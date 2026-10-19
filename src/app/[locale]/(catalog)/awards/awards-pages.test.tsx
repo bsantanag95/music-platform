@@ -130,7 +130,10 @@ describe("/awards: hub de premios", () => {
 
   it("con salones de la fama suma el bloque «Salones de la fama» bajo los premios, sin mezclarlos con las tarjetas", async () => {
     mocks.listLatestCeremoniesByAward.mockResolvedValue([latest("grammy", 2026), latest("brit-awards", 2026)]);
-    mocks.listHallOfFameClasses.mockResolvedValue([{ awardSlug: "grammy-hall-of-fame", year: 2026, years: [2026, 2025], inductees: [] }]);
+    mocks.listHallOfFameClasses.mockResolvedValue([
+      { awardSlug: "grammy-hall-of-fame", year: 2026, years: [2026, 2025], inductees: [] },
+      { awardSlug: "national-recording-registry", year: 2026, years: [2026, 2025, 2024, 2023, 2022], inductees: [] },
+    ]);
 
     const element = await AwardsIndexPage({ params });
     const text = JSON.stringify(element);
@@ -138,6 +141,10 @@ describe("/awards: hub de premios", () => {
     expect(text).toContain("salones-de-la-fama");
     expect(text).toContain("hall.hubHeading");
     expect(findAll(element, HallOfFameTileGrid)).toHaveLength(1);
+    // Una tarjeta por salón, en la forma detallada de las tarjetas de premios.
+    const halls = findAll(element, HallOfFameTileGrid)[0]!.props as { halls: { awardSlug: string }[]; detailed?: boolean };
+    expect(halls.halls.map((h) => h.awardSlug)).toEqual(["grammy-hall-of-fame", "national-recording-registry"]);
+    expect(halls.detailed).toBe(true);
     expect((findAll(element, AwardTileGrid)[0]!.props as { ceremonies: { awardSlug: string }[] }).ceremonies.map((c) => c.awardSlug)).toEqual([
       "grammy",
       "brit-awards",

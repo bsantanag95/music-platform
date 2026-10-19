@@ -72,7 +72,7 @@
       "newReleases": "Novedades",
       "upcoming": "Próximos",
       "awards": "Premios",
-      "hallOfFame": "Salón de la Fama",
+      "hallOfFame": "{count, plural, one {Salón de la Fama} other {Salones de la Fama}}",
       "topRated": "Mejor valorados",
       "decades": "Décadas"
     },

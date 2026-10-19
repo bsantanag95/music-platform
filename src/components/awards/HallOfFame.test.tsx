@@ -7,22 +7,6 @@ import { HallOfFameClassView } from "./HallOfFameClassView";
 import { HallOfFameExploreSection } from "./HallOfFameExploreSection";
 import { HallOfFameTile } from "./HallOfFameTile";
 
-// jsdom no implementa ResizeObserver ni matchMedia (el riel desplazable los usa para las flechas y el movimiento).
-vi.stubGlobal("matchMedia", (query: string) => ({
-  matches: false,
-  media: query,
-  addEventListener() {},
-  removeEventListener() {},
-}));
-vi.stubGlobal(
-  "ResizeObserver",
-  class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  },
-);
-
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, ...rest }: { href: string; children: ReactNode; scroll?: boolean }) => {
     const attrs: Record<string, unknown> = { ...rest };
@@ -143,45 +127,115 @@ const hall = (over: Partial<HallOfFameClass> = {}): HallOfFameClass => ({
   ...over,
 });
 
+const registry = (over: Partial<HallOfFameClass> = {}): HallOfFameClass =>
+  hall({
+    awardSlug: "national-recording-registry",
+    voting: "jury",
+    heldOn: "2026-05-14",
+    years: [2026, 2025, 2024, 2023, 2022],
+    inductees: [album("r1", "1989", "Taylor Swift"), album("r2", "Weezer", "Weezer"), song("r3", "Single Ladies", "Beyoncé"), album("r4", "Back to Black", "Amy Winehouse")],
+    ...over,
+  });
+
 describe("HallOfFameExploreSection", () => {
   it("no se renderiza sin clases cerradas", () => {
     const { container } = renderWithIntl(<HallOfFameExploreSection halls={[]} />);
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("muestra el salón, su última clase y una tarjeta por incorporación, con ancla y enlace a todas las clases", () => {
+  it("con un salón: ancla, encabezado en singular, una tarjeta y «Ver todos» al hub", () => {
     const { container } = renderWithIntl(<HallOfFameExploreSection halls={[hall()]} />);
     expect(container.querySelector("section#salon-de-la-fama")).not.toBeNull();
     expect(screen.getByRole("heading", { name: "Salón de la Fama" })).toBeInTheDocument();
-    expect(screen.getByText("Salón de la Fama de los Grammy · Clase de 2026 · 3 grabaciones")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Ver todas las clases/ })).toHaveAttribute("href", "/awards/grammy-hall-of-fame");
-    expect(container.querySelectorAll("li")).toHaveLength(3);
+    expect(container.querySelectorAll("li")).toHaveLength(1);
+    expect(screen.getByRole("link", { name: /Ver todos/ })).toHaveAttribute("href", "/awards");
   });
 
-  it("enlaza las incorporaciones del catálogo y deja como texto las que no lo están", () => {
+  it("con dos salones: encabezado en plural y una tarjeta por salón que abre su clase más reciente", () => {
+    const { container } = renderWithIntl(<HallOfFameExploreSection halls={[hall(), registry()]} />);
+    expect(screen.getByRole("heading", { name: "Salones de la Fama" })).toBeInTheDocument();
+    expect(container.querySelectorAll("section#salon-de-la-fama > ul > li")).toHaveLength(2);
+    expect(screen.getByRole("link", { name: /Salón de la Fama de los Grammy/ })).toHaveAttribute(
+      "href",
+      "/awards/grammy-hall-of-fame/2026",
+    );
+    expect(screen.getByRole("link", { name: /Registro Nacional de Grabaciones/ })).toHaveAttribute(
+      "href",
+      "/awards/national-recording-registry/2026",
+    );
+  });
+
+  it("no lista las incorporaciones de la clase: eso es de su página", () => {
     renderWithIntl(<HallOfFameExploreSection halls={[hall()]} />);
-    expect(screen.getByRole("link", { name: /OK Computer/ }).getAttribute("href")).toMatch(/^\/album\//);
-    expect(screen.getByRole("link", { name: /Trouble in Mind/ }).getAttribute("href")).toMatch(/^\/song\//);
-    expect(screen.getByText("Orange Blossom Special — The Rouse Brothers")).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /Orange Blossom/ })).not.toBeInTheDocument();
-  });
-
-  it("las canciones muestran la carátula de su disco ancla", () => {
-    renderWithIntl(<HallOfFameExploreSection halls={[hall({ inductees: [song("s1", "Trouble in Mind", "Bertha Hill")] })]} />);
-    expect(screen.getByTestId("cover")).toBeInTheDocument();
+    expect(screen.queryByText("Orange Blossom Special — The Rouse Brothers")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /OK Computer/ })).not.toBeInTheDocument();
   });
 
   it("en inglés usa los textos en inglés", () => {
-    renderWithIntl(<HallOfFameExploreSection halls={[hall()]} />, "en");
-    expect(screen.getByRole("heading", { name: "Hall of Fame" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /See all classes/ })).toBeInTheDocument();
+    renderWithIntl(<HallOfFameExploreSection halls={[hall(), registry()]} />, "en");
+    expect(screen.getByRole("heading", { name: "Halls of Fame" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /National Recording Registry/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /See all/ })).toBeInTheDocument();
   });
 });
 
 describe("HallOfFameTile", () => {
-  it("dice cuántas clases hay cargadas y cuál es la última, y enlaza al salón", () => {
+  it("muestra el nombre, el año de la clase en grande y enlaza a la clase más reciente", () => {
     renderWithIntl(<HallOfFameTile hall={hall()} />);
-    expect(screen.getByText("5 clases · Clase de 2026")).toBeInTheDocument();
-    expect(screen.getByRole("link")).toHaveAttribute("href", "/awards/grammy-hall-of-fame");
+    expect(screen.getByText("Salón de la Fama de los Grammy")).toBeInTheDocument();
+    expect(screen.getByText("2026")).toBeInTheDocument();
+    expect(screen.getByText("Clase")).toBeInTheDocument();
+    expect(screen.getByRole("link")).toHaveAttribute("href", "/awards/grammy-hall-of-fame/2026");
+  });
+
+  it("muestra hasta cuatro carátulas, primero las incorporaciones con disco en el catálogo", () => {
+    renderWithIntl(<HallOfFameTile hall={registry({ inductees: [textOnly("t0", "Speech — Someone"), ...registry().inductees] })} />);
+    expect(screen.getAllByTestId("cover")).toHaveLength(4);
+  });
+
+  it("tiñe el fondo con la primera carátula disponible", () => {
+    const withUrl: NominationView = {
+      ...album("u1", "Dookie", "Green Day"),
+      subject: {
+        kind: "release_group",
+        album: {
+          id: "rg-u1",
+          title: "Dookie",
+          artistName: "Green Day",
+          cover: { releaseGroupId: "rg-u1", coverThumbUrl: "https://covers.test/dookie.jpg", coverResolved: true },
+        },
+      },
+    };
+    const { container } = renderWithIntl(<HallOfFameTile hall={hall({ inductees: [withUrl] })} />);
+    expect(container.querySelector("img")).not.toBeNull();
+  });
+
+  it("sin ninguna carátula no lleva fondo", () => {
+    const { container } = renderWithIntl(<HallOfFameTile hall={hall({ inductees: [textOnly("t1", "Sin ficha")] })} />);
+    expect(container.querySelector("img")).toBeNull();
+  });
+
+  it("en la forma simple no trae datos ni clases anteriores", () => {
+    renderWithIntl(<HallOfFameTile hall={hall()} />);
+    expect(screen.queryByText(/5 clases/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+  });
+
+  it("en la forma detallada (hub) suma el rango, cuántas clases hay, quién decide y las clases anteriores como enlaces", () => {
+    renderWithIntl(<HallOfFameTile hall={registry()} detailed />);
+    expect(screen.getByText("2022–2026 · 5 clases · Lo elige un comité de selección")).toBeInTheDocument();
+    const previous = screen.getByRole("navigation", { name: "Clases anteriores de Registro Nacional de Grabaciones" });
+    expect(within(previous).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
+      "/awards/national-recording-registry/2025",
+      "/awards/national-recording-registry/2024",
+      "/awards/national-recording-registry/2023",
+      "/awards/national-recording-registry/2022",
+    ]);
+  });
+
+  it("un salón con una sola clase muestra solo su año y no ofrece clases anteriores", () => {
+    renderWithIntl(<HallOfFameTile hall={registry({ years: [2026] })} detailed />);
+    expect(screen.getByText("2026 · 1 clase · Lo elige un comité de selección")).toBeInTheDocument();
+    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
   });
 });

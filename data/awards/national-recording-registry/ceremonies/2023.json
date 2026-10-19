@@ -1,0 +1,2730 @@
+{
+  "award": "national-recording-registry",
+  "year": 2023,
+  "heldOn": "2023-04-12",
+  "sourceUrl": "https://newsroom.loc.gov/news/national-recording-registry-inducts-music-from-madonna--mariah-carey--queen-latifah--daddy-yankee/s/5a91b115-3825-4a5f-a702-35940b4de958",
+  "categories": [
+    {
+      "key": "albums",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "The Very First Mariachi Recordings",
+          "artist": "Cuarteto Coculense",
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Déjà Vu",
+          "artist": "Crosby, Stills, Nash & Young",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "3412fd44-c6e6-3a3b-b91a-964a055192ec",
+            "seed": {
+              "kind": "release_group",
+              "title": "Déjà vu",
+              "category": "studio",
+              "firstReleaseDate": "1970-03-11",
+              "credits": [
+                {
+                  "name": "Crosby, Stills, Nash & Young",
+                  "artist": {
+                    "id": "46a782ea-4308-476b-abd1-a91b197f3037",
+                    "name": "Crosby, Stills, Nash & Young",
+                    "sort-name": "Crosby, Stills, Nash & Young",
+                    "aliases": [
+                      {
+                        "sort-name": "Crosby,Stills,Nash and Young",
+                        "name": "Crosby,Stills,Nash and Young",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "crosby stills nash & young",
+                        "name": "crosby stills nash & young",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Crosby, Nash, Stills and Young",
+                        "name": "Crosby, Nash, Stills and Young",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "CSNY",
+                        "name": "CSNY",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Crosby, Stills, Nash, and Youn",
+                        "name": "Crosby, Stills, Nash, and Youn",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Crosby, Stills, Nash and Young",
+                        "name": "Crosby, Stills, Nash and Young",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Crosby Stills Nash and Young",
+                        "name": "Crosby Stills Nash and Young",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Synchronicity",
+          "artist": "The Police",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "f6df6292-fd40-37c3-bd61-22c53abfe773",
+            "seed": {
+              "kind": "release_group",
+              "title": "Synchronicity",
+              "category": "studio",
+              "firstReleaseDate": "1983-06-01",
+              "credits": [
+                {
+                  "name": "The Police",
+                  "artist": {
+                    "id": "9e0e2b01-41db-4008-bd8b-988977d6019a",
+                    "name": "The Police",
+                    "sort-name": "Police, The",
+                    "disambiguation": "British rock band",
+                    "aliases": [
+                      {
+                        "sort-name": "Sting & The Police",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Sting & The Police",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Sting and The Police",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Sting and The Police",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "ポリス",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "ポリス",
+                        "locale": "ja",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Police",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Police",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Like a Virgin",
+          "artist": "Madonna",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b69580b9-7050-3994-b544-4407a22c097a",
+            "seed": {
+              "kind": "release_group",
+              "title": "Like a Virgin",
+              "category": "studio",
+              "firstReleaseDate": "1984-11-13",
+              "credits": [
+                {
+                  "name": "Madonna",
+                  "artist": {
+                    "id": "79239441-bfd5-4981-a70c-55c3f15c1287",
+                    "name": "Madonna",
+                    "sort-name": "Madonna",
+                    "disambiguation": "“Queen of Pop”",
+                    "aliases": [
+                      {
+                        "sort-name": "Ciccone, Madonna Louise",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "麥當娜",
+                        "locale": "zh_Hant",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Ciccone, Madonna Louise Veronica",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Madonna Louise Veronica Ciccone",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "マドンナ",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "マドンナ",
+                        "locale": "ja",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Ciccone-Ritchie, Madonna",
+                        "name": "Madonna Ciccone-Ritchie",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Ciccone, Madonna Louise",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Madonna Louise Ciccone",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Madonna",
+                        "name": "Madonna",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "M. Ciccone",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "M. Ciccone",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Black Codes (From the Underground)",
+          "artist": "Wynton Marsalis",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b5dfd3b1-2c14-36f9-82c1-66e7e7441665",
+            "seed": {
+              "kind": "release_group",
+              "title": "Black Codes (From the Underground)",
+              "category": "studio",
+              "firstReleaseDate": "1985",
+              "credits": [
+                {
+                  "name": "Wynton Marsalis",
+                  "artist": {
+                    "id": "0d74dcc7-5684-4695-830f-a9846aad8ba9",
+                    "name": "Wynton Marsalis",
+                    "sort-name": "Marsalis, Wynton",
+                    "aliases": [
+                      {
+                        "sort-name": "Marsalis, Wynton",
+                        "name": "Marsalis, Wynton",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Wynton Marsallis",
+                        "name": "Wynton Marsallis",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "W. Marsalis",
+                        "name": "W. Marsalis",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Skain",
+                        "name": "Skain",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "All Hail the Queen",
+          "artist": "Queen Latifah",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "7416a063-8697-37a5-af06-af4da329c398",
+            "seed": {
+              "kind": "release_group",
+              "title": "All Hail the Queen",
+              "category": "studio",
+              "firstReleaseDate": "1989-11-28",
+              "credits": [
+                {
+                  "name": "Queen Latifah",
+                  "artist": {
+                    "id": "7a305f29-539a-456e-93b7-61b0e2ba3ef2",
+                    "name": "Queen Latifah",
+                    "sort-name": "Queen Latifah",
+                    "aliases": [
+                      {
+                        "sort-name": "Owens, Dana Elaine",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Dana Elaine Owens",
+                        "locale": "en",
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Latifa, Queen",
+                        "name": "Queen Latifa",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Dana Owens",
+                        "name": "Dana Owens",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Concerto for Clarinet and Chamber Orchestra",
+          "artist": "Northwest Chamber Orchestra",
+          "won": true,
+          "credits": "Ellen Taaffe Zwilich, composer",
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        }
+      ]
+    },
+    {
+      "key": "songs",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "St. Louis Blues",
+          "artist": "Handy's Memphis Blues Band",
+          "anchor": {
+            "title": "St. Louis Blues",
+            "artist": "Handy's Memphis Blues Band"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d6c5e6a7-5a8d-49ce-bb53-2d143d374750",
+            "seed": {
+              "kind": "recording",
+              "title": "St. Louis Blues",
+              "durationSec": null,
+              "credits": [
+                {
+                  "name": "W.C. Handy's Memphis Blues Band",
+                  "artist": {
+                    "id": "eef88765-e0ca-43d7-a64e-c4389ce82216",
+                    "name": "W.C. Handy's Memphis Blues Band",
+                    "sort-name": "W.C. Handy's Memphis Blues Band"
+                  }
+                }
+              ],
+              "anchorMbid": "992874be-7e46-4867-9fc8-769e9af28831",
+              "anchor": {
+                "kind": "release_group",
+                "title": "St. Louis Blues / Yellow Dog Blues",
+                "category": "single_ep",
+                "firstReleaseDate": "1922",
+                "credits": [
+                  {
+                    "name": "W.C. Handy's Memphis Blues Band",
+                    "artist": {
+                      "id": "eef88765-e0ca-43d7-a64e-c4389ce82216",
+                      "name": "W.C. Handy's Memphis Blues Band",
+                      "sort-name": "W.C. Handy's Memphis Blues Band"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Sugar Foot Stomp",
+          "artist": "Fletcher Henderson",
+          "anchor": {
+            "title": "Sugar Foot Stomp",
+            "artist": "Fletcher Henderson"
+          },
+          "won": true,
+          "resolved": {
+            "status": "ambiguous",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Don't Let Nobody Turn You Around",
+          "artist": "The Fairfield Four",
+          "anchor": {
+            "title": "Don't Let Nobody Turn You Around",
+            "artist": "The Fairfield Four"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Sherry",
+          "artist": "The Four Seasons",
+          "anchor": {
+            "title": "Sherry",
+            "artist": "The Four Seasons"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c9d7aaa9-1620-4f60-a7b7-3ba9284dc582",
+            "seed": {
+              "kind": "recording",
+              "title": "Sherry",
+              "durationSec": 153,
+              "credits": [
+                {
+                  "joinphrase": " and ",
+                  "name": "Frankie Valli",
+                  "artist": {
+                    "id": "3c714102-94d8-42f4-9005-fb8a75c2766d",
+                    "name": "Frankie Valli",
+                    "sort-name": "Valli, Frankie",
+                    "disambiguation": "American singer and actor, best known as the frontman of The Four Seasons",
+                    "aliases": [
+                      {
+                        "sort-name": "Frankie Vally",
+                        "name": "Frankie Vally",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Francis Castelluccio",
+                        "name": "Francis Castelluccio",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "The Four Seasons",
+                  "artist": {
+                    "id": "3f64d38c-1ad4-4fb0-941e-7f4b51d4c9e6",
+                    "name": "The Four Seasons",
+                    "sort-name": "Four Seasons, The",
+                    "disambiguation": "aka Frankie Valli and the Four Seasons",
+                    "aliases": [
+                      {
+                        "sort-name": "Frankie Vale & The Four Seasons",
+                        "name": "Frankie Vale & The Four Seasons",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Frankie Valli and the Four Seasons",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Frankie Valli and the Four Seasons",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Frankie Valli and The Four Seasons",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Frankie Valli and The Four Seasons",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Franke Valli & The Four Seasons",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Franke Valli & The Four Seasons",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "F. Valli & Four Seasons",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "F. Valli & Four Seasons",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Frankie Valli and The 4 Seasons",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Frankie Valli and The 4 Seasons",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "The 4 Seasons",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "The 4 Seasons",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Frankie Valli & The 4 Seasons",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Frankie Valli & The 4 Seasons",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Frankie Valli & The Four Seasons",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Frankie Valli & The Four Seasons",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Frankie Vali & The Four Season",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Frankie Vali & The Four Season",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Four Seasons",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Four Seasons",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "4 Seasons",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "4 Seasons",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "a9c56cb7-3978-4958-b958-e4a5fae5bf05",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Sherry and Other Hits",
+                "category": "compilation",
+                "credits": [
+                  {
+                    "name": "The Four Seasons",
+                    "artist": {
+                      "id": "3f64d38c-1ad4-4fb0-941e-7f4b51d4c9e6",
+                      "name": "The Four Seasons",
+                      "sort-name": "Four Seasons, The",
+                      "disambiguation": "aka Frankie Valli and the Four Seasons",
+                      "aliases": [
+                        {
+                          "sort-name": "Frankie Vale & The Four Seasons",
+                          "name": "Frankie Vale & The Four Seasons",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Frankie Valli and the Four Seasons",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "Frankie Valli and the Four Seasons",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Frankie Valli and The Four Seasons",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "Frankie Valli and The Four Seasons",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Franke Valli & The Four Seasons",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "Franke Valli & The Four Seasons",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "F. Valli & Four Seasons",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "F. Valli & Four Seasons",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Frankie Valli and The 4 Seasons",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "Frankie Valli and The 4 Seasons",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "The 4 Seasons",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "The 4 Seasons",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Frankie Valli & The 4 Seasons",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "Frankie Valli & The 4 Seasons",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Frankie Valli & The Four Seasons",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "Frankie Valli & The Four Seasons",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Frankie Vali & The Four Season",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "Frankie Vali & The Four Season",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Four Seasons",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "Four Seasons",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "4 Seasons",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "4 Seasons",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "What the World Needs Now Is Love",
+          "artist": "Jackie DeShannon",
+          "anchor": {
+            "title": "What the World Needs Now Is Love",
+            "artist": "Jackie DeShannon"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "1460b1ea-cb2c-4dc5-9df3-5d2dc7143862",
+            "seed": {
+              "kind": "recording",
+              "title": "What the World Needs Now Is Love",
+              "durationSec": 193,
+              "credits": [
+                {
+                  "name": "Jackie DeShannon",
+                  "artist": {
+                    "id": "194e5e92-0f2d-4d81-b5b9-c5f18d9edd59",
+                    "name": "Jackie DeShannon",
+                    "sort-name": "DeShannon, Jackie",
+                    "aliases": [
+                      {
+                        "sort-name": "Jacki DeShannon",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Jacki DeShannon",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Jacky DeShannon",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Jacky DeShannon",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Jackie de Shannon",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Jackie de Shannon",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "d2fb43d1-86f9-38d8-ad2b-d8b6db996e9d",
+              "anchor": {
+                "kind": "release_group",
+                "title": "What the World Needs Now Is Love",
+                "category": "studio",
+                "firstReleaseDate": "1968-08",
+                "credits": [
+                  {
+                    "name": "Jackie DeShannon",
+                    "artist": {
+                      "id": "194e5e92-0f2d-4d81-b5b9-c5f18d9edd59",
+                      "name": "Jackie DeShannon",
+                      "sort-name": "DeShannon, Jackie",
+                      "aliases": [
+                        {
+                          "sort-name": "Jacki DeShannon",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "Jacki DeShannon",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Jacky DeShannon",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "Jacky DeShannon",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Jackie de Shannon",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "Jackie de Shannon",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Wang Dang Doodle",
+          "artist": "Koko Taylor",
+          "anchor": {
+            "title": "Wang Dang Doodle",
+            "artist": "Koko Taylor"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "07e4b961-c8a6-4ca2-99aa-0ba5d451ca4c",
+            "seed": {
+              "kind": "recording",
+              "title": "Wang Dang Doodle",
+              "durationSec": 182,
+              "credits": [
+                {
+                  "name": "Koko Taylor",
+                  "artist": {
+                    "id": "9ebffe22-c6e0-49bc-a6c2-f79a97bc38b3",
+                    "name": "Koko Taylor",
+                    "sort-name": "Taylor, Koko",
+                    "aliases": [
+                      {
+                        "sort-name": "Walton, Cora Anna",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Cora Anna Walton",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Koko Tayler",
+                        "name": "Koko Tayler",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "eb35e684-4596-4460-b42b-82ec99c255cc",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Wang Dang Doodle",
+                "category": "compilation",
+                "firstReleaseDate": "1990",
+                "credits": [
+                  {
+                    "name": "Koko Taylor",
+                    "artist": {
+                      "id": "9ebffe22-c6e0-49bc-a6c2-f79a97bc38b3",
+                      "name": "Koko Taylor",
+                      "sort-name": "Taylor, Koko",
+                      "aliases": [
+                        {
+                          "sort-name": "Walton, Cora Anna",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "Cora Anna Walton",
+                          "locale": null,
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Koko Tayler",
+                          "name": "Koko Tayler",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Ode to Billie Joe",
+          "artist": "Bobbie Gentry",
+          "anchor": {
+            "title": "Ode to Billie Joe",
+            "artist": "Bobbie Gentry"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6060bc8e-7ad6-4a96-842c-ac723c4e6383",
+            "seed": {
+              "kind": "recording",
+              "title": "Ode to Billie Joe",
+              "durationSec": 255,
+              "credits": [
+                {
+                  "name": "Bobbie Gentry",
+                  "artist": {
+                    "id": "a5106366-6368-4a02-a580-73a3c02abb2f",
+                    "name": "Bobbie Gentry",
+                    "sort-name": "Gentry, Bobbie",
+                    "disambiguation": "Roberta Lee Streeter - American singer-songwriter",
+                    "aliases": [
+                      {
+                        "sort-name": "Bobby Gentry",
+                        "name": "Bobby Gentry",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Streeter, Roberta Lee",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Roberta Lee Streeter",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "7b747806-2720-318f-b984-3d72d04a6504",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Ode to Billie Joe",
+                "category": "studio",
+                "firstReleaseDate": "1967-06",
+                "credits": [
+                  {
+                    "name": "Bobbie Gentry",
+                    "artist": {
+                      "id": "a5106366-6368-4a02-a580-73a3c02abb2f",
+                      "name": "Bobbie Gentry",
+                      "sort-name": "Gentry, Bobbie",
+                      "disambiguation": "Roberta Lee Streeter - American singer-songwriter",
+                      "aliases": [
+                        {
+                          "sort-name": "Bobby Gentry",
+                          "name": "Bobby Gentry",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Streeter, Roberta Lee",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "Roberta Lee Streeter",
+                          "locale": null,
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Imagine",
+          "artist": "John Lennon",
+          "anchor": {
+            "title": "Imagine",
+            "artist": "John Lennon"
+          },
+          "won": true,
+          "resolved": {
+            "status": "manual",
+            "mbid": "5998641a-91ff-42c4-b3b6-7958452b93e2",
+            "seed": {
+              "kind": "recording",
+              "title": "Imagine",
+              "durationSec": 186,
+              "credits": [
+                {
+                  "name": "John Lennon",
+                  "artist": {
+                    "id": "4d5447d7-c61c-4120-ba1b-d7f471d385b9",
+                    "name": "John Lennon",
+                    "sort-name": "Lennon, John",
+                    "disambiguation": "The Beatles",
+                    "aliases": [
+                      {
+                        "sort-name": "Leg-Thigh, Winston",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Winston Leg-Thigh",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": "1968-12-11",
+                        "end-date": "1968-12-11"
+                      },
+                      {
+                        "sort-name": "Lennon, John Winston",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "John Winston Lennon",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": "1940-09-09",
+                        "end-date": "1969-04-22"
+                      },
+                      {
+                        "sort-name": "Леннон, Джон",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Джон Леннон",
+                        "locale": "ru",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Lenons, Dž.",
+                        "name": "Dž.Lenons",
+                        "locale": "lv",
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Booker Table and The Maitre D's",
+                        "name": "Booker Table and The Maitre D's",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Lennon",
+                        "name": "Lennon",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Джон",
+                        "name": "Джон",
+                        "locale": "ru",
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Torment, Mel",
+                        "name": "Mel Torment",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Dwarf McDougal",
+                        "name": "Dwarf McDougal",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "J. Lennon",
+                        "name": "J. Lennon",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Dad",
+                        "name": "Dad",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Ono Lennon, John Winston",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "John Winston Ono Lennon",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": "1969-04-22",
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Dr. Dream",
+                        "name": "Dr. Dream",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "John O'Cean",
+                        "name": "John O'Cean",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Hon. John St. John Johnson",
+                        "name": "Hon. John St. John Johnson",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Dr. Winston O'Boogie",
+                        "name": "Dr. Winston O'Boogie",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Lhennj Ono",
+                        "name": "Lhennj Ono",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Joel Nohnn",
+                        "name": "Joel Nohnn",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Kaptain Kundalini",
+                        "name": "Kaptain Kundalini",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Ghurkin, Rev. Fred",
+                        "name": "Rev. Fred Ghurkin",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Musketeer Gripweed & The Third Troop",
+                        "name": "Musketeer Gripweed & The Third Troop",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "ジョン・レノン",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "ジョン・レノン",
+                        "locale": "ja",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Lennon, John",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "John Lennon",
+                        "locale": "en",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "f242f304-0f1f-33a5-81a2-7a965b30e3b5",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Imagine",
+                "category": "studio",
+                "firstReleaseDate": "1971-09-09",
+                "credits": [
+                  {
+                    "name": "John Lennon",
+                    "artist": {
+                      "id": "4d5447d7-c61c-4120-ba1b-d7f471d385b9",
+                      "name": "John Lennon",
+                      "sort-name": "Lennon, John",
+                      "disambiguation": "The Beatles",
+                      "aliases": [
+                        {
+                          "sort-name": "Leg-Thigh, Winston",
+                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                          "name": "Winston Leg-Thigh",
+                          "locale": null,
+                          "type": "Artist name",
+                          "primary": null,
+                          "begin-date": "1968-12-11",
+                          "end-date": "1968-12-11"
+                        },
+                        {
+                          "sort-name": "Lennon, John Winston",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "John Winston Lennon",
+                          "locale": null,
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": "1940-09-09",
+                          "end-date": "1969-04-22"
+                        },
+                        {
+                          "sort-name": "Леннон, Джон",
+                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                          "name": "Джон Леннон",
+                          "locale": "ru",
+                          "type": "Artist name",
+                          "primary": true,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Lenons, Dž.",
+                          "name": "Dž.Lenons",
+                          "locale": "lv",
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Booker Table and The Maitre D's",
+                          "name": "Booker Table and The Maitre D's",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Lennon",
+                          "name": "Lennon",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Джон",
+                          "name": "Джон",
+                          "locale": "ru",
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Torment, Mel",
+                          "name": "Mel Torment",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Dwarf McDougal",
+                          "name": "Dwarf McDougal",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "J. Lennon",
+                          "name": "J. Lennon",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Dad",
+                          "name": "Dad",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Ono Lennon, John Winston",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "John Winston Ono Lennon",
+                          "locale": null,
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": "1969-04-22",
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Dr. Dream",
+                          "name": "Dr. Dream",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "John O'Cean",
+                          "name": "John O'Cean",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Hon. John St. John Johnson",
+                          "name": "Hon. John St. John Johnson",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Dr. Winston O'Boogie",
+                          "name": "Dr. Winston O'Boogie",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Lhennj Ono",
+                          "name": "Lhennj Ono",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Joel Nohnn",
+                          "name": "Joel Nohnn",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Kaptain Kundalini",
+                          "name": "Kaptain Kundalini",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Ghurkin, Rev. Fred",
+                          "name": "Rev. Fred Ghurkin",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Musketeer Gripweed & The Third Troop",
+                          "name": "Musketeer Gripweed & The Third Troop",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "ジョン・レノン",
+                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                          "name": "ジョン・レノン",
+                          "locale": "ja",
+                          "type": "Artist name",
+                          "primary": true,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Lennon, John",
+                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                          "name": "John Lennon",
+                          "locale": "en",
+                          "type": "Artist name",
+                          "primary": true,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Stairway to Heaven",
+          "artist": "Led Zeppelin",
+          "anchor": {
+            "title": "Stairway to Heaven",
+            "artist": "Led Zeppelin"
+          },
+          "won": true,
+          "resolved": {
+            "status": "manual",
+            "mbid": "ad3db673-9cd9-4b07-9b71-ffc721bebd25",
+            "seed": {
+              "kind": "recording",
+              "title": "Stairway to Heaven",
+              "durationSec": 475,
+              "credits": [
+                {
+                  "name": "Led Zeppelin",
+                  "artist": {
+                    "id": "678d88b2-87b0-403b-b63d-5da7465aecc3",
+                    "name": "Led Zeppelin",
+                    "sort-name": "Led Zeppelin",
+                    "aliases": [
+                      {
+                        "sort-name": "レッド・ツェッペリン",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "レッド・ツェッペリン",
+                        "locale": "ja",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Led Zeppelin",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Led Zeppelin",
+                        "locale": "en",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "レッド・ゼップ",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "レッド・ゼップ",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "レッドゼップ",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "レッドゼップ",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "ゼップ",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "ゼップ",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "ledzep",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "ledzep",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Bootleg Zeppelin",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Bootleg Zeppelin",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "LZ",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "LZ",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Led Zepplelin",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Led Zepplelin",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Led Zepellin",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Led Zepellin",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "レッド ツェッペリン",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "レッド ツェッペリン",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "レッドツェッペリン",
+                        "name": "レッドツェッペリン",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Led Zepplin",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Led Zepplin",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Led Zep",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Led Zep",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "94aabd06-bc7b-446e-831a-8cc6d729069c",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Stairway to Heaven",
+                "category": "single_ep",
+                "firstReleaseDate": "1972",
+                "credits": [
+                  {
+                    "name": "Led Zeppelin",
+                    "artist": {
+                      "id": "678d88b2-87b0-403b-b63d-5da7465aecc3",
+                      "name": "Led Zeppelin",
+                      "sort-name": "Led Zeppelin",
+                      "aliases": [
+                        {
+                          "sort-name": "レッド・ツェッペリン",
+                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                          "name": "レッド・ツェッペリン",
+                          "locale": "ja",
+                          "type": "Artist name",
+                          "primary": true,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Led Zeppelin",
+                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                          "name": "Led Zeppelin",
+                          "locale": "en",
+                          "type": "Artist name",
+                          "primary": true,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "レッド・ゼップ",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "レッド・ゼップ",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "レッドゼップ",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "レッドゼップ",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "ゼップ",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "ゼップ",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "ledzep",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "ledzep",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Bootleg Zeppelin",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "Bootleg Zeppelin",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "LZ",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "LZ",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Led Zepplelin",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "Led Zepplelin",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Led Zepellin",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "Led Zepellin",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "レッド ツェッペリン",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "レッド ツェッペリン",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "レッドツェッペリン",
+                          "name": "レッドツェッペリン",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Led Zepplin",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "Led Zepplin",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Led Zep",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "Led Zep",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Take Me Home, Country Roads",
+          "artist": "John Denver",
+          "anchor": {
+            "title": "Take Me Home, Country Roads",
+            "artist": "John Denver"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "6b03f838-c649-4be6-88f7-35977f6545dd",
+            "seed": {
+              "kind": "recording",
+              "title": "Take Me Home, Country Roads",
+              "durationSec": 192,
+              "credits": [
+                {
+                  "name": "John Denver",
+                  "artist": {
+                    "id": "34e10b51-b5c6-4bc1-b70e-f05f141eda1e",
+                    "name": "John Denver",
+                    "sort-name": "Denver, John",
+                    "aliases": [
+                      {
+                        "sort-name": "Deutschendorf, H.J., Jr.",
+                        "name": "H.J. Deutschendorf, Jr.",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Deutschendorf, Henry John, Jr.",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Henry John Deutschendorf, Jr.",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Denver, John",
+                        "name": "Denver, John",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "John Dennver",
+                        "name": "John Dennver",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "cec9b8a4-c8e5-3c76-b5a2-2ceaa80197fb",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Take Me Home, Country Roads",
+                "category": "compilation",
+                "firstReleaseDate": "1997",
+                "credits": [
+                  {
+                    "name": "John Denver",
+                    "artist": {
+                      "id": "34e10b51-b5c6-4bc1-b70e-f05f141eda1e",
+                      "name": "John Denver",
+                      "sort-name": "Denver, John",
+                      "aliases": [
+                        {
+                          "sort-name": "Deutschendorf, H.J., Jr.",
+                          "name": "H.J. Deutschendorf, Jr.",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Deutschendorf, Henry John, Jr.",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "Henry John Deutschendorf, Jr.",
+                          "locale": null,
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Denver, John",
+                          "name": "Denver, John",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "John Dennver",
+                          "name": "John Dennver",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Margaritaville",
+          "artist": "Jimmy Buffett",
+          "anchor": {
+            "title": "Margaritaville",
+            "artist": "Jimmy Buffett"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "d0000cea-427d-4568-af81-6ef167c1b9f3",
+            "seed": {
+              "kind": "recording",
+              "title": "Margaritaville",
+              "durationSec": 200,
+              "credits": [
+                {
+                  "name": "Jimmy Buffett",
+                  "artist": {
+                    "id": "16fdd9af-467f-47ce-bd29-3413b445b90f",
+                    "name": "Jimmy Buffett",
+                    "sort-name": "Buffett, Jimmy",
+                    "aliases": [
+                      {
+                        "sort-name": "Buffet, Jimmy",
+                        "name": "Buffet, Jimmy",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "JimmyBuffett",
+                        "name": "JimmyBuffett",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Buffett, Jimmy",
+                        "name": "Buffett, Jimmy",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Jimmy Buffet",
+                        "name": "Jimmy Buffet",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Jimmy Buffet One Particular Harbour",
+                        "name": "Jimmy Buffet One Particular Harbour",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Buffett, James William",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "James William Buffett",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "7577daaa-37ec-4bbc-a5bd-ba57cb2262a2",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Margaritaville",
+                "category": "single_ep",
+                "firstReleaseDate": "1977-02",
+                "credits": [
+                  {
+                    "name": "Jimmy Buffett",
+                    "artist": {
+                      "id": "16fdd9af-467f-47ce-bd29-3413b445b90f",
+                      "name": "Jimmy Buffett",
+                      "sort-name": "Buffett, Jimmy",
+                      "aliases": [
+                        {
+                          "sort-name": "Buffet, Jimmy",
+                          "name": "Buffet, Jimmy",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "JimmyBuffett",
+                          "name": "JimmyBuffett",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Buffett, Jimmy",
+                          "name": "Buffett, Jimmy",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Jimmy Buffet",
+                          "name": "Jimmy Buffet",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Jimmy Buffet One Particular Harbour",
+                          "name": "Jimmy Buffet One Particular Harbour",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Buffett, James William",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "James William Buffett",
+                          "locale": null,
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Flashdance… What a Feeling",
+          "artist": "Irene Cara",
+          "anchor": {
+            "title": "Flashdance… What a Feeling",
+            "artist": "Irene Cara"
+          },
+          "won": true,
+          "resolved": {
+            "status": "ambiguous",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Sweet Dreams (Are Made of This)",
+          "artist": "Eurythmics",
+          "anchor": {
+            "title": "Sweet Dreams (Are Made of This)",
+            "artist": "Eurythmics"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "bf8e28bb-b4ef-4b9a-bc64-8f58dd4ff5dd",
+            "seed": {
+              "kind": "recording",
+              "title": "Sweet Dreams (Are Made of This)",
+              "durationSec": 216,
+              "credits": [
+                {
+                  "name": "Eurythmics",
+                  "artist": {
+                    "id": "b4d32cff-f19e-455f-86c4-f347d824ca61",
+                    "name": "Eurythmics",
+                    "sort-name": "Eurythmics",
+                    "aliases": [
+                      {
+                        "sort-name": "Eurythmics, Annie Lennox & David A. Stewart",
+                        "name": "Eurythmics, Annie Lennox & David A. Stewart",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "ユーリズミックス",
+                        "name": "ユーリズミックス",
+                        "locale": "ja",
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Eurithmics",
+                        "name": "Eurithmics",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Eurthymics",
+                        "name": "Eurthymics",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Eurythmic",
+                        "name": "Eurythmic",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "The Eurythmics",
+                        "name": "The Eurythmics",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "b969f851-b5cf-3a3f-9bfe-1280eb271406",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Sweet Dreams (Are Made of This)",
+                "category": "studio",
+                "firstReleaseDate": "1983",
+                "credits": [
+                  {
+                    "name": "Eurythmics",
+                    "artist": {
+                      "id": "b4d32cff-f19e-455f-86c4-f347d824ca61",
+                      "name": "Eurythmics",
+                      "sort-name": "Eurythmics",
+                      "aliases": [
+                        {
+                          "sort-name": "Eurythmics, Annie Lennox & David A. Stewart",
+                          "name": "Eurythmics, Annie Lennox & David A. Stewart",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "ユーリズミックス",
+                          "name": "ユーリズミックス",
+                          "locale": "ja",
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Eurithmics",
+                          "name": "Eurithmics",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Eurthymics",
+                          "name": "Eurthymics",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Eurythmic",
+                          "name": "Eurythmic",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "The Eurythmics",
+                          "name": "The Eurythmics",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Super Mario Bros. theme",
+          "artist": "Koji Kondo",
+          "anchor": {
+            "title": "Super Mario Bros. theme",
+            "artist": "Koji Kondo"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "All I Want for Christmas Is You",
+          "artist": "Mariah Carey",
+          "anchor": {
+            "title": "All I Want for Christmas Is You",
+            "artist": "Mariah Carey"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "a6fab057-cf3a-4456-950e-d3edaf219326",
+            "seed": {
+              "kind": "recording",
+              "title": "All I Want for Christmas is You",
+              "durationSec": 241,
+              "credits": [
+                {
+                  "name": "Mariah Carey",
+                  "artist": {
+                    "id": "494e8d09-f85b-4543-892f-a5096aed1cd4",
+                    "name": "Mariah Carey",
+                    "sort-name": "Carey, Mariah",
+                    "aliases": [
+                      {
+                        "sort-name": "マライア・キャリー",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "マライア・キャリー",
+                        "locale": "ja",
+                        "type": "Artist name",
+                        "primary": true,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "머라이어 캐리",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Mariah Carey",
+                        "locale": "ko_KR",
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Mariah Carrey",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Mariah Carrey",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Carey, Mariah",
+                        "name": "Carey, Mariah",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Mariah-Carey",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "Mariah-Carey",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Mariah",
+                        "name": "Mariah",
+                        "locale": null,
+                        "type": null,
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "M. Carey",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "M. Carey",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "9e686e6e-ad1f-39c3-a8be-13b082f5eb7a",
+              "anchor": {
+                "kind": "release_group",
+                "title": "All I Want for Christmas Is You",
+                "category": "single_ep",
+                "firstReleaseDate": "1994-10-29",
+                "credits": [
+                  {
+                    "name": "Mariah Carey",
+                    "artist": {
+                      "id": "494e8d09-f85b-4543-892f-a5096aed1cd4",
+                      "name": "Mariah Carey",
+                      "sort-name": "Carey, Mariah",
+                      "aliases": [
+                        {
+                          "sort-name": "マライア・キャリー",
+                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                          "name": "マライア・キャリー",
+                          "locale": "ja",
+                          "type": "Artist name",
+                          "primary": true,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "머라이어 캐리",
+                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                          "name": "Mariah Carey",
+                          "locale": "ko_KR",
+                          "type": "Artist name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Mariah Carrey",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "Mariah Carrey",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Carey, Mariah",
+                          "name": "Carey, Mariah",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Mariah-Carey",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "Mariah-Carey",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Mariah",
+                          "name": "Mariah",
+                          "locale": null,
+                          "type": null,
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "M. Carey",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "M. Carey",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Gasolina",
+          "artist": "Daddy Yankee",
+          "anchor": {
+            "title": "Gasolina",
+            "artist": "Daddy Yankee"
+          },
+          "won": true,
+          "resolved": {
+            "status": "manual",
+            "mbid": "f4992365-73ee-40fe-9502-5eb6e7b9d67c",
+            "seed": {
+              "kind": "recording",
+              "title": "Gasolina",
+              "durationSec": 194,
+              "credits": [
+                {
+                  "name": "Daddy Yankee",
+                  "artist": {
+                    "id": "2f522f5c-111c-4ce8-8bd0-d82e97c227ad",
+                    "name": "Daddy Yankee",
+                    "sort-name": "Daddy Yankee",
+                    "aliases": [
+                      {
+                        "sort-name": "DY",
+                        "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                        "name": "DY",
+                        "locale": null,
+                        "type": "Search hint",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Ayala, Raymond",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Raymond Ayala",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Yankee, Winchestra",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Winchestra Yankee",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Winchester 30-30",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Winchester 30-30",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Ayala Rodríguez, Ramón Luis",
+                        "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                        "name": "Ramón Luis Ayala Rodríguez",
+                        "locale": null,
+                        "type": "Legal name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      },
+                      {
+                        "sort-name": "Yankee, Winchester",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "name": "Winchester Yankee",
+                        "locale": null,
+                        "type": "Artist name",
+                        "primary": null,
+                        "begin-date": null,
+                        "end-date": null
+                      }
+                    ]
+                  }
+                }
+              ],
+              "anchorMbid": "30f08ecc-a1b6-3aea-a7f2-e655b8f04617",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Gasolina",
+                "category": "single_ep",
+                "firstReleaseDate": "2005-05-02",
+                "credits": [
+                  {
+                    "name": "Daddy Yankee",
+                    "artist": {
+                      "id": "2f522f5c-111c-4ce8-8bd0-d82e97c227ad",
+                      "name": "Daddy Yankee",
+                      "sort-name": "Daddy Yankee",
+                      "aliases": [
+                        {
+                          "sort-name": "DY",
+                          "type-id": "1937e404-b981-3cb7-8151-4c86ebfc8d8e",
+                          "name": "DY",
+                          "locale": null,
+                          "type": "Search hint",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Ayala, Raymond",
+                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                          "name": "Raymond Ayala",
+                          "locale": null,
+                          "type": "Artist name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Yankee, Winchestra",
+                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                          "name": "Winchestra Yankee",
+                          "locale": null,
+                          "type": "Artist name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Winchester 30-30",
+                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                          "name": "Winchester 30-30",
+                          "locale": null,
+                          "type": "Artist name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Ayala Rodríguez, Ramón Luis",
+                          "type-id": "d4dcd0c0-b341-3612-a332-c0ce797b25cf",
+                          "name": "Ramón Luis Ayala Rodríguez",
+                          "locale": null,
+                          "type": "Legal name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        },
+                        {
+                          "sort-name": "Yankee, Winchester",
+                          "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                          "name": "Winchester Yankee",
+                          "locale": null,
+                          "type": "Artist name",
+                          "primary": null,
+                          "begin-date": null,
+                          "end-date": null
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "other",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Dorothy Thompson: Commentary and Analysis of the European Situation for NBC Radio",
+          "artist": "Dorothy Thompson",
+          "won": true,
+          "resolved": {
+            "status": "not_found"
+          }
+        },
+        {
+          "title": "Pale Blue Dot",
+          "artist": "Carl Sagan",
+          "won": true,
+          "resolved": {
+            "status": "not_found"
+          }
+        }
+      ]
+    }
+  ]
+}

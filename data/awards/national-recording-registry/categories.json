@@ -1,0 +1,40 @@
+{
+  "award": "national-recording-registry",
+  "kind": "hall_of_fame",
+  "voting": "jury",
+  "categories": [
+    {
+      "key": "albums",
+      "tier": "general",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Álbumes",
+        "en": "Albums"
+      },
+      "order": 1
+    },
+    {
+      "key": "songs",
+      "tier": "general",
+      "subject": "recording",
+      "honors": "performer",
+      "name": {
+        "es": "Canciones",
+        "en": "Songs"
+      },
+      "order": 2
+    },
+    {
+      "key": "other",
+      "tier": "general",
+      "subject": "release_group",
+      "honors": "performer",
+      "name": {
+        "es": "Otras grabaciones",
+        "en": "Other recordings"
+      },
+      "order": 3
+    }
+  ]
+}

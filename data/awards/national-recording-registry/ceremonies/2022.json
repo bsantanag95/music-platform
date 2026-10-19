@@ -1,0 +1,684 @@
+{
+  "award": "national-recording-registry",
+  "year": 2022,
+  "heldOn": "2022-04-13",
+  "sourceUrl": "https://newsroom.loc.gov/news/national-recording-registry-inducts-music-from-alicia-keys--ricky-martin--journey-and-more-in-2022/s/fee30140-0454-401c-a2a2-205298e32fb1",
+  "categories": [
+    {
+      "key": "albums",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Ellington at Newport",
+          "artist": "Duke Ellington",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c7af2ab6-81b0-3f92-8253-9417d00f1361",
+            "seed": {
+              "kind": "release_group",
+              "title": "Ellington at Newport",
+              "category": "live_other",
+              "firstReleaseDate": "1956-09",
+              "credits": [
+                {
+                  "name": "Duke Ellington & His Orchestra",
+                  "artist": {
+                    "id": "c01557ad-d41e-4316-a285-605769e2ab3b",
+                    "name": "Duke Ellington and His Orchestra"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "We Insist! Max Roach's Freedom Now Suite",
+          "artist": "Max Roach",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "74a22423-bc30-3f20-8339-bcee59483819",
+            "seed": {
+              "kind": "release_group",
+              "title": "We Insist! Max Roach’s Freedom Now Suite",
+              "category": "studio",
+              "firstReleaseDate": "1961-01",
+              "credits": [
+                {
+                  "name": "Max Roach",
+                  "artist": {
+                    "id": "0b6aea55-d855-4a33-ae08-b0280dd28684",
+                    "name": "Max Roach"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Tonight's the Night",
+          "artist": "The Shirelles",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "4cf6b921-e477-351c-9d7b-1503912bf393",
+            "seed": {
+              "kind": "release_group",
+              "title": "Tonight’s the Night",
+              "category": "studio",
+              "firstReleaseDate": "1961",
+              "credits": [
+                {
+                  "name": "The Shirelles",
+                  "artist": {
+                    "id": "a8540ea0-1a74-4c22-8b70-1348a77a74a0",
+                    "name": "The Shirelles"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "In C",
+          "artist": "Terry Riley",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "0883b5f3-2d3b-4331-b190-3a0dd6184c44",
+            "seed": {
+              "kind": "release_group",
+              "title": "In C",
+              "category": "studio",
+              "firstReleaseDate": "1989",
+              "credits": [
+                {
+                  "name": "Terry Riley",
+                  "artist": {
+                    "id": "7bf257bf-19a8-4205-8ae8-98511e50b719",
+                    "name": "Terry Riley"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Canciones de Mi Padre",
+          "artist": "Linda Ronstadt",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "ec6df4a3-e40c-3fa4-8c72-8633f572c8c3",
+            "seed": {
+              "kind": "release_group",
+              "title": "Canciones de mi padre",
+              "category": "studio",
+              "firstReleaseDate": "1987",
+              "credits": [
+                {
+                  "name": "Linda Ronstadt",
+                  "artist": {
+                    "id": "498f2581-be21-4eef-8756-fbb89d79b1c0",
+                    "name": "Linda Ronstadt"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Nick of Time",
+          "artist": "Bonnie Raitt",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "182a8072-0513-3aa2-b812-9f7a9692731a",
+            "seed": {
+              "kind": "release_group",
+              "title": "Nick of Time",
+              "category": "studio",
+              "firstReleaseDate": "1989-03-21",
+              "credits": [
+                {
+                  "name": "Bonnie Raitt",
+                  "artist": {
+                    "id": "0f0da09c-3940-4cb5-879f-4cea28907810",
+                    "name": "Bonnie Raitt"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "The Low End Theory",
+          "artist": "A Tribe Called Quest",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "c3733436-fcba-3c08-b082-d548df5c5139",
+            "seed": {
+              "kind": "release_group",
+              "title": "The Low End Theory",
+              "category": "studio",
+              "firstReleaseDate": "1991-09-24",
+              "credits": [
+                {
+                  "name": "A Tribe Called Quest",
+                  "artist": {
+                    "id": "9689aa5a-4471-4fb4-9721-07cecda0fa9f",
+                    "name": "A Tribe Called Quest"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Enter the Wu-Tang (36 Chambers)",
+          "artist": "Wu-Tang Clan",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "610fb60f-900a-3c42-ac7d-f6b6aa8035f9",
+            "seed": {
+              "kind": "release_group",
+              "title": "Enter the Wu‐Tang (36 Chambers)",
+              "category": "studio",
+              "firstReleaseDate": "1993-11-09",
+              "credits": [
+                {
+                  "name": "Wu‐Tang Clan",
+                  "artist": {
+                    "id": "0febdcf7-4e1f-4661-9493-b40427de2c13",
+                    "name": "Wu‐Tang Clan"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Buena Vista Social Club",
+          "artist": "Buena Vista Social Club",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "32bbab8e-02c0-30d2-9e23-a19739864b84",
+            "seed": {
+              "kind": "release_group",
+              "title": "Buena Vista Social Club",
+              "category": "studio",
+              "firstReleaseDate": "1997-06-23",
+              "credits": [
+                {
+                  "name": "Buena Vista Social Club",
+                  "artist": {
+                    "id": "2a85ecff-41e9-4be1-aca6-c87054a4c334",
+                    "name": "Buena Vista Social Club"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Songs in A Minor",
+          "artist": "Alicia Keys",
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "5701e04b-efc2-3429-b8af-c6596f1d08cf",
+            "seed": {
+              "kind": "release_group",
+              "title": "Songs in A Minor",
+              "category": "studio",
+              "firstReleaseDate": "2001-06-05",
+              "credits": [
+                {
+                  "name": "Alicia Keys",
+                  "artist": {
+                    "id": "8ef1df30-ae4f-4dbd-9351-1a32b208a01e",
+                    "name": "Alicia Keys"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "songs",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Harlem Strut",
+          "artist": "James P. Johnson",
+          "anchor": {
+            "title": "Harlem Strut",
+            "artist": "James P. Johnson"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "2acd026c-cb44-4052-bb5a-282c61497441",
+            "seed": {
+              "kind": "recording",
+              "title": "The Harlem Strut",
+              "durationSec": 162,
+              "credits": [
+                {
+                  "name": "James P. Johnson",
+                  "artist": {
+                    "id": "2a58b026-9659-4bfb-90c9-56c4ad9125f1",
+                    "name": "James P. Johnson"
+                  }
+                }
+              ],
+              "anchorMbid": "c44434e9-2721-403d-8d39-6b1b521176a5",
+              "anchor": {
+                "kind": "release_group",
+                "title": "The Harlem Strut / Unknown Blues",
+                "category": "single_ep",
+                "firstReleaseDate": "1921",
+                "credits": [
+                  {
+                    "name": "James P. Johnson",
+                    "joinphrase": " / ",
+                    "artist": {
+                      "id": "2a58b026-9659-4bfb-90c9-56c4ad9125f1",
+                      "name": "James P. Johnson"
+                    }
+                  },
+                  {
+                    "name": "Fletcher Henderson",
+                    "artist": {
+                      "id": "f47d1c94-c3e3-4c84-a42a-6c33e0032839",
+                      "name": "Fletcher Henderson"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Walking the Floor Over You",
+          "artist": "Ernest Tubb",
+          "anchor": {
+            "title": "Walking the Floor Over You",
+            "artist": "Ernest Tubb"
+          },
+          "won": true,
+          "resolved": {
+            "status": "manual",
+            "mbid": "509b6d9f-7b25-4ed4-a4c2-4a33910d8b63",
+            "seed": {
+              "kind": "recording",
+              "title": "Walking the Floor Over You",
+              "durationSec": 158,
+              "credits": [
+                {
+                  "name": "Ernest Tubb",
+                  "artist": {
+                    "id": "eefcb39d-afa5-4db0-916c-e6dbe1892e8e",
+                    "name": "Ernest Tubb"
+                  }
+                }
+              ],
+              "anchorMbid": "0eb4a5d8-e945-34f1-824f-cc5362824816",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Walking the Floor Over You",
+                "category": "compilation",
+                "firstReleaseDate": "1996-07-16",
+                "credits": [
+                  {
+                    "name": "Ernest Tubb",
+                    "artist": {
+                      "id": "eefcb39d-afa5-4db0-916c-e6dbe1892e8e",
+                      "name": "Ernest Tubb"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Jesus Gave Me Water",
+          "artist": "The Soul Stirrers",
+          "anchor": {
+            "title": "Jesus Gave Me Water",
+            "artist": "The Soul Stirrers"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "7dc52110-400d-4d93-b6c7-d2b8886bf948",
+            "seed": {
+              "kind": "recording",
+              "title": "Jesus Gave Me Water",
+              "durationSec": 151,
+              "credits": [
+                {
+                  "name": "The Soul Stirrers",
+                  "artist": {
+                    "id": "5aa8b4de-5e87-40c1-b230-e29e415578ec",
+                    "name": "The Soul Stirrers"
+                  }
+                }
+              ],
+              "anchorMbid": "8759e716-5ce3-39c6-81d9-3567bd7cbff5",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Jesus Gave Me Water",
+                "category": "studio",
+                "firstReleaseDate": "1993-01-31",
+                "credits": [
+                  {
+                    "name": "The Soul Stirrers",
+                    "artist": {
+                      "id": "5aa8b4de-5e87-40c1-b230-e29e415578ec",
+                      "name": "The Soul Stirrers"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "The Christmas Song",
+          "artist": "Nat King Cole",
+          "anchor": {
+            "title": "The Christmas Song",
+            "artist": "Nat King Cole"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "bde16b51-634e-4145-ab7d-5bf075e3c9f9",
+            "seed": {
+              "kind": "recording",
+              "title": "The Christmas Song",
+              "durationSec": 197,
+              "credits": [
+                {
+                  "name": "Nat King Cole",
+                  "artist": {
+                    "id": "fbe054ec-a143-4101-9e9e-64abc5ff5ac9",
+                    "name": "Nat King Cole"
+                  }
+                }
+              ],
+              "anchorMbid": "9cedba59-9bfe-36bd-81fc-bed263ddfd62",
+              "anchor": {
+                "kind": "release_group",
+                "title": "The Christmas Song",
+                "category": "studio",
+                "firstReleaseDate": "1960",
+                "credits": [
+                  {
+                    "name": "Nat King Cole",
+                    "artist": {
+                      "id": "fbe054ec-a143-4101-9e9e-64abc5ff5ac9",
+                      "name": "Nat King Cole"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Moon River",
+          "artist": "Andy Williams",
+          "anchor": {
+            "title": "Moon River",
+            "artist": "Andy Williams"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "673ebbe0-da2d-4a85-a4ac-cc0142065aae",
+            "seed": {
+              "kind": "recording",
+              "title": "Moon River",
+              "durationSec": 166,
+              "credits": [
+                {
+                  "name": "Andy Williams",
+                  "artist": {
+                    "id": "57cb4257-9855-4a42-b1be-bfba1d9b520d",
+                    "name": "Andy Williams"
+                  }
+                }
+              ],
+              "anchorMbid": "3ad926a9-c14b-4a07-acbf-e70992044761",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Moon River",
+                "category": "compilation",
+                "firstReleaseDate": "1990",
+                "credits": [
+                  {
+                    "name": "Andy Williams",
+                    "artist": {
+                      "id": "57cb4257-9855-4a42-b1be-bfba1d9b520d",
+                      "name": "Andy Williams"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "It's a Small World",
+          "artist": "The Disneyland Boys Choir",
+          "anchor": {
+            "title": "It's a Small World",
+            "artist": "The Disneyland Boys Choir"
+          },
+          "won": true,
+          "resolved": {
+            "status": "not_found",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Reach Out, I'll Be There",
+          "artist": "Four Tops",
+          "anchor": {
+            "title": "Reach Out",
+            "artist": "Four Tops"
+          },
+          "won": true,
+          "resolved": {
+            "status": "ambiguous",
+            "candidates": []
+          }
+        },
+        {
+          "title": "Bohemian Rhapsody",
+          "artist": "Queen",
+          "anchor": {
+            "title": "Bohemian Rhapsody",
+            "artist": "Queen"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "b1a9c0e9-d987-4042-ae91-78d6a3267d69",
+            "seed": {
+              "kind": "recording",
+              "title": "Bohemian Rhapsody",
+              "durationSec": 355,
+              "credits": [
+                {
+                  "name": "Queen",
+                  "artist": {
+                    "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                    "name": "Queen"
+                  }
+                }
+              ],
+              "anchorMbid": "361a28b7-4588-44a6-8c96-86c1efb8258f",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Bohemian Rhapsody",
+                "category": "single_ep",
+                "firstReleaseDate": "1975",
+                "credits": [
+                  {
+                    "name": "Queen",
+                    "artist": {
+                      "id": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+                      "name": "Queen"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Don't Stop Believin'",
+          "artist": "Journey",
+          "anchor": {
+            "title": "Don't Stop Believin'",
+            "artist": "Journey"
+          },
+          "won": true,
+          "resolved": {
+            "status": "manual",
+            "mbid": "5e390f77-3210-4e92-bd8b-fd6014e62b9c",
+            "seed": {
+              "kind": "recording",
+              "title": "Don't Stop Believin'",
+              "durationSec": 248,
+              "credits": [
+                {
+                  "name": "Journey",
+                  "artist": {
+                    "id": "abd506e1-6f2b-4d6f-b937-92c267f6f88b",
+                    "name": "Journey"
+                  }
+                }
+              ],
+              "anchorMbid": "7f6c1bdf-5218-44ad-87f5-82a74354c95c",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Don’t Stop Believin’",
+                "category": "single_ep",
+                "firstReleaseDate": "1981-10",
+                "credits": [
+                  {
+                    "name": "Journey",
+                    "artist": {
+                      "id": "abd506e1-6f2b-4d6f-b937-92c267f6f88b",
+                      "name": "Journey"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Livin' La Vida Loca",
+          "artist": "Ricky Martin",
+          "anchor": {
+            "title": "Livin' La Vida Loca",
+            "artist": "Ricky Martin"
+          },
+          "won": true,
+          "resolved": {
+            "status": "exact",
+            "mbid": "3dd4b7a1-9153-4626-96f5-ff3d5dabe773",
+            "seed": {
+              "kind": "recording",
+              "title": "Livin’ la vida loca",
+              "durationSec": 243,
+              "credits": [
+                {
+                  "name": "Ricky Martin",
+                  "artist": {
+                    "id": "70ea63ea-70dc-4b63-951a-2c249d2b3b0a",
+                    "name": "Ricky Martin"
+                  }
+                }
+              ],
+              "anchorMbid": "8e7ecd95-3949-4919-8ee1-ec2642857838",
+              "anchor": {
+                "kind": "release_group",
+                "title": "Livin' La Vida Loca",
+                "category": "studio",
+                "firstReleaseDate": "1999",
+                "credits": [
+                  {
+                    "name": "Ricky Martin",
+                    "artist": {
+                      "id": "70ea63ea-70dc-4b63-951a-2c249d2b3b0a",
+                      "name": "Ricky Martin"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "other",
+      "coverage": "complete",
+      "nominees": [
+        {
+          "title": "Franklin D. Roosevelt: Complete Presidential Speeches",
+          "artist": "Franklin D. Roosevelt",
+          "won": true,
+          "resolved": {
+            "status": "not_found"
+          }
+        },
+        {
+          "title": "On a Note of Triumph",
+          "artist": "Norman Corwin",
+          "won": true,
+          "resolved": {
+            "status": "not_found"
+          }
+        },
+        {
+          "title": "Hank Aaron's 715th Career Home Run",
+          "artist": "Hank Aaron",
+          "won": true,
+          "resolved": {
+            "status": "not_found"
+          }
+        },
+        {
+          "title": "WNYC broadcasts for September 11, 2001",
+          "artist": "WNYC",
+          "won": true,
+          "resolved": {
+            "status": "not_found"
+          }
+        },
+        {
+          "title": "WTF with Marc Maron (guest: Robin Williams)",
+          "artist": "Marc Maron",
+          "won": true,
+          "resolved": {
+            "status": "not_found"
+          }
+        }
+      ]
+    }
+  ]
+}

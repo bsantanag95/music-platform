@@ -398,7 +398,7 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
     { id: "novedades", label: t("jump.newReleases"), visible: explore.newReleases.length > 0 },
     { id: "proximos", label: t("jump.upcoming"), visible: explore.upcoming.length > 0 },
     { id: "premios", label: t("jump.awards"), visible: recentCeremonies.length > 0 },
-    { id: "salon-de-la-fama", label: t("jump.hallOfFame"), visible: hallClasses.length > 0 },
+    { id: "salon-de-la-fama", label: t("jump.hallOfFame", { count: hallClasses.length }), visible: hallClasses.length > 0 },
     { id: "mejor-valorados", label: t("jump.topRated"), visible: explore.topRated.length > 0 },
   ].filter((item) => item.visible);
 
