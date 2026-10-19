@@ -20,6 +20,8 @@ function titleAndArtist(nomination: NominationView): { title: string; artist: st
 
 export function CategoryWinnersTimeline({ entries, subjectKind }: { entries: CategoryHistoryEntry[]; subjectKind: AwardSubjectKind }) {
   const t = useTranslations("awards");
+  // En las categorías de personas la foto o la inicial es redonda: el marco también, o el círculo queda dentro de un cuadrado.
+  const person = subjectKind === "artist";
   const years = entries.flatMap((entry) => {
     const winners = entry.nominations.filter((n) => n.won);
     const [first] = winners;
@@ -38,8 +40,12 @@ export function CategoryWinnersTimeline({ entries, subjectKind }: { entries: Cat
                 <span className="font-display text-2xl leading-none tabular-nums text-paper transition-colors group-hover:text-amber">
                   {year}
                 </span>
-                <span className="block overflow-hidden rounded-md ring-1 ring-ink-border transition-[box-shadow] group-hover:ring-amber group-focus-visible:ring-amber">
-                  <NomineeVisual nomination={winner} size="aspect-square w-full" person={subjectKind === "artist"} />
+                {/* Anillo interior (capa encima de la imagen): uno exterior se dibuja fuera de la caja y el riel, que recorta su contenido, lo
+                    cortaba en los bordes laterales. */}
+                <span
+                  className={`relative block overflow-hidden after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:ring-1 after:ring-inset after:ring-ink-border after:transition-colors group-hover:after:ring-amber group-focus-visible:after:ring-amber ${person ? "rounded-full" : "rounded-md"}`}
+                >
+                  <NomineeVisual nomination={winner} size="aspect-square w-full" person={person} />
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate font-display text-sm text-paper">{title}</span>
