@@ -69,15 +69,21 @@ Cuando existe sesión, el Header SHALL separar dos zonas: una **barra general** 
 navegación de contenido y un **menú de usuario** anclado al nombre visible, cuyo control
 SHALL mostrar un indicador de despliegue (cheurón hacia abajo) junto al nombre.
 
-La barra general SHALL contener el acceso al buscador del catálogo, el enlace a la
-superficie pública de Listas de la comunidad (`/lists`), el enlace a la superficie pública
-de Actividad de la comunidad (`/activity`) y, cuando el catálogo editorial esté habilitado,
-el enlace a Explorar. El enlace "Listas" de la barra general SHALL apuntar a la superficie
-pública `/lists`, distinta de la gestión personal en `/me/lists`. El enlace "Actividad"
-SHALL apuntar a la superficie pública `/activity`, distinta del feed de seguidos en
-`/me/feed`. La barra general SHALL NOT mostrar en su nivel superior enlaces a las
-superficies personales del usuario (`/me/diary`, `/me/feed`, `/me/favorites`, `/me/lists`,
-`/me/collection`).
+La barra general SHALL contener, en este orden, el acceso al buscador del catálogo, el enlace
+a Explorar (cuando el catálogo editorial esté habilitado), el enlace a la superficie pública
+de Listas de la comunidad (`/lists`) y el enlace a la superficie pública de actividad de la
+comunidad (`/activity`), etiquetado **"Comunidad"**. El enlace "Listas" de la barra general
+SHALL apuntar a la superficie pública `/lists`, distinta de la gestión personal en
+`/me/lists`. El enlace "Comunidad" SHALL apuntar a `/activity`, distinta del feed de
+seguidos en `/me/feed`. La barra general SHALL NOT mostrar un enlace al descubrimiento de
+Caminos (`/caminos`), que se alcanza desde `/lists` (ver `camino-discovery`). La barra
+general SHALL NOT mostrar en su nivel superior enlaces a las superficies personales del
+usuario (`/me/diary`, `/me/feed`, `/me/favorites`, `/me/lists`, `/me/collection`,
+`/me/progress`).
+
+Ninguna etiqueta SHALL nombrar con la misma palabra una superficie pública de la barra
+general y una superficie personal distinta del menú de usuario, salvo "Listas", cuyo
+título de grupo en el menú ("Tu música") las distingue.
 
 La zona de usuario SHALL incluir además un control **"Añadir"** —solo cuando hay sesión—
 ubicado **junto al menú de usuario** (a su izquierda, después del selector de idioma) y NO en
@@ -90,15 +96,19 @@ de datos propios vive en la zona de usuario.
 
 En escritorio el menú de usuario SHALL desplegarse al posar el cursor sobre el control y
 SHALL replegarse cuando el cursor abandona el conjunto de control y menú. El menú SHALL
-agrupar los accesos a: el perfil propio (`/users/{username}`), el diario, los favoritos,
-mis valoraciones, las listas, la colección, los artistas seguidos, **los recorridos de artista**, el feed de
-actividad, los seguidores, los seguidos, las solicitudes de seguimiento, los ajustes y el
-cierre de sesión. El menú SHALL mostrar un indicador con el número de solicitudes de
+agrupar, en este orden, los accesos a: el perfil propio (`/users/{username}`, "Perfil");
+un grupo titulado **"Tu música"** con Diario, Valoraciones, Favoritos, Pendientes,
+Colección física, Listas y Progreso (`/me/progress`); un grupo titulado **"Social"** con
+Actividad (el feed de seguidos, `/me/feed`), Artistas seguidos, Seguidores, Seguidos y
+Solicitudes; las herramientas de rol; los ajustes y el cierre de sesión. Los títulos de
+grupo SHALL mostrarse como rótulos no interactivos y SHALL NOT ser enlaces. Ninguna
+etiqueta de acceso del menú SHALL llevar posesivo ("Mi", "Mis"): la pertenencia la dan los
+títulos de grupo. El menú SHALL mostrar un indicador con el número de solicitudes de
 seguimiento pendientes junto al acceso a solicitudes cuando ese número sea mayor que cero,
 presentado como bandeja de entrada y no como métrica de logro.
 
-El feed de actividad (`/me/feed`) SHALL alcanzarse desde el menú de usuario y SHALL NOT
-ocupar un lugar en la barra general.
+El feed de actividad (`/me/feed`) SHALL alcanzarse desde el menú de usuario, con la
+etiqueta "Actividad", y SHALL NOT ocupar un lugar en la barra general.
 
 Sin depender del cursor, el menú de usuario SHALL ser operable: su control SHALL alternar el
 menú al activarse (soporte táctil y de teclado), el menú SHALL cerrarse con `Escape`
@@ -112,18 +122,19 @@ colapsado, en un grupo propio antes de los ajustes, y SHALL NOT ocupar un lugar 
 general.
 
 En viewports por debajo del punto de corte `lg`, el Header SHALL colapsar en un panel único
-que conserve la misma división: un bloque de barra general (buscador, Listas, Actividad y
-Explorar) y un bloque de usuario que empieza por el control "Añadir" y sigue con los mismos
-accesos del menú, el selector de locale y el cierre de sesión.
+que conserve la misma división: un bloque de barra general (buscador, Explorar, Listas y
+Comunidad) y un bloque de usuario que empieza por el control "Añadir" y sigue con los mismos
+accesos y títulos de grupo del menú, el selector de locale y el cierre de sesión.
 
 #### Scenario: Barra general sin superficies personales
 
 - **WHEN** un usuario con sesión abre cualquier página con el Header en un viewport de
   escritorio
-- **THEN** la barra general muestra el buscador, el enlace a `/lists`, el enlace a
-  `/activity` y, si el catálogo editorial está habilitado, el enlace a Explorar
-- **AND** no muestra enlaces de nivel superior a diario, feed, favoritos, `/me/lists` ni
-  colección
+- **THEN** la barra general muestra el buscador, si el catálogo editorial está habilitado el
+  enlace a Explorar, el enlace a `/lists` y el enlace "Comunidad" a `/activity`
+- **AND** no muestra enlaces de nivel superior a diario, feed, favoritos, `/me/lists`,
+  colección ni progreso
+- **AND** no muestra un enlace a `/caminos`
 - **AND** no muestra el control "Añadir", que vive en la zona de usuario
 
 #### Scenario: El enlace de Listas apunta a la superficie pública
@@ -134,7 +145,7 @@ accesos del menú, el selector de locale y el cierre de sesión.
 
 #### Scenario: El enlace de Actividad apunta a la superficie pública
 
-- **WHEN** el usuario activa el enlace "Actividad" de la barra general
+- **WHEN** el usuario activa el enlace "Comunidad" de la barra general
 - **THEN** llega a `/activity` (actividad de la comunidad) y no a `/me/feed` (su feed de
   seguidos)
 
@@ -159,15 +170,25 @@ accesos del menú, el selector de locale y el cierre de sesión.
 #### Scenario: El menú de usuario agrupa las superficies personales
 
 - **WHEN** el usuario abre el menú anclado a su nombre visible
-- **THEN** ve los accesos a su perfil, diario, favoritos, mis valoraciones, listas, colección, artistas
-  seguidos, recorridos de artista, feed de actividad, seguidores, seguidos, solicitudes,
-  ajustes y cierre de sesión
+- **THEN** ve "Perfil"; el rótulo "Tu música" seguido de Diario, Valoraciones, Favoritos,
+  Pendientes, Colección física, Listas y Progreso; el rótulo "Social" seguido de Actividad,
+  Artistas seguidos, Seguidores, Seguidos y Solicitudes; y luego Ajustes y Cerrar sesión
 
 #### Scenario: Menú de usuario incluye los recorridos de artista
 
 - **WHEN** un usuario autenticado abre el menú de usuario del Header
-- **THEN** encuentra, junto al resto de los accesos de gestión, un acceso a sus recorridos
-  de artista (`/me/artist-journeys`)
+- **THEN** encuentra un único acceso "Progreso" que lleva a `/me/progress`
+- **AND** no encuentra accesos separados a recorridos de artista ni a Caminos
+
+#### Scenario: Sin posesivos en los accesos
+
+- **WHEN** el usuario recorre las etiquetas de los accesos del menú, en cualquier locale
+- **THEN** ninguna empieza por "Mi", "Mis", "My" ni equivalente
+
+#### Scenario: Los títulos de grupo no son enlaces
+
+- **WHEN** el usuario navega el menú con el teclado
+- **THEN** el foco pasa por los accesos y no se detiene en los rótulos "Tu música" ni "Social"
 
 #### Scenario: Apertura al posar el cursor en escritorio
 
@@ -190,7 +211,8 @@ accesos del menú, el selector de locale y el cierre de sesión.
 #### Scenario: Feed accesible solo desde el menú
 
 - **WHEN** el usuario busca su feed de actividad en el Header
-- **THEN** lo encuentra dentro del menú de usuario y no como enlace de la barra general
+- **THEN** lo encuentra dentro del menú de usuario, como "Actividad" en el grupo "Social", y
+  no como enlace de la barra general
 
 #### Scenario: Cierre del menú con teclado
 
@@ -205,9 +227,10 @@ accesos del menú, el selector de locale y el cierre de sesión.
 #### Scenario: Panel colapsado en viewport móvil
 
 - **WHEN** un usuario con sesión abre el panel del Header en un viewport por debajo de `lg`
-- **THEN** ve un bloque de barra general con el buscador, el enlace a `/lists`, el enlace a
-  `/activity` y Explorar, y un bloque de usuario que empieza por el control "Añadir" y
-  sigue con los mismos accesos del menú más el selector de locale y el cierre de sesión
+- **THEN** ve un bloque de barra general con el buscador, Explorar, el enlace a `/lists` y el
+  enlace "Comunidad" a `/activity`, y un bloque de usuario que empieza por el control
+  "Añadir" y sigue con los mismos accesos y rótulos de grupo del menú más el selector de
+  locale y el cierre de sesión
 
 #### Scenario: Herramientas de rol en el menú de usuario
 
@@ -231,8 +254,7 @@ accesos del menú, el selector de locale y el cierre de sesión.
 
 #### Scenario: El menú de usuario incluye Mis valoraciones
 - **WHEN** un usuario autenticado abre el menú de usuario del Header o el panel móvil
-- **THEN** encuentra el acceso "Mis valoraciones", después de favoritos, que lleva a
-  `/me/ratings`
+- **THEN** encuentra el acceso "Valoraciones", después de Diario, que lleva a `/me/ratings`
 
 ### Requirement: Header reducido en pantallas de foco
 

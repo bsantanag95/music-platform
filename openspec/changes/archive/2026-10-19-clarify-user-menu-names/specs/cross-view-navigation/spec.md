@@ -80,7 +80,7 @@ accesos y títulos de grupo del menú, el selector de locale y el cierre de sesi
 - **THEN** llega a `/lists` (descubrimiento de listas de la comunidad) y no a `/me/lists`
   (gestión de sus propias listas)
 
-#### Scenario: El enlace de Comunidad apunta a la superficie pública
+#### Scenario: El enlace de Actividad apunta a la superficie pública
 
 - **WHEN** el usuario activa el enlace "Comunidad" de la barra general
 - **THEN** llega a `/activity` (actividad de la comunidad) y no a `/me/feed` (su feed de
@@ -111,7 +111,7 @@ accesos y títulos de grupo del menú, el selector de locale y el cierre de sesi
   Pendientes, Colección física, Listas y Progreso; el rótulo "Social" seguido de Actividad,
   Artistas seguidos, Seguidores, Seguidos y Solicitudes; y luego Ajustes y Cerrar sesión
 
-#### Scenario: Un solo acceso a Progreso
+#### Scenario: Menú de usuario incluye los recorridos de artista
 
 - **WHEN** un usuario autenticado abre el menú de usuario del Header
 - **THEN** encuentra un único acceso "Progreso" que lleva a `/me/progress`
@@ -189,6 +189,6 @@ accesos y títulos de grupo del menú, el selector de locale y el cierre de sesi
 - **THEN** el Header se muestra colapsado con el botón del panel y la página no tiene
   desplazamiento horizontal
 
-#### Scenario: El menú de usuario incluye Valoraciones
+#### Scenario: El menú de usuario incluye Mis valoraciones
 - **WHEN** un usuario autenticado abre el menú de usuario del Header o el panel móvil
 - **THEN** encuentra el acceso "Valoraciones", después de Diario, que lleva a `/me/ratings`

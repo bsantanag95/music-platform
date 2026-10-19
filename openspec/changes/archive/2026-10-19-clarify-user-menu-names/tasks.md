@@ -39,4 +39,4 @@
 ## 6. Verificación
 
 - [x] 6.1 `pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build` pasan
-- [ ] 6.2 En el navegador (dev server del worktree), en es y en: menú agrupado en escritorio y móvil, `/me/progress` con las tres pestañas, redirecciones, barra general, sección "Para completar" de `/lists`, panel del artista y acciones rápidas
+- [x] 6.2 En el navegador (dev server del worktree), en es y en: menú agrupado en escritorio y móvil, `/me/progress` con las tres pestañas, redirecciones, barra general, sección "Para completar" de `/lists`, panel del artista y acciones rápidas

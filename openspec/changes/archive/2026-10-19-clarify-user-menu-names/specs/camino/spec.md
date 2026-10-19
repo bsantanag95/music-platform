@@ -38,12 +38,12 @@ desde el Header").
 - **THEN** ve las pestañas "Mis listas" y "Listas que sigo" (además de Discografías), nunca ambos
   orígenes en una sola lista ordenable
 
-#### Scenario: Buscador y orden completos en "Mis listas"
+#### Scenario: Buscador y orden completos en "Mis Caminos"
 - **WHEN** el propietario tiene varios Caminos propios y usa el buscador, el orden o el filtro de
   estado en la pestaña "Mis listas"
 - **THEN** ve el subconjunto filtrado/ordenado, sin ida y vuelta al servidor
 
-#### Scenario: "Listas que sigo" sin filtro de estado ni modo de vista
+#### Scenario: "Trackeados" sin filtro de estado ni modo de vista
 - **WHEN** el usuario abre la pestaña "Listas que sigo"
 - **THEN** encuentra buscador y orden, pero no un filtro de estado ni un conmutador de modo de
   visualización
@@ -68,7 +68,7 @@ propio, el mismo que lleva a los recorridos de artista. El sistema SHALL NOT ofr
 superficies un acceso separado a Caminos: la distinción entre discografías y listas vive en las
 pestañas del panel, con nombres que describen su contenido.
 
-#### Scenario: Un acceso, pestañas distinguibles
+#### Scenario: Acceso visible junto al de Recorridos
 - **WHEN** un usuario autenticado abre el menú de usuario del Header y activa "Progreso"
 - **THEN** llega a `/me/progress`, donde Discografías, Mis listas y Listas que sigo son pestañas
   distintas y distinguibles

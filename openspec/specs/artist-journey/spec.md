@@ -312,7 +312,8 @@ recorridos entre usuarios distintos, presente o futura.
 - **THEN** la página no muestra ningún conteo ni comparación de recorridos entre usuarios
 
 ### Requirement: Listado propio de recorridos
-El sistema SHALL exponer una ruta `/me/artist-journeys` que liste todos los recorridos del
+El sistema SHALL listar, en la pestaña **Discografías** del panel unificado `/me/progress`
+(`?tab=discographies`, capability `progress-hub`), todos los recorridos del
 usuario autenticado (en curso, completos y archivados), cada uno con el artista y su estado, sin
 fracción numérica visible en ningún modo — mismo criterio que la faceta de perfil; el modo
 Detallada SHALL poder mostrar progreso discreto sin números (Requirement "Detalle discreto propio
@@ -321,7 +322,9 @@ enlazar a la página de gestión de ese recorrido (`/me/artist-journeys/[artistI
 ofrecer además, agrupadas en su menú de tarjeta (Requirement "Menú de tarjeta del listado"),
 acciones para ver la página del artista correspondiente, archivar/desarchivar, y eliminar ese
 recorrido sin salir del listado (Requirement "Eliminar un recorrido desde el listado propio").
-La ruta SHALL requerir sesión.
+La ruta SHALL requerir sesión. `/me/artist-journeys` SHALL redirigir a esta pestaña. El estado
+vacío SHALL explicar que una discografía se empieza a completar desde la página de un artista
+con "Completar discografía".
 
 Cuando el usuario tiene al menos un recorrido, el sistema SHALL ofrecer un buscador que filtre
 las entradas por nombre de artista (localmente, sin ida y vuelta al servidor), sin distinguir
@@ -342,7 +345,7 @@ principal, menú de tarjeta con el resto, estado) — solo su densidad visual y 
 
 #### Scenario: Listado con recorridos en distintos estados
 - **WHEN** un usuario autenticado con recorridos en curso, completos y archivados abre
-  `/me/artist-journeys`
+  `/me/progress?tab=discographies`
 - **THEN** ve los tres, cada uno con su estado, sin ninguna fracción de progreso
 
 #### Scenario: Entrada enlaza a la gestión del recorrido
@@ -354,12 +357,12 @@ principal, menú de tarjeta con el resto, estado) — solo su densidad visual y 
 - **THEN** encuentra "Ver artista" en el menú de tarjeta de esa entrada
 
 #### Scenario: Listado vacío
-- **WHEN** un usuario sin ningún recorrido abre `/me/artist-journeys`
+- **WHEN** un usuario sin ningún recorrido abre `/me/progress?tab=discographies`
 - **THEN** ve un estado vacío localizado, sin error, sin buscador, sin control de orden, sin
   filtro de estado ni conmutador de modo
 
 #### Scenario: Sin sesión
-- **WHEN** una persona sin sesión abre `/me/artist-journeys`
+- **WHEN** una persona sin sesión abre `/me/progress?tab=discographies`
 - **THEN** es redirigida al inicio de sesión
 
 #### Scenario: Buscar filtra por nombre de artista
@@ -377,7 +380,7 @@ principal, menú de tarjeta con el resto, estado) — solo su densidad visual y 
 #### Scenario: Búsqueda sin coincidencias
 - **WHEN** el texto del buscador no coincide con ningún artista del listado
 - **THEN** el sistema muestra un estado vacío de "sin resultados", distinto del estado vacío de
-  "todavía no armaste ningún recorrido"
+  "todavía no estás completando ninguna discografía"
 
 #### Scenario: Orden por agregado (por defecto)
 - **WHEN** el propietario abre el listado sin haber cambiado el orden
@@ -404,7 +407,7 @@ principal, menú de tarjeta con el resto, estado) — solo su densidad visual y 
   visual
 
 #### Scenario: La preferencia de modo persiste entre visitas
-- **WHEN** el propietario elige un modo de visualización y vuelve a abrir `/me/artist-journeys`
+- **WHEN** el propietario elige un modo de visualización y vuelve a abrir `/me/progress?tab=discographies`
   más tarde en el mismo navegador
 - **THEN** el listado se abre en el modo elegido la vez anterior
 
@@ -423,22 +426,27 @@ principal, menú de tarjeta con el resto, estado) — solo su densidad visual y 
 - **THEN** ve el subconjunto que cumple el estado elegido y la búsqueda, en el orden seleccionado
 
 #### Scenario: El filtro de estado no persiste entre visitas
-- **WHEN** el propietario elige un estado en el filtro y vuelve a abrir `/me/artist-journeys` más
+- **WHEN** el propietario elige un estado en el filtro y vuelve a abrir `/me/progress?tab=discographies` más
   tarde
 - **THEN** el filtro de estado vuelve a "Todo", igual que el buscador y el orden
 
 ### Requirement: Acceso desde el menú de usuario
-El sistema SHALL incluir un acceso a `/me/artist-journeys` en el menú de usuario del Header y en
-el panel de gestión del perfil propio, con el mismo tratamiento visual que el resto de los
-accesos de esas superficies (ver spec `cross-view-navigation`).
+El sistema SHALL alcanzar los recorridos propios desde el único acceso "Progreso"
+(`/me/progress`) del menú de usuario del Header y del panel de gestión del perfil propio, con el
+mismo tratamiento visual que el resto de los accesos de esas superficies (ver spec
+`cross-view-navigation`). El sistema SHALL NOT ofrecer un acceso separado llamado "Recorridos".
 
 #### Scenario: Acceso visible en el menú de usuario
-- **WHEN** un usuario autenticado abre el menú de usuario del Header
-- **THEN** encuentra un acceso a sus recorridos junto al resto de los accesos de gestión
+- **WHEN** un usuario autenticado abre el menú de usuario del Header y activa "Progreso"
+- **THEN** llega a `/me/progress`, con la pestaña Discografías seleccionada
 
 #### Scenario: Acceso visible en el panel de gestión del perfil
 - **WHEN** el dueño de un perfil abre el panel de gestión de su propio perfil
-- **THEN** encuentra el mismo acceso a sus recorridos
+- **THEN** encuentra el mismo acceso "Progreso"
+
+#### Scenario: Redirección desde la ruta anterior
+- **WHEN** un usuario con sesión abre `/me/artist-journeys`
+- **THEN** llega a `/me/progress?tab=discographies`
 
 ### Requirement: Eliminar un recorrido desde el listado propio
 El sistema SHALL permitir al propietario eliminar un recorrido propio directamente desde
