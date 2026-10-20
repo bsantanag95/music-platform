@@ -84,6 +84,14 @@ de cuál de las filas con el mismo título haya en la BD.
 >   interrumpió, limpiar con
 >   `DELETE FROM app_user WHERE username LIKE 'smoke_verify_%';`. Captura el
 >   token de verificación del adaptador `console`; no envía correo real.
+> - `smoke-test-community-activity.ts` crea usuarios `smoke_act_*` y seis álbumes sintéticos (MBID
+>   `5e0ce000-0000-4000-8000-0000000ac0xx`) con valoraciones, comentarios, reseñas y bloqueos, y los borra al terminar
+>   (también si falla; además limpia al empezar los restos de una corrida interrumpida). Si se interrumpió, limpiar con
+>   `DELETE FROM app_user WHERE username LIKE 'smoke_act_%'; DELETE FROM release_group WHERE mbid::text LIKE
+>   '5e0ce000-0000-4000-8000-0000000ac0%';` (el `ON DELETE CASCADE` limpia lo demás). Verifica el riel "Con más
+>   conversación esta semana" (`listTrendingConversations`: umbral de 2 personas distintas, sin contar respuestas,
+>   contenido oculto, cuentas desactivadas ni perfiles privados, bloqueo en ambas direcciones por lector, ventana de 7
+>   días y la lectura sin caché bajo 50 ms) y el filtro `kind` de "Recientes" (`listCommunityActivity`).
 > - `smoke-test-comment-likes.ts` crea un artista sintético (MBID `5e0ce000-0000-4000-8000-0000000007c0`) y
 >   usuarios `smoke_like_*` con sus comentarios y likes, y los borra al terminar (también si falla; el `ON
 >   DELETE CASCADE` limpia comentarios, likes, bloqueos y restricciones). Si se interrumpió, limpiar con

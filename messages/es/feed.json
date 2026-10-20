@@ -44,7 +44,17 @@
       "month": "Este mes",
       "earlier": "Antes"
     },
-    "readReview": "Leer reseña"
+    "readReview": "Leer reseña",
+    "rail": {
+      "label": "Contexto de la comunidad",
+      "conversationTitle": "Con más conversación esta semana",
+      "people": "{count, plural, one {# persona} other {# personas}}",
+      "followTitle": "Sigue a más gente",
+      "followDescription": "Sigue a personas con tus gustos y verás aquí lo que valoran y reseñan.",
+      "joinTitle": "Únete a la comunidad",
+      "joinDescription": "Crea tu cuenta para valorar, reseñar y seguir a otras personas.",
+      "joinAction": "Crear cuenta"
+    }
   },
   "favoriteLabel": "Marcó como favorito",
   "ratingVerb": "Valoró",

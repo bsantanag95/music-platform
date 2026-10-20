@@ -38,22 +38,22 @@
 
 ## 5. Fase 3 · Riel de contexto
 
-- [ ] 5.1 `listTrendingConversations(viewerId)` en `community-activity.ts`: 7 días, ≥ 2 personas distintas, tope 5, visibilidad de Recientes, sin respuestas; caché de 10 minutos de la parte sin bloqueos y filtro de bloqueo por lector (D10)
-- [ ] 5.2 Medir la consulta contra la BD de scratch (presupuesto < 50 ms) y revisar el plan con `EXPLAIN ANALYZE`
-- [ ] 5.3 Componentes `ConversationRail` y `FollowMorePeopleCard` (con sesión y < 3 seguidos → `/users`; anónimo → `/auth/register`)
-- [ ] 5.4 Layout: `main` `max-w-6xl`; desde `lg`, grilla `[minmax(0,1fr)_280px]` con el feed en `max-w-3xl`; por debajo de `lg`, el riel después de la lista
-- [ ] 5.5 Tests unitarios del servicio (umbral, orden, bloqueo, cuenta desactivada, respuestas excluidas) y de los componentes (oculto si está vacío)
-- [ ] 5.6 Smoke test `scripts/smoke-test-community-activity.ts` contra Postgres real: crea usuarios `smoke_act_*` y un álbum sintético `5e0ce000-…`, verifica umbral, ventana, bloqueo y `kind`, y los borra al terminar (también si falla); documentar la limpieza en `AGENTS.md`
+- [x] 5.1 `listTrendingConversations(viewerId)` en `community-activity.ts`: 7 días, ≥ 2 personas distintas, tope 5, visibilidad de Recientes, sin respuestas; caché de 10 minutos de la parte sin bloqueos y filtro de bloqueo por lector (D10)
+- [x] 5.2 Medir la consulta contra la BD de scratch (presupuesto < 50 ms) y revisar el plan con `EXPLAIN ANALYZE` (medido ~5 ms; sin índices por fecha, ver Riesgos del diseño)
+- [x] 5.3 Componente `ActivityContextRail` con los dos módulos: conversación (cifra desde 5) y "Sigue a más gente" (con sesión y < 3 seguidos → `/users`; anónimo → `/auth/register`)
+- [x] 5.4 Layout: `main` `max-w-6xl`; desde `lg`, grilla `[minmax(0,1fr)_280px]` con el feed en `max-w-3xl`; por debajo de `lg`, el riel después de la lista
+- [x] 5.5 Tests unitarios del servicio (umbral, orden, bloqueo, cuenta desactivada, respuestas excluidas) y de los componentes (oculto si está vacío)
+- [x] 5.6 Smoke test `scripts/smoke-test-community-activity.ts` contra Postgres real: crea usuarios `smoke_act_*` y un álbum sintético `5e0ce000-…`, verifica umbral, ventana, bloqueo y `kind`, y los borra al terminar (también si falla); documentar la limpieza en `AGENTS.md`
 
 ## 6. Documentación
 
 - [x] 6.1 `docs/04-api/contracts.md`: documentar `GET /api/activity/recent` (hoy ausente) con `page`, `pageSize` y `kind`, y su `400`
-- [ ] 6.2 `docs/05-features/activity-feed.md`: actualizar la sección de la superficie pública (pestañas en la URL, filtros, bloques, riel)
-- [ ] 6.3 `docs/01-domain/business-rules.md`: regla del riel (2 personas, 7 días, tope 5, sin relleno)
+- [x] 6.2 `docs/05-features/activity-feed.md`: actualizar la sección de la superficie pública (pestañas en la URL, filtros, bloques, riel)
+- [x] 6.3 `docs/01-domain/business-rules.md`: regla del riel (2 personas, 7 días, tope 5, sin relleno)
 - [ ] 6.4 Al archivar: actualizar el `## Purpose` de `openspec/specs/community-activity/spec.md` con las etiquetas nuevas
 
 ## 7. Verificación
 
-- [ ] 7.1 `pnpm run typecheck && pnpm run lint && pnpm test && pnpm run build`
-- [ ] 7.2 Navegador a 375px y 1366px, con y sin sesión: las tres pestañas son alcanzables, sin "·" colgando, la URL conserva la pestaña y el filtro, los estados vacíos llevan su acción, el riel aparece y se oculta según corresponda
-- [ ] 7.3 Regresión visual de `/me/feed` e Inicio tras las correcciones globales (metadatos, nota en `self`, disco de reemplazo)
+- [x] 7.1 `pnpm run typecheck && pnpm run lint && pnpm test && pnpm run build`
+- [x] 7.2 Navegador a 375px y 1366px, con y sin sesión: las tres pestañas son alcanzables, sin "·" colgando, la URL conserva la pestaña y el filtro, los estados vacíos llevan su acción, el riel aparece y se oculta según corresponda
+- [x] 7.3 Regresión visual de `/me/feed` e Inicio tras las correcciones globales (metadatos, nota en `self`, disco de reemplazo)

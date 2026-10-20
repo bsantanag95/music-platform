@@ -44,7 +44,17 @@
       "month": "This month",
       "earlier": "Earlier"
     },
-    "readReview": "Read review"
+    "readReview": "Read review",
+    "rail": {
+      "label": "Community context",
+      "conversationTitle": "Most talked about this week",
+      "people": "{count, plural, one {# person} other {# people}}",
+      "followTitle": "Follow more people",
+      "followDescription": "Follow people who share your taste and you will see what they rate and review here.",
+      "joinTitle": "Join the community",
+      "joinDescription": "Create an account to rate, review and follow other people.",
+      "joinAction": "Create account"
+    }
   },
   "favoriteLabel": "Added a favorite",
   "ratingVerb": "Rated",

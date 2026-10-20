@@ -8,6 +8,8 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CommunityActivitySection } from "@/components/activity/CommunityActivitySection";
 import { ActivityTabs } from "@/components/activity/ActivityTabs";
+import { ActivityContextRail } from "@/components/activity/ActivityContextRail";
+import { listTrendingConversations } from "@/services/activity/trending-conversations";
 import { kindFromParam, tabFromParam, type ActivitySource } from "@/components/activity/activity-tab-param";
 import type { CommunityActivityKind } from "@/lib/api/schemas";
 
@@ -37,12 +39,11 @@ export default async function CommunityActivityPage({ searchParams }: { searchPa
   const kind = kindFromParam(active, typeof kindParam === "string" ? kindParam : null);
 
   // Solo la pestaña activa trae su primera página completa; de las otras basta saber si tienen algo (una entrada)
-  // para decidir el estado vacío global. Antes se pedían las tres páginas aunque nunca se abrieran.
-  // El filtro solo se aplica a la página completa de la pestaña activa. Para saber si las otras tienen algo (estado
-  // vacío global) se piden sin filtro.
+  // para decidir el estado vacío global. Antes se pedían las tres páginas aunque nunca se abrieran. El filtro solo se
+  // aplica a la página completa de la pestaña activa: las otras se piden sin filtro.
   const sizeFor = (source: ActivitySource) => (source === active ? PAGE_SIZE : 1);
   const kindFor = (source: ActivitySource) => (source === active ? kind : undefined);
-  const [recent, fromFollowing, own, followedAuthors] = await Promise.all([
+  const [recent, fromFollowing, own, followedAuthors, conversations] = await Promise.all([
     listCommunityActivity(viewerId, 1, sizeFor("recent"), {
       kind: kindFor("recent") as CommunityActivityKind | undefined,
     }),
@@ -51,6 +52,7 @@ export default async function CommunityActivityPage({ searchParams }: { searchPa
       : Promise.resolve(null),
     viewerId ? listMyRecentActivity(viewerId, 1, sizeFor("own")) : Promise.resolve(null),
     viewerId ? listFeedAuthors(viewerId) : Promise.resolve(null),
+    listTrendingConversations(viewerId),
   ]);
 
   // Con un filtro activo la pestaña puede venir vacía aunque haya actividad: no es el caso de "nada que mostrar", el
@@ -67,68 +69,77 @@ export default async function CommunityActivityPage({ searchParams }: { searchPa
   const explore = { label: t("community.empty.exploreAction"), href: "/explore" };
   const discover = { label: t("community.empty.discoverAction"), href: "/users" };
 
+  // Riel de contexto (fase 3, D10): desde `lg` a la derecha del feed, que conserva su ancho de lectura (`max-w-3xl`);
+  // por debajo, después de la lista.
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col items-start gap-6 px-4 py-8 sm:gap-8 sm:py-12">
+    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col items-start gap-6 px-4 py-8 sm:gap-8 sm:py-12">
       <Breadcrumbs items={[{ label: tCommon("home"), href: "/" }, { label: t("community.heading") }]} />
       <header className="-mt-2 flex flex-col gap-1 sm:-mt-4">
         <h1 className="font-display text-3xl text-paper">{t("community.heading")}</h1>
         <p className="font-body text-sm text-paper-muted">{t("community.subtitle")}</p>
       </header>
 
-      {!anySection ? (
-        <EmptyState title={t("community.emptyTitle")} description={t("community.emptyDescription")} />
-      ) : fromFollowing && own ? (
-        <ActivityTabs
-          tablistLabel={t("community.tablistLabel")}
-          tabs={[
-            {
-              key: "recent",
-              label: t("community.recentHeading"),
-              initial: active === "recent" ? recent : undefined,
-              initialKind: active === "recent" ? kind : undefined,
-              empty: {
-                title: t("community.empty.recentTitle"),
-                description: t("community.empty.recentDescription"),
-                action: explore,
-              },
-            },
-            {
-              key: "from-following",
-              label: t("community.followingHeading"),
-              initial: active === "from-following" ? fromFollowing : undefined,
-              initialKind: active === "from-following" ? kind : undefined,
-              empty: followsAnyone
-                ? {
-                    title: t("community.empty.followingQuietTitle"),
-                    description: t("community.empty.followingQuietDescription"),
-                    action: discover,
-                  }
-                : {
-                    title: t("community.empty.followingNoneTitle"),
-                    description: t("community.empty.followingNoneDescription"),
-                    action: discover,
+      <div className="grid w-full grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-12">
+        <div className="w-full min-w-0 max-w-3xl">
+          {!anySection ? (
+            <EmptyState title={t("community.emptyTitle")} description={t("community.emptyDescription")} />
+          ) : fromFollowing && own ? (
+            <ActivityTabs
+              tablistLabel={t("community.tablistLabel")}
+              tabs={[
+                {
+                  key: "recent",
+                  label: t("community.recentHeading"),
+                  initial: active === "recent" ? recent : undefined,
+                  initialKind: active === "recent" ? kind : undefined,
+                  empty: {
+                    title: t("community.empty.recentTitle"),
+                    description: t("community.empty.recentDescription"),
+                    action: explore,
                   },
-            },
-            {
-              key: "own",
-              label: t("community.ownHeading"),
-              initial: active === "own" ? own : undefined,
-              empty: {
-                title: t("community.empty.ownTitle"),
-                description: t("community.empty.ownDescription"),
-                action: explore,
-              },
-            },
-          ]}
-        />
-      ) : recent.entries.length > 0 || kind ? (
-        <CommunityActivitySection
-          source="recent"
-          headingKey="community.recentHeading"
-          initial={recent}
-          initialKind={kind}
-        />
-      ) : null}
+                },
+                {
+                  key: "from-following",
+                  label: t("community.followingHeading"),
+                  initial: active === "from-following" ? fromFollowing : undefined,
+                  initialKind: active === "from-following" ? kind : undefined,
+                  empty: followsAnyone
+                    ? {
+                        title: t("community.empty.followingQuietTitle"),
+                        description: t("community.empty.followingQuietDescription"),
+                        action: discover,
+                      }
+                    : {
+                        title: t("community.empty.followingNoneTitle"),
+                        description: t("community.empty.followingNoneDescription"),
+                        action: discover,
+                      },
+                },
+                {
+                  key: "own",
+                  label: t("community.ownHeading"),
+                  initial: active === "own" ? own : undefined,
+                  empty: {
+                    title: t("community.empty.ownTitle"),
+                    description: t("community.empty.ownDescription"),
+                    action: explore,
+                  },
+                },
+              ]}
+            />
+          ) : recent.entries.length > 0 || kind ? (
+            <CommunityActivitySection
+              source="recent"
+              headingKey="community.recentHeading"
+              initial={recent}
+              initialKind={kind}
+            />
+          ) : null}
+        </div>
+        <div className="lg:sticky lg:top-24 lg:self-start">
+          <ActivityContextRail conversations={conversations} followingCount={followedAuthors?.length ?? null} />
+        </div>
+      </div>
     </main>
   );
 }

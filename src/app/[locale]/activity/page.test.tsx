@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   listFeed: vi.fn(),
   listMyRecentActivity: vi.fn(),
   listFeedAuthors: vi.fn(),
+  listTrendingConversations: vi.fn(),
 }));
 
 vi.mock("next-intl/server", () => ({
@@ -22,6 +23,14 @@ vi.mock("@/services/activity/community-activity", () => ({
 }));
 vi.mock("@/services/feed/feed", () => ({ listFeed: mocks.listFeed, listFeedAuthors: mocks.listFeedAuthors }));
 vi.mock("@/services/home/home", () => ({ listMyRecentActivity: mocks.listMyRecentActivity }));
+vi.mock("@/services/activity/trending-conversations", () => ({
+  listTrendingConversations: mocks.listTrendingConversations,
+}));
+vi.mock("@/components/activity/ActivityContextRail", () => ({
+  ActivityContextRail: ({ followingCount }: { followingCount: number | null }) => (
+    <div data-testid="rail">{String(followingCount)}</div>
+  ),
+}));
 vi.mock("@/components/activity/CommunityActivitySection", () => ({
   CommunityActivitySection: ({ headingKey }: { headingKey: string }) => (
     <div data-testid="section">{headingKey}</div>
@@ -54,6 +63,7 @@ describe("/activity", () => {
     mocks.listFeed.mockResolvedValue(page([]));
     mocks.listMyRecentActivity.mockResolvedValue(page([]));
     mocks.listFeedAuthors.mockResolvedValue([]);
+    mocks.listTrendingConversations.mockResolvedValue([]);
   });
 
   it("con sesión y contenido en alguna fuente, muestra las tres pestañas", async () => {
@@ -166,5 +176,25 @@ describe("/activity", () => {
 
     expect(screen.getByText("community.emptyTitle")).toBeInTheDocument();
     expect(screen.queryByTestId("tabs")).not.toBeInTheDocument();
+  });
+
+  it("muestra el riel con la cantidad de seguidos, o null sin sesión", async () => {
+    mocks.resolveSession.mockResolvedValue({ user: { id: "u1" } });
+    mocks.listCommunityActivity.mockResolvedValue(page([entry]));
+    mocks.listFeedAuthors.mockResolvedValue([{ id: "u2", username: "bea", displayName: null }]);
+
+    await renderPage();
+
+    expect(mocks.listTrendingConversations).toHaveBeenCalledWith("u1");
+    expect(screen.getByTestId("rail")).toHaveTextContent("1");
+  });
+
+  it("sin sesión el riel recibe followingCount null", async () => {
+    mocks.resolveSession.mockResolvedValue(null);
+    mocks.listCommunityActivity.mockResolvedValue(page([entry]));
+
+    await renderPage();
+
+    expect(screen.getByTestId("rail")).toHaveTextContent("null");
   });
 });

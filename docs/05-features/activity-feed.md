@@ -465,6 +465,14 @@ días). Cada fila conserva su fecha relativa. `reviewCard` presenta la reseña c
 estrellas (si viene fusionada con su valoración), titular, extracto a 4 líneas y "Leer reseña" hacia su
 página. `/me/feed` e Inicio conservan la cita con borde petróleo.
 
+**Riel de contexto** (fase 3, `ActivityContextRail`): desde `lg`, una columna de 280px a la derecha del feed, que conserva
+su ancho de lectura; por debajo, después de la lista. Tiene dos módulos y cada uno se oculta si no tiene nada:
+- **"Con más conversación esta semana"** (`listTrendingConversations`, `services/activity/trending-conversations.ts`): reglas en
+  `docs/01-domain/business-rules.md` ("Conversación de la semana"). Los candidatos sin el filtro del lector se cachean 10 minutos
+  en memoria y el bloqueo se resta por lector.
+- **"Sigue a más gente"**: con sesión, solo si sigue a menos de 3 personas (→ `/users`); sin sesión, invita a crear una
+  cuenta.
+
 **Línea de metadato** (corrección compartida con `/me/feed` e Inicio): autor, verbo con su ícono,
 audiencia y tema son unidades indivisibles (`MetaUnit`), con el separador " · " al inicio de cada
 unidad, así ninguna línea termina en "·" ni separa el ícono de su verbo. Desde `sm` la fecha va en

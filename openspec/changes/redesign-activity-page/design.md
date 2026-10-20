@@ -152,14 +152,20 @@ La copia en español va en tuteo y se retira el voseo ("acá", "seguís") de `fe
   dirección con el lector y sin contenido moderado. Ordena por personas distintas y, a igualdad, por la
   actividad más reciente. Devuelve como máximo 5, con carátula y el recuento de personas. Las respuestas
   no cuentan, igual que en el feed.
-- **Caché**: la parte sin bloqueos se cachea en memoria 10 minutos (como `listFamilyGenres`). El filtro
-  de bloqueo del lector se aplica sobre ese resultado. Si tras filtrar quedan menos de 5, no se completa
-  con otros álbumes: el riel muestra lo que queda o se oculta si queda vacío.
+- **Caché**: la parte sin bloqueos (hasta 20 candidatos con sus participantes) se cachea en memoria 10
+  minutos con `createTtlCache` (como `listFamilyGenres`). El filtro de bloqueo del lector se aplica sobre ese
+  resultado. Si tras filtrar quedan menos de 5, no se completa con otros álbumes: el riel muestra lo que
+  queda o se oculta si queda vacío. El fin de la ventana es el `now` de la llamada que dispara la lectura
+  (`windowEnd`), no `Date.now()` dentro de `load`, para que las pruebas y el smoke puedan moverla.
+- **Lectura**: tres consultas de drizzle (una por fuente, en la ventana y con la visibilidad de Recientes
+  más `moderation_status = 'visible'`), agregadas en memoria por álbum y persona. Los detalles del álbum
+  se piden solo para los candidatos.
 - **"Sigue a más gente"**: aparece con sesión cuando la persona sigue a menos de 3 usuarios (el recuento
   de D9) y enlaza a `/users`. Sin sesión, la tarjeta invita a crear una cuenta (`/auth/register`). No hay
   sugerencias personalizadas.
 - **Por qué no es "popularidad fabricada"**: la métrica son personas reales en una ventana declarada, y
-  el umbral de 2 evita destacar a una sola persona. El texto lo dice explícitamente ("3 personas").
+  el umbral de 2 evita destacar a una sola persona. La cifra ("5 personas") se muestra solo desde 5, como
+  en Popularidad de Explorar: un número chico puede delatar quiénes son.
 
 ### D11. Contraste del disco de reemplazo (corrección global)
 
@@ -173,8 +179,11 @@ el disco se distinga del fondo de la página (contraste no textual ≥ 3:1, WCAG
 - [Las correcciones globales de D5, D6 y D11 cambian `/me/feed` e Inicio] → Están acotadas a errores, y
   hay que ajustar los tests existentes de `FeedActivityList` y `CompactActivityRow`. Se verifican en el
   navegador las tres superficies.
-- [El riel cuesta una consulta extra por visita] → Ventana de 7 días sobre índices por `created_at`,
-  caché de 10 minutos y presupuesto de < 50 ms medido contra la BD de scratch.
+- [El riel cuesta una consulta extra por visita] → Caché de 10 minutos: a lo sumo una lectura por instancia
+  cada 10 minutos. En la BD de scratch, la lectura sin caché tarda ~5 ms con la conexión abierta. No hay
+  índices por fecha en `rating`, `comment` ni `review` (tampoco los usa "Recientes"), así que con volumen
+  real las tres consultas recorren las tablas completas. Si el tiempo crece, el siguiente paso es un
+  índice parcial por fecha en una migración nueva.
 - [Con catálogos chicos el riel puede quedar vacío casi siempre] → Se oculta si está vacío, sin
   rellenar con otros álbumes.
 - [Con `replaceState`, la URL y el estado del cliente pueden desincronizarse si otro código navega] →

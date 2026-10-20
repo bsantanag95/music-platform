@@ -281,17 +281,23 @@ SHALL mostrarse después de la lista. El riel SHALL contener:
   que, en los últimos 7 días, los valoraron, comentaron (sin contar respuestas) o reseñaron,
   aplicando las mismas reglas de visibilidad que "Recientes" (perfil público, cuenta activa,
   contenido no moderado, sin bloqueo con el lector). Se ordenan por personas distintas, y a
-  igualdad por la actividad más reciente. Cada álbum SHALL mostrar su carátula, su título, su
-  artista y la cantidad de personas. Si no hay ningún álbum que cumpla el umbral, el módulo
-  SHALL NOT mostrarse y SHALL NOT completarse con otros álbumes.
+  igualdad por la actividad más reciente. Cada álbum SHALL mostrar su carátula, su título y su
+  artista; la cantidad de personas SHALL mostrarse solo desde 5, como en el resto de las cifras
+  de comunidad. Si no hay ningún álbum que cumpla el umbral, el módulo SHALL NOT mostrarse y
+  SHALL NOT completarse con otros álbumes.
 - **"Sigue a más gente"**: con sesión, solo cuando la persona sigue a menos de 3 usuarios,
   con un enlace a `/users`; sin sesión, con una invitación a crear una cuenta.
 
 #### Scenario: Álbum con conversación
 
-- **WHEN** tres personas con perfil público valoraron o reseñaron el mismo álbum en los
+- **WHEN** cinco personas con perfil público valoraron o reseñaron el mismo álbum en los
   últimos 7 días
-- **THEN** el álbum aparece en "Con más conversación esta semana" con "3 personas"
+- **THEN** el álbum aparece en "Con más conversación esta semana" con "5 personas"
+
+#### Scenario: Cifra chica sin mostrar
+
+- **WHEN** tres personas valoraron el mismo álbum en los últimos 7 días
+- **THEN** el álbum aparece en el riel, pero sin la cantidad de personas
 
 #### Scenario: Una sola persona no alcanza
 
