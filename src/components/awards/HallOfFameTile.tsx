@@ -21,7 +21,8 @@ const WIDE_COVERS = 8;
 /** Hasta cuántos salones la grilla usa tarjetas anchas (dos por fila). */
 export const WIDE_TILES_MAX = 2;
 
-function coverUrl(nomination: NominationView): string | null {
+/** URL de la carátula de una incorporación (la del disco, o la de su disco ancla), si la tiene. */
+export function coverUrl(nomination: NominationView): string | null {
   const subject = nomination.subject;
   if (subject?.kind === "release_group") return subject.album.cover.coverThumbUrl;
   if (subject?.kind === "recording" && subject.anchor) return subject.anchor.cover.coverThumbUrl;

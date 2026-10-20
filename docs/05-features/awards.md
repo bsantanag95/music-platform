@@ -29,8 +29,10 @@ como texto (13 no son música; las demás son grabaciones históricas que MusicB
 
 - **Una clase no es una ceremonia de ganadores:** no tiene número de edición (`edition` nulo), se presenta como "Clase de
   2026" con "Fecha de la clase" (la gala existe desde 2024; las clases 2020 y 2021 solo tienen la fecha del anuncio, que puede
-  ser del año anterior: la clase 2021 se anunció el 21-dic-2020), rotula "Ingresó" en lugar de "Ganador" y no ofrece historia
-  de la categoría.
+  ser del año anterior: la clase 2021 se anunció el 21-dic-2020), no ofrece historia de la categoría. Desde
+  `polish-hall-of-fame-class` la página muestra las incorporaciones como muro de carátulas (portada tipográfica si no hay) sin rotular
+  cada una (antes "Ingresó" en ámbar en todas), el disco de una canción solo si se llama distinto de ella, y una cabecera con el nombre
+  del salón como línea normal, fondo teñido, mosaico de cuatro carátulas y la cantidad por categoría enlazada a cada sección.
 - **No cuenta como premio ganado:** no aparece en las tarjetas de Premios, "Ganadores recientes", "Los más premiados", "Tu
   relación…", los puntajes que ordenan el catálogo ni la plantilla de colección `grammy-winners` (`competitionNominations`,
   `allCeremonies(kind)`).

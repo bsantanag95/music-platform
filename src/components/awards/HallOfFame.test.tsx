@@ -90,9 +90,9 @@ describe("HallOfFameClassView", () => {
     expect(screen.getByRole("link", { name: "Fuente: grammy.com" })).toHaveAttribute("href", page.sourceUrl);
   });
 
-  it("rotula «Ingresó» a cada incorporación, no «Ganador», y no muestra nominados ni historia de la categoría", () => {
+  it("no rotula cada incorporación (todas ingresaron) ni muestra nominados ni historia de la categoría", () => {
     renderWithIntl(<HallOfFameClassView page={page} awardName="Salón de la Fama de los Grammy" />);
-    expect(screen.getAllByText("Ingresó")).toHaveLength(3);
+    expect(screen.queryByText("Ingresó")).not.toBeInTheDocument();
     expect(screen.queryByText("Ganador")).not.toBeInTheDocument();
     expect(screen.queryByText(/Nominados/)).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Historial|Historia de la categoría/ })).not.toBeInTheDocument();
@@ -105,6 +105,27 @@ describe("HallOfFameClassView", () => {
     expect(within(albums).getByRole("link", { name: "OK Computer" }).getAttribute("href")).toMatch(/^\/album\//);
     const songs = screen.getByRole("heading", { level: 2, name: /Canciones/ }).closest("section")!;
     expect(within(songs).getByRole("link", { name: "Trouble in Mind" }).getAttribute("href")).toMatch(/^\/song\//);
+  });
+
+  it("la cabecera lleva el nombre del salón como línea normal y enlaza a cada categoría con su cantidad", () => {
+    renderWithIntl(<HallOfFameClassView page={page} awardName="Salón de la Fama de los Grammy" />);
+    const header = screen.getByRole("banner");
+    expect(within(header).getByText("Salón de la Fama de los Grammy").className).not.toMatch(/amber|uppercase/);
+    const jump = within(header).getByRole("navigation", { name: "En esta página" });
+    expect(within(jump).getAllByRole("link").map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
+      ["Álbumes2", "#categoria-albums"],
+      ["Canciones1", "#categoria-songs"],
+    ]);
+  });
+
+  it("no repite «del disco» cuando el disco se llama como la canción", () => {
+    const same = song("s2", "Cocktails for Two", "Spike Jones");
+    if (same.subject?.kind === "recording" && same.subject.anchor) same.subject.anchor = { ...same.subject.anchor, title: "Cocktails For Two" };
+    const songs = page.categories[1]!;
+    const withSame = { ...page, categories: [page.categories[0]!, { ...songs, nominations: [...songs.nominations, same] }] };
+    renderWithIntl(<HallOfFameClassView page={withSame} awardName="Salón de la Fama de los Grammy" />);
+    expect(screen.getByText("del disco Trouble in Mind (single)")).toBeInTheDocument();
+    expect(screen.queryByText(/del disco Cocktails/)).not.toBeInTheDocument();
   });
 
   it("la miga lleva «Salón de la Fama» (no «Premios») y enlaza al índice y al salón", () => {

@@ -92,7 +92,6 @@
   "hall": {
     "classTitle": "Class of {year}",
     "classFull": "{award} · Class of {year}",
-    "inducted": "Inducted",
     "date": "Class date: {date}",
     "recordingCount": "{count, plural, one {# recording} other {# recordings}}",
     "classYearRow": "Class",

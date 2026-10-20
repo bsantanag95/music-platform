@@ -92,7 +92,6 @@
   "hall": {
     "classTitle": "Clase de {year}",
     "classFull": "{award} · Clase de {year}",
-    "inducted": "Ingresó",
     "date": "Fecha de la clase: {date}",
     "recordingCount": "{count, plural, one {# grabación} other {# grabaciones}}",
     "classYearRow": "Clase",
