@@ -1,5 +1,16 @@
 {
-  "description": "Impeccable design detector: immediate-tier checks after Edit/Write on UI files, full-rule deep pass on Stop.",
+  "permissions": {
+    "allow": [
+      "Bash(openspec archive *)",
+      "Bash(openspec validate *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git reset *)",
+      "Bash(git restore *)",
+      "Bash(git worktree *)",
+      "Bash(cd /c/Users/besan/.claude/projects/C--Users-besan-Documents-Proyectos-music-platform/memory && printf '%s\\\\n' '- [four-music-awards]\\(four-music-awards.md\\) — change add-four-music-awards \\(2026-10-18\\): Mercury/Brit/Latin Grammy/Lo Nuestro + hub; ARCHIVED + merged + pushed \\(8b749f35\\); 0073 + load pending on real DB' >> MEMORY.md; tail -2 MEMORY.md | cut -c1-120)"
+    ]
+  },
   "hooks": {
     "PostToolUse": [
       {
@@ -26,5 +37,6 @@
         ]
       }
     ]
-  }
+  },
+  "description": "Impeccable design detector: immediate-tier checks after Edit/Write on UI files, full-rule deep pass on Stop."
 }
