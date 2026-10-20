@@ -1,9 +1,31 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { AnchorHTMLAttributes, ReactElement, ReactNode } from "react";
+import { useSyncExternalStore, type AnchorHTMLAttributes, type ReactElement, type ReactNode } from "react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { CommunityActivitySection } from "./CommunityActivitySection";
+
+// `useSearchParams` sobre un store mínimo que `history.replaceState` actualiza, como hace Next 15.
+const urlStore = vi.hoisted(() => {
+  let search = "";
+  const listeners = new Set<() => void>();
+  return {
+    get: () => search,
+    set: (next: string) => {
+      search = next;
+      listeners.forEach((listener) => listener());
+    },
+    subscribe: (listener: () => void) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+  };
+});
+
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => new URLSearchParams(useSyncExternalStore(urlStore.subscribe, urlStore.get, urlStore.get)),
+}));
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({
@@ -47,6 +69,17 @@ function render(ui: ReactElement) {
 }
 
 describe("CommunityActivitySection", () => {
+  beforeEach(() => {
+    urlStore.set("");
+    vi.spyOn(window.history, "replaceState").mockImplementation((_data, _unused, url) => {
+      urlStore.set(new URL(String(url), "http://localhost").search.replace(/^\?/, ""));
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("'Siguiendo' pasa clamp y variant=feed a FeedActivityList, igual que /me/feed", () => {
     render(
       <CommunityActivitySection source="from-following" initial={{ entries: [entry], page: 1, pageSize: 20, hasNext: false }} />,
@@ -116,5 +149,77 @@ describe("CommunityActivitySection", () => {
     expect(screen.getByRole("status")).toBeInTheDocument();
     expect(await screen.findByTestId("feed-activity-list")).toBeInTheDocument();
     expect(getRecentActivity).toHaveBeenCalledWith(1, 10);
+  });
+
+  describe("filtros por tipo (redesign-activity-page, fase 2)", () => {
+    const one = { entries: [entry], page: 1, pageSize: 10, hasNext: false };
+
+    it("'Recientes' ofrece Todo, Reseñas, Comentarios y Valoraciones, con Todo seleccionado", () => {
+      render(<CommunityActivitySection source="recent" initial={one} />);
+
+      const group = screen.getByRole("group", { name: "Filtrar por tipo" });
+      const chips = [...group.querySelectorAll("button")];
+      expect(chips.map((chip) => chip.textContent)).toEqual(["Todo", "Reseñas", "Comentarios", "Valoraciones"]);
+      expect(screen.getByRole("button", { name: "Todo" })).toHaveAttribute("aria-pressed", "true");
+    });
+
+    it("'Siguiendo' suma Escuchas y Listas; 'Tú' no muestra chips", () => {
+      const { unmount } = render(<CommunityActivitySection source="from-following" initial={one} />);
+      expect(screen.getByRole("button", { name: "Escuchas" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Listas" })).toBeInTheDocument();
+      unmount();
+
+      render(<CommunityActivitySection source="own" initial={one} />);
+      expect(screen.queryByRole("group", { name: "Filtrar por tipo" })).not.toBeInTheDocument();
+    });
+
+    it("elegir un chip lo escribe en ?kind= y pide la página 1 filtrada", async () => {
+      const { getCommunityActivity } = await import("@/lib/api/diary");
+      const user = userEvent.setup();
+      render(<CommunityActivitySection source="recent" initial={one} />);
+
+      await user.click(screen.getByRole("button", { name: "Reseñas" }));
+
+      expect(urlStore.get()).toBe("kind=review");
+      expect(screen.getByRole("button", { name: "Reseñas" })).toHaveAttribute("aria-pressed", "true");
+      expect(getCommunityActivity).toHaveBeenCalledWith(1, 10, { kind: "review" });
+    });
+
+    it("la página del servidor no se usa para otro filtro", () => {
+      urlStore.set("kind=comment");
+      render(<CommunityActivitySection source="recent" initial={one} />);
+
+      // `initial` vino sin filtro: con ?kind=comment se espera la página filtrada, no se muestra la otra.
+      expect(screen.getByRole("status")).toBeInTheDocument();
+      expect(screen.queryByTestId("feed-activity-list")).not.toBeInTheDocument();
+    });
+
+    it("un filtro sin resultados ofrece 'Ver todo', que quita el filtro", async () => {
+      urlStore.set("kind=comment");
+      const user = userEvent.setup();
+      render(
+        <CommunityActivitySection
+          source="recent"
+          initial={{ entries: [], page: 1, pageSize: 10, hasNext: false }}
+          initialKind="comment"
+        />,
+      );
+
+      expect(screen.getByRole("heading", { name: "Nada de este tipo por ahora" })).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: "Ver todo" }));
+
+      // Sin filtro vuelve a pedir la página 1 completa de la fuente.
+      expect(urlStore.get()).toBe("");
+      const { getCommunityActivity } = await import("@/lib/api/diary");
+      expect(getCommunityActivity).toHaveBeenCalledWith(1, 10, {});
+    });
+
+    it("un kind que no aplica a la pestaña se ignora", () => {
+      urlStore.set("kind=listen");
+      render(<CommunityActivitySection source="recent" initial={one} />);
+
+      expect(screen.getByRole("button", { name: "Todo" })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByTestId("feed-activity-list")).toBeInTheDocument();
+    });
   });
 });

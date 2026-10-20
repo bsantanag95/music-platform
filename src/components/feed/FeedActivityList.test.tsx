@@ -888,4 +888,62 @@ describe("FeedActivityList", () => {
       expect(unit?.textContent).toContain("Reseñó");
     });
   });
+
+  describe("bloques de fecha y tarjeta de reseña (redesign-activity-page, fase 2)", () => {
+    it("con dateSections intercala el encabezado del bloque, fuera de los elementos de la lista", () => {
+      renderWithIntl(<FeedActivityList entries={[comment(), rating()]} dateSections />);
+
+      const heading = screen.getByRole("heading", { level: 3, name: "Antes" });
+      expect(heading.closest("li")).toHaveAttribute("role", "presentation");
+      // Las dos entradas de agosto caen en el mismo bloque: un solo encabezado.
+      expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(1);
+    });
+
+    it("sin dateSections no hay encabezados (/me/feed e Inicio)", () => {
+      renderWithIntl(<FeedActivityList entries={[comment(), rating()]} />);
+
+      expect(screen.queryByRole("heading", { level: 3 })).not.toBeInTheDocument();
+    });
+
+    it("con reviewCard la reseña es una tarjeta con titular, extracto plegado y 'Leer reseña'", () => {
+      renderWithIntl(<FeedActivityList entries={[review()]} reviewCard />);
+
+      expect(screen.getByText("Un disco para volver")).toBeInTheDocument();
+      expect(screen.getByText(/La producción respira/)).toHaveClass("line-clamp-4");
+      expect(screen.getByRole("link", { name: "Leer reseña" }).getAttribute("href")).toMatch(/^\/review\/.*rev1/);
+    });
+
+    it("en una opinión fusionada, las estrellas van dentro de la tarjeta de la reseña", () => {
+      const { container } = renderWithIntl(
+        <FeedActivityList
+          entries={[
+            review({ createdAt: "2026-08-04T00:00:01Z", target: { ...ratingTarget() } }),
+            rating(),
+          ]}
+          reviewCard
+        />,
+      );
+
+      const card = screen.getByRole("link", { name: "Leer reseña" }).parentElement!;
+      expect(card).toHaveTextContent("87/100");
+      expect(container.querySelectorAll("li")).toHaveLength(1);
+    });
+
+    it("sin reviewCard la reseña conserva la cita con borde petróleo", () => {
+      const { container } = renderWithIntl(<FeedActivityList entries={[review()]} />);
+
+      expect(screen.queryByRole("link", { name: "Leer reseña" })).not.toBeInTheDocument();
+      expect(container.querySelector("p.border-petrol")).not.toBeNull();
+    });
+  });
 });
+
+function ratingTarget() {
+  return {
+    type: "release-group" as const,
+    id: "rg3",
+    title: "In Rainbows",
+    artistName: "Radiohead",
+    coverThumbUrl: null,
+  };
+}

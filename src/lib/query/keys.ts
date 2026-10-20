@@ -4,7 +4,7 @@ import type { FavoritesFiltersParams } from "@/lib/api/favorites";
 import type { MyRatingsFiltersParams } from "@/lib/api/ratings";
 import type { CollectionQuery } from "@/lib/api/collection";
 import type { WantedQuery } from "@/lib/api/wanted";
-import type { ListTarget } from "@/lib/api/schemas";
+import type { CommunityActivityKind, ListTarget } from "@/lib/api/schemas";
 
 // Query keys centralizadas — evita strings mágicos repetidos en cada
 // componente que use useQuery/useMutation con TanStack Query.
@@ -36,7 +36,8 @@ export const queryKeys = {
   popularLists: () => ["lists", "popular"] as const,
   listsFromFollowing: () => ["lists", "fromFollowing"] as const,
   listsContainingItem: (target: ListTarget) => ["lists", "containing", target.type, target.id] as const,
-  activityRecent: () => ["activity", "recent"] as const,
+  // El filtro de tipo es parte de la key (redesign-activity-page, D3); Inicio pide `activityRecent()` sin filtro.
+  activityRecent: (filters: { kind?: CommunityActivityKind } = {}) => ["activity", "recent", filters] as const,
   activityOwn: () => ["activity", "own"] as const,
   myFavorites: (filters: FavoritesFiltersParams) => ["favorites", "mine", filters] as const,
   myRatings: (filters: MyRatingsFiltersParams) => ["ratings", "mine", filters] as const,

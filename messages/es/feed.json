@@ -23,7 +23,28 @@
       "ownDescription": "Valora, reseña o registra una escucha y aparecerá aquí.",
       "exploreAction": "Explorar música",
       "discoverAction": "Descubrir personas"
-    }
+    },
+    "filterLabel": "Filtrar por tipo",
+    "chips": {
+      "all": "Todo",
+      "review": "Reseñas",
+      "comment": "Comentarios",
+      "rating": "Valoraciones",
+      "listen": "Escuchas",
+      "list": "Listas"
+    },
+    "emptyFiltered": {
+      "title": "Nada de este tipo por ahora",
+      "description": "Prueba con otro tipo o vuelve a ver toda la actividad.",
+      "action": "Ver todo"
+    },
+    "dateSection": {
+      "today": "Hoy",
+      "week": "Esta semana",
+      "month": "Este mes",
+      "earlier": "Antes"
+    },
+    "readReview": "Leer reseña"
   },
   "favoriteLabel": "Marcó como favorito",
   "ratingVerb": "Valoró",

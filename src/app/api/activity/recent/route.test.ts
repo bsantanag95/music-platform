@@ -20,7 +20,7 @@ describe("GET /api/activity/recent", () => {
     mocks.listCommunityActivity.mockResolvedValue({ entries: [], page: 1, pageSize: 10, hasNext: false });
     const response = await GET(new NextRequest("http://localhost/api/activity/recent"));
     expect(response.status).toBe(200);
-    expect(mocks.listCommunityActivity).toHaveBeenCalledWith(null, 1, 10);
+    expect(mocks.listCommunityActivity).toHaveBeenCalledWith(null, 1, 10, { kind: undefined });
   });
 
   it("con sesión pasa el id del lector", async () => {
@@ -28,12 +28,27 @@ describe("GET /api/activity/recent", () => {
     mocks.listCommunityActivity.mockResolvedValue({ entries: [], page: 2, pageSize: 10, hasNext: false });
     const response = await GET(new NextRequest("http://localhost/api/activity/recent?page=2"));
     expect(response.status).toBe(200);
-    expect(mocks.listCommunityActivity).toHaveBeenCalledWith("u1", 2, 10);
+    expect(mocks.listCommunityActivity).toHaveBeenCalledWith("u1", 2, 10, { kind: undefined });
   });
 
   it("paginación inválida responde 400", async () => {
     const response = await GET(new NextRequest("http://localhost/api/activity/recent?page=0"));
     expect(response.status).toBe(400);
+    expect(mocks.listCommunityActivity).not.toHaveBeenCalled();
+  });
+
+  it("kind válido filtra la fuente", async () => {
+    mocks.getCurrentUser.mockResolvedValue(null);
+    mocks.listCommunityActivity.mockResolvedValue({ entries: [], page: 1, pageSize: 10, hasNext: false });
+    const response = await GET(new NextRequest("http://localhost/api/activity/recent?kind=review"));
+    expect(response.status).toBe(200);
+    expect(mocks.listCommunityActivity).toHaveBeenCalledWith(null, 1, 10, { kind: "review" });
+  });
+
+  it("kind ajeno a esta fuente responde 400 VALIDATION_ERROR", async () => {
+    const response = await GET(new NextRequest("http://localhost/api/activity/recent?kind=listen"));
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code: "VALIDATION_ERROR" });
     expect(mocks.listCommunityActivity).not.toHaveBeenCalled();
   });
 });

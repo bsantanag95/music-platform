@@ -4,6 +4,7 @@ import {
   DiaryMonthsResponseSchema,
   FeedResponseSchema,
   ListenEntryResponseSchema,
+  type CommunityActivityKind,
   type DiaryAudience,
   type DiaryListResponse,
   type DiaryMonthsResponse,
@@ -82,8 +83,14 @@ export function getFeed(page = 1, pageSize = 20, filters?: FeedFiltersParams): P
 // Nombrada `getCommunityActivity`, no `getRecentActivity`: ese nombre ya lo
 // usa `@/lib/api/home.ts` para "Tu rastro reciente" (actividad propia,
 // `/api/me/recent-activity`) — mismo shape de página, concepto distinto.
-export function getCommunityActivity(page = 1, pageSize = 10): Promise<FeedResponse> {
-  return apiFetch(`/api/activity/recent?page=${page}&pageSize=${pageSize}`, FeedResponseSchema);
+export function getCommunityActivity(
+  page = 1,
+  pageSize = 10,
+  filters?: { kind?: CommunityActivityKind },
+): Promise<FeedResponse> {
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  if (filters?.kind) params.set("kind", filters.kind);
+  return apiFetch(`/api/activity/recent?${params.toString()}`, FeedResponseSchema);
 }
 
 export function createListenEntry(target: ListenTarget): Promise<ListenEntry> {

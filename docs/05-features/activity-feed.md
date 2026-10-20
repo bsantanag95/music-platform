@@ -449,6 +449,22 @@ que ahora también puede mostrar una reseña reciente.
 `GET /api/activity/recent` (público) alimenta la sección "Recientes"; "Siguiendo" reusa
 `GET /api/me/feed` y "Tú" reusa `GET /api/me/recent-activity`, ambos sin cambios en su contrato.
 
+**Filtros por tipo** (`redesign-activity-page`, fase 2): sobre la lista, una fila de chips. En
+"Recientes": Todo · Reseñas · Comentarios · Valoraciones, servidos por el `kind` opcional de
+`GET /api/activity/recent` (aditivo: con `kind` solo se consulta esa fuente). En "Siguiendo" se suman
+Escuchas y Listas, con el `kind` que `/api/me/feed` ya aceptaba. "Tú" no tiene chips. El filtro vive en
+`?kind=`, validado contra la pestaña: un valor que no aplica se ignora. Cambiar de pestaña lo quita, y
+el servidor lo aplica solo a la página completa de la pestaña activa. La página del servidor solo
+siembra la query del mismo filtro con el que se pidió. Un filtro sin resultados ofrece "Ver todo", y no
+dispara el estado vacío global.
+
+**Bloques de fecha y tarjeta de reseña** (solo `/activity`, opt-in en `FeedActivityList`):
+`dateSections` intercala encabezados "Hoy / Esta semana / Este mes / Antes" (`feed-date-sections.ts`:
+"Hoy" es el día calendario en la zona horaria de la app; semana y mes son ventanas móviles de 7 y 30
+días). Cada fila conserva su fecha relativa. `reviewCard` presenta la reseña como tarjeta elevada:
+estrellas (si viene fusionada con su valoración), titular, extracto a 4 líneas y "Leer reseña" hacia su
+página. `/me/feed` e Inicio conservan la cita con borde petróleo.
+
 **Línea de metadato** (corrección compartida con `/me/feed` e Inicio): autor, verbo con su ícono,
 audiencia y tema son unidades indivisibles (`MetaUnit`), con el separador " · " al inicio de cada
 unidad, así ninguna línea termina en "·" ni separa el ícono de su verbo. Desde `sm` la fecha va en

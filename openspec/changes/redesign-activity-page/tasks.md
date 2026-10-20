@@ -22,19 +22,19 @@
 
 ## 3. Fase 2 · Filtros por tipo
 
-- [ ] 3.1 `listCommunityActivity(..., { kind })`: armar solo la rama pedida (`rating` | `comment` | `review`)
-- [ ] 3.2 `GET /api/activity/recent`: `parseKind` con `400 VALIDATION_ERROR`; actualizar `route.test.ts`
-- [ ] 3.3 `getCommunityActivity(page, pageSize, { kind })` en `lib/api/diary.ts`; `queryKeys.activityRecent({ kind })` sin romper la clave que usa Inicio
-- [ ] 3.4 Componente de chips de filtro (Recientes: Todo, Reseñas, Comentarios, Valoraciones; Siguiendo: además Escuchas y Listas) con `aria-pressed` y una fila desplazable en móvil; escribe `kind` en la URL
-- [ ] 3.5 Siguiendo usa `getFeed(page, size, { kind })` con `queryKeys.myFeed({ kind })`
-- [ ] 3.6 Tests: servicio con `kind`, chips (selección, "Todo" quita `kind`), "cargar más" respeta el filtro
+- [x] 3.1 `listCommunityActivity(..., { kind })`: armar solo la rama pedida (`rating` | `comment` | `review`)
+- [x] 3.2 `GET /api/activity/recent`: `parseKind` con `400 VALIDATION_ERROR`; actualizar `route.test.ts`
+- [x] 3.3 `getCommunityActivity(page, pageSize, { kind })` en `lib/api/diary.ts`; `queryKeys.activityRecent({ kind })` sin romper la clave que usa Inicio
+- [x] 3.4 Componente de chips de filtro (Recientes: Todo, Reseñas, Comentarios, Valoraciones; Siguiendo: además Escuchas y Listas) con `aria-pressed` y una fila desplazable en móvil; escribe `kind` en la URL
+- [x] 3.5 Siguiendo usa `getFeed(page, size, { kind })` con `queryKeys.myFeed({ kind })`
+- [x] 3.6 Tests: servicio con `kind`, chips (selección, "Todo" quita `kind`), "cargar más" respeta el filtro
 
 ## 4. Fase 2 · Bloques de fecha y tarjeta de reseña
 
-- [ ] 4.1 `FeedActivityList`: prop `dateSections`; bloques Hoy / Esta semana / Este mes / Antes con `useNow()`, encabezado solo al cambiar de bloque, `<li role="presentation">` con `<h3>` (D7)
-- [ ] 4.2 Prop `reviewCard`: superficie elevada, estrellas, titular, extracto a 4 líneas y "Leer reseña" con `reviewHref` (D8); también en la fila de opinión fusionada
-- [ ] 4.3 Activar `dateSections` y `reviewCard` solo desde `CommunityActivitySection`
-- [ ] 4.4 Tests: bloques (sin repetir encabezado entre páginas) y tarjeta (enlace correcto, plegado)
+- [x] 4.1 `FeedActivityList`: prop `dateSections`; bloques Hoy / Esta semana / Este mes / Antes con `useNow()`, encabezado solo al cambiar de bloque, `<li role="presentation">` con `<h3>` (D7)
+- [x] 4.2 Prop `reviewCard`: superficie elevada, estrellas, titular, extracto a 4 líneas y "Leer reseña" con `reviewHref` (D8); también en la fila de opinión fusionada
+- [x] 4.3 Activar `dateSections` y `reviewCard` solo desde `CommunityActivitySection`
+- [x] 4.4 Tests: bloques (sin repetir encabezado entre páginas) y tarjeta (enlace correcto, plegado)
 
 ## 5. Fase 3 · Riel de contexto
 
@@ -47,7 +47,7 @@
 
 ## 6. Documentación
 
-- [ ] 6.1 `docs/04-api/contracts.md`: documentar `GET /api/activity/recent` (hoy ausente) con `page`, `pageSize` y `kind`, y su `400`
+- [x] 6.1 `docs/04-api/contracts.md`: documentar `GET /api/activity/recent` (hoy ausente) con `page`, `pageSize` y `kind`, y su `400`
 - [ ] 6.2 `docs/05-features/activity-feed.md`: actualizar la sección de la superficie pública (pestañas en la URL, filtros, bloques, riel)
 - [ ] 6.3 `docs/01-domain/business-rules.md`: regla del riel (2 personas, 7 días, tope 5, sin relleno)
 - [ ] 6.4 Al archivar: actualizar el `## Purpose` de `openspec/specs/community-activity/spec.md` con las etiquetas nuevas

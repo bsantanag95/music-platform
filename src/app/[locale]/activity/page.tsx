@@ -8,7 +8,8 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CommunityActivitySection } from "@/components/activity/CommunityActivitySection";
 import { ActivityTabs } from "@/components/activity/ActivityTabs";
-import { tabFromParam, type ActivitySource } from "@/components/activity/activity-tab-param";
+import { kindFromParam, tabFromParam, type ActivitySource } from "@/components/activity/activity-tab-param";
+import type { CommunityActivityKind } from "@/lib/api/schemas";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("feed");
@@ -29,22 +30,36 @@ export default async function CommunityActivityPage({ searchParams }: { searchPa
   const tCommon = await getTranslations("common");
   const session = await resolveSession();
   const viewerId = session?.user.id ?? null;
-  const tabParam = (await searchParams).tab;
+  const { tab: tabParam, kind: kindParam } = await searchParams;
   // Sin sesión no hay pestañas: `tab` se ignora.
   const active: ActivitySource = viewerId ? tabFromParam(typeof tabParam === "string" ? tabParam : null) : "recent";
+  // Filtro de tipo de la pestaña activa; uno que no aplica a esa pestaña se ignora.
+  const kind = kindFromParam(active, typeof kindParam === "string" ? kindParam : null);
 
   // Solo la pestaña activa trae su primera página completa; de las otras basta saber si tienen algo (una entrada)
   // para decidir el estado vacío global. Antes se pedían las tres páginas aunque nunca se abrieran.
+  // El filtro solo se aplica a la página completa de la pestaña activa. Para saber si las otras tienen algo (estado
+  // vacío global) se piden sin filtro.
   const sizeFor = (source: ActivitySource) => (source === active ? PAGE_SIZE : 1);
+  const kindFor = (source: ActivitySource) => (source === active ? kind : undefined);
   const [recent, fromFollowing, own, followedAuthors] = await Promise.all([
-    listCommunityActivity(viewerId, 1, sizeFor("recent")),
-    viewerId ? listFeed(viewerId, 1, sizeFor("from-following")) : Promise.resolve(null),
+    listCommunityActivity(viewerId, 1, sizeFor("recent"), {
+      kind: kindFor("recent") as CommunityActivityKind | undefined,
+    }),
+    viewerId
+      ? listFeed(viewerId, 1, sizeFor("from-following"), { kind: kindFor("from-following") })
+      : Promise.resolve(null),
     viewerId ? listMyRecentActivity(viewerId, 1, sizeFor("own")) : Promise.resolve(null),
     viewerId ? listFeedAuthors(viewerId) : Promise.resolve(null),
   ]);
 
+  // Con un filtro activo la pestaña puede venir vacía aunque haya actividad: no es el caso de "nada que mostrar", el
+  // panel ya ofrece "Ver todo".
   const anySection =
-    recent.entries.length > 0 || (fromFollowing?.entries.length ?? 0) > 0 || (own?.entries.length ?? 0) > 0;
+    kind !== undefined ||
+    recent.entries.length > 0 ||
+    (fromFollowing?.entries.length ?? 0) > 0 ||
+    (own?.entries.length ?? 0) > 0;
 
   // Cada panel vacío con una salida (D9): a Explorar, o a descubrir personas si "Siguiendo" está vacío. Distingue
   // "no sigue a nadie" de "la gente que sigue no publicó nada".
@@ -70,6 +85,7 @@ export default async function CommunityActivityPage({ searchParams }: { searchPa
               key: "recent",
               label: t("community.recentHeading"),
               initial: active === "recent" ? recent : undefined,
+              initialKind: active === "recent" ? kind : undefined,
               empty: {
                 title: t("community.empty.recentTitle"),
                 description: t("community.empty.recentDescription"),
@@ -80,6 +96,7 @@ export default async function CommunityActivityPage({ searchParams }: { searchPa
               key: "from-following",
               label: t("community.followingHeading"),
               initial: active === "from-following" ? fromFollowing : undefined,
+              initialKind: active === "from-following" ? kind : undefined,
               empty: followsAnyone
                 ? {
                     title: t("community.empty.followingQuietTitle"),
@@ -104,8 +121,13 @@ export default async function CommunityActivityPage({ searchParams }: { searchPa
             },
           ]}
         />
-      ) : recent.entries.length > 0 ? (
-        <CommunityActivitySection source="recent" headingKey="community.recentHeading" initial={recent} />
+      ) : recent.entries.length > 0 || kind ? (
+        <CommunityActivitySection
+          source="recent"
+          headingKey="community.recentHeading"
+          initial={recent}
+          initialKind={kind}
+        />
       ) : null}
     </main>
   );

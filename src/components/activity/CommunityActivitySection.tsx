@@ -1,6 +1,7 @@
 "use client";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -8,31 +9,45 @@ import { Link } from "@/i18n/navigation";
 import { getCommunityActivity, getFeed } from "@/lib/api/diary";
 import { getRecentActivity } from "@/lib/api/home";
 import { queryKeys } from "@/lib/query/keys";
-import type { FeedResponse } from "@/lib/api/schemas";
+import type { CommunityActivityKind, FeedKind, FeedResponse } from "@/lib/api/schemas";
 import { FeedActivityList } from "@/components/feed/FeedActivityList";
+import { ACTIVITY_FILTER_KINDS, kindFromParam, type ActivitySource } from "./activity-tab-param";
 
 export const ACTIVITY_PAGE_SIZE = 10;
 
-import type { ActivitySource } from "./activity-tab-param";
-
 export type { ActivitySource };
 
-export const ACTIVITY_SOURCES = {
-  recent: { fetch: getCommunityActivity, queryKey: queryKeys.activityRecent() },
-  "from-following": { fetch: getFeed, queryKey: queryKeys.myFeed({}) },
-  own: { fetch: getRecentActivity, queryKey: queryKeys.activityOwn() },
-} as const satisfies Record<
-  ActivitySource,
-  { fetch: (page: number, pageSize: number) => Promise<FeedResponse>; queryKey: readonly unknown[] }
->;
+// Clave y función de cada fuente con su filtro de tipo (redesign-activity-page, D3): el `kind` es parte de la key, así
+// cada combinación pagina por separado. "Tú" no filtra.
+function sourceQuery(source: ActivitySource, kind: FeedKind | undefined) {
+  switch (source) {
+    case "recent": {
+      // `kindFromParam` ya acotó el valor a los tipos de esta fuente.
+      const filters = kind ? { kind: kind as CommunityActivityKind } : {};
+      return {
+        queryKey: queryKeys.activityRecent(filters),
+        fetch: (page: number, pageSize: number) => getCommunityActivity(page, pageSize, filters),
+      };
+    }
+    case "from-following": {
+      const filters = kind ? { kind } : {};
+      return {
+        queryKey: queryKeys.myFeed(filters),
+        fetch: (page: number, pageSize: number) => getFeed(page, pageSize, filters),
+      };
+    }
+    case "own":
+      return { queryKey: queryKeys.activityOwn(), fetch: getRecentActivity };
+  }
+}
 
 // Opciones de `useInfiniteQuery` de una fuente, compartidas con el prefetch de `ActivityTabs` (al pasar el mouse o
 // enfocar una pestaña): misma clave y misma función, para que el prefetch caliente exactamente la query que monta el
 // panel.
-export function activityQueryOptions(source: ActivitySource) {
-  const { fetch, queryKey } = ACTIVITY_SOURCES[source];
+export function activityQueryOptions(source: ActivitySource, kind?: FeedKind) {
+  const { fetch, queryKey } = sourceQuery(source, kind);
   return {
-    queryKey,
+    queryKey: queryKey as readonly unknown[],
     queryFn: ({ pageParam }: { pageParam: number }) => fetch(pageParam, ACTIVITY_PAGE_SIZE),
     initialPageParam: 1,
     getNextPageParam: (last: FeedResponse) => (last.hasNext ? last.page + 1 : undefined),
@@ -52,6 +67,9 @@ interface CommunityActivitySectionProps {
   // Primera página renderizada en el servidor. Solo la trae la pestaña que llegó en la URL; las demás se piden en el
   // cliente al elegirlas (ver page.tsx) y muestran un esqueleto mientras tanto.
   initial?: FeedResponse;
+  // Filtro con el que el servidor pidió `initial`. La página inicial solo siembra la query de ese mismo filtro: si no,
+  // al elegir un chip la lista sin filtrar se mostraría como si fuera la filtrada.
+  initialKind?: FeedKind;
   // Encabezado propio: solo lo usa el caso sin sesión (una sola sección,
   // "Recientes", sin pestañas — ver page.tsx). Dentro de ActivityTabs el botón
   // de la pestaña ya cumple ese rol y se omite.
@@ -64,24 +82,56 @@ interface CommunityActivitySectionProps {
 
 // Una sección de `/activity` (Recientes, Siguiendo, Tú). La primera página llega renderizada del servidor cuando es
 // la pestaña de la URL; el resto se pide por `useInfiniteQuery` contra el endpoint de la fuente — mismo patrón que
-// `CommunityListSection` en `/lists`.
-export function CommunityActivitySection({ source, initial, headingKey, empty }: CommunityActivitySectionProps) {
+// `CommunityListSection` en `/lists`. El filtro de tipo vive en `?kind=` y, como la pestaña, se deriva de
+// `useSearchParams` y se escribe con `history.replaceState`.
+export function CommunityActivitySection({
+  source,
+  initial,
+  initialKind,
+  headingKey,
+  empty,
+}: CommunityActivitySectionProps) {
   const t = useTranslations("feed");
+  const searchParams = useSearchParams();
+  const kind = kindFromParam(source, searchParams.get("kind"));
+  const kinds: readonly FeedKind[] = ACTIVITY_FILTER_KINDS[source];
+
+  const setKind = (next: FeedKind | undefined) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (next) params.set("kind", next);
+    else params.delete("kind");
+    const query = params.toString();
+    window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
+  };
 
   const { data, hasNextPage, isFetchingNextPage, fetchNextPage, isError, isPending } = useInfiniteQuery({
-    ...activityQueryOptions(source),
-    ...(initial ? { initialData: { pages: [initial], pageParams: [1] } } : {}),
+    ...activityQueryOptions(source, kind),
+    ...(initial && kind === initialKind ? { initialData: { pages: [initial], pageParams: [1] } } : {}),
   });
 
-  if (isPending) return <ActivitySkeleton label={t("loadingMore")} />;
-
   const entries = data?.pages.flatMap((page) => page.entries) ?? [];
-  if (entries.length === 0 && !empty && !isError) return null;
+  if (!isPending && entries.length === 0 && !empty && !kind && !isError) return null;
 
   return (
     <section className="flex w-full flex-col gap-3">
       {headingKey ? <h2 className="font-display text-xl text-paper">{t(headingKey)}</h2> : null}
-      {entries.length === 0 && empty ? (
+      {kinds.length > 0 ? <KindChips kinds={kinds} active={kind} onChange={setKind} /> : null}
+
+      {isPending ? (
+        <ActivitySkeleton label={t("loadingMore")} />
+      ) : entries.length === 0 && kind ? (
+        // Un filtro sin resultados ofrece volver a todo, no un callejón sin salida.
+        <EmptyState
+          compact
+          title={t("community.emptyFiltered.title")}
+          description={t("community.emptyFiltered.description")}
+          action={
+            <Button variant="secondary" onClick={() => setKind(undefined)} className="mt-1">
+              {t("community.emptyFiltered.action")}
+            </Button>
+          }
+        />
+      ) : entries.length === 0 && empty ? (
         <EmptyState
           compact
           title={empty.title}
@@ -100,8 +150,15 @@ export function CommunityActivitySection({ source, initial, headingKey, empty }:
       ) : entries.length > 0 ? (
         // Las tres pestañas con la misma anatomía (carátula a la izquierda): "Tú" usa `own`, que es la de `feed` sin
         // autor, en vez del riel `self` de Inicio — al cambiar de pestaña la misma valoración se veía de dos formas
-        // distintas. `clamp` como en `/me/feed`: sección de altura libre con "cargar más", no un preview con scroll propio.
-        <FeedActivityList entries={entries} variant={source === "own" ? "own" : "feed"} clamp />
+        // distintas. `clamp` como en `/me/feed`: sección de altura libre con "cargar más", no un preview con scroll
+        // propio. Bloques de fecha y tarjeta de reseña solo acá (D7, D8): `/me/feed` conserva su presentación.
+        <FeedActivityList
+          entries={entries}
+          variant={source === "own" ? "own" : "feed"}
+          clamp
+          dateSections
+          reviewCard
+        />
       ) : null}
 
       {isError ? (
@@ -120,6 +177,50 @@ export function CommunityActivitySection({ source, initial, headingKey, empty }:
         </Button>
       ) : null}
     </section>
+  );
+}
+
+// Chips de filtro por tipo: forma de chip (no subrayado) para que se lean como filtro y no como otra fila de pestañas.
+// Una sola fila; en móvil se desplaza en horizontal sin desbordar la página.
+function KindChips({
+  kinds,
+  active,
+  onChange,
+}: {
+  kinds: readonly FeedKind[];
+  active: FeedKind | undefined;
+  onChange: (kind: FeedKind | undefined) => void;
+}) {
+  const t = useTranslations("feed");
+  const options: { kind: FeedKind | undefined; label: string }[] = [
+    { kind: undefined, label: t("community.chips.all") },
+    ...kinds.map((kind) => ({ kind, label: t(`community.chips.${kind}`) })),
+  ];
+  return (
+    <div
+      role="group"
+      aria-label={t("community.filterLabel")}
+      className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden"
+    >
+      {options.map((option) => {
+        const selected = option.kind === active;
+        return (
+          <button
+            key={option.kind ?? "all"}
+            type="button"
+            aria-pressed={selected}
+            onClick={() => onChange(option.kind)}
+            className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1 font-data text-xs transition-colors ${
+              selected
+                ? "border-amber/60 bg-amber/10 text-amber"
+                : "border-ink-border text-paper-muted hover:border-paper-muted hover:text-paper"
+            }`}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

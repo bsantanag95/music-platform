@@ -2,16 +2,17 @@
 
 import type { ReactNode } from "react";
 import { AppImage } from "@/components/ui/AppImage";
-import { useLocale, useNow, useTranslations } from "next-intl";
+import { useLocale, useNow, useTimeZone, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { ReactionBadge } from "@/components/diary/ReactionBadge";
 import { formatStars } from "@/components/album/album-format";
 import { targetHref } from "./feed-target";
-import { listHref } from "@/lib/catalog-links";
+import { listHref, reviewHref } from "@/lib/catalog-links";
 import { StarRatingValue } from "@/components/social/StarRatingValue";
 import { CommentTopicLabel } from "@/components/social/CommentTopicLabel";
 import { isFeedEntryQuote } from "./feed-entry-tier";
+import { withDateSections } from "./feed-date-sections";
 import {
   groupFeedRuns,
   type FeedEntryGroup,
@@ -41,6 +42,12 @@ interface FeedActivityListProps {
   // por su propio contenedor de scroll, plegar ahí encima sería doble tope
   // (ver openspec/changes/add-feed-filters, Non-Goals).
   clamp?: boolean;
+  // Encabezados "Hoy / Esta semana / Este mes / Antes" entre filas (redesign-activity-page, D7). Opt-in: solo
+  // `/activity`; `/me/feed` e Inicio no los muestran.
+  dateSections?: boolean;
+  // La reseña como tarjeta de lectura —estrellas, titular, extracto a 4 líneas y "Leer reseña"— en vez de la cita
+  // con borde petróleo (redesign-activity-page, D8). Opt-in: solo `/activity`.
+  reviewCard?: boolean;
 }
 
 // Presentación del feed por peso de contenido: las entradas con prosa
@@ -48,7 +55,13 @@ interface FeedActivityListProps {
 // el resto —favoritos, listas, ratings, escuchas sin nota— ocupan una fila de
 // baseline. Superficie de solo lectura: los únicos controles son enlaces de
 // navegación al autor y al objetivo.
-export function FeedActivityList({ entries, variant = "feed", clamp = false }: FeedActivityListProps) {
+export function FeedActivityList({
+  entries,
+  variant = "feed",
+  clamp = false,
+  dateSections = false,
+  reviewCard = false,
+}: FeedActivityListProps) {
   const t = useTranslations("feed");
   const locale = useLocale();
   const self = variant === "self";
@@ -56,6 +69,8 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
   // `now` estable dentro del request (mismo valor que las fechas relativas):
   // `groupFeedRuns` lo usa para la ventana de 7 días del pico de rotación.
   const now = useNow();
+  const timeZone = useTimeZone();
+  const rows = groupFeedRuns(uniqueEntries(entries), now);
 
   return (
     <ul
@@ -67,7 +82,19 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
           : "divide-y divide-ink-border"
       }
     >
-      {groupFeedRuns(uniqueEntries(entries), now).map((row) => {
+      {(dateSections ? withDateSections(rows, now, timeZone) : rows).map((row) => {
+        if (row.kind === "date-section") {
+          // Encabezado de bloque: `role="presentation"` para no contarse como un elemento más de la lista; sin el
+          // borde inferior de `divide-y`, así se lee pegado a las filas que agrupa.
+          return (
+            <li key={row.id} role="presentation" className="border-b-0 pb-1 pt-6 first:pt-0">
+              <h3 className="font-data text-[11px] uppercase tracking-wider text-paper-muted">
+                {t(`community.dateSection.${row.bucket}`)}
+              </h3>
+            </li>
+          );
+        }
+
         // Fila subordinada, indentada a la columna del título de las filas
         // normales (celda `size-11 sm:size-12` + `gap-3 sm:gap-4`), sin celda:
         // tanto el grupo colapsado como el pico de rotación se leen como
@@ -97,7 +124,7 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
           return (
             <li key={row.id} className={`${self ? "relative py-3 pl-4" : "py-4"} first:pt-0 last:pb-0`}>
               {self ? <TimelineDot filled top="top-4" /> : null}
-              <OpinionRow row={row} t={t} self={self} hideAuthor={hideAuthor} clamp={clamp} />
+              <OpinionRow row={row} t={t} self={self} hideAuthor={hideAuthor} clamp={clamp} reviewCard={reviewCard} />
             </li>
           );
         }
@@ -163,15 +190,21 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
                 <TargetTitle {...targetLink(row)} />
                 <EntryReaction entry={row} />
                 {row.kind === "rating" ? <RatingValue entry={row} t={t} locale={locale} /> : null}
-                {row.kind === "review" ? <ReviewKicker title={row.title} /> : null}
-                {heavy && body ? (
-                  <ProsePanel
-                    body={body}
-                    variant={row.kind === "listen" ? "impression" : "comment"}
-                    clamp={clamp}
-                    accent={row.kind === "review" ? "review" : undefined}
-                  />
-                ) : null}
+                {row.kind === "review" && reviewCard ? (
+                  <ReviewCard review={row} t={t} />
+                ) : (
+                  <>
+                    {row.kind === "review" ? <ReviewKicker title={row.title} /> : null}
+                    {heavy && body ? (
+                      <ProsePanel
+                        body={body}
+                        variant={row.kind === "listen" ? "impression" : "comment"}
+                        clamp={clamp}
+                        accent={row.kind === "review" ? "review" : undefined}
+                      />
+                    ) : null}
+                  </>
+                )}
               </div>
             </div>
           </li>
@@ -385,6 +418,39 @@ function FollowArtistRow({
 // borde petróleo de la prosa marca el tipo — eran tres señales para lo mismo.
 function ReviewKicker({ title }: { title: string | null }) {
   return title ? <p className="mt-1.5 font-display text-sm text-paper">{title}</p> : null;
+}
+
+// Tarjeta de lectura de una reseña (redesign-activity-page, D8): superficie elevada con las estrellas (si la reseña
+// viene fusionada con su valoración), el titular, un extracto plegado a 4 líneas y el enlace a la reseña completa. Sin
+// "Ver más": leerla entera es ir a su página, donde están sus comentarios.
+function ReviewCard({
+  review,
+  t,
+  rating = null,
+}: {
+  review: Extract<FeedEntry, { kind: "review" }>;
+  t: FeedT;
+  rating?: ReactNode;
+}) {
+  return (
+    <div className="mt-2 max-w-[60ch] rounded-lg border border-ink-border bg-ink-surface px-3 py-3 sm:px-4">
+      {rating ? <div className="[&>span]:mt-0">{rating}</div> : null}
+      {review.title ? (
+        <p className={`font-display text-base text-paper${rating ? " mt-1.5" : ""}`}>{review.title}</p>
+      ) : null}
+      <p
+        className={`line-clamp-4 whitespace-pre-wrap font-body text-sm text-paper${rating || review.title ? " mt-1" : ""}`}
+      >
+        {review.body}
+      </p>
+      <Link
+        href={reviewHref(review.author.username, review.target.title, review.id)}
+        className="mt-2 inline-block font-data text-xs text-paper-muted underline decoration-dotted underline-offset-2 transition-colors hover:text-amber"
+      >
+        {t("community.readReview")}
+      </Link>
+    </div>
+  );
 }
 
 function actionLabel(entry: FeedEntry, t: FeedT): string {
@@ -673,12 +739,14 @@ function OpinionRow({
   self,
   hideAuthor,
   clamp,
+  reviewCard = false,
 }: {
   row: FeedOpinionRow;
   t: FeedT;
   self: boolean;
   hideAuthor: boolean;
   clamp: boolean;
+  reviewCard?: boolean;
 }) {
   const locale = useLocale();
   const primary: FeedEntry = row.rating ?? row.review ?? row.comment!;
@@ -690,13 +758,24 @@ function OpinionRow({
     <>
       <MetaLine entry={primary} t={t} hideAuthor={hideAuthor} label={verb} iconKind={iconKind} topic={row.comment?.topic} />
       <TargetTitle {...targetLink(primary)} layout={self ? "inline" : undefined} />
-      {row.rating ? <RatingValue entry={row.rating} t={t} locale={locale} /> : null}
-      {row.review ? (
+      {row.review && reviewCard ? (
+        // Con tarjeta, las estrellas de la valoración fusionada van dentro de ella, junto al texto que califican.
+        <ReviewCard
+          review={row.review}
+          t={t}
+          rating={row.rating ? <RatingValue entry={row.rating} t={t} locale={locale} /> : null}
+        />
+      ) : (
         <>
-          <ReviewKicker title={row.review.title} />
-          <ProsePanel body={row.review.body} variant="comment" clamp={clamp} accent="review" />
+          {row.rating ? <RatingValue entry={row.rating} t={t} locale={locale} /> : null}
+          {row.review ? (
+            <>
+              <ReviewKicker title={row.review.title} />
+              <ProsePanel body={row.review.body} variant="comment" clamp={clamp} accent="review" />
+            </>
+          ) : null}
         </>
-      ) : null}
+      )}
       {row.comment ? <ProsePanel body={row.comment.body} variant="comment" clamp={clamp} /> : null}
     </>
   );

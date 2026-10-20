@@ -23,7 +23,28 @@
       "ownDescription": "Rate, review or log a listen and it will show up here.",
       "exploreAction": "Explore music",
       "discoverAction": "Discover people"
-    }
+    },
+    "filterLabel": "Filter by type",
+    "chips": {
+      "all": "All",
+      "review": "Reviews",
+      "comment": "Comments",
+      "rating": "Ratings",
+      "listen": "Listens",
+      "list": "Lists"
+    },
+    "emptyFiltered": {
+      "title": "Nothing of this type yet",
+      "description": "Try another type or go back to all activity.",
+      "action": "See all"
+    },
+    "dateSection": {
+      "today": "Today",
+      "week": "This week",
+      "month": "This month",
+      "earlier": "Earlier"
+    },
+    "readReview": "Read review"
   },
   "favoriteLabel": "Added a favorite",
   "ratingVerb": "Rated",

@@ -137,4 +137,16 @@ describe("listCommunityActivity", () => {
 
     expect(result.entries).toHaveLength(1);
   });
+
+  it("con kind consulta solo esa fuente (redesign-activity-page)", async () => {
+    mocks.db.select.mockReturnValueOnce(
+      sourceQuery([reviewRow("00000000-0000-4000-8000-000000000005", "2026-01-02T00:00:00Z")]),
+    );
+
+    const result = await listCommunityActivity(null, 1, 10, { kind: "review" });
+
+    // Una sola consulta: valoraciones y comentarios ni se piden.
+    expect(mocks.db.select).toHaveBeenCalledTimes(1);
+    expect(result.entries.map((entry) => entry.kind)).toEqual(["review"]);
+  });
 });

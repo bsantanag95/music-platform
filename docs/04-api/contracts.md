@@ -1146,6 +1146,21 @@ La fusión de valoración + reseña + comentario contiguos en una sola fila es s
 paginación y forma que el feed, con los `kind` `listen · rating · comment · review · follow ·
 follow-artist · collection · wanted · camino` (sin favoritos ni listas).
 
+### `GET /api/activity/recent?page=&pageSize=&kind=`
+
+"Recientes" de `/activity` y el bloque de actividad de la comunidad de Inicio. **Público**: no
+requiere sesión. Devuelve valoraciones vigentes, comentarios raíz y reseñas de cualquier usuario con
+perfil `public` y cuenta activa, en orden cronológico descendente. Con sesión excluye a los autores
+con un bloqueo en cualquier dirección.
+
+- `page` (desde 1) y `pageSize` (1–50, por defecto **10**). Una paginación inválida responde `400 { code: "VALIDATION_ERROR" }`.
+- `kind` (opcional, `redesign-activity-page`): `rating`, `comment` o `review`. Devuelve solo ese tipo;
+  sin `kind`, los tres. Un valor fuera de esa lista, incluidos otros `kind` del feed como `listen`,
+  responde `400 { code: "VALIDATION_ERROR" }`.
+
+Responde `200` con la misma forma que el feed (`{ entries, page, pageSize, hasNext }`), con entradas
+`kind: "rating" | "comment" | "review"`.
+
 ## Ratings y comentarios
 
 Los endpoints sociales usan el objetivo `artist`, `release-group` o `recording` y el UUID interno.

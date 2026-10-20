@@ -68,8 +68,8 @@ describe("/activity", () => {
     expect(screen.queryByTestId("section")).not.toBeInTheDocument();
     // Sin ?tab= solo Recientes trae su página completa; de las otras basta una entrada para saber si tienen algo.
     expect(screen.getByTestId("initial").textContent).toBe("recent");
-    expect(mocks.listCommunityActivity).toHaveBeenCalledWith("u1", 1, 10);
-    expect(mocks.listFeed).toHaveBeenCalledWith("u1", 1, 1);
+    expect(mocks.listCommunityActivity).toHaveBeenCalledWith("u1", 1, 10, { kind: undefined });
+    expect(mocks.listFeed).toHaveBeenCalledWith("u1", 1, 1, { kind: undefined });
     expect(mocks.listMyRecentActivity).toHaveBeenCalledWith("u1", 1, 1);
   });
 
@@ -81,7 +81,28 @@ describe("/activity", () => {
 
     expect(screen.getByTestId("initial").textContent).toBe("own");
     expect(mocks.listMyRecentActivity).toHaveBeenCalledWith("u1", 1, 10);
-    expect(mocks.listCommunityActivity).toHaveBeenCalledWith("u1", 1, 1);
+    expect(mocks.listCommunityActivity).toHaveBeenCalledWith("u1", 1, 1, { kind: undefined });
+  });
+
+  it("?kind= filtra solo la página completa de la pestaña activa", async () => {
+    mocks.resolveSession.mockResolvedValue({ user: { id: "u1" } });
+
+    await renderPage({ tab: "following", kind: "listen" });
+
+    expect(mocks.listFeed).toHaveBeenCalledWith("u1", 1, 10, { kind: "listen" });
+    // Las otras fuentes se piden sin filtro (solo para saber si tienen algo).
+    expect(mocks.listCommunityActivity).toHaveBeenCalledWith("u1", 1, 1, { kind: undefined });
+    // Con un filtro activo no cae al estado vacío global aunque la página filtrada venga vacía.
+    expect(screen.getByTestId("tabs")).toBeInTheDocument();
+  });
+
+  it("un ?kind= que no aplica a la pestaña se ignora", async () => {
+    mocks.resolveSession.mockResolvedValue(null);
+    mocks.listCommunityActivity.mockResolvedValue(page([entry]));
+
+    await renderPage({ kind: "listen" });
+
+    expect(mocks.listCommunityActivity).toHaveBeenCalledWith(null, 1, 10, { kind: undefined });
   });
 
   it("un ?tab= desconocido cae a Recientes", async () => {
@@ -122,7 +143,7 @@ describe("/activity", () => {
 
     expect(mocks.listFeed).not.toHaveBeenCalled();
     expect(mocks.listFeedAuthors).not.toHaveBeenCalled();
-    expect(mocks.listCommunityActivity).toHaveBeenCalledWith(null, 1, 10);
+    expect(mocks.listCommunityActivity).toHaveBeenCalledWith(null, 1, 10, { kind: undefined });
     expect(mocks.listMyRecentActivity).not.toHaveBeenCalled();
     expect(screen.queryByTestId("tabs")).not.toBeInTheDocument();
     expect(screen.getByTestId("section")).toHaveTextContent("community.recentHeading");

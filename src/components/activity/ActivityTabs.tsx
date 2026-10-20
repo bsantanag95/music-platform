@@ -5,13 +5,14 @@ import { useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { CommunityActivitySection, activityQueryOptions, type ActivityEmpty } from "./CommunityActivitySection";
 import { TAB_PARAM, tabFromParam, type ActivitySource } from "./activity-tab-param";
-import type { FeedResponse } from "@/lib/api/schemas";
+import type { FeedKind, FeedResponse } from "@/lib/api/schemas";
 
 interface ActivityTabDef {
   key: ActivitySource;
   label: string;
-  // Solo la pestaña que llegó en la URL trae su primera página del servidor.
+  // Solo la pestaña que llegó en la URL trae su primera página del servidor, pedida con `initialKind`.
   initial?: FeedResponse;
+  initialKind?: FeedKind;
   empty: ActivityEmpty;
 }
 
@@ -39,6 +40,8 @@ export function ActivityTabs({ tabs, tablistLabel }: ActivityTabsProps) {
     const value = TAB_PARAM[key];
     if (value) params.set("tab", value);
     else params.delete("tab");
+    // Cada pestaña ofrece sus propios tipos: el filtro no viaja de una a otra.
+    params.delete("kind");
     const query = params.toString();
     window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
   };
@@ -112,6 +115,7 @@ export function ActivityTabs({ tabs, tablistLabel }: ActivityTabsProps) {
           key={activeTab.key}
           source={activeTab.key}
           initial={activeTab.initial}
+          initialKind={activeTab.initialKind}
           empty={activeTab.empty}
         />
       </div>

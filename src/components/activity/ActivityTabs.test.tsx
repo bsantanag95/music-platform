@@ -108,6 +108,16 @@ describe("ActivityTabs", () => {
     expect(screen.getByTestId("panel")).toHaveTextContent("recent");
   });
 
+  it("cambiar de pestaña quita el filtro de tipo: cada pestaña ofrece sus propios tipos", async () => {
+    urlStore.set("kind=listen&tab=following");
+    const user = userEvent.setup();
+    render(<ActivityTabs tabs={tabs} tablistLabel="Secciones de actividad" />);
+
+    await user.click(screen.getByRole("tab", { name: "Recientes" }));
+
+    expect(urlStore.get()).toBe("");
+  });
+
   it("la flecha derecha del teclado avanza a la siguiente pestaña", async () => {
     const user = userEvent.setup();
     render(<ActivityTabs tabs={tabs} tablistLabel="Secciones de actividad" />);
