@@ -112,14 +112,11 @@ export function NominationItem({
   nomination,
   size = "sm",
   person = false,
-  wonLabel,
 }: {
   nomination: NominationView;
   size?: NominationSize;
   /** La categoría premia a personas: sin foto, la inicial. */
   person?: boolean;
-  /** Rótulo de quien ganó; por omisión "Ganador". Un salón de la fama usa "Ingresó" (ADR 0044). */
-  wonLabel?: string;
 }) {
   const t = useTranslations("awards");
   const href = subjectHref(nomination);
@@ -148,7 +145,7 @@ export function NominationItem({
             >
               <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3" />
             </svg>
-            {wonLabel ?? t("winner")}
+            {t("winner")}
           </span>
         ) : null}
         {href ? (
