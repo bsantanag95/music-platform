@@ -10,8 +10,15 @@ import { NomineeVisual } from "./NominationItem";
 // Premios: fondo teñido por la carátula, nombre, año de la clase en grande y cuatro carátulas de sus incorporaciones.
 // Enlaza a la clase más reciente (`/awards/<salón>` redirige a ella). Un salón no tiene un ganador destacado, así que el lugar
 // de la fila del trofeo lo ocupan las carátulas.
+//
+// Con pocos salones (hoy dos) la tarjeta es ancha (`wide`): dos tarjetas en una grilla de cinco columnas dejaban vacíos tres
+// quintos de la fila. Ancha, la fila de carátulas pasa de cuatro a ocho desde `lg`. Junto al año va cuántas grabaciones
+// ingresaron (el rótulo "Clase" no decía nada que el año no dijera).
 
 const COVERS = 4;
+const WIDE_COVERS = 8;
+/** Hasta cuántos salones la grilla usa tarjetas anchas (dos por fila). */
+export const WIDE_TILES_MAX = 2;
 
 /** Clases anteriores que se ofrecen como atajo en la tarjeta del hub; el resto, desde la fila de años de la clase. */
 const PREVIOUS_YEARS_SHOWN = 5;
@@ -23,14 +30,28 @@ function coverUrl(nomination: NominationView): string | null {
   return null;
 }
 
-export function HallOfFameTile({ hall, detailed = false }: { hall: HallOfFameClass; detailed?: boolean }) {
+/**
+ * Carátulas de la tarjeta, por prioridad: con carátula de verdad, luego con disco en el catálogo (sin carátula, la silueta del
+ * disco) y al final el resto, cada grupo en el orden curado. Antes se priorizaba tener disco ancla aunque no tuviera carátula, y
+ * la tarjeta salía llena de siluetas habiendo carátulas más abajo.
+ */
+export function tileCovers(inductees: NominationView[], max: number): NominationView[] {
+  const rank = (n: NominationView) => {
+    if (coverUrl(n)) return 0;
+    const subject = n.subject;
+    return subject?.kind === "release_group" || (subject?.kind === "recording" && subject.anchor !== null) ? 1 : 2;
+  };
+  return inductees
+    .map((nomination, index) => ({ nomination, index, rank: rank(nomination) }))
+    .sort((a, b) => a.rank - b.rank || a.index - b.index)
+    .slice(0, max)
+    .map((entry) => entry.nomination);
+}
+
+export function HallOfFameTile({ hall, detailed = false, wide = false }: { hall: HallOfFameClass; detailed?: boolean; wide?: boolean }) {
   const t = useTranslations("awards");
   const name = t.has(`names.${hall.awardSlug}`) ? t(`names.${hall.awardSlug}`) : hall.awardSlug;
-  // Preferimos las incorporaciones con carátula del catálogo: una tarjeta de siluetas no invita a entrar.
-  const withCover = hall.inductees.filter(
-    (n) => n.subject?.kind === "release_group" || (n.subject?.kind === "recording" && n.subject.anchor !== null),
-  );
-  const covers = (withCover.length >= COVERS ? withCover : hall.inductees).slice(0, COVERS);
+  const covers = tileCovers(hall.inductees, wide ? WIDE_COVERS : COVERS);
   const backdrop = covers.map(coverUrl).find((url): url is string => url !== null) ?? null;
   const oldest = hall.years.at(-1) ?? hall.year;
   const previous = hall.years.filter((year) => year !== hall.year).slice(0, PREVIOUS_YEARS_SHOWN);
@@ -64,13 +85,16 @@ export function HallOfFameTile({ hall, detailed = false }: { hall: HallOfFameCla
           <span className="line-clamp-2 font-body text-sm leading-snug text-paper">{name}</span>
           <span className="flex items-baseline justify-between gap-2">
             <span className="font-display text-3xl text-paper transition-colors group-hover:text-amber">{hall.year}</span>
-            <span className="shrink-0 font-data text-xs text-paper-muted">{t("hall.classYearRow")}</span>
+            <span className="shrink-0 font-data text-xs text-paper-muted">{t("hall.inducteesCount", { count: hall.inductees.length })}</span>
           </span>
           {detailed ? <span className="mt-0.5 font-data text-xs leading-snug text-paper-muted">{facts.join(" · ")}</span> : null}
         </span>
-        <span className="mt-auto grid grid-cols-4 gap-2 border-t border-ink-border/70 pt-3">
-          {covers.map((nomination) => (
-            <NomineeVisual key={nomination.id} nomination={nomination} size="aspect-square w-full rounded-md" />
+        <span className={`mt-auto grid grid-cols-4 gap-2 border-t border-ink-border/70 pt-3 ${wide ? "lg:grid-cols-8" : ""}`}>
+          {covers.map((nomination, index) => (
+            // En la tarjeta ancha, las carátulas de la quinta en adelante solo desde `lg` (debajo, la tarjeta es angosta).
+            <span key={nomination.id} className={index >= COVERS ? "hidden lg:block" : "block"}>
+              <NomineeVisual nomination={nomination} size="aspect-square w-full rounded-md" />
+            </span>
           ))}
         </span>
       </Link>
@@ -94,12 +118,13 @@ export function HallOfFameTile({ hall, detailed = false }: { hall: HallOfFameCla
   );
 }
 
-/** Una tarjeta por salón, en la cuadrícula de las tarjetas de Premios (la clase más reciente primero). */
+/** Una tarjeta por salón (la clase más reciente primero): en la cuadrícula de Premios o, con pocos salones, dos anchas por fila. */
 export function HallOfFameTileGrid({ halls, detailed = false }: { halls: HallOfFameClass[]; detailed?: boolean }) {
+  const wide = halls.length <= WIDE_TILES_MAX;
   return (
-    <ul className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+    <ul className={`grid w-full grid-cols-1 gap-3 ${wide ? "sm:grid-cols-2" : "sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"}`}>
       {halls.map((hall) => (
-        <HallOfFameTile key={hall.awardSlug} hall={hall} detailed={detailed} />
+        <HallOfFameTile key={hall.awardSlug} hall={hall} detailed={detailed} wide={wide} />
       ))}
     </ul>
   );

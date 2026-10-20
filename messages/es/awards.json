@@ -101,7 +101,8 @@
     "exploreSeeAll": "Ver todos",
     "hubHeading": "Salones de la fama",
     "previousClasses": "Clases anteriores de {award}",
-    "hubClasses": "{count, plural, one {# clase} other {# clases}}"
+    "hubClasses": "{count, plural, one {# clase} other {# clases}}",
+    "inducteesCount": "{count, plural, one {# grabación} other {# grabaciones}}"
   },
   "votingHall": {
     "academy": "Lo elige un comité de la academia",
