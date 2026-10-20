@@ -18,6 +18,7 @@ export function CommunityListCard({
   canSave,
   dense = false,
   showDate = false,
+  large = false,
 }: {
   list: DiscoverListSummary;
   /** Hay sesión: se ofrece la acción Guardar/Seguir. */
@@ -27,6 +28,8 @@ export function CommunityListCard({
   dense?: boolean;
   /** En la variante densa, muestra la antigüedad en lugar de los guardados (De la gente que sigues). */
   showDate?: boolean;
+  /** Tarjeta grande: una única Destacada ocupa la fila (con dos o más, la normal). */
+  large?: boolean;
 }) {
   const t = useTranslations("lists");
   const ownerName = list.owner.displayName ?? `@${list.owner.username}`;
@@ -58,6 +61,7 @@ export function CommunityListCard({
       coverThumbs={list.coverThumbs}
       description={list.description}
       dense={dense}
+      large={large}
       badge={badge}
       // Siempre dos líneas: qué es · cuánto (· guardados en la tarjeta completa), y de quién · cuándo (en las
       // secciones densas, de quién · guardados: la cifra que ordena Populares). Antes era una sola línea que

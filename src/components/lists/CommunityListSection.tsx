@@ -36,6 +36,8 @@ interface CommunityListSectionProps {
   cols?: 1 | 2 | 3;
   /** Card compacta a juego con `cols`; ver `ListCard`/`CommunityListCard`. */
   dense?: boolean;
+  /** Listas que ya salieron en una sección de más arriba: no se repiten (openspec: polish-community-lists). */
+  excludeIds?: string[];
 }
 
 // Una sección paginada de `/lists` (Populares, De seguidos, Recientes). La
@@ -50,6 +52,7 @@ export function CommunityListSection({
   canSave,
   cols = 2,
   dense = false,
+  excludeIds = [],
 }: CommunityListSectionProps) {
   const t = useTranslations("lists");
   const { fetch, queryKey } = SOURCES[source];
@@ -63,7 +66,8 @@ export function CommunityListSection({
     staleTime: 30_000,
   });
 
-  const lists = data?.pages.flatMap((page) => page.lists) ?? initial.lists;
+  const excluded = new Set(excludeIds);
+  const lists = (data?.pages.flatMap((page) => page.lists) ?? initial.lists).filter((list) => !excluded.has(list.id));
   if (lists.length === 0) return null;
 
   return (

@@ -20,6 +20,8 @@ interface ListCardProps {
   /** Variante compacta: mosaico chico, sin descripción. Para grillas/listas de
    * navegación (Populares, Recientes, De seguidos) donde se escanea, no se lee. */
   dense?: boolean;
+  /** Variante grande: mosaico mayor y título más grande, para una lista sola que ocupa la fila (una única Destacada). */
+  large?: boolean;
   /** Clases extra para la tarjeta (p. ej. ancho fijo dentro de un riel). */
   className?: string;
   /** Marca junto al título (p. ej. "Oficial"). */
@@ -49,6 +51,7 @@ export function ListCard({
   unavailable,
   pinnedLabel,
   dense = false,
+  large = false,
   className = "",
   badge,
   subMeta,
@@ -62,12 +65,12 @@ export function ListCard({
       } ${aside ? (dense ? "items-center" : "flex-wrap items-center sm:flex-nowrap") : ""} ${unavailable ? "opacity-60" : ""} ${className}`}
     >
       <Link href={href} className="shrink-0" tabIndex={-1} aria-hidden>
-        <ListCoverMosaic coverThumbs={coverThumbs} className={dense ? "w-12" : "w-20"} />
+        <ListCoverMosaic coverThumbs={coverThumbs} className={dense ? "w-12" : large ? "w-28 sm:w-36" : "w-20"} />
       </Link>
 
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex min-w-0 items-center gap-2">
-          <h3 className={`truncate font-display text-paper ${dense ? "text-sm" : "text-base"}`}>
+          <h3 className={`truncate font-display text-paper ${dense ? "text-sm" : large ? "text-xl" : "text-base"}`}>
             <Link href={href} className="transition-colors hover:text-amber">
               {title}
             </Link>
@@ -85,7 +88,7 @@ export function ListCard({
         ) : null}
 
         {description && !dense ? (
-          <p className="line-clamp-2 whitespace-pre-wrap font-body text-sm text-paper-muted">
+          <p className="line-clamp-2 max-w-prose whitespace-pre-wrap font-body text-sm text-paper-muted">
             {description}
           </p>
         ) : null}

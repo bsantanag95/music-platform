@@ -29,8 +29,10 @@ vi.mock("@/services/lists/community", () => ({
   listsFromFollowing: mocks.listsFromFollowing,
 }));
 vi.mock("@/components/lists/CommunityListSection", () => ({
-  CommunityListSection: ({ headingKey }: { headingKey: string }) => (
-    <div data-testid="section">{headingKey}</div>
+  CommunityListSection: ({ headingKey, excludeIds = [] }: { headingKey: string; excludeIds?: string[] }) => (
+    <div data-testid="section" data-exclude={excludeIds.join(",")}>
+      {headingKey}
+    </div>
   ),
 }));
 vi.mock("@/components/lists/CommunityListCard", () => ({
@@ -60,7 +62,7 @@ describe("/lists", () => {
     mocks.discoverCaminos.mockResolvedValue({ caminos: [], page: 1, pageSize: 8, hasNext: false });
   });
 
-  it("con sesión compone las cuatro secciones que tienen contenido", async () => {
+  it("con sesión compone las secciones con contenido: lo de la gente que sigues antes que lo general", async () => {
     mocks.resolveSession.mockResolvedValue({ user: { id: "u1" } });
     mocks.listFeaturedLists.mockResolvedValue({ lists: [list] });
     mocks.listPopularLists.mockResolvedValue(page([list]));
@@ -73,10 +75,22 @@ describe("/lists", () => {
     expect(screen.getByTestId("toolbar")).toBeInTheDocument();
     const headings = screen.getAllByTestId("section").map((n) => n.textContent);
     expect(headings).toEqual([
-      "community.popularHeading",
       "community.followingHeading",
+      "community.popularHeading",
       "community.recentHeading",
     ]);
+  });
+
+  it("cada sección deja fuera las listas que ya salieron más arriba", async () => {
+    mocks.resolveSession.mockResolvedValue({ user: { id: "u1" } });
+    mocks.listFeaturedLists.mockResolvedValue({ lists: [{ id: "f1" }] });
+    mocks.listsFromFollowing.mockResolvedValue(page([{ id: "s1" }]));
+    mocks.listPopularLists.mockResolvedValue(page([{ id: "p1" }]));
+    mocks.listDiscoverLists.mockResolvedValue(page([{ id: "r1" }]));
+
+    await renderPage();
+
+    expect(screen.getAllByTestId("section").map((n) => n.getAttribute("data-exclude"))).toEqual(["f1", "f1,s1", "f1,s1,p1"]);
   });
 
   it("muestra 'Para completar' con las listas seguidas y enlaza a /caminos", async () => {

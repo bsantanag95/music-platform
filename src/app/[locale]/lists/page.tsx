@@ -23,7 +23,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 // Superficie pública de descubrimiento de listas de la comunidad. Tiene dos
 // estados (cambio rework-public-lists-surface): "vitrina" (sin filtros), que
-// compone Destacadas → Populares → De usuarios seguidos → Recientes, y
+// compone Destacadas → De usuarios seguidos → Populares → Para completar → Recientes (openspec:
+// polish-community-lists: con sesión, lo de la gente que sigues va antes que lo general; cada lista sale una
+// sola vez, en la primera sección que le toca), y
 // "explorar" (con q/type/sort), que reemplaza la composición por una única
 // grilla filtrada y paginada. El toolbar está siempre visible.
 export default async function CommunityListsPage({
@@ -59,6 +61,17 @@ export default async function CommunityListsPage({
       recent.lists.length > 0 ||
       toComplete.caminos.length > 0;
 
+    // Cada lista sale una vez, en la primera sección donde aparece (de arriba hacia abajo): antes "Discos favoritos del
+    // momento" salía en De la gente que sigues, Populares y Recientes. Se cuentan las de la primera página de cada sección.
+    const ids = (lists: { id: string }[]) => lists.map((list) => list.id);
+    const featuredIds = ids(featured.lists);
+    const followingIds = ids(fromFollowing?.lists ?? []);
+    const shownBefore = {
+      following: featuredIds,
+      popular: [...featuredIds, ...followingIds],
+      recent: [...featuredIds, ...followingIds, ...ids(popular.lists)],
+    };
+
     content = (
       <>
         {!anySection ? (
@@ -70,43 +83,18 @@ export default async function CommunityListsPage({
 
         {featured.lists.length > 0 ? (
           // Sin caja propia (era una caja con tarjetas-caja dentro) ni rótulo ámbar: título y una línea
-          // que dice qué reúne, como las secciones de Explorar.
+          // que dice qué reúne, como las secciones de Explorar. Una sola destacada ocupa la fila, más grande.
           <section className="flex w-full flex-col gap-4">
             <SectionHeader
               heading={t("community.featuredHeading")}
               description={t("community.featuredDescription")}
               seeAll={{ href: "/explore/collections", label: t("community.seeCollections") }}
             />
-            <ListsGrid>
+            <ListsGrid cols={featured.lists.length === 1 ? 1 : 2}>
               {featured.lists.map((list) => (
-                <CommunityListCard key={list.id} list={list} canSave={canSave} />
+                <CommunityListCard key={list.id} list={list} canSave={canSave} large={featured.lists.length === 1} />
               ))}
             </ListsGrid>
-          </section>
-        ) : null}
-
-        {popular.lists.length > 0 ? (
-          <CommunityListSection
-            source="popular"
-            descriptionKey="community.popularDescription"
-            headingKey="community.popularHeading"
-            initial={popular}
-            canSave={canSave}
-            cols={3}
-            dense
-          />
-        ) : null}
-
-        {toComplete.caminos.length > 0 ? (
-          // Descubrimiento de listas para completar (openspec: clarify-user-menu-names): sale de la
-          // barra general y se alcanza desde aquí; mismo orden y vitrina que `/caminos`.
-          <section className="flex w-full flex-col gap-4">
-            <SectionHeader
-              heading={tCamino("hub.toComplete")}
-              description={tCamino("hub.toCompleteDescription")}
-              seeAll={{ href: "/caminos", label: tCamino("hub.seeAll") }}
-            />
-            <CaminoDiscoveryGrid caminos={toComplete.caminos} />
           </section>
         ) : null}
 
@@ -119,7 +107,34 @@ export default async function CommunityListsPage({
             canSave={canSave}
             cols={2}
             dense
+            excludeIds={shownBefore.following}
           />
+        ) : null}
+
+        {popular.lists.length > 0 ? (
+          <CommunityListSection
+            source="popular"
+            descriptionKey="community.popularDescription"
+            headingKey="community.popularHeading"
+            initial={popular}
+            canSave={canSave}
+            cols={3}
+            dense
+            excludeIds={shownBefore.popular}
+          />
+        ) : null}
+
+        {toComplete.caminos.length > 0 ? (
+          // Descubrimiento de listas para completar (openspec: clarify-user-menu-names): sale de la
+          // barra general y se alcanza desde aquí; mismo orden que `/caminos`, con la tarjeta compacta de esta página.
+          <section className="flex w-full flex-col gap-4">
+            <SectionHeader
+              heading={tCamino("hub.toComplete")}
+              description={tCamino("hub.toCompleteDescription")}
+              seeAll={{ href: "/caminos", label: tCamino("hub.seeAll") }}
+            />
+            <CaminoDiscoveryGrid caminos={toComplete.caminos} dense />
+          </section>
         ) : null}
 
         {recent.lists.length > 0 ? (
@@ -131,6 +146,7 @@ export default async function CommunityListsPage({
             canSave={canSave}
             cols={3}
             dense
+            excludeIds={shownBefore.recent}
           />
         ) : null}
       </>

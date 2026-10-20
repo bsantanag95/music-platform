@@ -16,7 +16,7 @@ import {
   PUBLIC_LIST_COLUMNS,
 } from "./discovery";
 import { activeUserCondition } from "@/services/auth/account-status";
-import { notFeaturedCollectionCondition } from "@/services/discovery/collections/conditions";
+import { notFeaturedCollectionCondition, notGeneratedCollectionCondition } from "@/services/discovery/collections/conditions";
 
 /**
  * Sección "Destacadas": las listas editoriales oficiales publicadas de `@exploracion`, de la más reciente a la
@@ -80,6 +80,8 @@ export async function listPopularLists(
         readerId ? ne(userList.ownerId, readerId) : undefined,
         notBlockedByReader(readerId),
         eq(userList.kind, "standard"),
+        // Las colecciones generadas son contenido de Explorar, no de la comunidad (openspec: polish-community-lists).
+        notGeneratedCollectionCondition(),
       ),
     )
     .groupBy(userList.id, appUser.id)

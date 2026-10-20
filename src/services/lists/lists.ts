@@ -275,11 +275,12 @@ export async function enrichLists(
     if (entry) entry.itemCount = Number(row.n);
   }
 
-  // Carátula por ítem: la del release group para álbumes, la de un álbum
-  // representativo para canciones (`LIST_ITEM_SONG_COVER`), NULL para artistas.
+  // Imagen por ítem: la carátula del release group para álbumes, la de un álbum representativo para canciones
+  // (`LIST_ITEM_SONG_COVER`) y la foto del artista (si no fue retirada) para artistas (openspec: polish-community-lists;
+  // antes NULL, y el mosaico de una lista de artistas eran cuatro discos vacíos).
   // El `row_number()` corre después del WHERE, así que ordena solo las
   // disponibles: "las primeras N carátulas disponibles", igual que el detalle.
-  const itemCover = sql<string | null>`coalesce(${releaseGroup.coverThumbUrl}, ${LIST_ITEM_SONG_COVER})`;
+  const itemCover = sql<string | null>`coalesce(${releaseGroup.coverThumbUrl}, ${LIST_ITEM_SONG_COVER}, case when ${artist.photoBlockedAt} is null then ${artist.photoUrl} end)`;
   const covers = await db
     .select({
       listId: userListItem.listId,
@@ -288,6 +289,7 @@ export async function enrichLists(
     })
     .from(userListItem)
     .leftJoin(releaseGroup, eq(userListItem.releaseGroupId, releaseGroup.id))
+    .leftJoin(artist, eq(userListItem.artistId, artist.id))
     .where(and(inArray(userListItem.listId, listIds), sql`${itemCover} is not null`));
   const sorted = covers
     .filter((row) => Number(row.rn) <= coverLimit)
