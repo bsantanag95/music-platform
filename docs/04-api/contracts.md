@@ -1579,7 +1579,7 @@ Parámetros opcionales (cambio `rework-public-lists-surface`):
 Sin filtros, el contrato y la respuesta no cambian. Con `sort=popular` se ordena por conteo
 agregado de guardados descendente (a igualdad, por creación) e **incluye** las listas sin
 guardados al final; esto difiere de la sección "Populares" (`/api/lists/popular`), que exige
-al menos un guardado. En ese orden, cada entrada incluye `saveCount`.
+un mínimo de guardados (`MIN_POPULAR_SAVES`, 2). En ese orden, cada entrada incluye `saveCount`.
 
 **200 OK:** `{ lists: [{ ..., owner, saved, following, saveCount? }], page, pageSize, hasNext }`. Sin
 sesión, `saved`/`following` son `false`.
@@ -1588,9 +1588,11 @@ soportados.
 
 ### `GET /api/lists/popular?page=&pageSize=` (cambio `add-community-lists-surface`)
 
-Sección "Populares" de `/lists`: listas públicas de perfiles públicos con al menos un
-guardado, ordenadas por conteo agregado de guardados descendente (a igualdad, por fecha de
-creación). **Público**; con sesión excluye las listas propias.
+Sección "Populares" de `/lists`: listas públicas de perfiles públicos con al menos
+`MIN_POPULAR_SAVES` (2) guardados, ordenadas por conteo agregado de guardados descendente (a
+igualdad, por fecha de creación). Con un solo guardado la lista no entra: la sección promete
+popularidad y una única persona no la sostiene; si ninguna llega al mínimo, la respuesta va vacía
+y `/lists` omite la sección. **Público**; con sesión excluye las listas propias.
 
 **200 OK:** `{ lists: [{ ..., owner, saved, following, saveCount }], page, pageSize, hasNext }`.
 **400** con `VALIDATION_ERROR` si la paginación es inválida.

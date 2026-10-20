@@ -106,6 +106,38 @@ describe("/lists", () => {
     expect(screen.queryByText("community.emptyTitle")).not.toBeInTheDocument();
   });
 
+  it("'Para completar' va después de Recientes: las listas sociales quedan juntas", async () => {
+    mocks.resolveSession.mockResolvedValue(null);
+    mocks.listPopularLists.mockResolvedValue(page([list]));
+    mocks.listDiscoverLists.mockResolvedValue(page([list]));
+    mocks.discoverCaminos.mockResolvedValue({ caminos: [{ id: "c1" }], page: 1, pageSize: 8, hasNext: false });
+
+    await renderPage();
+
+    const recent = screen.getByText("community.recentHeading");
+    const toComplete = screen.getByTestId("to-complete-grid");
+    expect(recent.compareDocumentPosition(toComplete) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("con sesión ofrece 'Crear lista' y no la invitación a entrar", async () => {
+    mocks.resolveSession.mockResolvedValue({ user: { id: "u1" } });
+
+    await renderPage();
+
+    expect(screen.getByText("createList")).toBeInTheDocument();
+    expect(screen.queryByText(/community\.signInAction/)).not.toBeInTheDocument();
+  });
+
+  it("sin sesión invita a iniciar sesión y no ofrece 'Crear lista'", async () => {
+    mocks.resolveSession.mockResolvedValue(null);
+
+    await renderPage();
+
+    // El `Link` simulado devuelve solo el texto: acción y resto quedan en el mismo párrafo.
+    expect(screen.getByText(/community\.signInAction.*community\.signInRest/)).toBeInTheDocument();
+    expect(screen.queryByText("createList")).not.toBeInTheDocument();
+  });
+
   it("sin listas con seguimiento no renderiza 'Para completar'", async () => {
     mocks.resolveSession.mockResolvedValue(null);
     mocks.listDiscoverLists.mockResolvedValue(page([list]));

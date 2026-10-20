@@ -54,8 +54,15 @@ export async function listFeaturedLists(readerId: string | null) {
 }
 
 /**
- * Sección "Populares": listas públicas de perfiles públicos con al menos un
- * guardado, ordenadas por conteo de guardados descendente y, a igualdad, por
+ * Guardados mínimos para entrar en "Populares". Con uno solo, la sección rotulada "las que más guarda la comunidad"
+ * mostraba listas que guardó una única persona: prometía una popularidad que no existe. Si ninguna llega al
+ * mínimo, la sección no se muestra (`page.tsx` omite una sección vacía).
+ */
+export const MIN_POPULAR_SAVES = 2;
+
+/**
+ * Sección "Populares": listas públicas de perfiles públicos con al menos
+ * `MIN_POPULAR_SAVES` guardados, ordenadas por conteo de guardados descendente y, a igualdad, por
  * fecha de creación. Vitrina, no ranking: sin posiciones numeradas.
  */
 export async function listPopularLists(
@@ -85,6 +92,7 @@ export async function listPopularLists(
       ),
     )
     .groupBy(userList.id, appUser.id)
+    .having(sql`${saves} >= ${MIN_POPULAR_SAVES}`)
     .orderBy(desc(saves), desc(userList.createdAt))
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);

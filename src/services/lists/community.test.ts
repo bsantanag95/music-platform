@@ -1,7 +1,7 @@
 import { PgDialect } from "drizzle-orm/pg-core";
 import type { SQL } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { listFeaturedLists, listPopularLists, listsFromFollowing } from "./community";
+import { listFeaturedLists, listPopularLists, listsFromFollowing, MIN_POPULAR_SAVES } from "./community";
 
 const mocks = vi.hoisted(() => ({
   db: { select: vi.fn() },
@@ -136,6 +136,32 @@ describe("servicio de listas de la comunidad", () => {
     const result = await listPopularLists(reader, 1, 20);
     expect(result.lists[0]?.saveCount).toBe(7);
     expect(mocks.saveCountsFor).toHaveBeenCalled();
+  });
+
+  it("Populares: exige un mínimo de guardados, no solo uno", async () => {
+    let having: unknown;
+    const builder: Record<string, unknown> = {
+      from: () => builder,
+      innerJoin: () => builder,
+      where: () => builder,
+      groupBy: () => builder,
+      having: (condition: unknown) => {
+        having = condition;
+        return builder;
+      },
+      orderBy: () => builder,
+      limit: () => builder,
+      offset: () => Promise.resolve([]),
+    };
+    mocks.db.select.mockReturnValueOnce(builder);
+
+    await listPopularLists(reader, 1, 20);
+
+    const { sql, params } = new PgDialect().sqlToQuery(having as SQL);
+    expect(sql).toContain("count(");
+    expect(sql).toContain(">=");
+    expect(params).toContain(MIN_POPULAR_SAVES);
+    expect(MIN_POPULAR_SAVES).toBeGreaterThanOrEqual(2);
   });
 
   it("Populares: valida la paginación", async () => {

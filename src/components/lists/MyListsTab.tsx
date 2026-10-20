@@ -27,13 +27,20 @@ import { useListFilters } from "./use-list-filters";
 
 const PAGE_SIZE = 20;
 
-export function MyListsTab({ initial }: { initial: ListsListResponse }) {
+export function MyListsTab({
+  initial,
+  initialShowForm = false,
+}: {
+  initial: ListsListResponse;
+  /** Abre el formulario de nueva lista al montar (el enlace "Crear lista" de `/lists`). */
+  initialShowForm?: boolean;
+}) {
   const t = useTranslations("lists");
   const queryClient = useQueryClient();
 
   const { filters, setFilters, searchInput, setSearchInput, isFiltered, params, clear } =
     useListFilters();
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(initialShowForm);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [rowBusyId, setRowBusyId] = useState<string | null>(null);
   const [announce, setAnnounce] = useState("");

@@ -142,7 +142,7 @@ exploración siempre visible** (búsqueda por texto, filtro por tipo y orden Pop
   "Limpiar filtros". El orden `popular` incluye las listas sin guardados al final.
 
 En vitrina, secciones, en este orden (openspec: polish-community-lists: con sesión, lo de la gente que sigues antes que lo
-general). **Cada lista sale una sola vez**: una lista que ya está en una sección de más arriba (contando la primera página de
+general; las listas sociales van juntas y «Para completar» cierra la página). **Cada lista sale una sola vez**: una lista que ya está en una sección de más arriba (contando la primera página de
 cada una) no se repite abajo (`excludeIds` de `CommunityListSection`).
 
 1. **Destacadas** — solo las listas **editoriales oficiales publicadas** de `@exploracion`
@@ -154,16 +154,23 @@ cada una) no se repite abajo (`excludeIds` de `CommunityListSection`).
 2. **De la gente que sigues** — listas visibles (`public` o `followers`) de usuarios que el
    lector sigue, recientes primero, sin las vacías (aparecen con su primer ítem). Solo con sesión; `GET /api/lists/from-following` responde
    `401 AUTH_REQUIRED` sin ella.
-3. **Populares** — listas públicas ordenadas por conteo agregado de guardados, sin las colecciones generadas por plantilla. Vitrina, no
-   ranking: "N guardados" en la tarjeta, sin posiciones. `GET /api/lists/popular`.
-4. **Para completar** — listas que otras personas siguen para completar (`discoverCaminos`), con la tarjeta compacta de las demás
-   secciones.
-5. **Recientes** — el descubrimiento cronológico de `list-discovery`, ahora accesible sin
+3. **Populares** — listas públicas con al menos `MIN_POPULAR_SAVES` (2) guardados, ordenadas por conteo agregado de guardados, sin las
+   colecciones generadas por plantilla. Con un solo guardado la sección prometía una popularidad que una única persona no sostiene;
+   si ninguna llega al mínimo, la sección no se muestra. Vitrina, no ranking: "N guardados" en la tarjeta, sin posiciones.
+   `GET /api/lists/popular`.
+4. **Recientes** — el descubrimiento cronológico de `list-discovery`, ahora accesible sin
    sesión (`GET /api/lists/discover` pasó a público). La pestaña "Descubrir" de `/me/lists`
    se conserva y comparte servicio. Las listas vacías no se descubren (ni aquí, ni en la búsqueda u
    orden de `/lists`, ni en "Descubrir"): aparecen con su primer ítem; el filtro va en SQL. Sin filtros, tampoco las
    colecciones generadas por plantilla de `@exploracion` (`notGeneratedCollectionCondition`): son contenido de Explorar y llenaban "lo
    último que publicó la comunidad"; una búsqueda o un filtro sí las encuentra.
+5. **Para completar** — al final: es otro tipo de objeto (progreso, no listas sociales) y entre Populares y Recientes cortaba la
+   lectura de las listas de la comunidad. Listas que otras personas siguen para completar (`discoverCaminos`), con la tarjeta
+   compacta de las demás secciones.
+
+**Cabecera.** Junto al título, con sesión, el botón **Crear lista**: lleva a `/me/lists?new=1`, que abre el formulario de nueva
+lista ya desplegado (sin sesión no se muestra). Sin sesión, una línea discreta bajo el buscador invita a iniciar sesión para guardar
+listas y seguir a quienes las crean (`/auth/login`).
 
 Tarjetas: el mosaico usa 1, 2, 3 o 4 imágenes según las que haya, sin discos de relleno, y en una lista de artistas muestra sus fotos
 (`enrichLists`: foto no retirada del artista); una sola Destacada ocupa la fila con un mosaico mayor (`ListCard` `large`).

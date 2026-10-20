@@ -105,6 +105,8 @@
     "emptyTitle": "Todavía no hay listas para descubrir",
     "emptyDescription": "Cuando la comunidad publique listas públicas, aparecerán aquí.",
     "featuredDescription": "Listas oficiales que escribe el equipo. Las colecciones de la plataforma viven en Explorar.",
+    "signInAction": "Inicia sesión",
+    "signInRest": "para guardar listas y seguir a quienes las crean.",
     "seeCollections": "Ver colecciones",
     "popularDescription": "Las que más guarda la comunidad.",
     "followingDescription": "Listas recientes de las personas que sigues.",

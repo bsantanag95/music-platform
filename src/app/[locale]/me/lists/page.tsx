@@ -12,11 +12,14 @@ import { DiscoverListsTab } from "@/components/lists/DiscoverListsTab";
 export default async function ListsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string | string[] }>;
+  searchParams: Promise<{ tab?: string | string[]; new?: string | string[] }>;
 }) {
   const t = await getTranslations("lists");
   const user = await requirePageUser();
-  const tab = parseListsTab((await searchParams).tab);
+  const { tab: rawTab, new: rawNew } = await searchParams;
+  const tab = parseListsTab(rawTab);
+  // `?new=1` (el botón "Crear lista" de `/lists`) abre el formulario de nueva lista ya desplegado.
+  const openForm = rawNew === "1";
 
   let panel;
   if (tab === "saved") {
@@ -24,7 +27,7 @@ export default async function ListsPage({
   } else if (tab === "discover") {
     panel = <DiscoverListsTab initial={await listDiscoverLists(user.id, 1, 20)} />;
   } else {
-    panel = <MyListsTab initial={await listMyLists(user.id, 1, 20)} />;
+    panel = <MyListsTab initial={await listMyLists(user.id, 1, 20)} initialShowForm={openForm} />;
   }
 
   return (
