@@ -5,7 +5,7 @@ import { renderWithIntl } from "@/test/i18n-test-utils";
 import type { CeremonyPage, HallOfFameClass, NominationView } from "@/services/awards/read";
 import { HallOfFameClassView } from "./HallOfFameClassView";
 import { HallOfFameExploreSection } from "./HallOfFameExploreSection";
-import { HallOfFameTile } from "./HallOfFameTile";
+import { HallOfFameTile, HallOfFameTileGrid, tileCovers } from "./HallOfFameTile";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, ...rest }: { href: string; children: ReactNode; scroll?: boolean }) => {
@@ -184,7 +184,7 @@ describe("HallOfFameTile", () => {
     renderWithIntl(<HallOfFameTile hall={hall()} />);
     expect(screen.getByText("Salón de la Fama de los Grammy")).toBeInTheDocument();
     expect(screen.getByText("2026")).toBeInTheDocument();
-    expect(screen.getByText("Clase")).toBeInTheDocument();
+    expect(screen.getByText("3 grabaciones")).toBeInTheDocument();
     expect(screen.getByRole("link")).toHaveAttribute("href", "/awards/grammy-hall-of-fame/2026");
   });
 
@@ -237,5 +237,41 @@ describe("HallOfFameTile", () => {
     renderWithIntl(<HallOfFameTile hall={registry({ years: [2026] })} detailed />);
     expect(screen.getByText("2026 · 1 clase · Lo elige un comité de selección")).toBeInTheDocument();
     expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+  });
+});
+
+describe("tileCovers", () => {
+  const withUrl = (id: string): NominationView => {
+    const base = album(id, id, "A");
+    if (base.subject?.kind !== "release_group") throw new Error("álbum");
+    return { ...base, subject: { ...base.subject, album: { ...base.subject.album, cover: { ...base.subject.album.cover, coverThumbUrl: `https://c.test/${id}.jpg` } } } };
+  };
+
+  it("pone primero las que tienen carátula, luego las del catálogo sin carátula y al final las de solo texto", () => {
+    const picked = tileCovers([textOnly("t1", "x"), album("a1", "Sin tapa", "A"), withUrl("u1"), song("s1", "S", "B"), withUrl("u2")], 4);
+    expect(picked.map((n) => n.id)).toEqual(["u1", "u2", "a1", "s1"]);
+  });
+
+  it("respeta el tope y el orden curado dentro de cada grupo", () => {
+    expect(tileCovers([album("a1", "1", "A"), album("a2", "2", "A"), album("a3", "3", "A")], 2).map((n) => n.id)).toEqual(["a1", "a2"]);
+  });
+});
+
+describe("HallOfFameTileGrid", () => {
+  const many = (prefix: string) => Array.from({ length: 9 }, (_, i) => album(`${prefix}${i}`, `T${i}`, "A"));
+
+  it("con hasta dos salones usa tarjetas anchas: ocho carátulas, las cuatro últimas solo desde lg", () => {
+    const { container } = renderWithIntl(<HallOfFameTileGrid halls={[hall({ inductees: many("g") }), registry({ inductees: many("r") })]} />);
+    expect(container.querySelector("ul")?.className).not.toContain("lg:grid-cols-5");
+    expect(screen.getAllByTestId("cover")).toHaveLength(16);
+    const lgOnly = [...container.querySelectorAll("span")].filter((el) => el.classList.contains("hidden") && el.classList.contains("lg:block"));
+    expect(lgOnly).toHaveLength(8);
+  });
+
+  it("con tres o más salones vuelve a la grilla de Premios con cuatro carátulas por tarjeta", () => {
+    const third = hall({ awardSlug: "otro-salon", inductees: many("o") });
+    const { container } = renderWithIntl(<HallOfFameTileGrid halls={[hall({ inductees: many("g") }), registry({ inductees: many("r") }), third]} />);
+    expect(container.querySelector("ul")?.className).toContain("lg:grid-cols-5");
+    expect(screen.getAllByTestId("cover")).toHaveLength(12);
   });
 });

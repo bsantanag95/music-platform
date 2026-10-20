@@ -35,7 +35,9 @@ como texto (13 no son música; las demás son grabaciones históricas que MusicB
   relación…", los puntajes que ordenan el catálogo ni la plantilla de colección `grammy-winners` (`competitionNominations`,
   `allCeremonies(kind)`).
 - **Dónde se ve:** sección "Salón de la Fama" de `/explore` (tras Premios y con su mismo aspecto: una tarjeta por salón, `HallOfFameTile`,
-  con el año de su última clase y cuatro carátulas, que abre esa clase; "Ver todos" al hub; el encabezado va en plural con más de un
+  con el año de su última clase, cuántas grabaciones ingresaron y carátulas —primero las que tienen carátula, luego las del catálogo
+  sin ella—, que abre esa clase; con hasta dos salones, tarjetas anchas de dos por fila con ocho carátulas desde `lg`, y con más, la
+  grilla de Premios con cuatro (openspec: polish-hall-of-fame-tiles); "Ver todos" al hub; el encabezado va en plural con más de un
   salón), bloque "Salones de la fama" del hub `/awards` (la misma tarjeta en su forma detallada: rango de clases, cuántas, quién
   decide y las clases anteriores como enlaces) y `/awards/<salón>[/<año>]` (`/awards/<salón>` redirige a la clase más reciente; las
   demás salen como años en la fila "Clase"). Las incorporaciones se listan solo en la página de la clase.
