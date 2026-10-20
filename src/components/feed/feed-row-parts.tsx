@@ -167,7 +167,9 @@ export function ProsePanel({
   );
 }
 
-export function RelativeDate({ iso }: { iso: string }) {
+// `className` suma visibilidad por breakpoint (ver `InlineDate`/`ColumnDate` en `FeedActivityList`). Sin formato
+// abreviado a propósito: en español `short` y `narrow` dan "hace 2 m" (mes) y "hace 2 a" (año), ambiguos.
+export function RelativeDate({ iso, className = "" }: { iso: string; className?: string }) {
   const format = useFormatter();
   const locale = useLocale();
   // `now` explícito: sin él, next-intl cae a `new Date()` en cada render y emite
@@ -177,7 +179,7 @@ export function RelativeDate({ iso }: { iso: string }) {
     <time
       dateTime={iso}
       title={new Date(iso).toLocaleString(locale)}
-      className="shrink-0 font-data text-xs text-paper-muted"
+      className={`shrink-0 font-data text-xs text-paper-muted ${className}`}
     >
       {format.relativeTime(new Date(iso), now)}
     </time>

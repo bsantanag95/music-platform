@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => ({
   listCommunityActivity: vi.fn(),
   listFeed: vi.fn(),
   listMyRecentActivity: vi.fn(),
+  listFeedAuthors: vi.fn(),
+  listTrendingConversations: vi.fn(),
 }));
 
 vi.mock("next-intl/server", () => ({
@@ -19,24 +21,39 @@ vi.mock("@/services/auth/sessions", () => ({ resolveSession: mocks.resolveSessio
 vi.mock("@/services/activity/community-activity", () => ({
   listCommunityActivity: mocks.listCommunityActivity,
 }));
-vi.mock("@/services/feed/feed", () => ({ listFeed: mocks.listFeed }));
+vi.mock("@/services/feed/feed", () => ({ listFeed: mocks.listFeed, listFeedAuthors: mocks.listFeedAuthors }));
 vi.mock("@/services/home/home", () => ({ listMyRecentActivity: mocks.listMyRecentActivity }));
+vi.mock("@/services/activity/trending-conversations", () => ({
+  listTrendingConversations: mocks.listTrendingConversations,
+}));
+vi.mock("@/components/activity/ActivityContextRail", () => ({
+  ActivityContextRail: ({ followingCount }: { followingCount: number | null }) => (
+    <div data-testid="rail">{String(followingCount)}</div>
+  ),
+}));
 vi.mock("@/components/activity/CommunityActivitySection", () => ({
   CommunityActivitySection: ({ headingKey }: { headingKey: string }) => (
     <div data-testid="section">{headingKey}</div>
   ),
 }));
+type TabProp = { key: string; label: string; initial?: unknown; empty: { title: string; action?: { href: string } } };
 vi.mock("@/components/activity/ActivityTabs", () => ({
-  ActivityTabs: ({ tabs }: { tabs: { key: string; label: string }[] }) => (
-    <div data-testid="tabs">{tabs.map((tab) => `${tab.key}:${tab.label}`).join(",")}</div>
+  ActivityTabs: ({ tabs }: { tabs: TabProp[] }) => (
+    <div data-testid="tabs">
+      <span data-testid="labels">{tabs.map((tab) => `${tab.key}:${tab.label}`).join(",")}</span>
+      <span data-testid="initial">{tabs.filter((tab) => tab.initial).map((tab) => tab.key).join(",")}</span>
+      <span data-testid="empties">
+        {tabs.map((tab) => `${tab.key}:${tab.empty.title}>${tab.empty.action?.href ?? ""}`).join(",")}
+      </span>
+    </div>
   ),
 }));
 
 const entry = { kind: "rating", id: "e1" };
 const page = (entries: unknown[]) => ({ entries, page: 1, pageSize: 10, hasNext: false });
 
-async function renderPage() {
-  render(await CommunityActivityPage());
+async function renderPage(search: Record<string, string> = {}) {
+  render(await CommunityActivityPage({ searchParams: Promise.resolve(search) }));
 }
 
 describe("/activity", () => {
@@ -45,6 +62,8 @@ describe("/activity", () => {
     mocks.listCommunityActivity.mockResolvedValue(page([]));
     mocks.listFeed.mockResolvedValue(page([]));
     mocks.listMyRecentActivity.mockResolvedValue(page([]));
+    mocks.listFeedAuthors.mockResolvedValue([]);
+    mocks.listTrendingConversations.mockResolvedValue([]);
   });
 
   it("con sesión y contenido en alguna fuente, muestra las tres pestañas", async () => {
@@ -53,21 +72,88 @@ describe("/activity", () => {
 
     await renderPage();
 
-    expect(screen.getByTestId("tabs").textContent).toBe(
+    expect(screen.getByTestId("labels").textContent).toBe(
       "recent:community.recentHeading,from-following:community.followingHeading,own:community.ownHeading",
     );
     expect(screen.queryByTestId("section")).not.toBeInTheDocument();
-    expect(mocks.listFeed).toHaveBeenCalledWith("u1", 1, 10);
+    // Sin ?tab= solo Recientes trae su página completa; de las otras basta una entrada para saber si tienen algo.
+    expect(screen.getByTestId("initial").textContent).toBe("recent");
+    expect(mocks.listCommunityActivity).toHaveBeenCalledWith("u1", 1, 10, { kind: undefined });
+    expect(mocks.listFeed).toHaveBeenCalledWith("u1", 1, 1, { kind: undefined });
+    expect(mocks.listMyRecentActivity).toHaveBeenCalledWith("u1", 1, 1);
+  });
+
+  it("?tab=you renderiza en el servidor la página completa de 'Tú'", async () => {
+    mocks.resolveSession.mockResolvedValue({ user: { id: "u1" } });
+    mocks.listMyRecentActivity.mockResolvedValue(page([entry]));
+
+    await renderPage({ tab: "you" });
+
+    expect(screen.getByTestId("initial").textContent).toBe("own");
     expect(mocks.listMyRecentActivity).toHaveBeenCalledWith("u1", 1, 10);
+    expect(mocks.listCommunityActivity).toHaveBeenCalledWith("u1", 1, 1, { kind: undefined });
+  });
+
+  it("?kind= filtra solo la página completa de la pestaña activa", async () => {
+    mocks.resolveSession.mockResolvedValue({ user: { id: "u1" } });
+
+    await renderPage({ tab: "following", kind: "listen" });
+
+    expect(mocks.listFeed).toHaveBeenCalledWith("u1", 1, 10, { kind: "listen" });
+    // Las otras fuentes se piden sin filtro (solo para saber si tienen algo).
+    expect(mocks.listCommunityActivity).toHaveBeenCalledWith("u1", 1, 1, { kind: undefined });
+    // Con un filtro activo no cae al estado vacío global aunque la página filtrada venga vacía.
+    expect(screen.getByTestId("tabs")).toBeInTheDocument();
+  });
+
+  it("un ?kind= que no aplica a la pestaña se ignora", async () => {
+    mocks.resolveSession.mockResolvedValue(null);
+    mocks.listCommunityActivity.mockResolvedValue(page([entry]));
+
+    await renderPage({ kind: "listen" });
+
+    expect(mocks.listCommunityActivity).toHaveBeenCalledWith(null, 1, 10, { kind: undefined });
+  });
+
+  it("un ?tab= desconocido cae a Recientes", async () => {
+    mocks.resolveSession.mockResolvedValue({ user: { id: "u1" } });
+    mocks.listCommunityActivity.mockResolvedValue(page([entry]));
+
+    await renderPage({ tab: "otra" });
+
+    expect(screen.getByTestId("initial").textContent).toBe("recent");
+  });
+
+  it("el estado vacío de 'Siguiendo' distingue si la persona no sigue a nadie", async () => {
+    mocks.resolveSession.mockResolvedValue({ user: { id: "u1" } });
+    mocks.listCommunityActivity.mockResolvedValue(page([entry]));
+
+    await renderPage();
+    expect(screen.getByTestId("empties").textContent).toBe(
+      "recent:community.empty.recentTitle>/explore,from-following:community.empty.followingNoneTitle>/users,own:community.empty.ownTitle>/explore",
+    );
+  });
+
+  it("si sigue a alguien, 'Siguiendo' vacío habla de la gente que sigue", async () => {
+    mocks.resolveSession.mockResolvedValue({ user: { id: "u1" } });
+    mocks.listCommunityActivity.mockResolvedValue(page([entry]));
+    mocks.listFeedAuthors.mockResolvedValue([{ id: "u2", username: "bea", displayName: null }]);
+
+    await renderPage();
+    expect(screen.getByTestId("empties").textContent).toContain(
+      "from-following:community.empty.followingQuietTitle>/users",
+    );
   });
 
   it("sin sesión no consulta 'de la gente que seguís' ni 'tu actividad', y muestra Recientes sin pestañas", async () => {
     mocks.resolveSession.mockResolvedValue(null);
     mocks.listCommunityActivity.mockResolvedValue(page([entry]));
 
-    await renderPage();
+    await renderPage({ tab: "you" });
 
     expect(mocks.listFeed).not.toHaveBeenCalled();
+    expect(mocks.listFeedAuthors).not.toHaveBeenCalled();
+    expect(mocks.listCommunityActivity).toHaveBeenCalledWith(null, 1, 10, { kind: undefined });
     expect(mocks.listMyRecentActivity).not.toHaveBeenCalled();
     expect(screen.queryByTestId("tabs")).not.toBeInTheDocument();
     expect(screen.getByTestId("section")).toHaveTextContent("community.recentHeading");
@@ -90,5 +176,25 @@ describe("/activity", () => {
 
     expect(screen.getByText("community.emptyTitle")).toBeInTheDocument();
     expect(screen.queryByTestId("tabs")).not.toBeInTheDocument();
+  });
+
+  it("muestra el riel con la cantidad de seguidos, o null sin sesión", async () => {
+    mocks.resolveSession.mockResolvedValue({ user: { id: "u1" } });
+    mocks.listCommunityActivity.mockResolvedValue(page([entry]));
+    mocks.listFeedAuthors.mockResolvedValue([{ id: "u2", username: "bea", displayName: null }]);
+
+    await renderPage();
+
+    expect(mocks.listTrendingConversations).toHaveBeenCalledWith("u1");
+    expect(screen.getByTestId("rail")).toHaveTextContent("1");
+  });
+
+  it("sin sesión el riel recibe followingCount null", async () => {
+    mocks.resolveSession.mockResolvedValue(null);
+    mocks.listCommunityActivity.mockResolvedValue(page([entry]));
+
+    await renderPage();
+
+    expect(screen.getByTestId("rail")).toHaveTextContent("null");
   });
 });

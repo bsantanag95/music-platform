@@ -2090,6 +2090,11 @@ export const FEED_KINDS = [
 ] as const;
 export type FeedKind = (typeof FEED_KINDS)[number];
 
+// Tipos filtrables de la actividad de la comunidad ("Recientes" de `/activity`, `GET /api/activity/recent?kind=`):
+// solo los que esa fuente compone (redesign-activity-page, D4).
+export const COMMUNITY_ACTIVITY_KINDS = ["rating", "comment", "review"] as const;
+export type CommunityActivityKind = (typeof COMMUNITY_ACTIVITY_KINDS)[number];
+
 export const FeedFavoriteSchema = z.object({
   kind: z.literal("favorite"),
   id: z.uuid(),

@@ -1,16 +1,18 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { AppImage } from "@/components/ui/AppImage";
-import { useLocale, useNow, useTranslations } from "next-intl";
+import { useLocale, useNow, useTimeZone, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { ReactionBadge } from "@/components/diary/ReactionBadge";
 import { formatStars } from "@/components/album/album-format";
 import { targetHref } from "./feed-target";
-import { listHref } from "@/lib/catalog-links";
+import { listHref, reviewHref } from "@/lib/catalog-links";
 import { StarRatingValue } from "@/components/social/StarRatingValue";
 import { CommentTopicLabel } from "@/components/social/CommentTopicLabel";
 import { isFeedEntryQuote } from "./feed-entry-tier";
+import { withDateSections } from "./feed-date-sections";
 import {
   groupFeedRuns,
   type FeedEntryGroup,
@@ -29,7 +31,10 @@ interface FeedActivityListProps {
   // "feed": actividad ajena — cada fila abre con la celda de carátula/disco y
   // ancla en el autor. "self": tu propio rastro — sin celda ni autor, con un
   // riel izquierdo continuo. Ver openspec/changes/redesign-feed, decisiones 3 y 10.
-  variant?: "feed" | "self";
+  // "own": tu propio rastro con la anatomía de "feed" (celda de carátula) pero sin
+  // autor — la pestaña "Tú" de `/activity`, para que se lea igual que las otras dos
+  // (redesign-activity-page, D6). Inicio sigue con "self".
+  variant?: "feed" | "self" | "own";
   // Pliega una cita larga (comentario o nota de escucha) que supera 6 líneas
   // de alto real, con un botón "Ver más"/"Ver menos". Opt-in: `FeedList`
   // (`/me/feed`) lo activa; `ScrollablePreviewList` (preview de feed y rastro
@@ -37,6 +42,12 @@ interface FeedActivityListProps {
   // por su propio contenedor de scroll, plegar ahí encima sería doble tope
   // (ver openspec/changes/add-feed-filters, Non-Goals).
   clamp?: boolean;
+  // Encabezados "Hoy / Esta semana / Este mes / Antes" entre filas (redesign-activity-page, D7). Opt-in: solo
+  // `/activity`; `/me/feed` e Inicio no los muestran.
+  dateSections?: boolean;
+  // La reseña como tarjeta de lectura —estrellas, titular, extracto a 4 líneas y "Leer reseña"— en vez de la cita
+  // con borde petróleo (redesign-activity-page, D8). Opt-in: solo `/activity`.
+  reviewCard?: boolean;
 }
 
 // Presentación del feed por peso de contenido: las entradas con prosa
@@ -44,13 +55,22 @@ interface FeedActivityListProps {
 // el resto —favoritos, listas, ratings, escuchas sin nota— ocupan una fila de
 // baseline. Superficie de solo lectura: los únicos controles son enlaces de
 // navegación al autor y al objetivo.
-export function FeedActivityList({ entries, variant = "feed", clamp = false }: FeedActivityListProps) {
+export function FeedActivityList({
+  entries,
+  variant = "feed",
+  clamp = false,
+  dateSections = false,
+  reviewCard = false,
+}: FeedActivityListProps) {
   const t = useTranslations("feed");
   const locale = useLocale();
   const self = variant === "self";
+  const hideAuthor = variant !== "feed";
   // `now` estable dentro del request (mismo valor que las fechas relativas):
   // `groupFeedRuns` lo usa para la ventana de 7 días del pico de rotación.
   const now = useNow();
+  const timeZone = useTimeZone();
+  const rows = groupFeedRuns(uniqueEntries(entries), now);
 
   return (
     <ul
@@ -62,7 +82,19 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
           : "divide-y divide-ink-border"
       }
     >
-      {groupFeedRuns(uniqueEntries(entries), now).map((row) => {
+      {(dateSections ? withDateSections(rows, now, timeZone) : rows).map((row) => {
+        if (row.kind === "date-section") {
+          // Encabezado de bloque: `role="presentation"` para no contarse como un elemento más de la lista; sin el
+          // borde inferior de `divide-y`, así se lee pegado a las filas que agrupa.
+          return (
+            <li key={row.id} role="presentation" className="border-b-0 pb-1 pt-6 first:pt-0">
+              <h3 className="font-data text-[11px] uppercase tracking-wider text-paper-muted">
+                {t(`community.dateSection.${row.bucket}`)}
+              </h3>
+            </li>
+          );
+        }
+
         // Fila subordinada, indentada a la columna del título de las filas
         // normales (celda `size-11 sm:size-12` + `gap-3 sm:gap-4`), sin celda:
         // tanto el grupo colapsado como el pico de rotación se leen como
@@ -74,7 +106,7 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
           return (
             <li key={row.id} className={subordinateClass}>
               {subordinateDot}
-              <RotationPeakRow peak={row} t={t} hideAuthor={self} />
+              <RotationPeakRow peak={row} t={t} hideAuthor={hideAuthor} />
             </li>
           );
         }
@@ -83,7 +115,7 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
           return (
             <li key={row.id} className={subordinateClass}>
               {subordinateDot}
-              <GroupRow group={row} t={t} hideAuthor={self} />
+              <GroupRow group={row} t={t} hideAuthor={hideAuthor} />
             </li>
           );
         }
@@ -92,7 +124,7 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
           return (
             <li key={row.id} className={`${self ? "relative py-3 pl-4" : "py-4"} first:pt-0 last:pb-0`}>
               {self ? <TimelineDot filled top="top-4" /> : null}
-              <OpinionRow row={row} t={t} self={self} clamp={clamp} />
+              <OpinionRow row={row} t={t} self={self} hideAuthor={hideAuthor} clamp={clamp} reviewCard={reviewCard} />
             </li>
           );
         }
@@ -101,7 +133,7 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
           return (
             <li key={`follow-${row.id}`} className={subordinateClass}>
               {subordinateDot}
-              <FollowRow entry={row} t={t} hideAuthor={self} />
+              <FollowRow entry={row} t={t} hideAuthor={hideAuthor} />
             </li>
           );
         }
@@ -110,7 +142,7 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
           return (
             <li key={`follow-artist-${row.id}`} className={subordinateClass}>
               {subordinateDot}
-              <FollowArtistRow entry={row} t={t} hideAuthor={self} />
+              <FollowArtistRow entry={row} t={t} hideAuthor={hideAuthor} />
             </li>
           );
         }
@@ -122,6 +154,8 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
           // Ritmo más apretado que "Tu feed": título, artista y reacción
           // comparten una línea (sin celda ni autor que ya la separan) para
           // que una entrada de sola presencia quede en dos líneas, no cuatro.
+          // La nota va en su propia línea, como en "feed": compartiendo la del
+          // título saltaba de lugar según el largo del título.
           return (
             <li
               key={entryKey(row)}
@@ -132,14 +166,8 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
               <div className="mt-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                 <TargetTitle {...targetLink(row)} layout="inline" />
                 <EntryReaction entry={row} inline />
-                {/* La nota comparte la línea del título: en el rastro propio la
-                    entrada de valoración queda en dos líneas, no tres. */}
-                {row.kind === "rating" ? (
-                  <span className="shrink-0 [&>span]:mt-0">
-                    <RatingValue entry={row} t={t} locale={locale} />
-                  </span>
-                ) : null}
               </div>
+              {row.kind === "rating" ? <RatingValue entry={row} t={t} locale={locale} /> : null}
               {row.kind === "review" ? <ReviewKicker title={row.title} /> : null}
               {heavy && body ? (
                 <ProsePanel
@@ -158,19 +186,25 @@ export function FeedActivityList({ entries, variant = "feed", clamp = false }: F
             <div className="flex gap-3 sm:gap-4">
               <FeedCell entry={row} />
               <div className="min-w-0 flex-1">
-                <MetaLine entry={row} t={t} hideAuthor={false} />
+                <MetaLine entry={row} t={t} hideAuthor={hideAuthor} />
                 <TargetTitle {...targetLink(row)} />
                 <EntryReaction entry={row} />
                 {row.kind === "rating" ? <RatingValue entry={row} t={t} locale={locale} /> : null}
-                {row.kind === "review" ? <ReviewKicker title={row.title} /> : null}
-                {heavy && body ? (
-                  <ProsePanel
-                    body={body}
-                    variant={row.kind === "listen" ? "impression" : "comment"}
-                    clamp={clamp}
-                    accent={row.kind === "review" ? "review" : undefined}
-                  />
-                ) : null}
+                {row.kind === "review" && reviewCard ? (
+                  <ReviewCard review={row} t={t} />
+                ) : (
+                  <>
+                    {row.kind === "review" ? <ReviewKicker title={row.title} /> : null}
+                    {heavy && body ? (
+                      <ProsePanel
+                        body={body}
+                        variant={row.kind === "listen" ? "impression" : "comment"}
+                        clamp={clamp}
+                        accent={row.kind === "review" ? "review" : undefined}
+                      />
+                    ) : null}
+                  </>
+                )}
               </div>
             </div>
           </li>
@@ -214,17 +248,15 @@ function GroupRow({
     <div>
       <div className="flex items-baseline justify-between gap-3">
         <span className="min-w-0 font-data text-xs text-paper-muted">
-          {hideAuthor ? null : (
-            <>
-              <AuthorIdentity author={group.author} />
-              {" · "}
-            </>
-          )}
+          {hideAuthor ? null : <AuthorIdentity author={group.author} />}
           {/* El verbo sigue al autor ("@ana · registró 3 escuchas"); sin autor (el propio rastro) abre la línea y va
               con mayúscula, como "Creó un Camino". */}
-          {hideAuthor ? verb.charAt(0).toLocaleUpperCase(locale) + verb.slice(1) : verb}
+          <MetaUnit separator={!hideAuthor}>
+            {hideAuthor ? verb.charAt(0).toLocaleUpperCase(locale) + verb.slice(1) : verb}
+          </MetaUnit>
+          <InlineDate iso={group.createdAt} />
         </span>
-        <RelativeDate iso={group.createdAt} />
+        <ColumnDate iso={group.createdAt} />
       </div>
       <p className="mt-1 font-data text-xs text-paper-muted">
         {shown.map((entry, index) => {
@@ -275,15 +307,11 @@ function RotationPeakRow({
     <div>
       <div className="flex items-baseline justify-between gap-3">
         <span className="min-w-0 font-data text-xs text-paper-muted">
-          {hideAuthor ? null : (
-            <>
-              <AuthorIdentity author={peak.author} />
-              {" · "}
-            </>
-          )}
-          {t("rotationPeak", { count: peak.count })}
+          {hideAuthor ? null : <AuthorIdentity author={peak.author} />}
+          <MetaUnit separator={!hideAuthor}>{t("rotationPeak", { count: peak.count })}</MetaUnit>
+          <InlineDate iso={peak.createdAt} />
         </span>
-        <RelativeDate iso={peak.createdAt} />
+        <ColumnDate iso={peak.createdAt} />
       </div>
       <p className="mt-1 font-data text-xs text-paper-muted">
         <Link
@@ -320,16 +348,19 @@ function FollowRow({
   return (
     <div className="flex items-baseline justify-between gap-3">
       <span className="min-w-0 font-data text-xs text-paper-muted">
-        <span aria-hidden="true" className="mr-1 inline-flex translate-y-px align-middle">
-          {FEED_KIND_ICONS.follow}
-        </span>
-        {hideAuthor ? null : (
-          <>
-            <AuthorIdentity author={entry.author} />
-            {" "}
-          </>
-        )}
-        {t("followVerb")}{" "}
+        {/* Ícono, autor y verbo como una sola unidad: el ícono nunca queda solo al final de una línea. */}
+        <span className="whitespace-nowrap">
+          <span aria-hidden="true" className="mr-1 inline-flex translate-y-px align-middle">
+            {FEED_KIND_ICONS.follow}
+          </span>
+          {hideAuthor ? null : (
+            <>
+              <AuthorIdentity author={entry.author} />
+              {" "}
+            </>
+          )}
+          {t("followVerb")}
+        </span>{" "}
         <UserHoverCard username={entry.followedUser.username}>
           <Link
             href={`/users/${encodeURIComponent(entry.followedUser.username)}`}
@@ -338,8 +369,9 @@ function FollowRow({
             {entry.followedUser.displayName ?? `@${entry.followedUser.username}`}
           </Link>
         </UserHoverCard>
+        <InlineDate iso={entry.createdAt} />
       </span>
-      <RelativeDate iso={entry.createdAt} />
+      <ColumnDate iso={entry.createdAt} />
     </div>
   );
 }
@@ -359,21 +391,24 @@ function FollowArtistRow({
   return (
     <div className="flex items-baseline justify-between gap-3">
       <span className="min-w-0 font-data text-xs text-paper-muted">
-        <span aria-hidden="true" className="mr-1 inline-flex translate-y-px align-middle">
-          {FEED_KIND_ICONS["follow-artist"]}
-        </span>
-        {hideAuthor ? null : (
-          <>
-            <AuthorIdentity author={entry.author} />
-            {" "}
-          </>
-        )}
-        {t("followArtistVerb")}{" "}
+        <span className="whitespace-nowrap">
+          <span aria-hidden="true" className="mr-1 inline-flex translate-y-px align-middle">
+            {FEED_KIND_ICONS["follow-artist"]}
+          </span>
+          {hideAuthor ? null : (
+            <>
+              <AuthorIdentity author={entry.author} />
+              {" "}
+            </>
+          )}
+          {t("followArtistVerb")}
+        </span>{" "}
         <Link href={targetHref("artist", entry.artist.id, entry.artist.name)} className="text-paper transition-colors hover:text-amber">
           {entry.artist.name}
         </Link>
+        <InlineDate iso={entry.createdAt} />
       </span>
-      <RelativeDate iso={entry.createdAt} />
+      <ColumnDate iso={entry.createdAt} />
     </div>
   );
 }
@@ -383,6 +418,39 @@ function FollowArtistRow({
 // borde petróleo de la prosa marca el tipo — eran tres señales para lo mismo.
 function ReviewKicker({ title }: { title: string | null }) {
   return title ? <p className="mt-1.5 font-display text-sm text-paper">{title}</p> : null;
+}
+
+// Tarjeta de lectura de una reseña (redesign-activity-page, D8): superficie elevada con las estrellas (si la reseña
+// viene fusionada con su valoración), el titular, un extracto plegado a 4 líneas y el enlace a la reseña completa. Sin
+// "Ver más": leerla entera es ir a su página, donde están sus comentarios.
+function ReviewCard({
+  review,
+  t,
+  rating = null,
+}: {
+  review: Extract<FeedEntry, { kind: "review" }>;
+  t: FeedT;
+  rating?: ReactNode;
+}) {
+  return (
+    <div className="mt-2 max-w-[60ch] rounded-lg border border-ink-border bg-ink-surface px-3 py-3 sm:px-4">
+      {rating ? <div className="[&>span]:mt-0">{rating}</div> : null}
+      {review.title ? (
+        <p className={`font-display text-base text-paper${rating ? " mt-1.5" : ""}`}>{review.title}</p>
+      ) : null}
+      <p
+        className={`line-clamp-4 whitespace-pre-wrap font-body text-sm text-paper${rating || review.title ? " mt-1" : ""}`}
+      >
+        {review.body}
+      </p>
+      <Link
+        href={reviewHref(review.author.username, review.target.title, review.id)}
+        className="mt-2 inline-block font-data text-xs text-paper-muted underline decoration-dotted underline-offset-2 transition-colors hover:text-amber"
+      >
+        {t("community.readReview")}
+      </Link>
+    </div>
+  );
 }
 
 function actionLabel(entry: FeedEntry, t: FeedT): string {
@@ -602,29 +670,62 @@ function MetaLine({
   return (
     <div className="flex items-baseline justify-between gap-3">
       <span className="min-w-0 font-data text-xs text-paper-muted">
-        {hideAuthor ? null : (
-          <>
-            <AuthorIdentity author={entry.author} />
-            {" · "}
-          </>
-        )}
-        {icon ? (
-          <span aria-hidden="true" className="mr-1 inline-flex translate-y-px align-middle">
-            {icon}
-          </span>
-        ) : null}
-        {label ?? actionLabel(entry, t)}
-        {audience ? ` · ${audience}` : null}
+        {hideAuthor ? null : <AuthorIdentity author={entry.author} />}
+        {/* El ícono va pegado a su verbo dentro de la misma unidad: antes se separaban en móvil ("· 📄" arriba,
+            "Valoró, reseñó y comentó" abajo). */}
+        <MetaUnit separator={!hideAuthor}>
+          {icon ? (
+            <span aria-hidden="true" className="mr-1 inline-flex translate-y-px align-middle">
+              {icon}
+            </span>
+          ) : null}
+          {label ?? actionLabel(entry, t)}
+        </MetaUnit>
+        {audience ? <MetaUnit separator>{audience}</MetaUnit> : null}
         {commentTopic ? (
-          <>
-            {" · "}
+          <MetaUnit separator>
             <CommentTopicLabel topic={commentTopic} />
-          </>
+          </MetaUnit>
         ) : null}
+        <InlineDate iso={entry.createdAt} />
       </span>
-      <RelativeDate iso={entry.createdAt} />
+      <ColumnDate iso={entry.createdAt} />
     </div>
   );
+}
+
+// Unidad indivisible de la línea de metadato (redesign-activity-page, D5): el salto de línea solo cae entre unidades
+// completas. El separador " · " va al inicio de la unidad, nunca al final de la anterior, así ninguna línea termina
+// en "·". El espacio previo queda fuera del `nowrap` para que el navegador pueda partir ahí.
+function MetaUnit({ separator = false, children }: { separator?: boolean; children: ReactNode }) {
+  return (
+    <>
+      {separator ? " " : null}
+      <span className="whitespace-nowrap">
+        {separator ? "· " : null}
+        {children}
+      </span>
+    </>
+  );
+}
+
+// Fecha de una fila de metadato. Desde `sm` va a la derecha en su propia columna (`ColumnDate`); por debajo viaja al
+// final del texto como una unidad más (`InlineDate`), para no reservar una columna que obligue a partir la línea del
+// autor. Solo una de las dos se muestra en cada ancho.
+function InlineDate({ iso }: { iso: string }) {
+  return (
+    <span className="sm:hidden">
+      {" "}
+      <span className="whitespace-nowrap">
+        {"· "}
+        <RelativeDate iso={iso} />
+      </span>
+    </span>
+  );
+}
+
+function ColumnDate({ iso }: { iso: string }) {
+  return <RelativeDate iso={iso} className="hidden sm:inline" />;
 }
 
 // Fila fusionada de opinión (openspec: expand-feed-coverage, D6): valoración,
@@ -632,7 +733,21 @@ function MetaLine({
 // una sola fila — verbo compuesto, estrellas con puntaje, reseña y comentario
 // como citas. Misma anatomía que una fila normal (celda + columna de texto en
 // "feed"; sin celda ni autor en "self").
-function OpinionRow({ row, t, self, clamp }: { row: FeedOpinionRow; t: FeedT; self: boolean; clamp: boolean }) {
+function OpinionRow({
+  row,
+  t,
+  self,
+  hideAuthor,
+  clamp,
+  reviewCard = false,
+}: {
+  row: FeedOpinionRow;
+  t: FeedT;
+  self: boolean;
+  hideAuthor: boolean;
+  clamp: boolean;
+  reviewCard?: boolean;
+}) {
   const locale = useLocale();
   const primary: FeedEntry = row.rating ?? row.review ?? row.comment!;
   const parts = [row.rating && "rating", row.review && "review", row.comment && "comment"].filter(Boolean);
@@ -641,15 +756,26 @@ function OpinionRow({ row, t, self, clamp }: { row: FeedOpinionRow; t: FeedT; se
 
   const content = (
     <>
-      <MetaLine entry={primary} t={t} hideAuthor={self} label={verb} iconKind={iconKind} topic={row.comment?.topic} />
+      <MetaLine entry={primary} t={t} hideAuthor={hideAuthor} label={verb} iconKind={iconKind} topic={row.comment?.topic} />
       <TargetTitle {...targetLink(primary)} layout={self ? "inline" : undefined} />
-      {row.rating ? <RatingValue entry={row.rating} t={t} locale={locale} /> : null}
-      {row.review ? (
+      {row.review && reviewCard ? (
+        // Con tarjeta, las estrellas de la valoración fusionada van dentro de ella, junto al texto que califican.
+        <ReviewCard
+          review={row.review}
+          t={t}
+          rating={row.rating ? <RatingValue entry={row.rating} t={t} locale={locale} /> : null}
+        />
+      ) : (
         <>
-          <ReviewKicker title={row.review.title} />
-          <ProsePanel body={row.review.body} variant="comment" clamp={clamp} accent="review" />
+          {row.rating ? <RatingValue entry={row.rating} t={t} locale={locale} /> : null}
+          {row.review ? (
+            <>
+              <ReviewKicker title={row.review.title} />
+              <ProsePanel body={row.review.body} variant="comment" clamp={clamp} accent="review" />
+            </>
+          ) : null}
         </>
-      ) : null}
+      )}
       {row.comment ? <ProsePanel body={row.comment.body} variant="comment" clamp={clamp} /> : null}
     </>
   );

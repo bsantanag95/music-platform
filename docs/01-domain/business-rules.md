@@ -196,6 +196,19 @@ para "Popular ahora", el orden "Populares" de los listados y la colección "Lo m
 - "Ahora" son 30 días; con pocos datos la ventana se agranda a 90 días y luego a "de siempre" (aceptando objetivos con una persona),
   y la interfaz dice qué ventana usó.
 
+## Conversación de la semana (`/activity`)
+
+Cambio `redesign-activity-page` (2026-10). Riel "Con más conversación esta semana" de la página Comunidad.
+
+- Entra un álbum con al menos **2 personas distintas** que, en los últimos **7 días**, lo valoraron, lo comentaron (solo
+  comentarios raíz: las respuestas no cuentan) o lo reseñaron. Una persona que hace varias cosas cuenta una vez.
+- Mismas reglas de visibilidad que "Recientes": perfil público y cuenta activa. No cuenta el contenido oculto por
+  moderación, y para cada lector se restan las personas con un bloqueo en cualquier dirección. Si así un álbum queda bajo el
+  umbral, no aparece.
+- Orden: más personas primero; a igualdad, la actividad más reciente. Tope de **5** álbumes. Si no hay suficientes, el riel
+  muestra menos o ninguno: nunca se completa con otros álbumes.
+- La cifra "N personas" se muestra solo desde **5**, como en Popularidad.
+
 ## Agregados de comunidad del álbum
 
 Cambio `redesign-album-page` (2026-09). La cabecera del álbum muestra agregados de la

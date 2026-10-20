@@ -23,6 +23,7 @@ import {
   type FeedReview,
 } from "@/services/feed/feed";
 import { activeUserCondition } from "@/services/auth/account-status";
+import type { CommunityActivityKind } from "@/lib/api/schemas";
 
 // Perfil público Y cuenta activa: una cuenta desactivada no aparece en la actividad de la comunidad.
 const PUBLIC_PROFILE = and(eq(appUser.profileVisibility, "public"), activeUserCondition());
@@ -52,10 +53,16 @@ export interface CommunityActivityPage {
   hasNext: boolean;
 }
 
+export interface CommunityActivityFilters {
+  // Una sola fuente (redesign-activity-page, D4): las otras dos ni se consultan.
+  kind?: CommunityActivityKind;
+}
+
 export async function listCommunityActivity(
   viewerId: string | null,
   page = 1,
   pageSize = 10,
+  filters: CommunityActivityFilters = {},
 ): Promise<CommunityActivityPage> {
   if (page < 1 || pageSize < 1 || pageSize > 50) {
     throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
@@ -65,9 +72,10 @@ export async function listCommunityActivity(
     viewerId ? and(PUBLIC_PROFILE, NOT_BLOCKED_SQL(viewerId, authorColumn)) : PUBLIC_PROFILE;
 
   const perSource = pageSize + 1;
+  const include = (kind: CommunityActivityKind) => !filters.kind || filters.kind === kind;
 
   const [ratings, comments, reviews] = await Promise.all([
-    db
+    !include("rating") ? [] : db
       .select({
         id: rating.id,
         stars: rating.stars,
@@ -97,7 +105,7 @@ export async function listCommunityActivity(
       .orderBy(desc(rating.updatedAt), desc(rating.id))
       .limit(perSource),
 
-    db
+    !include("comment") ? [] : db
       .select({
         id: comment.id,
         body: comment.body,
@@ -123,11 +131,12 @@ export async function listCommunityActivity(
       .leftJoin(artist, eq(comment.artistId, artist.id))
       .leftJoin(releaseGroup, eq(comment.releaseGroupId, releaseGroup.id))
       .leftJoin(recording, eq(comment.recordingId, recording.id))
-      .where(and(rootCommentsOnly(), visibility(comment.userId)))
+      // Sin el contenido oculto por moderación, que deja de aparecer en listados públicos (content-moderation).
+      .where(and(rootCommentsOnly(), eq(comment.moderationStatus, "visible"), visibility(comment.userId)))
       .orderBy(desc(comment.createdAt), desc(comment.id))
       .limit(perSource),
 
-    db
+    !include("review") ? [] : db
       .select({
         id: review.id,
         title: review.title,
@@ -153,7 +162,7 @@ export async function listCommunityActivity(
       .leftJoin(artist, eq(review.artistId, artist.id))
       .leftJoin(releaseGroup, eq(review.releaseGroupId, releaseGroup.id))
       .leftJoin(recording, eq(review.recordingId, recording.id))
-      .where(visibility(review.userId))
+      .where(and(eq(review.moderationStatus, "visible"), visibility(review.userId)))
       .orderBy(desc(review.updatedAt), desc(review.id))
       .limit(perSource),
   ]);
