@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Children, type ReactNode } from "react";
 import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 
 // La columna base es siempre `minmax(0, 1fr)`: sin `grid-cols-1` el track implícito es `auto` y toma el ancho
@@ -13,8 +13,10 @@ const COLS_CLASS = {
 // `cols`. Por defecto dos columnas (usado por las tres pestañas de /me/lists y
 // por el perfil ajeno); las secciones de navegación de `/lists` piden 1 o 3
 // para variar la densidad según qué tan detenida deba ser la lectura.
+// Con dos tarjetas o menos, una grilla de 3 columnas deja la fila coja (un tercio vacío a la derecha): se cae a 2.
 export function ListsGrid({ children, cols = 2 }: { children: ReactNode; cols?: 1 | 2 | 3 }) {
-  return <div className={`grid gap-4 ${COLS_CLASS[cols]}`}>{children}</div>;
+  const effective = cols === 3 && Children.count(children) <= 2 ? 2 : cols;
+  return <div className={`grid gap-4 ${COLS_CLASS[effective]}`}>{children}</div>;
 }
 
 const ENTITY_KEY: Record<string, "entityTypeArtist" | "entityTypeAlbum" | "entityTypeSong"> = {

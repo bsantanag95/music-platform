@@ -33,7 +33,7 @@ export async function CaminoDiscoveryGrid({ caminos, dense = false }: { caminos:
             title={camino.title}
             coverThumbs={camino.coverThumbs}
             meta={<span>{t("ownedBy", { username: camino.owner.username })}</span>}
-            subMeta={<span className="text-petrol">{t("trackingCount", { count: camino.trackingCount })}</span>}
+            subMeta={<span className="text-petrol-hover">{t("trackingCount", { count: camino.trackingCount })}</span>}
           />
         ))}
       </ListsGrid>
@@ -53,7 +53,7 @@ export async function CaminoDiscoveryGrid({ caminos, dense = false }: { caminos:
             <span className="font-data text-xs text-paper-muted">
               {t("ownedBy", { username: camino.owner.username })}
             </span>
-            <span className="font-data text-xs text-petrol">
+            <span className="font-data text-xs text-petrol-hover">
               {t("trackingCount", { count: camino.trackingCount })}
             </span>
           </Link>

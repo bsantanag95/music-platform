@@ -85,12 +85,13 @@ export function CommunityListsToolbar() {
           className="w-full rounded-md border border-ink-border bg-ink-surface py-2 pl-9 pr-3.5 font-data text-sm text-paper transition-colors placeholder:text-paper-muted focus:border-paper-muted/60"
         />
       </div>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <FilterSelect
           value={currentType}
           onChange={(value) => update({ type: value || undefined })}
           ariaLabel={t("typeFilterLabel")}
-          widthClassName="w-[20ch]"
+          widthClassName="w-[22ch]"
+          variant="boxed"
         >
           <option value="">{t("filterAllTypes")}</option>
           {COMMUNITY_ENTITY_TYPES.map((type) => (
@@ -103,7 +104,8 @@ export function CommunityListsToolbar() {
           value={currentSort}
           onChange={(value) => update({ sort: value })}
           ariaLabel={t("sortLabel")}
-          widthClassName="w-[13ch]"
+          widthClassName="w-[15ch]"
+          variant="boxed"
         >
           {PUBLIC_LIST_SORTS_UI.map((sort) => (
             <option key={sort} value={sort}>

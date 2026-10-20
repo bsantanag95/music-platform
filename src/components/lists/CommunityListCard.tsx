@@ -44,10 +44,11 @@ export function CommunityListCard({
   );
 
   // Marca "Oficial": contorno petróleo con check, no el bloque ámbar macizo de antes (la Regla de Rareza
-  // reserva el ámbar; en Destacadas casi todas las tarjetas lo llevaban).
+  // reserva el ámbar; en Destacadas casi todas las tarjetas lo llevaban). Texto en `petrol-hover` y 12 px: el
+  // `petrol` base sobre la tarjeta da ~3,6:1 de contraste y a 10 px no se lee.
   const badge = list.isOfficial ? (
-    <span className="inline-flex shrink-0 items-center gap-1 rounded border border-petrol/50 px-1.5 py-px font-data text-[10px] text-petrol">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true" className="size-2.5">
+    <span className="inline-flex shrink-0 items-center gap-1 rounded border border-petrol-hover/50 px-1.5 py-px font-data text-xs text-petrol-hover">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true" className="size-3">
         <path d="M5 12.5 10 17.5 19 7" />
       </svg>
       {t("officialBadge")}

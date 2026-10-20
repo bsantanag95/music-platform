@@ -157,7 +157,7 @@ export default async function CommunityListsPage({
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col items-start gap-8 px-4 py-12">
       <Breadcrumbs items={[{ label: tCommon("home"), href: "/" }, { label: t("community.heading") }]} />
       {/* Solo miga de pan y título (como Explorar): la introducción enumeraba las secciones de abajo. */}
-      <h1 className="-mt-4 font-display text-3xl text-paper">{t("community.heading")}</h1>
+      <h1 className="-mt-4 font-display text-3xl text-paper sm:text-4xl">{t("community.heading")}</h1>
 
       <Suspense fallback={null}>
         <CommunityListsToolbar />

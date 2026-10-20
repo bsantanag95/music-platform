@@ -70,7 +70,7 @@ export function ListCard({
 
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex min-w-0 items-center gap-2">
-          <h3 className={`truncate font-display text-paper ${dense ? "text-sm" : large ? "text-xl" : "text-base"}`}>
+          <h3 className={`truncate font-display text-paper ${dense ? "text-sm" : large ? "text-lg" : "text-base"}`}>
             <Link href={href} className="transition-colors hover:text-amber">
               {title}
             </Link>

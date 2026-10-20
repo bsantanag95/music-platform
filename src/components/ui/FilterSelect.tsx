@@ -20,6 +20,7 @@ export function FilterSelect({
   disabled = false,
   label,
   name,
+  variant = "underline",
   children,
 }: {
   value: string;
@@ -30,8 +31,14 @@ export function FilterSelect({
   label?: string;
   /** Nombre del campo: permite que el `<select>` viaje en un formulario `GET` sin JavaScript. */
   name?: string;
+  /**
+   * `underline` (por defecto): regla inferior, sin caja. `boxed`: caja con borde y fondo, a la altura de un
+   * buscador de la misma barra, para que los filtros se lean como controles y no como texto suelto.
+   */
+  variant?: "underline" | "boxed";
   children: ReactNode;
 }) {
+  const boxed = variant === "boxed";
   const control = (
     <div className="relative">
       <select
@@ -40,7 +47,11 @@ export function FilterSelect({
         onChange={(event) => onChange(event.target.value)}
         aria-label={ariaLabel}
         disabled={disabled}
-        className={`filter-select appearance-none overflow-hidden text-ellipsis whitespace-nowrap rounded border-b border-ink-border bg-transparent py-1.5 pl-0.5 pr-4 font-data text-sm text-paper-muted transition-colors hover:text-paper disabled:opacity-50 ${widthClassName}`}
+        className={`filter-select appearance-none overflow-hidden text-ellipsis whitespace-nowrap font-data text-sm text-paper-muted transition-colors hover:text-paper disabled:opacity-50 ${
+          boxed
+            ? "rounded-md border border-ink-border bg-ink-surface py-2 pl-3 pr-8 hover:border-paper-muted/40"
+            : "rounded border-b border-ink-border bg-transparent py-1.5 pl-0.5 pr-4"
+        } ${widthClassName}`}
       >
         {children}
       </select>
@@ -50,7 +61,7 @@ export function FilterSelect({
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
-        className="pointer-events-none absolute right-0 top-1/2 size-3 -translate-y-1/2 text-paper-muted"
+        className={`pointer-events-none absolute top-1/2 size-3 -translate-y-1/2 text-paper-muted ${boxed ? "right-3" : "right-0"}`}
       >
         <path d="M6 9l6 6 6-6" />
       </svg>

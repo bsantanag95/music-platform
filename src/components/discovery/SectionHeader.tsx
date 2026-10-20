@@ -16,7 +16,8 @@ interface SectionHeaderProps {
 /** Encabezado común de las secciones de Explorar: título, descripción opcional y acciones. */
 export function SectionHeader({ heading, description, seeAll, actions, headingId }: SectionHeaderProps) {
   return (
-    <div className="flex w-full items-end justify-between gap-4">
+    // En mobile el enlace "Ver todo" baja a su propia línea: a la derecha apretaba la descripción en columnas de 4 líneas.
+    <div className="flex w-full flex-col items-start gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
       <div className="flex min-w-0 flex-col gap-0.5">
         <h2 id={headingId} className="font-display text-xl text-paper">
           {heading}
