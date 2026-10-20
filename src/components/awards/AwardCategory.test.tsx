@@ -87,10 +87,11 @@ describe("AwardCategory", () => {
     expect(screen.queryByText(awardsEs.winnerOnlyNote)).not.toBeInTheDocument();
   });
 
-  it("un nominado sin resolver es solo el texto curado, sin enlace ni línea de artista", () => {
+  it("un nominado sin resolver parte el texto curado en título y artista, sin enlace", () => {
     renderWithIntl(<AwardCategory {...props} name={{ es: "X", en: "X" }} />);
-    expect(screen.getByText("Sin resolver — Alguien")).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Sin resolver — Alguien" })).not.toBeInTheDocument();
+    expect(screen.getByText("Sin resolver")).toBeInTheDocument();
+    expect(screen.getByText("Alguien")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Sin resolver" })).not.toBeInTheDocument();
   });
 
   it("una grabación enlaza a su canción, muestra su artista, enlaza a su disco ancla y muestra los créditos", () => {
@@ -120,7 +121,7 @@ describe("AwardCategory", () => {
 
       expect(container.querySelector("details")).toBeNull();
       expect(screen.getByText("Nominados (2)")).toBeVisible();
-      expect(screen.getByText("Sin resolver — Alguien")).toBeVisible();
+      expect(screen.getByText("Sin resolver")).toBeVisible();
       expect(screen.getByRole("link", { name: "Espresso" })).toBeVisible();
     });
 
@@ -140,7 +141,7 @@ describe("AwardCategory", () => {
       const details = container.querySelector("details")!;
       expect(details).not.toHaveAttribute("open");
       expect(within(details).getByText("Nominados (2)")).toBeInTheDocument();
-      expect(within(details).getByText("Sin resolver — Alguien")).toBeInTheDocument();
+      expect(within(details).getByText("Sin resolver")).toBeInTheDocument();
       expect(within(details).getByRole("link", { name: "Espresso" })).toBeInTheDocument();
       // El ganador queda fuera del control plegable.
       expect(details).not.toContainElement(screen.getByRole("link", { name: "COWBOY CARTER" }));

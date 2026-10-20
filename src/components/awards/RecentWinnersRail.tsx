@@ -6,6 +6,7 @@ import { albumHref } from "@/lib/catalog-links";
 import type { RecentHeadlineWinner } from "@/services/awards/read";
 import { awardsIndexHref, ceremonyHref } from "./award-links";
 import { NomineeVisual } from "./NominationItem";
+import { splitNomineeText } from "./nominee-text";
 
 // "Ganadores recientes" del hub `/awards` (openspec: enrich-awards-hub): el ganador destacado de las últimas ceremonias de cada
 // premio, para entrar directo a la música y no solo a la ceremonia. Riel de una fila, como los de Explorar: quince carátulas en
@@ -107,7 +108,8 @@ export function RecentWinnersRail({ winners, personal }: { winners: RecentHeadli
             const subject = entry.winner.subject;
             const album = subject?.kind === "release_group" ? subject.album : null;
             const href = album ? albumHref(album.artistName, album.title, album.id) : ceremonyHref(entry.awardSlug, entry.year);
-            const credit = album ? album.artistName : entry.winner.credit;
+            const unresolved = album ? null : splitNomineeText(entry.winner.text, entry.winner.credit);
+            const credit = album ? album.artistName : unresolved?.artist;
             const mark = album && personal ? (personal.heard.has(album.id) ? "heard" : personal.pending.has(album.id) ? "pending" : null) : null;
             return (
               <li
@@ -130,7 +132,7 @@ export function RecentWinnersRail({ winners, personal }: { winners: RecentHeadli
                   </span>
                   <span className="min-w-0">
                     <span className="block truncate font-display text-sm text-paper transition-colors group-hover:text-amber">
-                      {album?.title ?? entry.winner.text}
+                      {album?.title ?? unresolved?.title}
                     </span>
                     {credit ? <span className="block truncate font-data text-xs text-paper-muted">{credit}</span> : null}
                     <span className="block truncate font-data text-[0.65rem] uppercase tracking-wide text-petrol">

@@ -4,6 +4,7 @@ import { SectionHeader } from "@/components/discovery/SectionHeader";
 import type { AwardSubjectKind } from "@/db/schema";
 import type { CategoryHistoryEntry, NominationView } from "@/services/awards/read";
 import { historyYearAnchor } from "./category-leaders";
+import { splitNomineeText } from "./nominee-text";
 import { NomineeVisual } from "./NominationItem";
 
 // "Ganadores por año" del historial de una categoría (openspec: redesign-category-history): la carátula (o la foto) del
@@ -15,7 +16,7 @@ function titleAndArtist(nomination: NominationView): { title: string; artist: st
   if (subject?.kind === "release_group") return { title: subject.album.title, artist: subject.album.artistName };
   if (subject?.kind === "recording") return { title: subject.title, artist: subject.artistName };
   if (subject?.kind === "artist") return { title: subject.name, artist: null };
-  return { title: nomination.text, artist: nomination.credit };
+  return splitNomineeText(nomination.text, nomination.credit);
 }
 
 export function CategoryWinnersTimeline({ entries, subjectKind }: { entries: CategoryHistoryEntry[]; subjectKind: AwardSubjectKind }) {

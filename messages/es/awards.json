@@ -107,7 +107,8 @@
     "latestClass": "Clase de {year}",
     "previousClasses": "Clases anteriores de {award}",
     "hubClasses": "{count, plural, one {# clase} other {# clases}}",
-    "inducteesCount": "{count, plural, one {# grabación} other {# grabaciones}}"
+    "inducteesCount": "{count, plural, one {# grabación} other {# grabaciones}}",
+    "classesOf": "Clases de {award}"
   },
   "votingHall": {
     "academy": "Lo elige un comité de la academia",
