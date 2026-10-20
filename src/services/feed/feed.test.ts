@@ -556,6 +556,28 @@ describe("servicio de feed ampliado", () => {
       expect(sql.toLowerCase()).toContain("block");
     });
 
+    it("excluye las reseñas ocultas por moderación", async () => {
+      const capturing = sourceQueryCapturing([]);
+      mocks.db.select.mockReturnValueOnce(followedQuery(["u2"])).mockReturnValueOnce(capturing);
+
+      await listFeed(author.id, 1, 20, { kind: "review" });
+
+      const { sql, params } = dialect.sqlToQuery(capturing.where.mock.calls[0]![0]);
+      expect(sql).toContain('"review"."moderation_status" = $');
+      expect(params).toContain("visible");
+    });
+
+    it("excluye los comentarios ocultos por moderación", async () => {
+      const capturing = sourceQueryCapturing([]);
+      mocks.db.select.mockReturnValueOnce(followedQuery(["u2"])).mockReturnValueOnce(capturing);
+
+      await listFeed(author.id, 1, 20, { kind: "comment" });
+
+      const { sql, params } = dialect.sqlToQuery(capturing.where.mock.calls[0]![0]);
+      expect(sql).toContain('"comment"."moderation_status" = $');
+      expect(params).toContain("visible");
+    });
+
     it("q sobre reseñas filtra por el título del álbum, no por el cuerpo de la reseña", async () => {
       const capturing = sourceQueryCapturing([]);
       mocks.db.select.mockReturnValueOnce(followedQuery(["u2"])).mockReturnValueOnce(capturing);

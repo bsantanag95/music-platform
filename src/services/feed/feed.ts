@@ -899,6 +899,8 @@ export async function listFeed(
           .where(
             and(
               rootCommentsOnly(),
+              // Un comentario oculto por moderación deja de aparecer en listados públicos (content-moderation).
+              eq(comment.moderationStatus, "visible"),
               inArray(comment.userId, authorIds),
               BLOCKED_SQL(viewerId, comment.userId),
               ...titleSearchCondition(searchPattern, comment.releaseGroupId, comment.recordingId),
@@ -935,6 +937,8 @@ export async function listFeed(
           .leftJoin(appUser, eq(review.userId, appUser.id))
           .where(
             and(
+              // Igual que los comentarios: una reseña oculta por moderación no se muestra en el feed.
+              eq(review.moderationStatus, "visible"),
               inArray(review.userId, authorIds),
               BLOCKED_SQL(viewerId, review.userId),
               ...titleSearchCondition(searchPattern, review.releaseGroupId, review.recordingId),

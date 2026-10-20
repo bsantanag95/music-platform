@@ -68,7 +68,8 @@ forma consistente.
 
 La vista `/activity` SHALL mostrar una fuente "Recientes" con ratings vigentes,
 comentarios y reseñas de álbum de cualquier usuario con perfil `public`, en orden
-cronológico descendente, paginada. La fuente SHALL excluir bloqueos en cualquier
+cronológico descendente, paginada. Los comentarios y reseñas ocultos por moderación SHALL NOT
+aparecer. La fuente SHALL excluir bloqueos en cualquier
 dirección cuando hay sesión. Cada entrada SHALL mostrar autor (con enlace a su perfil),
 tipo de actividad, objetivo (con carátula cuando exista y enlace a su página de catálogo),
 fecha relativa y, para comentarios y reseñas, un fragmento del cuerpo. La fuente SHALL ser
@@ -96,6 +97,11 @@ cambio; con un valor fuera de esa lista, el endpoint SHALL responder `400 VALIDA
 - **WHEN** existe un bloqueo en cualquier dirección entre el lector con sesión y el autor
   de una entrada
 - **THEN** esa entrada no aparece en "Recientes" para ese lector
+
+#### Scenario: Contenido oculto por moderación
+
+- **WHEN** un moderador oculta un comentario o una reseña de un usuario con perfil público
+- **THEN** deja de aparecer en "Recientes", con o sin filtro de tipo, y vuelve si se restaura
 
 #### Scenario: Filtro por tipo
 

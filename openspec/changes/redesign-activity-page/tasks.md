@@ -57,3 +57,9 @@
 - [x] 7.1 `pnpm run typecheck && pnpm run lint && pnpm test && pnpm run build`
 - [x] 7.2 Navegador a 375px y 1366px, con y sin sesión: las tres pestañas son alcanzables, sin "·" colgando, la URL conserva la pestaña y el filtro, los estados vacíos llevan su acción, el riel aparece y se oculta según corresponda
 - [x] 7.3 Regresión visual de `/me/feed` e Inicio tras las correcciones globales (metadatos, nota en `self`, disco de reemplazo)
+
+## 8. Contenido oculto por moderación (corrección)
+
+- [x] 8.1 `listCommunityActivity` y `listFeed`: excluir comentarios y reseñas con `moderation_status = 'hidden'` (el rastro propio no cambia)
+- [x] 8.2 Tests unitarios de la condición SQL en ambas fuentes
+- [x] 8.3 Smoke: Recientes y el feed sin el contenido oculto, con y sin `kind`, y la restauración

@@ -397,7 +397,9 @@ Sin sesión, la página muestra una única sección sin pestañas:
 
 - **Recientes** — ratings vigentes, comentarios y **reseñas de álbum** de cualquier usuario
   con perfil `public`, sin requerir seguimiento, en orden cronológico paginado. Sin
-  recomendación ni señal de popularidad fabricada.
+  recomendación ni señal de popularidad fabricada. Como en el feed de seguidos, los comentarios y
+  reseñas ocultos por moderación no aparecen (`redesign-activity-page`: antes ninguna de las dos
+  fuentes los excluía).
 
 Con sesión, se suman dos fuentes más y las tres pasan a mostrarse como pestañas
 (`ActivityTabs`) en vez de apiladas verticalmente — con las tres secciones completas una

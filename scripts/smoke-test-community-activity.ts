@@ -3,25 +3,28 @@ export {};
 // Smoke test del cambio redesign-activity-page contra Postgres REAL (el SQL que las pruebas unitarias mockean): el riel
 // "Con más conversación esta semana" (`listTrendingConversations`: umbral de personas distintas, comentarios raíz,
 // contenido oculto, cuenta desactivada, perfil privado, bloqueo por lector, ventana de 7 días, tiempo de la lectura sin
-// caché) y el filtro `kind` de "Recientes" (`listCommunityActivity`).
+// caché), el filtro `kind` de "Recientes" (`listCommunityActivity`) y que "Recientes" y el feed (`listFeed`) no muestran
+// comentarios ni reseñas ocultos por moderación.
 // Escribe usuarios `smoke_act_*` y álbumes sintéticos (MBID `5e0ce000-0000-4000-8000-0000000ac0xx`) y los borra al
 // terminar (también si falla). Si se interrumpió, limpiar con
 //   DELETE FROM app_user WHERE username LIKE 'smoke_act_%';
 //   DELETE FROM release_group WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-0000000ac0%';
-// (el `ON DELETE CASCADE` limpia valoraciones, comentarios, reseñas y bloqueos). Correr contra una BD de scratch:
+// (el `ON DELETE CASCADE` limpia valoraciones, comentarios, reseñas, seguimientos y bloqueos). Correr contra una BD de
+// scratch:
 //   ALLOW_SMOKE_ON_REAL_DB=1 npx tsx --env-file=.env scripts/smoke-test-community-activity.ts
 
 import { randomUUID } from "node:crypto";
 import { like, sql } from "drizzle-orm";
 import { assertSmokeAllowed } from "./assert-smoke-allowed";
 import { db } from "../src/db";
-import { appUser, comment, rating, releaseGroup, review, userBlock } from "../src/db/schema";
+import { appUser, comment, rating, releaseGroup, review, userBlock, userFollow } from "../src/db/schema";
 import {
   TRENDING_LIMIT,
   listTrendingConversations,
   resetTrendingConversationsCache,
 } from "../src/services/activity/trending-conversations";
 import { listCommunityActivity } from "../src/services/activity/community-activity";
+import { listFeed } from "../src/services/feed/feed";
 
 assertSmokeAllowed();
 
@@ -185,6 +188,39 @@ async function main() {
     check(onlyRatings.entries.every((entry) => entry.kind === "rating"), "con kind=rating todas son valoraciones");
     const all = await listCommunityActivity(null, 1, 30);
     check(new Set(all.entries.map((entry) => entry.kind)).size > 1, "sin kind mezcla los tipos");
+
+    console.log("Contenido oculto por moderación en Recientes y el feed");
+    // `hidden` ya tiene una reseña oculta; suma un comentario visible y otro oculto. `viewer` lo sigue.
+    const [visibleComment, hiddenComment] = await db
+      .insert(comment)
+      .values([
+        { userId: hidden.id, releaseGroupId: solo.id, body: "smoke visible" },
+        { userId: hidden.id, releaseGroupId: solo.id, body: "smoke oculto", moderationStatus: "hidden" },
+      ])
+      .returning();
+    const [hiddenReview] = await db.select({ id: review.id }).from(review).where(sql`${review.userId} = ${hidden.id}`);
+    await db.insert(userFollow).values({ followerId: viewer.id, followedId: hidden.id, status: "accepted" });
+
+    const recentIds = new Set((await listCommunityActivity(null, 1, 50)).entries.map((entry) => entry.id));
+    check(recentIds.has(visibleComment!.id), "Recientes muestra el comentario visible");
+    check(!recentIds.has(hiddenComment!.id), "Recientes no muestra el comentario oculto");
+    check(!recentIds.has(hiddenReview!.id), "Recientes no muestra la reseña oculta");
+    const recentReviews = await listCommunityActivity(null, 1, 50, { kind: "review" });
+    check(!recentReviews.entries.some((entry) => entry.id === hiddenReview!.id), "tampoco con el filtro kind=review");
+
+    const feed = await listFeed(viewer.id, 1, 50);
+    const feedIds = new Set(feed.entries.map((entry) => entry.id));
+    check(feedIds.has(visibleComment!.id), "el feed de quien lo sigue muestra el comentario visible");
+    check(!feedIds.has(hiddenComment!.id), "el feed no muestra el comentario oculto");
+    check(!feedIds.has(hiddenReview!.id), "el feed no muestra la reseña oculta");
+    const feedReviews = await listFeed(viewer.id, 1, 50, { kind: "review" });
+    check(feedReviews.entries.length === 0, "con kind=review el feed no trae la reseña oculta");
+
+    await db.update(review).set({ moderationStatus: "visible" }).where(sql`${review.id} = ${hiddenReview!.id}`);
+    check(
+      (await listFeed(viewer.id, 1, 50, { kind: "review" })).entries.some((entry) => entry.id === hiddenReview!.id),
+      "al restaurarla, la reseña vuelve al feed",
+    );
 
     console.log("OK");
   } finally {

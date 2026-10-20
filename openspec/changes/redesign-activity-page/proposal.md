@@ -60,6 +60,8 @@ Además se rompe en detalles concretos:
 
 ### Modified Capabilities
 
+- `activity-feed`: el feed de seguidos deja de incluir comentarios y reseñas ocultos por moderación, que hoy
+  aparecen en contra de lo que exige `content-moderation` (encontrado durante la fase 3).
 - `community-activity`: cambian las etiquetas de las pestañas, la pestaña pasa a vivir en la URL, los
   estados vacíos llevan acción, se suman los filtros por tipo, los bloques de fecha, la tarjeta de
   reseña y el riel lateral, y "Tu actividad" adopta la anatomía con carátula.

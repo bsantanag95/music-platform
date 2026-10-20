@@ -1,4 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { PgDialect } from "drizzle-orm/pg-core";
+import type { SQL } from "drizzle-orm";
 import { listCommunityActivity } from "./community-activity";
 
 const mocks = vi.hoisted(() => ({
@@ -148,5 +150,31 @@ describe("listCommunityActivity", () => {
     // Una sola consulta: valoraciones y comentarios ni se piden.
     expect(mocks.db.select).toHaveBeenCalledTimes(1);
     expect(result.entries.map((entry) => entry.kind)).toEqual(["review"]);
+  });
+
+  it("excluye comentarios y reseñas ocultos por moderación (content-moderation)", async () => {
+    const dialect = new PgDialect();
+    const wheres: SQL[] = [];
+    const capturing = () => {
+      const limit = vi.fn().mockResolvedValue([]);
+      const orderBy = vi.fn(() => ({ limit }));
+      const where = vi.fn((condition: SQL) => {
+        wheres.push(condition);
+        return { orderBy };
+      });
+      const chain = { innerJoin: vi.fn(() => chain), leftJoin: vi.fn(() => chain), where };
+      return { from: vi.fn(() => chain) };
+    };
+    mocks.db.select.mockReturnValueOnce(capturing()).mockReturnValueOnce(capturing()).mockReturnValueOnce(capturing());
+
+    await listCommunityActivity(null, 1, 10);
+
+    const [ratingWhere, commentWhere, reviewWhere] = wheres.map((w) => dialect.sqlToQuery(w));
+    expect(commentWhere!.sql).toContain('"comment"."moderation_status" = $');
+    expect(reviewWhere!.sql).toContain('"review"."moderation_status" = $');
+    expect(commentWhere!.params).toContain("visible");
+    expect(reviewWhere!.params).toContain("visible");
+    // Las valoraciones no se moderan.
+    expect(ratingWhere!.sql).not.toContain("moderation_status");
   });
 });

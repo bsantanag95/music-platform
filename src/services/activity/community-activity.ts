@@ -131,7 +131,8 @@ export async function listCommunityActivity(
       .leftJoin(artist, eq(comment.artistId, artist.id))
       .leftJoin(releaseGroup, eq(comment.releaseGroupId, releaseGroup.id))
       .leftJoin(recording, eq(comment.recordingId, recording.id))
-      .where(and(rootCommentsOnly(), visibility(comment.userId)))
+      // Sin el contenido oculto por moderación, que deja de aparecer en listados públicos (content-moderation).
+      .where(and(rootCommentsOnly(), eq(comment.moderationStatus, "visible"), visibility(comment.userId)))
       .orderBy(desc(comment.createdAt), desc(comment.id))
       .limit(perSource),
 
@@ -161,7 +162,7 @@ export async function listCommunityActivity(
       .leftJoin(artist, eq(review.artistId, artist.id))
       .leftJoin(releaseGroup, eq(review.releaseGroupId, releaseGroup.id))
       .leftJoin(recording, eq(review.recordingId, recording.id))
-      .where(visibility(review.userId))
+      .where(and(eq(review.moderationStatus, "visible"), visibility(review.userId)))
       .orderBy(desc(review.updatedAt), desc(review.id))
       .limit(perSource),
   ]);
