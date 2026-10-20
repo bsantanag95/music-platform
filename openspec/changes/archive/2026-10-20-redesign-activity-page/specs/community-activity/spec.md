@@ -32,7 +32,7 @@ forma consistente.
 - **THEN** ve una barra de pestañas ("Recientes", "Siguiendo", "Tú") con "Recientes"
   seleccionada
 
-#### Scenario: Una fuente sin contenido muestra un estado vacío, no desaparece
+#### Scenario: Una fuente sin contenido muestra un mensaje, no desaparece
 
 - **WHEN** con sesión, una de las tres fuentes no tiene actividad que mostrar
 - **THEN** su pestaña sigue visible y, al seleccionarla, su panel muestra un estado vacío

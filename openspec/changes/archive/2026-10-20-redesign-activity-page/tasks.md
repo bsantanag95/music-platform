@@ -50,7 +50,7 @@
 - [x] 6.1 `docs/04-api/contracts.md`: documentar `GET /api/activity/recent` (hoy ausente) con `page`, `pageSize` y `kind`, y su `400`
 - [x] 6.2 `docs/05-features/activity-feed.md`: actualizar la sección de la superficie pública (pestañas en la URL, filtros, bloques, riel)
 - [x] 6.3 `docs/01-domain/business-rules.md`: regla del riel (2 personas, 7 días, tope 5, sin relleno)
-- [ ] 6.4 Al archivar: actualizar el `## Purpose` de `openspec/specs/community-activity/spec.md` con las etiquetas nuevas
+- [x] 6.4 Al archivar: actualizar el `## Purpose` de `openspec/specs/community-activity/spec.md` con las etiquetas nuevas
 
 ## 7. Verificación
 
