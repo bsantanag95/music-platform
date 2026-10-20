@@ -403,24 +403,37 @@ Con sesión, se suman dos fuentes más y las tres pasan a mostrarse como pestañ
 (`ActivityTabs`) en vez de apiladas verticalmente — con las tres secciones completas una
 debajo de otra, la página se volvía demasiado vertical para llegar a la última:
 
-- **De la gente que seguís** — es **el mismo `listFeed`** que alimenta `/me/feed` (las ocho
+- **Siguiendo** — es **el mismo `listFeed`** que alimenta `/me/feed` (las ocho
   fuentes, misma presentación con `FeedActivityList`, `variant="feed"`), sin filtros propios.
-- **Tu actividad** — es **el mismo `listMyRecentActivity`** que alimenta "Tu rastro
-  reciente" de Inicio (`FeedActivityList` con `variant="self"`).
+- **Tú** — es **el mismo `listMyRecentActivity`** que alimenta "Tu rastro reciente" de Inicio,
+  pero con `variant="own"`: la anatomía de `feed` (celda de carátula) sin autor, para que se lea
+  igual que las otras dos pestañas. Inicio sigue con `variant="self"` (riel de línea de tiempo).
+
+Las etiquetas son cortas ("Recientes · Siguiendo · Tú") para que las tres quepan a 375px; si una
+traducción desborda, el borde de la barra se desvanece (`redesign-activity-page`).
 
 Las tres pestañas usan la **misma presentación** (`FeedActivityList` con `clamp`; "Recientes" con
 `variant="feed"`): antes "Recientes" usaba la fila compacta del bloque de Inicio (`CompactActivityRow`, sin
 avatar ni artista) y la misma valoración se veía distinta al cambiar de pestaña. Para eso
 `listCommunityActivity` puebla `artistName`/`artistId` con el artista principal acreditado
 (`PRIMARY_ARTIST_SQL` / `PRIMARY_ARTIST_ID_SQL`, como `listFeed`). Las pestañas son subrayadas (como la
-navegación del Header) y la página tiene solo miga de pan y título, sin introducción.
+navegación del Header); el hover de una pestaña inactiva cambia solo el color del texto. La página
+tiene miga de pan, título y una línea de subtítulo.
+
+La pestaña activa vive en `?tab=` (`following`, `you`; sin parámetro, Recientes; sin sesión se
+ignora). `ActivityTabs` la deriva de `useSearchParams` y la escribe con `history.replaceState`, sin
+apilar historial ni volver a renderizar el server component. El servidor pide la página 1
+completa solo de la pestaña de la URL; de las otras pide una entrada (`pageSize` 1) para saber si
+tienen contenido. Las pestañas que no vinieron del servidor se piden al elegirlas, con un
+esqueleto mientras tanto y prefetch al pasar el mouse o enfocarlas. `tabFromParam` vive en
+`activity-tab-param.ts`, fuera del módulo cliente, porque la página (servidor) también lo usa.
 
 Cada pestaña es una `CommunityActivitySection` independiente con su propia paginación
 (`useInfiniteQuery`); solo se monta la pestaña activa, y el caché de React Query evita
 volver a pedir la página 1 al regresar a una pestaña ya visitada. Si una pestaña no tiene
-contenido (p. ej. un usuario que no sigue a nadie todavía) muestra un mensaje corto en vez de
-desaparecer — a diferencia de la versión sin pestañas, acá ocultar la pestaña sería más
-disruptivo que un panel vacío. La página entera solo cae al `EmptyState` global cuando
+contenido muestra un estado vacío con una acción en vez de desaparecer: "Siguiendo" distingue "aún
+no sigues a nadie" de "la gente que sigues no publicó nada" (`listFeedAuthors`) y ofrece
+"Descubrir personas" (`/users`); "Recientes" y "Tú" ofrecen "Explorar música" (`/explore`). La página entera solo cae al `EmptyState` global cuando
 ninguna de las fuentes disponibles tiene contenido.
 
 El servicio que alimenta "Recientes" —`listCommunityActivity` (antes en
@@ -433,9 +446,15 @@ compacto de Inicio (`CommunityActivity`, `AnonymousHome`/`AuthenticatedHome`) pa
 consumir esta versión pidiendo una sola página chica; su composición visual no cambia, salvo
 que ahora también puede mostrar una reseña reciente.
 
-`GET /api/activity/recent` (público) alimenta la sección "Recientes"; "De la gente que
-seguís" reusa `GET /api/me/feed` y "Tu actividad" reusa `GET /api/me/recent-activity`, ambos
-sin cambios en su contrato.
+`GET /api/activity/recent` (público) alimenta la sección "Recientes"; "Siguiendo" reusa
+`GET /api/me/feed` y "Tú" reusa `GET /api/me/recent-activity`, ambos sin cambios en su contrato.
+
+**Línea de metadato** (corrección compartida con `/me/feed` e Inicio): autor, verbo con su ícono,
+audiencia y tema son unidades indivisibles (`MetaUnit`), con el separador " · " al inicio de cada
+unidad, así ninguna línea termina en "·" ni separa el ícono de su verbo. Desde `sm` la fecha va en
+su columna a la derecha; por debajo viaja al final del texto como una unidad más. No se abrevia:
+en español los estilos `short`/`narrow` de `Intl` dan "hace 2 m" (mes) y "hace 2 a" (año). En
+`variant="self"` la nota va en su propia línea bajo el título, sin depender del largo del título.
 
 ## De dónde sale el contenido del feed
 

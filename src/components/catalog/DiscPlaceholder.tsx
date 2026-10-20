@@ -20,10 +20,11 @@ export function DiscPlaceholder({ alt, className = "" }: DiscPlaceholderProps) {
           ambos tonos cálidos casi negros. paper-muted es el tono que
           DESIGN.md ya asigna a "placeholder"; a esta opacidad el disco se
           lee como grabado discreto en cualquier tamaño, no como recuadro
-          vacío. */}
-      <div className="absolute inset-[15%] rounded-full border border-paper-muted/45" />
-      <div className="absolute inset-[35%] rounded-full border border-paper-muted/45" />
-      <div className="absolute inset-[48%] rounded-full bg-paper-muted/35" />
+          vacío. Al 60% el anillo llega a ~3,2:1 sobre ink-surface (WCAG 1.4.11, contraste no textual ≥ 3:1): al 45%
+          quedaba en ~2,4:1 y en `/activity` el disco se confundía con un cuadro vacío (redesign-activity-page, D11). */}
+      <div className="absolute inset-[15%] rounded-full border border-paper-muted/60" />
+      <div className="absolute inset-[35%] rounded-full border border-paper-muted/60" />
+      <div className="absolute inset-[48%] rounded-full bg-paper-muted/50" />
     </div>
   );
 }

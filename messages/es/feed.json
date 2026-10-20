@@ -6,12 +6,24 @@
     "pageTitle": "Comunidad",
     "heading": "Comunidad",
     "recentHeading": "Recientes",
-    "followingHeading": "De la gente que sigues",
-    "ownHeading": "Tu actividad",
+    "followingHeading": "Siguiendo",
+    "ownHeading": "Tú",
     "tablistLabel": "Secciones de actividad",
-    "tabEmpty": "Todavía no hay actividad acá.",
     "emptyTitle": "Todavía no hay actividad para mostrar",
-    "emptyDescription": "Cuando la comunidad valore, comente o reseñe algo, va a aparecer acá."
+    "emptyDescription": "Cuando la comunidad valore, comente o reseñe algo, aparecerá aquí.",
+    "subtitle": "Lo que la gente está valorando, comentando y reseñando ahora.",
+    "empty": {
+      "recentTitle": "Todavía no hay actividad pública",
+      "recentDescription": "Cuando alguien valore, comente o reseñe un disco, aparecerá aquí.",
+      "followingNoneTitle": "Aún no sigues a nadie",
+      "followingNoneDescription": "Aquí verás lo que valoran, reseñan y escuchan las personas que sigues.",
+      "followingQuietTitle": "Sin actividad reciente",
+      "followingQuietDescription": "Las personas que sigues no han publicado nada últimamente. Encuentra a más gente con tus gustos.",
+      "ownTitle": "Aún no tienes actividad",
+      "ownDescription": "Valora, reseña o registra una escucha y aparecerá aquí.",
+      "exploreAction": "Explorar música",
+      "discoverAction": "Descubrir personas"
+    }
   },
   "favoriteLabel": "Marcó como favorito",
   "ratingVerb": "Valoró",

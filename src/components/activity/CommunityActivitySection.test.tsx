@@ -1,10 +1,21 @@
 import { describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { ReactElement } from "react";
+import type { AnchorHTMLAttributes, ReactElement, ReactNode } from "react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { CommunityActivitySection } from "./CommunityActivitySection";
 
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({
+    href,
+    children,
+    ...rest
+  }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
+}));
 vi.mock("@/lib/api/diary", () => ({
   getFeed: vi.fn().mockResolvedValue({ entries: [], page: 1, pageSize: 10, hasNext: false }),
   getCommunityActivity: vi.fn().mockResolvedValue({ entries: [], page: 1, pageSize: 10, hasNext: false }),
@@ -36,7 +47,7 @@ function render(ui: ReactElement) {
 }
 
 describe("CommunityActivitySection", () => {
-  it("'De la gente que seguís' pasa clamp y variant=feed a FeedActivityList, igual que /me/feed", () => {
+  it("'Siguiendo' pasa clamp y variant=feed a FeedActivityList, igual que /me/feed", () => {
     render(
       <CommunityActivitySection source="from-following" initial={{ entries: [entry], page: 1, pageSize: 20, hasNext: false }} />,
     );
@@ -47,12 +58,12 @@ describe("CommunityActivitySection", () => {
     );
   });
 
-  it("'Tu actividad' pasa clamp y variant=self a FeedActivityList, igual que 'Tu rastro reciente' de Inicio", () => {
+  it("'Tú' pasa clamp y variant=own a FeedActivityList: la anatomía con carátula de las otras pestañas, sin autor", () => {
     render(<CommunityActivitySection source="own" initial={{ entries: [entry], page: 1, pageSize: 10, hasNext: false }} />);
 
     expect(screen.getByTestId("feed-activity-list")).toBeInTheDocument();
     expect(feedActivityListMock).toHaveBeenCalledWith(
-      expect.objectContaining({ clamp: true, variant: "self" }),
+      expect.objectContaining({ clamp: true, variant: "own" }),
     );
   });
 
@@ -77,16 +88,33 @@ describe("CommunityActivitySection", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("dentro de pestañas, una fuente sin entradas muestra emptyMessage en vez de desaparecer", () => {
+  it("dentro de pestañas, una fuente sin entradas muestra su estado vacío con la acción", () => {
     render(
       <CommunityActivitySection
         source="from-following"
         initial={{ entries: [], page: 1, pageSize: 10, hasNext: false }}
-        emptyMessage="Todavía no hay actividad acá."
+        empty={{
+          title: "Aún no sigues a nadie",
+          description: "Aquí verás lo que valoran las personas que sigues.",
+          action: { label: "Descubrir personas", href: "/users" },
+        }}
       />,
     );
 
-    expect(screen.getByText("Todavía no hay actividad acá.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Aún no sigues a nadie" })).toBeInTheDocument();
+    expect(screen.getByText("Aquí verás lo que valoran las personas que sigues.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Descubrir personas" })).toHaveAttribute("href", "/users");
     expect(screen.queryByTestId("feed-activity-list")).not.toBeInTheDocument();
+  });
+
+  it("sin página inicial del servidor muestra un esqueleto y luego pide la página 1 a su endpoint", async () => {
+    const { getRecentActivity } = await import("@/lib/api/home");
+    vi.mocked(getRecentActivity).mockResolvedValueOnce({ entries: [entry], page: 1, pageSize: 10, hasNext: false });
+
+    render(<CommunityActivitySection source="own" empty={{ title: "Vacío", description: "d" }} />);
+
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    expect(await screen.findByTestId("feed-activity-list")).toBeInTheDocument();
+    expect(getRecentActivity).toHaveBeenCalledWith(1, 10);
   });
 });

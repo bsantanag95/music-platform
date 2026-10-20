@@ -6,12 +6,24 @@
     "pageTitle": "Community",
     "heading": "Community",
     "recentHeading": "Recent",
-    "followingHeading": "From people you follow",
-    "ownHeading": "Your activity",
+    "followingHeading": "Following",
+    "ownHeading": "You",
     "tablistLabel": "Activity sections",
-    "tabEmpty": "No activity here yet.",
     "emptyTitle": "No activity to show yet",
-    "emptyDescription": "Once the community rates, comments or reviews something, it will show up here."
+    "emptyDescription": "Once the community rates, comments or reviews something, it will show up here.",
+    "subtitle": "What people are rating, commenting on and reviewing right now.",
+    "empty": {
+      "recentTitle": "No public activity yet",
+      "recentDescription": "Once someone rates, comments on or reviews a record, it will show up here.",
+      "followingNoneTitle": "You are not following anyone yet",
+      "followingNoneDescription": "This is where you will see what the people you follow rate, review and listen to.",
+      "followingQuietTitle": "No recent activity",
+      "followingQuietDescription": "The people you follow have not posted anything lately. Find more people who share your taste.",
+      "ownTitle": "You have no activity yet",
+      "ownDescription": "Rate, review or log a listen and it will show up here.",
+      "exploreAction": "Explore music",
+      "discoverAction": "Discover people"
+    }
   },
   "favoriteLabel": "Added a favorite",
   "ratingVerb": "Rated",

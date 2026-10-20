@@ -762,7 +762,11 @@ describe("FeedActivityList", () => {
         />,
       );
 
-      expect(screen.getByText(/Sumó a su colección · Vinilo · Seguidores/)).toBeInTheDocument();
+      // La línea de metadato se arma con unidades indivisibles (MetaUnit), así que el texto queda repartido en varios
+      // elementos: se compara el texto del contenedor de la línea.
+      expect(
+        screen.getByText((_, element) => element?.tagName === "SPAN" && element.className.includes("min-w-0") && (element.textContent ?? "").includes("Sumó a su colección · Vinilo · Seguidores")),
+      ).toBeInTheDocument();
       expect(screen.getByRole("link", { name: "Wish You Were Here" })).toBeInTheDocument();
       expect(screen.getByRole("link", { name: "Pink Floyd" })).toBeInTheDocument();
       expect(screen.getByTestId("cover-thumb")).toHaveAttribute("data-cover", "https://cover/9.jpg");
@@ -775,7 +779,11 @@ describe("FeedActivityList", () => {
         />,
       );
 
-      expect(screen.getByText(/Lo busca · cualquier formato · Público/)).toBeInTheDocument();
+      // La línea de metadato se arma con unidades indivisibles (MetaUnit), así que el texto queda repartido en varios
+      // elementos: se compara el texto del contenedor de la línea.
+      expect(
+        screen.getByText((_, element) => element?.tagName === "SPAN" && element.className.includes("min-w-0") && (element.textContent ?? "").includes("Lo busca · cualquier formato · Público")),
+      ).toBeInTheDocument();
     });
 
     it("un Camino completado enlaza a su página de lectura y muestra la cantidad de discos", () => {
@@ -839,6 +847,45 @@ describe("FeedActivityList", () => {
       expect(screen.getByText("Un disco para volver")).toBeInTheDocument();
       expect(screen.getByText("Cada vez que lo vuelvo a poner encuentro algo nuevo.")).toBeInTheDocument();
       expect(screen.getAllByTestId("cover-thumb")).toHaveLength(1);
+    });
+  });
+
+  describe("pestaña 'Tú' y línea de metadato (redesign-activity-page)", () => {
+    it("variant=own abre cada fila con la celda de carátula, como 'feed', pero sin autor", () => {
+      renderWithIntl(<FeedActivityList entries={[comment(), rating()]} variant="own" />);
+
+      expect(screen.getAllByTestId("cover-thumb")).toHaveLength(2);
+      expect(screen.queryByRole("link", { name: "Fran" })).not.toBeInTheDocument();
+      expect(document.querySelector("[data-timeline-dot]")).toBeNull();
+    });
+
+    it("en el rastro propio la nota va en su propia línea, fuera de la línea del título", () => {
+      renderWithIntl(<FeedActivityList entries={[rating()]} variant="self" />);
+
+      const titleLink = screen.getByRole("link", { name: "In Rainbows" });
+      const score = screen.getByText("87/100");
+      // La línea del título es el contenedor flex que agrupa título y reacción; la nota ya no vive ahí.
+      expect(titleLink.closest("div.flex")?.contains(score)).toBe(false);
+    });
+
+    it("ninguna unidad de la línea de metadato termina en '·'", () => {
+      const { container } = renderWithIntl(
+        <FeedActivityList entries={[comment(), favorite(), follow(), review()]} />,
+      );
+
+      const units = [...container.querySelectorAll("span.whitespace-nowrap")];
+      expect(units.length).toBeGreaterThan(0);
+      for (const unit of units) {
+        expect(unit.textContent?.trimEnd().endsWith("·")).toBe(false);
+      }
+    });
+
+    it("el ícono del tipo comparte unidad con su verbo", () => {
+      const { container } = renderWithIntl(<FeedActivityList entries={[review()]} />);
+
+      const icon = container.querySelector("span[aria-hidden='true'].translate-y-px");
+      const unit = icon?.closest("span.whitespace-nowrap");
+      expect(unit?.textContent).toContain("Reseñó");
     });
   });
 });
