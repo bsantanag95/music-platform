@@ -100,6 +100,11 @@
     "exploreDescription": "Grabaciones que se incorporan cada año por su valor histórico o cualitativo.",
     "exploreSeeAll": "Ver todos",
     "hubHeading": "Salones de la fama",
+    "pageHeading": "Salón de la Fama",
+    "emptyIndex": "Todavía no hay salones de la fama cargados.",
+    "linkFromAwards": "Salones de la fama →",
+    "exploreSeeAllClasses": "Ver todas las clases",
+    "latestClass": "Clase de {year}",
     "previousClasses": "Clases anteriores de {award}",
     "hubClasses": "{count, plural, one {# clase} other {# clases}}",
     "inducteesCount": "{count, plural, one {# grabación} other {# grabaciones}}"

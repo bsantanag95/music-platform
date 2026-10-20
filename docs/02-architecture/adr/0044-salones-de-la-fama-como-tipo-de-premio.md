@@ -76,6 +76,12 @@ y se cargan siempre como texto). Confirma el punto 1 (un salón es una carpeta d
 el riel con las incorporaciones por una tarjeta por salón, como Premios (el riel de cada clase escalaba mal); las incorporaciones se
 ven en la página de la clase.
 
+## Nota (cambio `add-hall-of-fame-page`, 2026-10)
+
+Los salones salieron de las rutas de premios: su índice vive en `/hall-of-fame` y sus clases en `/hall-of-fame/<salón>/<año>`, con miga
+propia; `/awards/<salón>[/<año>]` redirige de forma permanente. El modelo no cambia (`award.kind` sigue decidiendo), pero la presentación
+deja de llamar "premio" a lo que el punto 5 ya trata como algo distinto, y los salones ya no dependen de que `/awards` sea un hub.
+
 ## Alternativas descartadas
 
 - **Tablas propias para los salones:** duplicaría curaduría, resolución y carga para un modelo que ya los cubre.

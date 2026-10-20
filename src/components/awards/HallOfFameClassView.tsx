@@ -3,7 +3,7 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { FacetRow } from "@/components/discovery/FacetRow";
 import type { CeremonyPage } from "@/services/awards/read";
 import { categoryName } from "./AwardCategory";
-import { awardHref, awardsIndexHref, ceremonyHref } from "./award-links";
+import { hallClassHref, hallHref, hallOfFameIndexHref } from "./award-links";
 import { NominationItem } from "./NominationItem";
 import { sourceSite } from "./source-site";
 
@@ -28,8 +28,8 @@ export function HallOfFameClassView({ page, awardName }: { page: CeremonyPage; a
         <Breadcrumbs
           items={[
             { label: tCommon("home"), href: "/" },
-            { label: t("heading"), href: awardsIndexHref() },
-            { label: awardName, href: awardHref(page.awardSlug) },
+            { label: t("hall.pageHeading"), href: hallOfFameIndexHref() },
+            { label: awardName, href: hallHref(page.awardSlug) },
             { label: t("hall.classTitle", { year: page.ceremony.year }) },
           ]}
         />
@@ -60,7 +60,7 @@ export function HallOfFameClassView({ page, awardName }: { page: CeremonyPage; a
               links: page.ceremonies.map((ceremony) => ({
                 key: String(ceremony.year),
                 label: String(ceremony.year),
-                href: ceremonyHref(page.awardSlug, ceremony.year),
+                href: hallClassHref(page.awardSlug, ceremony.year),
                 current: ceremony.year === page.ceremony.year,
               })),
             }}

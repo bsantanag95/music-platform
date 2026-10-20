@@ -2,13 +2,13 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AppImage } from "@/components/ui/AppImage";
 import type { HallOfFameClass, NominationView } from "@/services/awards/read";
-import { ceremonyHref } from "./award-links";
+import { hallClassHref } from "./award-links";
 import { NomineeVisual } from "./NominationItem";
 
 // Tarjeta de un salón de la fama (openspec: add-national-recording-registry, design D4): la comparten la sección "Salón de la
-// Fama" de Explorar y el hub `/awards`, con el mismo esqueleto que `AwardTile` para que midan y se vean igual que las de
+// Fama" de Explorar y el índice `/hall-of-fame`, con el mismo esqueleto que `AwardTile` para que midan y se vean igual que las de
 // Premios: fondo teñido por la carátula, nombre, año de la clase en grande y cuatro carátulas de sus incorporaciones.
-// Enlaza a la clase más reciente (`/awards/<salón>` redirige a ella). Un salón no tiene un ganador destacado, así que el lugar
+// Enlaza a la clase más reciente (`/hall-of-fame/<salón>` redirige a ella). Un salón no tiene un ganador destacado, así que el lugar
 // de la fila del trofeo lo ocupan las carátulas.
 //
 // Con pocos salones (hoy dos) la tarjeta es ancha (`wide`): dos tarjetas en una grilla de cinco columnas dejaban vacíos tres
@@ -78,7 +78,7 @@ export function HallOfFameTile({ hall, detailed = false, wide = false }: { hall:
         </span>
       ) : null}
       <Link
-        href={ceremonyHref(hall.awardSlug, hall.year)}
+        href={hallClassHref(hall.awardSlug, hall.year)}
         className="flex flex-1 flex-col gap-3 outline-none after:absolute after:inset-0 after:content-['']"
       >
         <span className="flex flex-col gap-0.5">
@@ -104,7 +104,7 @@ export function HallOfFameTile({ hall, detailed = false, wide = false }: { hall:
             {previous.map((year) => (
               <li key={year}>
                 <Link
-                  href={ceremonyHref(hall.awardSlug, year)}
+                  href={hallClassHref(hall.awardSlug, year)}
                   className="inline-flex rounded-full border border-ink-border bg-ink/60 px-2.5 py-0.5 font-data text-xs tabular-nums text-paper-muted transition-colors hover:border-paper-muted/60 hover:text-paper focus-visible:border-amber focus-visible:text-paper"
                 >
                   {year}

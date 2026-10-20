@@ -100,6 +100,11 @@
     "exploreDescription": "Recordings added each year for their lasting historical or qualitative significance.",
     "exploreSeeAll": "See all",
     "hubHeading": "Halls of fame",
+    "pageHeading": "Hall of Fame",
+    "emptyIndex": "No halls of fame have been loaded yet.",
+    "linkFromAwards": "Halls of fame →",
+    "exploreSeeAllClasses": "See all classes",
+    "latestClass": "Class of {year}",
     "previousClasses": "Previous classes of {award}",
     "hubClasses": "{count, plural, one {# class} other {# classes}}",
     "inducteesCount": "{count, plural, one {# recording} other {# recordings}}"

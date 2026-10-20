@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { AppImage } from "@/components/ui/AppImage";
 import { StickyJumpNav } from "@/components/awards/StickyJumpNav";
-import { HallOfFameClassView } from "@/components/awards/HallOfFameClassView";
 import { NomineeVisual } from "@/components/awards/NominationItem";
 import { categoryName } from "@/components/awards/AwardCategory";
 import { FacetRow } from "@/components/discovery/FacetRow";
 import { AwardCategory } from "@/components/awards/AwardCategory";
-import { awardHref, awardsIndexHref, categoryHistoryHref, ceremonyHref } from "@/components/awards/award-links";
+import { awardHref, awardsIndexHref, categoryHistoryHref, ceremonyHref, hallClassHref } from "@/components/awards/award-links";
 import { sourceSite } from "@/components/awards/source-site";
 import { splitFeatured } from "@/components/awards/featured-categories";
 import { groupByField } from "@/components/awards/group-by-field";
@@ -41,11 +40,11 @@ export async function generateMetadata({ params }: CeremonyPageProps): Promise<M
 export default async function CeremonyPage({ params }: CeremonyPageProps) {
   const { locale, page } = await load(params);
   if (!page) notFound();
+  // Un salón de la fama vive en `/hall-of-fame` (openspec: add-hall-of-fame-page, design D2): redirección permanente.
+  if (page.kind === "hall_of_fame") permanentRedirect(`/${locale}${hallClassHref(page.awardSlug, page.ceremony.year)}`);
   const t = await getTranslations("awards");
   const tCommon = await getTranslations("common");
   const award = t.has(`names.${page.awardSlug}`) ? t(`names.${page.awardSlug}`) : page.awardSlug;
-  // Un salón de la fama se presenta como una clase (sin edición ni ganadores entre nominados): vista propia (ADR 0044).
-  if (page.kind === "hall_of_fame") return <HallOfFameClassView page={page} awardName={award} />;
   const title = t("ceremonyTitle", { award, year: page.ceremony.year });
   const date = new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
     new Date(`${page.ceremony.heldOn}T00:00:00Z`),

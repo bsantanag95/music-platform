@@ -106,10 +106,18 @@ describe("HallOfFameClassView", () => {
     expect(within(songs).getByRole("link", { name: "Trouble in Mind" }).getAttribute("href")).toMatch(/^\/song\//);
   });
 
+  it("la miga lleva «Salón de la Fama» (no «Premios») y enlaza al índice y al salón", () => {
+    renderWithIntl(<HallOfFameClassView page={page} awardName="Salón de la Fama de los Grammy" />);
+    const crumbs = screen.getByRole("navigation", { name: /migas|breadcrumb/i });
+    expect(within(crumbs).queryByText("Premios")).not.toBeInTheDocument();
+    expect(within(crumbs).getByRole("link", { name: "Salón de la Fama" })).toHaveAttribute("href", "/hall-of-fame");
+    expect(within(crumbs).getByRole("link", { name: "Salón de la Fama de los Grammy" })).toHaveAttribute("href", "/hall-of-fame/grammy-hall-of-fame");
+  });
+
   it("ofrece las demás clases como años, la actual marcada", () => {
     renderWithIntl(<HallOfFameClassView page={page} awardName="Salón de la Fama de los Grammy" />);
     const row = screen.getByRole("navigation", { name: "Clase" });
-    expect(within(row).getByRole("link", { name: "2025" })).toHaveAttribute("href", "/awards/grammy-hall-of-fame/2025");
+    expect(within(row).getByRole("link", { name: "2025" })).toHaveAttribute("href", "/hall-of-fame/grammy-hall-of-fame/2025");
     expect(within(row).getByRole("link", { name: "2026" })).toHaveAttribute("aria-current", "page");
   });
 });
@@ -143,12 +151,12 @@ describe("HallOfFameExploreSection", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("con un salón: ancla, encabezado en singular, una tarjeta y «Ver todos» al hub", () => {
+  it("con un salón: ancla, encabezado en singular, una tarjeta y «Ver todos» al índice de salones", () => {
     const { container } = renderWithIntl(<HallOfFameExploreSection halls={[hall()]} />);
     expect(container.querySelector("section#salon-de-la-fama")).not.toBeNull();
     expect(screen.getByRole("heading", { name: "Salón de la Fama" })).toBeInTheDocument();
     expect(container.querySelectorAll("li")).toHaveLength(1);
-    expect(screen.getByRole("link", { name: /Ver todos/ })).toHaveAttribute("href", "/awards");
+    expect(screen.getByRole("link", { name: /Ver todos/ })).toHaveAttribute("href", "/hall-of-fame");
   });
 
   it("con dos salones: encabezado en plural y una tarjeta por salón que abre su clase más reciente", () => {
@@ -157,11 +165,11 @@ describe("HallOfFameExploreSection", () => {
     expect(container.querySelectorAll("section#salon-de-la-fama > ul > li")).toHaveLength(2);
     expect(screen.getByRole("link", { name: /Salón de la Fama de los Grammy/ })).toHaveAttribute(
       "href",
-      "/awards/grammy-hall-of-fame/2026",
+      "/hall-of-fame/grammy-hall-of-fame/2026",
     );
     expect(screen.getByRole("link", { name: /Registro Nacional de Grabaciones/ })).toHaveAttribute(
       "href",
-      "/awards/national-recording-registry/2026",
+      "/hall-of-fame/national-recording-registry/2026",
     );
   });
 
@@ -185,7 +193,7 @@ describe("HallOfFameTile", () => {
     expect(screen.getByText("Salón de la Fama de los Grammy")).toBeInTheDocument();
     expect(screen.getByText("2026")).toBeInTheDocument();
     expect(screen.getByText("3 grabaciones")).toBeInTheDocument();
-    expect(screen.getByRole("link")).toHaveAttribute("href", "/awards/grammy-hall-of-fame/2026");
+    expect(screen.getByRole("link")).toHaveAttribute("href", "/hall-of-fame/grammy-hall-of-fame/2026");
   });
 
   it("muestra hasta cuatro carátulas, primero las incorporaciones con disco en el catálogo", () => {
@@ -226,10 +234,10 @@ describe("HallOfFameTile", () => {
     expect(screen.getByText("2022–2026 · 5 clases · Lo elige un comité de selección")).toBeInTheDocument();
     const previous = screen.getByRole("navigation", { name: "Clases anteriores de Registro Nacional de Grabaciones" });
     expect(within(previous).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
-      "/awards/national-recording-registry/2025",
-      "/awards/national-recording-registry/2024",
-      "/awards/national-recording-registry/2023",
-      "/awards/national-recording-registry/2022",
+      "/hall-of-fame/national-recording-registry/2025",
+      "/hall-of-fame/national-recording-registry/2024",
+      "/hall-of-fame/national-recording-registry/2023",
+      "/hall-of-fame/national-recording-registry/2022",
     ]);
   });
 
