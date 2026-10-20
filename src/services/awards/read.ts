@@ -499,6 +499,9 @@ export const getLatestCeremonyYear = cache(async (slug: string): Promise<number 
   return (await ceremoniesOf(id))[0]?.year ?? null;
 });
 
+/** Tipo de un premio (`competition` o `hall_of_fame`); `null` si no existe. Decide en qué ruta vive: `/awards` o `/hall-of-fame`. */
+export const getAwardKind = cache(async (slug: string): Promise<AwardKind | null> => (await awardRow(slug))?.kind ?? null);
+
 /** Página de una ceremonia; `null` si el premio o el año no están cargados. */
 export const getCeremonyPage = cache(async (slug: string, year: number): Promise<CeremonyPage | null> => {
   if (!Number.isInteger(year)) return null;

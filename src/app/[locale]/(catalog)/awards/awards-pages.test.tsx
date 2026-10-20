@@ -10,6 +10,9 @@ const mocks = vi.hoisted(() => ({
   redirect: vi.fn((): never => {
     throw new Error("NEXT_REDIRECT");
   }),
+  permanentRedirect: vi.fn((): never => {
+    throw new Error("NEXT_PERMANENT_REDIRECT");
+  }),
   notFound: vi.fn((): never => {
     throw new Error("NEXT_NOT_FOUND");
   }),
@@ -20,6 +23,7 @@ const mocks = vi.hoisted(() => ({
   getCurrentUser: vi.fn(),
   getWinnerMarks: vi.fn(),
   getLatestCeremonyYear: vi.fn(),
+  getAwardKind: vi.fn(),
   getCeremonyPage: vi.fn(),
   getCategoryHistory: vi.fn(),
 }));
@@ -29,7 +33,7 @@ vi.mock("next-intl/server", () => ({
     .fn()
     .mockResolvedValue(Object.assign((key: string, values?: Record<string, unknown>) => (values?.year ? `${key}:${values.year}` : key), { has: () => true })),
 }));
-vi.mock("next/navigation", () => ({ notFound: mocks.notFound }));
+vi.mock("next/navigation", () => ({ notFound: mocks.notFound, permanentRedirect: mocks.permanentRedirect }));
 vi.mock("@/i18n/navigation", () => ({ redirect: mocks.redirect, Link: () => null }));
 vi.mock("@/db", () => ({ db: {} }));
 vi.mock("@/services/auth/authorization", () => ({ getCurrentUser: mocks.getCurrentUser }));
@@ -43,6 +47,7 @@ vi.mock("@/services/awards/read", () => ({
   listRecentHeadlineWinners: mocks.listRecentHeadlineWinners,
   listMostAwardedArtists: mocks.listMostAwardedArtists,
   getLatestCeremonyYear: mocks.getLatestCeremonyYear,
+  getAwardKind: mocks.getAwardKind,
   getCeremonyPage: mocks.getCeremonyPage,
   getCategoryHistory: mocks.getCategoryHistory,
 }));
@@ -54,7 +59,6 @@ const { AwardCategory } = await import("@/components/awards/AwardCategory");
 const { FacetRow } = await import("@/components/discovery/FacetRow");
 const { AwardTileGrid } = await import("@/components/awards/AwardTile");
 const { HallOfFameTileGrid } = await import("@/components/awards/HallOfFameTile");
-const { HallOfFameClassView } = await import("@/components/awards/HallOfFameClassView");
 const { RecentWinnersRail } = await import("@/components/awards/RecentWinnersRail");
 const { PopularChart } = await import("@/components/discovery/PopularChart");
 const { default: CategoryHistoryRoute } = await import("./[award]/categories/[key]/page");
@@ -82,6 +86,7 @@ const params = Promise.resolve({ locale: "es" });
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.listHallOfFameClasses.mockResolvedValue([]);
+  mocks.getAwardKind.mockResolvedValue("competition");
   mocks.listRecentHeadlineWinners.mockResolvedValue([]);
   mocks.listMostAwardedArtists.mockResolvedValue([]);
   mocks.getCurrentUser.mockResolvedValue(null);
@@ -128,7 +133,7 @@ describe("/awards: hub de premios", () => {
     expect(mocks.listMostAwardedArtists).not.toHaveBeenCalled();
   });
 
-  it("con salones de la fama suma el bloque «Salones de la fama» bajo los premios, sin mezclarlos con las tarjetas", async () => {
+  it("con salones de la fama no los muestra en el hub: solo un enlace corto a /hall-of-fame", async () => {
     mocks.listLatestCeremoniesByAward.mockResolvedValue([latest("grammy", 2026), latest("brit-awards", 2026)]);
     mocks.listHallOfFameClasses.mockResolvedValue([
       { awardSlug: "grammy-hall-of-fame", year: 2026, years: [2026, 2025], inductees: [] },
@@ -138,13 +143,10 @@ describe("/awards: hub de premios", () => {
     const element = await AwardsIndexPage({ params });
     const text = JSON.stringify(element);
 
-    expect(text).toContain("salones-de-la-fama");
-    expect(text).toContain("hall.hubHeading");
-    expect(findAll(element, HallOfFameTileGrid)).toHaveLength(1);
-    // Una tarjeta por salón, en la forma detallada de las tarjetas de premios.
-    const halls = findAll(element, HallOfFameTileGrid)[0]!.props as { halls: { awardSlug: string }[]; detailed?: boolean };
-    expect(halls.halls.map((h) => h.awardSlug)).toEqual(["grammy-hall-of-fame", "national-recording-registry"]);
-    expect(halls.detailed).toBe(true);
+    expect(text).toContain("hall.linkFromAwards");
+    expect(text).toContain("/hall-of-fame");
+    expect(text).not.toContain("salones-de-la-fama");
+    expect(findAll(element, HallOfFameTileGrid)).toHaveLength(0);
     expect((findAll(element, AwardTileGrid)[0]!.props as { ceremonies: { awardSlug: string }[] }).ceremonies.map((c) => c.awardSlug)).toEqual([
       "grammy",
       "brit-awards",
@@ -156,7 +158,7 @@ describe("/awards: hub de premios", () => {
 
     const element = await AwardsIndexPage({ params });
 
-    expect(JSON.stringify(element)).not.toContain("salones-de-la-fama");
+    expect(JSON.stringify(element)).not.toContain("hall.linkFromAwards");
     expect(findAll(element, HallOfFameTileGrid)).toHaveLength(0);
   });
 
@@ -167,15 +169,15 @@ describe("/awards: hub de premios", () => {
     await expect(AwardsIndexPage({ params })).rejects.toThrow("NEXT_REDIRECT");
   });
 
-  it("con solo salones no dice que no hay ceremonias y muestra el bloque", async () => {
+  it("con solo salones y sin competencias dice que no hay ceremonias: los salones no cuentan en el hub", async () => {
     mocks.listLatestCeremoniesByAward.mockResolvedValue([]);
     mocks.listHallOfFameClasses.mockResolvedValue([{ awardSlug: "grammy-hall-of-fame", year: 2026, years: [2026], inductees: [] }]);
 
     const element = await AwardsIndexPage({ params });
     const text = JSON.stringify(element);
 
-    expect(text).not.toContain("emptyIndex");
-    expect(text).toContain("salones-de-la-fama");
+    expect(text).toContain("emptyIndex");
+    expect(text).toContain("hall.linkFromAwards");
   });
 
   it("las tarjetas del hub van en modo detallado y en una sola grilla (la agrupación está apagada)", async () => {
@@ -283,6 +285,15 @@ describe("/awards/{premio}", () => {
     expect(mocks.redirect).toHaveBeenCalledWith({ href: "/awards/grammy/2026", locale: "es" });
   });
 
+  it("un salón de la fama redirige de forma permanente a /hall-of-fame, en cada idioma", async () => {
+    mocks.getAwardKind.mockResolvedValue("hall_of_fame");
+
+    await expect(AwardPage({ params: Promise.resolve({ locale: "en", award: "grammy-hall-of-fame" }) })).rejects.toThrow("NEXT_PERMANENT_REDIRECT");
+
+    expect(mocks.permanentRedirect).toHaveBeenCalledWith("/en/hall-of-fame/grammy-hall-of-fame");
+    expect(mocks.redirect).not.toHaveBeenCalled();
+  });
+
   it("un premio inexistente o sin ceremonias es una página no encontrada", async () => {
     mocks.getLatestCeremonyYear.mockResolvedValue(null);
 
@@ -329,11 +340,10 @@ describe("/awards/{premio}/{año}: ceremonia", () => {
   const variantsOf = (element: ReactNode) =>
     Object.fromEntries(findAll(element, AwardCategory).map((item) => [(item.props as { name: { es: string } }).name.es, (item.props as { variant: string }).variant]));
 
-  it("la clase de un salón de la fama usa su vista propia, sin las categorías destacadas de una competencia", async () => {
-    const element = await open(page({ kind: "hall_of_fame", awardSlug: "grammy-hall-of-fame" }), "2024");
+  it("la clase de un salón de la fama redirige de forma permanente a su ruta en /hall-of-fame", async () => {
+    await expect(open(page({ kind: "hall_of_fame", awardSlug: "grammy-hall-of-fame" }), "2024")).rejects.toThrow("NEXT_PERMANENT_REDIRECT");
 
-    expect(findAll(element, HallOfFameClassView)).toHaveLength(1);
-    expect(findAll(element, AwardCategory)).toHaveLength(0);
+    expect(mocks.permanentRedirect).toHaveBeenCalledWith("/es/hall-of-fame/grammy-hall-of-fame/2024");
   });
 
   it("las cuatro primeras del campo general van destacadas y el resto, compactas", async () => {

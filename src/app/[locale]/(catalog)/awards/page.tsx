@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { redirect } from "@/i18n/navigation";
+import { Link, redirect } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { SectionHeader } from "@/components/discovery/SectionHeader";
 import { PopularChart, type PopularChartItem } from "@/components/discovery/PopularChart";
-import { ceremonyHref } from "@/components/awards/award-links";
+import { ceremonyHref, hallOfFameIndexHref } from "@/components/awards/award-links";
 import { GROUP_AWARDS_ON_HUB, groupAwards } from "@/components/awards/award-groups";
 import { AwardTileGrid } from "@/components/awards/AwardTile";
 import {
@@ -16,7 +16,6 @@ import {
 import { artistHref } from "@/lib/catalog-links";
 import { getCurrentUser } from "@/services/auth/authorization";
 import { getWinnerMarks, missingWinners, winnerAlbumIds } from "@/services/awards/personal";
-import { HallOfFameTileGrid } from "@/components/awards/HallOfFameTile";
 import {
   listHallOfFameClasses,
   listLatestCeremoniesByAward,
@@ -99,12 +98,17 @@ export default async function AwardsIndexPage({ params, searchParams }: AwardsIn
               {t("hubStats", { awards: ceremonies.length, ceremonies: ceremonyTotal })}
             </p>
           ) : null}
+          {halls.length > 0 ? (
+            <Link href={hallOfFameIndexHref()} className="w-fit font-data text-sm text-paper-muted transition-colors hover:text-amber">
+              {t("hall.linkFromAwards")}
+            </Link>
+          ) : null}
         </div>
       </div>
 
-      {ceremonies.length === 0 && halls.length === 0 ? (
+      {ceremonies.length === 0 ? (
         <p className="font-body text-paper-muted">{t("emptyIndex")}</p>
-      ) : ceremonies.length === 0 ? null : GROUP_AWARDS_ON_HUB ? (
+      ) : GROUP_AWARDS_ON_HUB ? (
         groupAwards(ceremonies).map(({ group, awards }) => (
           <section key={group} aria-labelledby={`grupo-${group}`} className="flex w-full flex-col gap-3">
             <h2 id={`grupo-${group}`} className="font-display text-xl text-paper">
@@ -123,13 +127,6 @@ export default async function AwardsIndexPage({ params, searchParams }: AwardsIn
         <section aria-labelledby="mas-premiados" className="flex w-full flex-col gap-4">
           <SectionHeader heading={t("mostAwardedHeading")} description={t("mostAwardedDescription")} headingId="mas-premiados" />
           <PopularChart items={chartItems} label={t("mostAwardedHeading")} />
-        </section>
-      ) : null}
-
-      {halls.length > 0 ? (
-        <section id="salones-de-la-fama" aria-labelledby="salones-de-la-fama-heading" className="flex w-full scroll-mt-24 flex-col gap-3">
-          <SectionHeader heading={t("hall.hubHeading")} description={t("hall.exploreDescription")} headingId="salones-de-la-fama-heading" />
-          <HallOfFameTileGrid halls={halls} detailed />
         </section>
       ) : null}
     </main>
