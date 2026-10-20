@@ -19,6 +19,7 @@ import {
   type PublicListSort,
 } from "./types";
 import { activeUserCondition } from "@/services/auth/account-status";
+import { notGeneratedCollectionCondition } from "@/services/discovery/collections/conditions";
 
 /** Filtros opcionales del listado público (cambio rework-public-lists-surface). */
 export interface DiscoverListFilters {
@@ -187,6 +188,10 @@ export async function listDiscoverLists(
     // su primer ítem. Sigue visible en el perfil de su dueño y por enlace. En SQL, para no acortar páginas.
     sql`exists (select 1 from ${userListItem} where ${userListItem.listId} = ${userList.id})`,
   ];
+  // Sin filtros (la sección "Recientes" de `/lists` y su paginación), sin las colecciones generadas por plantilla de
+  // `@exploracion` (openspec: polish-community-lists): son contenido de la plataforma, se recorren en Explorar, y llenaban
+  // "Lo último que publicó la comunidad". Una búsqueda o un filtro sí las encuentra.
+  if (!filters?.q?.trim() && !filters?.entityType && !filters?.sort) conditions.push(notGeneratedCollectionCondition());
   if (entityType) conditions.push(eq(userList.entityType, entityType));
   if (q) {
     conditions.push(

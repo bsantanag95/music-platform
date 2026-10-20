@@ -7,27 +7,32 @@ interface ListCoverMosaicProps {
   className?: string;
 }
 
-// Mosaico 2×2 de las primeras carátulas de una lista — "una pila de sleeves
-// sostenida a la luz". Cuando faltan carátulas (lista de artistas o canciones,
-// o álbumes sin arte) cada hueco cae en la silueta de disco del sistema, nunca
-// en un rectángulo vacío. Decorativo: el nombre y los metadatos de la lista son
-// lo que la identifica, así que el mosaico va `aria-hidden`.
+/** Disposición de cada imagen según cuántas haya: una sola llena la caja; dos, mitades; tres, una grande y dos chicas. */
+const LAYOUT: Record<number, { grid: string; tiles: string[] }> = {
+  1: { grid: "grid-cols-1 grid-rows-1", tiles: [""] },
+  2: { grid: "grid-cols-2 grid-rows-1", tiles: ["", ""] },
+  3: { grid: "grid-cols-2 grid-rows-2", tiles: ["row-span-2", "", ""] },
+  4: { grid: "grid-cols-2 grid-rows-2", tiles: ["", "", "", ""] },
+};
+
+// Mosaico de las primeras imágenes de una lista — "una pila de sleeves sostenida a la luz" —: carátulas de álbumes o
+// canciones y fotos de artistas. Usa tantas imágenes como haya, hasta cuatro, sin huecos (openspec: polish-community-lists):
+// antes eran siempre cuatro casillas y una lista con una o dos imágenes quedaba con discos grises de relleno. Sin ninguna, la
+// silueta de disco ocupa la caja. Decorativo: el nombre y los metadatos de la lista son lo que la identifica (`aria-hidden`).
 export function ListCoverMosaic({ coverThumbs, className = "" }: ListCoverMosaicProps) {
-  const tiles = Array.from({ length: 4 }, (_, i) => coverThumbs[i] ?? null);
+  const covers = coverThumbs.slice(0, 4);
+  const layout = LAYOUT[covers.length];
 
   return (
     <div
       aria-hidden
-      className={`grid aspect-square grid-cols-2 grid-rows-2 gap-px overflow-hidden rounded-md border border-ink-border bg-ink-border ${className}`}
+      className={`grid aspect-square gap-px overflow-hidden rounded-md border border-ink-border bg-ink-border ${layout?.grid ?? "grid-cols-1"} ${className}`}
     >
-      {/* El contenedor recorta las esquinas (`overflow-hidden`), así que el
-          redondeo propio de cada tile queda oculto y no hace falta anularlo. */}
-      {tiles.map((cover, i) =>
-        cover ? (
-          <CoverThumb key={i} cover={cover} label="" className="size-full" />
-        ) : (
-          <DiscPlaceholder key={i} alt="" className="size-full" />
-        ),
+      {/* El contenedor recorta las esquinas (`overflow-hidden`), así que el redondeo propio de cada tile queda oculto. */}
+      {layout ? (
+        covers.map((cover, i) => <CoverThumb key={i} cover={cover} label="" className={`size-full ${layout.tiles[i]}`} />)
+      ) : (
+        <DiscPlaceholder alt="" className="size-full" />
       )}
     </div>
   );
