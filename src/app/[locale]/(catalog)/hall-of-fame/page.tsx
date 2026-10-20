@@ -2,11 +2,10 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { HallOfFameLatestRail } from "@/components/awards/HallOfFameLatestRail";
-import { HallOfFameTileGrid } from "@/components/awards/HallOfFameTile";
 import { listHallOfFameClasses } from "@/services/awards/read";
 
-// Índice de los salones de la fama (openspec: add-hall-of-fame-page, design D3): una tarjeta detallada por salón y, bajo ellas, las
-// incorporaciones de la última clase de cada uno. Sin salones, un mensaje de vacío (no redirige).
+// Índice de los salones de la fama (openspec: add-hall-of-fame-page, design D3; polish-hall-of-fame-page): un bloque por salón, con
+// sus datos, sus clases y las incorporaciones de la última. Antes, además, la tarjeta de cada salón repetía la última clase arriba. Sin salones, un mensaje de vacío (no redirige).
 
 interface HallOfFameIndexProps {
   params: Promise<{ locale: string }>;
@@ -37,12 +36,7 @@ export default async function HallOfFameIndexPage({ params }: HallOfFameIndexPro
       {halls.length === 0 ? (
         <p className="font-body text-paper-muted">{t("hall.emptyIndex")}</p>
       ) : (
-        <>
-          <HallOfFameTileGrid halls={halls} detailed />
-          {halls.map((hall) => (
-            <HallOfFameLatestRail key={hall.awardSlug} hall={hall} />
-          ))}
-        </>
+        halls.map((hall) => <HallOfFameLatestRail key={hall.awardSlug} hall={hall} />)
       )}
     </main>
   );

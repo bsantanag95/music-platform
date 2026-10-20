@@ -4,6 +4,7 @@ import { AppImage } from "@/components/ui/AppImage";
 import type { LatestCeremony } from "@/services/awards/read";
 import { ceremonyHref } from "./award-links";
 import { NomineeVisual } from "./NominationItem";
+import { splitNomineeText } from "./nominee-text";
 
 // Tarjeta de un premio (openspec: add-music-awards, design D6; add-four-music-awards, design D6 y D7): su ceremonia más
 // reciente con el ganador destacado. La comparten la sección "Premios" de Explorar y el hub `/awards`.
@@ -54,8 +55,9 @@ export function AwardTile({ ceremony, detailed = false }: AwardTileProps) {
   // Con el álbum resuelto en el catálogo, título y artista por separado (el texto curado los junta:
   // "Midnights — Taylor Swift"); sin resolver, el texto curado y su crédito.
   const album = subject?.kind === "release_group" ? subject.album : null;
-  const title = album?.title ?? headline?.winner.text;
-  const credit = album ? album.artistName : headline?.winner.credit;
+  const unresolved = headline && !album ? splitNomineeText(headline.winner.text, headline.winner.credit) : null;
+  const title = album?.title ?? unresolved?.title;
+  const credit = album ? album.artistName : unresolved?.artist;
   const backdrop =
     album?.cover.coverThumbUrl ?? (subject?.kind === "recording" && subject.anchor ? subject.anchor.cover.coverThumbUrl : null);
   const oldest = ceremony.years.at(-1) ?? ceremony.year;

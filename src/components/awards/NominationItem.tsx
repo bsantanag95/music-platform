@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
@@ -6,6 +7,8 @@ import { LazyCoverImage } from "@/components/catalog/LazyCoverImage";
 import { AppImage } from "@/components/ui/AppImage";
 import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 import type { AlbumRef, CoverInfo, NominationView } from "@/services/awards/read";
+import { splitNomineeText } from "./nominee-text";
+import { TypeCover } from "./TypeCover";
 
 // Un nominado de una categoría de premios (openspec: add-music-awards, design D5; redesign-awards-pages). Con el sujeto
 // resuelto en el catálogo (álbum o grabación) se muestran el título y el artista en dos líneas, como las tarjetas de
@@ -13,12 +16,12 @@ import type { AlbumRef, CoverInfo, NominationView } from "@/services/awards/read
 // la ceremonia) y su crédito, sin enlace. El tamaño lo da quien lo usa: el ganador de una categoría destacada va grande,
 // el de una fila compacta mediano y los nominados chicos.
 
-function Cover({ cover, label, className }: { cover: CoverInfo; label: string; className: string }) {
-  return cover.coverResolved ? (
-    <CoverThumb cover={cover.coverThumbUrl} label={label} className={className} />
-  ) : (
-    <LazyCoverImage releaseGroupId={cover.releaseGroupId} coverLabel={label} className={className} />
-  );
+function Cover({ cover, label, className, fallback }: { cover: CoverInfo; label: string; className: string; fallback?: ReactNode }) {
+  if (!cover.coverResolved) {
+    return <LazyCoverImage releaseGroupId={cover.releaseGroupId} coverLabel={label} className={className} fallback={fallback} />;
+  }
+  if (!cover.coverThumbUrl && fallback) return <>{fallback}</>;
+  return <CoverThumb cover={cover.coverThumbUrl} label={label} className={className} />;
 }
 
 /** Inicial de una persona sin foto, en círculo: una silueta de disco para alguien (no un disco) confundía. */
@@ -37,12 +40,26 @@ function Initial({ name, size }: { name: string; size: string }) {
  * Carátula, foto o silueta del nominado (también en la tarjeta de ceremonia de Explorar). `person`: la categoría premia a
  * personas (artista, productor, compositor); sin foto se muestra la inicial en lugar del disco.
  */
-export function NomineeVisual({ nomination, size, person = false }: { nomination: NominationView; size: string; person?: boolean }) {
+export function NomineeVisual({
+  nomination,
+  size,
+  person = false,
+  typeCover = false,
+}: {
+  nomination: NominationView;
+  size: string;
+  person?: boolean;
+  /** Sin carátula, la portada tipográfica (inicial del título) en vez de la silueta del disco: para rieles de tarjetas grandes. */
+  typeCover?: boolean;
+}) {
   const t = useTranslations("catalog.explore");
   const subject = nomination.subject;
-  if (subject?.kind === "release_group") return <Cover cover={subject.album.cover} label={t("albumCoverLabel")} className={size} />;
+  const fallback = typeCover ? <TypeCover title={titleAndArtist(nomination).title} className={size} /> : undefined;
+  if (subject?.kind === "release_group") {
+    return <Cover cover={subject.album.cover} label={t("albumCoverLabel")} className={size} fallback={fallback} />;
+  }
   if (subject?.kind === "recording" && subject.anchor) {
-    return <Cover cover={subject.anchor.cover} label={t("albumCoverLabel")} className={size} />;
+    return <Cover cover={subject.anchor.cover} label={t("albumCoverLabel")} className={size} fallback={fallback} />;
   }
   if (subject?.kind === "artist" && subject.photoUrl) {
     return (
@@ -53,6 +70,7 @@ export function NomineeVisual({ nomination, size, person = false }: { nomination
   }
   if (subject?.kind === "artist") return <Initial name={subject.name} size={size} />;
   if (!subject && person) return <Initial name={nomination.text} size={size} />;
+  if (fallback) return fallback;
   // Decorativo: el nombre ya está en el texto del nominado.
   return (
     <span aria-hidden className="contents">
@@ -77,7 +95,8 @@ export function titleAndArtist(nomination: NominationView): { title: string; art
   const subject = nomination.subject;
   if (subject?.kind === "release_group") return { title: subject.album.title, artist: subject.album.artistName };
   if (subject?.kind === "recording") return { title: subject.title, artist: subject.artistName };
-  return { title: nomination.text, artist: null };
+  // Sin ficha, el texto curado partido en título y artista ("Rumor Has It — Reba McEntire"); el crédito va aparte.
+  return splitNomineeText(nomination.text, null);
 }
 
 export type NominationSize = "lg" | "md" | "sm";

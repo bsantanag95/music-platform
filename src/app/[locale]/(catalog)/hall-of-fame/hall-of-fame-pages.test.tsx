@@ -82,14 +82,12 @@ beforeEach(() => {
 });
 
 describe("/hall-of-fame: índice", () => {
-  it("con dos salones: una tarjeta detallada por salón y el riel de la última clase de cada uno", async () => {
+  it("con dos salones: un bloque por salón (datos, clases y riel de la última), sin repetir la clase en tarjetas", async () => {
     mocks.listHallOfFameClasses.mockResolvedValue([hallClass("national-recording-registry", 2026), hallClass("grammy-hall-of-fame", 2026)]);
 
     const element = await HallOfFameIndexPage({ params });
 
-    const grids = findAll(element, HallOfFameTileGrid);
-    expect(grids).toHaveLength(1);
-    expect((grids[0]!.props as { detailed?: boolean }).detailed).toBe(true);
+    expect(findAll(element, HallOfFameTileGrid)).toHaveLength(0);
     expect(findAll(element, HallOfFameLatestRail).map((rail) => (rail.props as { hall: { awardSlug: string } }).hall.awardSlug)).toEqual([
       "national-recording-registry",
       "grammy-hall-of-fame",

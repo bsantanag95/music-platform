@@ -3,7 +3,7 @@
 import { AppImage } from "@/components/ui/AppImage";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { getReleaseGroupCover } from "@/lib/api/catalog";
 import { queryKeys } from "@/lib/query/keys";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -13,6 +13,8 @@ interface LazyCoverImageProps {
   releaseGroupId: string;
   coverLabel: string;
   className?: string;
+  /** Qué mostrar si el disco no tiene carátula (o no se pudo cargar); por defecto, la silueta del disco. */
+  fallback?: ReactNode;
 }
 
 import type { Cover } from "@/lib/api/schemas";
@@ -32,7 +34,7 @@ const BACKOFF_DELAYS = [250, 750];
 // Resiliencia: limita reintentos de consulta (máx 2 con backoff) y errores
 // de carga de imagen (máx 2 reintentos visuales). Tras agotar intentos,
 // muestra placeholder estable sin loops de requests.
-export function LazyCoverImage({ releaseGroupId, coverLabel, className = "" }: LazyCoverImageProps) {
+export function LazyCoverImage({ releaseGroupId, coverLabel, className = "", fallback }: LazyCoverImageProps) {
   const t = useTranslations("catalog.artist");
   const [imageRetries, setImageRetries] = useState(0);
   // La carátula se resuelve recién cuando la tarjeta entra (o se acerca) al área visible
@@ -93,6 +95,7 @@ export function LazyCoverImage({ releaseGroupId, coverLabel, className = "" }: L
 
   // Error de consulta después de reintentos
   if (isError) {
+    if (fallback) return <>{fallback}</>;
     return <DiscPlaceholder alt={t("coverFailed")} className={className} />;
   }
 
@@ -100,11 +103,13 @@ export function LazyCoverImage({ releaseGroupId, coverLabel, className = "" }: L
 
   // Sin carátula disponible
   if (!cover) {
+    if (fallback) return <>{fallback}</>;
     return <DiscPlaceholder alt={t("coverPlaceholderAlt")} className={className} />;
   }
 
   // Error de imagen después de reintentos
   if (imageError) {
+    if (fallback) return <>{fallback}</>;
     return <DiscPlaceholder alt={t("coverFailed")} className={className} />;
   }
 

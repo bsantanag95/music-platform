@@ -5,6 +5,7 @@ import { renderWithIntl } from "@/test/i18n-test-utils";
 import type { CeremonyPage, HallOfFameClass, NominationView } from "@/services/awards/read";
 import { HallOfFameClassView } from "./HallOfFameClassView";
 import { HallOfFameExploreSection } from "./HallOfFameExploreSection";
+import { HallOfFameLatestRail } from "./HallOfFameLatestRail";
 import { HallOfFameTile, HallOfFameTileGrid, tileCovers } from "./HallOfFameTile";
 
 vi.mock("@/i18n/navigation", () => ({
@@ -197,8 +198,11 @@ describe("HallOfFameTile", () => {
   });
 
   it("muestra hasta cuatro carátulas, primero las incorporaciones con disco en el catálogo", () => {
-    renderWithIntl(<HallOfFameTile hall={registry({ inductees: [textOnly("t0", "Speech — Someone"), ...registry().inductees] })} />);
-    expect(screen.getAllByTestId("cover")).toHaveLength(4);
+    const { container } = renderWithIntl(<HallOfFameTile hall={registry({ inductees: [textOnly("t0", "Speech — Someone"), ...registry().inductees] })} />);
+    // Sin carátula, cada una es una portada tipográfica con la inicial del título; la de solo texto queda fuera.
+    const strip = container.querySelector(".grid")!;
+    expect(strip.children).toHaveLength(4);
+    expect(strip.textContent).toBe("1WSB");
   });
 
   it("tiñe el fondo con la primera carátula disponible", () => {
@@ -223,28 +227,43 @@ describe("HallOfFameTile", () => {
     expect(container.querySelector("img")).toBeNull();
   });
 
-  it("en la forma simple no trae datos ni clases anteriores", () => {
+  it("no trae datos ni clases anteriores: eso es del índice", () => {
     renderWithIntl(<HallOfFameTile hall={hall()} />);
     expect(screen.queryByText(/5 clases/)).not.toBeInTheDocument();
     expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
   });
+});
 
-  it("en la forma detallada (hub) suma el rango, cuántas clases hay, quién decide y las clases anteriores como enlaces", () => {
-    renderWithIntl(<HallOfFameTile hall={registry()} detailed />);
+describe("HallOfFameLatestRail", () => {
+  // jsdom no implementa ResizeObserver (el riel desplazable lo usa para las flechas).
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  );
+
+  it("suma el rango, cuántas clases hay y quién decide, y enlaza todas las clases con la actual marcada", () => {
+    renderWithIntl(<HallOfFameLatestRail hall={registry()} />);
     expect(screen.getByText("2022–2026 · 5 clases · Lo elige un comité de selección")).toBeInTheDocument();
-    const previous = screen.getByRole("navigation", { name: "Clases anteriores de Registro Nacional de Grabaciones" });
-    expect(within(previous).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
-      "/hall-of-fame/national-recording-registry/2025",
-      "/hall-of-fame/national-recording-registry/2024",
-      "/hall-of-fame/national-recording-registry/2023",
-      "/hall-of-fame/national-recording-registry/2022",
-    ]);
+    const classes = screen.getByRole("navigation", { name: "Clases de Registro Nacional de Grabaciones" });
+    const links = within(classes).getAllByRole("link");
+    expect(links.map((link) => link.getAttribute("href"))).toEqual([2026, 2025, 2024, 2023, 2022].map((y) => `/hall-of-fame/national-recording-registry/${y}`));
+    expect(links[0]).toHaveAttribute("aria-current", "page");
   });
 
-  it("un salón con una sola clase muestra solo su año y no ofrece clases anteriores", () => {
-    renderWithIntl(<HallOfFameTile hall={registry({ years: [2026] })} detailed />);
+  it("un salón con una sola clase muestra solo su año", () => {
+    renderWithIntl(<HallOfFameLatestRail hall={registry({ years: [2026] })} />);
     expect(screen.getByText("2026 · 1 clase · Lo elige un comité de selección")).toBeInTheDocument();
-    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+  });
+
+  it("separa título y artista de una incorporación sin ficha y le pone portada tipográfica", () => {
+    renderWithIntl(<HallOfFameLatestRail hall={registry({ inductees: [textOnly("t1", "Rumor Has It — Reba McEntire")] })} />);
+    expect(screen.getByText("Rumor Has It")).toBeInTheDocument();
+    expect(screen.getByText("Reba McEntire")).toBeInTheDocument();
+    expect(screen.getByText("R")).toBeInTheDocument();
   });
 });
 
@@ -271,7 +290,7 @@ describe("HallOfFameTileGrid", () => {
   it("con hasta dos salones usa tarjetas anchas: ocho carátulas, las cuatro últimas solo desde lg", () => {
     const { container } = renderWithIntl(<HallOfFameTileGrid halls={[hall({ inductees: many("g") }), registry({ inductees: many("r") })]} />);
     expect(container.querySelector("ul")?.className).not.toContain("lg:grid-cols-5");
-    expect(screen.getAllByTestId("cover")).toHaveLength(16);
+    expect([...container.querySelectorAll("ul > li .grid")].map((g) => g.children.length)).toEqual([8, 8]);
     const lgOnly = [...container.querySelectorAll("span")].filter((el) => el.classList.contains("hidden") && el.classList.contains("lg:block"));
     expect(lgOnly).toHaveLength(8);
   });
@@ -280,6 +299,6 @@ describe("HallOfFameTileGrid", () => {
     const third = hall({ awardSlug: "otro-salon", inductees: many("o") });
     const { container } = renderWithIntl(<HallOfFameTileGrid halls={[hall({ inductees: many("g") }), registry({ inductees: many("r") }), third]} />);
     expect(container.querySelector("ul")?.className).toContain("lg:grid-cols-5");
-    expect(screen.getAllByTestId("cover")).toHaveLength(12);
+    expect([...container.querySelectorAll("ul > li .grid")].map((g) => g.children.length)).toEqual([4, 4, 4]);
   });
 });
