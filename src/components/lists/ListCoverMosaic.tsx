@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 
@@ -19,8 +22,12 @@ const LAYOUT: Record<number, { grid: string; tiles: string[] }> = {
 // canciones y fotos de artistas. Usa tantas imágenes como haya, hasta cuatro, sin huecos (openspec: polish-community-lists):
 // antes eran siempre cuatro casillas y una lista con una o dos imágenes quedaba con discos grises de relleno. Sin ninguna, la
 // silueta de disco ocupa la caja. Decorativo: el nombre y los metadatos de la lista son lo que la identifica (`aria-hidden`).
+//
+// Una imagen que no carga (Cover Art Archive o el optimizador fallan de forma intermitente) se descarta y el mosaico se
+// reacomoda con las que sí cargaron: antes quedaba un disco gris en un cuadrante, que a 48 px se lee como un hueco.
 export function ListCoverMosaic({ coverThumbs, className = "" }: ListCoverMosaicProps) {
-  const covers = coverThumbs.slice(0, 4);
+  const [failed, setFailed] = useState<ReadonlySet<string>>(() => new Set());
+  const covers = coverThumbs.filter((cover) => !failed.has(cover)).slice(0, 4);
   const layout = LAYOUT[covers.length];
 
   return (
@@ -30,7 +37,15 @@ export function ListCoverMosaic({ coverThumbs, className = "" }: ListCoverMosaic
     >
       {/* El contenedor recorta las esquinas (`overflow-hidden`), así que el redondeo propio de cada tile queda oculto. */}
       {layout ? (
-        covers.map((cover, i) => <CoverThumb key={i} cover={cover} label="" className={`size-full ${layout.tiles[i]}`} />)
+        covers.map((cover, i) => (
+          <CoverThumb
+            key={`${i}:${cover}`}
+            cover={cover}
+            label=""
+            className={`size-full ${layout.tiles[i]}`}
+            onFail={() => setFailed((prev) => new Set(prev).add(cover))}
+          />
+        ))
       ) : (
         <DiscPlaceholder alt="" className="size-full" />
       )}

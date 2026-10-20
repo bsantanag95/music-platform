@@ -14,15 +14,18 @@ import { DiscPlaceholder } from "./DiscPlaceholder";
 //
 // Si la imagen falla al cargar (Cover Art Archive devuelve 5xx de forma
 // intermitente para algunas carátulas), cae al mismo disco en vez de dejar el
-// ícono de imagen rota del navegador.
+// ícono de imagen rota del navegador. `onFail` avisa al caller de esa caída para que decida otra cosa
+// (p. ej. el mosaico de una lista se reacomoda sin la imagen en vez de dejar un disco en un cuadrante).
 export function CoverThumb({
   cover,
   label,
   className = "",
+  onFail,
 }: {
   cover: string | null;
   label: string;
   className?: string;
+  onFail?: () => void;
 }) {
   // Se guarda la URL que falló (no un booleano): si cambia `cover`, la nueva se intenta.
   const [failedCover, setFailedCover] = useState<string | null>(null);
@@ -48,7 +51,10 @@ export function CoverThumb({
         fill
         sizes="250px"
         className="object-cover"
-        onError={() => setFailedCover(cover)}
+        onError={() => {
+          setFailedCover(cover);
+          onFail?.();
+        }}
       />
     </div>
   );

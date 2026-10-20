@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
 import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 
+// La columna base es siempre `minmax(0, 1fr)`: sin `grid-cols-1` el track implícito es `auto` y toma el ancho
+// mínimo del contenido, así que una tarjeta con título + insignia (Destacadas) desbordaba el viewport en mobile.
 const COLS_CLASS = {
-  1: "",
-  2: "sm:grid-cols-2",
-  3: "sm:grid-cols-2 lg:grid-cols-3",
+  1: "grid-cols-1",
+  2: "grid-cols-1 sm:grid-cols-2",
+  3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
 } as const;
 
 // Grilla de tarjetas de lista: una columna en mobile, más desde `sm`/`lg` según
