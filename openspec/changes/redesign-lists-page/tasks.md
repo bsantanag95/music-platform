@@ -44,4 +44,4 @@
 
 - [x] 6.1 `pnpm run typecheck && pnpm run lint && pnpm test && pnpm run build`
 - [x] 6.2 Navegador a 375px y 1366px, con y sin sesión, vitrina y explorar, `es` y `en`: título de la destacada completo, enlaces de colecciones sin redirección, `?sort=popular` sin colecciones generadas, carátulas de al menos 60px en móvil, riel
-- [ ] 6.3 Regresión de `ListCard` y `ListCoverMosaic` en `/me/lists`, un perfil con listas, "Retoma una lista" de Inicio y el detalle de una colección
+- [x] 6.3 Regresión de `ListCard` y `ListCoverMosaic` en `/me/lists`, un perfil con listas, "Retoma una lista" de Inicio y el detalle de una colección
