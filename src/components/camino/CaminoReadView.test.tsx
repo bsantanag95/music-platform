@@ -89,7 +89,7 @@ describe("CaminoReadView", () => {
   it("muestra título, dueño y álbumes sin controles de gestión", () => {
     renderView();
     expect(screen.getByRole("heading", { name: "Shoegaze esencial" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "de Ana" })).toHaveAttribute("href", "/users/ana");
+    expect(screen.getByRole("link", { name: "por Ana" })).toHaveAttribute("href", "/users/ana");
     expect(screen.getByRole("link", { name: "Loveless" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Archivar" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Eliminar" })).not.toBeInTheDocument();

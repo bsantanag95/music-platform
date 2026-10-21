@@ -1,11 +1,12 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { RelativeDate } from "@/components/feed/feed-row-parts";
 import { UserHoverCard } from "@/components/profiles/UserHoverCard";
 import type { DiscoverListSummary } from "@/lib/api/schemas";
-import { listHref } from "@/lib/catalog-links";
+import { presentList } from "@/lib/list-presentation";
+import { PLATFORM_OWNER_NAME, titleLocaleOf } from "@/services/discovery/collections/titles";
 import { ListCard } from "./ListCard";
 import { SaveListButton } from "./SaveListButton";
 import { entityTypeKey } from "./lists-shared";
@@ -16,9 +17,10 @@ import { entityTypeKey } from "./lists-shared";
 export function CommunityListCard({
   list,
   canSave,
-  dense = false,
+  dense: denseProp = false,
   showDate = false,
   large = false,
+  layout = "row",
 }: {
   list: DiscoverListSummary;
   /** Hay sesión: se ofrece la acción Guardar/Seguir. */
@@ -28,14 +30,25 @@ export function CommunityListCard({
   dense?: boolean;
   /** En la variante densa, muestra la antigüedad en lugar de los guardados (De la gente que sigues). */
   showDate?: boolean;
-  /** Tarjeta grande: una única Destacada ocupa la fila (con dos o más, la normal). */
+  /** Tarjeta grande: una única Destacada ocupa la fila como portada (con dos o más, la estantería). */
   large?: boolean;
+  /** `shelf`: tarjeta de estantería (redesign-lists-page, D6). Su contenido es el de la variante densa. */
+  layout?: "row" | "shelf";
 }) {
   const t = useTranslations("lists");
+  const locale = useLocale();
+  // La estantería muestra lo mismo que la tarjeta densa: tipo y conteo, y dueño con fecha o guardados.
+  const dense = denseProp || layout === "shelf";
+  // Una colección generada se muestra con el título del idioma y enlaza directo a su ruta en Explorar
+  // (redesign-lists-page, D2): antes iba a la ruta de usuario y una redirección la llevaba ahí.
+  const shown = presentList(list, locale);
   const ownerName = list.owner.displayName ?? `@${list.owner.username}`;
   const hasSaves = typeof list.saveCount === "number" && list.saveCount > 0;
 
-  const owner = (
+  const owner = list.generated ? (
+    // Una colección generada es de la plataforma, no de un usuario: sin perfil al que enlazar (como en las guardadas).
+    <span>{t("byOwner", { name: PLATFORM_OWNER_NAME[titleLocaleOf(locale)] })}</span>
+  ) : (
     <UserHoverCard username={list.owner.username}>
       <Link href={`/users/${encodeURIComponent(list.owner.username)}`} className="transition-colors hover:text-paper">
         {t("byOwner", { name: ownerName })}
@@ -57,12 +70,16 @@ export function CommunityListCard({
 
   return (
     <ListCard
-      href={listHref(list.owner.username, list.title, list.id)}
-      title={list.title}
+      href={shown.href}
+      title={shown.title}
       coverThumbs={list.coverThumbs}
+      itemCount={list.itemCount}
+      entityType={list.entityType}
       description={list.description}
       dense={dense}
       large={large}
+      layout={layout}
+      previewNames={large ? list.previewNames : undefined}
       badge={badge}
       // Siempre dos líneas: qué es · cuánto (· guardados en la tarjeta completa), y de quién · cuándo (en las
       // secciones densas, de quién · guardados: la cifra que ordena Populares). Antes era una sola línea que

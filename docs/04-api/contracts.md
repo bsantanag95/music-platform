@@ -1591,13 +1591,18 @@ Parámetros opcionales (cambio `rework-public-lists-surface`):
 - `entityType` — `artist` | `release-group` | `recording`.
 - `sort` — `recent` (default, cronológico) | `popular`.
 
-Sin filtros, el contrato y la respuesta no cambian. Con `sort=popular` se ordena por conteo
+Sin texto (`q`), la respuesta excluye las colecciones generadas por plantilla de `@exploracion`, también con
+`sort` o `entityType` (cambio `redesign-lists-page`: antes un orden o un tipo sin texto las traía); una búsqueda por
+texto sí las encuentra. Con `sort=popular` se ordena por conteo
 agregado de guardados descendente (a igualdad, por creación) e **incluye** las listas sin
 guardados al final; esto difiere de la sección "Populares" (`/api/lists/popular`), que exige
 un mínimo de guardados (`MIN_POPULAR_SAVES`, 2). En ese orden, cada entrada incluye `saveCount`.
 
-**200 OK:** `{ lists: [{ ..., owner, saved, following, saveCount? }], page, pageSize, hasNext }`. Sin
-sesión, `saved`/`following` son `false`.
+**200 OK:** `{ lists: [{ ..., owner, saved, following, saveCount?, generated }], page, pageSize, hasNext }`. Sin
+sesión, `saved`/`following` son `false`. `generated` es `{ templateKey, periodKey }` si la lista es una colección
+generada por plantilla, o `null`: con él el cliente muestra el título del idioma y enlaza a `/explore/collections/<slug>-<id>`
+sin pasar por la ruta de usuario (cambio `redesign-lists-page`; mismo campo que `SavedListSummary`). Lo traen también
+`/api/lists/popular` y `/api/lists/from-following`.
 **400** con `VALIDATION_ERROR` si la paginación es inválida o si `entityType`/`sort` no están
 soportados.
 

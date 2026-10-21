@@ -13,7 +13,7 @@ import type { CaminoDiscoverySummary } from "@/services/camino/discovery";
 // Recientes. La tarjeta de vitrina, con un mosaico del ancho de la tarjeta, medía unos 420 px de alto y no se
 // parecía a ninguna otra sección de la página.
 
-function caminoHref(camino: CaminoDiscoverySummary): string {
+export function caminoHref(camino: CaminoDiscoverySummary): string {
   return camino.kind === "custom_journey"
     ? `/users/${camino.owner.username}/caminos/${camino.id}`
     : listHref(camino.owner.username, camino.title, camino.id);
@@ -32,6 +32,8 @@ export async function CaminoDiscoveryGrid({ caminos, dense = false }: { caminos:
             href={caminoHref(camino)}
             title={camino.title}
             coverThumbs={camino.coverThumbs}
+            itemCount={camino.itemCount}
+            entityType="release-group"
             meta={<span>{t("ownedBy", { username: camino.owner.username })}</span>}
             subMeta={<span className="text-petrol-hover">{t("trackingCount", { count: camino.trackingCount })}</span>}
           />
@@ -48,7 +50,7 @@ export async function CaminoDiscoveryGrid({ caminos, dense = false }: { caminos:
             href={caminoHref(camino)}
             className="flex flex-col gap-2 rounded-lg border border-ink-border bg-ink-surface p-3 transition-colors hover:border-amber"
           >
-            <ListCoverMosaic coverThumbs={camino.coverThumbs} className="w-full" />
+            <ListCoverMosaic coverThumbs={camino.coverThumbs} itemCount={camino.itemCount} entityType="release-group" className="w-full" />
             <span className="truncate font-display text-sm text-paper">{camino.title}</span>
             <span className="font-data text-xs text-paper-muted">
               {t("ownedBy", { username: camino.owner.username })}

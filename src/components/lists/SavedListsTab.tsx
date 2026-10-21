@@ -53,6 +53,8 @@ export function SavedListsTab({ initial }: { initial: SavedListsResponse }) {
             href={shown.href}
             title={shown.title}
             coverThumbs={list.coverThumbs}
+      itemCount={list.itemCount}
+      entityType={list.entityType}
             description={list.description}
             unavailable={list.unavailable}
             meta={

@@ -20,6 +20,8 @@ import {
 } from "./types";
 import { activeUserCondition } from "@/services/auth/account-status";
 import { notGeneratedCollectionCondition } from "@/services/discovery/collections/conditions";
+import { generatedRefsFor } from "@/services/discovery/collections/generated";
+import type { GeneratedRef } from "@/services/discovery/collections/titles";
 
 /** Filtros opcionales del listado público (cambio rework-public-lists-surface). */
 export interface DiscoverListFilters {
@@ -45,6 +47,11 @@ export interface DiscoverListSummary {
   following: boolean;
   /** El lector es el dueño de esta lista (ver `DiscoverListSummarySchema`). */
   isOwn: boolean;
+  // Plantilla y período si la lista es una colección generada (redesign-lists-page, D2): con ellos la tarjeta enlaza
+  // directo a la ruta de colecciones y muestra el título del idioma, como ya hacen las listas guardadas.
+  generated: GeneratedRef | null;
+  /** Primeros nombres de la lista. Solo lo puebla "Destacadas" (portada de una destacada única). */
+  previewNames?: string[];
   /** Conteo agregado de guardados. Solo lo puebla "Populares". */
   saveCount?: number;
 }
@@ -100,7 +107,7 @@ export async function enrichPublicLists(
   options: { withSaveCount?: boolean } = {},
 ): Promise<DiscoverListSummary[]> {
   const ids = rows.map((row) => row.id);
-  const [enrichment, savedState, saveCounts] = await Promise.all([
+  const [enrichment, savedState, saveCounts, generated] = await Promise.all([
     enrichLists(ids),
     readerId
       ? savedStateFor(readerId, ids)
@@ -108,6 +115,7 @@ export async function enrichPublicLists(
     options.withSaveCount
       ? saveCountsFor(ids)
       : Promise.resolve(new Map<string, number>()),
+    generatedRefsFor(ids),
   ]);
 
   return rows.map((row): DiscoverListSummary => {
@@ -131,6 +139,7 @@ export async function enrichPublicLists(
       saved: state?.saved ?? false,
       following: state?.following ?? false,
       isOwn: readerId !== null && readerId === row.ownerId,
+      generated: generated.get(row.id) ?? null,
       ...(options.withSaveCount ? { saveCount: saveCounts.get(row.id) ?? 0 } : {}),
     };
   });
@@ -188,10 +197,11 @@ export async function listDiscoverLists(
     // su primer ítem. Sigue visible en el perfil de su dueño y por enlace. En SQL, para no acortar páginas.
     sql`exists (select 1 from ${userListItem} where ${userListItem.listId} = ${userList.id})`,
   ];
-  // Sin filtros (la sección "Recientes" de `/lists` y su paginación), sin las colecciones generadas por plantilla de
-  // `@exploracion` (openspec: polish-community-lists): son contenido de la plataforma, se recorren en Explorar, y llenaban
-  // "Lo último que publicó la comunidad". Una búsqueda o un filtro sí las encuentra.
-  if (!filters?.q?.trim() && !filters?.entityType && !filters?.sort) conditions.push(notGeneratedCollectionCondition());
+  // Sin texto de búsqueda, sin las colecciones generadas por plantilla de `@exploracion` (openspec: polish-community-lists,
+  // redesign-lists-page D3): son contenido de la plataforma, se recorren en Explorar, y llenaban "Lo último que publicó
+  // la comunidad". Una búsqueda por texto sí las encuentra; un cambio de orden o de tipo, no: es una manera de recorrer
+  // las listas de la comunidad, no de buscar en el catálogo de la plataforma.
+  if (!filters?.q?.trim()) conditions.push(notGeneratedCollectionCondition());
   if (entityType) conditions.push(eq(userList.entityType, entityType));
   if (q) {
     conditions.push(

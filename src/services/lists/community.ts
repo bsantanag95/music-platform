@@ -7,7 +7,7 @@
 
 import { and, count, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { appUser, listSave, userFollow, userList, userListItem } from "@/db/schema";
+import { appUser, artist, listSave, recording, releaseGroup, userFollow, userList, userListItem } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import {
   assertPagination,
@@ -49,8 +49,39 @@ export async function listFeaturedLists(readerId: string | null) {
 
   // Una lista vacía no aporta nada en una vitrina editorial: se omite hasta que tenga ítems (sigue
   // visible en su perfil y por enlace directo).
-  const lists = await enrichPublicLists(officialRows, readerId);
-  return { lists: lists.filter((list) => list.itemCount > 0) };
+  const lists = (await enrichPublicLists(officialRows, readerId)).filter((list) => list.itemCount > 0);
+  const names = await previewNamesFor(lists.map((list) => list.id));
+  return { lists: lists.map((list) => ({ ...list, previewNames: names.get(list.id) ?? [] })) };
+}
+
+/** Cuántos nombres muestra la portada de una destacada única. */
+export const PREVIEW_NAMES_MAX = 5;
+
+/**
+ * Primeros nombres de cada lista, en su orden: el título del álbum o de la canción, o el nombre del artista. Solo para las
+ * destacadas (pocas y sin paginar): la portada de una destacada única los muestra bajo el título (redesign-lists-page, D7).
+ */
+async function previewNamesFor(listIds: string[]): Promise<Map<string, string[]>> {
+  const result = new Map<string, string[]>();
+  if (listIds.length === 0) return result;
+  const name = sql<string | null>`coalesce(${releaseGroup.title}, ${recording.title}, ${artist.name})`;
+  const rows = await db
+    .select({
+      listId: userListItem.listId,
+      name,
+      rn: sql<number>`row_number() over (partition by ${userListItem.listId} order by ${userListItem.position})`,
+    })
+    .from(userListItem)
+    .leftJoin(releaseGroup, eq(userListItem.releaseGroupId, releaseGroup.id))
+    .leftJoin(recording, eq(userListItem.recordingId, recording.id))
+    .leftJoin(artist, eq(userListItem.artistId, artist.id))
+    .where(inArray(userListItem.listId, listIds));
+  for (const row of rows.filter((r) => r.name && Number(r.rn) <= PREVIEW_NAMES_MAX).sort((a, b) => Number(a.rn) - Number(b.rn))) {
+    const names = result.get(row.listId) ?? [];
+    names.push(row.name!);
+    result.set(row.listId, names);
+  }
+  return result;
 }
 
 /**

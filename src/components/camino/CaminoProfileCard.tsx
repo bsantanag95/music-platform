@@ -28,6 +28,8 @@ export function CaminoProfileCard({
       href={`/users/${encodeURIComponent(username)}/caminos/${camino.id}`}
       title={camino.title}
       coverThumbs={camino.coverThumbs}
+      itemCount={camino.itemCount}
+      entityType="release-group"
       className={className}
       meta={
         <>

@@ -49,6 +49,8 @@ export function DiscoverListsTab({ initial }: { initial: DiscoverListsResponse }
             href={listHref(list.owner.username, list.title, list.id)}
             title={list.title}
             coverThumbs={list.coverThumbs}
+      itemCount={list.itemCount}
+      entityType={list.entityType}
             description={list.description}
             meta={
               <>

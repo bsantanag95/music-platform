@@ -59,13 +59,28 @@ export function CommunityExploreGrid({ initial, filters, canSave }: CommunityExp
 
   return (
     <section aria-label={t("community.resultsLabel")} className="flex w-full flex-col gap-4">
-      <p role="status" aria-live="polite" className="font-data text-xs text-paper-muted">
-        {t("community.resultsCount", { count: lists.length })}
-      </p>
+      {/* Rótulo del modo explorar (redesign-lists-page, D4): cuántas, en qué orden y cómo volver a la vitrina. Sin total en
+          la respuesta: con más páginas por cargar dice "Más de N". */}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <p role="status" aria-live="polite" className="font-data text-xs text-paper-muted">
+          {hasNextPage
+            ? t("community.resultsCountMore", { count: lists.length })
+            : t("community.resultsCount", { count: lists.length })}
+          {" · "}
+          {filters.sort === "popular" ? t("community.sortPopular") : t("sort.recent")}
+        </p>
+        <button
+          type="button"
+          onClick={() => router.replace(pathname, { scroll: false })}
+          className="font-data text-xs text-paper-muted underline decoration-dotted underline-offset-2 transition-colors hover:text-paper"
+        >
+          {t("clearFilters")}
+        </button>
+      </div>
 
-      <ListsGrid cols={3}>
+      <ListsGrid cols="shelf">
         {lists.map((list) => (
-          <CommunityListCard key={list.id} list={list} canSave={canSave} dense />
+          <CommunityListCard key={list.id} list={list} canSave={canSave} layout="shelf" />
         ))}
       </ListsGrid>
 

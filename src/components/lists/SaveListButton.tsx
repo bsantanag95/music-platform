@@ -81,8 +81,10 @@ export function SaveListButton({
   };
 
   if (variant === "compact") {
+    // 44 px en móvil (área táctil mínima, redesign-lists-page) y 32 px desde `sm`, donde se usa con puntero. Un área
+    // ampliada con un pseudo-elemento se solaparía con la del otro botón, que está a 4 px.
     const iconButton =
-      "grid size-8 place-items-center rounded-md border transition-colors disabled:opacity-50";
+      "grid size-11 place-items-center rounded-md border transition-colors disabled:opacity-50 sm:size-8";
     return (
       <div className="flex flex-col items-end gap-1">
         <div className="flex items-center gap-1">

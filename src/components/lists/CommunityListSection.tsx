@@ -31,9 +31,9 @@ interface CommunityListSectionProps {
   descriptionKey?: string;
   initial: DiscoverListsResponse;
   canSave: boolean;
-  /** Columnas de la grilla: 1 para un rail compacto (De seguidos), 3 para
-   * densidad de navegación (Populares, Recientes). Por defecto 2. */
-  cols?: 1 | 2 | 3;
+  /** Columnas de la grilla: 1 para un rail compacto, 3 para densidad de navegación, `shelf` para la estantería
+   * (redesign-lists-page, D6). Por defecto 2. */
+  cols?: 1 | 2 | 3 | "shelf";
   /** Card compacta a juego con `cols`; ver `ListCard`/`CommunityListCard`. */
   dense?: boolean;
   /** Listas que ya salieron en una sección de más arriba: no se repiten (openspec: polish-community-lists). */
@@ -80,6 +80,7 @@ export function CommunityListSection({
             list={list}
             canSave={canSave}
             dense={dense}
+            layout={cols === "shelf" ? "shelf" : "row"}
             // En las secciones cronológicas importa cuándo la publicaron, no cuántos la guardaron.
             showDate={source !== "popular"}
           />

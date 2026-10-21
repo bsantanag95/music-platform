@@ -37,6 +37,7 @@ function list(id: string, title: string): DiscoverListSummary {
     saved: false,
     following: false,
     isOwn: false,
+    generated: null,
   };
 }
 
@@ -59,6 +60,20 @@ describe("CommunityExploreGrid", () => {
   it("renderiza los resultados iniciales", () => {
     renderGrid(response([list("a1b2c3d4-0000-4000-8000-000000000001", "Álbumes rosas")]));
     expect(screen.getByText("Álbumes rosas")).toBeInTheDocument();
+  });
+
+  it("encabeza la grilla con un rótulo: cuántas, en qué orden y Limpiar filtros (D4)", () => {
+    renderGrid(response([list("a1b2c3d4-0000-4000-8000-000000000001", "Álbumes rosas")]));
+
+    expect(screen.getByRole("status")).toHaveTextContent("1 lista · Recientes");
+    fireEvent.click(screen.getByRole("button", { name: "Limpiar filtros" }));
+    expect(mocks.replace).toHaveBeenCalledWith("/lists", { scroll: false });
+  });
+
+  it("con más páginas por cargar, el rótulo dice «Más de N»", () => {
+    renderGrid(response([list("a1b2c3d4-0000-4000-8000-000000000001", "Álbumes rosas")], true));
+
+    expect(screen.getByRole("status")).toHaveTextContent("Más de 1 lista");
   });
 
   it("sin resultados muestra el estado localizado y limpia filtros", () => {
