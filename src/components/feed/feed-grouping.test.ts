@@ -73,6 +73,13 @@ function favoriteAlbum(author = ana): FeedEntry {
     target: { id: `rg${seq}`, title: `Disco ${seq}`, artistName: null, coverThumbUrl: null }, author,
   };
 }
+function favoriteSong(author = ana): FeedEntry {
+  seq += 1;
+  return {
+    kind: "favorite", id: `fs${seq}`, targetType: "recording", audience: "public", createdAt: iso(),
+    target: { id: `rec${seq}`, title: `Tema ${seq}`, artistName: null, coverThumbUrl: null }, author,
+  };
+}
 function ratingAlbum(author = ana): FeedEntry {
   seq += 1;
   return {
@@ -169,12 +176,35 @@ describe("groupFeedRuns", () => {
     expect((rows[0] as FeedEntryGroup).tier).toBe(2);
   });
 
-  it("3 ratings de canción se colapsan, 2 ratings de álbum no, y no se fusionan", () => {
+  it("valoraciones de álbum y de canción seguidas forman una sola corrida (group-mixed-feed-runs)", () => {
     const rows = groupFeedRuns([ratingAlbum(), ratingAlbum(), ratingSong(), ratingSong(), ratingSong()]);
-    // los 2 de álbum sueltos + el grupo de 3 de canción
-    expect(rows.map((r) => r.kind)).toEqual(["rating", "rating", "group"]);
-    expect((rows[2] as FeedEntryGroup).tier).toBe(3);
-    expect((rows[2] as FeedEntryGroup).entries).toHaveLength(3);
+    expect(rows.map((r) => r.kind)).toEqual(["group"]);
+    // Con un álbum dentro, el grupo toma el tier más alto: señal de opinión.
+    expect((rows[0] as FeedEntryGroup).tier).toBe(2);
+    expect((rows[0] as FeedEntryGroup).entries).toHaveLength(5);
+  });
+
+  it("canción, canción y álbum valorados seguidos se pliegan en una fila", () => {
+    const rows = groupFeedRuns([ratingSong(), ratingSong(), ratingAlbum()]);
+    expect(rows.map((r) => r.kind)).toEqual(["group"]);
+    expect((rows[0] as FeedEntryGroup).groupedKind).toBe("rating");
+  });
+
+  it("una escucha entre medio sigue cortando la corrida mixta de valoraciones", () => {
+    const rows = groupFeedRuns([ratingSong(), ratingSong(), ratingSong(), listen(), ratingAlbum(), ratingAlbum()]);
+    expect(rows.map((r) => r.kind)).toEqual(["group", "listen", "rating", "rating"]);
+    expect((rows[0] as FeedEntryGroup).tier).toBe(3);
+  });
+
+  it("favoritos de álbum y de canción seguidos se pliegan juntos", () => {
+    const rows = groupFeedRuns([favoriteAlbum(), favoriteSong(), favoriteSong()]);
+    expect(rows.map((r) => r.kind)).toEqual(["group"]);
+    expect((rows[0] as FeedEntryGroup).groupedKind).toBe("favorite");
+  });
+
+  it("valoraciones y favoritos no se mezclan entre sí", () => {
+    const rows = groupFeedRuns([ratingAlbum(), favoriteSong(), ratingSong()]);
+    expect(rows.map((r) => r.kind)).toEqual(["rating", "favorite", "rating"]);
   });
 
   it("un comentario en el medio corta la corrida", () => {
