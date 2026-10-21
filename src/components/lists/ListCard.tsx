@@ -24,8 +24,11 @@ interface ListCardProps {
   large?: boolean;
   /** Clases extra para la tarjeta (p. ej. ancho fijo dentro de un riel). */
   className?: string;
-  /** Marca junto al título (p. ej. "Oficial"). */
+  /** Marca de la lista (p. ej. "Oficial"), en su propia línea sobre el título. */
   badge?: ReactNode;
+  /** Ítems y tipo de la lista: el mosaico los usa en su cuarta celda cuando hay tres imágenes. */
+  itemCount?: number;
+  entityType?: "artist" | "release-group" | "recording";
   /** Segunda línea de metadatos (dueño · antigüedad), para no partir una sola línea larga a mitad. */
   subMeta?: ReactNode;
   /**
@@ -56,6 +59,8 @@ export function ListCard({
   badge,
   subMeta,
   actionPlacement = "footer",
+  itemCount,
+  entityType,
 }: ListCardProps) {
   const aside = actionPlacement === "aside" && action;
   return (
@@ -65,18 +70,25 @@ export function ListCard({
       } ${aside ? (dense ? "items-center" : "flex-wrap items-center sm:flex-nowrap") : ""} ${unavailable ? "opacity-60" : ""} ${className}`}
     >
       <Link href={href} className="shrink-0" tabIndex={-1} aria-hidden>
-        <ListCoverMosaic coverThumbs={coverThumbs} className={dense ? "w-12" : large ? "w-28 sm:w-36" : "w-20"} />
+        <ListCoverMosaic
+          coverThumbs={coverThumbs}
+          itemCount={itemCount}
+          entityType={entityType}
+          className={dense ? "w-12" : large ? "w-28 sm:w-36" : "w-20"}
+        />
       </Link>
 
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex min-w-0 items-center gap-2">
-          <h3 className={`truncate font-display text-paper ${dense ? "text-sm" : large ? "text-lg" : "text-base"}`}>
-            <Link href={href} className="transition-colors hover:text-amber">
-              {title}
-            </Link>
-          </h3>
-          {badge}
-        </div>
+        {/* La marca va en su propia línea, sobre el título (redesign-lists-page, D1): compartiendo la fila le quitaba ancho
+            y en móvil truncaba el título ("Playlist d…"). El título se parte en hasta dos líneas en vez de truncarse. */}
+        {badge ? <div className="flex">{badge}</div> : null}
+        <h3
+          className={`line-clamp-2 break-words font-display text-paper ${dense ? "text-sm" : large ? "text-lg" : "text-base"}`}
+        >
+          <Link href={href} className="transition-colors hover:text-amber">
+            {title}
+          </Link>
+        </h3>
 
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-data text-xs text-paper-muted">
           {pinned && pinnedLabel ? <span className="text-amber">{pinnedLabel}</span> : null}

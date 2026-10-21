@@ -101,6 +101,8 @@ export function ListDetailHeader({
       <div className="flex gap-4">
         <ListCoverMosaic
           coverThumbs={list.coverThumbs}
+          itemCount={list.itemCount}
+          entityType={list.entityType}
           className="hidden w-28 shrink-0 sm:block"
         />
         <div className="flex min-w-0 flex-1 flex-col gap-2">

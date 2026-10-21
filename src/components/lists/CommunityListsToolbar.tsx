@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "@/i18n/navigation";
 import { FilterSelect } from "@/components/ui/FilterSelect";
@@ -22,9 +22,15 @@ export function CommunityListsToolbar() {
 
   const currentQ = searchParams.get("q") ?? "";
   const currentType = searchParams.get("type") ?? "";
-  const currentSort: PublicListSort =
-    (searchParams.get("sort") as PublicListSort | null) ?? "recent";
+  const sortParam = searchParams.get("sort") as PublicListSort | null;
+  // En la vitrina el orden no tiene valor (redesign-lists-page, D4): mostrar "Recientes" daba a entender que toda la página
+  // estaba ordenada así. En explorar sin `sort`, el orden efectivo es el cronológico.
+  const inExplore = Boolean(currentQ || currentType || sortParam);
+  const currentSort: PublicListSort | "" = sortParam ?? (inExplore ? "recent" : "");
   const [searchInput, setSearchInput] = useState(currentQ);
+  // Último `q` que escribió este campo. Si la URL cambia a otro valor por fuera (el "Limpiar filtros" del rótulo de la
+  // grilla), el campo se sincroniza; si no, el debounce volvería a escribir el texto viejo en la URL.
+  const pushedQ = useRef(currentQ);
 
   const update = useCallback(
     (changes: Record<string, string | undefined>) => {
@@ -44,14 +50,17 @@ export function CommunityListsToolbar() {
   useEffect(() => {
     if (searchInput === currentQ) return;
     const id = window.setTimeout(() => {
+      pushedQ.current = searchInput.trim();
       update({ q: searchInput.trim() || undefined });
     }, 300);
     return () => window.clearTimeout(id);
   }, [searchInput, currentQ, update]);
 
-  const hasFilters = Boolean(
-    currentQ || currentType || searchParams.has("sort") || searchInput.trim(),
-  );
+  useEffect(() => {
+    if (currentQ === pushedQ.current) return;
+    pushedQ.current = currentQ;
+    setSearchInput(currentQ);
+  }, [currentQ]);
 
   return (
     // Una sola fila (buscador que se estira + filtros a la derecha), sin caja propia: antes era un panel con
@@ -102,29 +111,23 @@ export function CommunityListsToolbar() {
         </FilterSelect>
         <FilterSelect
           value={currentSort}
-          onChange={(value) => update({ sort: value })}
+          onChange={(value) => update({ sort: value || undefined })}
           ariaLabel={t("sortLabel")}
           widthClassName="w-[15ch]"
           variant="boxed"
         >
+          {currentSort === "" ? (
+            <option value="" disabled hidden>
+              {t("sortLabel")}
+            </option>
+          ) : null}
           {PUBLIC_LIST_SORTS_UI.map((sort) => (
             <option key={sort} value={sort}>
               {sort === "popular" ? t("community.sortPopular") : t("sort.recent")}
             </option>
           ))}
         </FilterSelect>
-        {hasFilters ? (
-          <button
-            type="button"
-            onClick={() => {
-              setSearchInput("");
-              update({ q: undefined, type: undefined, sort: undefined });
-            }}
-            className="font-data text-xs text-paper-muted transition-colors hover:text-paper"
-          >
-            {t("clearFilters")}
-          </button>
-        ) : null}
+        {/* "Limpiar filtros" vive en el rótulo de la grilla de explorar (D4), que solo existe con filtros activos. */}
       </div>
     </form>
   );

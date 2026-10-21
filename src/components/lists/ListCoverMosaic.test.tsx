@@ -19,10 +19,38 @@ describe("ListCoverMosaic", () => {
     }
   });
 
-  it("con tres, la primera ocupa dos filas; sin imágenes, una sola silueta de disco", () => {
-    const { container, unmount } = render(<ListCoverMosaic coverThumbs={["a", "b", "c"]} />);
-    expect(container.querySelector("[data-testid=cover]")?.className).toContain("row-span-2");
-    unmount();
+  it("con tres, tres celdas iguales y una cuarta con los ítems restantes; ninguna ocupa dos filas (redesign-lists-page, D5)", () => {
+    const { container } = render(<ListCoverMosaic coverThumbs={["a", "b", "c"]} itemCount={5} />);
+    const covers = container.querySelectorAll("[data-testid=cover]");
+    expect(covers).toHaveLength(3);
+    for (const cover of covers) expect(cover.className).not.toContain("row-span");
+    expect(container.querySelector("[data-mosaic-rest]")).toHaveTextContent("+2");
+    expect(container.querySelector("[data-testid=disc]")).toBeNull();
+  });
+
+  it("con tres y ningún ítem más, la cuarta celda muestra el ícono del tipo", () => {
+    for (const [entityType, glyph] of [
+      ["artist", "artist"],
+      ["recording", "recording"],
+      ["release-group", "release-group"],
+    ] as const) {
+      const { container, unmount } = render(
+        <ListCoverMosaic coverThumbs={["a", "b", "c"]} itemCount={3} entityType={entityType} />,
+      );
+      expect(container.querySelector("[data-mosaic-rest]")?.textContent).toBe("");
+      expect(container.querySelector(`[data-mosaic-rest] [data-glyph="${glyph}"]`)).not.toBeNull();
+      unmount();
+    }
+  });
+
+  it("solo con tres hay cuarta celda; sin imágenes, una sola silueta de disco", () => {
+    for (const n of [1, 2, 4]) {
+      const { container, unmount } = render(
+        <ListCoverMosaic coverThumbs={Array.from({ length: n }, (_, i) => `c${i}`)} itemCount={9} />,
+      );
+      expect(container.querySelector("[data-mosaic-rest]")).toBeNull();
+      unmount();
+    }
     const empty = render(<ListCoverMosaic coverThumbs={[]} />);
     expect(empty.container.querySelectorAll("[data-testid=disc]")).toHaveLength(1);
   });
@@ -32,7 +60,7 @@ describe("ListCoverMosaic", () => {
     fireEvent.click(container.querySelectorAll("[data-testid=cover]")[3]!);
     const tiles = container.querySelectorAll("[data-testid=cover]");
     expect(tiles).toHaveLength(3);
-    expect(tiles[0]?.className).toContain("row-span-2");
+    expect(container.querySelector("[data-mosaic-rest]")).not.toBeNull();
     expect(container.querySelector("[data-testid=disc]")).toBeNull();
 
     for (let i = 0; i < 3; i++) fireEvent.click(container.querySelector("[data-testid=cover]")!);

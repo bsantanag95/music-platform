@@ -27,6 +27,8 @@ export function ProfileListCard({
       href={listHref(username, list.title, list.id)}
       title={list.title}
       coverThumbs={list.coverThumbs}
+      itemCount={list.itemCount}
+      entityType={list.entityType}
       description={list.description}
       pinned={list.pinned}
       pinnedLabel={t("pinnedBadge")}

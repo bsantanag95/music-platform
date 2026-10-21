@@ -6,12 +6,14 @@ import { listFeaturedLists, listPopularLists, listsFromFollowing, MIN_POPULAR_SA
 const mocks = vi.hoisted(() => ({
   db: { select: vi.fn() },
   enrichLists: vi.fn(),
+  generatedRefsFor: vi.fn(),
   savedStateFor: vi.fn(),
   saveCountsFor: vi.fn(),
 }));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
 vi.mock("./lists", () => ({ enrichLists: mocks.enrichLists }));
+vi.mock("@/services/discovery/collections/generated", () => ({ generatedRefsFor: mocks.generatedRefsFor }));
 vi.mock("./saved-lists", () => ({
   savedStateFor: mocks.savedStateFor,
   saveCountsFor: mocks.saveCountsFor,
@@ -65,6 +67,7 @@ describe("servicio de listas de la comunidad", () => {
     );
     mocks.savedStateFor.mockResolvedValue(new Map());
     mocks.saveCountsFor.mockResolvedValue(new Map([[listId, 7]]));
+    mocks.generatedRefsFor.mockResolvedValue(new Map());
   });
 
   it("Destacadas: enriquece sin paginar", async () => {

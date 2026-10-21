@@ -59,7 +59,7 @@
   "trackingOnlyAlbums": "Progress tracking is only available on album lists.",
   "discoveryTitle": "Lists to complete",
   "discoveryEmpty": "No lists have active tracking yet.",
-  "trackingCount": "{count, plural, =0 {no active tracking} one {# tracking progress} other {# tracking progress}}",
+  "trackingCount": "{count, plural, =0 {nobody completing it} one {# person completing it} other {# people completing it}}",
   "filterGenreLabel": "Genre",
   "filterArtistLabel": "Artist",
   "filterAll": "All",

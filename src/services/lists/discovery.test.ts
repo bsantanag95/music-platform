@@ -4,12 +4,18 @@ import { listDiscoverLists } from "./discovery";
 const mocks = vi.hoisted(() => ({
   db: { select: vi.fn() },
   enrichLists: vi.fn(),
+  generatedRefsFor: vi.fn(),
+  notGeneratedCollectionCondition: vi.fn(() => undefined),
   savedStateFor: vi.fn(),
   saveCountsFor: vi.fn(),
 }));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
 vi.mock("./lists", () => ({ enrichLists: mocks.enrichLists }));
+vi.mock("@/services/discovery/collections/generated", () => ({ generatedRefsFor: mocks.generatedRefsFor }));
+vi.mock("@/services/discovery/collections/conditions", () => ({
+  notGeneratedCollectionCondition: mocks.notGeneratedCollectionCondition,
+}));
 vi.mock("./saved-lists", () => ({
   savedStateFor: mocks.savedStateFor,
   saveCountsFor: mocks.saveCountsFor,
@@ -53,6 +59,7 @@ describe("servicio de descubrir listas", () => {
     mocks.enrichLists.mockResolvedValue(new Map([[listId, { itemCount: 12, coverThumbs: ["a", "b"] }]]));
     mocks.savedStateFor.mockResolvedValue(new Map());
     mocks.saveCountsFor.mockResolvedValue(new Map([[listId, 7]]));
+    mocks.generatedRefsFor.mockResolvedValue(new Map());
   });
 
   it("devuelve listas públicas recientes con enriquecimiento", async () => {
@@ -109,6 +116,33 @@ describe("servicio de descubrir listas", () => {
     const result = await listDiscoverLists(reader, 1, 20, { sort: "popular" });
     expect(mocks.saveCountsFor).toHaveBeenCalled();
     expect(result.lists[0]?.saveCount).toBe(7);
+  });
+
+  it("expone `generated` en las colecciones generadas y null en las demás (redesign-lists-page, D2)", async () => {
+    mocks.generatedRefsFor.mockResolvedValue(new Map([[listId, { templateKey: "grammy-winners", periodKey: "2025" }]]));
+    mocks.db.select.mockReturnValueOnce(chain([discoverRow]));
+    const result = await listDiscoverLists(reader, 1, 20, { q: "grammy" });
+    expect(result.lists[0]?.generated).toEqual({ templateKey: "grammy-winners", periodKey: "2025" });
+    expect(mocks.generatedRefsFor).toHaveBeenCalledWith([listId]);
+
+    mocks.generatedRefsFor.mockResolvedValue(new Map());
+    mocks.db.select.mockReturnValueOnce(chain([discoverRow]));
+    expect((await listDiscoverLists(reader)).lists[0]?.generated).toBeNull();
+  });
+
+  it("sin texto excluye las colecciones generadas, también con orden o tipo; con texto las incluye (D3)", async () => {
+    for (const filters of [undefined, { sort: "popular" as const }, { entityType: "release-group" as const }]) {
+      mocks.notGeneratedCollectionCondition.mockClear();
+      mocks.db.select.mockReturnValueOnce(chain([discoverRow]));
+      await listDiscoverLists(reader, 1, 20, filters);
+      expect(mocks.notGeneratedCollectionCondition).toHaveBeenCalledTimes(1);
+    }
+    for (const q of ["grammy", "  grammy  "]) {
+      mocks.notGeneratedCollectionCondition.mockClear();
+      mocks.db.select.mockReturnValueOnce(chain([discoverRow]));
+      await listDiscoverLists(reader, 1, 20, { q, sort: "popular" });
+      expect(mocks.notGeneratedCollectionCondition).not.toHaveBeenCalled();
+    }
   });
 
   it("rechaza filtros inválidos", async () => {

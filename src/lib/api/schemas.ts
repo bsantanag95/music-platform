@@ -1843,6 +1843,9 @@ export const DiscoverListSummarySchema = z.object({
   isOwn: z.boolean(),
   /** Conteo agregado de guardados. Presente en la sección "Populares" de /lists. */
   saveCount: z.number().int().optional(),
+  // Plantilla y período si la lista es una colección generada (openspec: redesign-lists-page, D2): la tarjeta enlaza a la
+  // ruta de colecciones y muestra el título del idioma, igual que una lista guardada.
+  generated: z.object({ templateKey: z.string(), periodKey: z.string() }).nullable().optional(),
 });
 export type DiscoverListSummary = z.infer<typeof DiscoverListSummarySchema>;
 

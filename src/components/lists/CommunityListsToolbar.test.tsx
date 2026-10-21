@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, screen } from "@testing-library/react";
-import { renderWithIntl } from "@/test/i18n-test-utils";
+import { renderWithIntl, withIntl } from "@/test/i18n-test-utils";
 import { CommunityListsToolbar } from "./CommunityListsToolbar";
 
 const nav = vi.hoisted(() => ({
@@ -49,12 +49,40 @@ describe("CommunityListsToolbar", () => {
     expect(nav.replace).toHaveBeenCalledWith("/lists?q=pink", { scroll: false });
   });
 
-  it("limpiar filtros navega a la ruta sin parámetros", () => {
-    nav.search = new URLSearchParams("q=hola&type=artist");
+  it("en la vitrina el orden dice «Ordenar» sin valor; con filtros muestra el orden efectivo (redesign-lists-page, D4)", () => {
+    const { unmount } = renderWithIntl(<CommunityListsToolbar />);
+    const sort = screen.getByRole("combobox", { name: "Ordenar" }) as HTMLSelectElement;
+    expect(sort.value).toBe("");
+    expect(sort.selectedOptions[0]?.textContent).toBe("Ordenar");
+    unmount();
+
+    nav.search = new URLSearchParams("q=hola");
     renderWithIntl(<CommunityListsToolbar />);
+    expect((screen.getByRole("combobox", { name: "Ordenar" }) as HTMLSelectElement).value).toBe("recent");
+  });
 
-    fireEvent.click(screen.getByRole("button", { name: "Limpiar filtros" }));
+  it("el orden por guardados se llama «Más guardadas» y escribe sort=popular", () => {
+    renderWithIntl(<CommunityListsToolbar />);
+    const sort = screen.getByRole("combobox", { name: "Ordenar" });
+    expect(screen.getByRole("option", { name: "Más guardadas" })).toBeInTheDocument();
 
-    expect(nav.replace).toHaveBeenCalledWith("/lists", { scroll: false });
+    fireEvent.change(sort, { target: { value: "popular" } });
+
+    expect(nav.replace).toHaveBeenCalledWith("/lists?sort=popular", { scroll: false });
+  });
+
+  it("si la URL pierde el texto por fuera (Limpiar filtros), el buscador se vacía y no lo vuelve a escribir", () => {
+    vi.useFakeTimers();
+    nav.search = new URLSearchParams("q=hola");
+    const { rerender } = renderWithIntl(<CommunityListsToolbar />);
+    expect(screen.getByRole("searchbox")).toHaveValue("hola");
+
+    nav.search = new URLSearchParams();
+    rerender(withIntl(<CommunityListsToolbar />));
+    vi.advanceTimersByTime(400);
+
+    expect(screen.getByRole("searchbox")).toHaveValue("");
+    expect(nav.replace).not.toHaveBeenCalled();
+    vi.useRealTimers();
   });
 });
