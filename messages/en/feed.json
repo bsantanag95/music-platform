@@ -70,8 +70,12 @@
   },
   "groupListens": "{count, plural, one {logged # listen} other {logged # listens}}",
   "groupFavorites": "{count, plural, one {added # favorite} other {added # favorites}}",
-  "groupRatings": "{count, plural, one {rated # album} other {rated # albums}}",
-  "groupSongRatings": "{count, plural, one {rated # song} other {rated # songs}}",
+  "groupRatingsMixed": "rated {parts}",
+  "groupRatingParts": {
+    "album": "{count, plural, one {# album} other {# albums}}",
+    "song": "{count, plural, one {# song} other {# songs}}",
+    "artist": "{count, plural, one {# artist} other {# artists}}"
+  },
   "groupFollows": "{count, plural, one {followed # person} other {followed # people}}",
   "groupFollowArtists": "{count, plural, one {started following # artist} other {started following # artists}}",
   "rotationPeak": "In rotation · {count, plural, one {# log} other {# logs}} this week",

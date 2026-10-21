@@ -938,6 +938,71 @@ describe("FeedActivityList", () => {
   });
 });
 
+describe("etiqueta de una corrida mixta de valoraciones (group-mixed-feed-runs)", () => {
+  let n = 0;
+  const rated = (type: "release-group" | "recording" | "artist", title: string): FeedEntry => {
+    n += 1;
+    return rating({
+      id: `mix${n}`,
+      createdAt: `2026-08-0${9 - n}T00:00:00Z`,
+      detailedScore: null,
+      target: { type, id: `t${n}`, title, artistName: type === "artist" ? null : "Tame Impala", coverThumbUrl: null },
+    });
+  };
+
+  it("desglosa por tipo, de mayor a menor: 'valoró 2 canciones y 1 disco'", () => {
+    n = 0;
+    renderWithIntl(
+      <FeedActivityList entries={[rated("recording", "Nangs"), rated("recording", "Morning Rain"), rated("release-group", "Currents")]} />,
+    );
+
+    expect(screen.getByText(/valoró 2 canciones y 1 disco/)).toBeInTheDocument();
+    for (const title of ["Nangs", "Morning Rain", "Currents"]) {
+      expect(screen.getByRole("link", { name: title })).toBeInTheDocument();
+    }
+  });
+
+  it("una corrida de artistas se rotula como artistas, no como canciones", () => {
+    n = 0;
+    renderWithIntl(
+      <FeedActivityList entries={[rated("artist", "Björk"), rated("artist", "Radiohead"), rated("artist", "Portishead")]} />,
+    );
+
+    expect(screen.getByText(/valoró 3 artistas/)).toBeInTheDocument();
+    expect(screen.queryByText(/canciones/)).not.toBeInTheDocument();
+  });
+
+  it("con un solo tipo conserva la etiqueta de siempre", () => {
+    n = 0;
+    renderWithIntl(
+      <FeedActivityList
+        entries={[rated("release-group", "A"), rated("release-group", "B"), rated("release-group", "C")]}
+      />,
+    );
+
+    expect(screen.getByText(/valoró 3 discos/)).toBeInTheDocument();
+  });
+
+  it("en inglés usa la conjunción del idioma: 'rated 2 songs and 1 album'", () => {
+    n = 0;
+    renderWithIntl(
+      <FeedActivityList entries={[rated("recording", "Nangs"), rated("release-group", "Currents"), rated("recording", "Eventually")]} />,
+      "en",
+    );
+
+    expect(screen.getByText(/rated 2 songs and 1 album/)).toBeInTheDocument();
+  });
+
+  it("tres tipos se unen con coma y conjunción", () => {
+    n = 0;
+    renderWithIntl(
+      <FeedActivityList entries={[rated("recording", "Nangs"), rated("release-group", "Currents"), rated("artist", "Björk")]} />,
+    );
+
+    expect(screen.getByText(/valoró 1 disco, 1 canción y 1 artista/)).toBeInTheDocument();
+  });
+});
+
 function ratingTarget() {
   return {
     type: "release-group" as const,
