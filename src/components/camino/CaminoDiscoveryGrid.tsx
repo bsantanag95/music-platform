@@ -13,7 +13,7 @@ import type { CaminoDiscoverySummary } from "@/services/camino/discovery";
 // Recientes. La tarjeta de vitrina, con un mosaico del ancho de la tarjeta, medía unos 420 px de alto y no se
 // parecía a ninguna otra sección de la página.
 
-function caminoHref(camino: CaminoDiscoverySummary): string {
+export function caminoHref(camino: CaminoDiscoverySummary): string {
   return camino.kind === "custom_journey"
     ? `/users/${camino.owner.username}/caminos/${camino.id}`
     : listHref(camino.owner.username, camino.title, camino.id);

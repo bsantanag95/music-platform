@@ -112,7 +112,22 @@
     "followingDescription": "Listas recientes de las personas que sigues.",
     "recentDescription": "Lo último que publicó la comunidad.",
     "resultsCountMore": "{count, plural, one {Más de # lista} other {Más de # listas}}",
-    "typeAll": "Todas"
+    "typeAll": "Todas",
+    "rail": {
+      "label": "Tus listas y listas para completar",
+      "yourListsTitle": "Tus listas",
+      "continueEditing": "Sigue donde la dejaste",
+      "myLists": "Mis listas",
+      "saved": "Guardadas",
+      "noListsDescription": "Aún no tienes listas. Arma la primera con tus discos, artistas o canciones.",
+      "createFirst": "Crear la primera",
+      "joinTitle": "Arma tus propias listas",
+      "joinDescription": "Con una cuenta puedes crear listas, guardar las de otras personas y completar las que te interesen.",
+      "joinAction": "Crear cuenta",
+      "signIn": "Ya tengo cuenta"
+    },
+    "emptyAction": "Crear la primera lista",
+    "emptySignedOutAction": "Inicia sesión para crear la primera"
   },
   "deleteShort": "¿Borrar?",
   "moveUp": "Subir “{title}”",

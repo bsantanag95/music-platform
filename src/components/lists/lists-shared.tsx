@@ -7,8 +7,9 @@ const COLS_CLASS = {
   1: "grid-cols-1",
   2: "grid-cols-1 sm:grid-cols-2",
   3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
-  // Estantería de `/lists` (redesign-lists-page, D6): tarjetas verticales con el mosaico arriba, dos por fila en móvil.
-  shelf: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5",
+  // Estantería de `/lists` (redesign-lists-page, D6): tarjetas verticales con el mosaico arriba, dos por fila en móvil y
+  // hasta cuatro: con el riel al lado, cinco columnas dejaban mosaicos de ~150 px en escritorio.
+  shelf: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4",
 } as const;
 
 // Grilla de tarjetas de lista: una columna en mobile, más desde `sm`/`lg` según

@@ -19,7 +19,7 @@
 
 - [x] 3.1 `CommunityListCard` / `ListCard` con `layout="shelf"`: mosaico arriba a todo el ancho, título, meta y dueño debajo, Guardar flotante de 44px (D6)
 - [x] 3.2 Imágenes de artistas en círculo dentro de su celda del mosaico (solo listas de artistas)
-- [x] 3.3 `ListsGrid`: 2 columnas en móvil, 3 en `sm`, 4 en `lg`, 5 en `xl` para la estantería
+- [x] 3.3 `ListsGrid`: 2 columnas en móvil, 3 en `sm`, 4 desde `lg` para la estantería (5 en `xl` se descartó con el riel)
 - [x] 3.4 De la gente que sigues, Populares, Recientes y explorar usan la estantería
 - [x] 3.5 Destacada única como portada: mosaico de 160px, descripción y los primeros nombres (`previewNames` en el resumen de destacadas) (D7)
 - [x] 3.6 Chips de tipo en lugar del select, con `aria-pressed`; el orden como control compacto (D8)
@@ -27,21 +27,21 @@
 
 ## 4. Fase 3 · Riel y estado vacío
 
-- [ ] 4.1 `page.tsx`: en la vitrina, grilla `[minmax(0,1fr)_280px]` desde `lg` con el riel `sticky`; por debajo, el riel tras las secciones; sin riel en explorar (D9)
-- [ ] 4.2 Módulo "Tus listas" con `getMostRecentEditedList` y accesos a `/me/lists` y guardadas; sin listas, invitación a crear la primera
-- [ ] 4.3 "Para completar" pasa al riel como módulo compacto (hasta 4, "Ver todas"); se quita la sección de la vitrina
-- [ ] 4.4 Sin sesión: tarjeta para crear una cuenta en el riel, en lugar de la línea "Inicia sesión para…"
-- [ ] 4.5 Estado vacío global con acción (D10)
-- [ ] 4.6 Tests: página (riel con y sin sesión, ausente en explorar, sin "Para completar" en la vitrina), módulos del riel
+- [x] 4.1 `page.tsx`: en la vitrina, grilla `[minmax(0,1fr)_280px]` desde `lg` con el riel `sticky`; por debajo, el riel tras las secciones; sin riel en explorar (D9)
+- [x] 4.2 Módulo "Tus listas" con `getMostRecentEditedList` y accesos a `/me/lists` y guardadas; sin listas, invitación a crear la primera
+- [x] 4.3 "Para completar" pasa al riel como módulo compacto (hasta 4, "Ver todas"); se quita la sección de la vitrina
+- [x] 4.4 Sin sesión: tarjeta para crear una cuenta en el riel, en lugar de la línea "Inicia sesión para…"
+- [x] 4.5 Estado vacío global con acción (D10)
+- [x] 4.6 Tests: página (riel con y sin sesión, ausente en explorar, sin "Para completar" en la vitrina), módulos del riel
 
 ## 5. Documentación
 
 - [x] 5.1 `docs/04-api/contracts.md`: `generated` en los resúmenes de `/api/lists/{discover,popular,from-following}` y la regla de colecciones generadas solo con `q`
-- [ ] 5.2 `docs/05-features/lists-and-favorites.md`: superficie `/lists` (estantería, chips, rótulo, riel, "Más guardadas")
-- [ ] 5.3 `docs/05-features/caminos.md`: "Para completar" en el riel de `/lists`, con tope de 4
+- [x] 5.2 `docs/05-features/lists-and-favorites.md`: superficie `/lists` (estantería, chips, rótulo, riel, "Más guardadas")
+- [x] 5.3 `docs/05-features/caminos.md`: "Para completar" en el riel de `/lists`, con tope de 4
 
 ## 6. Verificación
 
-- [ ] 6.1 `pnpm run typecheck && pnpm run lint && pnpm test && pnpm run build`
-- [ ] 6.2 Navegador a 375px y 1366px, con y sin sesión, vitrina y explorar, `es` y `en`: título de la destacada completo, enlaces de colecciones sin redirección, `?sort=popular` sin colecciones generadas, carátulas de al menos 60px en móvil, riel
+- [x] 6.1 `pnpm run typecheck && pnpm run lint && pnpm test && pnpm run build`
+- [x] 6.2 Navegador a 375px y 1366px, con y sin sesión, vitrina y explorar, `es` y `en`: título de la destacada completo, enlaces de colecciones sin redirección, `?sort=popular` sin colecciones generadas, carátulas de al menos 60px en móvil, riel
 - [ ] 6.3 Regresión de `ListCard` y `ListCoverMosaic` en `/me/lists`, un perfil con listas, "Retoma una lista" de Inicio y el detalle de una colección

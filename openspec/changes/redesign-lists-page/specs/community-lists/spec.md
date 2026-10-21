@@ -174,7 +174,7 @@ incluir `generated` (plantilla y período, o `null`), como ya lo hacen las lista
 
 Las secciones De usuarios seguidos, Populares y Recientes, y la grilla del modo explorar, SHALL presentar cada lista como
 una tarjeta de estantería: el mosaico cuadrado arriba, a todo el ancho de la tarjeta, y debajo el título (hasta dos
-líneas), el tipo y el conteo, y el dueño como "por <nombre>". La grilla SHALL tener 2 columnas en móvil y crecer hasta 5
+líneas), el tipo y el conteo, y el dueño como "por <nombre>". La grilla SHALL tener 2 columnas en móvil y crecer hasta 4
 en escritorio. La acción Guardar/Seguir SHALL tener un área táctil de al menos 44×44px.
 
 #### Scenario: Carátulas reconocibles

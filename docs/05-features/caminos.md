@@ -18,7 +18,7 @@
 > `lists` (Caminos propios) y `following` (listas ajenas con seguimiento). `/me/artist-journeys` y
 > `/me/caminos` redirigen a la pestaña equivalente (`mine` → `lists`, `tracked` → `following`); las
 > rutas de detalle no cambian. El descubrimiento público `/caminos` ya no está en la barra general:
-> se alcanza desde la sección «Para completar» de `/lists`. El texto de abajo conserva los nombres de
+> se alcanza desde el módulo «Para completar» del riel de `/lists` (hasta 4, con «Ver todas»; cambio `redesign-lists-page`). El texto de abajo conserva los nombres de
 > dominio originales.
 
 **Fase:** 5 (roadmap). **Estado:** ✅ Implementado (cambio `add-camino`). Este documento es la

@@ -128,21 +128,24 @@ seguida aparezca en el feed de quien la sigue— se implementa en el cambio de c
 composición bajo demanda + deduplicación por clave de evento). `following` ya se persiste y
 se expone (`src/services/lists/saved-lists.ts`: `followedListIds`, `savedStateFor`).
 
-### Superficie pública `/lists` (cambios `add-community-lists-surface`, `rework-public-lists-surface`)
+### Superficie pública `/lists` (cambios `add-community-lists-surface`, `rework-public-lists-surface`, `redesign-lists-page`)
 
 Descubrimiento de listas de la comunidad en ruta propia `/[locale]/lists`, enlazada desde la
 barra general del Header junto a Explorar. Accesible con y sin sesión.
 
 La superficie tiene **dos estados** derivados de la URL (`?q=&type=&sort=`), con un **toolbar de
-exploración siempre visible** (búsqueda por texto, filtro por tipo y orden Populares/Recientes):
+exploración siempre visible**: búsqueda por texto, chips de tipo (Todas · Artistas · Álbumes · Canciones) y orden
+("Más guardadas" / Recientes; en la vitrina el control dice "Ordenar", sin valor):
 
-- **Vitrina** (sin filtros): compone las secciones de abajo, omitiendo las vacías.
+- **Vitrina** (sin filtros): compone las secciones de abajo, omitiendo las vacías, con un **riel** a la derecha desde `lg`
+  (debajo, por debajo de ese ancho).
 - **Explorar** (con algún filtro): reemplaza la composición por una única grilla paginada de
-  resultados (filtrados y ordenados en el servidor), con conteo, estado "sin resultados" y
-  "Limpiar filtros". El orden `popular` incluye las listas sin guardados al final.
+  resultados (filtrados y ordenados en el servidor), encabezada por un rótulo ("12 listas · Más guardadas", "Más de N" si hay
+  más páginas, porque la respuesta no trae total) con "Limpiar filtros", y el estado "sin resultados". El orden `popular`
+  ("Más guardadas", para no confundirlo con la sección Populares) incluye las listas sin guardados al final. Sin riel.
 
 En vitrina, secciones, en este orden (openspec: polish-community-lists: con sesión, lo de la gente que sigues antes que lo
-general; las listas sociales van juntas y «Para completar» cierra la página). **Cada lista sale una sola vez**: una lista que ya está en una sección de más arriba (contando la primera página de
+general). **Cada lista sale una sola vez**: una lista que ya está en una sección de más arriba (contando la primera página de
 cada una) no se repite abajo (`excludeIds` de `CommunityListSection`).
 
 1. **Destacadas** — solo las listas **editoriales oficiales publicadas** de `@exploracion`
@@ -163,17 +166,26 @@ cada una) no se repite abajo (`excludeIds` de `CommunityListSection`).
    se conserva y comparte servicio. Las listas vacías no se descubren (ni aquí, ni en la búsqueda u
    orden de `/lists`, ni en "Descubrir"): aparecen con su primer ítem; el filtro va en SQL. Sin filtros, tampoco las
    colecciones generadas por plantilla de `@exploracion` (`notGeneratedCollectionCondition`): son contenido de Explorar y llenaban "lo
-   último que publicó la comunidad"; una búsqueda o un filtro sí las encuentra.
-5. **Para completar** — al final: es otro tipo de objeto (progreso, no listas sociales) y entre Populares y Recientes cortaba la
-   lectura de las listas de la comunidad. Listas que otras personas siguen para completar (`discoverCaminos`), con la tarjeta
-   compacta de las demás secciones.
+   último que publicó la comunidad"; solo una búsqueda por texto (`q`) las encuentra: un cambio de orden o de tipo sin texto, no
+   (`redesign-lists-page`). En sus tarjetas, `generated` (plantilla y período) da el título del idioma y el enlace directo a
+   `/explore/collections/…`, con la plataforma como dueña (`presentList`, como en las guardadas).
+
+**Riel** (`ListsContextRail`, `redesign-lists-page`): con sesión, **Tus listas** retoma la lista propia con actividad más reciente
+(`getMostRecentEditedList`, el criterio de "Retoma una lista" de Inicio) y enlaza a `/me/lists` y a las guardadas; sin listas,
+invita a crear la primera. Sin sesión, una invitación a crear una cuenta (o entrar), que reemplaza la línea "Inicia sesión para…"
+bajo el buscador. Debajo, **Para completar**: hasta 4 de las listas de `/caminos` (`discoverCaminos`), con "N personas la están
+completando" y "Ver todas"; dejó de ser una sección de la vitrina (es progreso, no listas sociales). Con ninguna sección con
+contenido, el estado vacío ofrece crear la primera lista o iniciar sesión para crearla.
 
 **Cabecera.** Junto al título, con sesión, el botón **Crear lista**: lleva a `/me/lists?new=1`, que abre el formulario de nueva
-lista ya desplegado (sin sesión no se muestra). Sin sesión, una línea discreta bajo el buscador invita a iniciar sesión para guardar
-listas y seguir a quienes las crean (`/auth/login`).
+lista ya desplegado (sin sesión no se muestra).
 
-Tarjetas: el mosaico usa 1, 2, 3 o 4 imágenes según las que haya, sin discos de relleno, y en una lista de artistas muestra sus fotos
-(`enrichLists`: foto no retirada del artista); una sola Destacada ocupa la fila con un mosaico mayor (`ListCard` `large`).
+Tarjetas (`redesign-lists-page`): **estantería** (`ListCard` `layout="shelf"`, `ListsGrid cols="shelf"`, 2 columnas en móvil y hasta
+4): el mosaico arriba a todo el ancho y el título (hasta dos líneas), tipo, conteo y dueño debajo, con Guardar flotando sobre el
+mosaico (44 px en móvil). El mosaico usa 1, 2, 3 o 4 imágenes según las que haya, sin discos de relleno: con tres, una grilla de 2×2
+con una cuarta celda "+N" (o el ícono del tipo) en vez de recortar la primera a 1:2. En una lista de artistas muestra sus fotos en
+círculo (`enrichLists`: foto no retirada del artista). La marca "Oficial" va en su propia línea, sobre el título. Una sola Destacada
+es una **portada**: mosaico de 160 px y los primeros nombres de la lista (`previewNames`, solo en destacadas).
 
 Servicios en `src/services/lists/community.ts` (Destacadas / Populares / De seguidos) y
 `discovery.ts` (Recientes). El conteo agregado de guardados (`saveCountsFor`) se apoya en

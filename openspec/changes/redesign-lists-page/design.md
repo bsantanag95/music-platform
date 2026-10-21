@@ -74,7 +74,7 @@ de disco sin ninguna) no cambian.
 
 `CommunityListCard` gana `layout="shelf"`: mosaico cuadrado arriba, a todo el ancho de la tarjeta, y debajo título (2
 líneas), meta (tipo · conteo) y dueño. Guardar va sobre el mosaico como un botón flotante (44px en móvil), siempre
-visible: en táctil no hay hover que lo revele y, guardada, la marca dice algo de la lista. La grilla: 2 columnas en móvil, 3 en `sm`, 4 en `lg` y 5 en `xl`. Lo usan De la
+visible: en táctil no hay hover que lo revele y, guardada, la marca dice algo de la lista. La grilla: 2 columnas en móvil, 3 en `sm` y 4 desde `lg`. Se descartaron 5 columnas en `xl`: con el riel al lado dejaban mosaicos de ~150 px. Lo usan De la
 gente que sigues, Populares, Recientes y explorar. Las imágenes de una lista de artistas van recortadas en círculo dentro
 de su celda (`rounded-full`), como las fotos de artistas del resto de la app.
 

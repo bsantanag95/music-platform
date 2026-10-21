@@ -39,7 +39,7 @@ cambia el modo de la página, y que hay errores concretos:
 **Fase 2: la lista como objeto visual**
 
 - Las secciones de navegación (De la gente que sigues, Populares, Recientes, explorar) pasan a una **estantería**: mosaico
-  cuadrado grande arriba y título y meta debajo, en una grilla de 2 columnas en móvil y hasta 5 en escritorio. Las
+  cuadrado grande arriba y título y meta debajo, en una grilla de 2 columnas en móvil y hasta 4 en escritorio. Las
   imágenes de artistas van en círculo, como en el resto de la app.
 - La destacada única se presenta como **portada ancha**: mosaico grande, los primeros nombres de la lista en una línea y
   Guardar visible.

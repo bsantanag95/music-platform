@@ -112,7 +112,22 @@
     "followingDescription": "Recent lists from people you follow.",
     "recentDescription": "The latest from the community.",
     "resultsCountMore": "{count, plural, one {More than # list} other {More than # lists}}",
-    "typeAll": "All"
+    "typeAll": "All",
+    "rail": {
+      "label": "Your lists and lists to complete",
+      "yourListsTitle": "Your lists",
+      "continueEditing": "Pick up where you left off",
+      "myLists": "My lists",
+      "saved": "Saved",
+      "noListsDescription": "You don't have any lists yet. Make your first one with your records, artists or songs.",
+      "createFirst": "Create your first",
+      "joinTitle": "Make your own lists",
+      "joinDescription": "With an account you can create lists, save other people’s and complete the ones you like.",
+      "joinAction": "Create account",
+      "signIn": "I already have an account"
+    },
+    "emptyAction": "Create the first list",
+    "emptySignedOutAction": "Sign in to create the first one"
   },
   "deleteShort": "Delete?",
   "moveUp": "Move “{title}” up",

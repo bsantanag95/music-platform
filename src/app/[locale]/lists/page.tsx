@@ -5,7 +5,6 @@ import { Link } from "@/i18n/navigation";
 import { resolveSession } from "@/services/auth/sessions";
 import { listDiscoverLists } from "@/services/lists/discovery";
 import { discoverCaminos } from "@/services/camino/discovery";
-import { CaminoDiscoveryGrid } from "@/components/camino/CaminoDiscoveryGrid";
 import { listFeaturedLists, listPopularLists, listsFromFollowing } from "@/services/lists/community";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -15,7 +14,12 @@ import { CommunityListCard } from "@/components/lists/CommunityListCard";
 import { CommunityListSection } from "@/components/lists/CommunityListSection";
 import { CommunityListsToolbar } from "@/components/lists/CommunityListsToolbar";
 import { CommunityExploreGrid } from "@/components/lists/CommunityExploreGrid";
+import { ListsContextRail } from "@/components/lists/ListsContextRail";
+import { getMostRecentEditedList } from "@/services/home/home";
 import { parseCommunityFilters, toDiscoverFilters } from "@/components/lists/community-filters";
+
+/** "Para completar" en el riel: hasta 4 (antes 8 como sección de la vitrina). */
+const RAIL_TO_COMPLETE = 4;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("lists");
@@ -36,31 +40,34 @@ export default async function CommunityListsPage({
 }) {
   const t = await getTranslations("lists");
   const tCommon = await getTranslations("common");
-  const tCamino = await getTranslations("camino");
   const session = await resolveSession();
   const viewerId = session?.user.id ?? null;
   const canSave = viewerId !== null;
   const filters = parseCommunityFilters(await searchParams);
 
   let content;
+  let rail = null;
   if (filters) {
     const initial = await listDiscoverLists(viewerId, 1, 20, toDiscoverFilters(filters));
     content = <CommunityExploreGrid initial={initial} filters={filters} canSave={canSave} />;
   } else {
-    const [featured, popular, fromFollowing, recent, toComplete] = await Promise.all([
+    const [featured, popular, fromFollowing, recent, toComplete, resume] = await Promise.all([
       listFeaturedLists(viewerId),
       listPopularLists(viewerId, 1, 20),
       viewerId ? listsFromFollowing(viewerId, 1, 20) : Promise.resolve(null),
       listDiscoverLists(viewerId, 1, 20),
-      discoverCaminos({}, 1, 8),
+      discoverCaminos({}, 1, RAIL_TO_COMPLETE),
+      viewerId ? getMostRecentEditedList(viewerId) : Promise.resolve(null),
     ]);
 
+    // "Para completar" vive en el riel (D9): ya no cuenta como sección de la vitrina.
     const anySection =
       featured.lists.length > 0 ||
       popular.lists.length > 0 ||
       (fromFollowing?.lists.length ?? 0) > 0 ||
-      recent.lists.length > 0 ||
-      toComplete.caminos.length > 0;
+      recent.lists.length > 0;
+
+    rail = <ListsContextRail viewer={viewerId ? { resume } : null} toComplete={toComplete.caminos} />;
 
     // Cada lista sale una vez, en la primera sección donde aparece (de arriba hacia abajo): antes "Discos favoritos del
     // momento" salía en De la gente que sigues, Populares y Recientes. Se cuentan las de la primera página de cada sección.
@@ -76,9 +83,18 @@ export default async function CommunityListsPage({
     content = (
       <>
         {!anySection ? (
+          // Con una salida (D10): crear la primera lista, o iniciar sesión para crearla.
           <EmptyState
             title={t("community.emptyTitle")}
             description={t("community.emptyDescription")}
+            action={
+              <Link
+                href={canSave ? "/me/lists?new=1" : "/auth/login"}
+                className="inline-flex items-center justify-center rounded border border-ink-border bg-ink px-4 py-2 font-display text-sm font-medium text-paper transition-colors hover:border-amber"
+              >
+                {canSave ? t("community.emptyAction") : t("community.emptySignedOutAction")}
+              </Link>
+            }
           />
         ) : null}
 
@@ -142,20 +158,6 @@ export default async function CommunityListsPage({
           />
         ) : null}
 
-        {toComplete.caminos.length > 0 ? (
-          // Descubrimiento de listas para completar (openspec: clarify-user-menu-names): sale de la
-          // barra general y se alcanza desde aquí; mismo orden que `/caminos`, con la tarjeta compacta de esta página.
-          // Va al final: es otro tipo de objeto (progreso, no listas sociales) y entre Populares y Recientes cortaba la
-          // lectura de las listas de la comunidad.
-          <section className="flex w-full flex-col gap-4">
-            <SectionHeader
-              heading={tCamino("hub.toComplete")}
-              description={tCamino("hub.toCompleteDescription")}
-              seeAll={{ href: "/caminos", label: tCamino("hub.seeAll") }}
-            />
-            <CaminoDiscoveryGrid caminos={toComplete.caminos} dense />
-          </section>
-        ) : null}
       </>
     );
   }
@@ -181,17 +183,16 @@ export default async function CommunityListsPage({
         <CommunityListsToolbar />
       </Suspense>
 
-      {canSave ? null : (
-        // Sin sesión las tarjetas no ofrecen Guardar/Seguir y nada invita a entrar: una línea, sin botón.
-        <p className="-mt-4 font-body text-sm text-paper-muted">
-          <Link href="/auth/login" className="text-amber underline-offset-2 hover:underline">
-            {t("community.signInAction")}
-          </Link>{" "}
-          {t("community.signInRest")}
-        </p>
+      {/* Sin sesión, la invitación a entrar está en el riel (D9), no en una línea bajo el toolbar. En explorar no hay riel:
+          la grilla ocupa todo el ancho. */}
+      {rail ? (
+        <div className="grid w-full grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-12">
+          <div className="flex min-w-0 flex-col gap-8">{content}</div>
+          <div className="lg:sticky lg:top-24 lg:self-start">{rail}</div>
+        </div>
+      ) : (
+        content
       )}
-
-      {content}
     </main>
   );
 }
