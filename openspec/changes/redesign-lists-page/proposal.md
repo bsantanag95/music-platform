@@ -41,8 +41,8 @@ cambia el modo de la página, y que hay errores concretos:
 - Las secciones de navegación (De la gente que sigues, Populares, Recientes, explorar) pasan a una **estantería**: mosaico
   cuadrado grande arriba y título y meta debajo, en una grilla de 2 columnas en móvil y hasta 5 en escritorio. Las
   imágenes de artistas van en círculo, como en el resto de la app.
-- La destacada única se presenta como **portada ancha**: mosaico grande, una tira con las primeras imágenes y los
-  primeros nombres de la lista, y Guardar visible.
+- La destacada única se presenta como **portada ancha**: mosaico grande, los primeros nombres de la lista en una línea y
+  Guardar visible.
 - El filtro de tipo pasa de un select a **chips** (Todas · Álbumes · Artistas · Canciones), como en `/activity`; el orden
   queda como un control discreto junto al rótulo de resultados.
 

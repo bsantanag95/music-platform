@@ -72,4 +72,23 @@ describe("ListCoverMosaic", () => {
     const { container } = render(<ListCoverMosaic coverThumbs={["a", "a", "b"]} />);
     expect(container.querySelectorAll("[data-testid=cover]")).toHaveLength(3);
   });
+
+  it("las fotos de artistas van en círculo, en celdas cuadradas y sin las líneas de la cuadrícula", () => {
+    for (const n of [1, 2, 4]) {
+      const { container, unmount } = render(
+        <ListCoverMosaic coverThumbs={Array.from({ length: n }, (_, i) => `c${i}`)} entityType="artist" />,
+      );
+      for (const tile of container.querySelectorAll("[data-testid=cover]")) {
+        expect(tile.className).toContain("!rounded-full");
+        expect(tile.className).toContain("aspect-square");
+      }
+      expect((container.firstChild as HTMLElement).className).not.toContain("bg-ink-border");
+      unmount();
+    }
+  });
+
+  it("álbumes y canciones siguen con celdas cuadradas", () => {
+    const { container } = render(<ListCoverMosaic coverThumbs={["a", "b"]} entityType="release-group" />);
+    for (const tile of container.querySelectorAll("[data-testid=cover]")) expect(tile.className).not.toContain("rounded-full");
+  });
 });

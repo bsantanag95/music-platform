@@ -111,7 +111,8 @@
     "popularDescription": "The ones the community saves the most.",
     "followingDescription": "Recent lists from people you follow.",
     "recentDescription": "The latest from the community.",
-    "resultsCountMore": "{count, plural, one {More than # list} other {More than # lists}}"
+    "resultsCountMore": "{count, plural, one {More than # list} other {More than # lists}}",
+    "typeAll": "All"
   },
   "deleteShort": "Delete?",
   "moveUp": "Move “{title}” up",

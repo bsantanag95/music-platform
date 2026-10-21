@@ -50,6 +50,8 @@ export interface DiscoverListSummary {
   // Plantilla y período si la lista es una colección generada (redesign-lists-page, D2): con ellos la tarjeta enlaza
   // directo a la ruta de colecciones y muestra el título del idioma, como ya hacen las listas guardadas.
   generated: GeneratedRef | null;
+  /** Primeros nombres de la lista. Solo lo puebla "Destacadas" (portada de una destacada única). */
+  previewNames?: string[];
   /** Conteo agregado de guardados. Solo lo puebla "Populares". */
   saveCount?: number;
 }

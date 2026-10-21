@@ -68,6 +68,22 @@ describe("servicio de listas de la comunidad", () => {
     mocks.savedStateFor.mockResolvedValue(new Map());
     mocks.saveCountsFor.mockResolvedValue(new Map([[listId, 7]]));
     mocks.generatedRefsFor.mockResolvedValue(new Map());
+    // Respuesta por defecto de las consultas que un test no configura (p. ej. los nombres de las destacadas).
+    mocks.db.select.mockReturnValue(chain([]));
+  });
+
+  it("Destacadas: trae los primeros nombres de cada lista, en orden y hasta 5 (redesign-lists-page, D7)", async () => {
+    mocks.enrichLists.mockResolvedValue(new Map([[officialRow.id, { itemCount: 7, coverThumbs: ["a"] }]]));
+    const nameRow = (name: string | null, rn: number) => ({ listId: officialRow.id, name, rn });
+    mocks.db.select
+      .mockReturnValueOnce(chain([officialRow]))
+      .mockReturnValueOnce(
+        chain([nameRow("Sexto", 6), nameRow("Segundo", 2), nameRow("Primero", 1), nameRow(null, 3), nameRow("Cuarto", 4), nameRow("Quinto", 5)]),
+      );
+
+    const result = await listFeaturedLists(reader);
+
+    expect(result.lists[0]?.previewNames).toEqual(["Primero", "Segundo", "Cuarto", "Quinto"]);
   });
 
   it("Destacadas: enriquece sin paginar", async () => {

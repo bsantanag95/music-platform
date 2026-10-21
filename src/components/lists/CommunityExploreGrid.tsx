@@ -78,9 +78,9 @@ export function CommunityExploreGrid({ initial, filters, canSave }: CommunityExp
         </button>
       </div>
 
-      <ListsGrid cols={3}>
+      <ListsGrid cols="shelf">
         {lists.map((list) => (
-          <CommunityListCard key={list.id} list={list} canSave={canSave} dense />
+          <CommunityListCard key={list.id} list={list} canSave={canSave} layout="shelf" />
         ))}
       </ListsGrid>
 

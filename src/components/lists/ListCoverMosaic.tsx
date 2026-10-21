@@ -38,12 +38,17 @@ export function ListCoverMosaic({ coverThumbs, className = "", itemCount, entity
   const covers = coverThumbs.filter((cover) => !failed.has(cover)).slice(0, 4);
   const layout = LAYOUT[covers.length];
   const remaining = itemCount !== undefined ? itemCount - covers.length : 0;
+  // Las fotos de artistas van en círculo, como en el resto de la app (redesign-lists-page): sin las líneas de 1 px entre
+  // celdas, que alrededor de un círculo se leen como una cuadrícula vacía.
+  const round = entityType === "artist" && covers.length > 0;
 
   return (
     <div
       aria-hidden
       // `container-type`: el "+N" de la cuarta celda escala con el ancho del mosaico (`cqw`), de 48 a 160 px.
-      className={`grid aspect-square gap-px overflow-hidden rounded-md border border-ink-border bg-ink-border [container-type:inline-size] ${layout?.grid ?? "grid-cols-1"} ${className}`}
+      className={`grid aspect-square overflow-hidden [container-type:inline-size] ${
+        round ? "gap-1" : "gap-px rounded-md border border-ink-border bg-ink-border"
+      } ${layout?.grid ?? "grid-cols-1"} ${className}`}
     >
       {/* El contenedor recorta las esquinas (`overflow-hidden`), así que el redondeo propio de cada tile queda oculto. */}
       {layout ? (
@@ -53,14 +58,17 @@ export function ListCoverMosaic({ coverThumbs, className = "", itemCount, entity
               key={`${i}:${cover}`}
               cover={cover}
               label=""
-              className={`size-full ${layout.tiles[i]}`}
+              // En círculo, cada celda es un cuadrado centrado: con dos fotos la celda mide 1:2 y saldría un óvalo.
+              className={round ? `aspect-square w-full self-center !rounded-full ${layout.tiles[i]}` : `size-full ${layout.tiles[i]}`}
               onFail={() => setFailed((prev) => new Set(prev).add(cover))}
             />
           ))}
           {covers.length === 3 ? (
             <span
               data-mosaic-rest=""
-              className="flex size-full items-center justify-center bg-ink-surface font-data text-[clamp(0.625rem,11cqw,1rem)] text-paper-muted"
+              className={`flex size-full items-center justify-center bg-ink-surface font-data text-[clamp(0.625rem,11cqw,1rem)] text-paper-muted ${
+                round ? "rounded-full" : ""
+              }`}
             >
               {remaining > 0 ? `+${remaining}` : <EntityGlyph entityType={entityType} />}
             </span>

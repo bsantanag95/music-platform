@@ -190,8 +190,8 @@ en escritorio. La acción Guardar/Seguir SHALL tener un área táctil de al meno
 ### Requirement: Destacada única como portada
 
 Cuando "Destacadas" tiene una sola lista, la tarjeta SHALL presentarse como portada ancha: mosaico mayor, título, tipo,
-conteo, dueño, descripción (hasta dos líneas) y una tira con las primeras imágenes y los primeros nombres de la lista,
-con la acción Guardar visible. La insignia de contenido oficial SHALL ir en su propia línea, encima del título, y el
+conteo, dueño, una línea con los primeros nombres de la lista (hasta cinco) y la descripción (hasta dos líneas), con la
+acción Guardar visible. La insignia de contenido oficial SHALL ir en su propia línea, encima del título, y el
 título SHALL NOT truncarse por ella en ningún ancho.
 
 #### Scenario: Destacada en móvil

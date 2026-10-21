@@ -17,9 +17,10 @@ import { entityTypeKey } from "./lists-shared";
 export function CommunityListCard({
   list,
   canSave,
-  dense = false,
+  dense: denseProp = false,
   showDate = false,
   large = false,
+  layout = "row",
 }: {
   list: DiscoverListSummary;
   /** Hay sesión: se ofrece la acción Guardar/Seguir. */
@@ -29,11 +30,15 @@ export function CommunityListCard({
   dense?: boolean;
   /** En la variante densa, muestra la antigüedad en lugar de los guardados (De la gente que sigues). */
   showDate?: boolean;
-  /** Tarjeta grande: una única Destacada ocupa la fila (con dos o más, la normal). */
+  /** Tarjeta grande: una única Destacada ocupa la fila como portada (con dos o más, la estantería). */
   large?: boolean;
+  /** `shelf`: tarjeta de estantería (redesign-lists-page, D6). Su contenido es el de la variante densa. */
+  layout?: "row" | "shelf";
 }) {
   const t = useTranslations("lists");
   const locale = useLocale();
+  // La estantería muestra lo mismo que la tarjeta densa: tipo y conteo, y dueño con fecha o guardados.
+  const dense = denseProp || layout === "shelf";
   // Una colección generada se muestra con el título del idioma y enlaza directo a su ruta en Explorar
   // (redesign-lists-page, D2): antes iba a la ruta de usuario y una redirección la llevaba ahí.
   const shown = presentList(list, locale);
@@ -73,6 +78,8 @@ export function CommunityListCard({
       description={list.description}
       dense={dense}
       large={large}
+      layout={layout}
+      previewNames={large ? list.previewNames : undefined}
       badge={badge}
       // Siempre dos líneas: qué es · cuánto (· guardados en la tarjeta completa), y de quién · cuándo (en las
       // secciones densas, de quién · guardados: la cifra que ordena Populares). Antes era una sola línea que

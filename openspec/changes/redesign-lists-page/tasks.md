@@ -17,13 +17,13 @@
 
 ## 3. Fase 2 · Estantería, portada y chips
 
-- [ ] 3.1 `CommunityListCard` / `ListCard` con `layout="shelf"`: mosaico arriba a todo el ancho, título, meta y dueño debajo, Guardar flotante de 44px (D6)
-- [ ] 3.2 Imágenes de artistas en círculo dentro de su celda del mosaico (solo listas de artistas)
-- [ ] 3.3 `ListsGrid`: 2 columnas en móvil, 3 en `sm`, 4 en `lg`, 5 en `xl` para la estantería
-- [ ] 3.4 De la gente que sigues, Populares, Recientes y explorar usan la estantería
-- [ ] 3.5 Destacada única como portada: mosaico de 160px, descripción, tira de primeras imágenes y nombres (`previewNames` en el resumen de destacadas) (D7)
-- [ ] 3.6 Chips de tipo en lugar del select, con `aria-pressed`; el orden como control compacto (D8)
-- [ ] 3.7 Tests: estantería (estructura, botón de 44px), portada (tira y nombres), chips (URL y estado)
+- [x] 3.1 `CommunityListCard` / `ListCard` con `layout="shelf"`: mosaico arriba a todo el ancho, título, meta y dueño debajo, Guardar flotante de 44px (D6)
+- [x] 3.2 Imágenes de artistas en círculo dentro de su celda del mosaico (solo listas de artistas)
+- [x] 3.3 `ListsGrid`: 2 columnas en móvil, 3 en `sm`, 4 en `lg`, 5 en `xl` para la estantería
+- [x] 3.4 De la gente que sigues, Populares, Recientes y explorar usan la estantería
+- [x] 3.5 Destacada única como portada: mosaico de 160px, descripción y los primeros nombres (`previewNames` en el resumen de destacadas) (D7)
+- [x] 3.6 Chips de tipo en lugar del select, con `aria-pressed`; el orden como control compacto (D8)
+- [x] 3.7 Tests: estantería (estructura, botón de 44px), portada (nombres), chips (URL y estado)
 
 ## 4. Fase 3 · Riel y estado vacío
 

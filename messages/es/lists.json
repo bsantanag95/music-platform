@@ -111,7 +111,8 @@
     "popularDescription": "Las que más guarda la comunidad.",
     "followingDescription": "Listas recientes de las personas que sigues.",
     "recentDescription": "Lo último que publicó la comunidad.",
-    "resultsCountMore": "{count, plural, one {Más de # lista} other {Más de # listas}}"
+    "resultsCountMore": "{count, plural, one {Más de # lista} other {Más de # listas}}",
+    "typeAll": "Todas"
   },
   "deleteShort": "¿Borrar?",
   "moveUp": "Subir “{title}”",

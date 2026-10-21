@@ -73,8 +73,8 @@ de disco sin ninguna) no cambian.
 ### D6. Estantería (fase 2)
 
 `CommunityListCard` gana `layout="shelf"`: mosaico cuadrado arriba, a todo el ancho de la tarjeta, y debajo título (2
-líneas), meta (tipo · conteo) y dueño. Guardar va sobre el mosaico como un botón flotante de 44px (visible en hover y foco
-en escritorio, siempre visible en táctil). La grilla: 2 columnas en móvil, 3 en `sm`, 4 en `lg` y 5 en `xl`. Lo usan De la
+líneas), meta (tipo · conteo) y dueño. Guardar va sobre el mosaico como un botón flotante (44px en móvil), siempre
+visible: en táctil no hay hover que lo revele y, guardada, la marca dice algo de la lista. La grilla: 2 columnas en móvil, 3 en `sm`, 4 en `lg` y 5 en `xl`. Lo usan De la
 gente que sigues, Populares, Recientes y explorar. Las imágenes de una lista de artistas van recortadas en círculo dentro
 de su celda (`rounded-full`), como las fotos de artistas del resto de la app.
 
@@ -82,9 +82,10 @@ de su celda (`rounded-full`), como las fotos de artistas del resto de la app.
 
 ### D7. Destacada única como portada (fase 2)
 
-Con una sola destacada, la tarjeta `large` pasa a un layout horizontal propio: mosaico de 160px, título, meta, descripción
-(2 líneas) y una tira con las primeras 5 imágenes y los primeros nombres de la lista (`previewNames`, opcional en el
-resumen de destacadas, resuelto en el servidor junto con las carátulas). Con dos o más destacadas, se usa la estantería.
+Con una sola destacada, la tarjeta `large` es una portada: mosaico de 160px, título, meta, una línea con los primeros 5
+nombres de la lista (`previewNames`, opcional en el resumen, solo en destacadas) y la descripción (2 líneas). Se descartó
+una tira de imágenes: el resumen trae 4 carátulas y repetiría las del mosaico de al lado. Con dos o más destacadas, se
+usa la estantería.
 
 ### D8. Chips de tipo (fase 2)
 

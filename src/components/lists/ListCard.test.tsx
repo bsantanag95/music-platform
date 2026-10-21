@@ -41,4 +41,42 @@ describe("ListCard", () => {
     expect(mosaic).toHaveAttribute("data-count", "7");
     expect(mosaic).toHaveAttribute("data-type", "artist");
   });
+
+  it("en estantería el mosaico va arriba, a todo el ancho, y el texto debajo; la acción flota sobre el mosaico (D6)", () => {
+    const { container } = render(
+      <ListCard
+        layout="shelf"
+        href="/l"
+        title="Discos favoritos"
+        meta={<span>Álbumes · 4</span>}
+        subMeta={<span>por Fran</span>}
+        coverThumbs={["a"]}
+        description="No se muestra en la estantería"
+        action={<button type="button">Guardar</button>}
+      />,
+    );
+
+    const article = container.querySelector("article")!;
+    const mosaic = screen.getByTestId("mosaic");
+    const heading = screen.getByRole("heading", { name: "Discos favoritos" });
+    expect(mosaic.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(article.className).not.toContain("border");
+    expect(screen.getByRole("button", { name: "Guardar" }).parentElement?.className).toContain("absolute");
+    expect(screen.queryByText("No se muestra en la estantería")).not.toBeInTheDocument();
+    expect(screen.getByText("por Fran")).toBeInTheDocument();
+  });
+
+  it("la portada (large) muestra los primeros nombres de la lista en una línea (D7)", () => {
+    render(
+      <ListCard large href="/l" title="Playlist de fondo" meta={null} coverThumbs={[]} previewNames={["Fiona Apple", "Tame Impala"]} />,
+    );
+
+    expect(screen.getByText("Fiona Apple · Tame Impala")).toBeInTheDocument();
+  });
+
+  it("sin `large`, los nombres no se muestran", () => {
+    render(<ListCard href="/l" title="T" meta={null} coverThumbs={[]} previewNames={["Fiona Apple"]} />);
+
+    expect(screen.queryByText("Fiona Apple")).not.toBeInTheDocument();
+  });
 });

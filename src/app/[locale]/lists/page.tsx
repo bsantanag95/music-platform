@@ -91,9 +91,16 @@ export default async function CommunityListsPage({
               description={t("community.featuredDescription")}
               seeAll={{ href: "/explore/collections", label: t("community.seeCollections") }}
             />
-            <ListsGrid cols={featured.lists.length === 1 ? 1 : 2}>
+            {/* Una sola destacada es una portada ancha (D7); con dos o más, la misma estantería que las demás secciones. */}
+            <ListsGrid cols={featured.lists.length === 1 ? 1 : "shelf"}>
               {featured.lists.map((list) => (
-                <CommunityListCard key={list.id} list={list} canSave={canSave} large={featured.lists.length === 1} />
+                <CommunityListCard
+                  key={list.id}
+                  list={list}
+                  canSave={canSave}
+                  large={featured.lists.length === 1}
+                  layout={featured.lists.length === 1 ? "row" : "shelf"}
+                />
               ))}
             </ListsGrid>
           </section>
@@ -106,8 +113,7 @@ export default async function CommunityListsPage({
             headingKey="community.followingHeading"
             initial={fromFollowing}
             canSave={canSave}
-            cols={2}
-            dense
+            cols="shelf"
             excludeIds={shownBefore.following}
           />
         ) : null}
@@ -119,8 +125,7 @@ export default async function CommunityListsPage({
             headingKey="community.popularHeading"
             initial={popular}
             canSave={canSave}
-            cols={3}
-            dense
+            cols="shelf"
             excludeIds={shownBefore.popular}
           />
         ) : null}
@@ -132,8 +137,7 @@ export default async function CommunityListsPage({
             headingKey="community.recentHeading"
             initial={recent}
             canSave={canSave}
-            cols={3}
-            dense
+            cols="shelf"
             excludeIds={shownBefore.recent}
           />
         ) : null}

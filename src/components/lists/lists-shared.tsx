@@ -7,6 +7,8 @@ const COLS_CLASS = {
   1: "grid-cols-1",
   2: "grid-cols-1 sm:grid-cols-2",
   3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+  // Estantería de `/lists` (redesign-lists-page, D6): tarjetas verticales con el mosaico arriba, dos por fila en móvil.
+  shelf: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5",
 } as const;
 
 // Grilla de tarjetas de lista: una columna en mobile, más desde `sm`/`lg` según
@@ -14,9 +16,12 @@ const COLS_CLASS = {
 // por el perfil ajeno); las secciones de navegación de `/lists` piden 1 o 3
 // para variar la densidad según qué tan detenida deba ser la lectura.
 // Con dos tarjetas o menos, una grilla de 3 columnas deja la fila coja (un tercio vacío a la derecha): se cae a 2.
-export function ListsGrid({ children, cols = 2 }: { children: ReactNode; cols?: 1 | 2 | 3 }) {
+export function ListsGrid({ children, cols = 2 }: { children: ReactNode; cols?: 1 | 2 | 3 | "shelf" }) {
   const effective = cols === 3 && Children.count(children) <= 2 ? 2 : cols;
-  return <div className={`grid gap-4 ${COLS_CLASS[effective]}`}>{children}</div>;
+  // En la estantería las columnas son fijas: con pocas tarjetas quedan del mismo tamaño que en una fila llena.
+  return (
+    <div className={`grid ${cols === "shelf" ? "gap-x-4 gap-y-6" : "gap-4"} ${COLS_CLASS[effective]}`}>{children}</div>
+  );
 }
 
 const ENTITY_KEY: Record<string, "entityTypeArtist" | "entityTypeAlbum" | "entityTypeSong"> = {

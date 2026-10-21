@@ -25,14 +25,21 @@ describe("CommunityListsToolbar", () => {
     vi.useRealTimers();
   });
 
-  it("al elegir un tipo navega con el parámetro type", () => {
-    renderWithIntl(<CommunityListsToolbar />);
+  it("el tipo se elige con chips: navega con el parámetro type y marca el chip (redesign-lists-page, D8)", () => {
+    const { unmount } = renderWithIntl(<CommunityListsToolbar />);
+    const group = screen.getByRole("group", { name: "Filtrar por tipo" });
+    expect([...group.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["Todas", "Artistas", "Álbumes", "Canciones"]);
+    expect(screen.getByRole("button", { name: "Todas" })).toHaveAttribute("aria-pressed", "true");
 
-    fireEvent.change(screen.getByLabelText("Filtrar por tipo"), {
-      target: { value: "artist" },
-    });
-
+    fireEvent.click(screen.getByRole("button", { name: "Artistas" }));
     expect(nav.replace).toHaveBeenCalledWith("/lists?type=artist", { scroll: false });
+    unmount();
+
+    nav.search = new URLSearchParams("type=artist");
+    renderWithIntl(<CommunityListsToolbar />);
+    expect(screen.getByRole("button", { name: "Artistas" })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Todas" }));
+    expect(nav.replace).toHaveBeenLastCalledWith("/lists", { scroll: false });
   });
 
   it("debouncea la búsqueda y navega con q", () => {
