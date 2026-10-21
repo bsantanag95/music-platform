@@ -242,7 +242,7 @@ function GroupRow({
               ? t("groupCollection", { count: group.entries.length })
               : group.groupedKind === "wanted"
                 ? t("groupWanted", { count: group.entries.length })
-                : t(group.tier === 2 ? "groupRatings" : "groupSongRatings", { count: group.entries.length });
+                : ratingGroupVerb(group.entries, t, locale);
 
   return (
     <div>
@@ -287,6 +287,31 @@ function GroupRow({
       </p>
     </div>
   );
+}
+
+// Partes del desglose de una corrida de valoraciones por tipo de objetivo (openspec: group-mixed-feed-runs, D3), en
+// el orden de desempate: discos, canciones, artistas.
+const RATING_PARTS = [
+  { type: "release-group", key: "album" },
+  { type: "recording", key: "song" },
+  { type: "artist", key: "artist" },
+] as const;
+
+// "valoró 2 canciones y 1 disco": cada tipo con su cantidad, de mayor a menor, unidos como lista del idioma. Con un solo
+// tipo queda "valoró 3 discos". Antes, todo grupo que no era de álbumes se rotulaba como canciones, también los de
+// artistas.
+function ratingGroupVerb(entries: FeedEntryGroup["entries"], t: FeedT, locale: string): string {
+  const counts = RATING_PARTS.map((part, order) => ({
+    ...part,
+    order,
+    count: entries.filter((entry) => entry.kind === "rating" && entry.target.type === part.type).length,
+  }))
+    .filter((part) => part.count > 0)
+    .sort((a, b) => b.count - a.count || a.order - b.order);
+  const parts = new Intl.ListFormat(locale, { style: "long", type: "conjunction" }).format(
+    counts.map((part) => t(`groupRatingParts.${part.key}`, { count: part.count })),
+  );
+  return t("groupRatingsMixed", { parts });
 }
 
 // Pico de rotación (openspec: add-feed-rotation-peak): una corrida de escuchas

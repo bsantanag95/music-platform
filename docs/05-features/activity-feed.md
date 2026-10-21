@@ -220,16 +220,23 @@ el resto de las superficies (ver `ratings-and-reviews.md`, sección "Representac
 ### Agrupación por tier
 
 `groupFeedRuns` (`src/components/feed/feed-grouping.ts`) pliega **3+ entradas consecutivas
-del mismo tier (2, 3 o 4), del mismo `kind` y del mismo autor** en una fila: `autor · valoró N
-discos` (o `registró N escuchas`, `marcó N favoritos`, `valoró N canciones`, `siguió a N
-personas` desde `add-feed-kind-differentiation`, o `empezó a seguir a N artistas` desde
-`add-artist-follow-feed-entry`) + hasta 4 títulos, personas o artistas enlazados + "y M más"
-(→ perfil del autor). El `FeedEntryGroup` lleva `tier: 2 | 3 | 4` para que el render
-distinga el grupo de señal de opinión (tier 2, verbo de álbumes) del de presencia cotidiana
-(tier 3, verbo de canciones) del de ambiente (tier 4, seguir usuario/seguir artista). Una
-racha de ratings de canción (tier 3) y ratings de álbum (tier 2) **no se fusionan** aunque
-sean consecutivas — ni una racha de "seguir usuario" con una de "seguir artista" (mismo
-tier 4, distinto `kind`), ni una de colección con una de wishlist. Toda entrada tier 1
+del mismo `kind` y del mismo autor** en una fila. Salvo valoraciones y favoritos, también tienen
+que ser del **mismo tier** (2, 3 o 4). La fila dice `autor · registró N escuchas` (o `marcó N
+favoritos`, `siguió a N personas` desde `add-feed-kind-differentiation`, o `empezó a seguir a N
+artistas` desde `add-artist-follow-feed-entry`) + hasta 4 títulos, personas o artistas enlazados
++ "y M más" (→ perfil del autor).
+
+**Valoraciones y favoritos mezclan tiers** (`group-mixed-feed-runs`): una racha de valoraciones de
+álbum (tier 2), canción y artista (tier 3) es una sola corrida, y lo mismo los favoritos. Antes
+"canción, canción, álbum" quedaba en tres filas sueltas porque ningún tramo llegaba a 3. La fila de
+valoraciones **desglosa por tipo de objetivo**, de mayor a menor y unido con `Intl.ListFormat`:
+`valoró 2 canciones y 1 disco`, `valoró 1 disco, 1 canción y 1 artista`, `valoró 3 discos` con un
+solo tipo. Antes todo grupo que no era de álbumes decía "canciones", también los de artistas. La de
+favoritos conserva `marcó N favoritos`. El `FeedEntryGroup` lleva el tier más alto de sus entradas
+(`tier: 2 | 3 | 4`). Siguen sin mezclarse una racha de "seguir usuario" con una de "seguir artista"
+(mismo tier 4, distinto `kind`), una de colección con una de wishlist, y valoraciones con favoritos.
+Una corrida tampoco absorbe una valoración que abre una fila fusionada de opinión (valoración + reseña
+o comentario del mismo objetivo): esa valoración se queda en su fila. Toda entrada tier 1
 (comentario, reseña, nota de escucha, evento de lista o de Camino) corta la corrida. Corre en el cliente sobre el array acumulado, así que también
 colapsa a través de un "Cargar más".
 

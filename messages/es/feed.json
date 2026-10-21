@@ -70,8 +70,12 @@
   },
   "groupListens": "{count, plural, one {registró # escucha} other {registró # escuchas}}",
   "groupFavorites": "{count, plural, one {marcó # favorito} other {marcó # favoritos}}",
-  "groupRatings": "{count, plural, one {valoró # disco} other {valoró # discos}}",
-  "groupSongRatings": "{count, plural, one {valoró # canción} other {valoró # canciones}}",
+  "groupRatingsMixed": "valoró {parts}",
+  "groupRatingParts": {
+    "album": "{count, plural, one {# disco} other {# discos}}",
+    "song": "{count, plural, one {# canción} other {# canciones}}",
+    "artist": "{count, plural, one {# artista} other {# artistas}}"
+  },
   "groupFollows": "{count, plural, one {siguió a # persona} other {siguió a # personas}}",
   "groupFollowArtists": "{count, plural, one {empezó a seguir a # artista} other {empezó a seguir a # artistas}}",
   "rotationPeak": "En rotación · {count, plural, one {# registro} other {# registros}} esta semana",

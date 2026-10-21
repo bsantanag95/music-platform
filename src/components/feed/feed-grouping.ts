@@ -70,6 +70,12 @@ export type FeedRow = FeedEntry | FeedEntryGroup | FeedRotationPeak | FeedOpinio
 
 const GROUP_MIN = 3;
 
+// Tipos cuya corrida mezcla tiers (openspec: group-mixed-feed-runs, D1): valorar o marcar favoritos seguido se lee
+// como una sola cosa aunque alterne álbum (tier 2) con canción o artista (tier 3). El resto exige el mismo tier.
+function mixesTiers(kind: FeedEntry["kind"]): boolean {
+  return kind === "rating" || kind === "favorite";
+}
+
 function isOpinionEntry(entry: FeedEntry): entry is OpinionEntry {
   return entry.kind === "rating" || entry.kind === "review" || entry.kind === "comment";
 }
@@ -285,9 +291,10 @@ function albumWindowRows(window: SweepCandidate[], now: Date): FeedRow[] {
 }
 
 /**
- * Pliega corridas de entradas consecutivas del **mismo tier** (2 o 3), del
- * **mismo `kind`** y del **mismo autor**. Una entrada de otro tier, otro tipo,
- * otro autor —o cualquier entrada tier 1— corta la corrida.
+ * Pliega corridas de entradas consecutivas del **mismo `kind`** y del **mismo
+ * autor** y, salvo valoraciones y favoritos, del **mismo tier** (2 o 3): esos dos
+ * mezclan álbum, canción y artista (openspec: group-mixed-feed-runs). Una entrada
+ * de otro tipo, otro autor —o cualquier entrada tier 1— corta la corrida.
  *
  * Cuando la entrada es escucha/favorito/valoración de una canción con álbum
  * resuelto (openspec: add-feed-album-sweep), primero se acota el **tramo de
@@ -345,14 +352,18 @@ export function groupFeedRuns(entries: FeedEntry[], now: Date = new Date()): Fee
 
     if (isGroupable(entry)) {
       const tier = feedEntryTier(entry) as 2 | 3 | 4;
+      const mixed = mixesTiers(entry.kind);
       let j = i + 1;
       while (
         j < entries.length &&
         isGroupable(entries[j]!) &&
         entries[j]!.kind === entry.kind &&
-        feedEntryTier(entries[j]!) === tier &&
+        (mixed || feedEntryTier(entries[j]!) === tier) &&
         entries[j]!.author.id === entry.author.id &&
-        !albumBoundary(entry, entries[j]!)
+        !albumBoundary(entry, entries[j]!) &&
+        // Una valoración que abre una fila fusionada de opinión (valoración + reseña o comentario del mismo objetivo)
+        // pertenece a esa fila, no a la corrida: al mezclar tiers, una valoración de álbum podía quedar absorbida.
+        !opinionRowAt(entries, j)
       ) {
         j++;
       }
@@ -373,7 +384,8 @@ export function groupFeedRuns(entries: FeedEntry[], now: Date = new Date()): Fee
           kind: "group",
           id: `group-${entry.kind}-${run[0]!.id}`,
           groupedKind: entry.kind,
-          tier,
+          // En una corrida mixta, el tier más alto (D2): con un álbum dentro, el grupo es señal de opinión.
+          tier: Math.min(...run.map((member) => feedEntryTier(member))) as 2 | 3 | 4,
           author: entry.author,
           createdAt: run[0]!.createdAt,
           entries: run,

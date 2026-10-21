@@ -706,10 +706,15 @@ la fecha absoluta como valor accesible del elemento de tiempo. Dentro de una mis
 página, los bloques de actividad de feed NO SHALL mezclar fecha relativa y absoluta.
 
 **Agrupación de actividad.** Una corrida es una secuencia de entradas consecutivas del
-mismo tier (2, 3 o 4), del mismo `kind` y del mismo autor (colección y wishlist son tipos
-distintos y no se mezclan). Cuando una corrida alcanza 3 o
+mismo `kind` y del mismo autor y, salvo para valoraciones y favoritos, del mismo tier (2, 3 o
+4) (colección y wishlist son tipos distintos y no se mezclan). Las **valoraciones** SHALL
+formar una sola corrida aunque mezclen objetivos de distinto tier —álbum, canción y artista—, y
+lo mismo los **favoritos**; un cambio de álbum conocido entre dos canciones sigue cortando la
+corrida. Cuando una corrida alcanza 3 o
 más entradas, SHALL plegarse en una única fila que nombra al autor, la cantidad y lista los
-títulos o personas enlazadas, con un único marcador de tiempo. Las entradas tier 1
+títulos o personas enlazadas, con un único marcador de tiempo. La fila plegada de
+valoraciones SHALL nombrar la cantidad **desglosada por tipo de objetivo** ("valoró 2
+canciones y 1 disco", "valoró 3 artistas") y NUNCA SHALL rotular como canciones lo que no lo es. Las entradas tier 1
 (comentarios, notas de escucha, reseñas, eventos de lista, eventos de Camino y filas fusionadas
 de opinión) NUNCA SHALL colapsarse y SHALL
 cortar la corrida.
@@ -801,10 +806,24 @@ objetivo musical SHALL seguir disponible.
 - **THEN** la entrada se muestra en una sola fila e incluye la reacción en esa fila
 
 #### Scenario: Corrida de ratings de canción se colapsa pero una corta de ratings de álbum no
-- **WHEN** un seguido registra 3 o más ratings de canción consecutivos, y por separado 2
-  ratings de álbum consecutivos, antes de cualquier otra actividad
-- **THEN** los 3 ratings de canción (tier 3) se pliegan en una única fila; los 2 ratings
-  de álbum (tier 2) se muestran como dos filas separadas por no alcanzar la corrida mínima
+- **WHEN** un seguido registra 3 ratings de canción consecutivos, luego una escucha y luego 2
+  ratings de álbum consecutivos
+- **THEN** los 3 ratings de canción se pliegan en una única fila; la escucha corta la corrida y
+  los 2 ratings de álbum se muestran como dos filas separadas por no alcanzar la corrida mínima
+
+#### Scenario: Valoraciones de álbum y de canción seguidas se pliegan juntas
+- **WHEN** un seguido valora 2 canciones y 1 álbum de forma consecutiva, sin otra actividad
+  entre medio
+- **THEN** el feed muestra una única fila plegada "valoró 2 canciones y 1 disco" que lista los
+  tres títulos con su nota
+
+#### Scenario: Favoritos de álbum y de canción seguidos se pliegan juntos
+- **WHEN** un seguido marca como favoritos 1 álbum y 2 canciones de forma consecutiva
+- **THEN** el feed muestra una única fila plegada de favoritos con los tres títulos
+
+#### Scenario: Una corrida de valoraciones de artistas se rotula como artistas
+- **WHEN** un seguido valora 3 artistas de forma consecutiva
+- **THEN** la fila plegada dice "valoró 3 artistas", no "valoró 3 canciones"
 
 #### Scenario: Corrida de escuchas del mismo autor se colapsa
 - **WHEN** un seguido registra 3 o más escuchas sin nota consecutivas antes de cualquier
