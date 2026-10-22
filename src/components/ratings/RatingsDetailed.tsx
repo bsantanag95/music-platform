@@ -6,7 +6,7 @@ import type { RatingsRendererProps } from "./ratings-view";
 // Modo Detallada: la fila completa de la biblioteca (`MyRatingRow`) con carátula, título,
 // artista, tipo, año, estrellas editables y puntaje. Modo por defecto: es el tratamiento que
 // tenía la página antes de sumar los tres modos.
-export function RatingsDetailed({ entries, actions, display }: RatingsRendererProps) {
+export function RatingsDetailed({ entries, actions, display, priorityIds }: RatingsRendererProps) {
   return (
     <div className="flex flex-col gap-4">
       {entries.map((entry) => (
@@ -17,6 +17,7 @@ export function RatingsDetailed({ entries, actions, display }: RatingsRendererPr
           onEdit={actions.onEdit}
           showArtist={display.showArtist}
           showType={display.showType}
+          priority={priorityIds?.has(entry.id) ?? false}
         />
       ))}
     </div>

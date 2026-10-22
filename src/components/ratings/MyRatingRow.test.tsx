@@ -15,7 +15,9 @@ vi.mock("@/i18n/navigation", () => ({
     </a>
   ),
 }));
-vi.mock("@/components/catalog/CoverThumb", () => ({ CoverThumb: () => <span data-testid="cover" /> }));
+vi.mock("@/components/catalog/CoverThumb", () => ({
+  CoverThumb: ({ priority }: { priority?: boolean }) => <span data-testid="cover" data-priority={String(Boolean(priority))} />,
+}));
 
 const mocks = vi.hoisted(() => ({
   saveRating: vi.fn(),
@@ -195,5 +197,42 @@ describe("MyRatingRow", () => {
     await waitFor(() => expect(mocks.saveRating).toHaveBeenCalled());
     expect(onUpdate).not.toHaveBeenCalled();
     expect(screen.getByRole("radio", { name: "5,0 estrellas" })).toBeEnabled();
+  });
+
+  it("si falla el guardado avisa con el mensaje de error y las estrellas siguen como estaban", async () => {
+    mocks.saveRating.mockRejectedValue(new Error("red"));
+    renderRow();
+    fireEvent.click(screen.getByRole("radio", { name: "5,0 estrellas" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(t.saveError);
+    expect(screen.getByRole("radio", { name: "4,5 estrellas" })).toBeChecked();
+  });
+
+  it("reintentar quita el aviso de error mientras guarda", async () => {
+    mocks.saveRating.mockRejectedValueOnce(new Error("red")).mockResolvedValue({});
+    const { onUpdate } = renderRow();
+    fireEvent.click(screen.getByRole("radio", { name: "5,0 estrellas" }));
+    await screen.findByRole("alert");
+
+    fireEvent.click(screen.getByRole("radio", { name: "4,0 estrellas" }));
+
+    await waitFor(() => expect(onUpdate).toHaveBeenCalled());
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("con puntero grueso las estrellas y 'Sin afinar' llegan a 44 px, sin cambiar el tamaño con ratón", () => {
+    renderRow(album({ detailedScore: null, stars: 4 }));
+    const group = screen.getByRole("group", { name: "Estrellas de Bad Animals" });
+    const cell = group.querySelector("span.relative")!;
+    expect(cell.className).toContain("h-7 w-6");
+    expect(cell.className).toContain("[@media(pointer:coarse)]:h-11");
+    expect(cell.className).toContain("[@media(pointer:coarse)]:w-12");
+    expect(screen.getByRole("button", { name: t.untunedAction }).className).toContain("[@media(pointer:coarse)]:min-h-11");
+  });
+
+  it("la carátula de una fila prioritaria se pide con prioridad", () => {
+    const onUpdate = vi.fn();
+    renderWithIntl(<MyRatingRow entry={album()} onUpdate={onUpdate} onEdit={vi.fn()} priority />);
+    expect(screen.getByTestId("cover")).toHaveAttribute("data-priority", "true");
   });
 });

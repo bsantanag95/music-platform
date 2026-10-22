@@ -19,7 +19,10 @@ interface StarRatingInputProps {
   /** Texto accesible de cada opción (p. ej. "3,5 estrellas"). */
   valueLabel: (value: number) => string;
   disabled?: boolean;
-  /** `sm` achica cada estrella para filas densas (p. ej. la biblioteca de valoraciones). */
+  /**
+   * `sm` achica cada estrella para filas densas (p. ej. la biblioteca de valoraciones). Con puntero grueso
+   * (`pointer: coarse`) vuelve a un área táctil de 48 × 44 px por estrella, con cada mitad de 24 px.
+   */
   size?: "md" | "sm";
 }
 
@@ -48,9 +51,15 @@ export function StarRatingInput({
           return (
             <span
               key={star}
-              className={`relative inline-flex items-center justify-center ${size === "sm" ? "h-7 w-6" : "h-10 w-8"}`}
+              className={`relative inline-flex items-center justify-center ${
+                size === "sm" ? "h-7 w-6 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-12" : "h-10 w-8"
+              }`}
             >
-              <StarGlyph fill={fill} preview={preview !== null} className={size === "sm" ? "size-5" : "size-6"} />
+              <StarGlyph
+                fill={fill}
+                preview={preview !== null}
+                className={size === "sm" ? "size-5 [@media(pointer:coarse)]:size-7" : "size-6"}
+              />
               {[star - 0.5, star].map((option, half) => (
                 <label
                   key={option}

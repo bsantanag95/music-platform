@@ -41,6 +41,8 @@ interface RatingTileProps {
   /** El artista y el tipo se omiten del overlay cuando el encabezado de la sección ya los dice. */
   showArtist?: boolean;
   showType?: boolean;
+  /** Carga la carátula sin diferirla (las de la primera fila). */
+  priority?: boolean;
 }
 
 // Ficha del modo Gráfico: carátula cuadrada sin caption y, encima, un overlay que muestra la
@@ -48,7 +50,7 @@ interface RatingTileProps {
 // nota". El overlay es `pointer-events-none` salvo sus botones, así un clic en cualquier otro
 // punto navega a la ficha a través del enlace que cubre la carátula. La etiqueta del enlace
 // lleva título, artista, estrellas y puntaje, de modo que la nota no depende del hover.
-export function RatingTile({ entry, onEdit, showArtist = true, showType = true }: RatingTileProps) {
+export function RatingTile({ entry, onEdit, showArtist = true, showType = true, priority = false }: RatingTileProps) {
   const t = useTranslations("ratings");
   const locale = useLocale();
   const { target } = entry;
@@ -73,7 +75,7 @@ export function RatingTile({ entry, onEdit, showArtist = true, showType = true }
         aria-label={ariaLabel}
         className="block overflow-hidden rounded-md border border-ink-border transition-colors hover:border-amber focus-visible:border-amber"
       >
-        <CoverThumb cover={target.coverThumbUrl} label="" className="aspect-square w-full" />
+        <CoverThumb cover={target.coverThumbUrl} label="" className="aspect-square w-full" priority={priority} />
       </Link>
 
       <div

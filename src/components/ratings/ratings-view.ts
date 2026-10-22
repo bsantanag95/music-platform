@@ -21,4 +21,6 @@ export interface RatingsRendererProps {
   entries: MyRatingEntry[];
   actions: RatingsRowActions;
   display: RatingsDisplay;
+  /** Ids de las valoraciones cuya carátula se carga con prioridad (las de arriba, sin scroll). */
+  priorityIds?: ReadonlySet<string>;
 }

@@ -13,8 +13,13 @@ import {
 // modo por defecto y la reconciliación con lo guardado ocurre tras el montaje. Toda
 // lectura/escritura va envuelta en try/catch — en modo privado o con el almacenamiento
 // bloqueado el acceso puede lanzar.
-export function useRatingViewMode(): readonly [RatingViewMode, (next: RatingViewMode) => void] {
+//
+// El tercer elemento, `ready`, dice si ya se leyó la preferencia: hasta entonces `mode` es el
+// defecto y no la elección de la persona, así que quien renderiza el listado debe esperar (con un
+// marcador) en vez de pintar el defecto y saltar después al modo guardado.
+export function useRatingViewMode(): readonly [RatingViewMode, (next: RatingViewMode) => void, boolean] {
   const [mode, setMode] = useState<RatingViewMode>(DEFAULT_RATING_VIEW_MODE);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     try {
@@ -24,6 +29,7 @@ export function useRatingViewMode(): readonly [RatingViewMode, (next: RatingView
     } catch {
       // almacenamiento no disponible: se mantiene el modo por defecto
     }
+    setReady(true);
     // Solo al montar: la preferencia no cambia por fuera de este hook.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -37,5 +43,5 @@ export function useRatingViewMode(): readonly [RatingViewMode, (next: RatingView
     }
   }, []);
 
-  return [mode, update] as const;
+  return [mode, update, ready] as const;
 }

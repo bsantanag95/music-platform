@@ -26,6 +26,8 @@
   "decadeFilterLabel": "Década",
   "decadeAll": "Todas",
   "totalLabel": "{count, plural, =0 {Sin valoraciones} one {# valoración} other {# valoraciones}}",
+  "resultsLabel": "{count, plural, =0 {Ningún resultado} one {# resultado} other {# resultados}}",
+  "artistOrderNote": "Artistas de la A a la Z. El orden elegido rige dentro de cada uno.",
   "untuned": "Sin afinar",
   "untunedAction": "Afinar puntaje",
   "scoreRemoved": "Se quitó el puntaje {score} porque no es coherente con las nuevas estrellas.",

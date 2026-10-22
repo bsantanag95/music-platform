@@ -57,6 +57,23 @@ describe("useRatingViewMode", () => {
     expect(window.localStorage.getItem(RATING_VIEW_MODE_STORAGE_KEY)).toBe("index");
   });
 
+  it("`ready` es verdadero una vez leída la preferencia guardada", () => {
+    window.localStorage.setItem(RATING_VIEW_MODE_STORAGE_KEY, "index");
+    const { result } = renderHook(() => useRatingViewMode());
+    expect(result.current[2]).toBe(true);
+    expect(result.current[0]).toBe("index");
+  });
+
+  it("`ready` también llega si el almacenamiento lanza", () => {
+    installStorage({
+      getItem: vi.fn(() => {
+        throw new Error("bloqueado");
+      }),
+    });
+    const { result } = renderHook(() => useRatingViewMode());
+    expect(result.current[2]).toBe(true);
+  });
+
   it("usa la clave propia de valoraciones", () => {
     expect(RATING_VIEW_MODE_STORAGE_KEY).toBe("music-platform:rating-view-mode");
   });

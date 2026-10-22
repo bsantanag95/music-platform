@@ -53,4 +53,20 @@ describe("StarRatingInput · tamaño", () => {
     expect(glyphClass()).not.toContain("size-6");
     expect(screen.getAllByRole("radio")).toHaveLength(10);
   });
+
+  it("size='sm' con puntero grueso crece a 48 × 44 px por estrella; el tamaño por defecto no cambia", () => {
+    const { unmount } = render(
+      <StarRatingInput value={3} onChange={vi.fn()} legend="Tu nota" valueLabel={valueLabel} size="sm" />,
+    );
+    const cell = screen.getByRole("group", { name: "Tu nota" }).querySelector("span.relative")!;
+    expect(cell.className).toContain("h-7 w-6");
+    expect(cell.className).toContain("[@media(pointer:coarse)]:h-11");
+    expect(cell.className).toContain("[@media(pointer:coarse)]:w-12");
+    expect(glyphClass()).toContain("[@media(pointer:coarse)]:size-7");
+    unmount();
+
+    renderInput(3);
+    const md = screen.getByRole("group", { name: "Tu nota" }).querySelector("span.relative")!;
+    expect(md.className).not.toContain("pointer:coarse");
+  });
 });

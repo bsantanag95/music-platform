@@ -19,13 +19,23 @@ interface MyRatingRowProps {
   /** El artista y el tipo se omiten cuando el encabezado de la sección ya los dice. */
   showArtist?: boolean;
   showType?: boolean;
+  /** Carga la carátula sin diferirla (las filas de arriba, sin scroll). */
+  priority?: boolean;
 }
 
-export function MyRatingRow({ entry, onUpdate, onEdit, showArtist = true, showType = true }: MyRatingRowProps) {
+export function MyRatingRow({
+  entry,
+  onUpdate,
+  onEdit,
+  showArtist = true,
+  showType = true,
+  priority = false,
+}: MyRatingRowProps) {
   const t = useTranslations("ratings");
   const locale = useLocale();
   const [busy, setBusy] = useState(false);
   const [scoreRemovedMsg, setScoreRemovedMsg] = useState("");
+  const [saveFailed, setSaveFailed] = useState(false);
 
   const { target } = entry;
   const coverLabel = target.title;
@@ -44,6 +54,7 @@ export function MyRatingRow({ entry, onUpdate, onEdit, showArtist = true, showTy
     if (newStars === entry.stars) return;
     setBusy(true);
     setScoreRemovedMsg("");
+    setSaveFailed(false);
     const keptScore = isScoreCoherent(newStars, entry.detailedScore) ? entry.detailedScore : null;
     const removedScore = entry.detailedScore !== null && !isScoreCoherent(newStars, entry.detailedScore)
       ? entry.detailedScore
@@ -64,7 +75,8 @@ export function MyRatingRow({ entry, onUpdate, onEdit, showArtist = true, showTy
         setScoreRemovedMsg(t("scoreRemoved", { score: removedScore }));
       }
     } catch {
-      // silencioso: el usuario puede reintentar
+      // Las estrellas quedan como estaban (no se llamó a `onUpdate`): se avisa y se puede reintentar.
+      setSaveFailed(true);
     } finally {
       setBusy(false);
     }
@@ -76,7 +88,7 @@ export function MyRatingRow({ entry, onUpdate, onEdit, showArtist = true, showTy
   // carátula); en angostas la nota baja bajo el título.
   return (
     <article className="flex items-start gap-3 sm:items-center" aria-busy={busy}>
-      <CoverThumb cover={target.coverThumbUrl} label={coverLabel} className="size-12" />
+      <CoverThumb cover={target.coverThumbUrl} label={coverLabel} className="size-12" priority={priority} />
 
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
@@ -108,7 +120,7 @@ export function MyRatingRow({ entry, onUpdate, onEdit, showArtist = true, showTy
             ) : null}
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 flex-wrap items-center gap-x-2">
             <StarRatingInput
               size="sm"
               value={entry.stars}
@@ -121,7 +133,7 @@ export function MyRatingRow({ entry, onUpdate, onEdit, showArtist = true, showTy
             <button
               type="button"
               onClick={() => onEdit(entry)}
-              className={`w-20 whitespace-nowrap rounded px-2 py-1 text-left font-data text-xs transition-colors ${
+              className={`w-20 whitespace-nowrap rounded px-2 py-1 text-left font-data text-xs transition-colors [@media(pointer:coarse)]:min-h-11 ${
                 entry.detailedScore !== null
                   ? "text-paper-muted hover:text-paper"
                   : "text-paper-muted italic underline decoration-dotted hover:text-paper"
@@ -132,6 +144,12 @@ export function MyRatingRow({ entry, onUpdate, onEdit, showArtist = true, showTy
             </button>
           </div>
         </div>
+
+        {saveFailed ? (
+          <p role="alert" className="font-data text-xs text-danger">
+            {t("saveError")}
+          </p>
+        ) : null}
 
         {scoreRemovedMsg ? (
           <p role="status" className="font-data text-xs text-paper-muted">

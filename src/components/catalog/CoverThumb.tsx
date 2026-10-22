@@ -21,11 +21,14 @@ export function CoverThumb({
   label,
   className = "",
   onFail,
+  priority = false,
 }: {
   cover: string | null;
   label: string;
   className?: string;
   onFail?: () => void;
+  /** Carga la imagen sin diferirla: para carátulas visibles sin hacer scroll (evita el aviso de LCP). */
+  priority?: boolean;
 }) {
   // Se guarda la URL que falló (no un booleano): si cambia `cover`, la nueva se intenta.
   const [failedCover, setFailedCover] = useState<string | null>(null);
@@ -50,6 +53,7 @@ export function CoverThumb({
         alt={label}
         fill
         sizes="250px"
+        priority={priority}
         className="object-cover"
         onError={() => {
           setFailedCover(cover);
