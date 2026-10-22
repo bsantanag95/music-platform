@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { getMyWantToListen, removeFromWantToListen } from "@/lib/api/want-to-listen";
@@ -16,6 +17,21 @@ interface WantToListenListProps {
   initial: WantToListenListResponse;
 }
 
+// Carátulas que se cargan con prioridad: las primeras entradas, las que se ven sin desplazarse.
+const PRIORITY_COVERS = 6;
+
+// Marcador del listado mientras se lee el modo guardado: unas filas neutras, sin fichas ni texto,
+// para no pintar el modo por defecto y saltar después al de la persona.
+function ListPlaceholder() {
+  return (
+    <div aria-hidden data-testid="want-to-listen-list-placeholder" className="flex flex-col gap-2">
+      {Array.from({ length: 4 }, (_, index) => (
+        <div key={index} className="h-16 rounded-lg bg-ink-surface motion-safe:animate-pulse" />
+      ))}
+    </div>
+  );
+}
+
 // Listado propio de Want to Listen: dos secciones (artistas, álbumes) — mismo
 // criterio de agrupación por tipo que el muro de favoritos — con los mismos
 // tres modos de visualización que el detalle de listas (Detallada/Índice/
@@ -23,11 +39,14 @@ interface WantToListenListProps {
 // una lista de gestión personal.
 export function WantToListenList({ initial }: WantToListenListProps) {
   const t = useTranslations("wantToListen");
-  const [mode, setMode] = useWantToListenViewMode();
+  const [mode, setMode, modeReady] = useWantToListenViewMode();
   const [items, setItems] = useState<WantToListenEntry[]>(initial.items);
   const [page, setPage] = useState(initial.page);
   const [hasNext, setHasNext] = useState(initial.hasNext);
   const [busyId, setBusyId] = useState<string | null>(null);
+  // Entrada cuyo quitado falló: el aviso va junto a ella, no al final de la página.
+  const [errorId, setErrorId] = useState<string | null>(null);
+  const [announce, setAnnounce] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
@@ -36,19 +55,40 @@ export function WantToListenList({ initial }: WantToListenListProps) {
   const journeys = useJourneyStatuses(items);
 
   if (items.length === 0) {
-    return <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />;
+    return (
+      <>
+        <EmptyState
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
+          action={
+            <Link
+              href="/search"
+              className="rounded-md border border-ink-border bg-ink-surface px-4 py-2 font-data text-sm text-paper transition-colors hover:border-amber"
+            >
+              {t("emptyCta")}
+            </Link>
+          }
+        />
+        <span role="status" aria-live="polite" className="sr-only">
+          {announce}
+        </span>
+      </>
+    );
   }
+
+  const priorityIds = new Set(items.slice(0, PRIORITY_COVERS).map((item) => item.id));
 
   const handleRemove = async (id: string) => {
     const entry = items.find((item) => item.id === id);
     if (!entry) return;
     setBusyId(id);
-    setLoadError(false);
+    setErrorId(null);
     try {
       await removeFromWantToListen({ type: entry.targetType, id: entry.target.id });
       setItems((current) => current.filter((item) => item.id !== id));
+      setAnnounce(t("removedAnnouncement", { title: entry.target.title }));
     } catch {
-      setLoadError(true);
+      setErrorId(id);
     } finally {
       setBusyId(null);
     }
@@ -70,36 +110,50 @@ export function WantToListenList({ initial }: WantToListenListProps) {
   };
 
   return (
-    <div className="flex w-full max-w-3xl flex-col gap-6">
+    <div className="flex w-full flex-col gap-6">
       <div className="flex items-center justify-end">
-        <WantToListenModeSwitcher mode={mode} onChange={setMode} />
+        <div className={modeReady ? "" : "invisible"} aria-hidden={modeReady ? undefined : true}>
+          <WantToListenModeSwitcher mode={mode} onChange={setMode} />
+        </div>
       </div>
 
-      {groups.map((group) => (
-        <WantToListenSection
-          key={group.type}
-          group={group}
-          mode={mode}
-          actions={{
-            busy: busyId !== null,
-            remove: (id) => void handleRemove(id),
-            journeyStatus: journeys.statusOf,
-            journeyAdded: journeys.markAdded,
-            journeyError: journeys.markError,
-          }}
-        />
-      ))}
+      <span role="status" aria-live="polite" className="sr-only">
+        {announce}
+      </span>
 
-      {loadError && (
-        <span role="alert" className="font-data text-xs text-danger">
-          {t("loadError")}
-        </span>
+      {modeReady ? (
+        groups.map((group) => (
+          <WantToListenSection
+            key={group.type}
+            group={group}
+            mode={mode}
+            complete={!hasNext}
+            priorityIds={priorityIds}
+            actions={{
+              busy: busyId !== null,
+              errorId,
+              remove: (id) => void handleRemove(id),
+              journeyStatus: journeys.statusOf,
+              journeyAdded: journeys.markAdded,
+              journeyError: journeys.markError,
+            }}
+          />
+        ))
+      ) : (
+        <ListPlaceholder />
       )}
 
       {hasNext && (
-        <Button variant="secondary" disabled={loading} onClick={() => void handleLoadMore()}>
-          {loading ? t("loadingMore") : t("loadMore")}
-        </Button>
+        <div className="flex flex-col items-center gap-2">
+          <Button variant="secondary" disabled={loading} onClick={() => void handleLoadMore()}>
+            {loading ? t("loadingMore") : t("loadMore")}
+          </Button>
+          {loadError && (
+            <span role="alert" className="font-data text-xs text-danger">
+              {t("loadError")}
+            </span>
+          )}
+        </div>
       )}
     </div>
   );

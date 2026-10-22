@@ -114,7 +114,7 @@ describe("WantToListenList", () => {
 
     await waitFor(() => expect(mocks.getArtistJourneyStatuses).toHaveBeenCalledTimes(1));
     expect(mocks.getArtistJourneyStatuses).toHaveBeenCalledWith(["a1", "a2"]);
-    expect(await screen.findAllByRole("button", { name: "Agregar a la discografía" })).toHaveLength(2);
+    expect(await screen.findAllByRole("button", { name: "Completar discografía" })).toHaveLength(2);
   });
 
   it("sin artistas no hace ninguna petición de recorridos", () => {
@@ -136,14 +136,14 @@ describe("WantToListenList", () => {
       "href",
       "/me/artist-journeys/a1",
     );
-    expect(screen.getAllByRole("button", { name: "Agregar a la discografía" })).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: "Completar discografía" })).toHaveLength(1);
   });
 
   it("activar un recorrido lo marca como agregado sin volver a consultar", async () => {
     mocks.activateArtistJourney.mockResolvedValue({});
     renderWithIntl(<WantToListenList initial={initial} />);
 
-    await userEvent.click(await screen.findByRole("button", { name: "Agregar a la discografía" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Completar discografía" }));
 
     expect(mocks.activateArtistJourney).toHaveBeenCalledWith("a1");
     expect(await screen.findByRole("link", { name: "Ya está en tu discografía" })).toBeInTheDocument();
@@ -171,14 +171,76 @@ describe("WantToListenList", () => {
     mocks.getArtistJourneyStatuses.mockRejectedValue(new Error("x"));
     renderWithIntl(<WantToListenList initial={initial} />);
     await waitFor(() => expect(mocks.getArtistJourneyStatuses).toHaveBeenCalled());
-    expect(screen.queryByRole("button", { name: "Agregar a la discografía" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Completar discografía" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Pink Floyd" })).toBeInTheDocument();
   });
 
-  it("estado vacío cuando no hay entradas", () => {
+  it("estado vacío con enlace a la búsqueda cuando no hay entradas", () => {
     renderWithIntl(
       <WantToListenList initial={{ items: [], page: 1, pageSize: 20, hasNext: false }} />,
     );
     expect(screen.getByText("Todavía no agregaste nada")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Buscar en el catálogo" })).toHaveAttribute("href", "/search");
+  });
+
+  // openspec: refine-want-to-listen-page-phase1
+  it("con más páginas por cargar los encabezados no muestran conteo", async () => {
+    mocks.getMyWantToListen.mockResolvedValue({ items: [], page: 2, pageSize: 20, hasNext: false });
+    renderWithIntl(<WantToListenList initial={{ ...initial, hasNext: true }} />);
+
+    expect(screen.getByRole("heading", { name: "Artistas" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Álbumes" })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Cargar más" }));
+    expect(await screen.findByRole("heading", { name: "Artistas (1)" })).toBeInTheDocument();
+  });
+
+  it("anuncia la entrada quitada", async () => {
+    mocks.removeFromWantToListen.mockResolvedValue(null);
+    renderWithIntl(<WantToListenList initial={initial} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Quitar The Dark Side of the Moon de la lista" }));
+    await userEvent.click(screen.getByRole("button", { name: "Confirmar remoción" }));
+
+    expect(await screen.findByRole("status")).toHaveTextContent("The Dark Side of the Moon salió de Pendientes");
+  });
+
+  it.each([
+    ["Detallada", "detailed"],
+    ["Índice", "index"],
+    ["Gráfico", "graphic"],
+  ])("si quitar falla en %s, el aviso va bajo esa entrada y la entrada sigue", async (_label, mode) => {
+    window.localStorage.setItem("music-platform:want-to-listen-view-mode", mode);
+    mocks.removeFromWantToListen.mockRejectedValue(new Error("x"));
+    renderWithIntl(<WantToListenList initial={initial} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Quitar The Dark Side of the Moon de la lista" }));
+    await userEvent.click(screen.getByRole("button", { name: "Confirmar remoción" }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("No pudimos quitarlo. Intenta de nuevo.");
+    expect(alert.closest("li")).toHaveTextContent("The Dark Side of the Moon");
+    expect(screen.getByRole("link", { name: "The Dark Side of the Moon" })).toBeInTheDocument();
+  });
+
+  it("mientras llega el estado de recorrido la acción ocupa su lugar sin estar en el árbol accesible", () => {
+    mocks.getArtistJourneyStatuses.mockReturnValue(new Promise(() => {}));
+    renderWithIntl(<WantToListenList initial={initial} />);
+
+    expect(screen.queryByRole("button", { name: "Completar discografía" })).not.toBeInTheDocument();
+    const reserved = screen.getByText("Completar discografía");
+    expect(reserved).toHaveAttribute("aria-hidden", "true");
+    expect(reserved.className).toContain("invisible");
+  });
+
+  it("los controles crecen a 44 px con puntero grueso", async () => {
+    renderWithIntl(<WantToListenList initial={initial} />);
+    expect(screen.getByRole("button", { name: "Quitar Pink Floyd de la lista" }).className).toContain(
+      "[@media(pointer:coarse)]:min-h-11",
+    );
+    expect(screen.getByRole("radio", { name: "Detallada" }).className).toContain("[@media(pointer:coarse)]:min-h-11");
+    expect((await screen.findByRole("button", { name: "Completar discografía" })).className).toContain(
+      "[@media(pointer:coarse)]:min-h-11",
+    );
   });
 });

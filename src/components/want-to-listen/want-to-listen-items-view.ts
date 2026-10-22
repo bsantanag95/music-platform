@@ -6,6 +6,8 @@ import type { JourneyStatus } from "./use-journey-statuses";
 // cronológico, no manual.
 export interface WantToListenRowActions {
   busy: boolean;
+  /** Entrada cuyo quitado falló; su renderer muestra el aviso bajo ella. */
+  errorId: string | null;
   remove: (id: string) => void;
   /** Estado de recorrido de un artista, resuelto por lote (`useJourneyStatuses`). */
   journeyStatus: (artistId: string) => JourneyStatus;
@@ -16,4 +18,6 @@ export interface WantToListenRowActions {
 export interface WantToListenRendererProps {
   entries: WantToListenEntry[];
   actions: WantToListenRowActions;
+  /** Entradas cuya carátula se carga con prioridad (las primeras de la página). */
+  priorityIds: ReadonlySet<string>;
 }

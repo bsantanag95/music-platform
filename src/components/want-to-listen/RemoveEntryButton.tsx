@@ -38,7 +38,7 @@ export function RemoveEntryButton({
         }
       }}
       onBlur={() => setArmed(false)}
-      className={`shrink-0 font-data text-xs underline decoration-dotted transition-colors disabled:opacity-40 ${
+      className={`inline-flex max-w-full shrink-0 items-center text-left font-data text-xs underline decoration-dotted transition-colors disabled:opacity-40 [@media(pointer:coarse)]:min-h-11 ${
         armed ? "text-danger hover:text-paper" : "text-paper-muted hover:text-danger"
       }`}
     >

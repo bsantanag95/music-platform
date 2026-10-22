@@ -23,7 +23,9 @@
   "removeItemShort": "¿Quitar?",
   "removeItemNamed": "Quitar {title} de la lista",
   "removeItemConfirm": "Confirmar remoción",
-  "journeyAdd": "Agregar a la discografía",
+  "journeyAdd": "Completar discografía",
   "journeyAdding": "Agregando...",
-  "journeyAlreadyAdded": "Ya está en tu discografía"
+  "journeyAlreadyAdded": "Ya está en tu discografía",
+  "removedAnnouncement": "{title} salió de Pendientes",
+  "removeError": "No pudimos quitarlo. Intenta de nuevo."
 }

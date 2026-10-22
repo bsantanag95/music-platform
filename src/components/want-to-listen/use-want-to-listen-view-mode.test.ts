@@ -32,10 +32,11 @@ describe("useWantToListenViewMode", () => {
     expect(result.current[0]).toBe("detailed");
   });
 
-  it("respeta una preferencia guardada válida", () => {
+  it("respeta una preferencia guardada válida y `ready` es verdadero", () => {
     window.localStorage.setItem(WANT_TO_LISTEN_VIEW_MODE_STORAGE_KEY, "graphic");
     const { result } = renderHook(() => useWantToListenViewMode());
     expect(result.current[0]).toBe("graphic");
+    expect(result.current[2]).toBe(true);
   });
 
   it("ignora un valor guardado inválido", () => {
@@ -62,6 +63,7 @@ describe("useWantToListenViewMode", () => {
     });
     const { result } = renderHook(() => useWantToListenViewMode());
     expect(result.current[0]).toBe("detailed");
+    expect(result.current[2]).toBe(true);
     act(() => result.current[1]("graphic"));
     expect(result.current[0]).toBe("graphic");
   });
