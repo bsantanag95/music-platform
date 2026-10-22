@@ -119,6 +119,13 @@ describe("QuickActionsDialog", () => {
     await waitFor(() => expect(screen.getByRole("searchbox")).toHaveFocus());
   });
 
+  // openspec: redesign-want-to-listen-toolbar
+  it("con `initialAction` abre en esa acción y busca solo lo que admite", async () => {
+    renderWithIntl(<QuickActionsDialog onClose={() => {}} initialAction="pending" />);
+    expect(await screen.findByRole("radio", { name: "Pendiente" })).toBeChecked();
+    expect(screen.getByRole("searchbox")).toHaveAttribute("placeholder", "Busca un álbum o un artista");
+  });
+
   it("ofrece las nueve acciones como chips", async () => {
     renderWithIntl(<QuickActionsDialog onClose={() => {}} />);
     const group = await screen.findByRole("radiogroup", { name: "Qué quieres hacer" });

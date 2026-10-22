@@ -2,17 +2,22 @@ import { apiFetch } from "./client";
 import {
   WantToListenMutationResponseSchema,
   WantToListenListResponseSchema,
+  type WantToListenFilters,
   type WantToListenListResponse,
   type WantToListenEntry,
   type WantToListenTarget,
 } from "./schemas";
 import { z } from "zod";
 
-export function getMyWantToListen(page = 1, pageSize = 20): Promise<WantToListenListResponse> {
-  return apiFetch(
-    `/api/me/want-to-listen?page=${page}&pageSize=${pageSize}`,
-    WantToListenListResponseSchema,
-  );
+export function getMyWantToListen(
+  page = 1,
+  pageSize = 20,
+  filters: WantToListenFilters = {},
+): Promise<WantToListenListResponse> {
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  if (filters.type) params.set("type", filters.type);
+  if (filters.sort) params.set("sort", filters.sort);
+  return apiFetch(`/api/me/want-to-listen?${params.toString()}`, WantToListenListResponseSchema);
 }
 
 /**

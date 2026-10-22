@@ -280,4 +280,20 @@ de las vistas:
   botón.
 - **Vacío:** el estado vacío enlaza a la búsqueda del catálogo.
 
-Pendientes es una intención liviana: la página no muestra totales grandes, avance ni recordatorios.
+La Fase 2 (`redesign-want-to-listen-toolbar`) suma cabecera y barra:
+
+- **Cabecera:** bajo el título, «Lo que anotaste para escuchar más adelante» y el botón **«Anotar algo»**, que abre
+  el diálogo global de «+ Añadir» ya en Pendiente. La lista escucha el aviso de cambios del diálogo y vuelve a pedir
+  su primera página, así lo anotado aparece sin recargar.
+- **Segmentos** Todo / Artistas / Álbumes con la cantidad de cada tipo, calculada por el servidor sin el filtro de
+  tipo; un tipo sin entradas se ve deshabilitado. Con un tipo elegido solo se ve su sección; si se quita la última
+  entrada de ese tipo, la página vuelve a Todo.
+- **Orden:** Recientes (defecto), Más antiguos y A–Z, en el servidor, también al «Cargar más».
+- **Conteos:** el «(N)» de cada sección es el total del servidor, no lo cargado (reemplaza la regla de la Fase 1
+  de ocultarlo con páginas pendientes).
+- **URL:** `?type=&sort=` con `replaceState`; el servidor siembra la primera página filtrada y un valor inválido
+  se ignora. Mientras llega una página nueva, la lista anterior se atenúa (`aria-busy`) y una respuesta vieja no
+  pisa a una más nueva.
+
+Pendientes es una intención liviana: la página no muestra totales grandes, avance ni recordatorios. Las cantidades
+de los segmentos y encabezados son descriptivas, del mismo peso que en Favoritos.

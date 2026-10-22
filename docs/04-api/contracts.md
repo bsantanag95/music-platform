@@ -1395,12 +1395,19 @@ Quita una entrada (toggle off). Idempotente: si no existe, responde `204` igual.
 
 **Body:** `{ target: { type, id } }`. **204.** **401** con `AUTH_REQUIRED` sin sesión.
 
-### `GET /api/me/want-to-listen?page=&pageSize=`
+### `GET /api/me/want-to-listen?page=&pageSize=&type=&sort=`
 
-Lista paginada de la lista propia, orden cronológico descendente.
+Lista paginada de la lista propia. Parámetros opcionales (cambio `redesign-want-to-listen-toolbar`):
+- `type`: `artist` | `release-group`. Solo entradas de ese tipo.
+- `sort`: `recent` (default, la más reciente primero) | `oldest` | `alpha` (por título visible —nombre del
+  artista o título del álbum— sin distinguir mayúsculas). Desempate por `id`, estable entre páginas.
 
-**200 OK:** `{ items: [{ id, targetType, createdAt, target: { id, title, coverThumbUrl } }], page, pageSize, hasNext }`.
-**401** con `AUTH_REQUIRED` sin sesión.
+**200 OK:** `{ items: [{ id, targetType, createdAt, target: { id, title, coverThumbUrl, artistName, artistId } }],
+page, pageSize, hasNext, counts: { artist, "release-group" } }`. `counts` es la cantidad de entradas por tipo de
+toda la lista, calculada **sin** el filtro de tipo. `artistName`/`artistId` son el artista principal acreditado de
+un álbum (`null` en entradas de artista).
+**400** con `VALIDATION_ERROR` si `type` o `sort` no son válidos (o la paginación). **401** con `AUTH_REQUIRED` sin
+sesión.
 
 ## Mis valoraciones (cambio `add-my-ratings-library`)
 
