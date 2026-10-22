@@ -91,5 +91,18 @@
     "private": "Private",
     "followers": "Followers",
     "public": "Public"
+  },
+  "rail": {
+    "label": "Diary context",
+    "goTo": "Go to",
+    "allDiary": "Whole diary",
+    "toLog": "To log",
+    "toLogHint": "From your Listen Later list",
+    "log": "Log",
+    "logItem": "Log a listen of {title}",
+    "seeWanted": "See Listen Later",
+    "asOthers": "How others see it",
+    "asOthersDescription": "Each listen is shown according to its audience: private ones are only visible to you.",
+    "asOthersLink": "See your diary on your profile"
   }
 }

@@ -91,5 +91,18 @@
     "private": "Privado",
     "followers": "Seguidores",
     "public": "Público"
+  },
+  "rail": {
+    "label": "Contexto del diario",
+    "goTo": "Ir a",
+    "allDiary": "Todo el diario",
+    "toLog": "Para anotar",
+    "toLogHint": "De tus Pendientes",
+    "log": "Anotar",
+    "logItem": "Anotar una escucha de {title}",
+    "seeWanted": "Ver Pendientes",
+    "asOthers": "Así lo ven otros",
+    "asOthersDescription": "Cada escucha se ve según su audiencia: las privadas solo las ves tú.",
+    "asOthersLink": "Ver tu diario en el perfil"
   }
 }

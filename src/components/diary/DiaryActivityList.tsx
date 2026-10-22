@@ -12,9 +12,11 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { RowMenu, RowMenuItem, RowMenuSeparator } from "@/components/ui/RowMenu";
 import { AudienceIcon, DiaryCover } from "./diary-row-parts";
+import { useDiaryBridgeRegistration } from "./DiaryBridge";
 import { DiaryFilterBar } from "./DiaryFilterBar";
 import {
   EMPTY_DIARY_FILTERS,
+  dateValue,
   filtersToSearchParams,
   hasActiveFilters,
   toApiFilters,
@@ -386,6 +388,7 @@ export function DiaryActivityList({ initial, initialFilters = EMPTY_DIARY_FILTER
   // Carga continua (D8). Un error la detiene hasta que se use el botón, para no
   // reintentar en bucle mientras el centinela sigue a la vista.
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const listTopRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (isError) setAutoLoadStopped(true);
   }, [isError]);
@@ -408,6 +411,24 @@ export function DiaryActivityList({ initial, initialFilters = EMPTY_DIARY_FILTER
     setSearchInput("");
     setFilters(EMPTY_DIARY_FILTERS);
   };
+
+  // El riel (D10) aplica una fecha con «Ir a» y entrega las escuchas que crea
+  // con «Anotar»: entran al frente con su formulario abierto, como «Registrar
+  // otra escucha», y los meses disponibles se vuelven a pedir por si es nuevo.
+  useDiaryBridgeRegistration(
+    {
+      setDate: (year, month) => {
+        setFilters((current) => ({ ...current, year, month: year ? month : "" }));
+        listTopRef.current?.scrollIntoView?.({ block: "start" });
+      },
+      addEntry: (created) => {
+        addCachedEntry(created);
+        setExpandedId(created.id);
+        void queryClient.invalidateQueries({ queryKey: queryKeys.myDiaryMonths(timeZone) });
+      },
+    },
+    dateValue(filters),
+  );
 
   // Una fila del diario, dentro de un grupo de mes de la vista de Cronología.
   const renderEntry = (entry: ListenEntry, showDay: boolean) => {
@@ -582,7 +603,7 @@ export function DiaryActivityList({ initial, initialFilters = EMPTY_DIARY_FILTER
 
   if (entries.length === 0 && !isPending) {
     return (
-      <div className="flex w-full flex-col gap-4">
+      <div ref={listTopRef} className="flex w-full scroll-mt-20 flex-col gap-4">
         {filterBar}
         <EmptyState
           title={isFiltered ? t("noResultsTitle") : (empty?.title ?? t("emptyTitle"))}
@@ -602,7 +623,7 @@ export function DiaryActivityList({ initial, initialFilters = EMPTY_DIARY_FILTER
   }
 
   return (
-    <div className="flex w-full flex-col gap-4">
+    <div ref={listTopRef} className="flex w-full scroll-mt-20 flex-col gap-4">
       {filterBar}
       <span role="status" aria-live="polite" className="sr-only">
         {savedId

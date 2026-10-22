@@ -45,11 +45,11 @@
 
 ## 5. Fase 3 · Riel de contexto
 
-- [ ] 5.1 `page.tsx`: `max-w-6xl` y `lg:grid-cols-[minmax(0,1fr)_280px]` con el riel `sticky`; sin riel por debajo de `lg` (D10)
-- [ ] 5.2 Módulo «Ir a»: meses disponibles por año como botones que aplican el filtro Fecha, y «Todo el diario»; sin conteos (D10)
-- [ ] 5.3 Módulo «Para anotar»: `listMyWantToListen(userId, 1, 4)` en el servidor, «Anotar» crea la escucha, la inserta arriba con el formulario abierto y quita el ítem; «Ver Pendientes»; se omite vacío (D10)
-- [ ] 5.4 Módulo «Así lo ven otros»: enlace a `/users/<username>/diary` con la nota de audiencias (D10)
-- [ ] 5.5 Tests: página (riel presente, módulos vacíos omitidos), «Ir a» aplica el filtro, «Anotar» (creación, inserción, ítem retirado, error)
+- [x] 5.1 `page.tsx`: `max-w-6xl` y `lg:grid-cols-[minmax(0,1fr)_280px]` con el riel `sticky`; sin riel por debajo de `lg` (D10)
+- [x] 5.2 Módulo «Ir a»: meses disponibles por año como botones que aplican el filtro Fecha, y «Todo el diario»; sin conteos (D10)
+- [x] 5.3 Módulo «Para anotar»: `listMyWantToListen(userId, 1, 4)` en el servidor, «Anotar» crea la escucha, la inserta arriba con el formulario abierto y quita el ítem; «Ver Pendientes»; se omite vacío (D10)
+- [x] 5.4 Módulo «Así lo ven otros»: enlace a `/users/<username>/diary` con la nota de audiencias (D10)
+- [x] 5.5 Tests: página (riel presente, módulos vacíos omitidos), «Ir a» aplica el filtro, «Anotar» (creación, inserción, ítem retirado, error)
 
 ## 6. Documentación
 
