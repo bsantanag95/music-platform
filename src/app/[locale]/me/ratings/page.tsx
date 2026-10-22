@@ -30,8 +30,10 @@ export default async function RatingsPage({ searchParams }: { searchParams: Prom
   const user = await requirePageUser();
   const filters = parseRatingsFilters(await searchParams);
   const initial = await listMyRatings(user.id, 1, RATINGS_PAGE_SIZE, filters);
+  // Un solo ancho para los tres modos (4xl) y el título alineado con el contenido: cambiar de modo
+  // no mueve la cabecera ni la barra.
   return (
-    <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-12">
+    <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-4 py-12">
       <h1 className="font-display text-2xl text-paper">{t("title")}</h1>
       <MyRatingsList initial={initial} initialFilters={filters} />
     </main>

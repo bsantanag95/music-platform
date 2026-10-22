@@ -1,9 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
-import { EMPTY_RATING_FILTERS, RatingsToolbar, ratingFiltersActive, type RatingsFiltersState } from "./RatingsToolbar";
+import {
+  EMPTY_RATING_FILTERS,
+  RatingsToolbar,
+  ratingFiltersActive,
+  ratingScopeNarrowed,
+  type RatingsFiltersState,
+} from "./RatingsToolbar";
 
-function renderToolbar(filters: RatingsFiltersState = EMPTY_RATING_FILTERS) {
+function renderToolbar(filters: RatingsFiltersState = EMPTY_RATING_FILTERS, hideClear = false) {
   const onChange = vi.fn();
   const onSearchInput = vi.fn();
   const onClear = vi.fn();
@@ -15,6 +21,7 @@ function renderToolbar(filters: RatingsFiltersState = EMPTY_RATING_FILTERS) {
       onSearchInput={onSearchInput}
       onClear={onClear}
       availableYears={[2012, 1987]}
+      hideClear={hideClear}
     />,
   );
   return { onChange, onSearchInput, onClear, unmount: view.unmount };
@@ -75,6 +82,25 @@ describe("RatingsToolbar", () => {
     const { onClear } = renderToolbar({ ...EMPTY_RATING_FILTERS, group: "none" });
     fireEvent.click(screen.getByText("Limpiar filtros"));
     expect(onClear).toHaveBeenCalled();
+  });
+});
+
+describe("RatingsToolbar · un solo 'Limpiar filtros'", () => {
+  it("con hideClear no muestra el botón aunque haya filtros activos", () => {
+    renderToolbar({ ...EMPTY_RATING_FILTERS, stars: "1" }, true);
+    expect(screen.queryByText("Limpiar filtros")).toBeNull();
+  });
+});
+
+describe("ratingScopeNarrowed", () => {
+  it("solo cuenta búsqueda y filtros, no el orden ni la agrupación", () => {
+    expect(ratingScopeNarrowed(EMPTY_RATING_FILTERS)).toBe(false);
+    expect(ratingScopeNarrowed({ ...EMPTY_RATING_FILTERS, sort: "worst" })).toBe(false);
+    expect(ratingScopeNarrowed({ ...EMPTY_RATING_FILTERS, group: "artist" })).toBe(false);
+    expect(ratingScopeNarrowed({ ...EMPTY_RATING_FILTERS, q: "  " })).toBe(false);
+    for (const patch of [{ q: "a" }, { stars: "5" }, { type: "recording" }, { year: "1987" }, { decade: "1980" }]) {
+      expect(ratingScopeNarrowed({ ...EMPTY_RATING_FILTERS, ...patch })).toBe(true);
+    }
   });
 });
 

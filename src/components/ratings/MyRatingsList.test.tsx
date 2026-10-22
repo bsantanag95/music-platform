@@ -17,7 +17,9 @@ vi.mock("@/i18n/navigation", () => ({
     </a>
   ),
 }));
-vi.mock("@/components/catalog/CoverThumb", () => ({ CoverThumb: () => <span data-testid="cover" /> }));
+vi.mock("@/components/catalog/CoverThumb", () => ({
+  CoverThumb: ({ priority }: { priority?: boolean }) => <span data-testid="cover" data-priority={String(Boolean(priority))} />,
+}));
 
 const mocks = vi.hoisted(() => ({
   getMyRatings: vi.fn(),
@@ -212,8 +214,15 @@ describe("MyRatingsList", () => {
     fireEvent.change(select(t.starsFilterLabel), { target: { value: "1" } });
     expect(await screen.findByText(t.noResultsTitle)).toBeInTheDocument();
     expect(screen.queryByText(t.emptyTitle)).not.toBeInTheDocument();
+    // Cabecera honesta y un único "Limpiar filtros" (el del estado vacío).
+    expect(screen.getByText("Ningún resultado")).toBeInTheDocument();
+    expect(screen.queryByText("Sin valoraciones")).not.toBeInTheDocument();
+    expect(screen.queryByText("sin álbumes")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: t.clearFilters })).toHaveLength(1);
+    // El conmutador de modo sigue a mano para quien filtra sin resultados.
+    expect(screen.getByRole("radiogroup")).toBeInTheDocument();
 
-    fireEvent.click(screen.getAllByRole("button", { name: t.clearFilters })[0]!);
+    fireEvent.click(screen.getByRole("button", { name: t.clearFilters }));
 
     await waitFor(() => expect(titles()).toHaveLength(3));
     expect(select(t.starsFilterLabel)).toHaveValue("");
@@ -316,7 +325,7 @@ describe("MyRatingsList", () => {
     expect(window.location.search).toBe("?group=artist");
   });
 
-  it("agrupado por artista: una sección por artista con Álbumes y Canciones separados, sin contador", () => {
+  it("agrupado por artista: una sección por artista con Álbumes y Canciones separados y su contador", () => {
     const mann = (n: number, title: string) => ({
       ...entry(n, title, 4, 80),
       target: { ...entry(n, title, 4, 80).target, artistName: "Aimee Mann", artistId: uuid(95) },
@@ -327,11 +336,18 @@ describe("MyRatingsList", () => {
     );
 
     const h2 = screen.getAllByRole("heading", { level: 2 });
-    expect(h2.map((heading) => heading.textContent)).toEqual(["Aimee Mann", "Heart"]);
+    // Todo está cargado (sin página siguiente): cada artista lleva su contador exacto.
+    expect(h2.map((heading) => heading.textContent)).toEqual(["Aimee Mann1", "Heart3"]);
     expect(within(h2[1]!).getByRole("link", { name: "Heart" })).toBeInTheDocument();
 
     const h3 = screen.getAllByRole("heading", { level: 3 });
     expect(h3.map((heading) => heading.textContent)).toEqual([t.sectionAlbums, t.sectionAlbums, t.sectionSongs]);
+  });
+
+  it("agrupado por artista con más páginas por cargar: sin contador de artista y con la nota de orden", () => {
+    renderList(page([safe, bad], { hasNext: true, total: 5 }), { group: "artist" });
+    expect(screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent)).toEqual(["Heart"]);
+    expect(screen.getByText(t.artistOrderNote)).toBeInTheDocument();
   });
 
   it("agrupado por artista: lo sin artista va al final como 'Sin artista', sin enlace", () => {
@@ -341,7 +357,7 @@ describe("MyRatingsList", () => {
     };
     renderList(page([safe, noArtist]), { group: "artist" });
     const h2 = screen.getAllByRole("heading", { level: 2 });
-    expect(h2.map((heading) => heading.textContent)).toEqual(["Heart", t.sectionNoArtist]);
+    expect(h2.map((heading) => heading.textContent)).toEqual(["Heart1", `${t.sectionNoArtist}1`]);
     expect(within(h2[1]!).queryByRole("link")).toBeNull();
   });
 
@@ -414,11 +430,10 @@ describe("MyRatingsList", () => {
 
   it("sin preferencia guardada abre en modo Gráfico (la pared de carátulas)", () => {
     installStorage();
-    const { container } = renderList(page([safe, girl]));
+    renderList(page([safe, girl]));
     expect(mode(t.viewMode.graphic)).toBeChecked();
     expect(screen.getAllByTestId("rating-overlay")).toHaveLength(2);
     expect(screen.queryAllByRole("article")).toHaveLength(0);
-    expect((container.firstElementChild as HTMLElement).className).toContain("max-w-5xl");
   });
 
   it("una preferencia guardada distinta del defecto manda sobre Gráfico", () => {
@@ -451,14 +466,44 @@ describe("MyRatingsList", () => {
     expect(screen.getByRole("link", { name: `There’s the Girl, Heart, Álbum, 3,0 estrellas, ${t.untuned}` })).toBeInTheDocument();
   });
 
-  it("el contenedor se ensancha solo en modo Gráfico", () => {
+  it("el contenedor no cambia de ancho al cambiar de modo (el ancho lo fija la página)", () => {
     const { container } = renderList(page([safe]));
     const root = container.firstElementChild as HTMLElement;
-    expect(root.className).toContain("max-w-3xl");
+    const widthOf = () => root.className.split(" ").filter((name) => name.startsWith("max-w-"));
+    expect(widthOf()).toEqual([]);
     fireEvent.click(mode(t.viewMode.graphic));
-    expect(root.className).toContain("max-w-5xl");
-    fireEvent.click(mode(t.viewMode.detailed));
-    expect(root.className).toContain("max-w-3xl");
+    expect(widthOf()).toEqual([]);
+    fireEvent.click(mode(t.viewMode.index));
+    expect(widthOf()).toEqual([]);
+  });
+
+  it("la cabecera cuenta resultados con filtros y conserva el total al solo ordenar", async () => {
+    mocks.getMyRatings.mockResolvedValue(page([bad]));
+    renderList(page([safe, bad, girl]));
+
+    fireEvent.change(select(t.sortLabel), { target: { value: "worst" } });
+    await waitFor(() => expect(mocks.getMyRatings).toHaveBeenCalled());
+    expect(screen.queryByText(/resultado/)).not.toBeInTheDocument();
+
+    fireEvent.change(select(t.starsFilterLabel), { target: { value: "4.5" } });
+    expect(await screen.findByText("1 resultado")).toBeInTheDocument();
+    expect(screen.getByText("1 álbum")).toBeInTheDocument();
+  });
+
+  it("las carátulas de las seis primeras valoraciones se piden con prioridad", () => {
+    const many = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => entry(n, `Disco ${n}`, 4, 80));
+    renderList(page(many));
+    const flags = screen.getAllByTestId("cover").map((cover) => cover.getAttribute("data-priority"));
+    expect(flags).toEqual(["true", "true", "true", "true", "true", "true", "false", "false"]);
+  });
+
+  it("modo Índice sin agrupar: el artista va en su propia línea bajo sm y en línea desde sm", () => {
+    renderList(page([safe]), { group: "none" });
+    fireEvent.click(mode(t.viewMode.index));
+    const artist = screen.getByText("Heart");
+    expect(artist.className).toContain("block");
+    expect(artist.className).toContain("sm:inline");
+    expect(screen.getByRole("link", { name: /Safe and Sound/ }).className).toContain("sm:truncate");
   });
 
   it("el conmutador de modo no aparece sin valoraciones", () => {

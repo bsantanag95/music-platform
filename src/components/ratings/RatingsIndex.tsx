@@ -8,9 +8,9 @@ import { ratingHref, typeLabelKey } from "./ratings-shared";
 import type { RatingsRendererProps } from "./ratings-view";
 
 // Modo Índice: filas de texto compactas para escanear una lista larga, sin carátulas —
-// mismo tratamiento que `FavoritesIndex`. El título lleva el artista como subtítulo; tipo y
-// año aparecen en pantallas anchas; la nota va a la derecha y su puntaje (o "Sin afinar")
-// abre el diálogo de puntaje.
+// mismo tratamiento que `FavoritesIndex`. El título lleva el artista como subtítulo (bajo `sm`, en
+// una segunda línea; desde `sm`, en la misma); tipo y año aparecen en pantallas anchas; la nota va a
+// la derecha y su puntaje (o "Sin afinar") abre el diálogo de puntaje.
 export function RatingsIndex({ entries, actions, display }: RatingsRendererProps) {
   const t = useTranslations("ratings");
   const locale = useLocale();
@@ -27,11 +27,13 @@ export function RatingsIndex({ entries, actions, display }: RatingsRendererProps
           >
             <Link
               href={ratingHref(entry)}
-              className="min-w-0 flex-1 truncate font-display text-sm text-paper transition-colors hover:text-amber"
+              className="min-w-0 flex-1 font-display text-sm text-paper transition-colors hover:text-amber sm:truncate"
             >
-              {target.title}
+              <span className="block truncate sm:inline">{target.title}</span>
               {display.showArtist && target.artistName ? (
-                <span className="ml-1.5 font-data text-xs text-paper-muted">{target.artistName}</span>
+                <span className="block truncate font-data text-xs text-paper-muted sm:ml-1.5 sm:inline">
+                  {target.artistName}
+                </span>
               ) : null}
             </Link>
 
@@ -53,7 +55,7 @@ export function RatingsIndex({ entries, actions, display }: RatingsRendererProps
                   ? t("editRatingFor", { title: target.title })
                   : t("untunedAction")
               }
-              className={`w-20 shrink-0 whitespace-nowrap rounded px-1 py-0.5 text-right font-data text-xs transition-colors ${
+              className={`w-20 shrink-0 whitespace-nowrap rounded px-1 py-0.5 text-right font-data text-xs transition-colors [@media(pointer:coarse)]:min-h-11 ${
                 entry.detailedScore !== null
                   ? "text-paper-muted hover:text-paper"
                   : "italic text-paper-muted underline decoration-dotted hover:text-paper"

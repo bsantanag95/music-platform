@@ -26,6 +26,7 @@ import {
   EMPTY_RATING_FILTERS,
   RatingsToolbar,
   ratingFiltersActive,
+  ratingScopeNarrowed,
   type RatingsFiltersState,
 } from "./RatingsToolbar";
 import { RatingsModeSwitcher } from "./RatingsModeSwitcher";
@@ -103,9 +104,24 @@ function syncQueryString(filters: RatingsFiltersState) {
 
 type RatingsPages = InfiniteData<MyRatingsListResponse, number>;
 
+// Carátulas con carga prioritaria: una fila completa de la pared (6 columnas en pantallas anchas).
+const PRIORITY_COVERS = 6;
+
+// Marcador del listado mientras no se conoce el modo guardado: evita pintar el defecto y saltar al
+// modo de la persona. Neutro (ni carátulas ni filas) y sin movimiento si se pidió reducirlo.
+function ListPlaceholder() {
+  return (
+    <div aria-hidden data-testid="ratings-list-placeholder" className="flex flex-col gap-4">
+      {Array.from({ length: 6 }, (_, index) => (
+        <div key={index} className="h-12 rounded-md bg-ink-surface motion-safe:animate-pulse" />
+      ))}
+    </div>
+  );
+}
+
 export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
   const t = useTranslations("ratings");
-  const [mode, setMode] = useRatingViewMode();
+  const [mode, setMode, modeReady] = useRatingViewMode();
 
   const seededState = useMemo(() => toFiltersState(initialFilters), [initialFilters]);
   const [filters, setFilters] = useState<RatingsFiltersState>(seededState);
@@ -152,6 +168,7 @@ export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
   }, [filters]);
 
   const isFiltered = ratingFiltersActive(filters);
+  const narrowed = ratingScopeNarrowed(filters);
   const availableYears = data?.pages[0]?.facets.years ?? initial.facets.years;
 
   const updateLocal = useCallback((id: string, entry: MyRatingEntry) => {
@@ -193,6 +210,10 @@ export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
   };
 
   const rowActions: RatingsRowActions = { onUpdate: updateLocal, onEdit: setEditing };
+  // Las seis primeras valoraciones (una fila de la pared) cargan su carátula con prioridad.
+  const priorityIds = useMemo(() => new Set(items.slice(0, PRIORITY_COVERS).map((item) => item.id)), [items]);
+  // Con el estado vacío filtrado ya hay un "Limpiar filtros" a la vista: la barra no repite el suyo.
+  const emptyOffersClear = items.length === 0 && isFiltered;
   const display = displayForGroup(filters.group);
   const Renderer = mode === "detailed" ? RatingsDetailed : mode === "index" ? RatingsIndex : RatingsGraphic;
   const typeGroups = filters.group === "type" ? groupRatingsByType(items) : null;
@@ -224,13 +245,17 @@ export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
   );
 
   return (
-    <div className={`flex w-full flex-col gap-5 ${mode === "graphic" ? "max-w-5xl" : "max-w-3xl"}`}>
+    <div className="flex w-full flex-col gap-5">
       <p className="font-data text-xs text-paper-muted">
-        <span>{t("totalLabel", { count: total })}</span>
-        <span aria-hidden> · </span>
-        <span>{t("countAlbums", { count: counts["release-group"] })}</span>
-        <span aria-hidden> · </span>
-        <span>{t("countSongs", { count: counts.recording })}</span>
+        <span>{narrowed ? t("resultsLabel", { count: total }) : t("totalLabel", { count: total })}</span>
+        {total > 0 ? (
+          <>
+            <span aria-hidden> · </span>
+            <span>{t("countAlbums", { count: counts["release-group"] })}</span>
+            <span aria-hidden> · </span>
+            <span>{t("countSongs", { count: counts.recording })}</span>
+          </>
+        ) : null}
       </p>
 
       <RatingsToolbar
@@ -240,10 +265,13 @@ export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
         onSearchInput={setSearchInput}
         onClear={clearFilters}
         availableYears={availableYears}
+        hideClear={emptyOffersClear}
       />
 
-      {items.length > 0 ? (
-        <div className="flex items-center justify-end">
+      {items.length > 0 || narrowed ? (
+        // Oculto (sin quitar su espacio) hasta conocer el modo guardado: así no marca el defecto un
+        // instante para saltar después al modo de la persona.
+        <div className={`flex items-center justify-end ${modeReady ? "" : "invisible"}`} aria-hidden={modeReady ? undefined : true}>
           <RatingsModeSwitcher mode={mode} onChange={setMode} />
         </div>
       ) : null}
@@ -254,14 +282,18 @@ export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
 
       {items.length === 0 ? (
         emptyBlock
+      ) : !modeReady ? (
+        <ListPlaceholder />
       ) : artistGroups ? (
         // Una sección por artista principal; dentro, Álbumes y Canciones por separado para no
-        // confundir una canción con un álbum. Sin contador: la sección puede quedar cortada entre
-        // páginas y el servidor no devuelve totales por artista.
+        // confundir una canción con un álbum. El contador del artista solo se muestra con todo
+        // cargado (sin página siguiente): antes la sección puede quedar cortada entre páginas y el
+        // servidor no devuelve totales por artista.
         <div className="flex flex-col gap-10">
+          <p className="font-data text-xs text-paper-muted">{t("artistOrderNote")}</p>
           {artistGroups.map((group) => (
             <section key={group.key} className="flex flex-col gap-4">
-              <h2 className="font-display text-lg text-paper">
+              <h2 className="flex items-baseline gap-2 font-display text-lg text-paper">
                 {group.href && group.artistName ? (
                   <Link href={group.href} className="transition-colors hover:text-amber">
                     {group.artistName}
@@ -269,13 +301,18 @@ export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
                 ) : (
                   (group.artistName ?? t("sectionNoArtist"))
                 )}
+                {hasNextPage ? null : (
+                  <span className="font-data text-xs text-paper-muted">
+                    {group.byType.reduce((sum, sub) => sum + sub.entries.length, 0)}
+                  </span>
+                )}
               </h2>
               {group.byType.map((sub) => (
                 <div key={sub.type} className="flex flex-col gap-2">
                   <h3 className="font-data text-xs uppercase tracking-wide text-paper-muted">
                     {t(sectionTitleKey(sub.type))}
                   </h3>
-                  <Renderer entries={sub.entries} actions={rowActions} display={display} />
+                  <Renderer entries={sub.entries} actions={rowActions} display={display} priorityIds={priorityIds} />
                 </div>
               ))}
             </section>
@@ -289,12 +326,12 @@ export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
                 {t(sectionTitleKey(group.type))}
                 <span className="font-data text-xs text-paper-muted">{counts[group.type]}</span>
               </h2>
-              <Renderer entries={group.entries} actions={rowActions} display={display} />
+              <Renderer entries={group.entries} actions={rowActions} display={display} priorityIds={priorityIds} />
             </section>
           ))}
         </div>
       ) : (
-        <Renderer entries={items} actions={rowActions} display={display} />
+        <Renderer entries={items} actions={rowActions} display={display} priorityIds={priorityIds} />
       )}
 
       {isError ? (

@@ -166,22 +166,33 @@ Solo el dueño ve su biblioteca; no existe ruta pública equivalente.
 - **Modos de visualización** (cambio `add-ratings-view-modes`). Tres modos, calcados de
   Favoritos y Want to Listen: **Detallada** (la fila completa), **Índice** (filas
   compactas de texto con la nota a la derecha) y **Gráfico** (pared de carátulas). La preferencia
-  vive en `localStorage` (`music-platform:rating-view-mode`), no en la URL.
+  vive en `localStorage` (`music-platform:rating-view-mode`), no en la URL. Hasta leerla, el listado
+  es un marcador neutro (no se pinta el modo por defecto para saltar después al guardado) y los tres
+  modos comparten el mismo ancho de contenedor (`max-w-4xl`, definido en la página), con el título
+  alineado al contenido (cambio `refine-ratings-page-phase1`).
 - **Pared con la nota al pasar el cursor.** En el modo Gráfico cada carátula, sin título debajo,
   despliega al pasar el cursor o enfocarla un overlay con las estrellas y el puntaje `86/100` (o
   "Sin afinar"), el título, el artista y la acción "Editar nota". El overlay no captura el
   cursor salvo en sus botones, así un clic en la carátula navega a la ficha. En pantallas sin
   hover (`hover: none`) el overlay se reduce al chip de nota y la acción, siempre visibles y sin
-  tapar la carátula; la etiqueta accesible del enlace lleva título, artista, estrellas y puntaje. El contenedor se ensancha en este modo.
+  tapar la carátula; la etiqueta accesible del enlace lleva título, artista, estrellas y puntaje. Las seis primeras carátulas se cargan con prioridad.
 - **Agrupación.** El selector "Agrupar" ofrece "Por tipo" (default; secciones Álbumes → Canciones
   con contador, tomado de `counts`), "Por artista" y "Sin agrupar" (lista única). "Por artista"
-  hace una sección por artista principal acreditado (encabezado enlazado a su página, sin contador
-  porque una sección puede quedar cortada entre páginas) y la subdivide en Álbumes y Canciones para
-  distinguirlos; lo que no tiene artista va al final en "Sin artista". Los artistas no se valoran,
+  hace una sección por artista principal acreditado (encabezado enlazado a su página; con contador
+  solo cuando ya están cargadas todas las valoraciones, porque antes una sección puede quedar cortada
+  entre páginas y el servidor no devuelve totales por artista) y la subdivide en Álbumes y Canciones
+  para distinguirlos; una línea explica el orden (artistas de la A a la Z); lo que no tiene artista va al final en "Sin artista". Los artistas no se valoran,
   así que el selector de tipo sigue siendo solo álbum/canción y no hay conteo de artistas.
 - **Sin datos repetidos.** Bajo "Por artista" las entradas no repiten el artista ni el tipo (ya los
   dicen el encabezado y el subencabezado); bajo "Por tipo" omiten el tipo; con "Sin agrupar"
   muestran ambos. El año siempre se muestra y la etiqueta accesible de la carátula no cambia.
+- **Contadores honestos.** Con búsqueda o filtros de tipo, estrellas, año o década la cabecera cuenta
+  resultados ("3 resultados", "Ningún resultado") en vez de "Sin valoraciones" (que queda para la
+  biblioteca vacía); solo ordenar o agrupar no cambia la etiqueta. Con filtros sin resultados hay un
+  único "Limpiar filtros" (el del estado vacío) y el conmutador de modo sigue visible.
+- **Áreas táctiles.** Con puntero grueso (`pointer: coarse`) las estrellas editables (48 × 44 px por
+  estrella, mitades de 24 px), el conmutador de modo y "Sin afinar" llegan a 44 px de alto; con ratón
+  conservan su tamaño compacto. En Índice el artista va en una segunda línea bajo `sm`.
 - **Fila Detallada compacta.** En pantallas anchas el título y la nota comparten línea (≈ 60 px por
   fila); en angostas la nota baja bajo el título.
 - **Selectores con nombre visible.** Cada selector de la barra (Tipo, Estrellas, Año, Década,
@@ -193,7 +204,8 @@ Solo el dueño ve su biblioteca; no existe ruta pública equivalente.
 - **Edición.** El diálogo de puntaje (`RatingDetailDialog`) es único, elevado a la lista, y se abre
   desde cualquiera de las tres vistas para afinar, destacar o borrar. En el modo Detallada la
   fila además permite cambiar las estrellas inline. Cambiar estrellas conserva el puntaje
-  solo si sigue coherente; si no, se guarda sin puntaje y se avisa. Tras editar, la entrada se
+  solo si sigue coherente; si no, se guarda sin puntaje y se avisa; si el guardado falla, la fila
+  conserva las estrellas y muestra el aviso de error. Tras editar, la entrada se
   actualiza en el lugar sin reordenarse hasta cambiar el orden o filtros; borrar baja el total
   y el contador de su tipo.
 - **Marca "Sin afinar".** Las entradas sin puntaje muestran "Sin afinar" en lugar de `86/100`

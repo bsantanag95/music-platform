@@ -36,6 +36,12 @@ export function ratingFiltersActive(filters: RatingsFiltersState): boolean {
   );
 }
 
+// Lo que de verdad reduce el conjunto (búsqueda y filtros): ordenar o agrupar no quita valoraciones,
+// así que no cuenta. Gobierna la etiqueta "N resultados" de la cabecera y el conmutador de vista.
+export function ratingScopeNarrowed(filters: RatingsFiltersState): boolean {
+  return Boolean(filters.q.trim() || filters.stars || filters.type || filters.year || filters.decade);
+}
+
 const STAR_OPTIONS = ["5", "4.5", "4", "3.5", "3", "2.5", "2", "1.5", "1", "0.5"] as const;
 const DECADES = [2020, 2010, 2000, 1990, 1980, 1970, 1960, 1950] as const;
 
@@ -52,6 +58,8 @@ interface RatingsToolbarProps {
   onSearchInput: (value: string) => void;
   onClear: () => void;
   availableYears: number[];
+  /** Oculta "Limpiar filtros" cuando el estado vacío de la página ya ofrece el suyo (un solo botón visible). */
+  hideClear?: boolean;
 }
 
 // Barra de herramientas de la biblioteca: buscador (con debounce en el orquestador) más
@@ -66,6 +74,7 @@ export function RatingsToolbar({
   onSearchInput,
   onClear,
   availableYears,
+  hideClear = false,
 }: RatingsToolbarProps) {
   const t = useTranslations("ratings");
   const isFiltered = ratingFiltersActive(filters);
@@ -159,7 +168,7 @@ export function RatingsToolbar({
           <option value="artist">{t("groupArtist")}</option>
           <option value="none">{t("groupNone")}</option>
         </FilterSelect>
-        {isFiltered ? (
+        {isFiltered && !hideClear ? (
           <button
             type="button"
             onClick={onClear}

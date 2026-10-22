@@ -29,6 +29,14 @@ describe("RatingsModeSwitcher", () => {
     expect(onChange).toHaveBeenCalledWith("graphic");
   });
 
+  it("con puntero grueso cada opción llega a 44 px (clases táctiles)", () => {
+    renderWithIntl(<RatingsModeSwitcher mode="index" onChange={() => {}} />);
+    for (const radio of screen.getAllByRole("radio")) {
+      expect(radio.className).toContain("[@media(pointer:coarse)]:min-h-11");
+      expect(radio.className).toContain("[@media(pointer:coarse)]:min-w-11");
+    }
+  });
+
   it("al hacer clic cambia el modo", () => {
     const onChange = vi.fn();
     renderWithIntl(<RatingsModeSwitcher mode="detailed" onChange={onChange} />);
