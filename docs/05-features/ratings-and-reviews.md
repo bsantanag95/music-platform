@@ -158,7 +158,9 @@ Solo el dueño ve su biblioteca; no existe ruta pública equivalente.
   de las que lo tienen, sin imputarles ningún valor; el desempate final es por fecha de
   actualización descendente.
 - **Filtros** combinables por estrellas (½–5), tipo (álbum o canción), año de salida, década y
-  una búsqueda de texto (título o artista principal).
+  una búsqueda de texto (título o artista principal). Las estrellas se filtran desde el histograma del
+  resumen y el tipo desde los segmentos (ver "Resumen e histograma" abajo); año, década, orden y
+  agrupación son selectores.
   El año de una canción es el menor `first_release_year` de los álbumes donde aparece; una
   canción sin año queda fuera de los filtros de año y década. El selector de año ofrece solo
   los años con valoraciones (facetas). Filtrar por año con orden "mejor nota" da el ranking
@@ -182,7 +184,7 @@ Solo el dueño ve su biblioteca; no existe ruta pública equivalente.
   solo cuando ya están cargadas todas las valoraciones, porque antes una sección puede quedar cortada
   entre páginas y el servidor no devuelve totales por artista) y la subdivide en Álbumes y Canciones
   para distinguirlos; una línea explica el orden (artistas de la A a la Z); lo que no tiene artista va al final en "Sin artista". Los artistas no se valoran,
-  así que el selector de tipo sigue siendo solo álbum/canción y no hay conteo de artistas.
+  así que el filtro de tipo sigue siendo solo álbum/canción y no hay conteo de artistas.
 - **Sin datos repetidos.** Bajo "Por artista" las entradas no repiten el artista ni el tipo (ya los
   dicen el encabezado y el subencabezado); bajo "Por tipo" omiten el tipo; con "Sin agrupar"
   muestran ambos. El año siempre se muestra y la etiqueta accesible de la carátula no cambia.
@@ -191,13 +193,27 @@ Solo el dueño ve su biblioteca; no existe ruta pública equivalente.
   biblioteca vacía); solo ordenar o agrupar no cambia la etiqueta. Con filtros sin resultados hay un
   único "Limpiar filtros" (el del estado vacío) y el conmutador de modo sigue visible.
 - **Áreas táctiles.** Con puntero grueso (`pointer: coarse`) las estrellas editables (48 × 44 px por
-  estrella, mitades de 24 px), el conmutador de modo y "Sin afinar" llegan a 44 px de alto; con ratón
+  estrella, mitades de 24 px), el conmutador de modo, "Sin afinar", los segmentos de tipo y las barras
+  del histograma llegan a 44 px de alto; con ratón
   conservan su tamaño compacto. En Índice el artista va en una segunda línea bajo `sm`.
 - **Fila Detallada compacta.** En pantallas anchas el título y la nota comparten línea (≈ 60 px por
   fila); en angostas la nota baja bajo el título.
-- **Selectores con nombre visible.** Cada selector de la barra (Tipo, Estrellas, Año, Década,
-  Ordenar, Agrupar) muestra su nombre sobre el control (`FilterSelect` con `label`, opcional y
-  aditivo), para que un "Todos" no dependa de abrir el menú.
+- **Selectores con nombre visible.** Cada selector de la barra (Año, Década, Ordenar, Agrupar)
+  muestra su nombre sobre el control (`FilterSelect` con `label`, opcional y aditivo), para que un
+  "Todos" no dependa de abrir el menú.
+- **Resumen e histograma** (cambio `redesign-ratings-header-toolbar`). Bajo el título, el total y el
+  desglose por tipo, el **promedio** de estrellas del conjunto visible y un histograma de diez barras
+  (½★ a 5★) con la cantidad de cada una. Cada barra es un botón (`aria-pressed`, etiqueta "4,5 estrellas:
+  2 valoraciones") que activa el filtro `stars`; tocarla de nuevo lo quita. Reemplaza al selector de
+  estrellas. El promedio se calcula en el cliente con las mismas facetas del histograma (el valor del
+  filtro si lo hay, o la media ponderada), así que nunca discrepan. El histograma se oculta con la
+  biblioteca vacía y se muestra siempre con un filtro de estrellas activo, para poder quitarlo.
+- **Tipo en segmentos.** El filtro de tipo es un control segmentado `Todo · Álbumes · Canciones` con la
+  cantidad de cada uno, junto al buscador (reemplaza al selector "Tipo"). El segmento activo no se
+  desactiva al pulsarlo; para volver a todos se elige "Todo".
+- **Facetas al día.** Las facetas de estrellas y tipo vienen con cada consulta y, al cambiar las
+  estrellas de una fila o borrar una nota, se ajustan en el lugar (`adjustFacets`) sin recargar ni
+  reordenar la lista.
 - **Marca de tipo en la pared.** Cada carátula lleva una marca fija — disco para álbum, nota
   musical para canción — visible también sin hover; el overlay añade "Álbum · 1987" y la etiqueta
   accesible incluye el tipo.

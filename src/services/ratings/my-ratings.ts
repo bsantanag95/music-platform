@@ -7,7 +7,10 @@ import { escapeLike } from "@/services/catalog/search/normalize";
 import {
   MY_RATING_GROUPS,
   MY_RATING_SEARCH_MAX_LENGTH,
+  MY_RATING_STAR_VALUES,
   type MyRatingGroup,
+  type MyRatingTargetType,
+  type MyRatingsFacets,
   type MyRatingEntry,
   type MyRatingsFilters,
   type MyRatingsListResponse,
@@ -127,6 +130,33 @@ function sortOrder(sort: MyRatingSort): SQL[] {
   }
 }
 
+// Fila de la consulta agrupada de facetas: cuántas valoraciones hay con cada (estrellas, tipo).
+export interface RatingDistributionRow {
+  stars: number;
+  type: MyRatingTargetType;
+  n: number;
+}
+
+// Deriva las facetas de estrellas y de tipo de una sola consulta agrupada que aplicó la búsqueda y el
+// año o la década, pero no el tipo ni las estrellas. Cada faceta aplica el filtro de la otra y no el
+// suyo, para que siga mostrando las alternativas de su propio filtro (openspec:
+// redesign-ratings-header-toolbar).
+export function deriveRatingFacets(
+  rows: RatingDistributionRow[],
+  active: { stars?: number; type?: MyRatingTargetType },
+): Pick<MyRatingsFacets, "stars" | "types"> {
+  const stars = MY_RATING_STAR_VALUES.map((value) => ({
+    value,
+    count: rows
+      .filter((row) => row.stars === value && (active.type === undefined || row.type === active.type))
+      .reduce((sum, row) => sum + row.n, 0),
+  }));
+  const inStars = rows.filter((row) => active.stars === undefined || row.stars === active.stars);
+  const countOf = (type: MyRatingTargetType) =>
+    inStars.filter((row) => row.type === type).reduce((sum, row) => sum + row.n, 0);
+  return { stars, types: { "release-group": countOf("release-group"), recording: countOf("recording") } };
+}
+
 function buildYearExpr(): SQL {
   return sql`CASE
     WHEN ${rating.releaseGroupId} IS NOT NULL THEN ${releaseGroup.firstReleaseYear}
@@ -150,6 +180,8 @@ export async function listMyRatings(
     eq(rating.userId, userId),
     isNull(rating.artistId),
   ];
+  // Condiciones de las facetas: las de la lista menos las de estrellas y tipo (se agregan abajo).
+  const facetConditions: SQL[] = [...baseConditions];
 
   if (normalized.stars !== undefined) {
     baseConditions.push(eq(sql`(${rating.stars})::float`, normalized.stars));
@@ -161,16 +193,20 @@ export async function listMyRatings(
   }
   if (normalized.q) {
     baseConditions.push(textMatch(normalized.q));
+    facetConditions.push(textMatch(normalized.q));
   }
 
   const yearExpr = buildYearExpr();
 
   if (normalized.year !== undefined) {
     baseConditions.push(eq(yearExpr, normalized.year));
+    facetConditions.push(eq(yearExpr, normalized.year));
   } else if (normalized.decade !== undefined) {
     const decadeStart = normalized.decade;
     const decadeEnd = decadeStart + 9;
-    baseConditions.push(sql`${yearExpr} BETWEEN ${decadeStart} AND ${decadeEnd}`);
+    const decadeCondition = sql`${yearExpr} BETWEEN ${decadeStart} AND ${decadeEnd}`;
+    baseConditions.push(decadeCondition);
+    facetConditions.push(decadeCondition);
   }
 
   const whereClause = and(...baseConditions);
@@ -225,11 +261,28 @@ export async function listMyRatings(
     .where(and(eq(rating.userId, userId), isNull(rating.artistId), isNotNull(buildYearExpr())))
     .orderBy(desc(sql`1`));
 
+  // Una sola consulta agrupada alimenta las facetas de estrellas y de tipo (como mucho 20 filas).
+  const distributionRows = await db
+    .select({
+      stars: sql<number>`(${rating.stars})::float`,
+      type: sql<MyRatingTargetType>`CASE WHEN ${rating.releaseGroupId} IS NOT NULL THEN 'release-group' ELSE 'recording' END`,
+      n: sql<number>`count(*)::int`,
+    })
+    .from(rating)
+    .leftJoin(releaseGroup, eq(rating.releaseGroupId, releaseGroup.id))
+    .leftJoin(recording, eq(rating.recordingId, recording.id))
+    .where(and(...facetConditions))
+    .groupBy(sql`1`, sql`2`);
+  const { stars: starsFacet, types: typesFacet } = deriveRatingFacets(
+    distributionRows.map((row) => ({ stars: Number(row.stars), type: row.type, n: Number(row.n) })),
+    { stars: normalized.stars, type: normalized.type },
+  );
+
   const items = rows.slice(0, pageSize).map(serializeMyRating);
   const hasNext = rows.length > pageSize;
   const years = yearRows.map((row) => row.year).filter((year): year is number => year !== null);
 
-  return { items, page, pageSize, hasNext, total, counts, facets: { years } };
+  return { items, page, pageSize, hasNext, total, counts, facets: { years, stars: starsFacet, types: typesFacet } };
 }
 
 function serializeMyRating(row: {

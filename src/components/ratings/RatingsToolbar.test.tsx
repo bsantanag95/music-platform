@@ -21,6 +21,7 @@ function renderToolbar(filters: RatingsFiltersState = EMPTY_RATING_FILTERS, hide
       onSearchInput={onSearchInput}
       onClear={onClear}
       availableYears={[2012, 1987]}
+      typeCounts={{ "release-group": 12, recording: 3 }}
       hideClear={hideClear}
     />,
   );
@@ -28,10 +29,10 @@ function renderToolbar(filters: RatingsFiltersState = EMPTY_RATING_FILTERS, hide
 }
 
 describe("RatingsToolbar", () => {
-  it("el selector de tipo solo ofrece álbum y canción (los artistas no se valoran)", () => {
+  it("el filtro de tipo son tres segmentos con su cantidad (los artistas no se valoran)", () => {
     renderToolbar();
-    const select = screen.getByLabelText("Tipo") as HTMLSelectElement;
-    expect([...select.options].map((option) => option.textContent)).toEqual(["Todos", "Álbum", "Canción"]);
+    const group = screen.getByRole("group", { name: "Tipo" });
+    expect([...group.querySelectorAll("button")].map((button) => button.textContent)).toEqual(["Todo15", "Álbumes12", "Canciones3"]);
   });
 
   it("el selector de agrupar ofrece por tipo, por artista y sin agrupar", () => {
@@ -43,7 +44,7 @@ describe("RatingsToolbar", () => {
 
   it("cada selector muestra su nombre de forma visible, no solo al abrirlo", () => {
     renderToolbar();
-    for (const name of ["Tipo", "Estrellas", "Año", "Década", "Ordenar", "Agrupar"]) {
+    for (const name of ["Año", "Década", "Ordenar", "Agrupar"]) {
       const visible = screen.getAllByText(name).find((node) => node.tagName === "SPAN");
       expect(visible, name).toBeTruthy();
       expect(visible!.getAttribute("aria-hidden")).toBe("true");
@@ -52,10 +53,8 @@ describe("RatingsToolbar", () => {
 
   it("cada control emite el cambio con el resto del estado intacto", () => {
     const { onChange } = renderToolbar();
-    fireEvent.change(screen.getByLabelText("Tipo"), { target: { value: "recording" } });
+    fireEvent.click(screen.getByRole("button", { name: /^Canciones/ }));
     expect(onChange).toHaveBeenLastCalledWith({ ...EMPTY_RATING_FILTERS, type: "recording" });
-    fireEvent.change(screen.getByLabelText("Estrellas"), { target: { value: "4.5" } });
-    expect(onChange).toHaveBeenLastCalledWith({ ...EMPTY_RATING_FILTERS, stars: "4.5" });
     fireEvent.change(screen.getByLabelText("Año"), { target: { value: "1987" } });
     expect(onChange).toHaveBeenLastCalledWith({ ...EMPTY_RATING_FILTERS, year: "1987" });
     fireEvent.change(screen.getByLabelText("Ordenar"), { target: { value: "title" } });

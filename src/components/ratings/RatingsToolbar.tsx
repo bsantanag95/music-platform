@@ -2,7 +2,8 @@
 
 import { useTranslations } from "next-intl";
 import { FilterSelect } from "@/components/ui/FilterSelect";
-import type { MyRatingGroup, MyRatingSort } from "@/lib/api/schemas";
+import type { MyRatingGroup, MyRatingSort, MyRatingsCounts } from "@/lib/api/schemas";
+import { RatingsTypeSegments } from "./RatingsTypeSegments";
 
 export interface RatingsFiltersState {
   q: string;
@@ -42,14 +43,7 @@ export function ratingScopeNarrowed(filters: RatingsFiltersState): boolean {
   return Boolean(filters.q.trim() || filters.stars || filters.type || filters.year || filters.decade);
 }
 
-const STAR_OPTIONS = ["5", "4.5", "4", "3.5", "3", "2.5", "2", "1.5", "1", "0.5"] as const;
 const DECADES = [2020, 2010, 2000, 1990, 1980, 1970, 1960, 1950] as const;
-
-function starsText(value: string): string {
-  const number = Number(value);
-  if (number === 0.5) return "½★";
-  return Number.isInteger(number) ? `${number}★` : `${Math.floor(number)}½★`;
-}
 
 interface RatingsToolbarProps {
   filters: RatingsFiltersState;
@@ -58,15 +52,18 @@ interface RatingsToolbarProps {
   onSearchInput: (value: string) => void;
   onClear: () => void;
   availableYears: number[];
+  /** Cantidad por tipo para los segmentos, calculada sin el filtro de tipo (`facets.types`). */
+  typeCounts: MyRatingsCounts;
   /** Oculta "Limpiar filtros" cuando el estado vacío de la página ya ofrece el suyo (un solo botón visible). */
   hideClear?: boolean;
 }
 
-// Barra de herramientas de la biblioteca: buscador (con debounce en el orquestador) más
-// `FilterSelect` livianos de tipo, estrellas, año, década, orden y agrupación. Misma
-// disposición que `FavoritesToolbar`, pero cada selector lleva su nombre visible sobre el control
-// (un "Todos" suelto no dice qué filtra). El tipo se limita a álbum/canción: los artistas no se
-// valoran; agrupar por artista solo reúne las valoraciones bajo su artista principal.
+// Barra de herramientas de la biblioteca: buscador (con debounce en el orquestador) y segmentos de
+// tipo (Todo / Álbumes / Canciones, con su cantidad) en la primera fila; `FilterSelect` livianos de año,
+// década, orden y agrupación en la segunda, cada uno con su nombre visible sobre el control (un "Todos"
+// suelto no dice qué filtra). El filtro de estrellas es el histograma del resumen (`RatingsSummary`). El
+// tipo se limita a álbum/canción: los artistas no se valoran; agrupar por artista solo reúne las
+// valoraciones bajo su artista principal (openspec: redesign-ratings-header-toolbar).
 export function RatingsToolbar({
   filters,
   onChange,
@@ -74,6 +71,7 @@ export function RatingsToolbar({
   onSearchInput,
   onClear,
   availableYears,
+  typeCounts,
   hideClear = false,
 }: RatingsToolbarProps) {
   const t = useTranslations("ratings");
@@ -81,41 +79,19 @@ export function RatingsToolbar({
 
   return (
     <div className="flex flex-col gap-2">
-      <input
-        type="search"
-        autoComplete="off"
-        value={searchInput}
-        onChange={(event) => onSearchInput(event.target.value)}
-        placeholder={t("searchPlaceholder")}
-        aria-label={t("searchPlaceholder")}
-        className="w-full rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted"
-      />
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <input
+          type="search"
+          autoComplete="off"
+          value={searchInput}
+          onChange={(event) => onSearchInput(event.target.value)}
+          placeholder={t("searchPlaceholder")}
+          aria-label={t("searchPlaceholder")}
+          className="w-full min-w-0 flex-1 rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted"
+        />
+        <RatingsTypeSegments value={filters.type} onChange={(type) => onChange({ ...filters, type })} counts={typeCounts} />
+      </div>
       <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
-        <FilterSelect
-          value={filters.type}
-          onChange={(value) => onChange({ ...filters, type: value })}
-          ariaLabel={t("typeFilterLabel")}
-          label={t("typeFilterLabel")}
-          widthClassName="w-[14ch]"
-        >
-          <option value="">{t("typeAll")}</option>
-          <option value="release-group">{t("typeAlbum")}</option>
-          <option value="recording">{t("typeSong")}</option>
-        </FilterSelect>
-        <FilterSelect
-          value={filters.stars}
-          onChange={(value) => onChange({ ...filters, stars: value })}
-          ariaLabel={t("starsFilterLabel")}
-          label={t("starsFilterLabel")}
-          widthClassName="w-[12ch]"
-        >
-          <option value="">{t("starsAll")}</option>
-          {STAR_OPTIONS.map((value) => (
-            <option key={value} value={value}>
-              {starsText(value)}
-            </option>
-          ))}
-        </FilterSelect>
         <FilterSelect
           value={filters.year}
           onChange={(value) => onChange({ ...filters, year: value })}

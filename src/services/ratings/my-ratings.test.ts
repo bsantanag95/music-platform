@@ -1,6 +1,6 @@
 import { PgDialect } from "drizzle-orm/pg-core";
 import { describe, expect, it, vi } from "vitest";
-import { listMyRatings } from "./my-ratings";
+import { deriveRatingFacets, listMyRatings, type RatingDistributionRow } from "./my-ratings";
 
 const mocks = vi.hoisted(() => ({
   db: { select: vi.fn() },
@@ -11,7 +11,7 @@ vi.mock("@/db", () => ({ db: mocks.db }));
 const dialect = new PgDialect();
 
 // Espías de la última consulta de conteo y de lista, para inspeccionar el WHERE y el ORDER BY.
-const spies = { countWhere: vi.fn(), listWhere: vi.fn(), orderBy: vi.fn() };
+const spies = { countWhere: vi.fn(), listWhere: vi.fn(), orderBy: vi.fn(), facetWhere: vi.fn() };
 
 function mockCountQuery(count: number, albums = count, songs = 0) {
   spies.countWhere = vi.fn().mockResolvedValue([{ count, albums, songs }]);
@@ -50,15 +50,29 @@ function mockYearsQuery(years: (number | null)[]) {
   });
 }
 
+// Consulta agrupada de facetas: from → leftJoin → leftJoin → where → groupBy.
+function mockDistributionQuery(distribution: RatingDistributionRow[]) {
+  const groupBy = vi.fn().mockResolvedValue(distribution);
+  spies.facetWhere = vi.fn(() => ({ groupBy }));
+  const where = spies.facetWhere;
+  const leftJoin2 = vi.fn(() => ({ where }));
+  const leftJoin1 = vi.fn(() => ({ leftJoin: leftJoin2 }));
+  mocks.db.select.mockReturnValueOnce({
+    from: vi.fn().mockReturnValue({ leftJoin: leftJoin1 }),
+  });
+}
+
 function mockAllQueries(
   count: number,
   rows: unknown[],
   years: (number | null)[] = [],
   counts?: { albums: number; songs: number },
+  distribution: RatingDistributionRow[] = [],
 ) {
   mockCountQuery(count, counts?.albums, counts?.songs);
   mockListQuery(rows);
   mockYearsQuery(years);
+  mockDistributionQuery(distribution);
 }
 
 const userId = "00000000-0000-4000-8000-000000000001";
@@ -83,6 +97,34 @@ function makeRow(overrides: Record<string, unknown> = {}) {
     ...overrides,
   };
 }
+
+describe("deriveRatingFacets", () => {
+  const rows: RatingDistributionRow[] = [
+    { stars: 5, type: "release-group", n: 3 },
+    { stars: 5, type: "recording", n: 1 },
+    { stars: 4.5, type: "release-group", n: 2 },
+    { stars: 3, type: "recording", n: 4 },
+  ];
+
+  it("sin filtros suma todo", () => {
+    const facets = deriveRatingFacets(rows, {});
+    expect(facets.stars.find((b) => b.value === 5)!.count).toBe(4);
+    expect(facets.types).toEqual({ "release-group": 5, recording: 5 });
+  });
+
+  it("la faceta de estrellas aplica el tipo pero no las estrellas", () => {
+    const facets = deriveRatingFacets(rows, { stars: 5, type: "recording" });
+    expect(facets.stars.filter((b) => b.count > 0)).toEqual([
+      { value: 3, count: 4 },
+      { value: 5, count: 1 },
+    ]);
+  });
+
+  it("la faceta de tipo aplica las estrellas pero no el tipo", () => {
+    const facets = deriveRatingFacets(rows, { stars: 5, type: "recording" });
+    expect(facets.types).toEqual({ "release-group": 3, recording: 1 });
+  });
+});
 
 describe("listMyRatings", () => {
   it("devuelve solo filas del usuario con paginación y facetas", async () => {
@@ -215,6 +257,44 @@ describe("listMyRatings", () => {
     await listMyRatings(userId, 1, 20, { q: "   " });
     const condition = spies.listWhere.mock.calls[0]![0] as Parameters<PgDialect["sqlToQuery"]>[0];
     expect(dialect.sqlToQuery(condition).sql.toLowerCase()).not.toContain("ilike");
+  });
+
+  it("devuelve diez cubos de estrellas y el desglose por tipo, sin filtros", async () => {
+    mockAllQueries(5, [makeRow()], [], undefined, [
+      { stars: 5, type: "release-group", n: 3 },
+      { stars: 4.5, type: "release-group", n: 1 },
+      { stars: 4.5, type: "recording", n: 1 },
+    ]);
+    const result = await listMyRatings(userId, 1, 20);
+    expect(result.facets.stars).toHaveLength(10);
+    expect(result.facets.stars.map((bucket) => bucket.value)).toEqual([0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]);
+    expect(result.facets.stars.find((bucket) => bucket.value === 5)!.count).toBe(3);
+    expect(result.facets.stars.find((bucket) => bucket.value === 4.5)!.count).toBe(2);
+    expect(result.facets.stars.find((bucket) => bucket.value === 1)!.count).toBe(0);
+    expect(result.facets.types).toEqual({ "release-group": 4, recording: 1 });
+  });
+
+  it("biblioteca vacía: diez cubos en cero y tipos en cero", async () => {
+    mockAllQueries(0, []);
+    const result = await listMyRatings(userId, 1, 20);
+    expect(result.facets.stars.every((bucket) => bucket.count === 0)).toBe(true);
+    expect(result.facets.stars).toHaveLength(10);
+    expect(result.facets.types).toEqual({ "release-group": 0, recording: 0 });
+  });
+
+  it("las facetas no aplican el filtro de estrellas ni el de tipo en la consulta", async () => {
+    mockAllQueries(0, []);
+    await listMyRatings(userId, 1, 20, { stars: 4, type: "recording", q: "floyd" });
+    const listSql = dialect.sqlToQuery(spies.listWhere.mock.calls[0]![0] as Parameters<PgDialect["sqlToQuery"]>[0]);
+    const facetSql = dialect.sqlToQuery(spies.facetWhere.mock.calls[0]![0] as Parameters<PgDialect["sqlToQuery"]>[0]);
+    // La lista filtra por estrellas, tipo y búsqueda; las facetas solo por la búsqueda.
+    expect(listSql.params).toContain(4);
+    expect(listSql.sql).toContain("is not null");
+    expect(facetSql.params).not.toContain(4);
+    expect(facetSql.params).toContain("%floyd%");
+    expect(facetSql.sql.toLowerCase().match(/is not null/g)?.length ?? 0).toBeLessThan(
+      listSql.sql.toLowerCase().match(/is not null/g)!.length,
+    );
   });
 
   it("rechaza una agrupación o una búsqueda inválidas", async () => {

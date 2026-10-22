@@ -1,5 +1,12 @@
 import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
-import type { MyRatingEntry, MyRatingGroup, MyRatingTargetType, RatingsResponse } from "@/lib/api/schemas";
+import type {
+  MyRatingEntry,
+  MyRatingGroup,
+  MyRatingTargetType,
+  MyRatingsFacets,
+  MyRatingsStarsBucket,
+  RatingsResponse,
+} from "@/lib/api/schemas";
 import type { RatingsDisplay } from "./ratings-view";
 
 // Tamaño de página de la biblioteca: 30 reparte parejo la última fila de la pared con 3, 5
@@ -111,4 +118,46 @@ export function ownForDialog(entry: MyRatingEntry): NonNullable<RatingsResponse[
     createdAt: entry.updatedAt,
     updatedAt: entry.updatedAt,
   };
+}
+
+/**
+ * Promedio de estrellas del conjunto visible a partir de las facetas de estrellas (que se calculan sin el
+ * filtro de estrellas): con ese filtro activo es su valor; sin él, la media ponderada de los cubos. `null`
+ * si no hay valoraciones. Sale de las mismas facetas que dibuja el histograma, así nunca discrepan.
+ */
+export function averageStars(buckets: MyRatingsStarsBucket[], starsFilter?: number): number | null {
+  if (starsFilter !== undefined) {
+    const bucket = buckets.find((item) => item.value === starsFilter);
+    return bucket && bucket.count > 0 ? starsFilter : null;
+  }
+  const total = buckets.reduce((sum, bucket) => sum + bucket.count, 0);
+  if (total === 0) return null;
+  return buckets.reduce((sum, bucket) => sum + bucket.value * bucket.count, 0) / total;
+}
+
+function bumpBucket(buckets: MyRatingsStarsBucket[], value: number, delta: number): MyRatingsStarsBucket[] {
+  return buckets.map((bucket) =>
+    bucket.value === value ? { ...bucket, count: Math.max(0, bucket.count + delta) } : bucket,
+  );
+}
+
+/**
+ * Ajusta las facetas tras editar o borrar una valoración, sin recargar la lista (que no se reordena hasta
+ * que cambie un filtro). `after` es la entrada editada, o `null` si se borró. La faceta de estrellas ignora
+ * el filtro de estrellas, así que siempre se mueve de un cubo al otro; la de tipo lo aplica, así que solo
+ * cambia si la valoración entra o sale del filtro de estrellas activo.
+ */
+export function adjustFacets(
+  facets: MyRatingsFacets,
+  starsFilter: number | undefined,
+  before: MyRatingEntry,
+  after: MyRatingEntry | null,
+): MyRatingsFacets {
+  if (after && after.stars === before.stars) return facets;
+  let stars = bumpBucket(facets.stars, before.stars, -1);
+  if (after) stars = bumpBucket(stars, after.stars, 1);
+  const inFilter = (entry: MyRatingEntry) => starsFilter === undefined || entry.stars === starsFilter;
+  const delta = (after && inFilter(after) ? 1 : 0) - (inFilter(before) ? 1 : 0);
+  const types = { ...facets.types, [before.targetType]: Math.max(0, facets.types[before.targetType] + delta) };
+  return { ...facets, stars, types };
 }

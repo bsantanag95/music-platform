@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { MyRatingEntry, RatingsResponse } from "@/lib/api/schemas";
+import { MY_RATING_STAR_VALUES, type MyRatingEntry, type MyRatingsFacets, type RatingsResponse } from "@/lib/api/schemas";
 import {
+  adjustFacets,
   applyRatingsResponse,
+  averageStars,
   displayForGroup,
   groupRatingsByArtist,
   groupRatingsByType,
@@ -182,5 +184,75 @@ describe("applyRatingsResponse / ownForDialog", () => {
   it("arma la valoración propia para el diálogo", () => {
     const own = ownForDialog(entry(1, "release-group", { stars: 3.5, detailedScore: null }));
     expect(own).toMatchObject({ id: uuid(1), stars: 3.5, detailedScore: null });
+  });
+});
+
+function facetsWith(counts: Record<number, number>, types = { "release-group": 0, recording: 0 }): MyRatingsFacets {
+  return {
+    years: [],
+    stars: MY_RATING_STAR_VALUES.map((value) => ({ value, count: counts[value] ?? 0 })),
+    types,
+  };
+}
+
+const bucketCount = (facets: MyRatingsFacets, value: number) => facets.stars.find((b) => b.value === value)!.count;
+
+describe("averageStars", () => {
+  it("sin valoraciones es null", () => {
+    expect(averageStars(facetsWith({}).stars)).toBeNull();
+  });
+
+  it("sin filtro es la media ponderada de los cubos", () => {
+    expect(averageStars(facetsWith({ 5: 3, 4.5: 2 }).stars)).toBeCloseTo(4.8, 5);
+  });
+
+  it("con filtro de estrellas es el valor del filtro si hay valoraciones de ese valor", () => {
+    const { stars } = facetsWith({ 5: 3, 4.5: 2 });
+    expect(averageStars(stars, 4.5)).toBe(4.5);
+    expect(averageStars(stars, 2)).toBeNull();
+  });
+});
+
+describe("adjustFacets", () => {
+  const album = (stars: number) => entry(1, "release-group", { stars });
+  const song = (stars: number) => entry(2, "recording", { stars });
+
+  it("cambiar estrellas mueve la cantidad de un cubo al otro y no toca los tipos sin filtro", () => {
+    const facets = facetsWith({ 5: 3, 4: 1 }, { "release-group": 3, recording: 1 });
+    const next = adjustFacets(facets, undefined, album(5), album(4));
+    expect(bucketCount(next, 5)).toBe(2);
+    expect(bucketCount(next, 4)).toBe(2);
+    expect(next.types).toEqual({ "release-group": 3, recording: 1 });
+  });
+
+  it("con filtro de estrellas, salir del filtro baja el contador de su tipo", () => {
+    const facets = facetsWith({ 5: 3, 4: 1 }, { "release-group": 2, recording: 1 });
+    const next = adjustFacets(facets, 5, song(5), song(4));
+    expect(bucketCount(next, 5)).toBe(2);
+    expect(bucketCount(next, 4)).toBe(2);
+    expect(next.types).toEqual({ "release-group": 2, recording: 0 });
+  });
+
+  it("con filtro de estrellas, entrar al filtro sube el contador de su tipo", () => {
+    const facets = facetsWith({ 5: 1, 4: 1 }, { "release-group": 1, recording: 0 });
+    const next = adjustFacets(facets, 5, album(4), album(5));
+    expect(next.types["release-group"]).toBe(2);
+  });
+
+  it("borrar quita de su cubo y del tipo", () => {
+    const facets = facetsWith({ 5: 3 }, { "release-group": 2, recording: 1 });
+    const next = adjustFacets(facets, undefined, song(5), null);
+    expect(bucketCount(next, 5)).toBe(2);
+    expect(next.types).toEqual({ "release-group": 2, recording: 1 - 1 });
+  });
+
+  it("si las estrellas no cambian devuelve las mismas facetas", () => {
+    const facets = facetsWith({ 5: 3 });
+    expect(adjustFacets(facets, undefined, album(5), album(5))).toBe(facets);
+  });
+
+  it("nunca baja de cero", () => {
+    const next = adjustFacets(facetsWith({}), undefined, album(5), null);
+    expect(bucketCount(next, 5)).toBe(0);
   });
 });

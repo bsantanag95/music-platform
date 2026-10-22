@@ -15,6 +15,7 @@ import { getMyRatings, type MyRatingsFiltersParams } from "@/lib/api/ratings";
 import { ApiError } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/keys";
 import type {
+  MyRatingsFacets,
   MyRatingEntry,
   MyRatingGroup,
   MyRatingSort,
@@ -30,12 +31,14 @@ import {
   type RatingsFiltersState,
 } from "./RatingsToolbar";
 import { RatingsModeSwitcher } from "./RatingsModeSwitcher";
+import { RatingsSummary } from "./RatingsSummary";
 import { RatingsDetailed } from "./RatingsDetailed";
 import { RatingsIndex } from "./RatingsIndex";
 import { RatingsGraphic } from "./RatingsGraphic";
 import { useRatingViewMode } from "./use-rating-view-mode";
 import {
   RATINGS_PAGE_SIZE,
+  adjustFacets,
   applyRatingsResponse,
   displayForGroup,
   groupRatingsByArtist,
@@ -129,6 +132,9 @@ export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
   const [items, setItems] = useState<MyRatingEntry[]>(initial.items);
   const [total, setTotal] = useState(initial.total);
   const [counts, setCounts] = useState(initial.counts);
+  // Facetas de estrellas, tipo y años: vienen del servidor con cada consulta y se ajustan en el lugar al
+  // editar o borrar (la lista no se recarga ni se reordena).
+  const [facets, setFacets] = useState<MyRatingsFacets>(initial.facets);
   const [editing, setEditing] = useState<MyRatingEntry | null>(null);
   const [announce, setAnnounce] = useState("");
 
@@ -160,6 +166,7 @@ export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
       setItems(data.pages.flatMap((page) => page.items));
       setTotal(data.pages[0]?.total ?? 0);
       setCounts(data.pages[0]?.counts ?? { "release-group": 0, recording: 0 });
+      if (data.pages[0]) setFacets(data.pages[0].facets);
     }
   }, [data]);
 
@@ -169,14 +176,21 @@ export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
 
   const isFiltered = ratingFiltersActive(filters);
   const narrowed = ratingScopeNarrowed(filters);
-  const availableYears = data?.pages[0]?.facets.years ?? initial.facets.years;
+  const availableYears = facets.years;
+  const starsFilter = filters.stars ? Number(filters.stars) : undefined;
 
-  const updateLocal = useCallback((id: string, entry: MyRatingEntry) => {
-    setItems((current) => current.map((item) => (item.id === id ? entry : item)));
-  }, []);
+  const updateLocal = useCallback(
+    (id: string, entry: MyRatingEntry) => {
+      const before = items.find((item) => item.id === id);
+      if (before) setFacets((current) => adjustFacets(current, starsFilter, before, entry));
+      setItems((current) => current.map((item) => (item.id === id ? entry : item)));
+    },
+    [items, starsFilter],
+  );
 
   const deleteLocal = useCallback(
     (entry: MyRatingEntry) => {
+      setFacets((current) => adjustFacets(current, starsFilter, entry, null));
       setItems((current) => current.filter((item) => item.id !== entry.id));
       setTotal((current) => Math.max(0, current - 1));
       setCounts((current) => ({
@@ -185,7 +199,7 @@ export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
       }));
       setAnnounce(t("deletedAnnouncement"));
     },
-    [t],
+    [t, starsFilter],
   );
 
   // Una sola instancia del diálogo para las tres vistas: cada entrada solo pide abrirla.
@@ -246,17 +260,15 @@ export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
 
   return (
     <div className="flex w-full flex-col gap-5">
-      <p className="font-data text-xs text-paper-muted">
-        <span>{narrowed ? t("resultsLabel", { count: total }) : t("totalLabel", { count: total })}</span>
-        {total > 0 ? (
-          <>
-            <span aria-hidden> · </span>
-            <span>{t("countAlbums", { count: counts["release-group"] })}</span>
-            <span aria-hidden> · </span>
-            <span>{t("countSongs", { count: counts.recording })}</span>
-          </>
-        ) : null}
-      </p>
+      <RatingsSummary
+        total={total}
+        counts={counts}
+        narrowed={narrowed}
+        stars={facets.stars}
+        starsFilter={filters.stars}
+        // Pulsar la barra activa quita el filtro de estrellas.
+        onStarsChange={(value) => setFilters((current) => ({ ...current, stars: current.stars === value ? "" : value }))}
+      />
 
       <RatingsToolbar
         filters={filters}
@@ -265,6 +277,7 @@ export function MyRatingsList({ initial, initialFilters }: MyRatingsListProps) {
         onSearchInput={setSearchInput}
         onClear={clearFilters}
         availableYears={availableYears}
+        typeCounts={facets.types}
         hideClear={emptyOffersClear}
       />
 

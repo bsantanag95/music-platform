@@ -6,7 +6,7 @@ import ratingsEs from "../../../messages/es/ratings.json";
 import catalogEs from "../../../messages/es/catalog.json";
 import { MyRatingsList } from "./MyRatingsList";
 import { RATING_VIEW_MODE_STORAGE_KEY } from "./rating-view-mode";
-import type { MyRatingEntry, MyRatingsListResponse } from "@/lib/api/schemas";
+import { MY_RATING_STAR_VALUES, type MyRatingEntry, type MyRatingsFacets, type MyRatingsListResponse } from "@/lib/api/schemas";
 
 // openspec: add-my-ratings-library (design D4–D7).
 
@@ -67,6 +67,16 @@ function song(n: number, title: string, stars: number, detailedScore: number | n
   };
 }
 
+// Facetas coherentes con las entradas (sin filtros): cubos de estrellas y cantidad por tipo.
+function facetsFor(items: MyRatingEntry[], years: number[] = [2012, 1987]): MyRatingsFacets {
+  const albums = items.filter((item) => item.targetType === "release-group").length;
+  return {
+    years,
+    stars: MY_RATING_STAR_VALUES.map((value) => ({ value, count: items.filter((item) => item.stars === value).length })),
+    types: { "release-group": albums, recording: items.length - albums },
+  };
+}
+
 function page(items: MyRatingEntry[], overrides: Partial<MyRatingsListResponse> = {}): MyRatingsListResponse {
   const albums = items.filter((item) => item.targetType === "release-group").length;
   return {
@@ -76,7 +86,7 @@ function page(items: MyRatingEntry[], overrides: Partial<MyRatingsListResponse> 
     hasNext: false,
     total: items.length,
     counts: { "release-group": albums, recording: items.length - albums },
-    facets: { years: [2012, 1987] },
+    facets: facetsFor(items),
     ...overrides,
   };
 }
@@ -99,6 +109,9 @@ function renderList(initial: MyRatingsListResponse, initialFilters?: Parameters<
 const SLOW = { timeout: 4000 };
 const select = (label: string) => screen.getByLabelText(label) as HTMLSelectElement;
 const mode = (name: string) => screen.getByRole("radio", { name });
+// Barra del histograma de estrellas y segmento de tipo (reemplazan a los selectores de estrellas y tipo).
+const bar = (value: string, count: string) => screen.getByRole("button", { name: `${value} estrellas: ${count}` });
+const segment = (label: string) => screen.getByRole("button", { name: new RegExp(`^${label}`) });
 const titles = () => screen.getAllByRole("article").map((row) => row.querySelector("a")?.textContent);
 
 // El entorno de test no expone un `localStorage` funcional: se instala uno en memoria. La mayoría de
@@ -134,7 +147,7 @@ describe("MyRatingsList", () => {
   });
 
   it("sin valoraciones dice que está vacío y enlaza a Explorar", () => {
-    renderList(page([], { facets: { years: [] } }));
+    renderList(page([], { facets: facetsFor([], []) }));
     expect(screen.getByText(t.emptyTitle)).toBeInTheDocument();
     expect(screen.getByText("Sin valoraciones")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: t.emptyCta })).toHaveAttribute("href", "/search");
@@ -185,8 +198,8 @@ describe("MyRatingsList", () => {
     mocks.getMyRatings.mockResolvedValue(page([girl]));
     renderList(page([safe, bad, girl]));
 
-    fireEvent.change(select(t.starsFilterLabel), { target: { value: "3" } });
-    fireEvent.change(select(t.typeFilterLabel), { target: { value: "release-group" } });
+    fireEvent.click(bar("3,0", "1 valoración"));
+    fireEvent.click(segment(t.sectionAlbums));
     fireEvent.change(select(t.decadeFilterLabel), { target: { value: "1980" } });
 
     await waitFor(() =>
@@ -211,7 +224,7 @@ describe("MyRatingsList", () => {
     mocks.getMyRatings.mockResolvedValueOnce(page([], { total: 0 })).mockResolvedValue(page([safe, bad, girl]));
     renderList(page([safe, bad, girl]));
 
-    fireEvent.change(select(t.starsFilterLabel), { target: { value: "1" } });
+    fireEvent.click(bar("1,0", "sin valoraciones"));
     expect(await screen.findByText(t.noResultsTitle)).toBeInTheDocument();
     expect(screen.queryByText(t.emptyTitle)).not.toBeInTheDocument();
     // Cabecera honesta y un único "Limpiar filtros" (el del estado vacío).
@@ -225,7 +238,7 @@ describe("MyRatingsList", () => {
     fireEvent.click(screen.getByRole("button", { name: t.clearFilters }));
 
     await waitFor(() => expect(titles()).toHaveLength(3));
-    expect(select(t.starsFilterLabel)).toHaveValue("");
+    expect(bar("1,0", "sin valoraciones")).toHaveAttribute("aria-pressed", "false");
     expect(screen.queryByRole("button", { name: t.clearFilters })).not.toBeInTheDocument();
     expect(window.location.search).toBe("");
   });
@@ -308,7 +321,7 @@ describe("MyRatingsList", () => {
 
   it("los selectores muestran su nombre visible", () => {
     renderList(page([safe]));
-    for (const name of [t.typeFilterLabel, t.starsFilterLabel, t.yearFilterLabel, t.decadeFilterLabel, t.sortLabel, t.groupLabel]) {
+    for (const name of [t.yearFilterLabel, t.decadeFilterLabel, t.sortLabel, t.groupLabel]) {
       expect(screen.getAllByText(name).some((node) => node.tagName === "SPAN" && node.getAttribute("aria-hidden") === "true"), name).toBe(true);
     }
   });
@@ -405,9 +418,16 @@ describe("MyRatingsList", () => {
     expect(row).toHaveTextContent(`${t.typeAlbum} · 2012`);
   });
 
-  it("el selector de tipo no ofrece artistas", () => {
-    renderList(page([safe]));
-    expect(Array.from(select(t.typeFilterLabel).options).map((option) => option.value)).toEqual(["", "release-group", "recording"]);
+  it("el filtro de tipo ofrece Todo, Álbumes y Canciones, sin artistas, y ya no hay selectores de tipo ni estrellas", () => {
+    renderList(page([safe, song(4, "Barracuda", 4, 80)]));
+    const group = screen.getByRole("group", { name: t.typeFilterLabel });
+    expect(within(group).getAllByRole("button").map((button) => button.textContent)).toEqual([
+      `${t.typeSegmentAll}2`,
+      `${t.sectionAlbums}1`,
+      `${t.sectionSongs}1`,
+    ]);
+    expect(screen.queryByLabelText(t.typeFilterLabel, { selector: "select" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(t.starsFilterLabel, { selector: "select" })).not.toBeInTheDocument();
   });
 
   it("buscar pide q tras una pausa y lo refleja en la URL", async () => {
@@ -485,7 +505,7 @@ describe("MyRatingsList", () => {
     await waitFor(() => expect(mocks.getMyRatings).toHaveBeenCalled());
     expect(screen.queryByText(/resultado/)).not.toBeInTheDocument();
 
-    fireEvent.change(select(t.starsFilterLabel), { target: { value: "4.5" } });
+    fireEvent.click(bar("4,5", "1 valoración"));
     expect(await screen.findByText("1 resultado")).toBeInTheDocument();
     expect(screen.getByText("1 álbum")).toBeInTheDocument();
   });
@@ -541,7 +561,8 @@ describe("MyRatingsList", () => {
     await waitFor(() => expect(screen.getByText("1 valoración")).toBeInTheDocument());
     expect(screen.getByText("1 álbum")).toBeInTheDocument();
     expect(screen.getByText("sin canciones")).toBeInTheDocument();
-    expect(screen.queryByText(t.sectionSongs)).not.toBeInTheDocument();
+    // La sección "Canciones" desaparece (el segmento de tipo sigue ahí, con 0).
+    expect(screen.queryByRole("heading", { name: new RegExp(t.sectionSongs) })).not.toBeInTheDocument();
   });
 
   it("afinar desde la fila actualiza el puntaje sin reordenar", async () => {
@@ -558,5 +579,100 @@ describe("MyRatingsList", () => {
 
     await waitFor(() => expect(screen.getByRole("button", { name: "88/100" })).toBeInTheDocument());
     expect(titles()).toEqual(["Safe and Sound", "Bad Animals", "There’s the Girl"]);
+  });
+  it("el resumen muestra el promedio y diez barras con su cantidad", () => {
+    renderList(page([safe, bad, girl]));
+    // (5 + 4,5 + 3) / 3 = 4,1666… → "4,2"
+    expect(screen.getByText("Promedio 4,2★")).toBeInTheDocument();
+    const group = screen.getByRole("group", { name: t.histogramLabel });
+    expect(within(group).getAllByRole("button")).toHaveLength(10);
+    expect(bar("5,0", "1 valoración")).toHaveAttribute("aria-pressed", "false");
+    expect(bar("2,0", "sin valoraciones")).toBeInTheDocument();
+  });
+
+  it("pulsar una barra filtra por esas estrellas y volver a pulsarla quita el filtro", async () => {
+    mocks.getMyRatings.mockResolvedValue(page([bad], { facets: facetsFor([safe, bad, girl]) }));
+    renderList(page([safe, bad, girl]));
+
+    fireEvent.click(bar("4,5", "1 valoración"));
+
+    await waitFor(() => expect(mocks.getMyRatings).toHaveBeenCalledWith(1, 30, expect.objectContaining({ stars: 4.5 })));
+    expect(window.location.search).toBe("?stars=4.5");
+    expect(bar("4,5", "1 valoración")).toHaveAttribute("aria-pressed", "true");
+    // Las demás barras conservan su cantidad (la faceta ignora su propio filtro) y el promedio es el filtrado.
+    expect(bar("5,0", "1 valoración")).toBeInTheDocument();
+    expect(screen.getByText("Promedio 4,5★")).toBeInTheDocument();
+
+    mocks.getMyRatings.mockResolvedValue(page([safe, bad, girl]));
+    fireEvent.click(bar("4,5", "1 valoración"));
+
+    await waitFor(() => expect(window.location.search).toBe(""));
+    expect(bar("4,5", "1 valoración")).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("un segmento de tipo filtra y 'Todo' lo quita; el activo no se desactiva al pulsarlo", async () => {
+    const barracuda = song(4, "Barracuda", 4, 80);
+    mocks.getMyRatings.mockResolvedValue(page([barracuda], { facets: facetsFor([safe, barracuda]) }));
+    renderList(page([safe, barracuda]));
+
+    fireEvent.click(segment(t.sectionSongs));
+
+    await waitFor(() => expect(mocks.getMyRatings).toHaveBeenCalledWith(1, 30, expect.objectContaining({ type: "recording" })));
+    expect(window.location.search).toBe("?type=recording");
+    expect(segment(t.sectionSongs)).toHaveAttribute("aria-pressed", "true");
+
+    mocks.getMyRatings.mockClear();
+    fireEvent.click(segment(t.sectionSongs));
+    expect(mocks.getMyRatings).not.toHaveBeenCalled();
+
+    mocks.getMyRatings.mockResolvedValue(page([safe, barracuda]));
+    fireEvent.click(segment(t.typeSegmentAll));
+    await waitFor(() => expect(window.location.search).toBe(""));
+  });
+
+  it("sin valoraciones no hay histograma ni promedio", () => {
+    renderList(page([], { facets: facetsFor([], []) }));
+    expect(screen.queryByRole("group", { name: t.histogramLabel })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Promedio/)).not.toBeInTheDocument();
+  });
+
+  it("con un filtro de estrellas activo y sin resultados el histograma sigue visible para quitarlo", async () => {
+    mocks.getMyRatings.mockResolvedValue(page([], { total: 0, facets: facetsFor([safe, bad, girl]) }));
+    renderList(page([safe, bad, girl]));
+
+    fireEvent.click(bar("1,0", "sin valoraciones"));
+
+    expect(await screen.findByText(t.noResultsTitle)).toBeInTheDocument();
+    expect(bar("1,0", "sin valoraciones")).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("cambiar las estrellas de una fila ajusta el histograma y el promedio sin reordenar", async () => {
+    mocks.saveRating.mockResolvedValue({});
+    renderList(page([safe, bad, girl]));
+    expect(bar("5,0", "1 valoración")).toBeInTheDocument();
+
+    // "Bad Animals" 4,5★ → 5★: el cubo de 5★ pasa a 2 y el de 4,5★ a 0.
+    fireEvent.click(screen.getAllByRole("radio", { name: "5,0 estrellas" })[1]!);
+
+    await waitFor(() => expect(bar("5,0", "2 valoraciones")).toBeInTheDocument());
+    expect(bar("4,5", "sin valoraciones")).toBeInTheDocument();
+    // (5 + 5 + 3) / 3 = 4,333… → "4,3"
+    expect(screen.getByText("Promedio 4,3★")).toBeInTheDocument();
+    expect(titles()).toEqual(["Safe and Sound", "Bad Animals", "There’s the Girl"]);
+  });
+
+  it("borrar una canción baja su barra y el segmento de canciones", async () => {
+    mocks.deleteRating.mockResolvedValue(null);
+    mocks.getRatings.mockResolvedValue({ own: null, aggregate: { count: 0, averageStars: null, averageDetailedScore: null } });
+    renderList(page([safe, song(4, "Barracuda", 4, 80)]));
+    expect(segment(t.sectionSongs)).toHaveTextContent(`${t.sectionSongs}1`);
+
+    fireEvent.click(screen.getByRole("button", { name: "80/100" }));
+    fireEvent.click(screen.getByRole("button", { name: detail.delete }));
+    fireEvent.click(await screen.findByRole("button", { name: detail.deleteConfirm }));
+
+    await waitFor(() => expect(bar("4,0", "sin valoraciones")).toBeInTheDocument());
+    expect(segment(t.sectionSongs)).toHaveTextContent(`${t.sectionSongs}0`);
+    expect(segment(t.sectionAlbums)).toHaveTextContent(`${t.sectionAlbums}1`);
   });
 });
