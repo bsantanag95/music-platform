@@ -75,14 +75,36 @@ function joinWhere(rows: unknown[]) {
   return { from };
 }
 
+// select().from().leftJoin()×3.where().groupBy() → faceta de audiencia de la lista propia
+function joinGroupBy(rows: unknown[]) {
+  const groupBy = vi.fn().mockResolvedValue(rows);
+  const where = vi.fn<(conditions: unknown) => unknown>(() => ({ groupBy }));
+  const chain = { leftJoin: vi.fn(() => chain), where };
+  const from = vi.fn(() => chain);
+  return { from, where };
+}
+
 const zeroCounts = { artist: 0, releaseGroup: 0, recording: 0 };
 
-// listMyFavorites / listUserFavorites hacen dos selects: primero el paginado,
-// luego el agregado de counts.
+// listUserFavorites hace dos selects: primero el paginado, luego el agregado de counts.
 function mockListQueries(rows: unknown[], counts = zeroCounts) {
   mocks.db.select
     .mockReturnValueOnce(joinPaged(rows))
     .mockReturnValueOnce(joinWhere([counts]));
+}
+
+// listMyFavorites suma un tercero: la faceta de audiencia agrupada.
+let audienceFacetChain = joinGroupBy([]);
+function mockMyListQueries(
+  rows: unknown[],
+  counts = zeroCounts,
+  audienceRows: { audience: string; n: number }[] = [],
+) {
+  audienceFacetChain = joinGroupBy(audienceRows);
+  mocks.db.select
+    .mockReturnValueOnce(joinPaged(rows))
+    .mockReturnValueOnce(joinWhere([counts]))
+    .mockReturnValueOnce(audienceFacetChain);
 }
 
 // select().from().leftJoin()×3.where().orderBy().limit() → sin offset, cada
@@ -225,7 +247,7 @@ describe("servicio de favoritos", () => {
   });
 
   it("listMyFavorites devuelve vacío y counts en cero cuando no hay favoritos", async () => {
-    mockListQueries([]);
+    mockMyListQueries([]);
 
     const result = await listMyFavorites(user);
     expect(result.favorites).toEqual([]);
@@ -242,7 +264,7 @@ describe("servicio de favoritos", () => {
       releaseTitle: "Dr. Feelgood",
       releaseCover: "https://coverartarchive.org/release-group/x/front-250",
     };
-    mockListQueries([favoriteRow, albumRow]);
+    mockMyListQueries([favoriteRow, albumRow]);
 
     await listMyFavorites(user);
 
@@ -257,7 +279,7 @@ describe("servicio de favoritos", () => {
       createdAt: new Date(Date.now() - i * 1000),
     }));
 
-    mockListQueries(rows, { artist: 12, releaseGroup: 7, recording: 2 });
+    mockMyListQueries(rows, { artist: 12, releaseGroup: 7, recording: 2 });
 
     const result = await listMyFavorites(user, 1, 20);
     expect(result.favorites.length).toBe(20);
@@ -268,7 +290,11 @@ describe("servicio de favoritos", () => {
   it("listMyFavorites acepta filtros combinados y separa counts (sin el filtro type) del listado", async () => {
     const paged = joinPaged([favoriteRow]);
     const countsChain = joinWhere([{ artist: 3, releaseGroup: 1, recording: 0 }]);
-    mocks.db.select.mockReturnValueOnce(paged).mockReturnValueOnce(countsChain);
+    audienceFacetChain = joinGroupBy([]);
+    mocks.db.select
+      .mockReturnValueOnce(paged)
+      .mockReturnValueOnce(countsChain)
+      .mockReturnValueOnce(audienceFacetChain);
 
     const result = await listMyFavorites(user, 1, 20, {
       type: "artist",
@@ -280,6 +306,39 @@ describe("servicio de favoritos", () => {
     expect(result.favorites.length).toBe(1);
     // counts refleja el conjunto sin el filtro de tipo: los tres tipos siguen presentes.
     expect(result.counts).toEqual({ artist: 3, "release-group": 1, recording: 0 });
+  });
+
+  it("listMyFavorites expone la faceta de audiencia con las tres audiencias (en cero si faltan)", async () => {
+    mockMyListQueries([], zeroCounts, [
+      { audience: "public", n: 3 },
+      { audience: "private", n: 1 },
+    ]);
+    const result = await listMyFavorites(user);
+    expect(result.facets).toEqual({ audience: { private: 1, followers: 0, public: 3 } });
+  });
+
+  it("la faceta de audiencia no aplica el filtro de audiencia pero sí q y type", async () => {
+    mockMyListQueries([]);
+    await listMyFavorites(user, 1, 20, { audience: "public", type: "release-group", q: "heart" });
+    const where = audienceFacetChain.where.mock.calls[0]![0] as SQL;
+    const query = new PgDialect().sqlToQuery(where);
+    expect(query.sql).not.toContain('"audience" = $');
+    expect(query.sql.toLowerCase()).toContain("ilike");
+    expect(query.sql.toLowerCase()).toContain("is not null");
+    expect(query.params).toContain("%heart%");
+    expect(query.params).not.toContain("public");
+  });
+
+  it("listUserFavorites no incluye la faceta de audiencia", async () => {
+    mocks.getProfileByUsername.mockResolvedValue({
+      id: "otro-usuario",
+      profileVisibility: "public",
+      relation: "none",
+      blockedByMe: false,
+    });
+    mockListQueries([]);
+    const result = await listUserFavorites("otro-usuario", user);
+    expect("facets" in result).toBe(false);
   });
 
   it("listUserFavorites devuelve vacío y counts en cero cuando no hay permiso", async () => {
@@ -488,7 +547,7 @@ describe("servicio de favoritos", () => {
 describe("búsqueda de texto (`q`) — título o artista acreditado (openspec: improve-favorites-picker)", () => {
   const dialect = new PgDialect();
 
-  function pagedAndCountsCapturingWhere(rows: unknown[]) {
+  function pagedAndCountsCapturingWhere(rows: unknown[], mine = true) {
     const pagedWhere = vi.fn(() => ({ orderBy: vi.fn(() => ({ limit: vi.fn(() => ({ offset: vi.fn().mockResolvedValue(rows) })) })) }));
     const pagedChain = { leftJoin: vi.fn(() => pagedChain), where: pagedWhere };
     const countsWhere = vi.fn().mockResolvedValue([zeroCounts]);
@@ -496,6 +555,8 @@ describe("búsqueda de texto (`q`) — título o artista acreditado (openspec: i
     mocks.db.select
       .mockReturnValueOnce({ from: vi.fn(() => pagedChain) })
       .mockReturnValueOnce({ from: vi.fn(() => countsChain) });
+    // La lista propia suma la consulta agrupada de la faceta de audiencia.
+    if (mine) mocks.db.select.mockReturnValueOnce(joinGroupBy([]));
     return { pagedWhere, countsWhere };
   }
 
@@ -528,7 +589,7 @@ describe("búsqueda de texto (`q`) — título o artista acreditado (openspec: i
       relation: "none",
       blockedByMe: false,
     });
-    const { pagedWhere, countsWhere } = pagedAndCountsCapturingWhere([]);
+    const { pagedWhere, countsWhere } = pagedAndCountsCapturingWhere([], false);
 
     await listUserFavorites("otro-usuario", user, 1, 20, { q: "sabrina" });
 

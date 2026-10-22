@@ -59,6 +59,13 @@ Mantiene el mundo visual vigente ("The Vinyl Listening Room") y los principios d
     "Seleccionar", barra de selección y "Listo" a 44 px; casillas a 24 px. Quitar se anuncia a lectores de
     pantalla y el error de guardar o quitar aparece junto a la ficha (el del lote sigue global).
   - Las seis primeras carátulas se cargan con prioridad.
+- **Segmentos y fichas de audiencia** (cambio `redesign-favorites-summary-toolbar`, Fase 2): el filtro de tipo
+  es un control segmentado `Todo · Artistas · Álbumes · Canciones` con su cantidad (`counts`, que ya ignora el
+  filtro de tipo), junto al buscador, y también en el perfil público. El filtro de audiencia (solo vista
+  propia) son tres fichas `Público · Seguidores · Privado` con su cantidad (`facets.audience`, calculada sin el
+  filtro de audiencia) que alternan al pulsarlas. Reemplazan a los selectores de tipo y audiencia; el orden
+  conserva su selector. Al cambiar la audiencia de una ficha, quitarla o cambiarlas en lote, las cantidades se
+  ajustan en el lugar (en la caché de la consulta, así un fallo las restaura) sin recargar ni reordenar la lista.
 - **API:** `GET /api/me/favorites` gana `q`/`type`/`audience`/`sort` y `counts`;
   `PATCH /api/me/favorites` acepta `{ ids: string[], audience }` además de `{ id, audience }`.
   Sin migraciones. Ver `docs/04-api/contracts.md`.

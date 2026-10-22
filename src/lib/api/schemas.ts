@@ -1661,12 +1661,22 @@ export const FavoriteCountsSchema = z.object({
 });
 export type FavoriteCounts = z.infer<typeof FavoriteCountsSchema>;
 
+// Cantidad de favoritos propios por audiencia, calculada sin el filtro de audiencia (faceta: cada audiencia
+// sigue mostrando su cantidad). Solo la lista propia la lleva (openspec: redesign-favorites-summary-toolbar).
+export const FavoriteAudienceFacetSchema = z.object({
+  private: z.number().int().nonnegative(),
+  followers: z.number().int().nonnegative(),
+  public: z.number().int().nonnegative(),
+});
+export type FavoriteAudienceFacet = z.infer<typeof FavoriteAudienceFacetSchema>;
+
 export const FavoritesListResponseSchema = z.object({
   favorites: z.array(FavoriteSchema),
   page: z.number().int(),
   pageSize: z.number().int(),
   hasNext: z.boolean(),
   counts: FavoriteCountsSchema,
+  facets: z.object({ audience: FavoriteAudienceFacetSchema }).optional(),
 });
 export type FavoritesListResponse = z.infer<typeof FavoritesListResponseSchema>;
 

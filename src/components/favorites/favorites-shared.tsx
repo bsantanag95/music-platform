@@ -1,4 +1,4 @@
-import type { Favorite, SocialTargetType } from "@/lib/api/schemas";
+import type { DiaryAudience, Favorite, FavoriteAudienceFacet, FavoriteCounts, SocialTargetType } from "@/lib/api/schemas";
 import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 
 // Orden fijo de tipos en el muro: artistas → álbumes → canciones. Coincide con
@@ -62,4 +62,34 @@ export function formatFavoriteDate(iso: string, locale: string): string {
     month: "short",
     day: "numeric",
   });
+}
+
+export interface FavoritePageFacets {
+  counts: FavoriteCounts;
+  audience: FavoriteAudienceFacet;
+}
+
+/**
+ * Ajusta las facetas tras cambiar la audiencia de uno o varios favoritos (`next`) o quitarlos (`next = null`),
+ * sin recargar la lista. La faceta de audiencia ignora el filtro de audiencia, así que siempre mueve la cantidad
+ * de un cubo al otro; `counts` (por tipo) sí lo aplica, así que solo cambia si el favorito entra o sale del filtro
+ * activo. Un favorito que ya tiene la audiencia nueva no cambia nada.
+ */
+export function adjustFavoriteFacets(
+  facets: FavoritePageFacets,
+  audienceFilter: DiaryAudience | "",
+  changed: Favorite[],
+  next: DiaryAudience | null,
+): FavoritePageFacets {
+  const audience = { ...facets.audience };
+  const counts = { ...facets.counts };
+  const inFilter = (value: DiaryAudience) => audienceFilter === "" || value === audienceFilter;
+  for (const favorite of changed) {
+    if (next !== null && favorite.audience === next) continue;
+    audience[favorite.audience] = Math.max(0, audience[favorite.audience] - 1);
+    if (next !== null) audience[next] += 1;
+    const delta = (next !== null && inFilter(next) ? 1 : 0) - (inFilter(favorite.audience) ? 1 : 0);
+    counts[favorite.targetType] = Math.max(0, counts[favorite.targetType] + delta);
+  }
+  return { counts, audience };
 }

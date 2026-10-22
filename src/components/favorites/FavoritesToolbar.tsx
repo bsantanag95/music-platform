@@ -2,8 +2,10 @@
 
 import { useTranslations } from "next-intl";
 import { FilterSelect } from "@/components/ui/FilterSelect";
-import type { FavoriteSort, SocialTargetType } from "@/lib/api/schemas";
+import type { FavoriteAudienceFacet, FavoriteCounts, FavoriteSort, SocialTargetType } from "@/lib/api/schemas";
 import type { DiaryAudience } from "@/lib/api/schemas";
+import { FavoritesAudienceChips } from "./FavoritesAudienceChips";
+import { FavoritesTypeSegments } from "./FavoritesTypeSegments";
 
 export interface FavoritesFiltersState {
   q: string;
@@ -35,67 +37,56 @@ interface FavoritesToolbarProps {
   searchInput: string;
   onSearchInput: (value: string) => void;
   onClear: () => void;
+  /** Cantidad por tipo para los segmentos, calculada sin el filtro de tipo (`counts`). */
+  counts: FavoriteCounts;
+  /** Cantidad por audiencia para las fichas (`facets.audience`); solo la lista propia la tiene. */
+  audienceFacet?: FavoriteAudienceFacet;
   /**
-   * El filtro de audiencia solo tiene sentido para el propio dueño filtrando
-   * sus favoritos por visibilidad — en modo lectura (perfil de un tercero) no
-   * se muestra: el visitante nunca puede ver "privado" de otra persona, y
-   * "seguidores"/"público" ya son la totalidad de lo que le llega.
+   * Las fichas de audiencia solo tienen sentido para el propio dueño filtrando sus favoritos por
+   * visibilidad — en modo lectura (perfil de un tercero) no se muestran: el visitante nunca puede ver
+   * "privado" de otra persona, y "seguidores"/"público" ya son la totalidad de lo que le llega.
    */
   showAudienceFilter?: boolean;
 }
 
-// Barra de herramientas del muro: buscador (con debounce en el orquestador) más
-// hasta tres <select> livianos de filtro/orden. Misma disposición que /me/lists y
-// /me/diary.
+// Barra de herramientas del muro (openspec: redesign-favorites-summary-toolbar): buscador (con debounce en
+// el orquestador) y segmentos de tipo con su cantidad en la primera fila; fichas de audiencia con su
+// cantidad (solo vista propia), orden y "Limpiar filtros" en la segunda.
 export function FavoritesToolbar({
   filters,
   onChange,
   searchInput,
   onSearchInput,
   onClear,
+  counts,
+  audienceFacet,
   showAudienceFilter = true,
 }: FavoritesToolbarProps) {
   const t = useTranslations("favorites");
   const isFiltered = favoriteFiltersActive(filters);
 
   return (
-    <div className="flex flex-col gap-2">
-      <input
-        type="search"
-        autoComplete="off"
-        value={searchInput}
-        onChange={(event) => onSearchInput(event.target.value)}
-        placeholder={t("searchPlaceholder")}
-        aria-label={t("searchPlaceholder")}
-        className="w-full rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted"
-      />
-      <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
-        <FilterSelect
-          value={filters.type}
-          onChange={(value) => onChange({ ...filters, type: value as SocialTargetType | "" })}
-          ariaLabel={t("typeFilterLabel")}
-          label={t("typeShort")}
-          widthClassName="w-[20ch]"
-        >
-          <option value="">{t("filterAllTypes")}</option>
-          <option value="artist">{t("typeArtist")}</option>
-          <option value="release-group">{t("typeAlbum")}</option>
-          <option value="recording">{t("typeSong")}</option>
-        </FilterSelect>
-        {showAudienceFilter && (
-          <FilterSelect
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <input
+          type="search"
+          autoComplete="off"
+          value={searchInput}
+          onChange={(event) => onSearchInput(event.target.value)}
+          placeholder={t("searchPlaceholder")}
+          aria-label={t("searchPlaceholder")}
+          className="w-full min-w-0 flex-1 rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted"
+        />
+        <FavoritesTypeSegments value={filters.type} onChange={(type) => onChange({ ...filters, type })} counts={counts} />
+      </div>
+      <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
+        {showAudienceFilter && audienceFacet ? (
+          <FavoritesAudienceChips
             value={filters.audience}
-            onChange={(value) => onChange({ ...filters, audience: value as DiaryAudience | "" })}
-            ariaLabel={t("audienceFilterLabel")}
-            label={t("audienceShort")}
-            widthClassName="w-[19ch]"
-          >
-            <option value="">{t("filterAllAudiences")}</option>
-            <option value="private">{t("audience.private")}</option>
-            <option value="followers">{t("audience.followers")}</option>
-            <option value="public">{t("audience.public")}</option>
-          </FilterSelect>
-        )}
+            onChange={(audience) => onChange({ ...filters, audience })}
+            facet={audienceFacet}
+          />
+        ) : null}
         <FilterSelect
           value={filters.sort}
           onChange={(value) => onChange({ ...filters, sort: value as FavoriteSort })}

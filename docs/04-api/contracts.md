@@ -1356,8 +1356,11 @@ combinables, aplicados en el servidor sobre el conjunto completo:
 - `sort`: `recent` (default) | `alpha` (alfabético por título del objetivo).
 
 **200 OK:** `{ favorites: [{ id, targetType, audience, createdAt, target: { id, title, coverThumbUrl } }], page, pageSize, hasNext, counts: { artist, "release-group", recording } }`.
-`counts` refleja `q`/`audience` pero no `type`. **400** con `VALIDATION_ERROR` si un parámetro es
-inválido.
+`counts` refleja `q`/`audience` pero no `type`. La lista propia suma `facets: { audience: { private,
+followers, public } }` (cambio `redesign-favorites-summary-toolbar`, campo aditivo): la cantidad por audiencia
+calculada con `q` y `type` pero **sin** el filtro `audience`, para que cada audiencia siga mostrando su cantidad al
+filtrar por otra. Solo la lista propia la incluye (la de un perfil ajeno no, porque el visitante no filtra por
+audiencia). **400** con `VALIDATION_ERROR` si un parámetro es inválido.
 
 ### `GET /api/users/[username]/favorites?page=&pageSize=`
 
