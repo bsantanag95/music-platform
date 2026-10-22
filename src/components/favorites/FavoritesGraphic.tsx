@@ -11,9 +11,11 @@ import type { FavoritesRendererProps } from "./favorites-items-view";
 
 const AUDIENCES: DiaryAudience[] = ["private", "followers", "public"];
 
-function tileMedia(favorite: Favorite) {
+function tileMedia(favorite: Favorite, priority: boolean) {
   if (favorite.targetType === "release-group") {
-    return <CoverThumb cover={favorite.target.coverThumbUrl} label="" className="aspect-square w-full" />;
+    return (
+      <CoverThumb cover={favorite.target.coverThumbUrl} label="" className="aspect-square w-full" priority={priority} />
+    );
   }
   if (favorite.targetType === "recording") {
     return <DiscPlaceholder alt="" className="aspect-square w-full" />;
@@ -25,7 +27,7 @@ function tileMedia(favorite: Favorite) {
 // `EntriesGraphic` de Want to Listen. El título y el artista acreditado van
 // como caption visible bajo la imagen; los controles de selección, audiencia
 // y quitar quedan debajo, condensados.
-export function FavoritesGraphic({ favorites, actions }: FavoritesRendererProps) {
+export function FavoritesGraphic({ favorites, actions, priorityIds }: FavoritesRendererProps) {
   const t = useTranslations("favorites");
 
   return (
@@ -41,7 +43,7 @@ export function FavoritesGraphic({ favorites, actions }: FavoritesRendererProps)
                 href={href}
                 className="block overflow-hidden rounded-md border border-ink-border transition-colors hover:border-amber"
               >
-                {tileMedia(favorite)}
+                {tileMedia(favorite, priorityIds?.has(favorite.id) ?? false)}
               </Link>
               {actions.selectionMode && !actions.readOnly ? (
                 <input
@@ -49,7 +51,7 @@ export function FavoritesGraphic({ favorites, actions }: FavoritesRendererProps)
                   checked={selected}
                   onChange={() => actions.onToggleSelect(favorite.id)}
                   aria-label={t("selectItem", { title: favorite.target.title })}
-                  className="absolute left-1.5 top-1.5 size-4 shrink-0 accent-amber"
+                  className="absolute left-1.5 top-1.5 size-4 shrink-0 accent-amber [@media(pointer:coarse)]:size-6"
                 />
               ) : null}
             </div>
@@ -61,7 +63,7 @@ export function FavoritesGraphic({ favorites, actions }: FavoritesRendererProps)
               {favorite.target.title}
             </Link>
             {favorite.target.artistName ? (
-              <span className="truncate font-data text-[0.65rem] text-paper-muted/80">
+              <span className="truncate font-data text-[0.7rem] text-paper-muted">
                 {favorite.target.artistName}
               </span>
             ) : null}
@@ -78,7 +80,7 @@ export function FavoritesGraphic({ favorites, actions }: FavoritesRendererProps)
                   onChange={(event) =>
                     actions.onAudienceChange(favorite, event.target.value as DiaryAudience)
                   }
-                  className="filter-select rounded border border-ink-border bg-ink px-1 py-0.5 font-data text-[0.65rem] text-paper-muted transition-colors hover:text-paper disabled:opacity-50"
+                  className="filter-select rounded border border-ink-border bg-ink px-1 py-0.5 font-data text-[0.7rem] text-paper-muted transition-colors hover:text-paper disabled:opacity-50 [@media(pointer:coarse)]:min-h-11"
                 >
                   {AUDIENCES.map((audience) => (
                     <option key={audience} value={audience}>
@@ -90,12 +92,18 @@ export function FavoritesGraphic({ favorites, actions }: FavoritesRendererProps)
                   type="button"
                   disabled={busy}
                   onClick={() => actions.onRemove(favorite)}
-                  className="font-data text-[0.65rem] text-paper-muted underline decoration-dotted transition-colors hover:text-danger disabled:opacity-50"
+                  className="font-data text-[0.7rem] text-paper-muted underline decoration-dotted transition-colors hover:text-danger disabled:opacity-50 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:px-1"
                 >
                   {t("removeFavorite")}
                 </button>
               </div>
             )}
+
+            {actions.errorId === favorite.id ? (
+              <p role="alert" className="font-data text-[0.7rem] text-danger">
+                {t("saveError")}
+              </p>
+            ) : null}
           </li>
         );
       })}

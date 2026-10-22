@@ -26,6 +26,7 @@ import {
   EMPTY_FAVORITE_FILTERS,
   FavoritesToolbar,
   favoriteFiltersActive,
+  favoriteScopeNarrowed,
   type FavoritesFiltersState,
 } from "./FavoritesToolbar";
 import { groupFavoritesByType, sectionTitleKey } from "./favorites-shared";
@@ -40,6 +41,21 @@ const PAGE_SIZE = 20;
 const AUDIENCES: DiaryAudience[] = ["private", "followers", "public"];
 
 type FavoritesPages = InfiniteData<FavoritesListResponse, number>;
+
+// Carátulas con carga prioritaria: las de los primeros favoritos (una fila del modo Gráfico).
+const PRIORITY_COVERS = 6;
+
+// Marcador del listado mientras no se conoce el modo guardado: evita pintar el defecto y saltar al modo de
+// la persona. Neutro (ni fichas ni filas) y sin movimiento si se pidió reducirlo.
+function ListPlaceholder() {
+  return (
+    <div aria-hidden data-testid="favorites-list-placeholder" className="flex flex-col gap-4">
+      {Array.from({ length: 6 }, (_, index) => (
+        <div key={index} className="h-16 rounded-lg bg-ink-surface motion-safe:animate-pulse" />
+      ))}
+    </div>
+  );
+}
 
 interface FavoritesWallProps {
   initial: FavoritesListResponse;
@@ -75,7 +91,7 @@ function sameFilters(a: FavoritesFiltersState, b: FavoritesFiltersState): boolea
 export function FavoritesWall({ initial, readOnly, username, initialFilters }: FavoritesWallProps) {
   const t = useTranslations("favorites");
   const queryClient = useQueryClient();
-  const [mode, setMode] = useFavoriteViewMode();
+  const [mode, setMode, modeReady] = useFavoriteViewMode();
 
   const seededState = useMemo(() => toFiltersState(initialFilters), [initialFilters]);
   const [filters, setFilters] = useState<FavoritesFiltersState>(seededState);
@@ -85,6 +101,8 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
   const [rowBusyId, setRowBusyId] = useState<string | null>(null);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [actionError, setActionError] = useState(false);
+  // Ficha cuyo último cambio de audiencia o quitar falló: el aviso va junto a ella, no solo al final.
+  const [errorId, setErrorId] = useState<string | null>(null);
   const [announce, setAnnounce] = useState("");
 
   // Debounce del buscador: espera a que el usuario deje de tipear.
@@ -96,6 +114,7 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
   }, [searchInput]);
 
   const isFiltered = favoriteFiltersActive(filters);
+  const narrowed = favoriteScopeNarrowed(filters);
   const apiFilters = useMemo(() => toApiFilters(filters), [filters]);
   const mineQueryKey = queryKeys.myFavorites(apiFilters);
   const queryKey = readOnly ? (["favorites", "user", username, apiFilters] as const) : mineQueryKey;
@@ -120,6 +139,11 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
     data?.pages.flatMap((page) => page?.favorites ?? []) ?? (seeded ? initial.favorites : []);
   const counts = data?.pages[0]?.counts ?? initial.counts;
   const groups = groupFavoritesByType(favorites);
+  // `counts` se calcula sin el filtro de tipo (es una faceta): con un tipo elegido el total de resultados es el
+  // de ese tipo; sin él, la suma de los tres.
+  const libraryTotal = counts.artist + counts["release-group"] + counts.recording;
+  const resultsTotal = filters.type ? counts[filters.type] : libraryTotal;
+  const priorityIds = new Set(favorites.slice(0, PRIORITY_COVERS).map((favorite) => favorite.id));
 
   const invalidateMine = useCallback(
     () => queryClient.invalidateQueries({ queryKey: ["favorites", "mine"], exact: false }),
@@ -171,12 +195,13 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
     const snapshot = queryClient.getQueryData<FavoritesPages>(mineQueryKey);
     setRowBusyId(favorite.id);
     setActionError(false);
+    setErrorId(null);
     patchLocalAudience([favorite.id], audience);
     try {
       await updateFavoriteAudience(favorite.id, audience);
     } catch {
       if (snapshot) queryClient.setQueryData(mineQueryKey, snapshot);
-      setActionError(true);
+      setErrorId(favorite.id);
     } finally {
       setRowBusyId(null);
       void invalidateMine();
@@ -187,14 +212,18 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
     const snapshot = queryClient.getQueryData<FavoritesPages>(mineQueryKey);
     setRowBusyId(favorite.id);
     setActionError(false);
+    setErrorId(null);
     patchLocalRemove(favorite);
     try {
       await removeFavorite({ type: favorite.targetType, id: favorite.target.id });
+      setAnnounce(t("removedAnnouncement"));
     } catch (error) {
       const gone = error instanceof ApiError && error.code === "FAVORITE_NOT_FOUND";
-      if (!gone && snapshot) {
+      if (gone) {
+        setAnnounce(t("removedAnnouncement"));
+      } else if (snapshot) {
         queryClient.setQueryData(mineQueryKey, snapshot);
-        setActionError(true);
+        setErrorId(favorite.id);
       }
     } finally {
       setRowBusyId(null);
@@ -233,6 +262,7 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
     const snapshot = queryClient.getQueryData<FavoritesPages>(mineQueryKey);
     setBulkBusy(true);
     setActionError(false);
+    setErrorId(null);
     patchLocalAudience(ids, audience);
     try {
       await updateFavoritesAudienceBulk(ids, audience);
@@ -279,14 +309,23 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
   );
 
   return (
-    <div className="flex w-full max-w-3xl flex-col gap-5">
-      <p className="font-data text-xs text-paper-muted">
-        {t("countArtists", { count: counts.artist })}
-        <span aria-hidden> · </span>
-        {t("countAlbums", { count: counts["release-group"] })}
-        <span aria-hidden> · </span>
-        {t("countSongs", { count: counts.recording })}
-      </p>
+    <div className="flex w-full flex-col gap-5">
+      {/* Con la biblioteca vacía y sin filtros no hay cabecera: el estado vacío ya lo dice. */}
+      {narrowed || libraryTotal > 0 ? (
+        <p className="font-data text-xs text-paper-muted">
+          {narrowed ? <span>{t("resultsLabel", { count: resultsTotal })}</span> : null}
+          {(narrowed ? resultsTotal > 0 : libraryTotal > 0) ? (
+            <>
+              {narrowed ? <span aria-hidden> · </span> : null}
+              {t("countArtists", { count: counts.artist })}
+              <span aria-hidden> · </span>
+              {t("countAlbums", { count: counts["release-group"] })}
+              <span aria-hidden> · </span>
+              {t("countSongs", { count: counts.recording })}
+            </>
+          ) : null}
+        </p>
+      ) : null}
 
       <FavoritesToolbar
         filters={filters}
@@ -297,19 +336,24 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
         showAudienceFilter={!readOnly}
       />
 
-      {favorites.length > 0 ? (
+      {favorites.length > 0 || narrowed ? (
         <div className="flex items-center justify-between gap-3">
-          {!readOnly ? (
+          {!readOnly && favorites.length > 0 ? (
             <Button
               variant="secondary"
               onClick={() => (selectionMode ? exitSelection() : setSelectionMode(true))}
+              className="[@media(pointer:coarse)]:min-h-11"
             >
               {selectionMode ? t("selectionDone") : t("selectMode")}
             </Button>
           ) : (
             <span />
           )}
-          <FavoritesModeSwitcher mode={mode} onChange={setMode} />
+          {/* Oculto (sin quitar su espacio) hasta conocer el modo guardado: así no marca el defecto un
+              instante para saltar después al modo de la persona. */}
+          <div className={modeReady ? "" : "invisible"} aria-hidden={modeReady ? undefined : true}>
+            <FavoritesModeSwitcher mode={mode} onChange={setMode} />
+          </div>
         </div>
       ) : null}
 
@@ -319,6 +363,8 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
 
       {favorites.length === 0 && !isPending ? (
         emptyBlock
+      ) : !modeReady ? (
+        <ListPlaceholder />
       ) : (
         <div className="flex flex-col gap-8">
           {groups.map((group) => {
@@ -327,6 +373,7 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
               selectionMode,
               selectedIds,
               busyId: rowBusyId,
+              errorId,
               bulkBusy,
               onToggleSelect: toggleSelect,
               onAudienceChange: handleAudienceChange,
@@ -340,7 +387,7 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
                   {t(sectionTitleKey(group.type))}
                   <span className="font-data text-xs text-paper-muted">{counts[group.type]}</span>
                 </h2>
-                <Renderer favorites={group.favorites} actions={rowActions} />
+                <Renderer favorites={group.favorites} actions={rowActions} priorityIds={priorityIds} />
               </section>
             );
           })}
@@ -382,7 +429,7 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
               type="button"
               disabled={bulkBusy}
               onClick={() => void handleBulkAudience(audience)}
-              className="rounded border border-ink-border px-2 py-1 font-data text-xs text-paper-muted transition-colors hover:border-amber hover:text-paper disabled:opacity-50"
+              className="rounded border border-ink-border px-2 py-1 font-data text-xs text-paper-muted transition-colors hover:border-amber hover:text-paper disabled:opacity-50 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:px-3"
             >
               {t(`audience.${audience}`)}
             </button>
@@ -390,7 +437,7 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
           <button
             type="button"
             onClick={exitSelection}
-            className="font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-paper"
+            className="font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-paper [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:px-2"
           >
             {t("selectionDone")}
           </button>

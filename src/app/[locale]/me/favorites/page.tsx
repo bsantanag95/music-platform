@@ -30,8 +30,10 @@ export default async function FavoritesPage({
   const filters = parseFavoritesFilters(await searchParams);
   const initial = await listMyFavorites(user.id, 1, 20, filters);
 
+  // Un solo ancho para los tres modos (4xl) y el título alineado con el contenido: cambiar de modo no
+  // mueve la cabecera ni la barra. El muro llena su contenedor; el perfil público pone el suyo.
   return (
-    <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-12">
+    <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-4 py-12">
       <h1 className="font-display text-2xl text-paper">{t("title")}</h1>
       <FavoritesWall initial={initial} initialFilters={filters} />
     </main>

@@ -7,6 +7,8 @@ export interface FavoritesRowActions {
   selectionMode?: boolean;
   selectedIds: Set<string>;
   busyId: string | null;
+  /** Ficha cuyo último cambio de audiencia o quitar falló: muestra el aviso de error junto a ella. */
+  errorId: string | null;
   bulkBusy: boolean;
   onToggleSelect: (id: string) => void;
   onAudienceChange: (favorite: Favorite, audience: DiaryAudience) => void;
@@ -16,4 +18,6 @@ export interface FavoritesRowActions {
 export interface FavoritesRendererProps {
   favorites: Favorite[];
   actions: FavoritesRowActions;
+  /** Ids de los favoritos cuya carátula se carga con prioridad (los de arriba, sin scroll). */
+  priorityIds?: ReadonlySet<string>;
 }

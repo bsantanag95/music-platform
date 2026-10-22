@@ -43,6 +43,22 @@ Mantiene el mundo visual vigente ("The Vinyl Listening Room") y los principios d
   fijaba a `followers` al marcar y no se podía revisar desde ninguna parte.
 - **Vista de perfil ajeno `/users/[username]/favorites`** hereda el muro en modo lectura (sin
   toolbar, sin edición de audiencia, sin selección).
+- **Afinado de la página** (cambio `refine-favorites-page-phase1`, mismo procedimiento que `/me/ratings`):
+  - Sin parpadeo: hasta leer el modo guardado (`localStorage`, defecto Detallada) el listado es un
+    marcador neutro y el conmutador queda oculto sin perder su espacio.
+  - Un solo ancho (`max-w-4xl`, fijado por la página; el muro no fija el suyo, así el perfil público
+    conserva el de su página) y el título alineado con el contenido.
+  - Cabecera honesta: con búsqueda o filtros de tipo o audiencia cuenta resultados ("3 resultados",
+    "Ningún resultado"; con filtro de tipo, el total de ese tipo) en vez de "sin artistas · sin álbumes ·
+    sin canciones"; sin favoritos y sin filtros no hay cabecera (el estado vacío ya lo dice); solo
+    ordenar no cambia la etiqueta. El conmutador sigue visible con filtros sin resultados.
+  - Barra legible: los selectores muestran su texto completo y su nombre (Tipo, Audiencia, Ordenar).
+  - Sin tipo repetido bajo el encabezado de sección (fichas, filas e Índice sin columna de tipo; la
+    fecha se conserva), controles de al menos 11 px y acciones del Índice a contraste normal.
+  - Áreas táctiles con puntero grueso: conmutador, selector de audiencia, "Quitar favorito",
+    "Seleccionar", barra de selección y "Listo" a 44 px; casillas a 24 px. Quitar se anuncia a lectores de
+    pantalla y el error de guardar o quitar aparece junto a la ficha (el del lote sigue global).
+  - Las seis primeras carátulas se cargan con prioridad.
 - **API:** `GET /api/me/favorites` gana `q`/`type`/`audience`/`sort` y `counts`;
   `PATCH /api/me/favorites` acepta `{ ids: string[], audience }` además de `{ id, audience }`.
   Sin migraciones. Ver `docs/04-api/contracts.md`.

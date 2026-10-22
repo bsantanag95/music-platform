@@ -23,6 +23,12 @@ export function favoriteFiltersActive(filters: FavoritesFiltersState): boolean {
   return Boolean(filters.q.trim() || filters.type || filters.audience || filters.sort !== "recent");
 }
 
+// Lo que de verdad reduce el conjunto (búsqueda y filtros de tipo o audiencia): ordenar no quita
+// favoritos, así que no cuenta. Gobierna la etiqueta "N resultados" de la cabecera y el conmutador.
+export function favoriteScopeNarrowed(filters: FavoritesFiltersState): boolean {
+  return Boolean(filters.q.trim() || filters.type || filters.audience);
+}
+
 interface FavoritesToolbarProps {
   filters: FavoritesFiltersState;
   onChange: (next: FavoritesFiltersState) => void;
@@ -63,12 +69,13 @@ export function FavoritesToolbar({
         aria-label={t("searchPlaceholder")}
         className="w-full rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted"
       />
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+      <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
         <FilterSelect
           value={filters.type}
           onChange={(value) => onChange({ ...filters, type: value as SocialTargetType | "" })}
           ariaLabel={t("typeFilterLabel")}
-          widthClassName="w-[17ch]"
+          label={t("typeShort")}
+          widthClassName="w-[20ch]"
         >
           <option value="">{t("filterAllTypes")}</option>
           <option value="artist">{t("typeArtist")}</option>
@@ -80,7 +87,8 @@ export function FavoritesToolbar({
             value={filters.audience}
             onChange={(value) => onChange({ ...filters, audience: value as DiaryAudience | "" })}
             ariaLabel={t("audienceFilterLabel")}
-            widthClassName="w-[16ch]"
+            label={t("audienceShort")}
+            widthClassName="w-[19ch]"
           >
             <option value="">{t("filterAllAudiences")}</option>
             <option value="private">{t("audience.private")}</option>
@@ -92,7 +100,8 @@ export function FavoritesToolbar({
           value={filters.sort}
           onChange={(value) => onChange({ ...filters, sort: value as FavoriteSort })}
           ariaLabel={t("sortLabel")}
-          widthClassName="w-[13ch]"
+          label={t("sortLabel")}
+          widthClassName="w-[15ch]"
         >
           <option value="recent">{t("sortRecent")}</option>
           <option value="alpha">{t("sortAlpha")}</option>
@@ -102,7 +111,7 @@ export function FavoritesToolbar({
           <button
             type="button"
             onClick={onClear}
-            className="font-data text-xs text-paper-muted transition-colors hover:text-paper"
+            className="pb-2 font-data text-xs text-paper-muted transition-colors hover:text-paper [@media(pointer:coarse)]:min-h-11"
           >
             {t("clearFilters")}
           </button>

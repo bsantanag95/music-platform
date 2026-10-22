@@ -6,7 +6,7 @@ import type { FavoritesRendererProps } from "./favorites-items-view";
 // Modo Detallada: la ficha completa (`FavoriteTile`) con carátula/placa,
 // título, artista y controles de audiencia/quitar. Modo por defecto, mismo
 // tratamiento que tenía el muro antes de sumar los tres modos.
-export function FavoritesDetailed({ favorites, actions }: FavoritesRendererProps) {
+export function FavoritesDetailed({ favorites, actions, priorityIds }: FavoritesRendererProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       {favorites.map((favorite) => (
@@ -17,6 +17,9 @@ export function FavoritesDetailed({ favorites, actions }: FavoritesRendererProps
           selectionMode={actions.selectionMode}
           selected={actions.selectedIds.has(favorite.id)}
           busy={actions.busyId === favorite.id || actions.bulkBusy}
+          error={actions.errorId === favorite.id}
+          showType={false}
+          priority={priorityIds?.has(favorite.id) ?? false}
           onToggleSelect={actions.onToggleSelect}
           onAudienceChange={actions.onAudienceChange}
           onRemove={actions.onRemove}
