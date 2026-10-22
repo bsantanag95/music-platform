@@ -3,11 +3,11 @@
 import { RatingTile } from "./RatingTile";
 import type { RatingsRendererProps } from "./ratings-view";
 
-// Modo Gráfico: pared de carátulas con la nota al pasar el cursor. Hasta seis columnas: el
-// contenedor tiene el mismo ancho en los tres modos.
+// Modo Gráfico: pared de carátulas con su leyenda (título, detalle, estrellas y puntaje) siempre visible.
+// Hasta seis columnas: el contenedor tiene el mismo ancho en los tres modos.
 export function RatingsGraphic({ entries, actions, display, priorityIds }: RatingsRendererProps) {
   return (
-    <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+    <ul className="grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
       {entries.map((entry) => (
         <RatingTile
           key={entry.id}

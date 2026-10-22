@@ -138,7 +138,10 @@ describe("MyRatingRow", () => {
     const { onEdit } = renderRow(entry);
     expect(screen.queryByText("86/100")).not.toBeInTheDocument();
     const mark = screen.getByRole("button", { name: t.untunedAction });
-    expect(mark).toHaveTextContent(t.untuned);
+    // Un guion con la ayuda "Sin afinar": la frase ya no se repite como texto visible en cada fila.
+    expect(mark).toHaveTextContent("—");
+    expect(mark).toHaveAttribute("title", t.untuned);
+    expect(screen.queryByText(t.untuned)).not.toBeInTheDocument();
 
     fireEvent.click(mark);
     expect(onEdit).toHaveBeenCalledWith(entry);

@@ -8,7 +8,7 @@ import type { RatingsRendererProps } from "./ratings-view";
 // tenía la página antes de sumar los tres modos.
 export function RatingsDetailed({ entries, actions, display, priorityIds }: RatingsRendererProps) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col divide-y divide-ink-border">
       {entries.map((entry) => (
         <MyRatingRow
           key={entry.id}

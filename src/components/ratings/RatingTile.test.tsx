@@ -6,7 +6,7 @@ import { albumHref, songHref } from "@/lib/catalog-links";
 import { RatingTile } from "./RatingTile";
 import type { MyRatingEntry } from "@/lib/api/schemas";
 
-// openspec: add-ratings-view-modes (my-ratings-view-modes, "Modo Gráfico").
+// openspec: redesign-ratings-views (my-ratings-view-modes, "Modo Gráfico con la nota visible").
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
@@ -16,7 +16,9 @@ vi.mock("@/i18n/navigation", () => ({
   ),
 }));
 vi.mock("@/components/catalog/CoverThumb", () => ({
-  CoverThumb: ({ cover }: { cover: string | null }) => <span data-testid="cover" data-cover={cover ?? ""} />,
+  CoverThumb: ({ cover, priority }: { cover: string | null; priority?: boolean }) => (
+    <span data-testid="cover" data-cover={cover ?? ""} data-priority={String(Boolean(priority))} />
+  ),
 }));
 
 const t = ratingsEs;
@@ -44,7 +46,10 @@ function album(overrides: Partial<MyRatingEntry> = {}): MyRatingEntry {
   };
 }
 
-function renderTile(entry: MyRatingEntry = album(), extra: { showArtist?: boolean; showType?: boolean } = {}) {
+function renderTile(
+  entry: MyRatingEntry = album(),
+  extra: { showArtist?: boolean; showType?: boolean; priority?: boolean } = {},
+) {
   const onEdit = vi.fn();
   renderWithIntl(
     <ul>
@@ -54,55 +59,54 @@ function renderTile(entry: MyRatingEntry = album(), extra: { showArtist?: boolea
   return { onEdit };
 }
 
+const caption = () => screen.getByTestId("rating-caption");
+
 describe("RatingTile", () => {
-  it("el overlay muestra estrellas, el puntaje 86/100, el título y el artista", () => {
+  it("la leyenda siempre visible muestra título, artista, estrellas y puntaje, sin overlay", () => {
     renderTile();
-    const overlay = screen.getByTestId("rating-overlay");
-    expect(overlay).toHaveTextContent("86/100");
-    expect(overlay).toHaveTextContent("Bad Animals");
-    expect(overlay).toHaveTextContent("Heart");
+    expect(caption()).toHaveTextContent("Bad Animals");
+    expect(caption()).toHaveTextContent("Heart");
+    expect(caption()).toHaveTextContent("86");
     expect(screen.getByRole("img", { name: "4,5 estrellas" })).toBeInTheDocument();
+    expect(screen.queryByTestId("rating-overlay")).not.toBeInTheDocument();
+    // Nada sobre la imagen salvo la marca de tipo, que no captura el cursor.
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+    expect(screen.getByRole("link").contains(screen.getByRole("button"))).toBe(false);
   });
 
-  it("el overlay indica el tipo y el año junto al artista", () => {
+  it("la línea de detalle junta artista, tipo y año", () => {
     renderTile();
-    expect(screen.getByTestId("rating-overlay")).toHaveTextContent("Álbum · 1987");
+    expect(caption()).toHaveTextContent("Heart · Álbum · 1987");
   });
 
-  it("sin showArtist ni showType el overlay omite artista y tipo pero conserva el año; la etiqueta accesible sigue completa", () => {
+  it("sin showArtist ni showType omite artista y tipo pero conserva el año; la etiqueta accesible sigue completa", () => {
     renderTile(album(), { showArtist: false, showType: false });
-    const overlay = screen.getByTestId("rating-overlay");
-    expect(overlay).not.toHaveTextContent("Heart");
-    expect(overlay).not.toHaveTextContent("Álbum");
-    expect(overlay).toHaveTextContent("1987");
+    expect(caption()).not.toHaveTextContent("Heart");
+    expect(caption()).not.toHaveTextContent("Álbum");
+    expect(caption()).toHaveTextContent("1987");
     expect(screen.getByRole("link")).toHaveAttribute("aria-label", "Bad Animals, Heart, Álbum, 4,5 estrellas, 86/100");
   });
 
   it("con showType=false muestra el artista y el año sin el tipo", () => {
     renderTile(album(), { showType: false });
-    const overlay = screen.getByTestId("rating-overlay");
-    expect(overlay).toHaveTextContent("Heart");
-    expect(overlay).not.toHaveTextContent("Álbum");
-    expect(overlay).toHaveTextContent("1987");
+    expect(caption()).toHaveTextContent("Heart · 1987");
+    expect(caption()).not.toHaveTextContent("Álbum");
   });
 
-  it("sin año ni tipo no dibuja la línea de detalle", () => {
+  it("sin año ni artista ni tipo no dibuja la línea de detalle", () => {
     renderTile(album({ target: { ...album().target, year: null } }), { showArtist: false, showType: false });
-    const overlay = screen.getByTestId("rating-overlay");
-    expect(overlay).not.toHaveTextContent("·");
-    expect(overlay).not.toHaveTextContent("1987");
+    expect(caption()).not.toHaveTextContent("·");
+    expect(caption()).not.toHaveTextContent("1987");
   });
 
   it("lleva una marca fija de tipo: disco para álbum, nota musical para canción", () => {
     renderTile();
     expect(screen.getByTestId("rating-type-badge")).toHaveAttribute("data-type", "release-group");
     expect(screen.getByTestId("rating-type-badge").querySelectorAll("circle")).toHaveLength(2);
-    // No depende del overlay (se ve sin hover) ni captura el cursor.
-    expect(screen.getByTestId("rating-overlay").contains(screen.getByTestId("rating-type-badge"))).toBe(false);
     expect(screen.getByTestId("rating-type-badge").className).toContain("pointer-events-none");
   });
 
-  it("una canción muestra la marca de nota musical y 'Canción' en el overlay", () => {
+  it("una canción muestra la marca de nota musical y 'Canción' en la leyenda", () => {
     renderTile(
       album({
         targetType: "recording",
@@ -111,15 +115,24 @@ describe("RatingTile", () => {
     );
     expect(screen.getByTestId("rating-type-badge")).toHaveAttribute("data-type", "recording");
     expect(screen.getByTestId("rating-type-badge").querySelector("path")).not.toBeNull();
-    expect(screen.getByTestId("rating-overlay")).toHaveTextContent("Canción · 1976");
+    expect(caption()).toHaveTextContent("Heart · Canción · 1976");
     expect(screen.getByRole("link")).toHaveAttribute("aria-label", "Alone, Heart, Canción, 4,5 estrellas, 86/100");
   });
 
-  it("la carátula enlaza a la ficha y su etiqueta lleva título, artista, estrellas y puntaje", () => {
+  it("la carátula enlaza a la ficha y su etiqueta lleva título, artista, tipo, estrellas y puntaje", () => {
     renderTile();
     const link = screen.getByRole("link", { name: "Bad Animals, Heart, Álbum, 4,5 estrellas, 86/100" });
     expect(link).toHaveAttribute("href", albumHref("Heart", "Bad Animals", RG_ID));
     expect(screen.getByTestId("cover")).toHaveAttribute("data-cover", "https://example.com/cover.jpg");
+  });
+
+  it("el título enlaza igual pero no es un segundo punto de tabulación ni de lectura", () => {
+    renderTile();
+    const titleLink = caption().querySelector("a")!;
+    expect(titleLink).toHaveAttribute("href", albumHref("Heart", "Bad Animals", RG_ID));
+    expect(titleLink).toHaveAttribute("aria-hidden", "true");
+    expect(titleLink).toHaveAttribute("tabindex", "-1");
+    expect(screen.getAllByRole("link")).toHaveLength(1);
   });
 
   it("una canción enlaza a su página", () => {
@@ -133,17 +146,16 @@ describe("RatingTile", () => {
   });
 
   it("sin artista la etiqueta omite ese dato", () => {
-    renderTile(
-      album({ target: { ...album().target, artistName: null, artistId: null } }),
-    );
+    renderTile(album({ target: { ...album().target, artistName: null, artistId: null } }));
     expect(screen.getByRole("link", { name: "Bad Animals, Álbum, 4,5 estrellas, 86/100" })).toBeInTheDocument();
   });
 
-  it("'Editar nota' pide abrir el diálogo con la entrada y no navega", () => {
+  it("el puntaje abre el diálogo con la entrada y no navega", () => {
     const entry = album();
     const { onEdit } = renderTile(entry);
     const button = screen.getByRole("button", { name: "Editar la nota de Bad Animals" });
-    expect(button).toHaveTextContent(t.editRating);
+    expect(button).toHaveTextContent("86");
+    expect(button).not.toHaveTextContent("/100");
     // El botón es un hermano del enlace, no un descendiente: activarlo no dispara la navegación.
     expect(screen.getByRole("link").contains(button)).toBe(false);
 
@@ -151,33 +163,34 @@ describe("RatingTile", () => {
     expect(onEdit).toHaveBeenCalledWith(entry);
   });
 
-  it("sin puntaje el overlay muestra 'Sin afinar' como acción que abre el diálogo", () => {
+  it("sin puntaje muestra un guion con la ayuda 'Sin afinar' como acción que abre el diálogo", () => {
     const entry = album({ detailedScore: null, stars: 4 });
     const { onEdit } = renderTile(entry);
-    expect(screen.queryByText("86/100")).not.toBeInTheDocument();
+    expect(screen.queryByText("86")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: `Bad Animals, Heart, Álbum, 4,0 estrellas, ${t.untuned}` })).toBeInTheDocument();
+    const button = screen.getByRole("button", { name: t.untunedAction });
+    expect(button).toHaveTextContent("—");
+    expect(button).toHaveAttribute("title", t.untuned);
+    expect(caption()).not.toHaveTextContent(t.untuned);
 
-    fireEvent.click(screen.getByRole("button", { name: t.untunedAction }));
+    fireEvent.click(button);
     expect(onEdit).toHaveBeenCalledWith(entry);
   });
 
-  it("el overlay no captura el cursor salvo en sus botones y se revela con hover, foco y sin hover", () => {
+  it("el botón del puntaje llega a 44 px con puntero grueso", () => {
     renderTile();
-    const overlay = screen.getByTestId("rating-overlay");
-    expect(overlay.className).toContain("pointer-events-none");
-    expect(overlay.className).toContain("opacity-0");
-    expect(overlay.className).toContain("group-hover:opacity-100");
-    expect(overlay.className).toContain("group-focus-within:opacity-100");
-    expect(overlay.className).toContain("[@media(hover:none)]:opacity-100");
     expect(screen.getByRole("button", { name: "Editar la nota de Bad Animals" }).className).toContain(
-      "pointer-events-auto",
+      "[@media(pointer:coarse)]:min-h-11",
     );
   });
 
   it("sin carátula propia entrega null al componente de carátula (disco genérico)", () => {
-    renderTile(
-      album({ target: { ...album().target, coverThumbUrl: null } }),
-    );
+    renderTile(album({ target: { ...album().target, coverThumbUrl: null } }));
     expect(screen.getByTestId("cover")).toHaveAttribute("data-cover", "");
+  });
+
+  it("la carátula prioritaria se pide con prioridad", () => {
+    renderTile(album(), { priority: true });
+    expect(screen.getByTestId("cover")).toHaveAttribute("data-priority", "true");
   });
 });

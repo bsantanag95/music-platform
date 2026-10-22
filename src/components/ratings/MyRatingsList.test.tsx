@@ -142,7 +142,7 @@ describe("MyRatingsList", () => {
     expect(screen.getByText("3 valoraciones")).toBeInTheDocument();
     expect(titles()).toEqual(["Safe and Sound", "Bad Animals", "There’s the Girl"]);
     expect(screen.getByRole("button", { name: "99/100" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: t.untunedAction })).toHaveTextContent(t.untuned);
+    expect(screen.getByRole("button", { name: t.untunedAction })).toHaveTextContent("—");
     expect(mocks.getMyRatings).not.toHaveBeenCalled();
   });
 
@@ -404,7 +404,7 @@ describe("MyRatingsList", () => {
   it("modo Índice por artista: sin artista ni tipo en la fila, con el año", () => {
     renderList(page([safe]), { group: "artist" });
     fireEvent.click(mode(t.viewMode.index));
-    const row = screen.getByRole("link", { name: /Safe and Sound/ }).closest("li")!;
+    const row = screen.getByRole("link", { name: /Safe and Sound/ }).closest("tr")!;
     expect(row).not.toHaveTextContent("Heart");
     expect(row).not.toHaveTextContent(t.typeAlbum);
     expect(row).toHaveTextContent("2012");
@@ -413,9 +413,10 @@ describe("MyRatingsList", () => {
   it("modo Índice sin agrupar: artista, tipo y año", () => {
     renderList(page([safe]), { group: "none" });
     fireEvent.click(mode(t.viewMode.index));
-    const row = screen.getByRole("link", { name: /Safe and Sound/ }).closest("li")!;
+    const row = screen.getByRole("link", { name: /Safe and Sound/ }).closest("tr")!;
     expect(row).toHaveTextContent("Heart");
-    expect(row).toHaveTextContent(`${t.typeAlbum} · 2012`);
+    expect(row).toHaveTextContent(t.typeAlbum);
+    expect(row).toHaveTextContent("2012");
   });
 
   it("el filtro de tipo ofrece Todo, Álbumes y Canciones, sin artistas, y ya no hay selectores de tipo ni estrellas", () => {
@@ -452,7 +453,7 @@ describe("MyRatingsList", () => {
     installStorage();
     renderList(page([safe, girl]));
     expect(mode(t.viewMode.graphic)).toBeChecked();
-    expect(screen.getAllByTestId("rating-overlay")).toHaveLength(2);
+    expect(screen.getAllByTestId("rating-caption")).toHaveLength(2);
     expect(screen.queryAllByRole("article")).toHaveLength(0);
   });
 
@@ -460,7 +461,7 @@ describe("MyRatingsList", () => {
     installStorage({ [RATING_VIEW_MODE_STORAGE_KEY]: "index" });
     renderList(page([safe]));
     expect(mode(t.viewMode.index)).toBeChecked();
-    expect(screen.queryAllByTestId("rating-overlay")).toHaveLength(0);
+    expect(screen.queryAllByTestId("rating-caption")).toHaveLength(0);
   });
 
   it("el modo de visualización no viaja en la URL", () => {
@@ -481,7 +482,7 @@ describe("MyRatingsList", () => {
   it("modo Gráfico: una carátula por valoración con la nota en el overlay", () => {
     renderList(page([safe, girl]));
     fireEvent.click(mode(t.viewMode.graphic));
-    expect(screen.getAllByTestId("rating-overlay")).toHaveLength(2);
+    expect(screen.getAllByTestId("rating-caption")).toHaveLength(2);
     expect(screen.getByRole("link", { name: "Safe and Sound, Heart, Álbum, 5,0 estrellas, 99/100" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: `There’s the Girl, Heart, Álbum, 3,0 estrellas, ${t.untuned}` })).toBeInTheDocument();
   });
@@ -531,7 +532,7 @@ describe("MyRatingsList", () => {
     expect(screen.queryByRole("radiogroup")).not.toBeInTheDocument();
   });
 
-  it("desde la pared, 'Editar nota' abre el diálogo y afinar actualiza el overlay en su lugar", async () => {
+  it("desde la pared, el puntaje abre el diálogo y afinar actualiza la leyenda en su lugar", async () => {
     mocks.saveRating.mockResolvedValue({});
     mocks.getRatings.mockResolvedValue({
       own: { id: uuid(2), stars: 4.5, detailedScore: 88, createdAt: "", updatedAt: "2026-10-02T10:00:00.000Z" },
@@ -545,8 +546,10 @@ describe("MyRatingsList", () => {
     fireEvent.click(screen.getByRole("button", { name: detail.save }));
 
     await waitFor(() => expect(mocks.saveRating).toHaveBeenCalledWith("release-group", uuid(52), { detailedScore: 88 }));
-    await waitFor(() => expect(screen.getByText("88/100")).toBeInTheDocument());
-    expect(screen.getAllByTestId("rating-overlay")).toHaveLength(2);
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Editar la nota de Bad Animals" })).toHaveTextContent("88"),
+    );
+    expect(screen.getAllByTestId("rating-caption")).toHaveLength(2);
   });
 
   it("borrar una canción baja el total y el contador de su tipo", async () => {

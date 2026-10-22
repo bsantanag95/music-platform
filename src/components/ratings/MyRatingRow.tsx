@@ -9,6 +9,7 @@ import { albumHref, songHref, artistHref } from "@/lib/catalog-links";
 import { formatStars } from "@/components/album/album-format";
 import { isScoreCoherent } from "@/lib/rating-range";
 import { saveRating } from "@/lib/api/social";
+import { RatingScore } from "./RatingScore";
 import type { MyRatingEntry } from "@/lib/api/schemas";
 
 interface MyRatingRowProps {
@@ -84,15 +85,17 @@ export function MyRatingRow({
 
   const showMeta = (showArtist && Boolean(target.artistName)) || showType;
 
-  // Fila compacta: en pantallas anchas el título y la nota comparten línea (≈ el alto de la
-  // carátula); en angostas la nota baja bajo el título.
+  // Fila compacta (la separa de la siguiente un divisor de `RatingsDetailed`, no un hueco): desde `sm` el
+  // título, las estrellas y el puntaje (de ancho fijo, alineado entre filas) comparten línea; en angostas
+  // el puntaje sube junto al título y las estrellas ocupan la línea de abajo, en vez de bajar el puntaje
+  // a una tercera línea. La carátula se achica desde `sm`.
   return (
-    <article className="flex items-start gap-3 sm:items-center" aria-busy={busy}>
-      <CoverThumb cover={target.coverThumbUrl} label={coverLabel} className="size-12" priority={priority} />
+    <article className="flex items-start gap-3 py-2 sm:items-center" aria-busy={busy}>
+      <CoverThumb cover={target.coverThumbUrl} label={coverLabel} className="size-12 sm:size-10" priority={priority} />
 
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 sm:flex sm:flex-row sm:gap-3">
+          <div className="flex min-w-0 flex-col gap-0.5 sm:flex-1">
             <div className="flex items-baseline gap-2">
               <Link
                 href={titleHref}
@@ -120,7 +123,7 @@ export function MyRatingRow({
             ) : null}
           </div>
 
-          <div className="flex shrink-0 flex-wrap items-center gap-x-2">
+          <div className="col-span-2 row-start-2 sm:col-auto sm:row-auto">
             <StarRatingInput
               size="sm"
               value={entry.stars}
@@ -129,20 +132,14 @@ export function MyRatingRow({
               valueLabel={(value) => t("starValue", { value: formatStars(value, locale) })}
               disabled={busy}
             />
-
-            <button
-              type="button"
-              onClick={() => onEdit(entry)}
-              className={`w-20 whitespace-nowrap rounded px-2 py-1 text-left font-data text-xs transition-colors [@media(pointer:coarse)]:min-h-11 ${
-                entry.detailedScore !== null
-                  ? "text-paper-muted hover:text-paper"
-                  : "text-paper-muted italic underline decoration-dotted hover:text-paper"
-              }`}
-              aria-label={entry.detailedScore !== null ? `${entry.detailedScore}/100` : t("untunedAction")}
-            >
-              {entry.detailedScore !== null ? `${entry.detailedScore}/100` : t("untuned")}
-            </button>
           </div>
+
+          <RatingScore
+            entry={entry}
+            onEdit={onEdit}
+            ariaLabel={entry.detailedScore !== null ? `${entry.detailedScore}/100` : t("untunedAction")}
+            className="col-start-2 row-start-1 w-16 sm:col-auto sm:row-auto [@media(pointer:coarse)]:-my-2"
+          />
         </div>
 
         {saveFailed ? (

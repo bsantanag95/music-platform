@@ -60,7 +60,7 @@ describe("MyRatingsList · marcador del listado", () => {
       </QueryClientProvider>,
     );
     expect(screen.getByTestId("ratings-list-placeholder")).toBeInTheDocument();
-    expect(screen.queryAllByTestId("rating-overlay")).toHaveLength(0);
+    expect(screen.queryAllByTestId("rating-caption")).toHaveLength(0);
     expect(screen.queryAllByRole("article")).toHaveLength(0);
     expect(screen.getByText("1 valoración")).toBeInTheDocument();
     expect(screen.getByLabelText("Buscar en tus valoraciones")).toBeInTheDocument();

@@ -172,12 +172,12 @@ Solo el dueño ve su biblioteca; no existe ruta pública equivalente.
   es un marcador neutro (no se pinta el modo por defecto para saltar después al guardado) y los tres
   modos comparten el mismo ancho de contenedor (`max-w-4xl`, definido en la página), con el título
   alineado al contenido (cambio `refine-ratings-page-phase1`).
-- **Pared con la nota al pasar el cursor.** En el modo Gráfico cada carátula, sin título debajo,
-  despliega al pasar el cursor o enfocarla un overlay con las estrellas y el puntaje `86/100` (o
-  "Sin afinar"), el título, el artista y la acción "Editar nota". El overlay no captura el
-  cursor salvo en sus botones, así un clic en la carátula navega a la ficha. En pantallas sin
-  hover (`hover: none`) el overlay se reduce al chip de nota y la acción, siempre visibles y sin
-  tapar la carátula; la etiqueta accesible del enlace lleva título, artista, estrellas y puntaje. Las seis primeras carátulas se cargan con prioridad.
+- **Pared con la nota visible** (cambio `redesign-ratings-views`). En el modo Gráfico cada carátula
+  lleva debajo su leyenda siempre visible: título, línea de detalle (artista, tipo y año según la
+  agrupación), estrellas y puntaje (`86`, o un guion `—`). No hay overlay: la carátula solo enlaza a
+  la ficha y el puntaje es un botón que abre el diálogo de puntaje, así ratón, teclado y táctil usan lo
+  mismo (con puntero grueso mide 44 px de alto). La etiqueta accesible del enlace de la carátula lleva
+  título, artista, tipo, estrellas y puntaje. Las seis primeras carátulas se cargan con prioridad.
 - **Agrupación.** El selector "Agrupar" ofrece "Por tipo" (default; secciones Álbumes → Canciones
   con contador, tomado de `counts`), "Por artista" y "Sin agrupar" (lista única). "Por artista"
   hace una sección por artista principal acreditado (encabezado enlazado a su página; con contador
@@ -193,11 +193,16 @@ Solo el dueño ve su biblioteca; no existe ruta pública equivalente.
   biblioteca vacía); solo ordenar o agrupar no cambia la etiqueta. Con filtros sin resultados hay un
   único "Limpiar filtros" (el del estado vacío) y el conmutador de modo sigue visible.
 - **Áreas táctiles.** Con puntero grueso (`pointer: coarse`) las estrellas editables (48 × 44 px por
-  estrella, mitades de 24 px), el conmutador de modo, "Sin afinar", los segmentos de tipo y las barras
+  estrella, mitades de 24 px), el conmutador de modo, los botones de puntaje, los segmentos de tipo y las barras
   del histograma llegan a 44 px de alto; con ratón
   conservan su tamaño compacto. En Índice el artista va en una segunda línea bajo `sm`.
-- **Fila Detallada compacta.** En pantallas anchas el título y la nota comparten línea (≈ 60 px por
-  fila); en angostas la nota baja bajo el título.
+- **Fila Detallada compacta.** Las filas se separan con una línea fina (no con huecos), la carátula
+  baja a 40 px desde `sm`, y estrellas y puntaje van a la derecha con un ancho de puntaje fijo, así
+  quedan alineados de una fila a otra. En pantallas anchas el título y la nota comparten línea; en
+  angostas la nota baja bajo el título.
+- **Índice como tabla.** El modo Índice es una `<table>` con encabezados (Título, Tipo, Año, Estrellas,
+  Nota; visibles desde `sm`, solo para lectores de pantalla debajo) que alinea las columnas. La
+  columna Tipo solo aparece sin agrupar; el artista va bajo el título en pantallas angostas.
 - **Selectores con nombre visible.** Cada selector de la barra (Año, Década, Ordenar, Agrupar)
   muestra su nombre sobre el control (`FilterSelect` con `label`, opcional y aditivo), para que un
   "Todos" no dependa de abrir el menú.
@@ -215,8 +220,8 @@ Solo el dueño ve su biblioteca; no existe ruta pública equivalente.
   estrellas de una fila o borrar una nota, se ajustan en el lugar (`adjustFacets`) sin recargar ni
   reordenar la lista.
 - **Marca de tipo en la pared.** Cada carátula lleva una marca fija — disco para álbum, nota
-  musical para canción — visible también sin hover; el overlay añade "Álbum · 1987" y la etiqueta
-  accesible incluye el tipo.
+  musical para canción — y la línea de detalle de la leyenda dice "Álbum · 1987"; la etiqueta accesible
+  incluye el tipo.
 - **Edición.** El diálogo de puntaje (`RatingDetailDialog`) es único, elevado a la lista, y se abre
   desde cualquiera de las tres vistas para afinar, destacar o borrar. En el modo Detallada la
   fila además permite cambiar las estrellas inline. Cambiar estrellas conserva el puntaje
@@ -224,9 +229,10 @@ Solo el dueño ve su biblioteca; no existe ruta pública equivalente.
   conserva las estrellas y muestra el aviso de error. Tras editar, la entrada se
   actualiza en el lugar sin reordenarse hasta cambiar el orden o filtros; borrar baja el total
   y el contador de su tipo.
-- **Marca "Sin afinar".** Las entradas sin puntaje muestran "Sin afinar" en lugar de `86/100`
-  (en las filas, el índice y el overlay de la pared); es la marca y a la vez la acción para abrir
-  el diálogo.
+- **Marca "Sin afinar".** Las entradas sin puntaje muestran un guion atenuado `—` en lugar de
+  `86/100` (en las filas, la tabla del índice y la leyenda de la pared), con la ayuda "Sin afinar" y
+  el nombre accesible "Afinar puntaje"; la frase ya no se repite como texto visible en cada entrada.
+  Es la marca y a la vez la acción para abrir el diálogo (componente compartido `RatingScore`).
 - **Privacidad.** El puntaje sigue siendo del dueño y de las destacadas; los seguidores
   aprobados ven estrellas solo donde ya se ven.
 - **Excepción del tooltip de la discografía.** En la columna "Tú" de la discografía, el
