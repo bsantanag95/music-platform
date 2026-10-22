@@ -44,7 +44,11 @@ const initial: MyRatingsListResponse = {
   hasNext: false,
   total: 1,
   counts: { "release-group": 1, recording: 0 },
-  facets: { years: [2012] },
+  facets: {
+    years: [2012],
+    stars: [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map((value) => ({ value, count: value === 5 ? 1 : 0 })),
+    types: { "release-group": 1, recording: 0 },
+  },
 };
 
 describe("MyRatingsList · marcador del listado", () => {

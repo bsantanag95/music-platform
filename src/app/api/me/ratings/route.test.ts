@@ -22,7 +22,11 @@ const listResult = {
   hasNext: false,
   total: 0,
   counts: { "release-group": 0, recording: 0 },
-  facets: { years: [] },
+  facets: {
+    years: [],
+    stars: [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map((value) => ({ value, count: 0 })),
+    types: { "release-group": 0, recording: 0 },
+  },
 };
 
 describe("GET /api/me/ratings", () => {

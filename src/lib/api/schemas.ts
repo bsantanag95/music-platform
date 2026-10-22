@@ -2708,15 +2708,31 @@ export const MyRatingEntrySchema = z.object({
 });
 export type MyRatingEntry = z.infer<typeof MyRatingEntrySchema>;
 
-export const MyRatingsFacetsSchema = z.object({
-  years: z.array(z.number().int()),
-});
-
 export const MyRatingsCountsSchema = z.object({
   "release-group": z.number().int(),
   recording: z.number().int(),
 });
 export type MyRatingsCounts = z.infer<typeof MyRatingsCountsSchema>;
+
+// Valores posibles de estrellas, de menor a mayor (½…5 en pasos de ½): los diez cubos del histograma.
+export const MY_RATING_STAR_VALUES = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5] as const;
+
+// Cantidad de valoraciones con un valor de estrellas (½…5).
+export const MyRatingsStarsBucketSchema = z.object({
+  value: z.number(),
+  count: z.number().int(),
+});
+export type MyRatingsStarsBucket = z.infer<typeof MyRatingsStarsBucketSchema>;
+
+// `stars` (diez cubos de ½★, de menor a mayor) se calcula sin el filtro de estrellas y `types` sin el de
+// tipo: así cada faceta sigue ofreciendo las alternativas de su propio filtro (openspec:
+// redesign-ratings-header-toolbar).
+export const MyRatingsFacetsSchema = z.object({
+  years: z.array(z.number().int()),
+  stars: z.array(MyRatingsStarsBucketSchema),
+  types: MyRatingsCountsSchema,
+});
+export type MyRatingsFacets = z.infer<typeof MyRatingsFacetsSchema>;
 
 export const MyRatingsListResponseSchema = z.object({
   items: z.array(MyRatingEntrySchema),

@@ -147,7 +147,7 @@ siguiente), porque entonces es exacto; mientras haya más páginas NO SHALL llev
 sección puede quedar cortada entre páginas y el servidor no devuelve totales por artista. Con "Sin
 agrupar" SHALL mostrar una lista única sin encabezados. La agrupación SHALL
 aplicarse igual en los tres modos y respetar los filtros. Los artistas NO SHALL ser una opción del
-selector de tipo, porque no se valoran: "Por artista" solo reúne las valoraciones de álbumes y
+filtro de tipo, porque no se valoran: "Por artista" solo reúne las valoraciones de álbumes y
 canciones bajo su artista. La paginación SHALL ser continua entre secciones: cargar más SHALL
 agregar entradas al final de la sección y subsección que corresponda.
 
@@ -165,8 +165,8 @@ agregar entradas al final de la sección y subsección que corresponda.
   el orden elegido
 
 #### Scenario: Los artistas no se valoran
-- **WHEN** abre el selector de tipo
-- **THEN** solo ofrece álbum y canción, y ningún contador cuenta artistas
+- **WHEN** mira el filtro de tipo
+- **THEN** solo ofrece Todo, Álbumes y Canciones, y ningún contador cuenta artistas
 
 #### Scenario: Agrupar por artista
 - **WHEN** elige "Por artista" y tiene 2 álbumes y 1 canción de Heart, y 1 álbum de Aimee Mann
@@ -229,13 +229,13 @@ carátula, que conserva título, artista, tipo, estrellas y puntaje.
 - **THEN** la etiqueta de cada carátula sigue incluyendo artista y tipo
 
 ### Requirement: Barra de filtros homogénea
-La página SHALL mostrar una barra con el buscador y los selectores de tipo, estrellas, año,
-década, orden y agrupar, con el mismo estilo liviano que las demás secciones personales, y un
-control "Limpiar filtros" visible cuando haya algún filtro activo. Cada selector SHALL mostrar su
-nombre (Tipo, Estrellas, Año, Década, Ordenar, Agrupar) de forma visible sobre el control, sin
-necesidad de abrirlo, de modo que una opción neutra como "Todos" nunca quede sin contexto. El buscador SHALL aplicarse
-tras una breve pausa al escribir. Los filtros, el orden, la búsqueda y la agrupación SHALL
-reflejarse en la URL para poder recargar o compartir el enlace sin perder el estado; el modo de
+La página SHALL mostrar una barra con el buscador, el filtro de tipo en segmentos y los selectores de año,
+década, orden y agrupar, con el mismo estilo liviano que las demás secciones personales, y un control
+"Limpiar filtros" visible cuando haya algún filtro activo. El filtro de estrellas SHALL ser el histograma del
+resumen. Cada selector SHALL mostrar su nombre (Año, Década, Ordenar, Agrupar) de forma visible sobre el
+control, sin necesidad de abrirlo, de modo que una opción neutra como "Todos" nunca quede sin contexto. El
+buscador SHALL aplicarse tras una breve pausa al escribir. Los filtros, el orden, la búsqueda y la agrupación
+SHALL reflejarse en la URL para poder recargar o compartir el enlace sin perder el estado; el modo de
 visualización NO SHALL reflejarse en la URL.
 
 #### Scenario: Estado en la URL
@@ -244,7 +244,7 @@ visualización NO SHALL reflejarse en la URL.
 
 #### Scenario: Selectores con nombre visible
 - **WHEN** la persona abre `/me/ratings` sin filtros
-- **THEN** cada selector muestra su nombre visible sobre el control, p. ej. "Estrellas" sobre
+- **THEN** cada selector muestra su nombre visible sobre el control, p. ej. "Década" sobre
   "Todas" y "Agrupar" sobre "Por tipo"
 
 #### Scenario: Limpiar filtros
@@ -255,6 +255,10 @@ visualización NO SHALL reflejarse en la URL.
 #### Scenario: El modo no viaja en la URL
 - **WHEN** la persona cambia de modo
 - **THEN** la URL no cambia
+
+#### Scenario: Estrellas y tipo en la URL
+- **WHEN** la persona pulsa la barra de 4★ y el segmento "Canciones"
+- **THEN** la URL conserva `stars=4` y `type=recording`
 
 ### Requirement: Contenedor de ancho único
 `/me/ratings` SHALL usar el mismo ancho máximo en los tres modos de visualización, de modo que cambiar
@@ -308,16 +312,83 @@ mostrar otro.
 
 ### Requirement: Áreas táctiles con puntero grueso
 En dispositivos con puntero grueso (`pointer: coarse`), las estrellas editables de la fila Detallada, el
-conmutador de modo de visualización y los botones "Sin afinar" SHALL tener al menos 44 px de alto, y cada
-mitad de estrella SHALL medir al menos 24 px de ancho. Con puntero fino su tamaño NO SHALL cambiar. Cuando
-las estrellas y el puntaje no quepan en una línea, el puntaje SHALL bajar a la línea siguiente en vez de
-desbordar.
+conmutador de modo de visualización, los botones "Sin afinar", los segmentos de tipo y las barras del
+histograma SHALL tener al menos 44 px de alto, y cada mitad de estrella editable SHALL medir al menos 24 px de
+ancho. Con puntero fino su tamaño NO SHALL cambiar. Cuando las estrellas y el puntaje no quepan en una línea,
+el puntaje SHALL bajar a la línea siguiente en vez de desbordar.
 
 #### Scenario: Teléfono
 - **WHEN** la persona usa un dispositivo con puntero grueso y ve la fila Detallada
 - **THEN** cada estrella editable mide 48 × 44 px, y el conmutador y el botón "Sin afinar" miden al menos 44 px de alto
 
+#### Scenario: Segmentos e histograma en el teléfono
+- **WHEN** la persona usa un dispositivo con puntero grueso
+- **THEN** cada segmento de tipo y cada barra del histograma miden al menos 44 px de alto
+
 #### Scenario: Ratón
 - **WHEN** la persona usa un ratón
 - **THEN** los controles conservan su tamaño compacto
+
+### Requirement: Resumen con promedio e histograma de estrellas
+Bajo el título, `/me/ratings` SHALL mostrar un resumen con el total y el desglose por tipo (según los contadores
+honestos), el promedio de estrellas del conjunto visible y un histograma de diez barras, una por cada valor de ½
+a 5, con la cantidad de valoraciones de cada una (`facets.stars`). El promedio SHALL calcularse a partir de esas
+mismas facetas — el valor del filtro de estrellas si lo hay, o la media ponderada de los diez valores — y SHALL
+omitirse sin valoraciones. Cada barra SHALL ser un botón con `aria-pressed` que activa el filtro de estrellas de
+ese valor; pulsar la barra activa SHALL quitar el filtro. Cada barra SHALL tener una etiqueta accesible con el
+valor y la cantidad (por ejemplo "4,5 estrellas: 3 valoraciones"), y el eje SHALL rotular solo las estrellas
+enteras. El histograma SHALL ocultarse si no hay ninguna valoración y no hay filtro de estrellas; con filtro de
+estrellas activo SHALL mostrarse siempre, para poder quitarlo. Tras cambiar las estrellas desde una fila o
+borrar una nota, el histograma, el promedio y los segmentos SHALL actualizarse en el lugar, sin recargar ni
+reordenar la lista.
+
+#### Scenario: Ver la distribución
+- **WHEN** una persona con 3 valoraciones de 5★ y 2 de 4,5★ abre `/me/ratings`
+- **THEN** ve el promedio de 4,8★ y diez barras, con 3 sobre la de 5★ y 2 sobre la de 4,5★
+
+#### Scenario: Filtrar desde una barra
+- **WHEN** pulsa la barra de 4,5★
+- **THEN** la barra queda activa, la lista muestra solo las de 4,5★, las demás barras conservan su cantidad y el promedio es 4,5★
+
+#### Scenario: Quitar el filtro
+- **WHEN** vuelve a pulsar la barra activa
+- **THEN** se quita el filtro de estrellas y la lista vuelve a mostrar todas
+
+#### Scenario: Etiqueta accesible
+- **WHEN** un lector de pantalla recorre la barra de 4,5★ con 2 valoraciones
+- **THEN** anuncia "4,5 estrellas: 2 valoraciones" y si está activa
+
+#### Scenario: Ajuste tras editar
+- **WHEN** cambia una valoración de 5★ a 4★ desde su fila
+- **THEN** la barra de 5★ baja en uno, la de 4★ sube en uno y el promedio se recalcula, sin que la fila cambie de lugar
+
+#### Scenario: Ajuste tras borrar
+- **WHEN** borra una valoración de 5★ de tipo canción
+- **THEN** la barra de 5★ y el segmento "Canciones" bajan en uno
+
+#### Scenario: Sin valoraciones
+- **WHEN** una persona sin valoraciones abre la página sin filtros
+- **THEN** no hay histograma ni promedio
+
+#### Scenario: Filtro activo sin resultados
+- **WHEN** hay un filtro de estrellas activo y ninguna valoración coincide
+- **THEN** el histograma sigue visible con la barra activa, para poder quitar el filtro
+
+### Requirement: Filtro de tipo en segmentos con contador
+El filtro de tipo SHALL ser un control segmentado de botones con `aria-pressed` — "Todo", "Álbumes" y
+"Canciones" — junto al buscador, cada uno con su cantidad (`facets.types`; "Todo" es la suma de las dos). El
+segmento activo SHALL marcarse y pulsarlo de nuevo no SHALL quitarlo: para volver a todos se elige "Todo". Los
+artistas NO SHALL ofrecerse como tipo, porque no se valoran.
+
+#### Scenario: Cambiar de tipo
+- **WHEN** la persona pulsa "Canciones"
+- **THEN** el segmento queda activo, la lista muestra solo canciones y los contadores de "Todo" y "Álbumes" no cambian
+
+#### Scenario: Contadores con búsqueda
+- **WHEN** busca "heart" y 4 de sus resultados son álbumes y 2 son canciones
+- **THEN** los segmentos muestran "Todo 6", "Álbumes 4" y "Canciones 2"
+
+#### Scenario: Volver a todos
+- **WHEN** con "Canciones" activo pulsa "Todo"
+- **THEN** se quita el filtro de tipo y la URL deja de llevar `type`
 

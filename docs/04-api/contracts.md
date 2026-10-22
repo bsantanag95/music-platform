@@ -1425,11 +1425,17 @@ Parámetros opcionales combinables:
   ranking mezclado, p. ej. el top de un año). Los artistas no se valoran: `artist` solo reúne las
   valoraciones de álbumes y canciones bajo su artista; no hay conteo de artistas.
 
-**200 OK:** `{ items: [{ id, targetType, stars, detailedScore, updatedAt, target: { id, title, coverThumbUrl, artistName, artistId, year } }], page, pageSize, hasNext, total, counts: { "release-group": number, recording: number }, facets: { years: number[] } }`.
+**200 OK:** `{ items: [{ id, targetType, stars, detailedScore, updatedAt, target: { id, title, coverThumbUrl, artistName, artistId, year } }], page, pageSize, hasNext, total, counts: { "release-group": number, recording: number }, facets: { years: number[], stars: { value: number, count: number }[], types: { "release-group": number, recording: number } } }`.
 `counts` desglosa `total` por tipo y respeta todos los filtros, incluida la búsqueda (campo aditivo
 de `add-ratings-view-modes`). `facets.years` lista solo los años con valoraciones, ordenados
-descendente. **400** con `VALIDATION_ERROR` si un parámetro es inválido (incluida una
-agrupación fuera de vocabulario). **401** con `AUTH_REQUIRED` sin sesión.
+descendente.
+`facets.stars` (cambio `redesign-ratings-header-toolbar`, campo aditivo) son siempre diez entradas, una
+por cada valor de ½ a 5 en pasos de ½ y de menor a mayor, con `count` 0 si no hay valoraciones de ese
+valor; se calcula con la búsqueda, el año o la década y el tipo vigentes pero **sin** el filtro `stars`.
+`facets.types` es la cantidad por tipo calculada con la búsqueda, el año o la década y las estrellas
+vigentes pero **sin** el filtro `type`. Así cada faceta sigue ofreciendo las alternativas de su propio
+filtro; `total`, `counts` e `items` no cambian. **400** con `VALIDATION_ERROR` si un parámetro es
+inválido (incluida una agrupación fuera de vocabulario). **401** con `AUTH_REQUIRED` sin sesión.
 
 ## Marcas de un disco (cambio `extend-album-quick-actions`)
 
