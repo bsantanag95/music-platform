@@ -27,6 +27,8 @@ import {
 
 interface QuickActionsDialogProps {
   onClose: () => void;
+  /** Acción con la que abre; por defecto Escucha. Pendientes la abre en Pendiente (redesign-want-to-listen-toolbar). */
+  initialAction?: QuickAction;
 }
 
 // Diálogo de acciones rápidas del Header (openspec: add-header-quick-actions): un solo diálogo con
@@ -34,17 +36,21 @@ interface QuickActionsDialogProps {
 // registrar una escucha cuesta lo mismo que antes (abrir y escribir). Las acciones con objetivo
 // comparten el buscador; Nueva lista no lo necesita. A11y al nivel de `GetStartedModal`: portal,
 // focus-trap, Escape, retorno de foco (lo hace el botón que lo monta).
-export function QuickActionsDialog({ onClose }: QuickActionsDialogProps) {
+export function QuickActionsDialog({ onClose, initialAction = "listen" }: QuickActionsDialogProps) {
   const t = useTranslations("quickActions");
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [mounted, setMounted] = useState(false);
 
-  const [action, setAction] = useState<QuickAction>("listen");
+  const [action, setAction] = useState<QuickAction>(initialAction);
   const [target, setTarget] = useState<PickTarget | null>(null);
   const [rawQuery, setRawQuery] = useState("");
-  const [searchType, setSearchType] = useState<PickerType>("album");
+  const [searchType, setSearchType] = useState<PickerType>(() =>
+    initialAction === "newList" || initialAction === "newCamino"
+      ? "album"
+      : (ACTION_PICKER_TYPES[initialAction][0] ?? "album"),
+  );
   // Tras crear una lista, "Agregar a esta lista" fija la búsqueda al tipo de la lista.
   const [lockedType, setLockedType] = useState<PickerType | null>(null);
 

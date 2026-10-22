@@ -1,7 +1,8 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, releaseGroup, wantToListenEntry } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
+import type { WantToListenCounts, WantToListenFilters, WantToListenSort } from "@/lib/api/schemas";
 import { scheduleCoverMirrors } from "@/services/catalog/cover-mirror";
 import { WANT_TO_LISTEN_TARGET_TYPES } from "./types";
 import type { WantToListenTargetType, WantToListenTarget } from "./types";
@@ -159,21 +160,67 @@ export async function removeWantToListenEntryForTarget(
   await removeWantToListenEntry({ type: target.type, id: target.id }, userId);
 }
 
-/** Listado propio de Want to Listen, paginado, orden cronológico descendente. */
+// Orden del listado propio (openspec: redesign-want-to-listen-toolbar). El desempate por `id` deja estable
+// el "Cargar más" por offset. `alpha` ordena por el título visible: el nombre del artista o el del álbum.
+function orderFor(sort: WantToListenSort) {
+  switch (sort) {
+    case "oldest":
+      return [asc(wantToListenEntry.createdAt), asc(wantToListenEntry.id)];
+    case "alpha":
+      return [sql`lower(coalesce(${artist.name}, ${releaseGroup.title})) ASC`, asc(wantToListenEntry.id)];
+    case "recent":
+      return [desc(wantToListenEntry.createdAt), desc(wantToListenEntry.id)];
+  }
+}
+
+const TYPE_COLUMN = {
+  artist: wantToListenEntry.artistId,
+  "release-group": wantToListenEntry.releaseGroupId,
+} as const;
+
+/** Cantidad de entradas propias por tipo, sin el filtro de tipo: cada segmento conserva su cifra. */
+async function countByType(userId: string): Promise<WantToListenCounts> {
+  const [row] = await db
+    .select({
+      artist: sql<number>`count(${wantToListenEntry.artistId})::int`,
+      releaseGroup: sql<number>`count(${wantToListenEntry.releaseGroupId})::int`,
+    })
+    .from(wantToListenEntry)
+    .where(eq(wantToListenEntry.userId, userId));
+  return { artist: row?.artist ?? 0, "release-group": row?.releaseGroup ?? 0 };
+}
+
+/**
+ * Listado propio de Want to Listen, paginado. Por defecto en orden cronológico descendente; admite
+ * filtro de tipo y orden, y devuelve la cantidad por tipo de toda la lista (`counts`).
+ */
 export async function listMyWantToListen(
   userId: string,
   page = 1,
   pageSize = 20,
-): Promise<{ items: WantToListenEntryDTO[]; page: number; pageSize: number; hasNext: boolean }> {
+  filters: WantToListenFilters = {},
+): Promise<{
+  items: WantToListenEntryDTO[];
+  page: number;
+  pageSize: number;
+  hasNext: boolean;
+  counts: WantToListenCounts;
+}> {
   if (page < 1 || pageSize < 1 || pageSize > 50) {
     throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
   }
 
-  const rows = await entriesFrom()
-    .where(eq(wantToListenEntry.userId, userId))
-    .orderBy(desc(wantToListenEntry.createdAt), desc(wantToListenEntry.id))
-    .limit(pageSize + 1)
-    .offset((page - 1) * pageSize);
+  const conditions = [eq(wantToListenEntry.userId, userId)];
+  if (filters.type) conditions.push(isNotNull(TYPE_COLUMN[filters.type]));
+
+  const [rows, counts] = await Promise.all([
+    entriesFrom()
+      .where(and(...conditions))
+      .orderBy(...orderFor(filters.sort ?? "recent"))
+      .limit(pageSize + 1)
+      .offset((page - 1) * pageSize),
+    countByType(userId),
+  ]);
 
   const items = rows.slice(0, pageSize).map(serializeEntry);
 
@@ -187,7 +234,7 @@ export async function listMyWantToListen(
     ),
   );
 
-  return { items, page, pageSize, hasNext: rows.length > pageSize };
+  return { items, page, pageSize, hasNext: rows.length > pageSize, counts };
 }
 
 const ENTRY_ROW_SELECT = {

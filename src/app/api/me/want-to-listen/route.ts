@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { withErrorHandling } from "@/lib/with-error-handling";
 import { parsePagination } from "@/lib/api/pagination";
 import { ApiError } from "@/lib/api/errors";
-import { CreateWantToListenRequestSchema, RemoveWantToListenRequestSchema } from "@/lib/api/schemas";
+import {
+  CreateWantToListenRequestSchema,
+  RemoveWantToListenRequestSchema,
+  WantToListenFiltersSchema,
+} from "@/lib/api/schemas";
 import { requireUser } from "@/services/auth/authorization";
 import {
   listMyWantToListen,
@@ -15,8 +19,16 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const { page, pageSize } = parsePagination(searchParams);
 
+  const parsedFilters = WantToListenFiltersSchema.safeParse({
+    type: searchParams.get("type") || undefined,
+    sort: searchParams.get("sort") || undefined,
+  });
+  if (!parsedFilters.success) {
+    throw new ApiError("VALIDATION_ERROR", 400, "Los filtros no son válidos");
+  }
+
   const user = await requireUser();
-  return NextResponse.json(await listMyWantToListen(user.id, page, pageSize));
+  return NextResponse.json(await listMyWantToListen(user.id, page, pageSize, parsedFilters.data));
 });
 
 export const POST = withErrorHandling(async (request: NextRequest) => {

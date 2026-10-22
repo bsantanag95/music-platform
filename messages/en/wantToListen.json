@@ -27,5 +27,15 @@
   "journeyAdding": "Adding...",
   "journeyAlreadyAdded": "Already in your discography",
   "removedAnnouncement": "{title} removed from Listen Later",
-  "removeError": "We could not remove it. Try again."
+  "removeError": "We could not remove it. Try again.",
+  "description": "What you noted down to listen to later.",
+  "addPending": "Note something",
+  "typeFilterLabel": "Type",
+  "typeSegmentAll": "All",
+  "sortLabel": "Sort",
+  "sort": {
+    "recent": "Recent",
+    "oldest": "Oldest",
+    "alpha": "A–Z"
+  }
 }

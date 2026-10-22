@@ -32,6 +32,7 @@ const initial: WantToListenListResponse = {
   page: 1,
   pageSize: 20,
   hasNext: false,
+  counts: { artist: 1, "release-group": 0 },
 };
 
 describe("WantToListenList · marcador del listado", () => {

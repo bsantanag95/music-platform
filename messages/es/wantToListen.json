@@ -27,5 +27,15 @@
   "journeyAdding": "Agregando...",
   "journeyAlreadyAdded": "Ya está en tu discografía",
   "removedAnnouncement": "{title} salió de Pendientes",
-  "removeError": "No pudimos quitarlo. Intenta de nuevo."
+  "removeError": "No pudimos quitarlo. Intenta de nuevo.",
+  "description": "Lo que anotaste para escuchar más adelante.",
+  "addPending": "Anotar algo",
+  "typeFilterLabel": "Tipo",
+  "typeSegmentAll": "Todo",
+  "sortLabel": "Orden",
+  "sort": {
+    "recent": "Recientes",
+    "oldest": "Más antiguos",
+    "alpha": "A–Z"
+  }
 }

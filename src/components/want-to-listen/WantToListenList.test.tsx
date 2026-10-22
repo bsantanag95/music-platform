@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { WantToListenList } from "./WantToListenList";
+import { OWN_DATA_CHANGED_EVENT } from "@/components/quick-actions/quick-actions-changes";
 import type { WantToListenEntry, WantToListenListResponse } from "@/lib/api/schemas";
 
 vi.mock("@/i18n/navigation", () => ({
@@ -63,11 +64,13 @@ const initial: WantToListenListResponse = {
   page: 1,
   pageSize: 20,
   hasNext: false,
+  counts: { artist: 1, "release-group": 1 },
 };
 
 describe("WantToListenList", () => {
   beforeEach(() => {
     installStorage();
+    window.history.replaceState(null, "", "/");
     vi.clearAllMocks();
     mocks.getArtistJourneyStatuses.mockResolvedValue([]);
   });
@@ -157,7 +160,13 @@ describe("WantToListenList", () => {
       createdAt: "2025-12-01T00:00:00Z",
       target: { id: "a9", title: "Queen", coverThumbUrl: null },
     };
-    mocks.getMyWantToListen.mockResolvedValue({ items: [next], page: 2, pageSize: 20, hasNext: false });
+    mocks.getMyWantToListen.mockResolvedValue({
+      items: [next],
+      page: 2,
+      pageSize: 20,
+      hasNext: false,
+      counts: { artist: 2, "release-group": 1 },
+    });
     renderWithIntl(<WantToListenList initial={{ ...initial, hasNext: true }} />);
     await waitFor(() => expect(mocks.getArtistJourneyStatuses).toHaveBeenCalledTimes(1));
 
@@ -177,22 +186,105 @@ describe("WantToListenList", () => {
 
   it("estado vacío con enlace a la búsqueda cuando no hay entradas", () => {
     renderWithIntl(
-      <WantToListenList initial={{ items: [], page: 1, pageSize: 20, hasNext: false }} />,
+      <WantToListenList
+        initial={{ items: [], page: 1, pageSize: 20, hasNext: false, counts: { artist: 0, "release-group": 0 } }}
+      />,
     );
     expect(screen.getByText("Todavía no agregaste nada")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Buscar en el catálogo" })).toHaveAttribute("href", "/search");
   });
 
   // openspec: refine-want-to-listen-page-phase1
-  it("con más páginas por cargar los encabezados no muestran conteo", async () => {
-    mocks.getMyWantToListen.mockResolvedValue({ items: [], page: 2, pageSize: 20, hasNext: false });
-    renderWithIntl(<WantToListenList initial={{ ...initial, hasNext: true }} />);
+  // openspec: redesign-want-to-listen-toolbar
+  it("los encabezados muestran el total del servidor aunque falten páginas", () => {
+    renderWithIntl(
+      <WantToListenList initial={{ ...initial, hasNext: true, counts: { artist: 12, "release-group": 30 } }} />,
+    );
+    expect(screen.getByRole("heading", { name: "Artistas (12)" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Álbumes (30)" })).toBeInTheDocument();
+  });
 
-    expect(screen.getByRole("heading", { name: "Artistas" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Álbumes" })).toBeInTheDocument();
+  it("los segmentos muestran las cantidades y filtrar por tipo pide la primera página y escribe la URL", async () => {
+    mocks.getMyWantToListen.mockResolvedValue({ ...initial, items: [artistEntry] });
+    renderWithIntl(<WantToListenList initial={initial} />);
+    const group = screen.getByRole("group", { name: "Tipo" });
+    expect(within(group).getByRole("button", { name: /^Todo\s*2$/ })).toHaveAttribute("aria-pressed", "true");
 
-    await userEvent.click(screen.getByRole("button", { name: "Cargar más" }));
-    expect(await screen.findByRole("heading", { name: "Artistas (1)" })).toBeInTheDocument();
+    await userEvent.click(within(group).getByRole("button", { name: /^Artistas\s*1$/ }));
+
+    expect(mocks.getMyWantToListen).toHaveBeenCalledWith(1, 20, { type: "artist" });
+    expect(window.location.search).toBe("?type=artist");
+    await waitFor(() => expect(screen.queryByRole("heading", { name: /Álbumes/ })).not.toBeInTheDocument());
+    expect(screen.getByRole("heading", { name: "Artistas (1)" })).toBeInTheDocument();
+  });
+
+  it("un tipo sin entradas queda deshabilitado", () => {
+    renderWithIntl(
+      <WantToListenList initial={{ ...initial, items: [albumEntry], counts: { artist: 0, "release-group": 1 } }} />,
+    );
+    expect(screen.getByRole("button", { name: /^Artistas\s*0$/ })).toBeDisabled();
+  });
+
+  it("cambiar el orden lo pide al servidor y lo deja en la URL", async () => {
+    mocks.getMyWantToListen.mockResolvedValue(initial);
+    renderWithIntl(<WantToListenList initial={initial} />);
+
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Orden" }), "alpha");
+
+    expect(mocks.getMyWantToListen).toHaveBeenCalledWith(1, 20, { sort: "alpha" });
+    expect(window.location.search).toBe("?sort=alpha");
+  });
+
+  it("una respuesta vieja no pisa a la más nueva", async () => {
+    let resolveOld: (value: unknown) => void = () => {};
+    mocks.getMyWantToListen
+      .mockReturnValueOnce(new Promise((resolve) => (resolveOld = resolve)))
+      .mockResolvedValueOnce({ ...initial, items: [albumEntry] });
+    renderWithIntl(<WantToListenList initial={initial} />);
+
+    await userEvent.click(screen.getByRole("button", { name: /^Artistas\s*1$/ }));
+    await userEvent.click(screen.getByRole("button", { name: /^Álbumes\s*1$/ }));
+    await waitFor(() => expect(screen.queryByRole("link", { name: "Pink Floyd" })).not.toBeInTheDocument());
+
+    resolveOld({ ...initial, items: [artistEntry] });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(screen.queryByRole("link", { name: "Pink Floyd" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "The Dark Side of the Moon" })).toBeInTheDocument();
+  });
+
+  it("al avisar un cambio desde el diálogo global vuelve a pedir la primera página con los filtros", async () => {
+    const added: WantToListenEntry = {
+      id: "e7",
+      targetType: "release-group",
+      createdAt: "2026-01-05T00:00:00Z",
+      target: { id: "rg7", title: "Wish You Were Here", coverThumbUrl: null },
+    };
+    mocks.getMyWantToListen.mockResolvedValue({
+      ...initial,
+      items: [added, ...initial.items],
+      counts: { artist: 1, "release-group": 2 },
+    });
+    renderWithIntl(<WantToListenList initial={initial} initialFilters={{ sort: "oldest" }} />);
+
+    act(() => window.dispatchEvent(new Event(OWN_DATA_CHANGED_EVENT)));
+
+    expect(await screen.findByRole("link", { name: "Wish You Were Here" })).toBeInTheDocument();
+    expect(mocks.getMyWantToListen).toHaveBeenCalledWith(1, 20, { sort: "oldest" });
+    expect(screen.getByRole("heading", { name: "Álbumes (2)" })).toBeInTheDocument();
+  });
+
+  it("quitar la última entrada del tipo filtrado vuelve a Todo", async () => {
+    mocks.removeFromWantToListen.mockResolvedValue(null);
+    mocks.getMyWantToListen.mockResolvedValue({ ...initial, items: [albumEntry], counts: { artist: 0, "release-group": 1 } });
+    renderWithIntl(
+      <WantToListenList initial={{ ...initial, items: [artistEntry] }} initialFilters={{ type: "artist" }} />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Quitar Pink Floyd de la lista" }));
+    await userEvent.click(screen.getByRole("button", { name: "Confirmar remoción" }));
+
+    expect(mocks.getMyWantToListen).toHaveBeenCalledWith(1, 20, {});
+    expect(await screen.findByRole("link", { name: "The Dark Side of the Moon" })).toBeInTheDocument();
   });
 
   it("anuncia la entrada quitada", async () => {

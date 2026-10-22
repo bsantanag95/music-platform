@@ -10,19 +10,19 @@ import type { WantToListenGroup } from "./want-to-listen-shared";
 import type { WantToListenRowActions } from "./want-to-listen-items-view";
 
 // Una sección del muro (artistas o álbumes): encabezado con conteo y el
-// renderer del modo elegido. El conteo solo aparece con la lista completa
-// (`complete`): con páginas por cargar contaría solo lo cargado. Las dos secciones comparten el mismo modo de
+// renderer del modo elegido. El conteo es el total del tipo según el servidor
+// (`total`), no lo cargado: con páginas por cargar sigue siendo verdadero. Las dos secciones comparten el mismo modo de
 // visualización — el conmutador vive una sola vez, en `WantToListenList`.
 export function WantToListenSection({
   group,
   mode,
-  complete,
+  total,
   priorityIds,
   actions,
 }: {
   group: WantToListenGroup;
   mode: WantToListenViewMode;
-  complete: boolean;
+  total: number;
   priorityIds: ReadonlySet<string>;
   actions: WantToListenRowActions;
 }) {
@@ -32,13 +32,8 @@ export function WantToListenSection({
   return (
     <section className="flex flex-col gap-3">
       <h2 className="font-display text-lg text-paper">
-        {t(sectionTitleKey(group.type))}
-        {complete ? (
-          <>
-            {" "}
-            <span className="font-data text-sm text-paper-muted">({group.entries.length})</span>
-          </>
-        ) : null}
+        {t(sectionTitleKey(group.type))}{" "}
+        <span className="font-data text-sm text-paper-muted">({total})</span>
       </h2>
       <Renderer entries={group.entries} actions={actions} priorityIds={priorityIds} />
     </section>

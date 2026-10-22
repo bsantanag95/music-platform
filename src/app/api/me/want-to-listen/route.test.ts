@@ -22,7 +22,7 @@ vi.mock("@/services/want-to-listen/want-to-listen", () => ({
 const user = { id: "00000000-0000-4000-8000-000000000001" };
 const artistTarget = { type: "artist" as const, id: "00000000-0000-4000-8000-0000000000aa" };
 
-const listResult = { items: [], page: 1, pageSize: 20, hasNext: false };
+const listResult = { items: [], page: 1, pageSize: 20, hasNext: false, counts: { artist: 0, "release-group": 0 } };
 
 describe("GET /api/me/want-to-listen", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -33,7 +33,23 @@ describe("GET /api/me/want-to-listen", () => {
     const response = await GET(new NextRequest("http://localhost/api/me/want-to-listen"));
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(listResult);
-    expect(mocks.listMyWantToListen).toHaveBeenCalledWith(user.id, 1, 20);
+    expect(mocks.listMyWantToListen).toHaveBeenCalledWith(user.id, 1, 20, {});
+  });
+
+  // openspec: redesign-want-to-listen-toolbar
+  it("pasa el filtro de tipo y el orden al servicio", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    mocks.listMyWantToListen.mockResolvedValue(listResult);
+    await GET(new NextRequest("http://localhost/api/me/want-to-listen?type=artist&sort=alpha&page=2"));
+    expect(mocks.listMyWantToListen).toHaveBeenCalledWith(user.id, 2, 20, { type: "artist", sort: "alpha" });
+  });
+
+  it.each(["type=recording", "sort=random"])("rechaza %s con 400 VALIDATION_ERROR", async (query) => {
+    mocks.requireUser.mockResolvedValue(user);
+    const response = await GET(new NextRequest(`http://localhost/api/me/want-to-listen?${query}`));
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(mocks.listMyWantToListen).not.toHaveBeenCalled();
   });
 
   it("sin sesión devuelve 401 AUTH_REQUIRED", async () => {

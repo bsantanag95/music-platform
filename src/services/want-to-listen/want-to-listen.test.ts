@@ -45,6 +45,13 @@ function joinPaged(rows: unknown[]) {
   return { from };
 }
 
+// select().from().where() → conteo por tipo (`countByType`), segunda consulta del listado
+function countRows(artist = 0, releaseGroup = 0) {
+  const where = vi.fn().mockResolvedValue([{ artist, releaseGroup }]);
+  const from = vi.fn(() => ({ where }));
+  return { from };
+}
+
 const target: WantToListenTarget = { type: "artist", id: "00000000-0000-4000-8000-000000000001" };
 const user = "00000000-0000-4000-8000-000000000002";
 
@@ -141,7 +148,7 @@ describe("servicio de want-to-listen", () => {
   });
 
   it("listMyWantToListen devuelve vacío cuando no hay entradas", async () => {
-    mocks.db.select.mockReturnValueOnce(joinPaged([]));
+    mocks.db.select.mockReturnValueOnce(joinPaged([])).mockReturnValueOnce(countRows());
 
     const result = await listMyWantToListen(user);
     expect(result.items).toEqual([]);
@@ -165,7 +172,7 @@ describe("servicio de want-to-listen", () => {
         album(3, null),
         entryRow,
       ]),
-    );
+    ).mockReturnValueOnce(countRows(1, 3));
 
     await listMyWantToListen(user);
 
@@ -183,7 +190,7 @@ describe("servicio de want-to-listen", () => {
       releaseTitle: "The Dark Side of the Moon",
       releaseCover: "https://example.com/cover.jpg",
     };
-    mocks.db.select.mockReturnValueOnce(joinPaged([entryRow, albumRow]));
+    mocks.db.select.mockReturnValueOnce(joinPaged([entryRow, albumRow])).mockReturnValueOnce(countRows(1, 1));
 
     const result = await listMyWantToListen(user);
     expect(result.items).toHaveLength(2);
@@ -193,4 +200,27 @@ describe("servicio de want-to-listen", () => {
       target: { title: "The Dark Side of the Moon", coverThumbUrl: "https://example.com/cover.jpg" },
     });
   });
+
+  // openspec: redesign-want-to-listen-toolbar
+  it("listMyWantToListen devuelve la cantidad por tipo de toda la lista", async () => {
+    mocks.db.select.mockReturnValueOnce(joinPaged([entryRow])).mockReturnValueOnce(countRows(2, 4));
+
+    const result = await listMyWantToListen(user, 1, 20, { type: "artist" });
+    expect(result.items).toHaveLength(1);
+    expect(result.counts).toEqual({ artist: 2, "release-group": 4 });
+  });
+
+  it.each(["recent", "oldest", "alpha"] as const)(
+    "listMyWantToListen ordena por %s con desempate por id",
+    async (sort) => {
+      const orderBy = vi.fn(() => ({ limit: vi.fn(() => ({ offset: vi.fn().mockResolvedValue([]) })) }));
+      const chain = { leftJoin: vi.fn(() => chain), where: vi.fn(() => ({ orderBy })) };
+      mocks.db.select.mockReturnValueOnce({ from: vi.fn(() => chain) }).mockReturnValueOnce(countRows());
+
+      await listMyWantToListen(user, 1, 20, { sort });
+
+      expect(orderBy).toHaveBeenCalledTimes(1);
+      expect(orderBy.mock.calls[0]).toHaveLength(2);
+    },
+  );
 });

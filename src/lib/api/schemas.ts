@@ -1610,11 +1610,31 @@ export const WantToListenMutationResponseSchema = z.object({
 });
 export type WantToListenMutationResponse = z.infer<typeof WantToListenMutationResponseSchema>;
 
+// Orden del listado propio (openspec: redesign-want-to-listen-toolbar): `recent` es el de siempre.
+export const WANT_TO_LISTEN_SORTS = ["recent", "oldest", "alpha"] as const;
+export const WantToListenSortSchema = z.enum(WANT_TO_LISTEN_SORTS);
+export type WantToListenSort = z.infer<typeof WantToListenSortSchema>;
+
+// Filtros opcionales del listado propio, aplicados en el servidor sobre toda la lista.
+export const WantToListenFiltersSchema = z.object({
+  type: WantToListenTargetTypeSchema.optional(),
+  sort: WantToListenSortSchema.optional(),
+});
+export type WantToListenFilters = z.infer<typeof WantToListenFiltersSchema>;
+
+// Cantidad de entradas propias por tipo, calculada sin el filtro de tipo (faceta).
+export const WantToListenCountsSchema = z.object({
+  artist: z.number().int().nonnegative(),
+  "release-group": z.number().int().nonnegative(),
+});
+export type WantToListenCounts = z.infer<typeof WantToListenCountsSchema>;
+
 export const WantToListenListResponseSchema = z.object({
   items: z.array(WantToListenEntrySchema),
   page: z.number().int(),
   pageSize: z.number().int(),
   hasNext: z.boolean(),
+  counts: WantToListenCountsSchema,
 });
 export type WantToListenListResponse = z.infer<typeof WantToListenListResponseSchema>;
 
