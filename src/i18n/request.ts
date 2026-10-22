@@ -1,5 +1,7 @@
 import { getRequestConfig } from "next-intl/server";
+import { cookies } from "next/headers";
 import { routing } from "./routing";
+import { DEFAULT_TIME_ZONE, TIME_ZONE_COOKIE, parseTimeZone } from "@/lib/time-zone";
 
 export default getRequestConfig(async ({ requestLocale }) => {
   const locale = await requestLocale;
@@ -13,6 +15,10 @@ export default getRequestConfig(async ({ requestLocale }) => {
     // Sin esto, next-intl cae a `new Date()` por render y avisa
     // `ENVIRONMENT_FALLBACK`; fijarlo acá lo hace consistente servidor/cliente.
     now: new Date(),
+    // Zona horaria del usuario desde la cookie `tz` (openspec: redesign-diary-page,
+    // D1); sin cookie válida, UTC. `NextIntlClientProvider` la hereda, así que
+    // servidor y cliente formatean fechas con la misma zona.
+    timeZone: parseTimeZone((await cookies()).get(TIME_ZONE_COOKIE)?.value) ?? DEFAULT_TIME_ZONE,
     messages: {
       common: (await import(`../../messages/${resolvedLocale}/common.json`)).default,
       catalog: (await import(`../../messages/${resolvedLocale}/catalog.json`)).default,

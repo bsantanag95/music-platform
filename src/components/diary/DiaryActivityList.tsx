@@ -1,18 +1,20 @@
 "use client";
 
 import { keepPreviousData, useInfiniteQuery, useQuery, useQueryClient, type InfiniteData } from "@tanstack/react-query";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale, useTimeZone, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
-import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { DiaryDateBlock, ProsePanel, TargetTitle, dayKey, monthKey } from "@/components/feed/feed-row-parts";
 import { targetHref } from "@/components/feed/feed-target";
+import { Link } from "@/i18n/navigation";
 import { AddToListPanel } from "@/components/lists/AddToListPanel";
 import { ListsContainingItemPanel } from "@/components/lists/ListsContainingItemPanel";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterSelect } from "@/components/ui/FilterSelect";
-import { RowMenu, RowMenuItem } from "@/components/ui/RowMenu";
+import { RowMenu, RowMenuItem, RowMenuSeparator } from "@/components/ui/RowMenu";
+import { AudienceIcon, DiaryCover } from "./diary-row-parts";
 import { ListenEntryForm } from "./ListenEntryForm";
+import { LogListenButton } from "./LogListenButton";
 import { ReactionGlyph } from "./ReactionBadge";
 import {
   createListenEntry,
@@ -52,9 +54,12 @@ interface DiaryActivityListProps {
 // superficies. Cada entrada es siempre su propia fila: nunca se agrupan
 // escuchas, porque acá hay que poder editar o borrar una entrada puntual (ver
 // openspec/changes/archive/redesign-diary, design.md decisiones 1 y 2).
-function coverForEntry(entry: ListenEntry): string | null {
-  return entry.target.type === "release-group" ? entry.target.coverThumbUrl : null;
-}
+//
+// Anatomía actual (openspec: redesign-diary-page, D3): una grilla fija de cuatro
+// columnas que nunca se parte — fecha (día y día de la semana), carátula según el
+// tipo de objetivo, cuerpo (título con la reacción al lado y, debajo, «Artista ·
+// Tipo · Contexto») y acciones (audiencia como ícono, lápiz y «···»), de 44px en
+// móvil. Fechas y meses en la zona horaria del usuario (`useTimeZone()`, D1).
 
 function PencilIcon() {
   return (
@@ -152,12 +157,12 @@ type DiaryPages = InfiniteData<DiaryListResponse, number>;
 // para la vista de cronología (openspec: deepen-listening-diary, D4). Lineal:
 // las entradas de un mismo mes vienen contiguas. No agrega conteos ni totales
 // — es la misma información, con un encabezado por mes.
-function groupByMonth(entries: ListenEntry[], locale: string) {
-  const formatter = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" });
+function groupByMonth(entries: ListenEntry[], locale: string, timeZone: string) {
+  const formatter = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric", timeZone });
   const groups: { key: string; label: string; entries: ListenEntry[] }[] = [];
   for (const entry of entries) {
     const date = new Date(entry.createdAt);
-    const key = monthKey(date);
+    const key = monthKey(date, timeZone);
     const last = groups[groups.length - 1];
     if (!last || last.key !== key) {
       groups.push({ key, label: formatter.format(date), entries: [entry] });
@@ -168,9 +173,12 @@ function groupByMonth(entries: ListenEntry[], locale: string) {
   return groups;
 }
 
+const TARGET_TYPE_KEY = { artist: "artist", "release-group": "album", recording: "song" } as const;
+
 export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
   const t = useTranslations("diary");
   const locale = useLocale();
+  const timeZone = useTimeZone() ?? "UTC";
   const queryClient = useQueryClient();
 
   const [filters, setFilters] = useState<DiaryFiltersState>(EMPTY_FILTERS);
@@ -228,10 +236,12 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
   }, [highlightResult]);
 
   const isFiltered = hasActiveFilters(filters);
-  const apiFilters = toApiFilters(filters);
+  // La zona viaja con los filtros (y en la clave de la query): año y mes se
+  // cuentan en la misma zona con la que se agrupa por mes (D1).
+  const apiFilters = { ...toApiFilters(filters), timeZone };
   const queryKey = queryKeys.myDiary(apiFilters);
 
-  const { data, hasNextPage, isFetchingNextPage, fetchNextPage, isPending, isError } = useInfiniteQuery({
+  const { data, hasNextPage, isFetchingNextPage, fetchNextPage, isPending, isError, isPlaceholderData } = useInfiniteQuery({
     queryKey,
     queryFn: ({ pageParam }) => getMyDiary(pageParam, PAGE_SIZE, apiFilters),
     initialPageParam: 1,
@@ -252,8 +262,8 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
   // filtros activos (los años/meses disponibles no cambian según lo que el
   // usuario esté filtrando en este momento).
   const { data: monthsData } = useQuery({
-    queryKey: queryKeys.myDiaryMonths(),
-    queryFn: getMyDiaryMonths,
+    queryKey: queryKeys.myDiaryMonths(timeZone),
+    queryFn: () => getMyDiaryMonths(timeZone),
     staleTime: 60_000,
   });
   const months = useMemo(() => monthsData?.months ?? [], [monthsData]);
@@ -280,7 +290,7 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
   };
 
   const entries = data?.pages.flatMap((page) => page.entries) ?? initial.entries;
-  const monthGroups = useMemo(() => groupByMonth(entries, locale), [entries, locale]);
+  const monthGroups = useMemo(() => groupByMonth(entries, locale, timeZone), [entries, locale, timeZone]);
   // Día a mostrar por fila: solo cuando cambia respecto a la fila anterior
   // *del mismo grupo de mes* (openspec: redesign-diary-row) — dos escuchas
   // consecutivas del mismo día muestran el número una sola vez.
@@ -289,12 +299,14 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
     for (const group of monthGroups) {
       group.entries.forEach((entry, index) => {
         const previous = group.entries[index - 1];
-        const showDay = index === 0 || dayKey(new Date(entry.createdAt)) !== dayKey(new Date(previous!.createdAt));
+        const showDay =
+          index === 0 ||
+          dayKey(new Date(entry.createdAt), timeZone) !== dayKey(new Date(previous!.createdAt), timeZone);
         map.set(entry.id, showDay);
       });
     }
     return map;
-  }, [monthGroups]);
+  }, [monthGroups, timeZone]);
 
   const updateCachedEntry = (updated: ListenEntry) => {
     queryClient.setQueryData<DiaryPages>(queryKey, (old) =>
@@ -304,6 +316,20 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
             pages: old.pages.map((page) => ({
               ...page,
               entries: page.entries.map((item) => (item.id === updated.id ? updated : item)),
+            })),
+          }
+        : old,
+    );
+  };
+
+  const updateCachedEntries = (matches: (entry: ListenEntry) => boolean, update: (entry: ListenEntry) => ListenEntry) => {
+    queryClient.setQueryData<DiaryPages>(queryKey, (old) =>
+      old
+        ? {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              entries: page.entries.map((item) => (matches(item) ? update(item) : item)),
             })),
           }
         : old,
@@ -381,7 +407,13 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
     setActionError(false);
     try {
       const result = await toggleWantToListen({ type: entry.target.type, id: entry.target.id });
-      setWantToListenResult({ id: entry.id, added: result !== null });
+      const added = result !== null;
+      // Todas las escuchas del mismo objetivo comparten el estado de Pendientes.
+      updateCachedEntries(
+        (item) => item.target.type === entry.target.type && item.target.id === entry.target.id,
+        (item) => ({ ...item, inWantToListen: added }),
+      );
+      setWantToListenResult({ id: entry.id, added });
     } catch {
       setActionError(true);
     }
@@ -431,49 +463,77 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
             : "bg-transparent"
         }`}
       >
-        <div className="flex gap-3 sm:gap-4">
-          <DiaryDateBlock iso={entry.createdAt} showDay={showDay} />
-          <CoverThumb cover={coverForEntry(entry)} label="" className="size-11 sm:size-12" />
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              <span className="flex min-w-0 items-baseline gap-1 font-data text-xs text-paper-muted">
-                <span>{t(`context.${entry.listenContext}`)}</span>
+        <div className="grid grid-cols-[1.75rem_2.5rem_minmax(0,1fr)_auto] gap-x-2.5 sm:grid-cols-[2.25rem_3rem_minmax(0,1fr)_auto] sm:gap-x-4">
+          <DiaryDateBlock iso={entry.createdAt} showDay={showDay} weekday />
+          <DiaryCover entry={entry} className="size-10 sm:size-12" />
+          <div className="min-w-0">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="min-w-0 [&_a]:line-clamp-2">
+                <TargetTitle
+                  href={targetHref(entry.target.type, entry.target.id, entry.target.title, entry.target.subtitle ?? null)}
+                  label={entry.target.title}
+                  artist={null}
+                  layout="inline"
+                />
               </span>
-              <span className="flex shrink-0 items-center gap-2">
-                <span className="font-data text-xs text-paper-muted">
-                  {t(`audience.${entry.audience}`)}
-                </span>
-                <ReactionGlyph reaction={entry.reaction} />
-                <button
-                  type="button"
-                  aria-label={t("edit")}
-                  className="flex size-6 items-center justify-center rounded text-paper-muted transition-colors hover:text-paper"
-                  onClick={() => setExpandedId((current) => (current === entry.id ? null : entry.id))}
-                >
-                  <PencilIcon />
-                </button>
-                <RowMenu label={t("moreActions")}>
-                  <RowMenuItem onSelect={() => void handleLogAnother(entry)}>{t("logAnother")}</RowMenuItem>
-                  <RowMenuItem onSelect={() => setAddToListEntryId((current) => (current === entry.id ? null : entry.id))}>
-                    {t("addToList")}
-                  </RowMenuItem>
-                  <RowMenuItem onSelect={() => setShowInListsEntryId((current) => (current === entry.id ? null : entry.id))}>
-                    {t("showInLists")}
-                  </RowMenuItem>
-                  {entry.target.type !== "recording" && (
-                    <RowMenuItem onSelect={() => void handleToggleWantToListen(entry)}>
-                      {t("wantToListen")}
-                    </RowMenuItem>
-                  )}
-                  <RowMenuItem onSelect={() => void handleToggleHighlight(entry)}>
-                    {t(entry.isHighlighted ? "unhighlight" : "highlight")}
-                  </RowMenuItem>
-                  <RowMenuItem danger onSelect={() => setPendingDeleteId(entry.id)}>
-                    {t("delete")}
-                  </RowMenuItem>
-                </RowMenu>
-              </span>
+              <ReactionGlyph reaction={entry.reaction} variant="accent" />
             </div>
+            <p className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 font-data text-xs text-paper-muted">
+              {entry.target.subtitle ? (
+                <>
+                  {entry.target.artistId ? (
+                    <Link
+                      href={targetHref("artist", entry.target.artistId, entry.target.subtitle)}
+                      className="transition-colors hover:text-paper"
+                    >
+                      {entry.target.subtitle}
+                    </Link>
+                  ) : (
+                    <span>{entry.target.subtitle}</span>
+                  )}
+                  <span aria-hidden="true">·</span>
+                </>
+              ) : null}
+              <span>{t(`targetType.${TARGET_TYPE_KEY[entry.target.type]}`)}</span>
+              <span aria-hidden="true">·</span>
+              <span>{t(`context.${entry.listenContext}`)}</span>
+              <span aria-hidden="true">·</span>
+              <AudienceIcon audience={entry.audience} />
+            </p>
+          </div>
+          <div className="-mr-2.5 -mt-2.5 flex items-start sm:-mr-1 sm:-mt-1">
+            <button
+              type="button"
+              aria-label={t("edit")}
+              aria-expanded={expanded}
+              className="flex size-11 items-center justify-center rounded text-paper-muted transition-colors hover:text-paper sm:size-8"
+              onClick={() => setExpandedId((current) => (current === entry.id ? null : entry.id))}
+            >
+              <PencilIcon />
+            </button>
+            <RowMenu label={t("moreActions")} triggerClassName="size-11 sm:size-8">
+              <RowMenuItem onSelect={() => void handleLogAnother(entry)}>{t("logAnother")}</RowMenuItem>
+              <RowMenuItem onSelect={() => setAddToListEntryId((current) => (current === entry.id ? null : entry.id))}>
+                {t("addToList")}
+              </RowMenuItem>
+              <RowMenuItem onSelect={() => setShowInListsEntryId((current) => (current === entry.id ? null : entry.id))}>
+                {t("showInLists")}
+              </RowMenuItem>
+              {entry.target.type !== "recording" && (
+                <RowMenuItem onSelect={() => void handleToggleWantToListen(entry)}>
+                  {t(entry.inWantToListen ? "unwantToListen" : "wantToListen")}
+                </RowMenuItem>
+              )}
+              <RowMenuItem onSelect={() => void handleToggleHighlight(entry)}>
+                {t(entry.isHighlighted ? "unhighlight" : "highlight")}
+              </RowMenuItem>
+              <RowMenuSeparator />
+              <RowMenuItem danger onSelect={() => setPendingDeleteId(entry.id)}>
+                {t("delete")}
+              </RowMenuItem>
+            </RowMenu>
+          </div>
+          <div className="col-start-3 col-end-5 min-w-0">
             {pendingDelete && (
               <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <span role="alert" className="min-w-0 font-data text-xs text-danger">
@@ -500,19 +560,6 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
                 </span>
               </div>
             )}
-            <div className="mt-1">
-              <TargetTitle
-                href={targetHref(entry.target.type, entry.target.id, entry.target.title, entry.target.subtitle ?? null)}
-                label={entry.target.title}
-                artist={entry.target.subtitle}
-                artistHref={
-                  entry.target.artistId
-                    ? targetHref("artist", entry.target.artistId, entry.target.subtitle ?? "")
-                    : null
-                }
-                layout="inline"
-              />
-            </div>
             {body ? <ProsePanel body={body} variant="impression" /> : null}
             {addingToList && (
               <div className="mt-3">
@@ -663,6 +710,15 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
         <EmptyState
           title={isFiltered ? t("noResultsTitle") : (empty?.title ?? t("emptyTitle"))}
           description={isFiltered ? t("noResultsDescription") : (empty?.description ?? t("emptyDescription"))}
+          action={
+            isFiltered ? (
+              <Button variant="secondary" onClick={clearFilters}>
+                {t("clearFilters")}
+              </Button>
+            ) : (
+              <LogListenButton variant="primary" />
+            )
+          }
         />
       </div>
     );
@@ -680,7 +736,12 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
               ? t(highlightResult.highlighted ? "highlighted" : "unhighlighted")
               : null}
       </span>
-      <div className="flex flex-col gap-6">
+      {/* Mientras llegan los resultados de un filtro nuevo, la lista anterior
+          queda atenuada y marcada como ocupada (openspec: redesign-diary-page, D5). */}
+      <div
+        aria-busy={isPlaceholderData}
+        className={`flex flex-col gap-6 transition-opacity ${isPlaceholderData ? "opacity-60" : ""}`}
+      >
         {monthGroups.map((group) => {
           const collapsed = collapsedMonths.has(group.key);
           return (

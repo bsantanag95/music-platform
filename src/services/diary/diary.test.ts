@@ -519,15 +519,16 @@ describe("servicio del diario", () => {
       expect(params).toEqual(expect.arrayContaining(["relisten", "loved", "public", "%kid a%"]));
     });
 
-    it("filtra por año: rango de todo el año calendario", async () => {
+    it("filtra por año: rango de todo el año calendario, en UTC sin zona horaria", async () => {
       const helper = joinPagedCapturing([entryRow]);
       mocks.db.select.mockReturnValue(helper);
       await listMyDiary(user, 1, 20, { year: 2026 });
 
       const { sql, params } = dialect.sqlToQuery(helper.where.mock.calls[0]![0]);
       expect(sql).toContain("created_at");
-      expect(params).toContainEqual(new Date(Date.UTC(2026, 0, 1)).toISOString());
-      expect(params).toContainEqual(new Date(Date.UTC(2027, 0, 1)).toISOString());
+      expect(sql).toContain("make_timestamptz");
+      // [inicio, fin): 2026-01 → 2027-01, contados en UTC.
+      expect(params).toEqual(expect.arrayContaining([2026, 1, 2027, "UTC"]));
     });
 
     it("filtra por año y mes: rango acotado a ese mes calendario", async () => {
@@ -536,8 +537,7 @@ describe("servicio del diario", () => {
       await listMyDiary(user, 1, 20, { year: 2026, month: 9 });
 
       const { params } = dialect.sqlToQuery(helper.where.mock.calls[0]![0]);
-      expect(params).toContainEqual(new Date(Date.UTC(2026, 8, 1)).toISOString());
-      expect(params).toContainEqual(new Date(Date.UTC(2026, 9, 1)).toISOString());
+      expect(params).toEqual(expect.arrayContaining([2026, 9, 10]));
     });
 
     it("diciembre acarrea el año siguiente como límite superior del rango", async () => {
@@ -546,8 +546,17 @@ describe("servicio del diario", () => {
       await listMyDiary(user, 1, 20, { year: 2026, month: 12 });
 
       const { params } = dialect.sqlToQuery(helper.where.mock.calls[0]![0]);
-      expect(params).toContainEqual(new Date(Date.UTC(2026, 11, 1)).toISOString());
-      expect(params).toContainEqual(new Date(Date.UTC(2027, 0, 1)).toISOString());
+      expect(params).toEqual(expect.arrayContaining([2026, 12, 2027, 1]));
+    });
+
+    it("cuenta el año y el mes en la zona horaria pedida", async () => {
+      const helper = joinPagedCapturing([entryRow]);
+      mocks.db.select.mockReturnValue(helper);
+      await listMyDiary(user, 1, 20, { year: 2026, month: 9, timeZone: "America/Santiago" });
+
+      const { params } = dialect.sqlToQuery(helper.where.mock.calls[0]![0]);
+      expect(params).toContain("America/Santiago");
+      expect(params).not.toContain("UTC");
     });
 
     it("un mes sin año lanza VALIDATION_ERROR y no llega a construir la query", async () => {
@@ -556,6 +565,45 @@ describe("servicio del diario", () => {
         status: 400,
       });
       expect(mocks.db.select).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("imagen por tipo y Want to Listen (redesign-diary-page)", () => {
+    it("usa la foto del artista y la carátula del álbum de una canción", async () => {
+      const rows = [
+        { ...entryRow, id: "00000000-0000-4000-8000-0000000000a1", artistPhoto: "https://example.com/artist.webp" },
+        {
+          ...entryRow,
+          id: "00000000-0000-4000-8000-0000000000a2",
+          artistId: null,
+          recordingId: "00000000-0000-4000-8000-0000000000b2",
+          recordingTitle: "Taste",
+          recordingCover: "https://example.com/album.webp",
+        },
+      ];
+      mocks.db.select.mockReturnValue(joinPagedCapturing(rows));
+
+      const result = await listMyDiary(user, 1, 20);
+
+      expect(result.entries[0]!.target.coverThumbUrl).toBe("https://example.com/artist.webp");
+      expect(result.entries[1]!.target).toMatchObject({ type: "recording", coverThumbUrl: "https://example.com/album.webp" });
+    });
+
+    it("el diario propio trae inWantToListen; el de un perfil no lo expone", async () => {
+      mocks.db.select.mockReturnValue(joinPagedCapturing([{ ...entryRow, inWantToListen: true }]));
+      const own = await listMyDiary(user, 1, 20);
+      const ownFields = mocks.db.select.mock.calls[0]![0] as Record<string, SQL>;
+      expect(own.entries[0]!.inWantToListen).toBe(true);
+      const { sql } = dialect.sqlToQuery(ownFields.inWantToListen!);
+      expect(sql).toContain("want_to_listen_entry");
+      expect(sql).toContain('"listen_entry"."user_id"');
+
+      mocks.db.select.mockClear();
+      mocks.getProfileByUsername.mockResolvedValue({ id: user, isPrivate: false, relation: "self" });
+      mocks.db.select.mockReturnValueOnce(joinPagedCapturing([entryRow])).mockReturnValueOnce(whereTerminal([{ count: 1 }]));
+      await listUserDiary("alguien", user, 1, 20).catch(() => undefined);
+      const profileFields = mocks.db.select.mock.calls[0]![0] as Record<string, unknown>;
+      expect(profileFields).not.toHaveProperty("inWantToListen");
     });
   });
 
@@ -583,6 +631,22 @@ describe("servicio del diario", () => {
       for (const bucket of result) {
         expect(Object.keys(bucket).sort()).toEqual(["month", "year"]);
       }
+    });
+
+    it("extrae año y mes en la zona horaria pedida (UTC por defecto)", async () => {
+      const groupBy = vi.fn().mockReturnValue({ orderBy: vi.fn().mockResolvedValue([]) });
+      const where = vi.fn(() => ({ groupBy }));
+      const from = vi.fn(() => ({ where }));
+      mocks.db.select.mockReturnValue({ from });
+
+      await listMyDiaryMonths(user, "America/Santiago");
+      await listMyDiaryMonths(user);
+
+      const fields = mocks.db.select.mock.calls.map((call) => call[0] as { year: SQL });
+      const [local, utc] = fields.map((field) => dialect.sqlToQuery(field.year));
+      expect(local!.sql).toContain("AT TIME ZONE");
+      expect(local!.params).toContain("America/Santiago");
+      expect(utc!.params).toContain("UTC");
     });
   });
 

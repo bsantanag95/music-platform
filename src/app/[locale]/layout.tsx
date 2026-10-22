@@ -7,6 +7,7 @@ import { Providers } from "./providers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { FooterSlot } from "@/components/layout/FooterSlot";
+import { TimeZoneCookie } from "@/components/layout/TimeZoneCookie";
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
 import { countPendingFollowRequests } from "@/services/social/following";
@@ -82,6 +83,7 @@ export default async function RootLayout({
       <body>
         <NextIntlClientProvider messages={messages}>
           <span id="top" aria-hidden="true" />
+          <TimeZoneCookie />
           <Header
             user={publicUser ? { ...publicUser, avatarUrl } : null}
             exploreEnabled={exploreEnabled}

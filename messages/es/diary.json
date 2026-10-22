@@ -1,5 +1,13 @@
 {
   "title": "Diario",
+  "subtitle": "Tu registro de escuchas",
+  "logListen": "Anotar escucha",
+  "unwantToListen": "Quitar de Pendientes",
+  "targetType": {
+    "artist": "Artista",
+    "album": "Álbum",
+    "song": "Canción"
+  },
   "emptyTitle": "Todavía no registraste nada",
   "emptyDescription": "Registra una escucha de un artista, álbum o canción para que aparezca acá.",
   "profileEmptyTitle": "Sin entradas en el diario",

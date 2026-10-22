@@ -1,5 +1,13 @@
 {
   "title": "Diary",
+  "subtitle": "Your listening log",
+  "logListen": "Log a listen",
+  "unwantToListen": "Remove from Listen Later",
+  "targetType": {
+    "artist": "Artist",
+    "album": "Album",
+    "song": "Song"
+  },
   "emptyTitle": "Nothing logged yet",
   "emptyDescription": "Log a listen of an artist, album or song and it will show up here.",
   "profileEmptyTitle": "No diary entries",

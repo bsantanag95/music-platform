@@ -6,6 +6,7 @@ import { CreateListenEntryRequestSchema } from "@/lib/api/schemas";
 import { requireSocialActivityAllowed, requireUser } from "@/services/auth/authorization";
 import { createListenEntry, listMyDiary, resolveDiaryTarget, type DiaryFilters } from "@/services/diary/diary";
 import { DIARY_AUDIENCES, LISTEN_CONTEXTS, LISTEN_REACTIONS } from "@/services/diary/types";
+import { parseTimeZoneParam } from "./time-zone-param";
 
 const REACTION_FILTER_VALUES = [...LISTEN_REACTIONS, "none"] as const;
 
@@ -51,6 +52,7 @@ function parseDiaryFilters(searchParams: URLSearchParams): DiaryFilters {
     audience: parseEnumParam(searchParams, "audience", DIARY_AUDIENCES),
     year: parseIntParam(searchParams, "year", { min: 1900, max: 9999 }),
     month: parseIntParam(searchParams, "month", { min: 1, max: 12 }),
+    timeZone: parseTimeZoneParam(searchParams),
   };
 }
 

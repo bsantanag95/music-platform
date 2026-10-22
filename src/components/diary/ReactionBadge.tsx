@@ -45,9 +45,33 @@ export function ReactionBadge({
 // en todas las filas; sin reacción, el slot queda decorativo y vacío
 // (`aria-hidden`, sin `role="img"`) — nunca un ícono neutro por defecto, para
 // no confundir ausencia con reacción `neutral` explícita.
-export function ReactionGlyph({ reaction }: { reaction: ListenReaction | null }) {
+//
+// `accent` (openspec: redesign-diary-page, D3): en el diario propio el ícono va
+// junto al título, en ámbar, y sin reacción no se dibuja nada — las acciones
+// tienen su propia columna, así que ya no hace falta reservar el hueco. El
+// diario del perfil (`DiaryReadList`) conserva la variante con hueco reservado.
+export function ReactionGlyph({
+  reaction,
+  variant = "slot",
+}: {
+  reaction: ListenReaction | null;
+  variant?: "slot" | "accent";
+}) {
   const t = useTranslations("diary");
   const label = reaction ? t(`reaction.${reaction}`) : undefined;
+  if (variant === "accent") {
+    if (!reaction) return null;
+    return (
+      <span
+        role="img"
+        aria-label={label}
+        title={label}
+        className="inline-flex shrink-0 items-center text-amber [&>svg]:h-[18px] [&>svg]:w-[18px]"
+      >
+        {REACTION_ICONS[reaction]}
+      </span>
+    );
+  }
   return (
     <span
       role={reaction ? "img" : undefined}

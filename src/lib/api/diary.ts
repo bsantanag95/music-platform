@@ -30,6 +30,9 @@ export interface DiaryFiltersParams {
   audience?: DiaryAudience;
   year?: number;
   month?: number;
+  // Zona horaria en la que se cuentan año y mes (openspec: redesign-diary-page,
+  // D1) — la de `useTimeZone()`, la misma con la que el cliente agrupa por mes.
+  timeZone?: string;
 }
 
 export function getMyDiary(
@@ -44,13 +47,15 @@ export function getMyDiary(
   if (filters?.audience) params.set("audience", filters.audience);
   if (filters?.year) params.set("year", String(filters.year));
   if (filters?.month) params.set("month", String(filters.month));
+  if (filters?.timeZone) params.set("tz", filters.timeZone);
   return apiFetch(`/api/me/diary?${params.toString()}`, DiaryListResponseSchema);
 }
 
 // Pares año/mes con al menos una escucha, para poblar los filtros de Año/Mes
 // (openspec: add-diary-date-navigation).
-export function getMyDiaryMonths(): Promise<DiaryMonthsResponse> {
-  return apiFetch("/api/me/diary/months", DiaryMonthsResponseSchema);
+export function getMyDiaryMonths(timeZone?: string): Promise<DiaryMonthsResponse> {
+  const query = timeZone ? `?tz=${encodeURIComponent(timeZone)}` : "";
+  return apiFetch(`/api/me/diary/months${query}`, DiaryMonthsResponseSchema);
 }
 
 export function getUserDiary(username: string, page = 1, pageSize = 20): Promise<DiaryListResponse> {

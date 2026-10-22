@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { NextIntlClientProvider } from "next-intl";
 import type { ReactElement } from "react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { artistHref } from "@/lib/catalog-links";
@@ -65,7 +66,8 @@ vi.mock("@/lib/api/want-to-listen", () => ({
 }));
 vi.mock("@/lib/api/client", () => ({ ApiError: mocks.ApiError }));
 
-const NO_FILTERS = { q: undefined, context: undefined, reaction: undefined, audience: undefined };
+// Sin `timeZone` en el proveedor de pruebas, el diario usa UTC (openspec: redesign-diary-page, D1).
+const NO_FILTERS = { q: undefined, context: undefined, reaction: undefined, audience: undefined, timeZone: "UTC" };
 
 function renderWithQuery(ui: ReactElement) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -190,33 +192,79 @@ describe("DiaryActivityList", () => {
     expect(quote.className).not.toMatch(/rounded/);
   });
 
-  it("la reacción se muestra como ícono en el cluster de acciones, junto a audiencia, con el nombre accesible", () => {
+  it("la reacción va junto al título, en ámbar, con el nombre accesible", () => {
     renderWithQuery(<DiaryActivityList initial={initial} />);
     const likedRow = screen.getByText("Pink Floyd").closest("li") as HTMLElement;
     const glyph = within(likedRow).getByRole("img", { name: "Me gustó" });
-    expect(glyph).toBeInTheDocument();
-    // vive en el mismo cluster que audiencia/editar/menú, no junto al título
-    const actionsCluster = within(likedRow).getByText("Seguidores").closest("span.shrink-0");
-    expect(actionsCluster?.contains(glyph)).toBe(true);
+    expect(glyph).toHaveAttribute("title", "Me gustó");
+    expect(glyph.className).toMatch(/text-amber/);
+    // comparte la línea del título, no la columna de acciones
+    const titleLine = within(likedRow).getByRole("link", { name: "Pink Floyd" }).closest("div");
+    expect(titleLine?.contains(glyph)).toBe(true);
   });
 
-  it("sin reacción, el slot se reserva igual — no desaparece, solo queda vacío y decorativo", () => {
+  it("sin reacción no se dibuja ningún ícono y las acciones no cambian de columna", () => {
     const withReaction = { ...liked, id: "r1" };
     const withoutReaction = plainListen("l1", "Sin reacción");
-    const { container } = renderWithQuery(
+    renderWithQuery(
       <DiaryActivityList initial={{ entries: [withReaction, withoutReaction], page: 1, pageSize: 20, hasNext: false }} />,
     );
-
-    // un slot de ancho fijo por fila, exista o no la reacción
-    const slots = container.querySelectorAll('span[class*="w-5"][class*="shrink-0"]');
-    expect(slots).toHaveLength(2);
-
     const rowWithout = screen.getByRole("link", { name: "Sin reacción" }).closest("li") as HTMLElement;
-    expect(within(rowWithout).queryByRole("img")).toBeNull();
-    const emptySlot = rowWithout.querySelector('span[class*="w-5"][class*="shrink-0"]');
-    expect(emptySlot).not.toBeNull();
-    expect(emptySlot).toHaveAttribute("aria-hidden", "true");
-    expect(emptySlot?.textContent).toBe("");
+    expect(within(rowWithout).queryByRole("img", { name: /Me gustó|Me encantó|Obsesión|Neutro|No me gustó/ })).toBeNull();
+    // las acciones viven en su propia columna de la grilla en ambas filas
+    for (const row of screen.getAllByRole("listitem")) {
+      const grid = row.firstElementChild as HTMLElement;
+      expect(grid.className).toMatch(/grid-cols-\[/);
+      const edit = within(row).getByRole("button", { name: "Editar" });
+      expect(edit.parentElement?.parentElement).toBe(grid);
+    }
+  });
+
+  it("la línea secundaria dice artista, tipo y contexto; la audiencia es un ícono con nombre accesible", () => {
+    renderWithQuery(
+      <DiaryActivityList
+        initial={{ entries: [albumWithCreditedArtist, plainListen("s1", "Taste")], page: 1, pageSize: 20, hasNext: false }}
+      />,
+    );
+    const albumRow = screen.getByRole("link", { name: "In Rainbows" }).closest("li") as HTMLElement;
+    expect(within(albumRow).getByText("Álbum")).toBeInTheDocument();
+    expect(within(albumRow).getByText("Primera escucha")).toBeInTheDocument();
+    expect(within(albumRow).getByRole("img", { name: "Público" })).toBeInTheDocument();
+    // la audiencia ya no se escribe como texto visible
+    expect(within(albumRow).queryByText("Público")).toBeNull();
+    const songRow = screen.getByRole("link", { name: "Taste" }).closest("li") as HTMLElement;
+    expect(within(songRow).getByText("Canción")).toBeInTheDocument();
+  });
+
+  it("muestra el día y el día de la semana, en la zona horaria del usuario", () => {
+    const { container } = renderWithQuery(<DiaryActivityList initial={initial} />);
+    const time = container.querySelector(`time[datetime="${liked.createdAt}"]`) as HTMLElement;
+    // 15 de enero de 2026 (UTC) fue jueves
+    expect(time.textContent).toBe("15jue");
+  });
+
+  it("agrupa por mes y pide los filtros en la zona horaria del usuario", async () => {
+    // 01:00 UTC del 1 de octubre = 22:00 del 30 de septiembre en Santiago.
+    const lateNight = plainListen("tz1", "Fin de mes", "2026-10-01T01:00:00.000Z");
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const { container } = renderWithIntl(
+      <NextIntlClientProvider locale="es" timeZone="America/Santiago">
+        <QueryClientProvider client={queryClient}>
+          <DiaryActivityList initial={{ entries: [lateNight], page: 1, pageSize: 20, hasNext: false }} />
+        </QueryClientProvider>
+      </NextIntlClientProvider>,
+    );
+    expect(screen.getByRole("heading", { name: /septiembre de 2026/i })).toBeInTheDocument();
+    expect(container.querySelector("time")?.textContent).toBe("30mié");
+    await waitFor(() => expect(mocks.getMyDiaryMonths).toHaveBeenCalledWith("America/Santiago"));
+  });
+
+  it("los artistas usan una carátula redonda; álbumes y canciones, cuadrada", () => {
+    const { container } = renderWithQuery(<DiaryActivityList initial={initial} />);
+    const shapes = Array.from(container.querySelectorAll("[data-cover-shape]")).map((node) =>
+      node.getAttribute("data-cover-shape"),
+    );
+    expect(shapes).toEqual(["round", "square"]);
   });
 
   it("editar es un ícono siempre visible con nombre accesible 'Editar'", () => {
@@ -338,10 +386,10 @@ describe("DiaryActivityList", () => {
     await user.click(screen.getByRole("menuitem", { name: "Eliminar" }));
 
     const warning = within(firstRow).getByRole("alert");
-    const dateCluster = within(firstRow).getByText("Seguidores").closest("span.shrink-0");
-    // el aviso ya no es hijo del cluster shrink-0 (audiencia/editar/menú) — por
-    // eso no se sale del ancho de la fila cuando el texto es largo.
-    expect(dateCluster?.contains(warning)).toBe(false);
+    const actions = within(firstRow).getByRole("button", { name: "Editar" }).parentElement;
+    // el aviso no vive en la columna de acciones — por eso no se sale del ancho
+    // de la fila cuando el texto es largo.
+    expect(actions?.contains(warning)).toBe(false);
     expect(warning.closest("div")?.className).toMatch(/flex-wrap/);
   });
 
@@ -430,6 +478,34 @@ describe("DiaryActivityList", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Se quitó de tus Pendientes");
   });
 
+  it("el menú refleja si el objetivo ya está en Pendientes y se actualiza al alternar", async () => {
+    const user = userEvent.setup();
+    mocks.toggleWantToListen.mockResolvedValue(null);
+    const wanted = { ...liked, inWantToListen: true };
+    renderWithQuery(<DiaryActivityList initial={{ entries: [wanted, neutral], page: 1, pageSize: 20, hasNext: false }} />);
+
+    const firstRow = screen.getByText("Pink Floyd").closest("li") as HTMLElement;
+    await openRowMenu(user, firstRow);
+    expect(screen.queryByRole("menuitem", { name: "Marcar como pendiente" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("menuitem", { name: "Quitar de Pendientes" }));
+    await waitFor(() => expect(mocks.toggleWantToListen).toHaveBeenCalled());
+
+    await openRowMenu(user, firstRow);
+    expect(screen.getByRole("menuitem", { name: "Marcar como pendiente" })).toBeInTheDocument();
+  });
+
+  it("las opciones del menú no se parten y «Eliminar» va tras un separador", async () => {
+    const user = userEvent.setup();
+    renderWithQuery(<DiaryActivityList initial={initial} />);
+    const firstRow = screen.getByText("Pink Floyd").closest("li") as HTMLElement;
+    await openRowMenu(user, firstRow);
+
+    const items = screen.getAllByRole("menuitem");
+    for (const item of items) expect(item.className).toMatch(/whitespace-nowrap/);
+    const remove = screen.getByRole("menuitem", { name: "Eliminar" });
+    expect(remove.parentElement?.previousElementSibling).toHaveAttribute("role", "separator");
+  });
+
   it("no ofrece quiero volver a escuchar para una canción", async () => {
     const user = userEvent.setup();
     const song = plainListen("song-1", "Vogue (version 2)");
@@ -485,6 +561,11 @@ describe("DiaryActivityList", () => {
     expect(screen.queryByRole("button", { name: "Cargar más" })).not.toBeInTheDocument();
   });
 
+  it("el diario vacío ofrece anotar una escucha", () => {
+    renderWithQuery(<DiaryActivityList initial={{ entries: [], page: 1, pageSize: 20, hasNext: false }} />);
+    expect(screen.getByRole("button", { name: "Anotar escucha" })).toBeInTheDocument();
+  });
+
   it("muestra textos de estado vacío personalizados con prop empty", () => {
     renderWithQuery(
       <DiaryActivityList
@@ -511,6 +592,7 @@ describe("DiaryActivityList", () => {
             context: undefined,
             reaction: undefined,
             audience: undefined,
+            timeZone: "UTC",
           }),
         { timeout: 1000 },
       );
@@ -529,6 +611,7 @@ describe("DiaryActivityList", () => {
           context: "rediscovery",
           reaction: undefined,
           audience: undefined,
+          timeZone: "UTC",
         }),
       );
     });
@@ -547,6 +630,7 @@ describe("DiaryActivityList", () => {
           context: undefined,
           reaction: "none",
           audience: "private",
+          timeZone: "UTC",
         }),
       );
     });
@@ -562,15 +646,34 @@ describe("DiaryActivityList", () => {
       expect(screen.queryByText("Todavía no registraste nada")).not.toBeInTheDocument();
     });
 
+    it("mientras llegan los resultados de un filtro, la lista anterior queda atenuada y ocupada", async () => {
+      const user = userEvent.setup();
+      let resolve: (value: DiaryListResponse) => void = () => undefined;
+      mocks.getMyDiary.mockReturnValue(new Promise<DiaryListResponse>((done) => (resolve = done)));
+      const { container } = renderWithQuery(<DiaryActivityList initial={initial} />);
+
+      await user.selectOptions(screen.getByLabelText("Audiencia"), "public");
+
+      const list = container.querySelector("[aria-busy]") as HTMLElement;
+      await waitFor(() => expect(list).toHaveAttribute("aria-busy", "true"));
+      expect(list.className).toMatch(/opacity-60/);
+      expect(screen.getByText("Pink Floyd")).toBeInTheDocument();
+
+      resolve({ entries: [neutral], page: 1, pageSize: 20, hasNext: false });
+      await waitFor(() => expect(container.querySelector("[aria-busy]")).toHaveAttribute("aria-busy", "false"));
+    });
+
     it("limpiar filtros vuelve a traer todo", async () => {
       const user = userEvent.setup();
       mocks.getMyDiary.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
       renderWithQuery(<DiaryActivityList initial={initial} />);
 
       await user.selectOptions(screen.getByLabelText("Audiencia"), "private");
-      await waitFor(() => expect(screen.getByText("Limpiar filtros")).toBeInTheDocument());
+      // sin resultados, el estado vacío también ofrece limpiar (además de la barra)
+      await waitFor(() => expect(screen.getAllByText("Limpiar filtros")).toHaveLength(2));
+      const emptyState = screen.getByRole("heading", { name: "Sin resultados para estos filtros" }).parentElement as HTMLElement;
 
-      await user.click(screen.getByText("Limpiar filtros"));
+      await user.click(within(emptyState).getByRole("button", { name: "Limpiar filtros" }));
 
       expect(screen.getByText("Pink Floyd")).toBeInTheDocument();
       expect(screen.queryByText("Limpiar filtros")).not.toBeInTheDocument();
