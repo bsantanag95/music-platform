@@ -1,92 +1,101 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import type { DiaryAudience } from "@/lib/api/schemas";
-import { favoriteTargetHref } from "./favorites-shared";
+import { FavoriteActions } from "./FavoriteActions";
+import { favoriteTargetHref, formatFavoriteDate } from "./favorites-shared";
 import type { FavoritesRendererProps } from "./favorites-items-view";
 
-const AUDIENCES: DiaryAudience[] = ["private", "followers", "public"];
+const HEAD = "px-2 py-1.5 text-left font-data text-[0.65rem] font-normal uppercase tracking-wide text-paper-muted/70";
 
-// Modo Índice: filas de texto compactas para escanear una lista larga —
-// mismo tratamiento que `EntriesIndex` de Want to Listen, con el artista
-// acreditado como subtítulo y los controles de audiencia/quitar de
-// `FavoriteTile` condensados en la fila. Sin columna de tipo: el encabezado de la sección ya lo dice.
-// Las acciones de cada fila se ven siempre a contraste normal (antes se atenuaban al 40 %).
+// Modo Índice como tabla (openspec: redesign-favorites-views): título (con el artista acreditado), fecha, y en la
+// vista propia la audiencia y las acciones, con las columnas alineadas entre filas. Los encabezados se ven desde
+// `sm` y solo los oye un lector de pantalla debajo. Sin columna de tipo: el encabezado de la sección ya lo dice.
+// En modo lectura no hay columnas de audiencia ni de acciones.
 export function FavoritesIndex({ favorites, actions }: FavoritesRendererProps) {
   const t = useTranslations("favorites");
+  const locale = useLocale();
+  const own = !actions.readOnly && !actions.selectionMode;
+  const selecting = Boolean(actions.selectionMode) && !actions.readOnly;
 
   return (
-    <ul className="flex flex-col">
-      {favorites.map((favorite) => {
-        const href = favoriteTargetHref(favorite);
-        const busy = actions.busyId === favorite.id || actions.bulkBusy;
-        return (
-          <li
-            key={favorite.id}
-            className="group flex flex-wrap items-center gap-3 rounded-md border-b border-ink-border px-2 py-2 transition-colors last:border-b-0 hover:bg-ink-surface"
-          >
-            {actions.selectionMode && !actions.readOnly ? (
-              <input
-                type="checkbox"
-                checked={actions.selectedIds.has(favorite.id)}
-                onChange={() => actions.onToggleSelect(favorite.id)}
-                aria-label={t("selectItem", { title: favorite.target.title })}
-                className="size-4 shrink-0 accent-amber [@media(pointer:coarse)]:size-6"
-              />
-            ) : null}
-
-            <Link
-              href={href}
-              className="min-w-0 flex-1 truncate font-display text-sm text-paper transition-colors hover:text-amber"
+    <table className="w-full border-collapse">
+      <thead className="sr-only sm:not-sr-only">
+        <tr className="border-b border-ink-border">
+          {selecting ? <th scope="col" className={`${HEAD} w-8`} /> : null}
+          <th scope="col" className={HEAD}>
+            {t("colTitle")}
+          </th>
+          <th scope="col" className={`${HEAD} hidden sm:table-cell`}>
+            {t("colDate")}
+          </th>
+          {own ? (
+            <th scope="col" className={HEAD}>
+              {t("colAudience")}
+            </th>
+          ) : null}
+        </tr>
+      </thead>
+      <tbody>
+        {favorites.map((favorite) => {
+          const href = favoriteTargetHref(favorite);
+          const busy = actions.busyId === favorite.id || actions.bulkBusy;
+          const selected = actions.selectedIds.has(favorite.id);
+          return (
+            <tr
+              key={favorite.id}
+              className={`border-b border-ink-border transition-colors last:border-b-0 ${
+                selected ? "bg-amber/10" : "hover:bg-ink-surface"
+              }`}
             >
-              {favorite.target.title}
-              {favorite.target.artistName ? (
-                <span className="ml-1.5 font-data text-xs text-paper-muted">
-                  {favorite.target.artistName}
-                </span>
+              {selecting ? (
+                <td className="w-8 px-2 py-2">
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    onChange={() => actions.onToggleSelect(favorite.id)}
+                    aria-label={t("selectItem", { title: favorite.target.title })}
+                    className="size-6 shrink-0 accent-amber"
+                  />
+                </td>
               ) : null}
-            </Link>
-
-            {actions.readOnly || actions.selectionMode ? null : (
-              <div className="flex shrink-0 items-center gap-2">
-                <label className="sr-only" htmlFor={`favorite-index-audience-${favorite.id}`}>
-                  {t("audienceLabel")}
-                </label>
-                <select
-                  id={`favorite-index-audience-${favorite.id}`}
-                  value={favorite.audience}
-                  disabled={busy}
-                  onChange={(event) =>
-                    actions.onAudienceChange(favorite, event.target.value as DiaryAudience)
-                  }
-                  className="filter-select rounded border border-ink-border bg-ink px-1.5 py-0.5 font-data text-xs text-paper-muted transition-colors hover:text-paper disabled:opacity-50 [@media(pointer:coarse)]:min-h-11"
+              <td className="w-full max-w-0 px-2 py-2">
+                <Link
+                  href={href}
+                  className="block font-display text-sm text-paper transition-colors hover:text-amber sm:truncate"
                 >
-                  {AUDIENCES.map((audience) => (
-                    <option key={audience} value={audience}>
-                      {t(`audience.${audience}`)}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => actions.onRemove(favorite)}
-                  className="font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-danger disabled:opacity-50 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:px-1"
-                >
-                  {t("removeFavorite")}
-                </button>
-              </div>
-            )}
-
-            {actions.errorId === favorite.id ? (
-              <p role="alert" className="basis-full font-data text-xs text-danger">
-                {t("saveError")}
-              </p>
-            ) : null}
-          </li>
-        );
-      })}
-    </ul>
+                  <span className="block truncate sm:inline">{favorite.target.title}</span>
+                  {favorite.target.artistName ? (
+                    <span className="block truncate font-data text-xs text-paper-muted sm:ml-1.5 sm:inline">
+                      {favorite.target.artistName}
+                    </span>
+                  ) : null}
+                </Link>
+                {actions.errorId === favorite.id ? (
+                  <p role="alert" className="font-data text-xs text-danger">
+                    {t("saveError")}
+                  </p>
+                ) : null}
+              </td>
+              <td className="hidden whitespace-nowrap px-2 py-2 font-data text-xs text-paper-muted sm:table-cell">
+                <time dateTime={favorite.createdAt}>{formatFavoriteDate(favorite.createdAt, locale)}</time>
+              </td>
+              {own ? (
+                <td className="whitespace-nowrap px-1 py-1 text-right">
+                  <div className="flex justify-end">
+                    <FavoriteActions
+                      favorite={favorite}
+                      busy={busy}
+                      onAudienceChange={actions.onAudienceChange}
+                      onRemove={actions.onRemove}
+                    />
+                  </div>
+                </td>
+              ) : null}
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
   );
 }

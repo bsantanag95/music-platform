@@ -12,6 +12,7 @@ import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
+  addFavorite,
   getMyFavorites,
   getUserFavorites,
   removeFavorite,
@@ -31,6 +32,7 @@ import {
 } from "./FavoritesToolbar";
 import { adjustFavoriteFacets, groupFavoritesByType, sectionTitleKey } from "./favorites-shared";
 import { useFavoriteViewMode } from "./use-favorite-view-mode";
+import { FavoriteUndoToast } from "./FavoriteUndoToast";
 import { FavoritesModeSwitcher } from "./FavoritesModeSwitcher";
 import { FavoritesDetailed } from "./FavoritesDetailed";
 import { FavoritesIndex } from "./FavoritesIndex";
@@ -103,6 +105,9 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
   const [actionError, setActionError] = useState(false);
   // Ficha cuyo último cambio de audiencia o quitar falló: el aviso va junto a ella, no solo al final.
   const [errorId, setErrorId] = useState<string | null>(null);
+  // Último favorito quitado, mientras el aviso ofrece "Deshacer" (openspec: redesign-favorites-views).
+  const [undoable, setUndoable] = useState<Favorite | null>(null);
+  const [confirmBulkRemove, setConfirmBulkRemove] = useState(false);
   const [announce, setAnnounce] = useState("");
 
   // Debounce del buscador: espera a que el usuario deje de tipear.
@@ -239,6 +244,7 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
     try {
       await removeFavorite({ type: favorite.targetType, id: favorite.target.id });
       setAnnounce(t("removedAnnouncement"));
+      setUndoable(favorite);
     } catch (error) {
       const gone = error instanceof ApiError && error.code === "FAVORITE_NOT_FOUND";
       if (gone) {
@@ -253,7 +259,26 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
     }
   };
 
+  // "Deshacer": vuelve a marcar el favorito con su audiencia anterior. `POST` alterna, así que el aviso se limpia
+  // antes de llamar para que no pueda usarse dos veces.
+  const handleUndo = async () => {
+    const favorite = undoable;
+    if (!favorite) return;
+    setUndoable(null);
+    setActionError(false);
+    try {
+      await addFavorite({ type: favorite.targetType, id: favorite.target.id }, favorite.audience);
+      setAnnounce(t("restoredAnnouncement"));
+    } catch {
+      setActionError(true);
+    } finally {
+      void invalidateMine();
+    }
+  };
+  const expireUndo = useCallback(() => setUndoable(null), []);
+
   const toggleSelect = (id: string) => {
+    setConfirmBulkRemove(false);
     setSelectedIds((current) => {
       const next = new Set(current);
       if (next.has(id)) next.delete(id);
@@ -266,8 +291,24 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
   const exitSelection = useCallback(() => {
     setSelectionMode(false);
     setSelectedIds(new Set());
+    setConfirmBulkRemove(false);
     setAnnounce("");
   }, []);
+
+  // "Seleccionar todo" de una sección: si ya están todos, los deselecciona.
+  const toggleSection = (ids: string[]) => {
+    setConfirmBulkRemove(false);
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      const all = ids.every((id) => next.has(id));
+      for (const id of ids) {
+        if (all) next.delete(id);
+        else next.add(id);
+      }
+      setAnnounce(t("selectedCount", { count: next.size }));
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!selectionMode) return;
@@ -296,6 +337,36 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
       setBulkBusy(false);
       void invalidateMine();
     }
+  };
+
+  // Quitar en lote: no hay `DELETE` en lote, así que se quita cada favorito y, si alguno falla, se restaura toda la
+  // lista y se avisa. Sin "Deshacer": se pide confirmación antes.
+  const handleBulkRemove = async () => {
+    const chosen = favorites.filter((favorite) => selectedIds.has(favorite.id));
+    if (chosen.length === 0) return;
+    const snapshot = queryClient.getQueryData<FavoritesPages>(mineQueryKey);
+    setBulkBusy(true);
+    setActionError(false);
+    setErrorId(null);
+    setConfirmBulkRemove(false);
+    for (const favorite of chosen) patchLocalRemove(favorite);
+    const results = await Promise.allSettled(
+      chosen.map((favorite) => removeFavorite({ type: favorite.targetType, id: favorite.target.id })),
+    );
+    const failed = results.some(
+      (result) =>
+        result.status === "rejected" &&
+        !(result.reason instanceof ApiError && result.reason.code === "FAVORITE_NOT_FOUND"),
+    );
+    if (failed) {
+      if (snapshot) queryClient.setQueryData(mineQueryKey, snapshot);
+      setActionError(true);
+    } else {
+      exitSelection();
+      setAnnounce(t("bulkRemovedAnnouncement", { count: chosen.length }));
+    }
+    setBulkBusy(false);
+    void invalidateMine();
   };
 
   const clearFilters = () => {
@@ -407,10 +478,24 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
               mode === "detailed" ? FavoritesDetailed : mode === "index" ? FavoritesIndex : FavoritesGraphic;
             return (
               <section key={group.type} className="flex flex-col gap-3">
-                <h2 className="flex items-baseline gap-2 font-display text-lg text-paper">
-                  {t(sectionTitleKey(group.type))}
-                  <span className="font-data text-xs text-paper-muted">{counts[group.type]}</span>
-                </h2>
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="flex items-baseline gap-2 font-display text-lg text-paper">
+                    {t(sectionTitleKey(group.type))}
+                    <span className="font-data text-xs text-paper-muted">{counts[group.type]}</span>
+                  </h2>
+                  {selectionMode && !readOnly ? (
+                    <button
+                      type="button"
+                      aria-label={t("selectAllSectionLabel", { section: t(sectionTitleKey(group.type)) })}
+                      onClick={() => toggleSection(group.favorites.map((favorite) => favorite.id))}
+                      className="font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-paper [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:px-2"
+                    >
+                      {group.favorites.every((favorite) => selectedIds.has(favorite.id))
+                        ? t("deselectAllSection")
+                        : t("selectAllSection")}
+                    </button>
+                  ) : null}
+                </div>
                 <Renderer favorites={group.favorites} actions={rowActions} priorityIds={priorityIds} />
               </section>
             );
@@ -458,6 +543,37 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
               {t(`audience.${audience}`)}
             </button>
           ))}
+          {confirmBulkRemove ? (
+            <span className="flex flex-wrap items-center gap-2">
+              <span className="font-data text-xs text-paper">
+                {t("bulkRemoveConfirm", { count: selectedIds.size })}
+              </span>
+              <button
+                type="button"
+                disabled={bulkBusy}
+                onClick={() => void handleBulkRemove()}
+                className="rounded border border-danger px-2 py-1 font-data text-xs text-danger transition-colors hover:bg-danger/10 disabled:opacity-50 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:px-3"
+              >
+                {t("bulkRemove")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmBulkRemove(false)}
+                className="rounded border border-ink-border px-2 py-1 font-data text-xs text-paper-muted transition-colors hover:text-paper [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:px-3"
+              >
+                {t("bulkCancel")}
+              </button>
+            </span>
+          ) : (
+            <button
+              type="button"
+              disabled={bulkBusy}
+              onClick={() => setConfirmBulkRemove(true)}
+              className="rounded border border-ink-border px-2 py-1 font-data text-xs text-danger transition-colors hover:border-danger disabled:opacity-50 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:px-3"
+            >
+              {t("bulkRemove")}
+            </button>
+          )}
           <button
             type="button"
             onClick={exitSelection}
@@ -467,6 +583,8 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
           </button>
         </div>
       ) : null}
+
+      {undoable ? <FavoriteUndoToast onUndo={() => void handleUndo()} onExpire={expireUndo} /> : null}
     </div>
   );
 }
