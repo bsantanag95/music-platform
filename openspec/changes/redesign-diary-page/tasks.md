@@ -53,15 +53,15 @@
 
 ## 6. Documentación
 
-- [ ] 6.1 `docs/04-api/contracts.md`: `GET /api/me/diary` con `year`, `month`, `type`, `tz`, `inWantToListen` y `coverThumbUrl` por tipo; `GET /api/me/diary/months` con `tz`
-- [ ] 6.2 `docs/05-features/listening-diary-and-ratings.md`: superficie `/me/diary` (fila, filtros, URL, riel)
-- [ ] 6.3 `docs/02-architecture/i18n.md`: zona horaria del usuario (cookie `tz`, next-intl, `UTC` por defecto)
-- [ ] 6.4 `docs/01-domain/business-rules.md`: el mes y el día calendario del diario se cuentan en la zona horaria del usuario
-- [ ] 6.5 `AGENTS.md`: lo que el smoke del diario verifica ahora
+- [x] 6.1 `docs/04-api/contracts.md`: `GET /api/me/diary` con `year`, `month`, `type`, `tz`, `inWantToListen` y `coverThumbUrl` por tipo; `GET /api/me/diary/months` con `tz`
+- [x] 6.2 `docs/05-features/listening-diary-and-ratings.md`: superficie `/me/diary` (fila, filtros, URL, riel)
+- [x] 6.3 `docs/02-architecture/i18n.md`: zona horaria del usuario (cookie `tz`, next-intl, `UTC` por defecto)
+- [x] 6.4 `docs/01-domain/business-rules.md`: el mes y el día calendario del diario se cuentan en la zona horaria del usuario
+- [x] 6.5 `AGENTS.md`: lo que el smoke del diario verifica ahora
 
 ## 7. Verificación
 
-- [ ] 7.1 `pnpm run typecheck && pnpm run lint && pnpm test && pnpm run build`
-- [ ] 7.2 `ALLOW_SMOKE_ON_REAL_DB=1` contra la BD de scratch: `smoke-test-diary.ts` y `smoke-test-diary-social.ts`
-- [ ] 7.3 Navegador a 375px y 1280px, `es` y `en`: fila sin partirse, carátulas por tipo, menú, filtros y URL, encabezado fijo, carga continua, riel, escucha de fin de mes en el mes correcto
-- [ ] 7.4 Regresión: diario del perfil, feed y `/activity` (fechas en la zona del usuario), tracklist y discografía (`RowMenu`), registro global y Recorrido (`ListenEntryForm`)
+- [x] 7.1 `pnpm run typecheck && pnpm run lint && pnpm test && pnpm run build`
+- [x] 7.2 `ALLOW_SMOKE_ON_REAL_DB=1` contra la BD de scratch: `smoke-test-diary.ts` y `smoke-test-diary-social.ts`
+- [x] 7.3 Navegador a 375px y 1280px, `es` y `en`: fila sin partirse, carátulas por tipo, menú, filtros y URL, encabezado fijo, carga continua, riel, escucha de fin de mes en el mes correcto
+- [x] 7.4 Regresión: diario del perfil, feed y `/activity` (fechas en la zona del usuario), tracklist y discografía (`RowMenu`), registro global y Recorrido (`ListenEntryForm`)

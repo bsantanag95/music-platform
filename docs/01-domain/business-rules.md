@@ -167,6 +167,10 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - Registrar una escucha no obliga a valorar, comentar ni compartir. La escucha usa reacción
   emocional (`liked`/`loved`/`obsessed`/`neutral`/`disliked`), nunca estrellas; ninguna entrada
   del diario crea, modifica ni propone la valoración vigente del objetivo.
+- El día y el mes calendario de una escucha se cuentan en la **zona horaria del usuario**: el
+  encabezado de mes del diario, su filtro de fecha y la lista de meses disponibles usan la misma
+  zona, así que una escucha nunca aparece bajo un mes y se filtra en otro. Sin zona conocida, UTC.
+  El diario sigue sin mostrar conteos por mes, totales ni rachas.
 - Un Favorito es una marca independiente: marcarlo o quitarlo no crea ni modifica escuchas,
   valoraciones ni comentarios del mismo objetivo. Un usuario tiene a lo sumo un favorito por
   objetivo (toggle idempotente).
