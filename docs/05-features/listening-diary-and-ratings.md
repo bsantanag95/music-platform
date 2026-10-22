@@ -257,3 +257,27 @@ Desde 1024px, un riel fijo junto a la lista (por debajo no hay riel):
 Ningún módulo muestra conteos, totales ni rachas. La lista y el riel son hermanos en la página y se
 comunican por un contexto de cliente (`DiaryBridge`): la lista sigue siendo dueña de los filtros y de
 la caché.
+
+## 12. La página `/me/want-to-listen` (Pendientes)
+
+Listado propio de Pendientes (spec `want-to-listen`): dos secciones, Artistas y Álbumes, con los mismos tres modos
+que Favoritos (Detallada, Índice y Gráfico). La auditoría del 2026-10-22 planteó un rediseño en tres fases, igual que
+en Calificaciones y Favoritos; la Fase 1 (`refine-want-to-listen-page-phase1`) corrige errores sin cambiar el diseño
+de las vistas:
+
+- **Sin parpadeo:** hasta leer el modo guardado (`localStorage`, defecto Detallada) el listado es un marcador neutro y
+  el conmutador queda oculto sin perder su espacio.
+- **Ancho y título:** `max-w-4xl` en la página, título alineado a la izquierda; el listado llena su contenedor.
+- **Nada tapa el título:** en Detallada, bajo `sm`, las acciones van en una línea propia bajo el título; en Gráfico se
+  apilan y su texto se parte dentro de la tarjeta; en Índice no se atenúan y, bajo `sm`, el artista va en una
+  segunda línea.
+- **Acción de discografía estable:** se llama «Completar discografía», como en la página del artista, y mientras
+  llega el estado del lote la entrada ya reserva su espacio.
+- **Conteos:** el «(N)» de cada sección solo aparece cuando no quedan páginas por cargar; antes contaba solo lo
+  cargado.
+- **Táctil y avisos:** con puntero grueso «Quitar», la acción de discografía y el conmutador miden 44 px. Quitar se
+  anuncia a lectores de pantalla; si falla, el aviso aparece bajo esa entrada. El error de «Cargar más» va junto al
+  botón.
+- **Vacío:** el estado vacío enlaza a la búsqueda del catálogo.
+
+Pendientes es una intención liviana: la página no muestra totales grandes, avance ni recordatorios.

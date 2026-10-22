@@ -14,11 +14,17 @@ import {
 // lo guardado ocurre tras el montaje. Toda lectura/escritura va envuelta en
 // try/catch — en modo privado o con el almacenamiento bloqueado el acceso
 // puede lanzar.
+//
+// El tercer elemento, `ready`, dice si ya se leyó la preferencia: hasta entonces `mode` es el
+// defecto y no la elección de la persona, así que quien renderiza el listado debe esperar (con un
+// marcador) en vez de pintar el defecto y saltar después al modo guardado.
 export function useWantToListenViewMode(): readonly [
   WantToListenViewMode,
   (next: WantToListenViewMode) => void,
+  boolean,
 ] {
   const [mode, setMode] = useState<WantToListenViewMode>(DEFAULT_WANT_TO_LISTEN_VIEW_MODE);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     try {
@@ -28,6 +34,7 @@ export function useWantToListenViewMode(): readonly [
     } catch {
       // almacenamiento no disponible: se mantiene el modo por defecto
     }
+    setReady(true);
     // Solo al montar: la preferencia no cambia por fuera de este hook.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -41,5 +48,5 @@ export function useWantToListenViewMode(): readonly [
     }
   }, []);
 
-  return [mode, update] as const;
+  return [mode, update, ready] as const;
 }

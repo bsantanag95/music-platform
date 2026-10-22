@@ -77,7 +77,7 @@ export function WantToListenModeSwitcher({
             aria-checked={selected}
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(value)}
-            className={`inline-flex items-center gap-1.5 rounded px-2 py-1 font-data text-xs transition-colors ${
+            className={`inline-flex items-center gap-1.5 rounded px-2 py-1 font-data text-xs transition-colors [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:px-3 ${
               selected ? "bg-amber/10 text-amber" : "text-paper-muted hover:text-paper"
             }`}
           >

@@ -6,6 +6,11 @@ import { Link } from "@/i18n/navigation";
 import { activateArtistJourney } from "@/lib/api/artist-journeys";
 import type { JourneyStatus } from "./use-journey-statuses";
 
+// En el Gráfico el texto se parte dentro de la tarjeta (`max-w-full`, `text-left`) en vez de
+// desbordarla; con puntero grueso llega a 44 px de alto.
+const ACTION_CLASS =
+  "inline-flex max-w-full shrink-0 items-center text-left font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-amber [@media(pointer:coarse)]:min-h-11";
+
 interface WantToListenArtistJourneyActionProps {
   artistId: string;
   /** Estado resuelto por lote en `WantToListenList` (`useJourneyStatuses`). */
@@ -41,13 +46,22 @@ export function WantToListenArtistJourneyAction({
     }
   };
 
-  if (status === "loading" || status === "error") return null;
+  // Mientras llega el estado del lote, la acción ya ocupa su lugar (invisible y fuera del árbol
+  // accesible): sin esto la fila cambiaba de tamaño al aparecer. Con error no se ofrece.
+  if (status === "loading") {
+    return (
+      <span aria-hidden className={`invisible ${ACTION_CLASS}`}>
+        {t("journeyAdd")}
+      </span>
+    );
+  }
+  if (status === "error") return null;
 
   if (status === "added") {
     return (
       <Link
         href={`/me/artist-journeys/${artistId}`}
-        className="shrink-0 font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-amber"
+        className={ACTION_CLASS}
       >
         {t("journeyAlreadyAdded")}
       </Link>
@@ -59,7 +73,7 @@ export function WantToListenArtistJourneyAction({
       type="button"
       disabled={busy}
       onClick={() => void handleAdd()}
-      className="shrink-0 font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-amber disabled:opacity-50"
+      className={`${ACTION_CLASS} disabled:opacity-50`}
     >
       {busy ? t("journeyAdding") : t("journeyAdd")}
     </button>

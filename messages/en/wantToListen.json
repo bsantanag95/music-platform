@@ -23,7 +23,9 @@
   "removeItemShort": "Remove?",
   "removeItemNamed": "Remove {title} from the list",
   "removeItemConfirm": "Confirm removal",
-  "journeyAdd": "Add to discography",
+  "journeyAdd": "Complete discography",
   "journeyAdding": "Adding...",
-  "journeyAlreadyAdded": "Already in your discography"
+  "journeyAlreadyAdded": "Already in your discography",
+  "removedAnnouncement": "{title} removed from Listen Later",
+  "removeError": "We could not remove it. Try again."
 }
