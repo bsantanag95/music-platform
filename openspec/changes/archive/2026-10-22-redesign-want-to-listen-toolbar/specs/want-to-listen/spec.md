@@ -41,7 +41,17 @@ tipo. Un tipo u orden inválido SHALL responder `400` con `VALIDATION_ERROR`.
 - **WHEN** pide su lista con `type=recording` o `sort=random`
 - **THEN** la API responde `400` con `VALIDATION_ERROR`
 
+## REMOVED Requirements
+
 ### Requirement: Secciones por tipo y modos de visualización del listado propio
+**Reason**: el conteo de cada sección ya no se oculta con páginas pendientes: ahora viene del servidor
+(`counts`) y es verdadero siempre.
+**Migration**: reemplazado por "Secciones con conteo del servidor y modos de visualización del listado
+propio", que conserva secciones, modos, preferencia y marcador sin parpadeo.
+
+## ADDED Requirements
+
+### Requirement: Secciones con conteo del servidor y modos de visualización del listado propio
 El listado propio de Want to Listen SHALL separar las entradas en dos secciones —**artistas**
 y **álbumes**, en ese orden— cada una con su propio encabezado y la cantidad total de entradas
 de ese tipo según el servidor (no solo las cargadas); una sección sin entradas NO SHALL
@@ -83,7 +93,6 @@ el conmutador SHALL ocultarse sin perder su espacio.
 - **WHEN** el usuario tiene 30 álbumes y solo se cargaron 20
 - **THEN** el encabezado de la sección dice "Álbumes (30)"
 
-## ADDED Requirements
 
 ### Requirement: Cabecera de Pendientes con "Anotar algo"
 `/me/want-to-listen` SHALL mostrar, bajo el título, una línea que describe la página y un botón
