@@ -6,8 +6,10 @@ Diario de escucha: registro manual e **intencional** de "qué se escuchó y cóm
 artista, álbum o canción — no un historial automático ni una lista de completitud. Entradas
 append-only con reacción emocional (gramática de sensación, sin estrellas), contexto, impresión
 breve y audiencia. Un registro rápido nace `private` y sube a `followers` al ganar intención
-(impresión o reacción), salvo elección explícita. El diario propio se ve como lista o como
-cronología por mes; la audiencia gobierna qué ve cada lector en el feed y el perfil.
+(impresión o reacción), salvo elección explícita. El diario propio se presenta siempre como una
+cronología por mes, contada en la zona horaria del usuario, con filtros combinables (también en la
+URL) y un riel de contexto sin métricas de volumen; la audiencia gobierna qué ve cada lector en el
+feed y el perfil.
 ## Requirements
 ### Requirement: Registro manual de una escucha
 El sistema SHALL permitir a un usuario autenticado registrar una escucha sobre un artista, un álbum
@@ -134,21 +136,24 @@ hacerse públicas explícitamente.
 El sistema SHALL permitir al usuario autenticado listar sus propias escuchas en orden cronológico
 descendente con paginación. El listado SHALL contener únicamente entradas del usuario que lo
 consulta y SHALL incluir el objetivo, el contexto, la impresión, la reacción y la audiencia de cada
-entrada. El listado SHALL presentarse como una lista vertical de filas (no como tarjetas ancladas
+entrada, y, para artistas y álbumes, si el objetivo está en Want to Listen del usuario. El listado SHALL presentarse
+como una lista vertical de filas (no como tarjetas ancladas
 independientes) y NUNCA SHALL agrupar ni colapsar dos o más entradas en una sola fila: cada
 escucha SHALL permanecer accesible de forma individual para su ampliación o borrado,
 independientemente de cuántas entradas consecutivas compartan contexto, ausencia de reacción o
 ausencia de impresión. El sistema SHALL permitir acotar el listado combinando, de forma independiente
 y simultánea: texto libre, contexto, reacción (incluida la ausencia explícita de reacción), audiencia,
-año y mes calendario. Un filtro de mes SHALL requerir un año también especificado — no existe un
-filtro de "este mes, en cualquier año". La búsqueda por texto SHALL coincidir tanto con el título del
+tipo de objetivo (artista, álbum o canción), año y mes calendario. Un filtro de mes SHALL requerir un año también
+especificado — no existe un filtro de "este mes, en cualquier año". El año y el mes calendario SHALL interpretarse en
+la zona horaria del usuario cuando la petición la indica, y en UTC cuando no. La búsqueda por texto SHALL coincidir tanto
+con el título del
 objetivo (artista, álbum o canción) como con el artista acreditado como principal de un álbum o
 canción, para que una búsqueda por nombre de artista encuentre también sus álbumes y canciones, no
 únicamente las entradas cuyo objetivo es la artista misma. Cada álbum o canción listado SHALL mostrar
 el nombre de su artista acreditado como principal junto al título. Cada filtro SHALL aplicarse sobre
 la totalidad de las entradas del usuario, no únicamente sobre las ya cargadas en el cliente. Un valor
-de contexto, reacción o audiencia fuera de su vocabulario cerrado, o un mes sin año, SHALL producir
-un error de validación y no SHALL alterar el listado.
+de contexto, reacción, audiencia o tipo fuera de su vocabulario cerrado, una zona horaria desconocida, o un mes sin año,
+SHALL producir un error de validación y no SHALL alterar el listado.
 
 #### Scenario: Listar el diario
 - **WHEN** un usuario autenticado abre su diario
@@ -217,128 +222,26 @@ un error de validación y no SHALL alterar el listado.
 - **WHEN** el sistema recibe un filtro de mes sin un año que lo acompañe
 - **THEN** la API responde un error de validación y el listado no se modifica
 
-### Requirement: Presentación del diario propio
+#### Scenario: Filtrar por tipo de objetivo
 
-Cada fila del listado del diario propio SHALL abrir con una celda cuadrada fija que muestra la
-carátula del objetivo cuando existe y el disco de vinilo (círculos concéntricos) cuando no —la misma
-anatomía que usa `/me/feed`, no la variante compacta sin celda reservada a los widgets de Inicio,
-porque el diario propio es la página dedicada, no un aside. Cada fila SHALL además mostrar, en una
-columna dedicada de fecha, el número de día calendario de la entrada, mostrado solo cuando difiere
-del de la fila anterior dentro del mismo grupo de mes — el mes en sí nunca se repite por fila, lo
-dice una sola vez el encabezado del grupo (ver "Vista de cronología del diario propio"); la fecha
-relativa SHALL seguir disponible como valor accesible y como texto al pasar el mouse o el foco sobre
-el bloque. El título del objetivo SHALL ser el elemento visual dominante de cada fila, con una
-afordancia de enlace que no dependa del estado `:hover`. Cuando el objetivo es un álbum o una
-canción con artista acreditado, el nombre de ese artista junto al título SHALL enlazar a su propia
-página — igual que ya hace el resto del historial cronológico del producto (`/me/feed`); cuando el
-objetivo ya es el artista, o no hay artista acreditado, el nombre SHALL mostrarse como texto plano.
-El contexto de escucha SHALL mostrarse en
-una línea de metadato secundaria junto con la audiencia; esa misma línea SHALL llevar, junto a la
-audiencia y antes de las acciones, un espacio de ancho fijo para el ícono de la reacción de la
-entrada (ver "Representación de las reacciones") que SHALL reservarse siempre, tenga o no reacción
-la entrada — nunca SHALL omitirse cuando no hay reacción, para que la posición del control de editar
-y del menú "···" no varíe de una fila a otra según haya o no reacción. Ninguna fila SHALL repetir el
-nombre del propio usuario: es una gestión del propio historial, no un feed con autores múltiples.
+- **WHEN** el usuario filtra su diario por el tipo canción
+- **THEN** el listado muestra únicamente las escuchas cuyo objetivo es una canción, sin artistas ni álbumes
 
-Una entrada con impresión escrita no vacía SHALL mostrarla completa como una cita —tipografía de
-lectura en cursiva, comillas tipográficas y una regla vertical neutra a la izquierda que la separa
-del resto de la fila— y NUNCA SHALL usar una superficie con fondo o borde propio (esa presentación en
-panel queda reservada a `/me/feed`, donde una nota compite por peso con ratings y favoritos vecinos).
-Una entrada sin impresión SHALL ocupar una sola fila de baseline.
+#### Scenario: El mes se interpreta en la zona horaria del usuario
 
-La acción de ampliar (editar) una entrada SHALL presentarse como un control de solo ícono siempre
-visible en la fila, con nombre accesible, y NUNCA SHALL usar el componente de botón sólido reservado
-a acciones de una sola vez por pantalla. Las acciones adicionales sobre una entrada —borrar,
-registrar otra escucha del mismo objetivo, agregar el objetivo a una lista— SHALL agruparse detrás de
-un control de menú de solo ícono ("···") en la fila, en vez de mostrarse como enlaces de texto
-sueltos o botones adicionales permanentes; el texto de las opciones de ese menú SHALL compartir el
-mismo tamaño tipográfico que el resto de los datos de la fila (contexto, audiencia), nunca uno mayor.
-Al elegir borrar desde el menú, el mensaje de advertencia SHALL ocupar su propia línea, capaz de
-ajustar su ancho al contenedor de la fila, en vez de competir por espacio con la fecha y las acciones.
-Guardar una edición SHALL cerrar el formulario automáticamente y SHALL confirmar el éxito con una
-señal visual momentánea sobre la fila afectada, sin requerir un mensaje de texto visible; el mismo
-evento SHALL anunciarse a través de tecnología de asistencia aunque no haya texto visible en pantalla.
+- **WHEN** un usuario en America/Santiago (UTC−3) anotó una escucha el 30 de septiembre a las 22:00 hora local y filtra
+  por septiembre de ese año indicando su zona horaria
+- **THEN** la escucha aparece en el resultado, y no aparece al filtrar por octubre
 
-#### Scenario: Fila con carátula o disco
+#### Scenario: Zona horaria desconocida
 
-- **WHEN** el usuario abre su propio diario
-- **THEN** cada fila muestra la carátula del objetivo cuando existe, o el disco de vinilo cuando no,
-  sin repetir su propio `@username`
+- **WHEN** el sistema recibe una zona horaria que no es un identificador IANA válido
+- **THEN** la API responde un error de validación y el listado no se modifica
 
-#### Scenario: Escucha con impresión se muestra como cita
+#### Scenario: Estado de Want to Listen en cada entrada
 
-- **WHEN** el diario propio incluye una escucha con una impresión escrita no vacía
-- **THEN** la impresión se muestra completa como una cita en cursiva con comillas tipográficas y una
-  regla vertical a la izquierda, sin fondo ni borde de panel
-
-#### Scenario: Escucha sin impresión ocupa una sola fila
-
-- **WHEN** el diario propio incluye una escucha sin impresión escrita
-- **THEN** la entrada ocupa una sola fila de baseline, con el título del objetivo como elemento
-  dominante, el número de día en su propia columna, y el contexto, la audiencia y el ícono de
-  reacción (si existe) en la línea de metadato
-
-#### Scenario: Editar y borrar son afordancias de texto
-
-- **WHEN** el usuario ve una entrada de su propio diario
-- **THEN** edita con un ícono siempre visible y accede a Eliminar (junto con Registrar otra escucha
-  y Agregar a lista) desde un menú "···" — ninguna de estas acciones usa el componente de botón
-  sólido, ni, ya no, enlaces de texto sueltos como en un pase anterior de este mismo diseño
-
-#### Scenario: La confirmación de borrado no desborda la fila
-
-- **WHEN** el usuario elige borrar desde el menú y aparece el mensaje de confirmación
-- **THEN** el mensaje se ajusta al ancho de la fila en su propia línea, sin extenderse fuera del
-  contenedor ni superponerse con la fecha o las acciones
-
-#### Scenario: Guardar cierra el formulario y confirma sin texto visible
-
-- **WHEN** el usuario guarda una edición exitosamente
-- **THEN** el formulario se cierra sin acción manual adicional y la fila muestra una confirmación
-  visual momentánea, sin agregar un mensaje de éxito en texto
-
-#### Scenario: La confirmación de guardado es perceptible por lectores de pantalla
-
-- **WHEN** el usuario guarda una edición exitosamente usando un lector de pantalla
-- **THEN** recibe un anuncio de que el cambio se guardó, aunque la confirmación visual no incluya
-  texto visible en pantalla
-
-#### Scenario: Bloque de fecha con día deduplicado
-
-- **WHEN** el usuario ve dos filas consecutivas del mismo día calendario, dentro del mismo grupo de
-  mes
-- **THEN** la primera muestra el número de día y la siguiente lo deja en blanco, sin repetirlo
-
-#### Scenario: Cambio de día entre filas consecutivas
-
-- **WHEN** dos filas consecutivas del diario pertenecen a días calendario distintos
-- **THEN** cada una muestra su propio número de día
-
-#### Scenario: Fecha relativa con fecha absoluta accesible
-
-- **WHEN** el usuario pasa el mouse o el foco sobre el bloque de fecha de una entrada
-- **THEN** obtiene la fecha relativa ("hace 2 días") como información complementaria (tooltip o
-  valor accesible) — el texto principal visible de la columna ya no es la fecha relativa sino el
-  número de día, invirtiendo cuál de las dos es el dato visible y cuál el accesible respecto a un
-  pase anterior de este mismo diseño
-
-#### Scenario: La reacción no desalinea la fila
-
-- **WHEN** el usuario ve filas consecutivas donde unas tienen reacción y otras no
-- **THEN** el control de editar y el menú "···" quedan en la misma posición en todas esas filas — el
-  espacio de la reacción se reserva igual, con o sin ícono
-
-#### Scenario: El artista acreditado de un álbum o canción enlaza a su página
-
-- **WHEN** el usuario ve en su diario una entrada cuyo objetivo es un álbum o una canción con
-  artista acreditado
-- **THEN** el nombre del artista, junto al título, es un enlace a la página de ese artista
-
-#### Scenario: Sin enlace de artista para objetivos que ya son un artista, o sin acreditar
-
-- **WHEN** el usuario ve en su diario una entrada cuyo objetivo es un artista, o un álbum/canción sin
-  artista acreditado
-- **THEN** el nombre del artista (si se muestra) aparece como texto plano, sin enlace
+- **WHEN** el usuario lista su diario y el álbum de una de sus escuchas está en su Want to Listen
+- **THEN** esa entrada indica que el objetivo está en Want to Listen; las entradas de canciones nunca lo indican
 
 ### Requirement: Ampliar y modificar una escucha
 
@@ -347,6 +250,12 @@ cambiar la impresión, el contexto, la reacción o la audiencia. Cada campo SHAL
 opcional y al menos uno deberá enviarse en cada modificación. El sistema NO SHALL ofrecer,
 en el flujo de ampliar una escucha, ningún campo de valoración numérica ni de reseña: esos
 actos pertenecen al modo Obra y son independientes de la escucha.
+
+El formulario de ampliar SHALL presentar el contexto, la reacción y la audiencia con el mismo tipo de control (opciones
+de selección única siempre visibles, no un desplegable para uno y chips para otros), SHALL mostrar en vivo cuántos
+caracteres lleva la impresión sobre el máximo, SHALL rotular «Cancelar» la acción que descarta los cambios y SHALL
+permitir guardar con Ctrl/⌘+Enter desde la impresión. Dentro del diario propio, donde la fila ya identifica el objetivo,
+el formulario SHALL omitir el rótulo del objetivo; en las demás superficies que lo reutilizan SHALL conservarlo.
 
 #### Scenario: Ampliar una entrada mínima
 
@@ -369,6 +278,21 @@ actos pertenecen al modo Obra y son independientes de la escucha.
 
 - **WHEN** el usuario envía una modificación sin ningún campo
 - **THEN** la API responde un error de validación
+
+#### Scenario: Contador de la impresión
+
+- **WHEN** el usuario escribe 120 caracteres en la impresión
+- **THEN** el formulario muestra «120/500» junto al campo
+
+#### Scenario: Guardar con el teclado
+
+- **WHEN** el usuario pulsa Ctrl+Enter (o ⌘+Enter) mientras escribe la impresión
+- **THEN** el formulario guarda igual que con el botón Guardar
+
+#### Scenario: Sin rótulo redundante en el diario propio
+
+- **WHEN** el usuario abre el formulario de ampliar desde una fila de su diario
+- **THEN** el formulario no repite el nombre del objetivo, que ya muestra la fila
 
 ### Requirement: Borrado de una escucha
 El sistema SHALL permitir al propietario borrar una entrada propia de forma física e irreversible.
@@ -434,51 +358,6 @@ desde una página de entidad o desde el punto de entrada global.
   global sin completar la ampliación
 - **THEN** la entrada persiste tal como nació (append-only), visible en su diario
 
-### Requirement: Representación de las reacciones
-
-El sistema SHALL mostrar las reacciones con texto localizado y un ícono de refuerzo, sin depender
-únicamente del color ni del emoji. El sistema SHALL diferenciar visualmente la ausencia de reacción
-de la reacción neutra, y SHALL traducir las etiquetas en español e inglés. En la línea de metadato de
-la fila del diario propio, el sistema SHALL exponer el nombre localizado de la reacción como nombre
-accesible del ícono (y como texto visible al pasar el mouse o el foco), en vez de como texto siempre
-renderizado en pantalla; esta excepción SHALL limitarse a esa fila. Cualquier otro lugar donde se
-muestre una reacción —el feed, el panel de ampliación de una entrada— SHALL seguir mostrando el texto
-localizado siempre visible junto al ícono.
-
-#### Scenario: Etiquetas localizadas
-- **WHEN** la interfaz muestra la reacción `liked`
-- **THEN** el texto visible es `Me gustó` en español e `Like it` en inglés, con icono de refuerzo
-
-#### Scenario: Ausencia frente a neutra
-- **WHEN** la interfaz muestra una entrada sin reacción y otra con reacción `neutral`
-- **THEN** la primera no muestra reacción y la segunda muestra la etiqueta localizada `Neutro`/
-  `Neutral` con su icono
-
-#### Scenario: Reacción del diario en la línea de metadato, solo ícono con nombre accesible
-
-- **WHEN** el diario propio muestra una entrada con reacción
-- **THEN** el ícono aparece en la línea de metadato, junto a la audiencia, con el nombre localizado
-  de la reacción disponible como nombre accesible y como texto al pasar el mouse o el foco, sin texto
-  siempre visible junto a él
-
-#### Scenario: Sin reacción, el espacio queda reservado pero sin ícono
-
-- **WHEN** una entrada del diario no tiene reacción
-- **THEN** no se muestra ningún ícono en la línea de metadato, pero el espacio que ocuparía sigue
-  reservado — nunca se omite ni corre el resto de la línea
-
-#### Scenario: El panel de ampliación conserva el texto visible
-
-- **WHEN** el usuario abre el panel para elegir o corregir la reacción de una entrada
-- **THEN** cada opción se muestra con su texto localizado siempre visible, no solo con un ícono
-
-#### Scenario: El feed no adopta la excepción
-
-- **WHEN** una reacción se muestra fuera de la línea de metadato del diario propio (por ejemplo, en
-  el feed)
-- **THEN** el texto localizado permanece siempre visible junto al ícono, sin aplicar la excepción de
-  la fila del diario
-
 ### Requirement: Encuadre del diario como registro intencional
 
 El sistema SHALL presentar el diario de escucha como un **registro personal e intencional
@@ -513,7 +392,8 @@ lista de completitud. En consecuencia:
 
 El diario propio SHALL presentar siempre sus entradas agrupadas por **mes calendario** de su fecha
 de registro, con un encabezado por mes — no SHALL ofrecer una vista de lista plana alternativa ni un
-conmutador entre vistas: la agrupación por mes es la única presentación. Dentro de cada mes las
+conmutador entre vistas: la agrupación por mes es la única presentación. El mes calendario SHALL calcularse en la zona
+horaria del usuario, la misma que usan el filtro de fecha y la lista de meses disponibles. Dentro de cada mes las
 entradas SHALL conservar el orden cronológico descendente y las mismas afordancias de edición y menú
 de acciones que el resto del diario. La vista de cronología NO SHALL mostrar conteos por mes, totales
 ni rachas: es la misma información reordenada, no un resumen estadístico. El agrupado SHALL operar
@@ -522,7 +402,9 @@ encabezado de mes SHALL ofrecer un control para colapsar u ocultar las filas de 
 volver a expandirlas — todo mes SHALL arrancar expandido por defecto, y el sistema NO SHALL ofrecer
 un control que colapse o expanda todos los meses a la vez. Colapsar un mes NUNCA SHALL mostrar cuántas
 filas oculta, ni SHALL interpretarse como un conmutador de vista: la agrupación por mes con
-encabezado sigue siendo la única presentación del diario.
+encabezado sigue siendo la única presentación del diario. El encabezado del mes que se está recorriendo SHALL quedar
+fijo en la parte superior mientras se desplazan sus filas, y su control de colapso SHALL tener un área táctil de al menos
+44px en pantallas táctiles.
 
 #### Scenario: Agrupar por mes
 
@@ -572,13 +454,26 @@ encabezado sigue siendo la única presentación del diario.
 - **THEN** no encuentra ningún control que colapse o expanda todos los meses de una sola acción —
   solo el control individual de cada encabezado
 
+#### Scenario: El mes del encabezado coincide con el del filtro
+
+- **WHEN** una escucha registrada el 30 de septiembre a las 22:00 en la zona del usuario (1 de octubre en UTC) aparece
+  en el diario
+- **THEN** figura bajo el encabezado de septiembre, igual que al filtrar por septiembre
+
+#### Scenario: Encabezado fijo al desplazarse
+
+- **WHEN** el usuario se desplaza por las filas de un mes
+- **THEN** el encabezado de ese mes permanece visible en la parte superior hasta que empieza el siguiente
+
 ### Requirement: Acciones rápidas desde la fila del diario
 
 El sistema SHALL permitir, desde el menú de una fila del diario propio, registrar una escucha
 adicional sobre el mismo objetivo de esa fila, agregar ese objetivo a una lista propia
 compatible, y marcar el objetivo en Want to Listen ("Quiero volver a escuchar") cuando el
 objetivo es un artista o un álbum — nunca una canción, mismo alcance que la capability
-`want-to-listen` —, todo sin salir de `/me/diary`.
+`want-to-listen` —, todo sin salir de `/me/diary`. La opción de Want to Listen SHALL rotularse según el estado vigente
+del objetivo (agregar si no está, quitar si ya está). Las opciones del menú SHALL mostrarse cada una en una sola línea y
+la opción de borrar SHALL quedar separada visualmente del resto.
 
 #### Scenario: Registrar otra escucha desde la fila
 
@@ -612,11 +507,23 @@ objetivo es un artista o un álbum — nunca una canción, mismo alcance que la 
 - **WHEN** el usuario abre el menú de una fila cuyo objetivo es una canción
 - **THEN** no encuentra ninguna opción de "Quiero volver a escuchar" en ese menú
 
+#### Scenario: El menú refleja si el objetivo ya está en Want to Listen
+
+- **WHEN** el usuario abre el menú de una fila cuyo álbum ya está en su Want to Listen
+- **THEN** la opción dice «Quitar de Pendientes» y, tras elegirla, el mismo menú vuelve a ofrecer «Marcar como
+  pendiente»
+
+#### Scenario: Opciones del menú en una sola línea
+
+- **WHEN** el usuario abre el menú de una fila
+- **THEN** cada opción ocupa una sola línea y «Eliminar» aparece separada de las demás
+
 ### Requirement: Meses disponibles para filtrar el diario
 
 El sistema SHALL exponer, para el usuario autenticado, el conjunto de pares año/mes calendario en
 los que tiene al menos una escucha registrada, del más reciente al más antiguo, para poblar los
-filtros de año y mes — sin exponer cuántas escuchas tiene cada mes.
+filtros de año y mes — sin exponer cuántas escuchas tiene cada mes. Los pares SHALL calcularse en la zona horaria que
+indique la petición (UTC si no indica ninguna).
 
 #### Scenario: Solo meses con al menos una escucha
 
@@ -628,6 +535,12 @@ filtros de año y mes — sin exponer cuántas escuchas tiene cada mes.
 
 - **WHEN** el sistema devuelve los meses disponibles para filtrar
 - **THEN** la respuesta no incluye cuántas escuchas tiene el usuario en cada mes
+
+#### Scenario: Meses en la zona horaria del usuario
+
+- **WHEN** la única escucha de un usuario se registró el 30 de septiembre a las 22:00 en America/Santiago y pide los
+  meses disponibles con esa zona
+- **THEN** la respuesta incluye septiembre y no octubre
 
 ### Requirement: Destacar una entrada del diario
 
@@ -666,4 +579,224 @@ vuelve a regirse únicamente por su audiencia y por la matriz de visibilidad gen
 - **WHEN** una request intenta destacar una entrada de diario que no pertenece a quien la
   envía
 - **THEN** la API responde `404` con código `LISTEN_ENTRY_NOT_FOUND` y no destaca nada
+
+### Requirement: Fila del diario propio
+
+Cada fila del diario propio SHALL organizarse en cuatro columnas de ancho fijo que nunca se parten en otra línea, en
+cualquier ancho de pantalla: fecha, carátula, cuerpo y acciones.
+
+- **Fecha**: el número de día calendario y, debajo, el día de la semana abreviado, ambos en la zona horaria del usuario,
+  mostrados solo cuando el día difiere del de la fila anterior dentro del mismo grupo de mes — el mes nunca se repite
+  por fila, lo dice el encabezado del grupo. La fecha completa y la relativa SHALL seguir disponibles como valor
+  accesible y como texto al pasar el mouse o el foco.
+- **Carátula**: para un álbum, su carátula; para una canción, la carátula de un álbum que la contiene; para un artista,
+  su foto recortada en círculo. Sin imagen, el disco de vinilo, en círculo para artistas.
+- **Cuerpo**: el título del objetivo SHALL ser el elemento visual dominante, con una afordancia de enlace que no dependa
+  de `:hover`, y la reacción (si existe) SHALL mostrarse junto a él (ver «Reacciones: etiquetas y presentación»). Debajo,
+  una línea secundaria SHALL mostrar el artista acreditado (enlazado a su página cuando el objetivo es un álbum o una
+  canción con artista acreditado; texto plano en otro caso), el tipo del objetivo localizado (artista, álbum o canción),
+  el contexto de escucha y, al final, la audiencia como ícono con su nombre localizado como nombre accesible y como
+  texto al pasar el mouse o el foco (no como texto siempre visible). Una impresión escrita no vacía SHALL mostrarse completa como una cita —tipografía de lectura en
+  cursiva, comillas tipográficas y una regla vertical neutra a la izquierda— y NUNCA SHALL usar una superficie con fondo
+  o borde propio. Ninguna fila SHALL repetir el nombre del propio usuario.
+- **Acciones**: el control de editar, de solo ícono y siempre visible, y el menú «···» con las demás acciones. Cada control SHALL tener un área táctil de al menos 44px en pantallas táctiles. La posición de las
+  acciones SHALL ser la misma en todas las filas, tengan o no reacción, impresión o artista.
+
+La acción de editar NUNCA SHALL usar el componente de botón sólido reservado a acciones de una sola vez por pantalla; el
+texto de las opciones del menú SHALL compartir el tamaño tipográfico de los datos de la fila. Al elegir borrar, el
+mensaje de advertencia SHALL ocupar su propia línea, capaz de ajustar su ancho al contenedor de la fila. Guardar una
+edición SHALL cerrar el formulario automáticamente y confirmar el éxito con una señal visual momentánea sobre la fila,
+sin un mensaje de texto visible, y el mismo evento SHALL anunciarse a través de tecnología de asistencia.
+
+#### Scenario: Carátula según el tipo de objetivo
+
+- **WHEN** el diario incluye una escucha de un álbum con carátula, una de una canción de ese álbum y una de un artista
+  con foto
+- **THEN** la primera muestra la carátula, la segunda la carátula del álbum y la tercera la foto del artista en círculo
+
+#### Scenario: Sin imagen disponible
+
+- **WHEN** el objetivo de una escucha no tiene carátula ni foto
+- **THEN** la fila muestra el disco de vinilo, en círculo si el objetivo es un artista
+
+#### Scenario: El tipo del objetivo es visible
+
+- **WHEN** el diario incluye una escucha de la canción «Slave to the Grind» y otra del álbum del mismo nombre
+- **THEN** la línea secundaria de cada fila dice «Canción» y «Álbum», respectivamente
+
+#### Scenario: La fila no se parte en móvil
+
+- **WHEN** el usuario abre su diario en una pantalla de 375px
+- **THEN** editar y el menú de cada fila quedan en la misma posición en todas las filas, alineados con la primera
+  línea, y cada control mide al menos 44px de área táctil
+
+#### Scenario: Audiencia como ícono con nombre accesible
+
+- **WHEN** el usuario ve una escucha privada
+- **THEN** la línea secundaria termina con el ícono de candado, cuyo nombre accesible es «Privado», sin escribir
+  «Privado» como texto visible
+
+#### Scenario: Día y día de la semana
+
+- **WHEN** dos filas consecutivas del mismo mes son de días distintos
+- **THEN** cada una muestra su número de día y su día de la semana abreviado; cuando son del mismo día, la segunda los
+  deja en blanco
+
+#### Scenario: Fecha relativa con fecha absoluta accesible
+
+- **WHEN** el usuario pasa el mouse o el foco sobre el bloque de fecha de una entrada
+- **THEN** obtiene la fecha completa y la relativa ("hace 2 días") como valor accesible y texto al pasar el mouse
+
+#### Scenario: Escucha con impresión se muestra como cita
+
+- **WHEN** el diario propio incluye una escucha con una impresión escrita no vacía
+- **THEN** la impresión se muestra completa como una cita en cursiva con comillas tipográficas y una
+  regla vertical a la izquierda, sin fondo ni borde de panel
+
+#### Scenario: El artista acreditado de un álbum o canción enlaza a su página
+
+- **WHEN** el usuario ve en su diario una entrada cuyo objetivo es un álbum o una canción con artista acreditado
+- **THEN** el nombre del artista, en la línea secundaria, es un enlace a la página de ese artista
+
+#### Scenario: Guardar cierra el formulario y confirma sin texto visible
+
+- **WHEN** el usuario guarda una edición exitosamente
+- **THEN** el formulario se cierra sin acción manual adicional, la fila muestra una confirmación visual momentánea sin
+  texto y un lector de pantalla anuncia que el cambio se guardó
+
+#### Scenario: La confirmación de borrado no desborda la fila
+
+- **WHEN** el usuario elige borrar desde el menú y aparece el mensaje de confirmación
+- **THEN** el mensaje se ajusta al ancho de la fila en su propia línea, sin superponerse con la fecha o las acciones
+
+### Requirement: Reacciones: etiquetas y presentación
+
+El sistema SHALL mostrar las reacciones con texto localizado y un ícono de refuerzo, sin depender únicamente del color
+ni del emoji. El sistema SHALL diferenciar visualmente la ausencia de reacción de la reacción neutra, y SHALL traducir
+las etiquetas en español e inglés. En la fila del diario propio y en las filas del diario del perfil, la reacción SHALL
+mostrarse como ícono con el nombre localizado como nombre accesible y como texto al pasar el mouse o el foco, en vez de
+como texto siempre visible: en el diario propio, junto al título y en el color de acento; en el diario del perfil, en su
+línea de metadato. Sin reacción, no se dibuja ningún ícono — nunca uno neutro por defecto. Cualquier otro lugar donde se
+muestre una reacción —el feed, el panel de ampliación de una entrada— SHALL seguir mostrando el texto localizado siempre
+visible junto al ícono.
+
+#### Scenario: Etiquetas localizadas
+
+- **WHEN** la interfaz muestra la reacción `liked`
+- **THEN** el texto visible es `Me gustó` en español e `Like it` en inglés, con icono de refuerzo
+
+#### Scenario: Ausencia frente a neutra
+
+- **WHEN** la interfaz muestra una entrada sin reacción y otra con reacción `neutral`
+- **THEN** la primera no muestra reacción y la segunda muestra la etiqueta localizada `Neutro`/`Neutral` con su icono
+
+#### Scenario: La reacción acompaña al título en el diario propio
+
+- **WHEN** el diario propio muestra una entrada con reacción `loved`
+- **THEN** el ícono aparece junto al título, en el color de acento, con «Me encantó» como nombre accesible y como texto
+  al pasar el mouse o el foco
+
+#### Scenario: Sin reacción no hay ícono
+
+- **WHEN** una entrada del diario propio no tiene reacción
+- **THEN** junto al título no aparece ningún ícono, y las acciones de la fila no cambian de posición
+
+#### Scenario: El panel de ampliación conserva el texto visible
+
+- **WHEN** el usuario abre el panel para elegir o corregir la reacción de una entrada
+- **THEN** cada opción se muestra con su texto localizado siempre visible, no solo con un ícono
+
+#### Scenario: El feed no adopta la excepción
+
+- **WHEN** una reacción se muestra fuera de las filas del diario (por ejemplo, en el feed)
+- **THEN** el texto localizado permanece siempre visible junto al ícono
+
+### Requirement: Cabecera, filtros y estado de carga del diario propio
+
+El diario propio SHALL abrir con una cabecera que muestra el título, una línea que lo describe como registro personal y
+una acción para anotar una escucha que abre el punto de entrada global de registro. Cuando el usuario no tiene escuchas,
+el estado vacío SHALL ofrecer esa misma acción; cuando los filtros no dan resultados, SHALL ofrecer limpiarlos.
+
+Los filtros SHALL presentarse como un buscador y un único control que despliega el resto (reacción, contexto,
+audiencia, tipo y fecha) e indica cuántos filtros hay activos; los filtros activos SHALL verse, fuera del panel, como
+etiquetas que se quitan individualmente. La fecha SHALL elegirse con un único control que ofrece, agrupados por año, el
+año completo y cada mes con escuchas. Los filtros activos SHALL reflejarse en la URL sin agregar entradas al historial
+del navegador, y abrir esa URL SHALL mostrar el diario ya filtrado. Mientras llegan los resultados de un filtro nuevo,
+la lista anterior SHALL mostrarse atenuada y marcada como ocupada para tecnología de asistencia. Al acercarse al final
+de lo cargado, el diario SHALL pedir la página siguiente sin intervención, conservando un control manual equivalente.
+
+#### Scenario: Anotar desde la cabecera
+
+- **WHEN** el usuario pulsa «Anotar escucha» en la cabecera de su diario
+- **THEN** se abre el registro global con la acción Escucha seleccionada y, al registrar, la nueva escucha aparece en el
+  diario
+
+#### Scenario: Estado vacío con acción
+
+- **WHEN** un usuario sin escuchas abre su diario
+- **THEN** ve un estado vacío localizado con la acción «Anotar escucha»
+
+#### Scenario: Sin resultados con acción
+
+- **WHEN** los filtros activos no coinciden con ninguna escucha
+- **THEN** el estado sin resultados ofrece «Limpiar filtros», que restaura el diario completo
+
+#### Scenario: Filtros compactos en móvil
+
+- **WHEN** el usuario abre su diario en una pantalla de 375px sin filtros activos
+- **THEN** antes de la primera escucha solo hay una línea con el buscador y el control de filtros
+
+#### Scenario: Filtros activos visibles
+
+- **WHEN** el usuario aplica la reacción «Me encantó» y el tipo canción y cierra el panel
+- **THEN** ve dos etiquetas, «Me encantó» y «Canciones», y quitar una deja la otra aplicada
+
+#### Scenario: Filtros en la URL
+
+- **WHEN** el usuario aplica filtros y recarga la página
+- **THEN** el diario se abre con esos filtros aplicados, y volver atrás en el navegador no recorre cada cambio de filtro
+
+#### Scenario: Carga visible al filtrar
+
+- **WHEN** el usuario cambia un filtro y los resultados todavía no llegaron
+- **THEN** la lista anterior se ve atenuada y marcada como ocupada hasta que llegan los nuevos
+
+#### Scenario: Carga continua
+
+- **WHEN** el usuario se acerca al final de las escuchas cargadas y hay más
+- **THEN** el diario pide la página siguiente sin que pulse nada, y el control «Cargar más» sigue disponible
+
+### Requirement: Riel de contexto del diario propio
+
+En pantallas de 1024px o más, el diario propio SHALL mostrar junto a la lista un riel con: atajos a cada año y mes con
+escuchas, que aplican el filtro de fecha; hasta 4 objetivos de Want to Listen del usuario, cada uno con una acción para
+anotar su escucha, más un enlace a Want to Listen; y un enlace a la vista del diario que ven los demás en su perfil. El
+riel NO SHALL mostrar conteos, totales, rachas ni metas. Un módulo sin contenido SHALL omitirse. Por debajo de 1024px,
+el riel no se muestra.
+
+#### Scenario: Ir a un mes desde el riel
+
+- **WHEN** el usuario elige «Septiembre» bajo 2026 en el riel
+- **THEN** el diario queda filtrado por septiembre de 2026, igual que con el control de fecha
+
+#### Scenario: Anotar desde Para anotar
+
+- **WHEN** el usuario pulsa «Anotar» en un álbum de Para anotar
+- **THEN** se crea la escucha, aparece al principio del diario con su formulario de ampliar abierto y el álbum deja de
+  figurar en Para anotar y en Want to Listen
+
+#### Scenario: Sin pendientes
+
+- **WHEN** el usuario no tiene nada en Want to Listen
+- **THEN** el riel no muestra el módulo Para anotar
+
+#### Scenario: El riel no resume volumen
+
+- **WHEN** el usuario ve el riel
+- **THEN** ningún módulo muestra cuántas escuchas hay por año, por mes ni en total
+
+#### Scenario: Sin riel en móvil
+
+- **WHEN** el usuario abre su diario en una pantalla de menos de 1024px
+- **THEN** la página no muestra el riel
 
