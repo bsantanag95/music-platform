@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactElement } from "react";
@@ -21,7 +21,11 @@ vi.mock("@/i18n/navigation", () => ({
     <a href={href}>{children}</a>
   ),
 }));
-vi.mock("@/components/catalog/CoverThumb", () => ({ CoverThumb: () => <span /> }));
+vi.mock("@/components/catalog/CoverThumb", () => ({
+  CoverThumb: ({ priority }: { priority?: boolean }) => (
+    <span data-testid="cover" data-priority={String(Boolean(priority))} />
+  ),
+}));
 vi.mock("@/components/catalog/DiscPlaceholder", () => ({ DiscPlaceholder: () => <span /> }));
 vi.mock("@/lib/api/favorites", () => ({
   getMyFavorites: mocks.getMyFavorites,
@@ -184,5 +188,138 @@ describe("FavoritesWall", () => {
     await waitFor(() =>
       expect(mocks.getUserFavorites).toHaveBeenCalledWith("ana", 1, 20, { q: "radio" }),
     );
+  });
+  // openspec: refine-favorites-page-phase1
+
+  it("con un filtro sin resultados cuenta resultados, no 'sin artistas · sin álbumes · sin canciones', y conserva el conmutador", async () => {
+    const counts = { artist: 1, "release-group": 0, recording: 0 };
+    mocks.getMyFavorites.mockResolvedValue(response([], { counts: { artist: 0, "release-group": 0, recording: 0 } }));
+    renderWall(response([fav({ targetType: "artist" })], { counts }));
+
+    fireEvent.change(screen.getByPlaceholderText("Buscar en tus favoritos"), { target: { value: "zzz" } });
+
+    expect(await screen.findByText("Ningún resultado")).toBeInTheDocument();
+    expect(screen.queryByText(/sin artistas/)).not.toBeInTheDocument();
+    expect(screen.getByRole("radiogroup")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Seleccionar" })).not.toBeInTheDocument();
+  });
+
+  it("con filtro de tipo el total de resultados es el de ese tipo y conserva el desglose", () => {
+    const counts = { artist: 1, "release-group": 12, recording: 3 };
+    renderWall(response([fav({ targetType: "release-group" })], { counts }), { initialFilters: { type: "release-group" } });
+    expect(screen.getByText("12 resultados").closest("p")).toHaveTextContent("12 resultados · 1 artista · 12 álbumes · 3 canciones");
+  });
+
+  it("solo ordenar no convierte la cabecera en 'resultados'", () => {
+    const counts = { artist: 1, "release-group": 0, recording: 0 };
+    renderWall(response([fav({ targetType: "artist" })], { counts }), { initialFilters: { sort: "alpha" } });
+    expect(screen.queryByText(/resultado/)).not.toBeInTheDocument();
+    expect(screen.getByText("1 artista", { exact: false })).toBeInTheDocument();
+  });
+
+  it("sin favoritos y sin filtros no hay cabecera de conteo ni conmutador: el estado vacío lo dice", () => {
+    renderWall(response([]));
+    expect(screen.queryByText(/sin artistas/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("radiogroup")).not.toBeInTheDocument();
+    expect(screen.getByText("Todavía no marcaste favoritos")).toBeInTheDocument();
+  });
+
+  it("quitar un favorito lo anuncia", async () => {
+    const target = fav({ targetType: "artist" });
+    const counts = { artist: 1, "release-group": 0, recording: 0 };
+    mocks.removeFavorite.mockResolvedValue(null);
+    mocks.getMyFavorites.mockResolvedValue(response([], { counts: { artist: 0, "release-group": 0, recording: 0 } }));
+    renderWall(response([target], { counts }));
+
+    await userEvent.click(screen.getByRole("button", { name: "Quitar favorito" }));
+
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Favorito quitado"));
+  });
+
+  it("si falla quitar, el aviso aparece junto a la ficha afectada y la ficha vuelve", async () => {
+    const a = fav({ targetType: "artist" });
+    const b = fav({ targetType: "artist" });
+    const counts = { artist: 2, "release-group": 0, recording: 0 };
+    mocks.removeFavorite.mockRejectedValue(new ApiError("INTERNAL_ERROR", 500, "x"));
+    mocks.getMyFavorites.mockResolvedValue(response([a, b], { counts }));
+    renderWall(response([a, b], { counts }));
+
+    await userEvent.click(screen.getAllByRole("button", { name: "Quitar favorito" })[0]!);
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(/No pudimos guardar/);
+    expect(screen.getAllByRole("article")[0]).toContainElement(alert);
+    expect(screen.getAllByRole("article")).toHaveLength(2);
+  });
+
+  it("el cambio de audiencia fallido también avisa junto a su ficha", async () => {
+    const target = fav({ targetType: "artist", audience: "followers" });
+    const counts = { artist: 1, "release-group": 0, recording: 0 };
+    mocks.updateFavoriteAudience.mockRejectedValue(new ApiError("INTERNAL_ERROR", 500, "x"));
+    mocks.getMyFavorites.mockResolvedValue(response([target], { counts }));
+    renderWall(response([target], { counts }));
+
+    await userEvent.selectOptions(screen.getByLabelText("Audiencia"), "private");
+
+    const alert = await screen.findByRole("alert");
+    expect(screen.getByRole("article")).toContainElement(alert);
+  });
+
+  it("el muro no fija su propio ancho (lo fija la página) y bajo el encabezado omite el tipo", () => {
+    const album = fav({ targetType: "release-group", target: { id: "a1", title: "Disco", coverThumbUrl: null } });
+    const counts = { artist: 0, "release-group": 1, recording: 0 };
+    const { container } = renderWall(response([album], { counts })) as unknown as { container: HTMLElement };
+    expect((container.firstElementChild as HTMLElement).className).not.toContain("max-w-");
+    expect(screen.getByRole("article")).not.toHaveTextContent("Álbum");
+    expect(screen.getByRole("article").querySelector("time")).not.toBeNull();
+  });
+
+  it("modo Índice: sin columna de tipo y con las acciones a contraste normal", async () => {
+    const album = fav({ targetType: "release-group", target: { id: "a1", title: "Disco", coverThumbUrl: null } });
+    const counts = { artist: 0, "release-group": 1, recording: 0 };
+    renderWall(response([album], { counts }));
+
+    await userEvent.click(screen.getByRole("radio", { name: "Índice" }));
+
+    const row = screen.getByRole("link", { name: /Disco/ }).closest("li") as HTMLElement;
+    expect(row).not.toHaveTextContent("Álbum");
+    const actions = within(row).getByRole("button", { name: "Quitar favorito" }).parentElement as HTMLElement;
+    expect(actions.className).not.toContain("opacity-40");
+  });
+
+  it("las carátulas de los seis primeros favoritos se piden con prioridad", () => {
+    const albums = Array.from({ length: 8 }, (_, n) =>
+      fav({ targetType: "release-group", target: { id: `a${n}`, title: `Disco ${n}`, coverThumbUrl: "c.jpg" } }),
+    );
+    renderWall(response(albums, { counts: { artist: 0, "release-group": 8, recording: 0 } }));
+    expect(screen.getAllByTestId("cover").map((cover) => cover.getAttribute("data-priority"))).toEqual([
+      "true", "true", "true", "true", "true", "true", "false", "false",
+    ]);
+  });
+
+  it("los controles llevan las clases táctiles de 44 px y las casillas de 24 px", async () => {
+    const target = fav({ targetType: "artist" });
+    renderWall(response([target], { counts: { artist: 1, "release-group": 0, recording: 0 } }));
+    expect(screen.getByLabelText("Audiencia").className).toContain("[@media(pointer:coarse)]:min-h-11");
+    expect(screen.getByRole("button", { name: "Quitar favorito" }).className).toContain("[@media(pointer:coarse)]:min-h-11");
+    expect(screen.getByRole("button", { name: "Seleccionar" }).className).toContain("[@media(pointer:coarse)]:min-h-11");
+    expect(screen.getByRole("radio", { name: "Índice" }).className).toContain("[@media(pointer:coarse)]:min-h-11");
+
+    await userEvent.click(screen.getByRole("button", { name: "Seleccionar" }));
+    expect(screen.getByRole("checkbox").className).toContain("[@media(pointer:coarse)]:size-6");
+  });
+
+  it("los selectores de la barra muestran su nombre y su texto completo", () => {
+    renderWall(response([fav({ targetType: "artist" })], { counts: { artist: 1, "release-group": 0, recording: 0 } }));
+    for (const name of ["Tipo", "Audiencia", "Ordenar"]) {
+      expect(
+        screen.getAllByText(name).some((node) => node.tagName === "SPAN" && node.getAttribute("aria-hidden") === "true"),
+        name,
+      ).toBe(true);
+    }
+    const widths = ["Filtrar por tipo", "Filtrar por audiencia", "Ordenar"].map((label) => screen.getByLabelText(label).className);
+    expect(widths[0]).toContain("w-[20ch]");
+    expect(widths[1]).toContain("w-[19ch]");
+    expect(widths[2]).toContain("w-[15ch]");
   });
 });

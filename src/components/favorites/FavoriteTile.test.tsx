@@ -90,4 +90,22 @@ describe("FavoriteTile", () => {
     await userEvent.click(screen.getByRole("checkbox", { name: "Seleccionar The Wall" }));
     expect(onToggleSelect).toHaveBeenCalledWith(favorite().id);
   });
+  it("muestra el tipo por defecto y lo omite con showType=false, conservando la fecha", () => {
+    const { unmount } = renderWithIntl(<FavoriteTile favorite={favorite()} />);
+    expect(screen.getByRole("article")).toHaveTextContent("Álbum");
+    unmount();
+    renderWithIntl(<FavoriteTile favorite={favorite()} showType={false} />);
+    expect(screen.getByRole("article")).not.toHaveTextContent("Álbum");
+    expect(screen.getByRole("article").querySelector("time")).not.toBeNull();
+  });
+
+  it("con error muestra el aviso de guardado con rol alert", () => {
+    renderWithIntl(<FavoriteTile favorite={favorite()} error />);
+    expect(screen.getByRole("alert")).toHaveTextContent("No pudimos guardar el cambio");
+  });
+
+  it("sin error no hay aviso", () => {
+    renderWithIntl(<FavoriteTile favorite={favorite()} />);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
 });
