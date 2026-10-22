@@ -55,6 +55,7 @@ function response(favorites: Favorite[], overrides: Partial<FavoritesListRespons
     pageSize: 20,
     hasNext: false,
     counts: { artist: 0, "release-group": 0, recording: 0 },
+    facets: { audience: { private: 0, followers: 0, public: 0 } },
     ...overrides,
   };
 }
@@ -309,17 +310,130 @@ describe("FavoritesWall", () => {
     expect(screen.getByRole("checkbox").className).toContain("[@media(pointer:coarse)]:size-6");
   });
 
-  it("los selectores de la barra muestran su nombre y su texto completo", () => {
+  it("ya no hay selectores de tipo ni de audiencia: solo queda el de orden, con su nombre visible", () => {
     renderWall(response([fav({ targetType: "artist" })], { counts: { artist: 1, "release-group": 0, recording: 0 } }));
-    for (const name of ["Tipo", "Audiencia", "Ordenar"]) {
-      expect(
-        screen.getAllByText(name).some((node) => node.tagName === "SPAN" && node.getAttribute("aria-hidden") === "true"),
-        name,
-      ).toBe(true);
+    expect(screen.queryByLabelText("Filtrar por tipo", { selector: "select" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Filtrar por audiencia", { selector: "select" })).not.toBeInTheDocument();
+    const sort = screen.getByLabelText("Ordenar");
+    expect(sort.tagName).toBe("SELECT");
+    expect(screen.getAllByText("Ordenar").some((node) => node.tagName === "SPAN" && node.getAttribute("aria-hidden") === "true")).toBe(true);
+  });
+  // openspec: redesign-favorites-summary-toolbar
+
+  const FACET = { audience: { private: 1, followers: 2, public: 3 } };
+  const COUNTS = { artist: 2, "release-group": 3, recording: 1 };
+  const seg = (label: string) => screen.getByRole("button", { name: new RegExp(`^${label}`) });
+
+  it("los segmentos de tipo muestran la cantidad de cada uno y 'Todo' es la suma", () => {
+    renderWall(response([fav({ targetType: "artist" })], { counts: COUNTS, facets: FACET }));
+    const group = screen.getByRole("group", { name: "Filtrar por tipo" });
+    expect(within(group).getAllByRole("button").map((b) => b.textContent)).toEqual([
+      "Todo6",
+      "Artistas2",
+      "Álbumes3",
+      "Canciones1",
+    ]);
+    expect(seg("Todo")).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("pulsar un segmento filtra por ese tipo; el activo no se desactiva y 'Todo' lo quita", async () => {
+    mocks.getMyFavorites.mockResolvedValue(response([fav({ targetType: "recording" })], { counts: COUNTS, facets: FACET }));
+    renderWall(response([fav({ targetType: "artist" })], { counts: COUNTS, facets: FACET }));
+
+    await userEvent.click(seg("Canciones"));
+    await waitFor(() => expect(mocks.getMyFavorites).toHaveBeenCalledWith(1, 20, { type: "recording" }));
+    expect(seg("Canciones")).toHaveAttribute("aria-pressed", "true");
+
+    mocks.getMyFavorites.mockClear();
+    await userEvent.click(seg("Canciones"));
+    expect(mocks.getMyFavorites).not.toHaveBeenCalled();
+
+    // Volver a "Todo" reutiliza la caché de la consulta inicial: no hace falta otra petición.
+    await userEvent.click(seg("Todo"));
+    await waitFor(() => expect(seg("Todo")).toHaveAttribute("aria-pressed", "true"));
+    expect(seg("Canciones")).toHaveAttribute("aria-pressed", "false");
+    expect(window.location.search).toBe("");
+  });
+
+  it("las fichas de audiencia muestran el reparto y filtran; pulsar la activa la quita", async () => {
+    mocks.getMyFavorites.mockResolvedValue(response([fav({ audience: "private" })], { counts: COUNTS, facets: FACET }));
+    renderWall(response([fav({ targetType: "artist" })], { counts: COUNTS, facets: FACET }));
+    const group = screen.getByRole("group", { name: "Filtrar por audiencia" });
+    expect(within(group).getAllByRole("button").map((b) => b.textContent)).toEqual(["Público3", "Seguidores2", "Privado1"]);
+
+    await userEvent.click(within(group).getByRole("button", { name: /^Privado/ }));
+    await waitFor(() => expect(mocks.getMyFavorites).toHaveBeenCalledWith(1, 20, { audience: "private" }));
+    expect(within(group).getByRole("button", { name: /^Privado/ })).toHaveAttribute("aria-pressed", "true");
+    // La faceta ignora su propio filtro: las demás fichas conservan su cantidad.
+    expect(within(group).getByRole("button", { name: /^Público/ })).toHaveTextContent("3");
+
+    await userEvent.click(within(group).getByRole("button", { name: /^Privado/ }));
+    await waitFor(() => expect(within(group).getByRole("button", { name: /^Privado/ })).toHaveAttribute("aria-pressed", "false"));
+    expect(window.location.search).toBe("");
+  });
+
+  it("cambiar la audiencia de una ficha mueve la cantidad entre fichas, sin recargar la lista", async () => {
+    const target = fav({ targetType: "artist", audience: "followers" });
+    const counts = { artist: 1, "release-group": 0, recording: 0 };
+    mocks.updateFavoriteAudience.mockResolvedValue({ ...target, audience: "public" });
+    // El refetch devuelve la misma lista: el ajuste local ya movió las cantidades.
+    mocks.getMyFavorites.mockResolvedValue(
+      response([{ ...target, audience: "public" }], { counts, facets: { audience: { private: 0, followers: 0, public: 1 } } }),
+    );
+    renderWall(response([target], { counts, facets: { audience: { private: 0, followers: 1, public: 0 } } }));
+
+    await userEvent.selectOptions(screen.getByLabelText("Audiencia"), "public");
+
+    const group = screen.getByRole("group", { name: "Filtrar por audiencia" });
+    await waitFor(() => expect(within(group).getByRole("button", { name: /^Público/ })).toHaveTextContent("1"));
+    expect(within(group).getByRole("button", { name: /^Seguidores/ })).toHaveTextContent("0");
+  });
+
+  it("quitar un favorito baja su cubo de audiencia y su segmento de tipo", async () => {
+    const target = fav({ targetType: "release-group", audience: "public" });
+    const counts = { artist: 0, "release-group": 1, recording: 0 };
+    mocks.removeFavorite.mockResolvedValue(null);
+    mocks.getMyFavorites.mockResolvedValue(
+      response([], { counts: { artist: 0, "release-group": 0, recording: 0 }, facets: { audience: { private: 0, followers: 0, public: 0 } } }),
+    );
+    renderWall(response([target], { counts, facets: { audience: { private: 0, followers: 0, public: 1 } } }));
+
+    await userEvent.click(screen.getByRole("button", { name: "Quitar favorito" }));
+
+    await waitFor(() => expect(seg("Álbumes")).toHaveTextContent("0"));
+    expect(within(screen.getByRole("group", { name: "Filtrar por audiencia" })).getByRole("button", { name: /^Público/ })).toHaveTextContent("0");
+  });
+
+  it("con un filtro de audiencia, sacar una ficha del filtro baja el segmento de su tipo", async () => {
+    const target = fav({ targetType: "artist", audience: "public" });
+    const counts = { artist: 1, "release-group": 0, recording: 0 };
+    mocks.updateFavoriteAudience.mockResolvedValue({ ...target, audience: "private" });
+    // El servidor, al refrescar, ya no trae la ficha dentro del filtro "Público".
+    mocks.getMyFavorites.mockResolvedValue(
+      response([], { counts: { artist: 0, "release-group": 0, recording: 0 }, facets: { audience: { private: 1, followers: 0, public: 0 } } }),
+    );
+    renderWall(response([target], { counts, facets: { audience: { private: 0, followers: 0, public: 1 } } }), {
+      initialFilters: { audience: "public" },
+    });
+
+    await userEvent.selectOptions(screen.getByLabelText("Audiencia"), "private");
+
+    await waitFor(() => expect(seg("Artistas")).toHaveTextContent("0"));
+  });
+
+  it("modo lectura: hay segmentos de tipo pero ninguna ficha de audiencia", () => {
+    renderWall(response([fav({ targetType: "artist" })], { counts: COUNTS, facets: undefined }), { readOnly: true, username: "ana" });
+    expect(screen.getByRole("group", { name: "Filtrar por tipo" })).toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: "Filtrar por audiencia" })).not.toBeInTheDocument();
+  });
+
+  it("segmentos y fichas llevan las clases táctiles de 44 px", () => {
+    renderWall(response([fav({ targetType: "artist" })], { counts: COUNTS, facets: FACET }));
+    for (const button of [
+      ...within(screen.getByRole("group", { name: "Filtrar por tipo" })).getAllByRole("button"),
+      ...within(screen.getByRole("group", { name: "Filtrar por audiencia" })).getAllByRole("button"),
+    ]) {
+      expect(button.className).toContain("[@media(pointer:coarse)]:min-h-11");
     }
-    const widths = ["Filtrar por tipo", "Filtrar por audiencia", "Ordenar"].map((label) => screen.getByLabelText(label).className);
-    expect(widths[0]).toContain("w-[20ch]");
-    expect(widths[1]).toContain("w-[19ch]");
-    expect(widths[2]).toContain("w-[15ch]");
   });
 });

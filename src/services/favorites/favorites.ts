@@ -32,6 +32,13 @@ export interface FavoriteCounts {
   recording: number;
 }
 
+/** Cantidad de favoritos propios por audiencia (faceta, sin el filtro de audiencia). */
+export interface FavoriteAudienceFacet {
+  private: number;
+  followers: number;
+  public: number;
+}
+
 // Título del objetivo, resuelto desde la tabla que corresponda (los otros
 // dos joins quedan en null). Se usa para el buscador `q` y el orden alfabético.
 const TITLE_EXPR = sql`coalesce(${artist.name}, ${releaseGroup.title}, ${recording.title})`;
@@ -298,6 +305,27 @@ async function favoriteCounts(scopeConditions: SQL[]): Promise<FavoriteCounts> {
   };
 }
 
+// Faceta de audiencia: cantidad por audiencia sobre el alcance sin el filtro `audience` (pero con `q` y
+// `type`), así cada audiencia sigue mostrando su cantidad al filtrar por otra (openspec:
+// redesign-favorites-summary-toolbar).
+async function favoriteAudienceFacet(conditions: SQL[]): Promise<FavoriteAudienceFacet> {
+  const rows = await db
+    .select({ audience: favorite.audience, n: sql<number>`count(*)`.mapWith(Number) })
+    .from(favorite)
+    .leftJoin(artist, eq(favorite.artistId, artist.id))
+    .leftJoin(releaseGroup, eq(favorite.releaseGroupId, releaseGroup.id))
+    .leftJoin(recording, eq(favorite.recordingId, recording.id))
+    .where(and(...conditions))
+    .groupBy(favorite.audience);
+  const facet: FavoriteAudienceFacet = { private: 0, followers: 0, public: 0 };
+  for (const row of rows) {
+    if (row.audience === "private" || row.audience === "followers" || row.audience === "public") {
+      facet[row.audience] = row.n;
+    }
+  }
+  return facet;
+}
+
 // Búsqueda de texto (`q`): coincide con el título del objetivo o, para álbumes y
 // canciones, con el nombre del artista principal acreditado (mismo criterio que la
 // búsqueda de la colección). Los favoritos de artista coinciden por su nombre, que
@@ -343,6 +371,14 @@ export async function listMyFavorites(
 
   const counts = await favoriteCounts(scopeConditions);
 
+  // Faceta de audiencia: `q` y `type`, sin `audience`.
+  const facetConditions: SQL[] = [eq(favorite.userId, userId)];
+  if (q) facetConditions.push(favoriteTextMatch(q));
+  if (type === "artist") facetConditions.push(isNotNull(favorite.artistId));
+  else if (type === "release-group") facetConditions.push(isNotNull(favorite.releaseGroupId));
+  else if (type === "recording") facetConditions.push(isNotNull(favorite.recordingId));
+  const audienceFacet = await favoriteAudienceFacet(facetConditions);
+
   const favorites = rows.slice(0, pageSize).map(serializeFavorite);
   scheduleFavoriteCoverMirrors(favorites);
 
@@ -352,6 +388,7 @@ export async function listMyFavorites(
     pageSize,
     hasNext: rows.length > pageSize,
     counts,
+    facets: { audience: audienceFacet },
   };
 }
 

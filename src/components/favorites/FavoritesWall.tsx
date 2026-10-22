@@ -29,7 +29,7 @@ import {
   favoriteScopeNarrowed,
   type FavoritesFiltersState,
 } from "./FavoritesToolbar";
-import { groupFavoritesByType, sectionTitleKey } from "./favorites-shared";
+import { adjustFavoriteFacets, groupFavoritesByType, sectionTitleKey } from "./favorites-shared";
 import { useFavoriteViewMode } from "./use-favorite-view-mode";
 import { FavoritesModeSwitcher } from "./FavoritesModeSwitcher";
 import { FavoritesDetailed } from "./FavoritesDetailed";
@@ -138,6 +138,9 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
   const favorites =
     data?.pages.flatMap((page) => page?.favorites ?? []) ?? (seeded ? initial.favorites : []);
   const counts = data?.pages[0]?.counts ?? initial.counts;
+  // Faceta de audiencia (solo la lista propia): se ajusta en la caché al editar, así revertir ante un fallo
+  // restaura también las cantidades.
+  const audienceFacet = data?.pages[0]?.facets?.audience ?? initial.facets?.audience;
   const groups = groupFavoritesByType(favorites);
   // `counts` se calcula sin el filtro de tipo (es una faceta): con un tipo elegido el total de resultados es el
   // de ese tipo; sin él, la suma de los tres.
@@ -152,42 +155,61 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
 
   const patchLocalAudience = useCallback(
     (ids: string[], audience: DiaryAudience) => {
-      queryClient.setQueryData<FavoritesPages>(mineQueryKey, (old) =>
-        old
-          ? {
-              ...old,
-              pages: old.pages.map((page) => ({
-                ...page,
-                favorites: page.favorites.map((favorite) =>
-                  ids.includes(favorite.id) ? { ...favorite, audience } : favorite,
-                ),
-              })),
-            }
-          : old,
-      );
+      queryClient.setQueryData<FavoritesPages>(mineQueryKey, (old) => {
+        if (!old) return old;
+        const changed = old.pages.flatMap((page) => page.favorites).filter((favorite) => ids.includes(favorite.id));
+        return {
+          ...old,
+          pages: old.pages.map((page, index) => {
+            const base = {
+              ...page,
+              favorites: page.favorites.map((favorite) =>
+                ids.includes(favorite.id) ? { ...favorite, audience } : favorite,
+              ),
+            };
+            if (index !== 0 || !page.facets) return base;
+            const next = adjustFavoriteFacets(
+              { counts: page.counts, audience: page.facets.audience },
+              filters.audience,
+              changed,
+              audience,
+            );
+            return { ...base, counts: next.counts, facets: { audience: next.audience } };
+          }),
+        };
+      });
     },
-    [queryClient, mineQueryKey],
+    [queryClient, mineQueryKey, filters.audience],
   );
 
   const patchLocalRemove = useCallback(
     (favorite: Favorite) => {
       queryClient.setQueryData<FavoritesPages>(mineQueryKey, (old) => {
         if (!old) return old;
-        const key = favorite.targetType;
         return {
           ...old,
-          pages: old.pages.map((page, index) => ({
-            ...page,
-            favorites: page.favorites.filter((item) => item.id !== favorite.id),
-            counts:
-              index === 0
-                ? { ...page.counts, [key]: Math.max(0, page.counts[key] - 1) }
-                : page.counts,
-          })),
+          pages: old.pages.map((page, index) => {
+            const base = { ...page, favorites: page.favorites.filter((item) => item.id !== favorite.id) };
+            if (index !== 0) return base;
+            const next = adjustFavoriteFacets(
+              {
+                counts: page.counts,
+                audience: page.facets?.audience ?? { private: 0, followers: 0, public: 0 },
+              },
+              filters.audience,
+              [favorite],
+              null,
+            );
+            return {
+              ...base,
+              counts: next.counts,
+              facets: page.facets ? { audience: next.audience } : undefined,
+            };
+          }),
         };
       });
     },
-    [queryClient, mineQueryKey],
+    [queryClient, mineQueryKey, filters.audience],
   );
 
   const handleAudienceChange = async (favorite: Favorite, audience: DiaryAudience) => {
@@ -333,6 +355,8 @@ export function FavoritesWall({ initial, readOnly, username, initialFilters }: F
         searchInput={searchInput}
         onSearchInput={setSearchInput}
         onClear={clearFilters}
+        counts={counts}
+        audienceFacet={audienceFacet}
         showAudienceFilter={!readOnly}
       />
 
