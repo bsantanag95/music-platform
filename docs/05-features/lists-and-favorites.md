@@ -66,6 +66,21 @@ Mantiene el mundo visual vigente ("The Vinyl Listening Room") y los principios d
   filtro de audiencia) que alternan al pulsarlas. Reemplazan a los selectores de tipo y audiencia; el orden
   conserva su selector. Al cambiar la audiencia de una ficha, quitarla o cambiarlas en lote, las cantidades se
   ajustan en el lugar (en la caché de la consulta, así un fallo las restaura) sin recargar ni reordenar la lista.
+- **Vistas rehechas** (cambio `redesign-favorites-views`, Fase 3):
+  - **Insignia de audiencia y menú `⋯`** (`FavoriteActions`, vista propia): la audiencia se muestra como
+    insignia con icono (candado, personas, globo) y, junto con el `⋯`, abre un menú (`menu` con
+    `menuitemradio` por audiencia y `menuitem` "Quitar favorito"; Escape, clic fuera y flechas; foco de vuelta).
+    Reemplaza al `select` por ficha y al enlace "Quitar". No existe en modo lectura.
+  - **Quitar con "Deshacer":** al quitar aparece "Quitado de favoritos · Deshacer" (6 s). Deshacer re-crea el
+    favorito con su audiencia anterior (`POST` con `audience`; la fecha de marcado se reinicia). El aviso se limpia
+    al usarlo porque `POST` alterna.
+  - **Gráfico limpio:** portada, título, artista y `⋯`; una marca con el icono de la audiencia sobre la portada solo
+    si no es pública (y solo en la vista propia).
+  - **Índice como tabla** con encabezados (Título, Fecha, Audiencia; visibles desde `sm`), sin audiencia ni
+    acciones en modo lectura.
+  - **Modo selección:** casillas de 24 px, ficha o fila resaltada, "Seleccionar todo" por sección y barra con
+    audiencias, "Quitar" (con confirmación en la barra; sin `DELETE` en lote se quita favorito a favorito y,
+    si alguno falla, se restaura la lista) y "Listo".
 - **API:** `GET /api/me/favorites` gana `q`/`type`/`audience`/`sort` y `counts`;
   `PATCH /api/me/favorites` acepta `{ ids: string[], audience }` además de `{ id, audience }`.
   Sin migraciones. Ver `docs/04-api/contracts.md`.

@@ -64,6 +64,18 @@ export function toggleFavorite(target: FavoriteTarget): Promise<Favorite | null>
   }).then((response) => response.favorite);
 }
 
+/**
+ * Vuelve a marcar un favorito con la audiencia dada (el "Deshacer" de quitar). `POST` alterna: quien lo llame
+ * debe saber que el objetivo ya no es favorito.
+ */
+export function addFavorite(target: FavoriteTarget, audience: DiaryAudience): Promise<Favorite | null> {
+  return apiFetch("/api/me/favorites", FavoriteMutationResponseSchema, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ target, audience }),
+  }).then((response) => response.favorite);
+}
+
 export function removeFavorite(target: FavoriteTarget): Promise<null> {
   return apiFetch("/api/me/favorites", z.null(), {
     method: "DELETE",

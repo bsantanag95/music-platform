@@ -6,9 +6,8 @@ import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import type { DiaryAudience, Favorite } from "@/lib/api/schemas";
 import { ArtistPlate } from "./ArtistPlate";
+import { FavoriteActions } from "./FavoriteActions";
 import { favoriteArtistHref, favoriteTargetHref, formatFavoriteDate, typeLabelKey } from "./favorites-shared";
-
-const AUDIENCES: DiaryAudience[] = ["private", "followers", "public"];
 
 interface FavoriteTileProps {
   favorite: Favorite;
@@ -29,8 +28,8 @@ interface FavoriteTileProps {
 
 // Ficha de un favorito en el muro. Tres tratamientos según el tipo: álbum con
 // carátula, artista con placa tipográfica, canción con la silueta de disco del
-// sistema. En modo propio ofrece cambiar la audiencia y quitar; en modo selección
-// muestra una casilla; en modo lectura solo enlaza al objetivo.
+// sistema. En modo propio muestra la insignia de audiencia y el menú `⋯` (cambiar audiencia, quitar); en modo
+// selección, una casilla y la ficha resaltada si está elegida; en modo lectura solo enlaza al objetivo.
 export function FavoriteTile({
   favorite,
   readOnly,
@@ -58,14 +57,18 @@ export function FavoriteTile({
     );
 
   return (
-    <article className="group flex gap-3 rounded-lg border border-ink-border bg-ink-surface p-3 transition-colors focus-within:border-amber hover:border-amber">
+    <article
+      className={`group flex gap-3 rounded-lg border p-3 transition-colors focus-within:border-amber hover:border-amber ${
+        selected ? "border-amber bg-amber/10" : "border-ink-border bg-ink-surface"
+      }`}
+    >
       {selectionMode && !readOnly ? (
         <input
           type="checkbox"
           checked={Boolean(selected)}
           onChange={() => onToggleSelect?.(favorite.id)}
           aria-label={t("selectItem", { title: favorite.target.title })}
-          className="mt-1 size-4 shrink-0 accent-amber [@media(pointer:coarse)]:size-6"
+          className="mt-1 size-6 shrink-0 accent-amber"
         />
       ) : null}
 
@@ -102,34 +105,14 @@ export function FavoriteTile({
           <time dateTime={favorite.createdAt}>{formatFavoriteDate(favorite.createdAt, locale)}</time>
         </p>
 
-        {readOnly ? null : selectionMode ? null : (
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <label className="sr-only" htmlFor={`favorite-audience-${favorite.id}`}>
-              {t("audienceLabel")}
-            </label>
-            <select
-              id={`favorite-audience-${favorite.id}`}
-              value={favorite.audience}
-              disabled={busy}
-              onChange={(event) =>
-                onAudienceChange?.(favorite, event.target.value as DiaryAudience)
-              }
-              className="filter-select rounded border border-ink-border bg-ink px-2 py-1 font-data text-xs text-paper-muted transition-colors hover:text-paper disabled:opacity-50 [@media(pointer:coarse)]:min-h-11"
-            >
-              {AUDIENCES.map((audience) => (
-                <option key={audience} value={audience}>
-                  {t(`audience.${audience}`)}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => onRemove?.(favorite)}
-              className="font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-danger disabled:opacity-50 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:px-1"
-            >
-              {t("removeFavorite")}
-            </button>
+        {readOnly || selectionMode ? null : (
+          <div className="mt-1">
+            <FavoriteActions
+              favorite={favorite}
+              busy={busy}
+              onAudienceChange={(item, audience) => onAudienceChange?.(item, audience)}
+              onRemove={(item) => onRemove?.(item)}
+            />
           </div>
         )}
 

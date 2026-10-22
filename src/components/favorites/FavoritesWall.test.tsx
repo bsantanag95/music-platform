@@ -9,6 +9,7 @@ import { ApiError } from "@/lib/api/client";
 import type { Favorite, FavoritesListResponse } from "@/lib/api/schemas";
 
 const mocks = vi.hoisted(() => ({
+  addFavorite: vi.fn(),
   getMyFavorites: vi.fn(),
   getUserFavorites: vi.fn(),
   removeFavorite: vi.fn(),
@@ -28,6 +29,7 @@ vi.mock("@/components/catalog/CoverThumb", () => ({
 }));
 vi.mock("@/components/catalog/DiscPlaceholder", () => ({ DiscPlaceholder: () => <span /> }));
 vi.mock("@/lib/api/favorites", () => ({
+  addFavorite: mocks.addFavorite,
   getMyFavorites: mocks.getMyFavorites,
   getUserFavorites: mocks.getUserFavorites,
   removeFavorite: mocks.removeFavorite,
@@ -69,6 +71,21 @@ function renderWall(initial: FavoritesListResponse, props: Partial<Parameters<ty
   ) as unknown as ReactElement;
 }
 
+// El menú de acciones (insignia + `⋯`) reemplaza al selector de audiencia y al botón "Quitar favorito".
+async function openMenu(index = 0) {
+  await userEvent.click(screen.getAllByRole("button", { name: /^Acciones de / })[index]!);
+  return screen.getByRole("menu");
+}
+async function chooseAudience(name: string, index = 0) {
+  const menu = await openMenu(index);
+  await userEvent.click(within(menu).getByRole("menuitemradio", { name }));
+}
+async function removeViaMenu(index = 0) {
+  const menu = await openMenu(index);
+  await userEvent.click(within(menu).getByRole("menuitem", { name: "Quitar favorito" }));
+}
+const badge = (name: RegExp) => screen.getByRole("button", { name });
+
 describe("FavoritesWall", () => {
   beforeEach(() => {
     seq = 0;
@@ -105,11 +122,11 @@ describe("FavoritesWall", () => {
     mocks.getMyFavorites.mockResolvedValue(response([{ ...target, audience: "public" }], { counts }));
     renderWall(response([target], { counts }));
 
-    await userEvent.selectOptions(screen.getByLabelText("Audiencia"), "public");
+    await chooseAudience("Público");
     await waitFor(() =>
       expect(mocks.updateFavoriteAudience).toHaveBeenCalledWith(target.id, "public"),
     );
-    expect((screen.getByLabelText("Audiencia") as HTMLSelectElement).value).toBe("public");
+    expect(badge(/Audiencia: Público/)).toBeInTheDocument();
   });
 
   it("revierte el cambio de audiencia si la API falla", async () => {
@@ -119,9 +136,9 @@ describe("FavoritesWall", () => {
     mocks.getMyFavorites.mockResolvedValue(response([target], { counts }));
     renderWall(response([target], { counts }));
 
-    await userEvent.selectOptions(screen.getByLabelText("Audiencia"), "private");
+    await chooseAudience("Privado");
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(/No pudimos guardar/));
-    expect((screen.getByLabelText("Audiencia") as HTMLSelectElement).value).toBe("followers");
+    expect(badge(/Audiencia: Seguidores/)).toBeInTheDocument();
   });
 
   it("modo selección: cambia la audiencia en lote y sale del modo", async () => {
@@ -232,9 +249,9 @@ describe("FavoritesWall", () => {
     mocks.getMyFavorites.mockResolvedValue(response([], { counts: { artist: 0, "release-group": 0, recording: 0 } }));
     renderWall(response([target], { counts }));
 
-    await userEvent.click(screen.getByRole("button", { name: "Quitar favorito" }));
+    await removeViaMenu();
 
-    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Favorito quitado"));
+    await waitFor(() => expect(screen.getAllByRole("status").map((node) => node.textContent).join(" ")).toContain("Favorito quitado"));
   });
 
   it("si falla quitar, el aviso aparece junto a la ficha afectada y la ficha vuelve", async () => {
@@ -245,7 +262,7 @@ describe("FavoritesWall", () => {
     mocks.getMyFavorites.mockResolvedValue(response([a, b], { counts }));
     renderWall(response([a, b], { counts }));
 
-    await userEvent.click(screen.getAllByRole("button", { name: "Quitar favorito" })[0]!);
+    await removeViaMenu(0);
 
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent(/No pudimos guardar/);
@@ -260,7 +277,7 @@ describe("FavoritesWall", () => {
     mocks.getMyFavorites.mockResolvedValue(response([target], { counts }));
     renderWall(response([target], { counts }));
 
-    await userEvent.selectOptions(screen.getByLabelText("Audiencia"), "private");
+    await chooseAudience("Privado");
 
     const alert = await screen.findByRole("alert");
     expect(screen.getByRole("article")).toContainElement(alert);
@@ -282,10 +299,11 @@ describe("FavoritesWall", () => {
 
     await userEvent.click(screen.getByRole("radio", { name: "Índice" }));
 
-    const row = screen.getByRole("link", { name: /Disco/ }).closest("li") as HTMLElement;
+    const row = screen.getByRole("link", { name: /Disco/ }).closest("tr") as HTMLElement;
     expect(row).not.toHaveTextContent("Álbum");
-    const actions = within(row).getByRole("button", { name: "Quitar favorito" }).parentElement as HTMLElement;
+    const actions = within(row).getByRole("button", { name: /^Acciones de / }).closest("div") as HTMLElement;
     expect(actions.className).not.toContain("opacity-40");
+    expect(screen.getByRole("table")).toBeInTheDocument();
   });
 
   it("las carátulas de los seis primeros favoritos se piden con prioridad", () => {
@@ -301,13 +319,13 @@ describe("FavoritesWall", () => {
   it("los controles llevan las clases táctiles de 44 px y las casillas de 24 px", async () => {
     const target = fav({ targetType: "artist" });
     renderWall(response([target], { counts: { artist: 1, "release-group": 0, recording: 0 } }));
-    expect(screen.getByLabelText("Audiencia").className).toContain("[@media(pointer:coarse)]:min-h-11");
-    expect(screen.getByRole("button", { name: "Quitar favorito" }).className).toContain("[@media(pointer:coarse)]:min-h-11");
+    expect(badge(/Audiencia: Seguidores/).className).toContain("[@media(pointer:coarse)]:min-h-11");
+    expect(badge(/^Acciones de /).className).toContain("[@media(pointer:coarse)]:size-11");
     expect(screen.getByRole("button", { name: "Seleccionar" }).className).toContain("[@media(pointer:coarse)]:min-h-11");
     expect(screen.getByRole("radio", { name: "Índice" }).className).toContain("[@media(pointer:coarse)]:min-h-11");
 
     await userEvent.click(screen.getByRole("button", { name: "Seleccionar" }));
-    expect(screen.getByRole("checkbox").className).toContain("[@media(pointer:coarse)]:size-6");
+    expect(screen.getByRole("checkbox").className).toContain("size-6");
   });
 
   it("ya no hay selectores de tipo ni de audiencia: solo queda el de orden, con su nombre visible", () => {
@@ -382,7 +400,7 @@ describe("FavoritesWall", () => {
     );
     renderWall(response([target], { counts, facets: { audience: { private: 0, followers: 1, public: 0 } } }));
 
-    await userEvent.selectOptions(screen.getByLabelText("Audiencia"), "public");
+    await chooseAudience("Público");
 
     const group = screen.getByRole("group", { name: "Filtrar por audiencia" });
     await waitFor(() => expect(within(group).getByRole("button", { name: /^Público/ })).toHaveTextContent("1"));
@@ -398,7 +416,7 @@ describe("FavoritesWall", () => {
     );
     renderWall(response([target], { counts, facets: { audience: { private: 0, followers: 0, public: 1 } } }));
 
-    await userEvent.click(screen.getByRole("button", { name: "Quitar favorito" }));
+    await removeViaMenu();
 
     await waitFor(() => expect(seg("Álbumes")).toHaveTextContent("0"));
     expect(within(screen.getByRole("group", { name: "Filtrar por audiencia" })).getByRole("button", { name: /^Público/ })).toHaveTextContent("0");
@@ -416,7 +434,7 @@ describe("FavoritesWall", () => {
       initialFilters: { audience: "public" },
     });
 
-    await userEvent.selectOptions(screen.getByLabelText("Audiencia"), "private");
+    await chooseAudience("Privado");
 
     await waitFor(() => expect(seg("Artistas")).toHaveTextContent("0"));
   });
@@ -435,5 +453,160 @@ describe("FavoritesWall", () => {
     ]) {
       expect(button.className).toContain("[@media(pointer:coarse)]:min-h-11");
     }
+  });
+  // openspec: redesign-favorites-views
+
+  it("quitar muestra el aviso con 'Deshacer' y deshacer vuelve a marcar con la audiencia anterior", async () => {
+    const target = fav({ targetType: "release-group", audience: "private" });
+    const counts = { artist: 0, "release-group": 1, recording: 0 };
+    mocks.removeFavorite.mockResolvedValue(null);
+    mocks.addFavorite.mockResolvedValue(target);
+    mocks.getMyFavorites.mockResolvedValue(response([], { counts: { artist: 0, "release-group": 0, recording: 0 } }));
+    renderWall(response([target], { counts }));
+
+    await removeViaMenu();
+    const undo = await screen.findByRole("button", { name: "Deshacer" });
+    expect(screen.getAllByRole("status").map((node) => node.textContent).join(" ")).toContain("Quitado de favoritos");
+
+    await userEvent.click(undo);
+
+    await waitFor(() =>
+      expect(mocks.addFavorite).toHaveBeenCalledWith({ type: "release-group", id: target.target.id }, "private"),
+    );
+    expect(screen.queryByRole("button", { name: "Deshacer" })).not.toBeInTheDocument();
+  });
+
+  it("si quitar falla no hay aviso de deshacer", async () => {
+    const target = fav({ targetType: "artist" });
+    const counts = { artist: 1, "release-group": 0, recording: 0 };
+    mocks.removeFavorite.mockRejectedValue(new ApiError("INTERNAL_ERROR", 500, "x"));
+    mocks.getMyFavorites.mockResolvedValue(response([target], { counts }));
+    renderWall(response([target], { counts }));
+
+    await removeViaMenu();
+
+    await screen.findByRole("alert");
+    expect(screen.queryByRole("button", { name: "Deshacer" })).not.toBeInTheDocument();
+  });
+
+  it("modo selección: 'Seleccionar todo' de una sección elige todos sus favoritos y vuelve a pulsarlo los quita", async () => {
+    const a = fav({ targetType: "artist" });
+    const b = fav({ targetType: "artist" });
+    const album = fav({ targetType: "release-group" });
+    renderWall(response([a, b, album], { counts: { artist: 2, "release-group": 1, recording: 0 } }));
+
+    await userEvent.click(screen.getByRole("button", { name: "Seleccionar" }));
+    await userEvent.click(screen.getByRole("button", { name: "Seleccionar todo en Artistas" }));
+
+    expect(screen.getByRole("checkbox", { name: `Seleccionar ${a.target.title}` })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: `Seleccionar ${b.target.title}` })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: `Seleccionar ${album.target.title}` })).not.toBeChecked();
+    expect(screen.getAllByText("2 seleccionados").length).toBeGreaterThan(0);
+
+    await userEvent.click(screen.getByRole("button", { name: "Seleccionar todo en Artistas" }));
+    expect(screen.getByRole("checkbox", { name: `Seleccionar ${a.target.title}` })).not.toBeChecked();
+  });
+
+  it("modo selección: la ficha elegida se resalta", async () => {
+    const a = fav({ targetType: "artist" });
+    renderWall(response([a], { counts: { artist: 1, "release-group": 0, recording: 0 } }));
+    await userEvent.click(screen.getByRole("button", { name: "Seleccionar" }));
+    await userEvent.click(screen.getByRole("checkbox"));
+    expect(screen.getByRole("article").className).toContain("border-amber");
+  });
+
+  it("quitar en lote pide confirmación en la barra y quita los seleccionados", async () => {
+    const a = fav({ targetType: "artist" });
+    const b = fav({ targetType: "artist" });
+    const counts = { artist: 2, "release-group": 0, recording: 0 };
+    mocks.removeFavorite.mockResolvedValue(null);
+    mocks.getMyFavorites.mockResolvedValue(response([], { counts: { artist: 0, "release-group": 0, recording: 0 } }));
+    renderWall(response([a, b], { counts }));
+
+    await userEvent.click(screen.getByRole("button", { name: "Seleccionar" }));
+    await userEvent.click(screen.getByRole("button", { name: "Seleccionar todo en Artistas" }));
+    const bar = screen.getByText("Cambiar audiencia a").closest("div") as HTMLElement;
+    await userEvent.click(within(bar).getByRole("button", { name: "Quitar" }));
+    expect(screen.getByText("¿Quitar 2 favoritos?")).toBeInTheDocument();
+    expect(mocks.removeFavorite).not.toHaveBeenCalled();
+
+    await userEvent.click(within(bar).getAllByRole("button", { name: "Quitar" })[0]!);
+
+    await waitFor(() => expect(mocks.removeFavorite).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.queryByRole("article")).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.getAllByRole("status").map((n) => n.textContent).join(" ")).toContain("2 favoritos quitados"));
+  });
+
+  it("cancelar la confirmación no quita nada y conserva la selección", async () => {
+    const a = fav({ targetType: "artist" });
+    renderWall(response([a], { counts: { artist: 1, "release-group": 0, recording: 0 } }));
+    await userEvent.click(screen.getByRole("button", { name: "Seleccionar" }));
+    await userEvent.click(screen.getByRole("checkbox"));
+    const bar = screen.getByText("Cambiar audiencia a").closest("div") as HTMLElement;
+    await userEvent.click(within(bar).getByRole("button", { name: "Quitar" }));
+    await userEvent.click(within(bar).getByRole("button", { name: "Cancelar" }));
+
+    expect(mocks.removeFavorite).not.toHaveBeenCalled();
+    expect(screen.getByRole("checkbox")).toBeChecked();
+    expect(screen.queryByText(/¿Quitar/)).not.toBeInTheDocument();
+  });
+
+  it("si falla quitar en lote restaura la lista y avisa", async () => {
+    const a = fav({ targetType: "artist" });
+    const b = fav({ targetType: "artist" });
+    const counts = { artist: 2, "release-group": 0, recording: 0 };
+    mocks.removeFavorite.mockResolvedValueOnce(null).mockRejectedValueOnce(new ApiError("INTERNAL_ERROR", 500, "x"));
+    mocks.getMyFavorites.mockResolvedValue(response([a, b], { counts }));
+    renderWall(response([a, b], { counts }));
+
+    await userEvent.click(screen.getByRole("button", { name: "Seleccionar" }));
+    await userEvent.click(screen.getByRole("button", { name: "Seleccionar todo en Artistas" }));
+    const bar = screen.getByText("Cambiar audiencia a").closest("div") as HTMLElement;
+    await userEvent.click(within(bar).getByRole("button", { name: "Quitar" }));
+    await userEvent.click(within(bar).getAllByRole("button", { name: "Quitar" })[0]!);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/No pudimos guardar/);
+    expect(screen.getAllByRole("article")).toHaveLength(2);
+  });
+
+  it("Gráfico limpio: sin selector ni 'Quitar' en la ficha, y la marca solo en los no públicos", async () => {
+    const priv = fav({ targetType: "release-group", audience: "private" });
+    const pub = fav({ targetType: "release-group", audience: "public" });
+    renderWall(response([priv, pub], { counts: { artist: 0, "release-group": 2, recording: 0 } }));
+
+    await userEvent.click(screen.getByRole("radio", { name: "Gráfico" }));
+
+    expect(screen.queryByRole("combobox", { name: "Audiencia" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Quitar favorito" })).not.toBeInTheDocument();
+    expect(screen.getAllByTestId("audience-pin")).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: /^Acciones de / })).toHaveLength(2);
+    // Sin insignia con texto: solo el ⋯ en la ficha.
+    expect(screen.queryByRole("button", { name: /Audiencia: / })).not.toBeInTheDocument();
+  });
+
+  it("Índice propio: tabla con encabezados Título, Fecha y Audiencia", async () => {
+    const album = fav({ targetType: "release-group", target: { id: "a1", title: "Disco", coverThumbUrl: null } });
+    renderWall(response([album], { counts: { artist: 0, "release-group": 1, recording: 0 } }));
+
+    await userEvent.click(screen.getByRole("radio", { name: "Índice" }));
+
+    expect(screen.getAllByRole("columnheader").map((h) => h.textContent)).toEqual(["Título", "Fecha", "Audiencia"]);
+    expect(screen.getByRole("columnheader", { name: "Título" }).closest("thead")!.className).toContain("sr-only");
+  });
+
+  it("modo lectura: el Índice y el Gráfico no tienen audiencia, marca ni acciones", async () => {
+    const priv = fav({ targetType: "release-group", audience: "followers" });
+    renderWall(response([priv], { counts: { artist: 0, "release-group": 1, recording: 0 } }), {
+      readOnly: true,
+      username: "ana",
+    });
+
+    await userEvent.click(screen.getByRole("radio", { name: "Índice" }));
+    expect(screen.getAllByRole("columnheader").map((h) => h.textContent)).toEqual(["Título", "Fecha"]);
+    expect(screen.queryByRole("button", { name: /^Acciones de / })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("radio", { name: "Gráfico" }));
+    expect(screen.queryByTestId("audience-pin")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Acciones de / })).not.toBeInTheDocument();
   });
 });

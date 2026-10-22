@@ -69,17 +69,18 @@ describe("FavoriteTile", () => {
     expect(screen.getByRole("link", { name: "Karma Police" })).toHaveAttribute("href", "/song/s1");
   });
 
-  it("modo propio: cambia la audiencia con el selector", async () => {
+  it("modo propio: cambia la audiencia desde el menú de la insignia", async () => {
     const onAudienceChange = vi.fn();
     renderWithIntl(<FavoriteTile favorite={favorite()} onAudienceChange={onAudienceChange} />);
-    await userEvent.selectOptions(screen.getByLabelText("Audiencia"), "public");
+    await userEvent.click(screen.getByRole("button", { name: /Audiencia: Seguidores/ }));
+    await userEvent.click(screen.getByRole("menuitemradio", { name: "Público" }));
     expect(onAudienceChange).toHaveBeenCalledWith(expect.objectContaining({ id: favorite().id }), "public");
   });
 
   it("modo lectura: sin selector de audiencia ni quitar", () => {
     renderWithIntl(<FavoriteTile favorite={favorite()} readOnly />);
-    expect(screen.queryByLabelText("Audiencia")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Quitar favorito" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Audiencia:/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Acciones de / })).not.toBeInTheDocument();
   });
 
   it("modo selección: muestra la casilla y notifica al marcarla", async () => {
