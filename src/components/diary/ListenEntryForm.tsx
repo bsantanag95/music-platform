@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { ReactionPicker } from "./ReactionPicker";
 import { updateListenEntry } from "@/lib/api/diary";
 import { ApiError } from "@/lib/api/client";
+import { DIARY_BODY_MAX } from "@/services/diary/types";
 import type {
   DiaryAudience,
   ListenContext,
@@ -36,6 +37,9 @@ interface ListenEntryFormProps {
   };
   onSaved?: (entry: ListenEntry) => void;
   onCancel?: () => void;
+  // Rótulo del objetivo arriba del panel. El diario propio lo apaga: la fila
+  // ya dice qué es (openspec: redesign-diary-page, D9).
+  showTarget?: boolean;
 }
 
 function formatTargetLabel(target: ListenEntryFormTarget): string {
@@ -46,7 +50,12 @@ function formatTargetLabel(target: ListenEntryFormTarget): string {
 // Panel para ampliar o modificar una entrada del diario: impresión (≤500),
 // contexto, reacción emocional y audiencia. Solo muta la entrada propia;
 // nunca toca la valoración vigente del objetivo.
-export function ListenEntryForm({ entryId, target, initial, onSaved, onCancel }: ListenEntryFormProps) {
+const LISTEN_CONTEXT_OPTIONS = ["first_listen", "relisten", "rediscovery"] as const;
+// Desde este largo el contador se anuncia a lectores de pantalla; antes, solo
+// se ve (anunciar cada tecla sería ruido).
+const BODY_ANNOUNCE_FROM = 450;
+
+export function ListenEntryForm({ entryId, target, initial, onSaved, onCancel, showTarget = true }: ListenEntryFormProps) {
   const t = useTranslations("diary");
   const [listenContext, setListenContext] = useState<ListenContext>(initial.listenContext);
   const [body, setBody] = useState(initial.body ?? "");
@@ -109,35 +118,67 @@ export function ListenEntryForm({ entryId, target, initial, onSaved, onCancel }:
 
   return (
     <div className="flex flex-col gap-3 rounded-md border border-ink-border bg-ink-surface p-4">
-      <p className="truncate font-data text-xs uppercase tracking-wide text-paper-muted">
-        {formatTargetLabel(target)}
-      </p>
+      {showTarget ? (
+        <p className="truncate font-data text-xs uppercase tracking-wide text-paper-muted">
+          {formatTargetLabel(target)}
+        </p>
+      ) : null}
       <div className="flex flex-col gap-1">
         <label className="flex flex-col gap-1">
           <span className="font-data text-sm text-paper">{t("bodyLabel")}</span>
           <textarea
             value={body}
             onChange={(event) => setBody(event.target.value)}
-            maxLength={500}
+            onKeyDown={(event) => {
+              // Ctrl/⌘+Enter guarda sin salir del campo (D9).
+              if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && !busy) {
+                event.preventDefault();
+                void handleSubmit();
+              }
+            }}
+            aria-keyshortcuts="Control+Enter Meta+Enter"
+            maxLength={DIARY_BODY_MAX}
             rows={3}
             className="rounded-md border border-ink-border bg-ink px-3 py-2 font-body text-sm text-paper"
           />
         </label>
-        <span className="font-data text-xs text-paper-muted">{t("bodyMax")}</span>
+        <div className="flex items-baseline justify-between gap-3 font-data text-xs text-paper-muted">
+          <span>{t("saveShortcut")}</span>
+          <span
+            aria-live={body.length >= BODY_ANNOUNCE_FROM ? "polite" : "off"}
+            className={body.length >= BODY_ANNOUNCE_FROM ? "text-amber" : undefined}
+          >
+            {t("characterCount", { count: body.length, max: DIARY_BODY_MAX })}
+          </span>
+        </div>
       </div>
 
-      <label className="flex flex-col gap-1">
-        <span className="font-data text-sm text-paper">{t("contextLabel")}</span>
-        <select
-          value={listenContext}
-          onChange={(event) => setListenContext(event.target.value as ListenContext)}
-          className="rounded-md border border-ink-border bg-ink px-3 py-2 font-data text-sm text-paper"
-        >
-          <option value="first_listen">{t("context.first_listen")}</option>
-          <option value="relisten">{t("context.relisten")}</option>
-          <option value="rediscovery">{t("context.rediscovery")}</option>
-        </select>
-      </label>
+      {/* Contexto con la misma forma que la audiencia: opciones siempre
+          visibles de selección única, no un desplegable (D9). */}
+      <fieldset>
+        <legend className="font-data text-sm text-paper">{t("contextLabel")}</legend>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          {LISTEN_CONTEXT_OPTIONS.map((option) => (
+            <label
+              key={option}
+              className={`inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 font-data text-xs transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-amber ${
+                listenContext === option
+                  ? "border-amber bg-amber/10 text-paper"
+                  : "border-ink-border bg-ink text-paper-muted hover:text-paper"
+              }`}
+            >
+              <input
+                type="radio"
+                name={`context-${entryId}`}
+                className="sr-only"
+                checked={listenContext === option}
+                onChange={() => setListenContext(option as ListenContext)}
+              />
+              {t(`context.${option}`)}
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <ReactionPicker
         name={`reaction-${entryId}`}
@@ -151,7 +192,7 @@ export function ListenEntryForm({ entryId, target, initial, onSaved, onCancel }:
           {(["private", "followers", "public"] as const).map((option) => (
             <label
               key={option}
-              className={`inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 font-data text-xs transition-colors ${
+              className={`inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 font-data text-xs transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-amber ${
                 audience === option
                   ? "border-amber bg-amber/10 text-paper"
                   : "border-ink-border bg-ink text-paper-muted hover:text-paper"
@@ -176,7 +217,7 @@ export function ListenEntryForm({ entryId, target, initial, onSaved, onCancel }:
         </Button>
         {onCancel ? (
           <Button variant="ghost" disabled={busy} onClick={onCancel}>
-            {t("collapse")}
+            {t("cancel")}
           </Button>
         ) : null}
         {errorCode && (

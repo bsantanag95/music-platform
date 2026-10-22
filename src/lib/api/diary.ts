@@ -14,6 +14,7 @@ import {
   type ListenEntry,
   type ListenReaction,
   type ListenTarget,
+  type SocialTargetType,
   type UpdateListenEntryRequest,
 } from "./schemas";
 import { z } from "zod";
@@ -28,6 +29,7 @@ export interface DiaryFiltersParams {
   context?: ListenContext;
   reaction?: ListenReaction | "none";
   audience?: DiaryAudience;
+  type?: SocialTargetType;
   year?: number;
   month?: number;
   // Zona horaria en la que se cuentan año y mes (openspec: redesign-diary-page,
@@ -45,6 +47,7 @@ export function getMyDiary(
   if (filters?.context) params.set("context", filters.context);
   if (filters?.reaction) params.set("reaction", filters.reaction);
   if (filters?.audience) params.set("audience", filters.audience);
+  if (filters?.type) params.set("type", filters.type);
   if (filters?.year) params.set("year", String(filters.year));
   if (filters?.month) params.set("month", String(filters.month));
   if (filters?.timeZone) params.set("tz", filters.timeZone);

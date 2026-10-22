@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, isNotNull, isNull, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import {
   artist,
@@ -84,6 +84,8 @@ export interface DiaryFilters {
   q?: string;
   context?: ListenContext;
   reaction?: ListenReaction | "none";
+  /** Tipo de objetivo (openspec: redesign-diary-page, D6). */
+  type?: SocialTargetType;
   audience?: DiaryAudience;
   year?: number;
   month?: number;
@@ -230,6 +232,10 @@ export async function listMyDiary(
     conditions.push(eq(listenEntry.reaction, filters.reaction));
   }
   if (filters?.audience) conditions.push(eq(listenEntry.audience, filters.audience));
+  if (filters?.type) {
+    // La columna del objetivo no nula dice el tipo (el CHECK garantiza una sola).
+    conditions.push(isNotNull(listenEntry[targetColumns[filters.type]]));
+  }
   if (filters?.year) {
     // Rango [inicio, fin) en la zona horaria del usuario (UTC sin ella): todo
     // el año, o solo el mes elegido dentro de él (con acarreo de año en

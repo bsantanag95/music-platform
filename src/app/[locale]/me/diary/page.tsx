@@ -3,14 +3,22 @@ import { requirePageUser } from "@/services/auth/page-auth";
 import { listMyDiary } from "@/services/diary/diary";
 import { DiaryActivityList } from "@/components/diary/DiaryActivityList";
 import { LogListenButton } from "@/components/diary/LogListenButton";
+import { filtersFromSearchParams, toApiFilters } from "@/components/diary/diary-filters";
 
-export default async function DiaryPage() {
+export default async function DiaryPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const t = await getTranslations("diary");
   const user = await requirePageUser();
   // La página 1 se siembra en la misma zona horaria con la que el cliente
   // agrupa por mes y filtra (openspec: redesign-diary-page, D1).
   const timeZone = await getTimeZone();
-  const initial = await listMyDiary(user.id, 1, 20, { timeZone });
+  // Los filtros de la URL siembran la primera página (D7); los valores
+  // inválidos se ignoran en vez de propagar el 400 de la API.
+  const initialFilters = filtersFromSearchParams(await searchParams);
+  const initial = await listMyDiary(user.id, 1, 20, { ...toApiFilters(initialFilters), timeZone });
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-10 sm:py-12">
@@ -22,7 +30,7 @@ export default async function DiaryPage() {
         </div>
         <LogListenButton />
       </header>
-      <DiaryActivityList initial={initial} />
+      <DiaryActivityList initial={initial} initialFilters={initialFilters} />
     </main>
   );
 }

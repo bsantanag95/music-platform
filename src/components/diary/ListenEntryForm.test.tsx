@@ -62,7 +62,7 @@ describe("ListenEntryForm", () => {
   it("muestra los campos con los valores iniciales", () => {
     renderWithIntl(<ListenEntryForm entryId={entryId} target={target} initial={initial} />);
     expect(screen.getByLabelText(/Impresión/)).toHaveValue("Genial");
-    expect(screen.getByLabelText("Contexto")).toHaveValue("first_listen");
+    expect(screen.getByRole("radio", { name: "Primera escucha" })).toBeChecked();
     expect(screen.getByRole("radio", { name: "Me encantó" })).toBeChecked();
     expect(screen.getByRole("radio", { name: "Seguidores" })).toBeChecked();
   });
@@ -96,7 +96,7 @@ describe("ListenEntryForm", () => {
     mocks.updateListenEntry.mockResolvedValue(saved);
     renderWithIntl(<ListenEntryForm entryId={entryId} target={target} initial={initial} onSaved={onSaved} />);
 
-    await user.selectOptions(screen.getByLabelText("Contexto"), "relisten");
+    await user.click(screen.getByRole("radio", { name: "Repetición" }));
     await user.click(screen.getByRole("radio", { name: "Privado" }));
     await user.click(screen.getByRole("button", { name: "Guardar" }));
 
@@ -200,6 +200,51 @@ describe("ListenEntryForm", () => {
       // y tampoco baja a Privado al vaciarla
       await user.clear(screen.getByLabelText(/Impresión/));
       expect(screen.getByRole("radio", { name: "Seguidores" })).toBeChecked();
+    });
+  });
+
+  describe("presentación del formulario (redesign-diary-page)", () => {
+    it("contexto, reacción y audiencia usan el mismo control: opciones de selección única", () => {
+      renderWithIntl(<ListenEntryForm entryId={entryId} target={target} initial={initial} />);
+      expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+      expect(screen.getByRole("group", { name: "Contexto" })).toBeInTheDocument();
+      expect(screen.getAllByRole("radio", { name: /escucha|Repetición|Redescubrimiento/ })).toHaveLength(3);
+    });
+
+    it("muestra el contador de la impresión y lo anuncia cerca del máximo", async () => {
+      const user = userEvent.setup();
+      renderWithIntl(<ListenEntryForm entryId={entryId} target={target} initial={{ ...initial, body: null }} />);
+      expect(screen.getByText("0/500")).toHaveAttribute("aria-live", "off");
+
+      await user.type(screen.getByLabelText(/Impresión/), "x".repeat(120));
+      expect(screen.getByText("120/500")).toBeInTheDocument();
+
+      await user.click(screen.getByLabelText(/Impresión/));
+      await user.paste("y".repeat(340));
+      expect(screen.getByText("460/500")).toHaveAttribute("aria-live", "polite");
+    });
+
+    it("Ctrl+Enter en la impresión guarda", async () => {
+      const user = userEvent.setup();
+      mocks.updateListenEntry.mockResolvedValue(saved);
+      renderWithIntl(<ListenEntryForm entryId={entryId} target={target} initial={initial} />);
+
+      await user.click(screen.getByLabelText(/Impresión/));
+      await user.keyboard("{Control>}{Enter}{/Control}");
+      await waitFor(() => expect(mocks.updateListenEntry).toHaveBeenCalledTimes(1));
+    });
+
+    it("la acción que descarta se llama Cancelar", async () => {
+      const user = userEvent.setup();
+      const onCancel = vi.fn();
+      renderWithIntl(<ListenEntryForm entryId={entryId} target={target} initial={initial} onCancel={onCancel} />);
+      await user.click(screen.getByRole("button", { name: "Cancelar" }));
+      expect(onCancel).toHaveBeenCalled();
+    });
+
+    it("showTarget={false} omite el rótulo del objetivo", () => {
+      renderWithIntl(<ListenEntryForm entryId={entryId} target={target} initial={initial} showTarget={false} />);
+      expect(screen.queryByText("Radiohead - OK Computer")).not.toBeInTheDocument();
     });
   });
 

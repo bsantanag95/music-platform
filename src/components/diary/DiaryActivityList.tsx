@@ -2,7 +2,7 @@
 
 import { keepPreviousData, useInfiniteQuery, useQuery, useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { useLocale, useTimeZone, useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DiaryDateBlock, ProsePanel, TargetTitle, dayKey, monthKey } from "@/components/feed/feed-row-parts";
 import { targetHref } from "@/components/feed/feed-target";
 import { Link } from "@/i18n/navigation";
@@ -10,9 +10,16 @@ import { AddToListPanel } from "@/components/lists/AddToListPanel";
 import { ListsContainingItemPanel } from "@/components/lists/ListsContainingItemPanel";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FilterSelect } from "@/components/ui/FilterSelect";
 import { RowMenu, RowMenuItem, RowMenuSeparator } from "@/components/ui/RowMenu";
 import { AudienceIcon, DiaryCover } from "./diary-row-parts";
+import { DiaryFilterBar } from "./DiaryFilterBar";
+import {
+  EMPTY_DIARY_FILTERS,
+  filtersToSearchParams,
+  hasActiveFilters,
+  toApiFilters,
+  type DiaryFiltersState,
+} from "./diary-filters";
 import { ListenEntryForm } from "./ListenEntryForm";
 import { LogListenButton } from "./LogListenButton";
 import { ReactionGlyph } from "./ReactionBadge";
@@ -23,23 +30,19 @@ import {
   getMyDiaryMonths,
   highlightListenEntry,
   unhighlightListenEntry,
-  type DiaryFiltersParams,
 } from "@/lib/api/diary";
 import { toggleWantToListen } from "@/lib/api/want-to-listen";
 import { ApiError } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/keys";
-import type {
-  DiaryAudience,
-  DiaryListResponse,
-  ListenContext,
-  ListenEntry,
-  ListenReaction,
-} from "@/lib/api/schemas";
+import type { DiaryListResponse, ListenEntry } from "@/lib/api/schemas";
 
 const PAGE_SIZE = 20;
 
 interface DiaryActivityListProps {
   initial: DiaryListResponse;
+  // Filtros con los que el servidor sembró `initial`, leídos de la URL
+  // (openspec: redesign-diary-page, D7). Sin ellos, el diario completo.
+  initialFilters?: DiaryFiltersState;
   empty?: { title: string; description: string };
 }
 
@@ -91,66 +94,6 @@ function ChevronIcon({ expanded }: { expanded: boolean }) {
   );
 }
 
-// Etiqueta de un mes 1-12 para las opciones del filtro de Mes — mismo
-// mecanismo (`Intl.DateTimeFormat`) que ya usan los encabezados de
-// `groupByMonth`, sin agregar 12 claves de traducción nuevas. El año es
-// arbitrario (2000): solo se usa para construir una fecha válida, `month`
-// no depende de qué año se elija.
-function monthOptionLabel(month: number, locale: string): string {
-  const date = new Date(Date.UTC(2000, month - 1, 1));
-  // `timeZone: "UTC"` es obligatorio acá: la fecha es un vehículo sintético
-  // para extraer "el nombre local del mes N", sin significado horario propio
-  // — formatearla en la zona horaria del navegador puede correr el mes un
-  // día para atrás en usuarios al oeste de UTC (medianoche UTC del día 1 cae
-  // en el último día del mes anterior en su hora local).
-  const label = new Intl.DateTimeFormat(locale, { month: "long", timeZone: "UTC" }).format(date);
-  return label.charAt(0).toUpperCase() + label.slice(1);
-}
-
-// Estado de filtros de la UI: `""` es "sin filtrar" para los tres `<select>`
-// (más simple que `undefined` para el valor controlado de un elemento nativo).
-// `q` es el valor tal cual lo tipea el usuario, sin debounce — `useDiaryFilters`
-// (más abajo) es quien lo recorta a la versión que efectivamente viaja al servidor.
-// `year`/`month` viven como string (valor nativo de un `<select>` controlado),
-// igual que el resto — `month` solo viaja a la API si `year` también está
-// elegido (openspec: add-diary-date-navigation; el selector de Mes ni
-// siquiera ofrece opciones hasta elegir un Año, ver `filterBar`).
-interface DiaryFiltersState {
-  q: string;
-  context: ListenContext | "";
-  reaction: ListenReaction | "none" | "";
-  audience: DiaryAudience | "";
-  year: string;
-  month: string;
-}
-
-const EMPTY_FILTERS: DiaryFiltersState = {
-  q: "",
-  context: "",
-  reaction: "",
-  audience: "",
-  year: "",
-  month: "",
-};
-
-function toApiFilters(filters: DiaryFiltersState): DiaryFiltersParams {
-  const q = filters.q.trim();
-  return {
-    q: q ? q : undefined,
-    context: filters.context || undefined,
-    reaction: filters.reaction || undefined,
-    audience: filters.audience || undefined,
-    year: filters.year ? Number(filters.year) : undefined,
-    month: filters.year && filters.month ? Number(filters.month) : undefined,
-  };
-}
-
-function hasActiveFilters(filters: DiaryFiltersState): boolean {
-  return Boolean(
-    filters.q.trim() || filters.context || filters.reaction || filters.audience || filters.year,
-  );
-}
-
 type DiaryPages = InfiniteData<DiaryListResponse, number>;
 
 // Agrupa las entradas (ya en orden cronológico descendente) por mes calendario
@@ -175,20 +118,21 @@ function groupByMonth(entries: ListenEntry[], locale: string, timeZone: string) 
 
 const TARGET_TYPE_KEY = { artist: "artist", "release-group": "album", recording: "song" } as const;
 
-export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
+export function DiaryActivityList({ initial, initialFilters = EMPTY_DIARY_FILTERS, empty }: DiaryActivityListProps) {
   const t = useTranslations("diary");
   const locale = useLocale();
   const timeZone = useTimeZone() ?? "UTC";
   const queryClient = useQueryClient();
 
-  const [filters, setFilters] = useState<DiaryFiltersState>(EMPTY_FILTERS);
-  const [searchInput, setSearchInput] = useState("");
+  const [filters, setFilters] = useState<DiaryFiltersState>(initialFilters);
+  const [searchInput, setSearchInput] = useState(initialFilters.q);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [addToListEntryId, setAddToListEntryId] = useState<string | null>(null);
   const [showInListsEntryId, setShowInListsEntryId] = useState<string | null>(null);
   const [actionError, setActionError] = useState(false);
+  const [autoLoadStopped, setAutoLoadStopped] = useState(false);
   // Meses colapsados en la Cronología (clave = `monthKey`, la misma que ya usa
   // `groupByMonth`) — puramente en memoria, no persiste ni toca el backend
   // (openspec: add-diary-date-navigation). Todo mes arranca expandido.
@@ -217,6 +161,16 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
     return () => window.clearTimeout(timeout);
   }, [searchInput]);
 
+  // Los filtros viven en la URL (D7) con `replaceState`: sin volver a renderizar
+  // el servidor ni sumar una entrada al historial por cada cambio.
+  useEffect(() => {
+    const current = new URLSearchParams(window.location.search);
+    const next = filtersToSearchParams(filters, current);
+    if (next.toString() === current.toString()) return;
+    const query = next.toString();
+    window.history.replaceState(window.history.state, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
+  }, [filters]);
+
   useEffect(() => {
     if (!savedId) return;
     const timeout = window.setTimeout(() => setSavedId(null), 1500);
@@ -236,6 +190,7 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
   }, [highlightResult]);
 
   const isFiltered = hasActiveFilters(filters);
+  const seededFilters = JSON.stringify(toApiFilters(filters)) === JSON.stringify(toApiFilters(initialFilters));
   // La zona viaja con los filtros (y en la clave de la query): año y mes se
   // cuentan en la misma zona con la que se agrupa por mes (D1).
   const apiFilters = { ...toApiFilters(filters), timeZone };
@@ -246,10 +201,10 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
     queryFn: ({ pageParam }) => getMyDiary(pageParam, PAGE_SIZE, apiFilters),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => (lastPage.hasNext ? lastPage.page + 1 : undefined),
-    // La página 1 sin filtros ya vino resuelta del servidor — no tiene sentido
-    // volver a pedirla apenas se monta. Con filtros activos no hay nada que
-    // sembrar: cada combinación es una serie nueva.
-    initialData: isFiltered ? undefined : () => ({ pages: [initial], pageParams: [1] }),
+    // La página 1 de los filtros de la URL ya vino resuelta del servidor — no
+    // tiene sentido volver a pedirla apenas se monta. Cualquier otra
+    // combinación es una serie nueva, sin nada que sembrar.
+    initialData: seededFilters ? () => ({ pages: [initial], pageParams: [1] }) : undefined,
     staleTime: Infinity,
     // Al cambiar un filtro, sigue mostrando los resultados anteriores hasta que
     // llegan los nuevos en vez de vaciar la lista por un instante.
@@ -267,19 +222,6 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
     staleTime: 60_000,
   });
   const months = useMemo(() => monthsData?.months ?? [], [monthsData]);
-  const availableYears = useMemo(
-    () => Array.from(new Set(months.map((m) => m.year))).sort((a, b) => b - a),
-    [months],
-  );
-  const availableMonthsForYear = useMemo(() => {
-    if (!filters.year) return [];
-    const year = Number(filters.year);
-    return months
-      .filter((m) => m.year === year)
-      .map((m) => m.month)
-      .sort((a, b) => b - a);
-  }, [months, filters.year]);
-
   const toggleMonthCollapsed = (key: string) => {
     setCollapsedMonths((current) => {
       const next = new Set(current);
@@ -437,12 +379,34 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
 
   const handleLoadMore = () => {
     setActionError(false);
+    setAutoLoadStopped(false);
     fetchNextPage().catch(() => setActionError(true));
   };
 
+  // Carga continua (D8). Un error la detiene hasta que se use el botón, para no
+  // reintentar en bucle mientras el centinela sigue a la vista.
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (isError) setAutoLoadStopped(true);
+  }, [isError]);
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !hasNextPage || isFetchingNextPage || autoLoadStopped) return;
+    if (typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      (observed) => {
+        if (!observed.some((item) => item.isIntersecting)) return;
+        fetchNextPage().catch(() => setAutoLoadStopped(true));
+      },
+      { rootMargin: "600px 0px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, autoLoadStopped, fetchNextPage]);
+
   const clearFilters = () => {
     setSearchInput("");
-    setFilters(EMPTY_FILTERS);
+    setFilters(EMPTY_DIARY_FILTERS);
   };
 
   // Una fila del diario, dentro de un grupo de mes de la vista de Cronología.
@@ -583,6 +547,7 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
                 <ListenEntryForm
                   entryId={entry.id}
                   target={entry.target}
+                  showTarget={false}
                   initial={{
                     listenContext: entry.listenContext,
                     body: entry.body,
@@ -605,102 +570,14 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
   };
 
   const filterBar = (
-    // Fila del buscador y fila de filtros son dos bloques `flex-col` separados
-    // a propósito, en vez de un único `flex-wrap`: con todo en una fila, la
-    // aparición de "Limpiar filtros" (solo cuando hay un filtro activo) alcanzaba
-    // a empujar el ancho total más allá del contenedor y todo el cluster de
-    // filtros saltaba debajo del buscador al elegir cualquier opción. Con el
-    // buscador ya siempre arriba, no hay nada de qué "saltar".
-    <div className="flex w-full flex-col gap-2">
-      <input
-        type="search"
-        autoComplete="off"
-        value={searchInput}
-        onChange={(event) => setSearchInput(event.target.value)}
-        placeholder={t("searchPlaceholder")}
-        aria-label={t("searchPlaceholder")}
-        className="w-full rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted"
-      />
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <FilterSelect
-          value={filters.context}
-          onChange={(value) => setFilters((current) => ({ ...current, context: value as ListenContext | "" }))}
-          ariaLabel={t("contextLabel")}
-          widthClassName="w-[19ch]"
-        >
-          <option value="">{t("filterAllContext")}</option>
-          <option value="first_listen">{t("context.first_listen")}</option>
-          <option value="relisten">{t("context.relisten")}</option>
-          <option value="rediscovery">{t("context.rediscovery")}</option>
-        </FilterSelect>
-        <FilterSelect
-          value={filters.reaction}
-          onChange={(value) => setFilters((current) => ({ ...current, reaction: value as ListenReaction | "none" | "" }))}
-          ariaLabel={t("reactionLabel")}
-          widthClassName="w-[15ch]"
-        >
-          <option value="">{t("filterAllReaction")}</option>
-          <option value="liked">{t("reaction.liked")}</option>
-          <option value="loved">{t("reaction.loved")}</option>
-          <option value="obsessed">{t("reaction.obsessed")}</option>
-          <option value="neutral">{t("reaction.neutral")}</option>
-          <option value="disliked">{t("reaction.disliked")}</option>
-          <option value="none">{t("reaction.none")}</option>
-        </FilterSelect>
-        <FilterSelect
-          value={filters.audience}
-          onChange={(value) => setFilters((current) => ({ ...current, audience: value as DiaryAudience | "" }))}
-          ariaLabel={t("audienceLabel")}
-          widthClassName="w-[13ch]"
-        >
-          <option value="">{t("filterAllAudience")}</option>
-          <option value="private">{t("audience.private")}</option>
-          <option value="followers">{t("audience.followers")}</option>
-          <option value="public">{t("audience.public")}</option>
-        </FilterSelect>
-        <FilterSelect
-          value={filters.year}
-          onChange={(value) =>
-            setFilters((current) => {
-              const monthsForYear = months.filter((m) => String(m.year) === value).map((m) => m.month);
-              const monthStillValid = current.month !== "" && monthsForYear.includes(Number(current.month));
-              return { ...current, year: value, month: monthStillValid ? current.month : "" };
-            })
-          }
-          ariaLabel={t("yearLabel")}
-          widthClassName="w-[9ch]"
-        >
-          <option value="">{t("filterAllYear")}</option>
-          {availableYears.map((year) => (
-            <option key={year} value={String(year)}>
-              {year}
-            </option>
-          ))}
-        </FilterSelect>
-        <FilterSelect
-          value={filters.month}
-          onChange={(value) => setFilters((current) => ({ ...current, month: value }))}
-          ariaLabel={t("monthLabel")}
-          widthClassName="w-[11ch]"
-        >
-          <option value="">{t("filterAllMonth")}</option>
-          {availableMonthsForYear.map((month) => (
-            <option key={month} value={String(month)}>
-              {monthOptionLabel(month, locale)}
-            </option>
-          ))}
-        </FilterSelect>
-        {isFiltered && (
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="font-data text-xs text-paper-muted transition-colors hover:text-paper"
-          >
-            {t("clearFilters")}
-          </button>
-        )}
-      </div>
-    </div>
+    <DiaryFilterBar
+      searchInput={searchInput}
+      onSearchChange={setSearchInput}
+      filters={filters}
+      onChange={(next) => setFilters({ ...next, q: filters.q })}
+      onClear={clearFilters}
+      months={months}
+    />
   );
 
   if (entries.length === 0 && !isPending) {
@@ -746,13 +623,15 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
           const collapsed = collapsedMonths.has(group.key);
           return (
             <div key={group.key} className="flex flex-col gap-2">
-              <div className="flex items-center gap-1.5">
+              {/* Encabezado fijo bajo el header global mientras se recorren las
+                  filas del mes (D8); fondo opaco para que no se transparenten. */}
+              <div className="sticky top-16 z-10 -mx-1 flex items-center gap-1 bg-ink px-1 py-0.5">
                 <button
                   type="button"
                   aria-expanded={!collapsed}
                   aria-label={collapsed ? t("expandMonth", { month: group.label }) : t("collapseMonth", { month: group.label })}
                   onClick={() => toggleMonthCollapsed(group.key)}
-                  className="flex size-5 items-center justify-center rounded text-paper-muted transition-colors hover:text-paper"
+                  className="-m-3 flex size-11 items-center justify-center rounded text-paper-muted transition-colors hover:text-paper sm:-m-1.5 sm:size-8"
                 >
                   <ChevronIcon expanded={!collapsed} />
                 </button>
@@ -769,6 +648,9 @@ export function DiaryActivityList({ initial, empty }: DiaryActivityListProps) {
           );
         })}
       </div>
+      {/* Centinela de carga continua (D8): al acercarse al final se pide la
+          página siguiente; «Cargar más» queda como respaldo y para teclado. */}
+      {hasNextPage && !autoLoadStopped && <div ref={sentinelRef} aria-hidden="true" className="h-px" />}
       {hasNextPage && (
         <Button
           variant="secondary"

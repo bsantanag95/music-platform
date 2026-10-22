@@ -549,6 +549,15 @@ describe("servicio del diario", () => {
       expect(params).toEqual(expect.arrayContaining([2026, 12, 2027, 1]));
     });
 
+    it("filtra por tipo de objetivo con la columna no nula del objetivo", async () => {
+      const helper = joinPagedCapturing([entryRow]);
+      mocks.db.select.mockReturnValue(helper);
+      await listMyDiary(user, 1, 20, { type: "recording" });
+
+      const { sql } = dialect.sqlToQuery(helper.where.mock.calls[0]![0]);
+      expect(sql).toMatch(/"recording_id" is not null/i);
+    });
+
     it("cuenta el año y el mes en la zona horaria pedida", async () => {
       const helper = joinPagedCapturing([entryRow]);
       mocks.db.select.mockReturnValue(helper);

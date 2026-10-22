@@ -27,21 +27,21 @@
 
 ## 3. Fase 2 · Filtros, URL y navegación
 
-- [ ] 3.1 API y servicio: filtro `type` (`artist` | `release-group` | `recording`), validado contra su vocabulario (D6)
-- [ ] 3.2 Barra compacta: buscador y botón «Filtros · N» con panel de chips (Reacción, Contexto, Audiencia, Tipo) y el control único Fecha con `optgroup` por año (D6)
-- [ ] 3.3 Chips de filtros activos con «×» y «Limpiar filtros» bajo el buscador (D6)
-- [ ] 3.4 Filtros en la URL con `replaceState`; `page.tsx` lee `searchParams`, ignora valores inválidos y siembra la página 1 filtrada; `initialData` solo si coinciden (D7)
-- [ ] 3.5 Encabezado de mes `sticky` con fondo opaco y control de colapso de 44px en móvil (D8)
-- [ ] 3.6 Carga continua con `IntersectionObserver` (`rootMargin` 600px), «Cargar más» como respaldo; un error detiene la carga automática (D8)
-- [ ] 3.7 Tests: `type` en ruta y servicio, panel y conteo de filtros, chips activos, URL (lectura, escritura sin historial, valor inválido), observador (dispara, se detiene tras error)
+- [x] 3.1 API y servicio: filtro `type` (`artist` | `release-group` | `recording`), validado contra su vocabulario (D6)
+- [x] 3.2 Barra compacta: buscador y botón «Filtros · N» con panel de chips (Reacción, Contexto, Audiencia, Tipo) y el control único Fecha con `optgroup` por año (D6)
+- [x] 3.3 Chips de filtros activos con «×» y «Limpiar filtros» bajo el buscador (D6)
+- [x] 3.4 Filtros en la URL con `replaceState`; `page.tsx` lee `searchParams`, ignora valores inválidos y siembra la página 1 filtrada; `initialData` solo si coinciden (D7)
+- [x] 3.5 Encabezado de mes `sticky` con fondo opaco y control de colapso de 44px en móvil (D8)
+- [x] 3.6 Carga continua con `IntersectionObserver` (`rootMargin` 600px), «Cargar más» como respaldo; un error detiene la carga automática (D8)
+- [x] 3.7 Tests: `type` en ruta y servicio, panel y conteo de filtros, chips activos, URL (lectura, escritura sin historial, valor inválido), observador (dispara, se detiene tras error)
 
 ## 4. Fase 2 · Formulario de ampliar
 
-- [ ] 4.1 Contexto como chips de radio con la misma forma que audiencia (D9)
-- [ ] 4.2 Contador «N/500» (`aria-live` desde 450) y Ctrl/⌘+Enter para guardar (D9)
-- [ ] 4.3 «Cancelar» en lugar de «Cerrar» (clave nueva `cancel`) (D9)
-- [ ] 4.4 Prop `showTarget` (por defecto `true`); el diario pasa `false` (D9)
-- [ ] 4.5 Tests: `ListenEntryForm` (chips de contexto, contador, atajo, rótulo, `showTarget`), sin regresión en registro global y Recorrido
+- [x] 4.1 Contexto como chips de radio con la misma forma que audiencia (D9)
+- [x] 4.2 Contador «N/500» (`aria-live` desde 450) y Ctrl/⌘+Enter para guardar (D9)
+- [x] 4.3 «Cancelar» en lugar de «Cerrar» (clave nueva `cancel`) (D9)
+- [x] 4.4 Prop `showTarget` (por defecto `true`); el diario pasa `false` (D9)
+- [x] 4.5 Tests: `ListenEntryForm` (chips de contexto, contador, atajo, rótulo, `showTarget`), sin regresión en registro global y Recorrido
 
 ## 5. Fase 3 · Riel de contexto
 
