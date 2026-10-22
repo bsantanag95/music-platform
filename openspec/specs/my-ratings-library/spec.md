@@ -151,26 +151,28 @@ y el contador de su tipo.
 
 #### Scenario: Afinar desde la pared
 - **WHEN** la persona abre el diálogo desde una carátula del modo Gráfico y guarda 76
-- **THEN** el overlay de esa carátula muestra `76/100`, sin cambiar de posición
+- **THEN** la leyenda de esa carátula muestra el puntaje 76, sin cambiar de posición
 
 #### Scenario: Borrar desde la fila
 - **WHEN** la persona confirma "Borrar nota" desde el diálogo de una fila
 - **THEN** la fila desaparece y el total baja en uno
 
 ### Requirement: Marca "Sin afinar"
-Las entradas sin puntaje detallado SHALL mostrar en lugar de `86/100` una marca atenuada "Sin
-afinar" que a la vez SHALL ser la acción que abre el diálogo de puntaje, en los modos Detallada
-e Índice y en el overlay del modo Gráfico. La marca SHALL existir solo en esta página.
+Las entradas sin puntaje detallado SHALL mostrar en lugar de `86/100` un guion atenuado `—` con la ayuda "Sin
+afinar" y el nombre accesible "Afinar puntaje", que a la vez SHALL ser la acción que abre el diálogo de
+puntaje, en los modos Detallada, Índice y Gráfico. La frase "Sin afinar" NO SHALL repetirse como texto visible
+en cada entrada, y SHALL seguir en la etiqueta accesible del enlace de la carátula del modo Gráfico. La marca
+SHALL existir solo en esta página.
 
 #### Scenario: Fila sin puntaje
 - **WHEN** una valoración de 4 estrellas no tiene puntaje detallado
-- **THEN** su fila muestra las estrellas y "Sin afinar", y al activarla se abre el diálogo de
-  puntaje
+- **THEN** su fila muestra las estrellas y un guion con la ayuda "Sin afinar", y al activarlo se abre el
+  diálogo de puntaje
 
 #### Scenario: Carátula sin puntaje
-- **WHEN** esa misma valoración se ve en el modo Gráfico y se pasa el cursor sobre la carátula
-- **THEN** el overlay muestra las estrellas y "Sin afinar", y al activarla se abre el diálogo de
-  puntaje
+- **WHEN** esa misma valoración se ve en el modo Gráfico
+- **THEN** la leyenda muestra las estrellas y un guion con la ayuda "Sin afinar", y al activarlo se abre el
+  diálogo de puntaje
 
 ### Requirement: Accesos a la biblioteca
 El menú de usuario (escritorio y panel móvil) SHALL ofrecer el acceso "Valoraciones"
