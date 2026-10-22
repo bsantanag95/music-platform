@@ -1445,6 +1445,9 @@ export const ListenEntrySchema = z.object({
   // puebla el diario (mismo criterio que `artistName`/`albumId` más arriba,
   // que solo puebla el feed) — el feed no participa de este concepto.
   isHighlighted: z.boolean().optional(),
+  // Si el objetivo está en Want to Listen del dueño (openspec: redesign-diary-page,
+  // D4) — rotula la opción del menú de la fila. Solo lo puebla el diario propio.
+  inWantToListen: z.boolean().optional(),
 });
 export type ListenEntry = z.infer<typeof ListenEntrySchema>;
 

@@ -108,6 +108,9 @@ describe("diario API (GET/POST)", () => {
     ["month", "0"],
     ["month", "13"],
     ["month", "abc"],
+    ["tz", "Marte%2FBase"],
+    ["type", "playlist"],
+    ["tz", "%2B03%3A00"],
   ])("GET rechaza %s=%s con VALIDATION_ERROR", async (parameter, value) => {
     const request = new NextRequest(`http://localhost/api/me/diary?${parameter}=${value}`);
     const response = await GET(request);
@@ -126,6 +129,29 @@ describe("diario API (GET/POST)", () => {
       1,
       20,
       expect.objectContaining({ year: 2026, month: 9 }),
+    );
+  });
+
+  it("GET filtra por tipo de objetivo", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    mocks.listMyDiary.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
+    const response = await GET(new NextRequest("http://localhost/api/me/diary?type=recording"));
+    expect(response.status).toBe(200);
+    expect(mocks.listMyDiary).toHaveBeenCalledWith(user.id, 1, 20, expect.objectContaining({ type: "recording" }));
+  });
+
+  it("GET pasa la zona horaria de tz junto al año y el mes", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    mocks.listMyDiary.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
+    const response = await GET(
+      new NextRequest("http://localhost/api/me/diary?year=2026&month=9&tz=America%2FSantiago"),
+    );
+    expect(response.status).toBe(200);
+    expect(mocks.listMyDiary).toHaveBeenCalledWith(
+      user.id,
+      1,
+      20,
+      expect.objectContaining({ year: 2026, month: 9, timeZone: "America/Santiago" }),
     );
   });
 

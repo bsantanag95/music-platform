@@ -1,6 +1,6 @@
 "use client";
 
-import { useFormatter, useLocale, useNow, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useNow, useTimeZone, useTranslations } from "next-intl";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "@/i18n/navigation";
 
@@ -186,19 +186,38 @@ export function RelativeDate({ iso, className = "" }: { iso: string; className?:
   );
 }
 
+// Partes de la fecha calendario de un instante en una zona horaria concreta
+// (openspec: redesign-diary-page, D1): el diario agrupa y muestra el día en la
+// zona del usuario (`useTimeZone()`), la misma con la que la API filtra por
+// año y mes — no en la del proceso que renderiza, que en el servidor es otra.
+const calendarFormatters = new Map<string, Intl.DateTimeFormat>();
+
+function calendarParts(date: Date, timeZone?: string): { year: number; month: number; day: number } {
+  const key = timeZone ?? "";
+  let formatter = calendarFormatters.get(key);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric", month: "numeric", day: "numeric" });
+    calendarFormatters.set(key, formatter);
+  }
+  const parts = Object.fromEntries(formatter.formatToParts(date).map((part) => [part.type, part.value]));
+  return { year: Number(parts.year), month: Number(parts.month), day: Number(parts.day) };
+}
+
 // Clave de mes calendario (`${año}-${mes}`), usada por `groupByMonth` para los
 // encabezados de mes de la vista de Cronología del diario propio (única vista
 // del diario — openspec: redesign-diary-row).
-export function monthKey(date: Date): string {
-  return `${date.getFullYear()}-${date.getMonth()}`;
+export function monthKey(date: Date, timeZone?: string): string {
+  const { year, month } = calendarParts(date, timeZone);
+  return `${year}-${month}`;
 }
 
 // Clave de día calendario (`${año}-${mes}-${día}`), usada por `DiaryDateBlock`
 // para no repetir el número de día en escuchas consecutivas del mismo día
 // (openspec: redesign-diary-row) — el encabezado de mes ya agrupa por mes, así
 // que el día es lo único que puede repetirse fila a fila.
-export function dayKey(date: Date): string {
-  return `${monthKey(date)}-${date.getDate()}`;
+export function dayKey(date: Date, timeZone?: string): string {
+  const { year, month, day } = calendarParts(date, timeZone);
+  return `${year}-${month}-${day}`;
 }
 
 // Bloque de fecha del diario propio (openspec: redesign-diary-row): reemplaza
@@ -210,23 +229,36 @@ export function dayKey(date: Date): string {
 // no correr el resto de la fila, pero queda visualmente en blanco. La fecha
 // completa y la relativa están siempre disponibles como valor accesible
 // (`aria-label`) y como texto al pasar el mouse (`title`), en cada fila,
-// aunque el día no se muestre.
-export function DiaryDateBlock({ iso, showDay }: { iso: string; showDay: boolean }) {
+// aunque el día no se muestre. `weekday` suma debajo el día de la semana
+// abreviado (openspec: redesign-diary-page, D3). Todo en la zona horaria del
+// usuario (`useTimeZone()`).
+export function DiaryDateBlock({ iso, showDay, weekday = false }: { iso: string; showDay: boolean; weekday?: boolean }) {
   const format = useFormatter();
   const locale = useLocale();
   const now = useNow();
+  const timeZone = useTimeZone();
   const date = new Date(iso);
   const relativeLabel = format.relativeTime(date, now);
-  const absoluteLabel = date.toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+  const absoluteLabel = date.toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric", timeZone });
+  const weekdayLabel = date.toLocaleDateString(locale, { weekday: "short", timeZone }).replace(/\.$/, "");
 
   return (
     <time
       dateTime={iso}
       title={relativeLabel}
       aria-label={`${absoluteLabel} · ${relativeLabel}`}
-      className="flex w-6 shrink-0 items-start justify-center font-display text-base text-paper"
+      className="flex shrink-0 flex-col items-center font-display text-base leading-tight text-paper"
     >
-      {showDay ? date.getDate() : null}
+      {showDay ? (
+        <>
+          <span aria-hidden="true">{calendarParts(date, timeZone).day}</span>
+          {weekday ? (
+            <span aria-hidden="true" className="font-data text-[11px] text-paper-muted">
+              {weekdayLabel}
+            </span>
+          ) : null}
+        </>
+      ) : null}
     </time>
   );
 }

@@ -1007,8 +1007,11 @@ visibilidad propias documentadas más abajo.
 ### `POST /api/me/diary`
 
 Registra una escucha con un solo gesto. El servidor infiere el contexto (`first_listen` en la
-primera escucha del usuario sobre el objetivo, `relisten` en adelante) y aplica la audiencia por
-defecto `followers`. La entrada se crea sin impresión ni reacción; se completan luego con `PATCH`.
+primera escucha del usuario sobre el objetivo, `relisten` en adelante). La entrada nace `private`
+(un registro rápido no expresa intención de compartir, `deepen-listening-diary`), salvo que el usuario
+haya elegido otra audiencia por defecto para el contenido nuevo (`default-audience`). Se crea sin
+impresión ni reacción; se completan luego con `PATCH`. Si el objetivo estaba en Want to Listen, sale
+de ahí.
 
 **Body:** `{ target: { type: "artist" | "release-group" | "recording", id } }`.
 **201 OK:** `{ entry }` con `{ id, listenContext, body, reaction, audience, createdAt, target }`.
@@ -1030,21 +1033,47 @@ usa `POST /api/me/diary`, no este endpoint.
 **401** con `AUTH_REQUIRED` sin sesión. Idempotente: si el usuario ya está onboardeado,
 responde `200` con el estado vigente sin volver a crear favoritos.
 
-### `GET /api/me/diary?page=&pageSize=&q=&context=&reaction=&audience=`
+### `GET /api/me/diary?page=&pageSize=&q=&context=&reaction=&audience=&type=&year=&month=&tz=`
 
 Lista paginada del diario propio en orden cronológico descendente. Cada entrada expone su objetivo
-con `{ type, id, title, subtitle, coverThumbUrl }`.
+con `{ type, id, title, subtitle, artistId, coverThumbUrl }`, `isHighlighted` e `inWantToListen`.
 
-Los cuatro últimos params son opcionales, combinables entre sí y aditivos (sin ellos, el
-comportamiento es idéntico al de antes de este cambio): `q` busca coincidencia parcial
-(case-insensitive) sobre el título del objetivo (artista, álbum o canción); `context` filtra por
-`listenContext` (`first_listen` | `relisten` | `rediscovery`); `reaction` filtra por reacción
-(`liked` | `loved` | `obsessed` | `neutral` | `disliked`, o el valor especial `none` para las
-entradas sin reacción); `audience` filtra por audiencia (`private` | `followers` | `public`).
+- `coverThumbUrl` depende del tipo (`redesign-diary-page`): la carátula del álbum; para una canción,
+  la carátula de un álbum que la contiene; para un artista, su foto. `null` si no hay imagen.
+- `inWantToListen` dice si el objetivo está en Want to Listen del propio usuario (siempre `false`
+  para canciones). Solo lo trae esta lectura y las respuestas de las mutaciones propias; el diario
+  de un perfil (`GET /api/users/[username]/diary`) no lo expone.
+
+Todos los filtros son opcionales y combinables:
+
+- `q`: coincidencia parcial (case-insensitive) sobre el título del objetivo o el artista acreditado
+  como principal de un álbum o canción.
+- `context`: `first_listen` | `relisten` | `rediscovery`.
+- `reaction`: `liked` | `loved` | `obsessed` | `neutral` | `disliked`, o `none` para las entradas
+  sin reacción (distinto de `neutral`).
+- `audience`: `private` | `followers` | `public`.
+- `type`: `artist` | `release-group` | `recording` (`redesign-diary-page`).
+- `year` (1900–9999) y `month` (1–12): año calendario, o un mes de ese año. `month` sin `year` es
+  inválido.
+- `tz`: zona horaria IANA (`America/Santiago`) en la que se cuentan `year` y `month`. Sin ella, UTC.
+  La interfaz envía la del usuario (cookie `tz`, ver `02-architecture/i18n.md`), la misma con la que
+  agrupa por mes.
 
 **200 OK:** `{ entries: [ListenEntry], page, pageSize, hasNext }`. **400** con `VALIDATION_ERROR`
-si la paginación es inválida, o si `context`/`reaction`/`audience` traen un valor fuera de su
-vocabulario cerrado.
+si la paginación es inválida, si `context`/`reaction`/`audience`/`type` traen un valor fuera de su
+vocabulario cerrado, si `year`/`month` están fuera de rango, si llega `month` sin `year` o si `tz` no
+es una zona IANA con nombre (los desplazamientos sueltos como `+03:00` se rechazan). **401** con
+`AUTH_REQUIRED` sin sesión.
+
+### `GET /api/me/diary/months?tz=`
+
+Pares año/mes calendario en los que el usuario tiene al menos una escucha, del más reciente al más
+antiguo, contados en la zona `tz` (UTC sin ella). Pueblan el control de Fecha y el riel «Ir a» de
+`/me/diary`. **Sin conteos**: la respuesta nunca dice cuántas escuchas hay por mes (spec
+`listen-diary`).
+
+**200 OK:** `{ months: [{ year, month }] }`. **400** con `VALIDATION_ERROR` si `tz` no es válida.
+**401** con `AUTH_REQUIRED` sin sesión.
 
 ### `PATCH /api/me/diary/{id}`
 

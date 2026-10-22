@@ -111,7 +111,7 @@ export function RowMenuItem({ onSelect, danger = false, children }: RowMenuItemP
           ctx?.close();
           onSelect();
         }}
-        className={`w-full px-3 py-1.5 text-left leading-relaxed transition-colors hover:bg-ink ${
+        className={`w-full whitespace-nowrap px-3 py-1.5 text-left leading-relaxed transition-colors hover:bg-ink ${
           danger ? "text-danger" : "text-paper"
         }`}
       >
@@ -119,4 +119,11 @@ export function RowMenuItem({ onSelect, danger = false, children }: RowMenuItemP
       </button>
     </li>
   );
+}
+
+// Separador entre grupos de opciones (openspec: redesign-diary-page, D4): por
+// ejemplo, para apartar «Eliminar» del resto. Decorativo para el lector de
+// pantalla: `role="separator"` dentro de un `menu` es válido y no recibe foco.
+export function RowMenuSeparator() {
+  return <li role="separator" className="my-1 border-t border-ink-border" />;
 }

@@ -15,7 +15,9 @@ vi.mock("@/i18n/navigation", () => ({
     </a>
   ),
 }));
-vi.mock("@/components/catalog/CoverThumb", () => ({ CoverThumb: () => <span data-testid="cover" /> }));
+vi.mock("@/components/catalog/CoverThumb", () => ({
+  CoverThumb: ({ cover }: { cover: string | null }) => <span data-testid="cover" data-cover={cover ?? ""} />,
+}));
 vi.mock("@/lib/api/diary", () => ({ getUserDiary: mocks.getUserDiary }));
 
 let seq = 0;
@@ -55,6 +57,24 @@ describe("DiaryReadList", () => {
     expect(screen.getByRole("link", { name: "Álbum 1" })).toHaveAttribute("href", "/album/rg1");
     expect(screen.getByRole("link", { name: "Artista 2" })).toHaveAttribute("href", "/artist/a2");
     expect(screen.getAllByText("Primera escucha")).toHaveLength(2);
+  });
+
+  it("usa la imagen según el tipo: foto redonda para artistas, carátula del álbum para canciones", () => {
+    const { container } = renderWithIntl(
+      <DiaryReadList
+        initial={response([
+          entry({ target: { type: "artist", id: "ar", title: "Ratt", subtitle: null, artistId: null, coverThumbUrl: "https://x/ratt.webp" } }),
+          entry({ target: { type: "recording", id: "rc", title: "Taste", subtitle: null, artistId: null, coverThumbUrl: "https://x/album.webp" } }),
+        ])}
+        username="ana"
+      />,
+    );
+    expect(screen.getAllByTestId("cover").map((node) => node.getAttribute("data-cover"))).toEqual([
+      "https://x/ratt.webp",
+      "https://x/album.webp",
+    ]);
+    const shapes = Array.from(container.querySelectorAll("[data-cover-shape]")).map((node) => node.getAttribute("data-cover-shape"));
+    expect(shapes).toEqual(["round", "square"]);
   });
 
   it("muestra la nota como cita, y no muestra controles de gestión", () => {

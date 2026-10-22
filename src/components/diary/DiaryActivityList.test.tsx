@@ -1,11 +1,13 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { NextIntlClientProvider } from "next-intl";
 import type { ReactElement } from "react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { artistHref } from "@/lib/catalog-links";
 import { DiaryActivityList } from "./DiaryActivityList";
+import { EMPTY_DIARY_FILTERS } from "./diary-filters";
 import type { DiaryListResponse, ListenEntry } from "@/lib/api/schemas";
 
 const mocks = vi.hoisted(() => {
@@ -65,7 +67,8 @@ vi.mock("@/lib/api/want-to-listen", () => ({
 }));
 vi.mock("@/lib/api/client", () => ({ ApiError: mocks.ApiError }));
 
-const NO_FILTERS = { q: undefined, context: undefined, reaction: undefined, audience: undefined };
+// Sin `timeZone` en el proveedor de pruebas, el diario usa UTC (openspec: redesign-diary-page, D1).
+const NO_FILTERS = { q: undefined, context: undefined, reaction: undefined, audience: undefined, timeZone: "UTC" };
 
 function renderWithQuery(ui: ReactElement) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -190,33 +193,79 @@ describe("DiaryActivityList", () => {
     expect(quote.className).not.toMatch(/rounded/);
   });
 
-  it("la reacción se muestra como ícono en el cluster de acciones, junto a audiencia, con el nombre accesible", () => {
+  it("la reacción va junto al título, en ámbar, con el nombre accesible", () => {
     renderWithQuery(<DiaryActivityList initial={initial} />);
     const likedRow = screen.getByText("Pink Floyd").closest("li") as HTMLElement;
     const glyph = within(likedRow).getByRole("img", { name: "Me gustó" });
-    expect(glyph).toBeInTheDocument();
-    // vive en el mismo cluster que audiencia/editar/menú, no junto al título
-    const actionsCluster = within(likedRow).getByText("Seguidores").closest("span.shrink-0");
-    expect(actionsCluster?.contains(glyph)).toBe(true);
+    expect(glyph).toHaveAttribute("title", "Me gustó");
+    expect(glyph.className).toMatch(/text-amber/);
+    // comparte la línea del título, no la columna de acciones
+    const titleLine = within(likedRow).getByRole("link", { name: "Pink Floyd" }).closest("div");
+    expect(titleLine?.contains(glyph)).toBe(true);
   });
 
-  it("sin reacción, el slot se reserva igual — no desaparece, solo queda vacío y decorativo", () => {
+  it("sin reacción no se dibuja ningún ícono y las acciones no cambian de columna", () => {
     const withReaction = { ...liked, id: "r1" };
     const withoutReaction = plainListen("l1", "Sin reacción");
-    const { container } = renderWithQuery(
+    renderWithQuery(
       <DiaryActivityList initial={{ entries: [withReaction, withoutReaction], page: 1, pageSize: 20, hasNext: false }} />,
     );
-
-    // un slot de ancho fijo por fila, exista o no la reacción
-    const slots = container.querySelectorAll('span[class*="w-5"][class*="shrink-0"]');
-    expect(slots).toHaveLength(2);
-
     const rowWithout = screen.getByRole("link", { name: "Sin reacción" }).closest("li") as HTMLElement;
-    expect(within(rowWithout).queryByRole("img")).toBeNull();
-    const emptySlot = rowWithout.querySelector('span[class*="w-5"][class*="shrink-0"]');
-    expect(emptySlot).not.toBeNull();
-    expect(emptySlot).toHaveAttribute("aria-hidden", "true");
-    expect(emptySlot?.textContent).toBe("");
+    expect(within(rowWithout).queryByRole("img", { name: /Me gustó|Me encantó|Obsesión|Neutro|No me gustó/ })).toBeNull();
+    // las acciones viven en su propia columna de la grilla en ambas filas
+    for (const row of screen.getAllByRole("listitem")) {
+      const grid = row.firstElementChild as HTMLElement;
+      expect(grid.className).toMatch(/grid-cols-\[/);
+      const edit = within(row).getByRole("button", { name: "Editar" });
+      expect(edit.parentElement?.parentElement).toBe(grid);
+    }
+  });
+
+  it("la línea secundaria dice artista, tipo y contexto; la audiencia es un ícono con nombre accesible", () => {
+    renderWithQuery(
+      <DiaryActivityList
+        initial={{ entries: [albumWithCreditedArtist, plainListen("s1", "Taste")], page: 1, pageSize: 20, hasNext: false }}
+      />,
+    );
+    const albumRow = screen.getByRole("link", { name: "In Rainbows" }).closest("li") as HTMLElement;
+    expect(within(albumRow).getByText("Álbum")).toBeInTheDocument();
+    expect(within(albumRow).getByText("Primera escucha")).toBeInTheDocument();
+    expect(within(albumRow).getByRole("img", { name: "Público" })).toBeInTheDocument();
+    // la audiencia ya no se escribe como texto visible
+    expect(within(albumRow).queryByText("Público")).toBeNull();
+    const songRow = screen.getByRole("link", { name: "Taste" }).closest("li") as HTMLElement;
+    expect(within(songRow).getByText("Canción")).toBeInTheDocument();
+  });
+
+  it("muestra el día y el día de la semana, en la zona horaria del usuario", () => {
+    const { container } = renderWithQuery(<DiaryActivityList initial={initial} />);
+    const time = container.querySelector(`time[datetime="${liked.createdAt}"]`) as HTMLElement;
+    // 15 de enero de 2026 (UTC) fue jueves
+    expect(time.textContent).toBe("15jue");
+  });
+
+  it("agrupa por mes y pide los filtros en la zona horaria del usuario", async () => {
+    // 01:00 UTC del 1 de octubre = 22:00 del 30 de septiembre en Santiago.
+    const lateNight = plainListen("tz1", "Fin de mes", "2026-10-01T01:00:00.000Z");
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const { container } = renderWithIntl(
+      <NextIntlClientProvider locale="es" timeZone="America/Santiago">
+        <QueryClientProvider client={queryClient}>
+          <DiaryActivityList initial={{ entries: [lateNight], page: 1, pageSize: 20, hasNext: false }} />
+        </QueryClientProvider>
+      </NextIntlClientProvider>,
+    );
+    expect(screen.getByRole("heading", { name: /septiembre de 2026/i })).toBeInTheDocument();
+    expect(container.querySelector("time")?.textContent).toBe("30mié");
+    await waitFor(() => expect(mocks.getMyDiaryMonths).toHaveBeenCalledWith("America/Santiago"));
+  });
+
+  it("los artistas usan una carátula redonda; álbumes y canciones, cuadrada", () => {
+    const { container } = renderWithQuery(<DiaryActivityList initial={initial} />);
+    const shapes = Array.from(container.querySelectorAll("[data-cover-shape]")).map((node) =>
+      node.getAttribute("data-cover-shape"),
+    );
+    expect(shapes).toEqual(["round", "square"]);
   });
 
   it("editar es un ícono siempre visible con nombre accesible 'Editar'", () => {
@@ -338,10 +387,10 @@ describe("DiaryActivityList", () => {
     await user.click(screen.getByRole("menuitem", { name: "Eliminar" }));
 
     const warning = within(firstRow).getByRole("alert");
-    const dateCluster = within(firstRow).getByText("Seguidores").closest("span.shrink-0");
-    // el aviso ya no es hijo del cluster shrink-0 (audiencia/editar/menú) — por
-    // eso no se sale del ancho de la fila cuando el texto es largo.
-    expect(dateCluster?.contains(warning)).toBe(false);
+    const actions = within(firstRow).getByRole("button", { name: "Editar" }).parentElement;
+    // el aviso no vive en la columna de acciones — por eso no se sale del ancho
+    // de la fila cuando el texto es largo.
+    expect(actions?.contains(warning)).toBe(false);
     expect(warning.closest("div")?.className).toMatch(/flex-wrap/);
   });
 
@@ -366,9 +415,9 @@ describe("DiaryActivityList", () => {
     await waitFor(() =>
       expect(mocks.createListenEntry).toHaveBeenCalledWith({ type: "artist", id: liked.target.id }),
     );
-    // dos filas con el mismo objetivo ahora (la nueva + la original), más la
-    // etiqueta de contexto del panel de ampliación recién abierto
-    await waitFor(() => expect(screen.getAllByText("Pink Floyd")).toHaveLength(3));
+    // dos filas con el mismo objetivo ahora (la nueva + la original); el panel
+    // de ampliación ya no repite el nombre dentro del diario (redesign-diary-page, D9)
+    await waitFor(() => expect(screen.getAllByText("Pink Floyd")).toHaveLength(2));
     // el formulario de ampliación de la nueva entrada ya está abierto
     expect(screen.getByLabelText(/Impresión/)).toBeInTheDocument();
   });
@@ -430,6 +479,34 @@ describe("DiaryActivityList", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Se quitó de tus Pendientes");
   });
 
+  it("el menú refleja si el objetivo ya está en Pendientes y se actualiza al alternar", async () => {
+    const user = userEvent.setup();
+    mocks.toggleWantToListen.mockResolvedValue(null);
+    const wanted = { ...liked, inWantToListen: true };
+    renderWithQuery(<DiaryActivityList initial={{ entries: [wanted, neutral], page: 1, pageSize: 20, hasNext: false }} />);
+
+    const firstRow = screen.getByText("Pink Floyd").closest("li") as HTMLElement;
+    await openRowMenu(user, firstRow);
+    expect(screen.queryByRole("menuitem", { name: "Marcar como pendiente" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("menuitem", { name: "Quitar de Pendientes" }));
+    await waitFor(() => expect(mocks.toggleWantToListen).toHaveBeenCalled());
+
+    await openRowMenu(user, firstRow);
+    expect(screen.getByRole("menuitem", { name: "Marcar como pendiente" })).toBeInTheDocument();
+  });
+
+  it("las opciones del menú no se parten y «Eliminar» va tras un separador", async () => {
+    const user = userEvent.setup();
+    renderWithQuery(<DiaryActivityList initial={initial} />);
+    const firstRow = screen.getByText("Pink Floyd").closest("li") as HTMLElement;
+    await openRowMenu(user, firstRow);
+
+    const items = screen.getAllByRole("menuitem");
+    for (const item of items) expect(item.className).toMatch(/whitespace-nowrap/);
+    const remove = screen.getByRole("menuitem", { name: "Eliminar" });
+    expect(remove.parentElement?.previousElementSibling).toHaveAttribute("role", "separator");
+  });
+
   it("no ofrece quiero volver a escuchar para una canción", async () => {
     const user = userEvent.setup();
     const song = plainListen("song-1", "Vogue (version 2)");
@@ -485,6 +562,63 @@ describe("DiaryActivityList", () => {
     expect(screen.queryByRole("button", { name: "Cargar más" })).not.toBeInTheDocument();
   });
 
+  it("el diario vacío ofrece anotar una escucha", () => {
+    renderWithQuery(<DiaryActivityList initial={{ entries: [], page: 1, pageSize: 20, hasNext: false }} />);
+    expect(screen.getByRole("button", { name: "Anotar escucha" })).toBeInTheDocument();
+  });
+
+  describe("carga continua (redesign-diary-page, D8)", () => {
+    let observerCallback: IntersectionObserverCallback | null = null;
+    beforeEach(() => {
+      observerCallback = null;
+      vi.stubGlobal(
+        "IntersectionObserver",
+        class {
+          constructor(callback: IntersectionObserverCallback) {
+            observerCallback = callback;
+          }
+          observe() {}
+          disconnect() {}
+        },
+      );
+    });
+    afterEach(() => vi.unstubAllGlobals());
+
+    const intersect = () =>
+      observerCallback?.([{ isIntersecting: true } as IntersectionObserverEntry], {} as IntersectionObserver);
+
+    it("pide la página siguiente al acercarse al final, sin pulsar nada", async () => {
+      mocks.getMyDiary.mockResolvedValue({ entries: [neutral], page: 2, pageSize: 20, hasNext: false });
+      renderWithQuery(<DiaryActivityList initial={initial} />);
+      expect(screen.getByRole("button", { name: "Cargar más" })).toBeInTheDocument();
+
+      await waitFor(() => expect(observerCallback).not.toBeNull());
+      intersect();
+      await waitFor(() => expect(mocks.getMyDiary).toHaveBeenCalledWith(2, 20, NO_FILTERS));
+      await waitFor(() => expect(screen.queryByRole("button", { name: "Cargar más" })).not.toBeInTheDocument());
+    });
+
+    it("un error detiene la carga automática hasta usar el botón", async () => {
+      const user = userEvent.setup();
+      mocks.getMyDiary.mockRejectedValueOnce(new Error("red"));
+      renderWithQuery(<DiaryActivityList initial={initial} />);
+
+      await waitFor(() => expect(observerCallback).not.toBeNull());
+      intersect();
+      await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
+      const callsAfterError = mocks.getMyDiary.mock.calls.length;
+      observerCallback = null;
+      // sin centinela tras el error: el observador no vuelve a montarse solo
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(observerCallback).toBeNull();
+      expect(mocks.getMyDiary.mock.calls.length).toBe(callsAfterError);
+
+      mocks.getMyDiary.mockResolvedValue({ entries: [neutral], page: 2, pageSize: 20, hasNext: false });
+      await user.click(screen.getByRole("button", { name: "Cargar más" }));
+      await waitFor(() => expect(mocks.getMyDiary.mock.calls.length).toBeGreaterThan(callsAfterError));
+    });
+  });
+
   it("muestra textos de estado vacío personalizados con prop empty", () => {
     renderWithQuery(
       <DiaryActivityList
@@ -497,6 +631,20 @@ describe("DiaryActivityList", () => {
   });
 
   describe("filtros y búsqueda", () => {
+    const empty: DiaryListResponse = { entries: [], page: 1, pageSize: 20, hasNext: false };
+
+    async function openFilters(user: ReturnType<typeof userEvent.setup>) {
+      await user.click(screen.getByRole("button", { name: /^Filtros/ }));
+    }
+
+    function chip(group: string, name: string) {
+      return within(screen.getByRole("group", { name: group })).getByRole("button", { name });
+    }
+
+    beforeEach(() => {
+      window.history.replaceState(null, "", "/es/me/diary");
+    });
+
     it("buscar texto dispara una nueva query con `q`, tras el debounce", async () => {
       const user = userEvent.setup();
       mocks.getMyDiary.mockResolvedValue({ entries: [neutral], page: 1, pageSize: 20, hasNext: false });
@@ -505,80 +653,176 @@ describe("DiaryActivityList", () => {
       await user.type(screen.getByPlaceholderText("Buscar por artista, álbum o canción"), "radiohead");
 
       await waitFor(
-        () =>
-          expect(mocks.getMyDiary).toHaveBeenCalledWith(1, 20, {
-            q: "radiohead",
-            context: undefined,
-            reaction: undefined,
-            audience: undefined,
-          }),
+        () => expect(mocks.getMyDiary).toHaveBeenCalledWith(1, 20, expect.objectContaining({ q: "radiohead", timeZone: "UTC" })),
         { timeout: 1000 },
       );
     });
 
-    it("cambiar el select de contexto filtra por ese contexto", async () => {
+    it("sin filtros, antes de la primera escucha solo hay el buscador y el botón de filtros", () => {
+      renderWithQuery(<DiaryActivityList initial={initial} />);
+      expect(screen.getByRole("button", { name: "Filtros" })).toHaveAttribute("aria-expanded", "false");
+      expect(screen.queryByRole("group", { name: "Contexto" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+    });
+
+    it("un chip de contexto filtra por ese contexto y el botón cuenta los filtros activos", async () => {
       const user = userEvent.setup();
       mocks.getMyDiary.mockResolvedValue({ entries: [neutral], page: 1, pageSize: 20, hasNext: false });
       renderWithQuery(<DiaryActivityList initial={initial} />);
 
-      await user.selectOptions(screen.getByLabelText("Contexto"), "rediscovery");
+      await openFilters(user);
+      await user.click(chip("Contexto", "Redescubrimiento"));
 
+      expect(chip("Contexto", "Redescubrimiento")).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByRole("button", { name: "Filtros · 1" })).toBeInTheDocument();
       await waitFor(() =>
-        expect(mocks.getMyDiary).toHaveBeenCalledWith(1, 20, {
-          q: undefined,
-          context: "rediscovery",
-          reaction: undefined,
-          audience: undefined,
-        }),
+        expect(mocks.getMyDiary).toHaveBeenCalledWith(1, 20, expect.objectContaining({ context: "rediscovery" })),
       );
+    });
+
+    it("pulsar de nuevo un chip elegido quita el filtro", async () => {
+      const user = userEvent.setup();
+      mocks.getMyDiary.mockResolvedValue(empty);
+      renderWithQuery(<DiaryActivityList initial={initial} />);
+
+      await openFilters(user);
+      await user.click(chip("Audiencia", "Privado"));
+      await user.click(chip("Audiencia", "Privado"));
+      expect(chip("Audiencia", "Privado")).toHaveAttribute("aria-pressed", "false");
+      expect(screen.getByRole("button", { name: "Filtros" })).toBeInTheDocument();
     });
 
     it("combina el filtro de reacción con el de audiencia", async () => {
       const user = userEvent.setup();
-      mocks.getMyDiary.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
+      mocks.getMyDiary.mockResolvedValue(empty);
       renderWithQuery(<DiaryActivityList initial={initial} />);
 
-      await user.selectOptions(screen.getByLabelText("¿Cómo te sentó?"), "none");
-      await user.selectOptions(screen.getByLabelText("Audiencia"), "private");
+      await openFilters(user);
+      await user.click(chip("Reacción", "Sin reacción"));
+      await user.click(chip("Audiencia", "Privado"));
 
       await waitFor(() =>
-        expect(mocks.getMyDiary).toHaveBeenLastCalledWith(1, 20, {
-          q: undefined,
-          context: undefined,
-          reaction: "none",
-          audience: "private",
-        }),
+        expect(mocks.getMyDiary).toHaveBeenLastCalledWith(
+          1,
+          20,
+          expect.objectContaining({ reaction: "none", audience: "private", context: undefined }),
+        ),
+      );
+    });
+
+    it("filtra por tipo de objetivo", async () => {
+      const user = userEvent.setup();
+      mocks.getMyDiary.mockResolvedValue(empty);
+      renderWithQuery(<DiaryActivityList initial={initial} />);
+
+      await openFilters(user);
+      await user.click(chip("Tipo", "Canciones"));
+      await waitFor(() =>
+        expect(mocks.getMyDiary).toHaveBeenLastCalledWith(1, 20, expect.objectContaining({ type: "recording" })),
+      );
+    });
+
+    it("los filtros activos se ven como etiquetas que se quitan de a una", async () => {
+      const user = userEvent.setup();
+      mocks.getMyDiary.mockResolvedValue(empty);
+      renderWithQuery(<DiaryActivityList initial={initial} />);
+
+      await openFilters(user);
+      await user.click(chip("Reacción", "Me encantó"));
+      await user.click(chip("Tipo", "Canciones"));
+      await openFilters(user); // cierra el panel
+
+      const loved = screen.getByRole("button", { name: "Quitar filtro: Me encantó" });
+      expect(screen.getByRole("button", { name: "Quitar filtro: Canciones" })).toBeInTheDocument();
+      await user.click(loved);
+      expect(screen.queryByRole("button", { name: "Quitar filtro: Me encantó" })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Quitar filtro: Canciones" })).toBeInTheDocument();
+      await waitFor(() =>
+        expect(mocks.getMyDiary).toHaveBeenLastCalledWith(
+          1,
+          20,
+          expect.objectContaining({ reaction: undefined, type: "recording" }),
+        ),
       );
     });
 
     it("sin resultados para los filtros muestra un vacío distinto del diario realmente vacío", async () => {
       const user = userEvent.setup();
-      mocks.getMyDiary.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
+      mocks.getMyDiary.mockResolvedValue(empty);
       renderWithQuery(<DiaryActivityList initial={initial} />);
 
-      await user.selectOptions(screen.getByLabelText("Audiencia"), "private");
+      await openFilters(user);
+      await user.click(chip("Audiencia", "Privado"));
 
       await waitFor(() => expect(screen.getByText("Sin resultados para estos filtros")).toBeInTheDocument());
       expect(screen.queryByText("Todavía no registraste nada")).not.toBeInTheDocument();
     });
 
+    it("mientras llegan los resultados de un filtro, la lista anterior queda atenuada y ocupada", async () => {
+      const user = userEvent.setup();
+      let resolve: (value: DiaryListResponse) => void = () => undefined;
+      mocks.getMyDiary.mockReturnValue(new Promise<DiaryListResponse>((done) => (resolve = done)));
+      const { container } = renderWithQuery(<DiaryActivityList initial={initial} />);
+
+      await openFilters(user);
+      await user.click(chip("Audiencia", "Público"));
+
+      const list = container.querySelector("[aria-busy]") as HTMLElement;
+      await waitFor(() => expect(list).toHaveAttribute("aria-busy", "true"));
+      expect(list.className).toMatch(/opacity-60/);
+      expect(screen.getByText("Pink Floyd")).toBeInTheDocument();
+
+      resolve({ entries: [neutral], page: 1, pageSize: 20, hasNext: false });
+      await waitFor(() => expect(container.querySelector("[aria-busy]")).toHaveAttribute("aria-busy", "false"));
+    });
+
     it("limpiar filtros vuelve a traer todo", async () => {
       const user = userEvent.setup();
-      mocks.getMyDiary.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
+      mocks.getMyDiary.mockResolvedValue(empty);
       renderWithQuery(<DiaryActivityList initial={initial} />);
 
-      await user.selectOptions(screen.getByLabelText("Audiencia"), "private");
-      await waitFor(() => expect(screen.getByText("Limpiar filtros")).toBeInTheDocument());
+      await openFilters(user);
+      await user.click(chip("Audiencia", "Privado"));
+      // sin resultados, el estado vacío también ofrece limpiar (además de la barra)
+      await waitFor(() => expect(screen.getAllByText("Limpiar filtros")).toHaveLength(2));
+      const emptyState = screen.getByRole("heading", { name: "Sin resultados para estos filtros" }).parentElement as HTMLElement;
 
-      await user.click(screen.getByText("Limpiar filtros"));
+      await user.click(within(emptyState).getByRole("button", { name: "Limpiar filtros" }));
 
       expect(screen.getByText("Pink Floyd")).toBeInTheDocument();
       expect(screen.queryByText("Limpiar filtros")).not.toBeInTheDocument();
     });
+
+    it("los filtros se escriben en la URL sin sumar entradas al historial", async () => {
+      const user = userEvent.setup();
+      mocks.getMyDiary.mockResolvedValue(empty);
+      const pushState = vi.spyOn(window.history, "pushState");
+      renderWithQuery(<DiaryActivityList initial={initial} />);
+
+      await openFilters(user);
+      await user.click(chip("Reacción", "Me encantó"));
+      await user.click(chip("Tipo", "Canciones"));
+
+      await waitFor(() => expect(window.location.search).toBe("?reaction=loved&type=recording"));
+      expect(pushState).not.toHaveBeenCalled();
+
+      await user.click(screen.getAllByRole("button", { name: "Limpiar filtros" })[0]!);
+      await waitFor(() => expect(window.location.search).toBe(""));
+      pushState.mockRestore();
+    });
+
+    it("con filtros sembrados por el servidor usa esa página sin volver a pedirla", () => {
+      const seeded = { ...EMPTY_DIARY_FILTERS, reaction: "loved" as const };
+      renderWithQuery(<DiaryActivityList initial={initial} initialFilters={seeded} />);
+      expect(screen.getByText("Pink Floyd")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Quitar filtro: Me encantó" })).toBeInTheDocument();
+      expect(mocks.getMyDiary).not.toHaveBeenCalled();
+    });
   });
 
-  describe("filtro de año y mes (add-diary-date-navigation)", () => {
+  describe("filtro de fecha (add-diary-date-navigation / redesign-diary-page)", () => {
     beforeEach(() => {
+      window.history.replaceState(null, "", "/es/me/diary");
       mocks.getMyDiaryMonths.mockResolvedValue({
         months: [
           { year: 2026, month: 9 },
@@ -588,82 +832,54 @@ describe("DiaryActivityList", () => {
       });
     });
 
-    it("el selector de Año solo ofrece años con registros", async () => {
-      renderWithQuery(<DiaryActivityList initial={initial} />);
+    async function dateSelect(user: ReturnType<typeof userEvent.setup>) {
       await waitFor(() => expect(mocks.getMyDiaryMonths).toHaveBeenCalled());
+      await user.click(screen.getByRole("button", { name: /^Filtros/ }));
+      const select = (await screen.findByLabelText("Fecha")) as HTMLSelectElement;
+      await waitFor(() => expect(select.querySelectorAll("optgroup")).toHaveLength(2));
+      return select;
+    }
 
-      const yearSelect = (await screen.findByLabelText("Año")) as HTMLSelectElement;
-      const optionValues = Array.from(yearSelect.options).map((o) => o.value).filter(Boolean);
-      expect(optionValues.sort()).toEqual(["2025", "2026"]);
-    });
-
-    it("el selector de Mes está vacío hasta elegir un Año, y luego solo ofrece meses de ese año", async () => {
+    it("un único control ofrece, por año, el año completo y solo los meses con escuchas", async () => {
       const user = userEvent.setup();
       renderWithQuery(<DiaryActivityList initial={initial} />);
-      await waitFor(() => expect(mocks.getMyDiaryMonths).toHaveBeenCalled());
+      const select = await dateSelect(user);
 
-      const monthSelect = (await screen.findByLabelText("Mes")) as HTMLSelectElement;
-      expect(Array.from(monthSelect.options).map((o) => o.value).filter(Boolean)).toHaveLength(0);
-
-      await user.selectOptions(screen.getByLabelText("Año"), "2026");
-      const monthValues = Array.from(monthSelect.options).map((o) => o.value).filter(Boolean);
-      expect(monthValues.sort()).toEqual(["1", "9"]);
+      const groups = Array.from(select.querySelectorAll("optgroup")).map((group) => ({
+        label: group.label,
+        options: Array.from(group.querySelectorAll("option")).map((option) => option.value),
+      }));
+      expect(groups).toEqual([
+        { label: "2026", options: ["2026", "2026-9", "2026-1"] },
+        { label: "2025", options: ["2025", "2025-12"] },
+      ]);
+      expect(screen.queryByLabelText("Año")).not.toBeInTheDocument();
+      expect(screen.queryByLabelText("Mes")).not.toBeInTheDocument();
     });
 
-    it("elegir un año filtra el diario por ese año", async () => {
-      const user = userEvent.setup();
-      mocks.getMyDiary.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
-      renderWithQuery(<DiaryActivityList initial={initial} />);
-      await waitFor(() => expect(mocks.getMyDiaryMonths).toHaveBeenCalled());
-
-      await user.selectOptions(await screen.findByLabelText("Año"), "2025");
-
-      await waitFor(() =>
-        expect(mocks.getMyDiary).toHaveBeenLastCalledWith(
-          1,
-          20,
-          expect.objectContaining({ year: 2025, month: undefined }),
-        ),
-      );
-    });
-
-    it("elegir año y mes filtra ambos a la vez", async () => {
+    it("elegir un año completo filtra por ese año", async () => {
       const user = userEvent.setup();
       mocks.getMyDiary.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
       renderWithQuery(<DiaryActivityList initial={initial} />);
-      await waitFor(() => expect(mocks.getMyDiaryMonths).toHaveBeenCalled());
+      const select = await dateSelect(user);
 
-      await user.selectOptions(await screen.findByLabelText("Año"), "2026");
-      await user.selectOptions(screen.getByLabelText("Mes"), "9");
-
+      await user.selectOptions(select, "2025");
       await waitFor(() =>
-        expect(mocks.getMyDiary).toHaveBeenLastCalledWith(
-          1,
-          20,
-          expect.objectContaining({ year: 2026, month: 9 }),
-        ),
+        expect(mocks.getMyDiary).toHaveBeenLastCalledWith(1, 20, expect.objectContaining({ year: 2025, month: undefined })),
       );
     });
 
-    it("cambiar de año limpia un mes que ya no pertenece al año nuevo", async () => {
+    it("elegir un mes filtra año y mes a la vez, y la etiqueta lo nombra", async () => {
       const user = userEvent.setup();
       mocks.getMyDiary.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
       renderWithQuery(<DiaryActivityList initial={initial} />);
-      await waitFor(() => expect(mocks.getMyDiaryMonths).toHaveBeenCalled());
+      const select = await dateSelect(user);
 
-      await user.selectOptions(await screen.findByLabelText("Año"), "2026");
-      await user.selectOptions(screen.getByLabelText("Mes"), "9");
-      await user.selectOptions(screen.getByLabelText("Año"), "2025");
-
-      const monthSelect = screen.getByLabelText("Mes") as HTMLSelectElement;
-      expect(monthSelect.value).toBe("");
+      await user.selectOptions(select, "2026-9");
       await waitFor(() =>
-        expect(mocks.getMyDiary).toHaveBeenLastCalledWith(
-          1,
-          20,
-          expect.objectContaining({ year: 2025, month: undefined }),
-        ),
+        expect(mocks.getMyDiary).toHaveBeenLastCalledWith(1, 20, expect.objectContaining({ year: 2026, month: 9 })),
       );
+      expect(screen.getByRole("button", { name: "Quitar filtro: Septiembre 2026" })).toBeInTheDocument();
     });
   });
 
@@ -763,6 +979,14 @@ describe("DiaryActivityList", () => {
         await user.click(febToggle);
 
         expect(febHeading.textContent).not.toMatch(/\(\d|\d\s*(escuchas?|entradas?)/i);
+      });
+
+      it("el encabezado de mes queda fijo al desplazarse y su control tiene 44px en móvil", () => {
+        renderWithQuery(<DiaryActivityList initial={multiMonth} />);
+        const febHeading = screen.getByRole("heading", { name: /febrero de 2026/i });
+        const bar = febHeading.parentElement as HTMLElement;
+        expect(bar.className.split(" ")).toEqual(expect.arrayContaining(["sticky", "bg-ink"]));
+        expect(within(bar).getByRole("button").className.split(" ")).toContain("size-11");
       });
 
       it("no hay ningún control para colapsar o expandir todos los meses a la vez", () => {

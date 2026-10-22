@@ -197,9 +197,63 @@ rápido es el único componente que la capa de presencia necesita para no perder
 
 ### Vista de cronología
 
-`/me/diary` ofrece un conmutador **Lista / Cronología**. La cronología agrupa las mismas filas por
-**mes calendario** (`Intl.DateTimeFormat`, encabezado por mes), en el mismo orden cronológico
-descendente, con edición y borrado disponibles igual que en la lista. **No** muestra conteos por
-mes, totales ni rachas — es la misma información reordenada para que se lea como historial y no como
-log plano. Agrupa en el cliente sobre el array acumulado, así que también agrupa lo que llega al
-pedir más. El modo arranca siempre en Lista (no se persiste en Fase 3).
+La cronología agrupa las filas por **mes calendario** (encabezado por mes), en orden cronológico
+descendente, con edición y borrado disponibles en cada fila. **No** muestra conteos por mes, totales
+ni rachas — es la misma información reordenada para que se lea como historial y no como log plano.
+Agrupa en el cliente sobre el array acumulado, así que también agrupa lo que llega al pedir más. El
+conmutador Lista / Cronología de este pase se retiró después (`redesign-diary-row`): la cronología es
+la única presentación.
+
+## 11. La página `/me/diary` (`redesign-diary-page`)
+
+Rediseño en tres fases tras la auditoría del 2026-10-21. Las reglas de la sección 10 no cambian.
+
+### Zona horaria
+
+El mes y el día de una escucha se cuentan en la **zona horaria del usuario**, la misma en el
+encabezado de mes, en el filtro de fecha y en los meses disponibles. Antes había tres zonas en juego
+(navegador, UTC y la sesión de Postgres) y una escucha de las 22:00 del 30/9 en Santiago salía bajo
+septiembre pero aparecía al filtrar octubre. Detalle técnico en `02-architecture/i18n.md`.
+
+### Fila
+
+Una grilla fija de cuatro columnas que no se parte en ningún ancho:
+
+1. **Fecha:** día y día de la semana abreviado, solo cuando cambia respecto de la fila anterior del
+   mes; la fecha completa y la relativa quedan como valor accesible.
+2. **Carátula según el tipo:** la del álbum; la de un álbum que contiene la canción; la foto del
+   artista, en círculo. Sin imagen, el disco de vinilo (en círculo para artistas). El diario del perfil
+   usa las mismas imágenes.
+3. **Cuerpo:** el título manda, con la reacción a su lado como ícono ámbar (nombre accesible y
+   `title`); debajo, «Artista · Tipo · Contexto» y la audiencia como ícono. La impresión, como cita.
+4. **Acciones:** lápiz y «···», de 44px en móvil y 32px en escritorio. El menú no corta sus opciones,
+   separa «Eliminar» y rotula la opción de Pendientes según el estado («Marcar como pendiente» /
+   «Quitar de Pendientes»).
+
+### Cabecera, filtros y carga
+
+- Cabecera con «Tu registro de escuchas» y **«Anotar escucha»**, que abre el registro global de
+  «+ Añadir». El diario vacío ofrece la misma acción; sin resultados, «Limpiar filtros».
+- **Barra compacta:** buscador y «Filtros · N», que despliega chips de Reacción, Contexto, Audiencia y
+  **Tipo**, y un único control de **Fecha** (meses con escuchas agrupados por año, más «Todo el año»).
+  Los filtros activos se ven como etiquetas que se quitan de a una.
+- Los filtros viven en la **URL** (`replaceState`, sin historial) y el servidor siembra la primera
+  página filtrada; un valor inválido en la URL se ignora.
+- Al filtrar, la lista anterior se atenúa (`aria-busy`) hasta que llegan los resultados.
+- Encabezado de mes **fijo** al desplazarse y **carga continua** (`IntersectionObserver`), con
+  «Cargar más» como respaldo; un error detiene la carga automática.
+- Formulario de ampliar: contexto en chips como reacción y audiencia, contador «N/500», Ctrl/⌘+Enter
+  para guardar, «Cancelar», y sin repetir el objetivo dentro del diario.
+
+### Riel de contexto
+
+Desde 1024px, un riel fijo junto a la lista (por debajo no hay riel):
+
+- **Ir a:** años y meses con escuchas, sin cifras, que aplican el filtro de fecha.
+- **Para anotar:** hasta 4 Pendientes con «Anotar» — crea la escucha (que sale de Pendientes por la
+  regla de `createListenEntry`) y la abre al frente del diario.
+- **Así lo ven otros:** enlace a la pestaña de diario del perfil.
+
+Ningún módulo muestra conteos, totales ni rachas. La lista y el riel son hermanos en la página y se
+comunican por un contexto de cliente (`DiaryBridge`): la lista sigue siendo dueña de los filtros y de
+la caché.

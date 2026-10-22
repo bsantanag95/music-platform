@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, ilike, inArray, isNull, lt, or, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, isNotNull, isNull, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import {
   artist,
@@ -11,7 +11,7 @@ import {
 } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import type { SocialTargetType } from "@/lib/api/schemas";
-import { PRIMARY_ARTIST_ID_SQL, PRIMARY_ARTIST_SQL } from "@/services/feed/feed";
+import { PRIMARY_ARTIST_ID_SQL, PRIMARY_ARTIST_SQL, RECORDING_COVER_SQL } from "@/services/feed/feed";
 import { getProfileByUsername } from "@/services/social/profiles";
 import { removeWantToListenEntryForTarget } from "@/services/want-to-listen/want-to-listen";
 import {
@@ -63,6 +63,9 @@ export interface DiaryEntry {
    * más allá de su audiencia normal. `false` cuando la fila no trae el join
    * (p. ej. el feed, que no participa de este concepto). */
   isHighlighted: boolean;
+  /** Si el objetivo está en Want to Listen del dueño de la entrada (openspec:
+   * redesign-diary-page, D4). Solo lo traen las lecturas del diario propio. */
+  inWantToListen?: boolean;
 }
 
 export interface UpdateListenEntryChanges {
@@ -81,9 +84,14 @@ export interface DiaryFilters {
   q?: string;
   context?: ListenContext;
   reaction?: ListenReaction | "none";
+  /** Tipo de objetivo (openspec: redesign-diary-page, D6). */
+  type?: SocialTargetType;
   audience?: DiaryAudience;
   year?: number;
   month?: number;
+  /** Zona horaria IANA en la que se cuentan `year`/`month` (openspec:
+   * redesign-diary-page, D1). Sin ella, UTC. No acota por sí sola. */
+  timeZone?: string;
 }
 
 export interface DiaryMonthBucket {
@@ -224,18 +232,29 @@ export async function listMyDiary(
     conditions.push(eq(listenEntry.reaction, filters.reaction));
   }
   if (filters?.audience) conditions.push(eq(listenEntry.audience, filters.audience));
+  if (filters?.type) {
+    // La columna del objetivo no nula dice el tipo (el CHECK garantiza una sola).
+    conditions.push(isNotNull(listenEntry[targetColumns[filters.type]]));
+  }
   if (filters?.year) {
-    // Rango [inicio, fin) en UTC: todo el año, o solo el mes elegido dentro de
-    // él (con acarreo de año en diciembre) — mismo criterio de "rango
-    // semiabierto" que ya usa la paginación por fecha en otras partes del
-    // servicio.
-    const startMonth = filters.month ? filters.month - 1 : 0;
-    const start = new Date(Date.UTC(filters.year, startMonth, 1));
-    const end = filters.month
-      ? new Date(Date.UTC(filters.year, filters.month, 1))
-      : new Date(Date.UTC(filters.year + 1, 0, 1));
-    conditions.push(gte(listenEntry.createdAt, start));
-    conditions.push(lt(listenEntry.createdAt, end));
+    // Rango [inicio, fin) en la zona horaria del usuario (UTC sin ella): todo
+    // el año, o solo el mes elegido dentro de él (con acarreo de año en
+    // diciembre). Los límites los calcula Postgres con `make_timestamptz`, así
+    // el filtro sigue comparando `created_at` contra un valor y usa el índice
+    // `(user_id, created_at)` (openspec: redesign-diary-page, D1).
+    const timeZone = filters.timeZone ?? "UTC";
+    const startMonth = filters.month ?? 1;
+    const [endYear, endMonth] = filters.month
+      ? filters.month === 12
+        ? [filters.year + 1, 1]
+        : [filters.year, filters.month + 1]
+      : [filters.year + 1, 1];
+    conditions.push(
+      sql`${listenEntry.createdAt} >= make_timestamptz(${filters.year}::int, ${startMonth}::int, 1, 0, 0, 0, ${timeZone}::text)`,
+    );
+    conditions.push(
+      sql`${listenEntry.createdAt} < make_timestamptz(${endYear}::int, ${endMonth}::int, 1, 0, 0, 0, ${timeZone}::text)`,
+    );
   }
   const q = filters?.q?.trim();
   if (q) {
@@ -253,7 +272,7 @@ export async function listMyDiary(
     if (searchCondition) conditions.push(searchCondition);
   }
 
-  const rows = await selectEntries()
+  const rows = await selectEntries({ withWantToListen: true })
     .where(and(...conditions))
     .orderBy(desc(listenEntry.createdAt), desc(listenEntry.id))
     .limit(pageSize + 1)
@@ -277,9 +296,13 @@ export async function listMyDiary(
  * `listDecades` (`src/services/discovery/discovery.ts`), con
  * `extract(year/month from created_at)` en vez de un floor de década.
  */
-export async function listMyDiaryMonths(userId: string): Promise<DiaryMonthBucket[]> {
-  const yearExpr = sql`extract(year from ${listenEntry.createdAt})`;
-  const monthExpr = sql`extract(month from ${listenEntry.createdAt})`;
+export async function listMyDiaryMonths(userId: string, timeZone = "UTC"): Promise<DiaryMonthBucket[]> {
+  // Año y mes en la zona horaria del usuario, la misma con la que filtra
+  // `listMyDiary` y agrupa el cliente (openspec: redesign-diary-page, D1) —
+  // sin `AT TIME ZONE`, `extract` usaría la zona de la sesión de Postgres.
+  const localCreatedAt = sql`(${listenEntry.createdAt} AT TIME ZONE ${timeZone}::text)`;
+  const yearExpr = sql`extract(year from ${localCreatedAt})`;
+  const monthExpr = sql`extract(month from ${localCreatedAt})`;
   const rows = await db
     .select({
       year: sql<number>`${yearExpr}::int`,
@@ -287,8 +310,11 @@ export async function listMyDiaryMonths(userId: string): Promise<DiaryMonthBucke
     })
     .from(listenEntry)
     .where(eq(listenEntry.userId, userId))
-    .groupBy(yearExpr, monthExpr)
-    .orderBy(sql`${yearExpr} desc`, sql`${monthExpr} desc`);
+    // Por posición y no repitiendo la expresión: la zona viaja como parámetro y
+    // Postgres no reconoce `$1` del SELECT y `$2` del GROUP BY como la misma
+    // expresión (42803).
+    .groupBy(sql`1`, sql`2`)
+    .orderBy(sql`1 desc`, sql`2 desc`);
   return rows.map((row) => ({ year: Number(row.year), month: Number(row.month) }));
 }
 
@@ -492,7 +518,7 @@ export async function listFeed(viewerId: string, page = 1, pageSize = 20) {
 }
 
 async function getOwnedEntry(id: string, userId: string): Promise<DiaryEntry> {
-  const rows = await selectEntries()
+  const rows = await selectEntries({ withWantToListen: true })
     .where(and(eq(listenEntry.id, id), eq(listenEntry.userId, userId)))
     .limit(1);
   const row = rows[0];
@@ -500,9 +526,27 @@ async function getOwnedEntry(id: string, userId: string): Promise<DiaryEntry> {
   return serializeEntry(row);
 }
 
-function selectEntries() {
+// Si el objetivo de la escucha está en Want to Listen de su propio autor
+// (openspec: redesign-diary-page, D4), para rotular la opción del menú de la
+// fila. Solo para el diario propio: en el diario de un perfil revelaría a
+// quien visita los pendientes del dueño. Las canciones no entran en Want to
+// Listen, así que para ellas nunca hay fila que coincida. Correlación con el
+// nombre de tabla literal: un `${listenEntry.userId}` interpolado puede salir
+// sin calificar ("user_id") y resolverse contra `w`, que tiene las mismas
+// columnas, dando siempre verdadero.
+const IN_WANT_TO_LISTEN_SQL = sql<boolean>`EXISTS (
+  SELECT 1 FROM want_to_listen_entry w
+  WHERE w.user_id = "listen_entry"."user_id"
+    AND (
+      w.artist_id = "listen_entry"."artist_id"
+      OR w.release_group_id = "listen_entry"."release_group_id"
+    )
+)`;
+
+function selectEntries({ withWantToListen = false }: { withWantToListen?: boolean } = {}) {
   return db
     .select({
+      ...(withWantToListen ? { inWantToListen: IN_WANT_TO_LISTEN_SQL } : {}),
       id: listenEntry.id,
       listenContext: listenEntry.listenContext,
       body: listenEntry.body,
@@ -513,11 +557,15 @@ function selectEntries() {
       releaseGroupId: listenEntry.releaseGroupId,
       recordingId: listenEntry.recordingId,
       artistName: artist.name,
+      // Imagen por tipo de objetivo (openspec: redesign-diary-page, D2): foto
+      // del artista y, para una canción, la carátula de un álbum que la contiene.
+      artistPhoto: artist.photoUrl,
       creditedArtist: PRIMARY_ARTIST_SQL(listenEntry.releaseGroupId, listenEntry.recordingId),
       creditedArtistId: PRIMARY_ARTIST_ID_SQL(listenEntry.releaseGroupId, listenEntry.recordingId),
       releaseTitle: releaseGroup.title,
       releaseCover: releaseGroup.coverThumbUrl,
       recordingTitle: recording.title,
+      recordingCover: RECORDING_COVER_SQL(listenEntry.recordingId),
       isHighlighted: sql<boolean>`${listenEntryHighlight.userId} IS NOT NULL`,
     })
     .from(listenEntry)
@@ -544,20 +592,23 @@ function serializeEntry(row: {
   releaseGroupId: string | null;
   recordingId: string | null;
   artistName: string | null;
+  artistPhoto?: string | null;
   creditedArtist?: string | null;
   creditedArtistId?: string | null;
   releaseTitle: string | null;
   releaseCover: string | null;
   recordingTitle: string | null;
+  recordingCover?: string | null;
   isHighlighted?: boolean;
+  inWantToListen?: boolean;
 }): DiaryEntry {
   let target: DiaryTargetInfo;
   if (row.artistId) {
-    target = { type: "artist", id: row.artistId, title: row.artistName ?? "", subtitle: null, artistId: null, coverThumbUrl: null };
+    target = { type: "artist", id: row.artistId, title: row.artistName ?? "", subtitle: null, artistId: null, coverThumbUrl: row.artistPhoto ?? null };
   } else if (row.releaseGroupId) {
     target = { type: "release-group", id: row.releaseGroupId, title: row.releaseTitle ?? "", subtitle: row.creditedArtist ?? null, artistId: row.creditedArtistId ?? null, coverThumbUrl: row.releaseCover };
   } else {
-    target = { type: "recording", id: row.recordingId ?? "", title: row.recordingTitle ?? "", subtitle: row.creditedArtist ?? null, artistId: row.creditedArtistId ?? null, coverThumbUrl: null };
+    target = { type: "recording", id: row.recordingId ?? "", title: row.recordingTitle ?? "", subtitle: row.creditedArtist ?? null, artistId: row.creditedArtistId ?? null, coverThumbUrl: row.recordingCover ?? null };
   }
   return {
     id: row.id,
@@ -568,6 +619,7 @@ function serializeEntry(row: {
     createdAt: row.createdAt.toISOString(),
     target,
     isHighlighted: row.isHighlighted ?? false,
+    ...(row.inWantToListen !== undefined ? { inWantToListen: row.inWantToListen } : {}),
   };
 }
 

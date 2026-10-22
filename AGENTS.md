@@ -57,6 +57,15 @@ de cuál de las filas con el mismo título haya en la BD.
 > - `smoke-test-social.ts` crea tres usuarios `smoke-social-*` (público, privado
 >   y seguidor) y los borra al terminar; si se interrumpió, limpiar con
 >   `DELETE FROM app_user WHERE username LIKE 'smoke-social-%';`.
+> - `smoke-test-diary.ts` crea un usuario `smoke-diary-*` y un artista sintético `Smoke Diary Artist *` (con una foto de
+>   prueba) y los borra al terminar, también si falla (primero sus escuchas y pendientes). Si se interrumpió, limpiar con
+>   `DELETE FROM app_user WHERE username LIKE 'smoke-diary-%'; DELETE FROM artist WHERE name LIKE 'Smoke Diary Artist %';`
+>   (el `ON DELETE CASCADE` limpia escuchas y pendientes). Verifica el ciclo de una escucha (nace `private`, contexto
+>   inferido, ampliación, borrado, independencia con la valoración) y, desde `redesign-diary-page`, contra Postgres real:
+>   que el año y el mes se cuentan en la zona `tz` (una escucha de las 22:00 del 30/9 en America/Santiago cae en
+>   septiembre con la zona y en octubre en UTC, también en los meses disponibles), la foto del artista y la carátula del
+>   álbum de una canción (usa, sin escribirla, una canción del catálogo con carátula; si no hay, lo avisa y lo omite),
+>   `inWantToListen` y que una página de 20 entradas se lee en menos de 50 ms.
 > - `smoke-test-password-reset.ts` crea dos usuarios `smoke-reset-*` (con
 >   contraseña local y solo-Google) y los borra al terminar; el `ON DELETE
 >   CASCADE` limpia sus tokens y sesiones. Si se interrumpió, limpiar con

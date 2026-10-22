@@ -11,11 +11,12 @@ import { randomUUID } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 import { assertSmokeAllowed } from "./assert-smoke-allowed";
 import { db } from "../src/db";
-import { appUser, artist, listenEntry, rating } from "../src/db/schema";
+import { appUser, artist, listenEntry, rating, wantToListenEntry } from "../src/db/schema";
 import {
   createListenEntry,
   deleteListenEntry,
   listMyDiary,
+  listMyDiaryMonths,
   resolveDiaryTarget,
   updateListenEntry,
 } from "../src/services/diary/diary";
@@ -36,6 +37,9 @@ const syntheticArtist = {
   mbid: randomUUID(),
   type: "person",
   name: `Smoke Diary Artist ${suffix}`,
+  // Foto sintética (sin archivo espejado: el CHECK solo exige licencia y fuente
+  // cuando hay `photo_file`) para verificar la imagen por tipo de objetivo.
+  photoUrl: `https://example.test/smoke-diary-${suffix}.webp`,
 };
 
 async function main() {
@@ -46,10 +50,11 @@ async function main() {
     const target = await resolveDiaryTarget("artist", syntheticArtist.id);
     if (target.type !== "artist") throw new Error("objetivo no resuelto");
 
-    // Primera escucha → first_listen + audiencia followers por defecto.
+    // Primera escucha → first_listen + audiencia private por defecto (un registro
+    // rápido no expresa intención de compartir; openspec: deepen-listening-diary, D1).
     const first = await createListenEntry(target, user.id);
     if (first.listenContext !== "first_listen") throw new Error("primera escucha no es first_listen");
-    if (first.audience !== "followers") throw new Error("audiencia por defecto no es followers");
+    if (first.audience !== "private") throw new Error("audiencia por defecto no es private");
 
     // Segunda escucha → relisten.
     const second = await createListenEntry(target, user.id);
@@ -89,8 +94,11 @@ async function main() {
       throw new Error("las operaciones del diario tocaron la tabla de valoración");
     }
 
+    await checkRedesignDiaryPage(target);
+
     console.log("✅ smoke-test-diary: todos los casos pasaron");
   } finally {
+    await db.delete(wantToListenEntry).where(eq(wantToListenEntry.userId, user.id));
     await db.delete(listenEntry).where(eq(listenEntry.userId, user.id));
     await db.delete(artist).where(
       and(eq(artist.id, syntheticArtist.id), eq(artist.name, syntheticArtist.name)),
@@ -98,6 +106,93 @@ async function main() {
     await db.delete(appUser).where(and(eq(appUser.id, user.id), eq(appUser.username, user.username)));
     console.log("🧹 smoke-test-diary: fixtures limpiados");
   }
+}
+
+// openspec: redesign-diary-page — zona horaria, imagen por tipo, Want to Listen
+// y presupuesto de la página, contra Postgres real.
+async function checkRedesignDiaryPage(target: Awaited<ReturnType<typeof resolveDiaryTarget>>) {
+  await db.delete(listenEntry).where(eq(listenEntry.userId, user.id));
+
+  // 22:00 del 30 de septiembre en America/Santiago (UTC−3 en horario de
+  // verano) es la 01:00 del 1 de octubre en UTC.
+  const lateNight = new Date("2026-10-01T01:00:00Z");
+  const [boundary] = await db
+    .insert(listenEntry)
+    .values({ userId: user.id, artistId: syntheticArtist.id, listenContext: "first_listen", createdAt: lateNight })
+    .returning({ id: listenEntry.id });
+  if (!boundary) throw new Error("no se insertó la escucha de fin de mes");
+
+  const ids = async (filters: Parameters<typeof listMyDiary>[3]) =>
+    (await listMyDiary(user.id, 1, 20, filters)).entries.map((entry) => entry.id);
+  const tz = "America/Santiago";
+  if (!(await ids({ year: 2026, month: 9, timeZone: tz })).includes(boundary.id)) {
+    throw new Error("con zona horaria, la escucha de las 22:00 del 30/9 no cae en septiembre");
+  }
+  if ((await ids({ year: 2026, month: 10, timeZone: tz })).includes(boundary.id)) {
+    throw new Error("con zona horaria, la escucha de las 22:00 del 30/9 cae en octubre");
+  }
+  if (!(await ids({ year: 2026, month: 10 })).includes(boundary.id)) {
+    throw new Error("sin zona horaria (UTC), la escucha no cae en octubre");
+  }
+  if (!(await ids({ year: 2026, timeZone: tz })).includes(boundary.id)) {
+    throw new Error("el filtro de año con zona horaria perdió la escucha");
+  }
+  const monthsLocal = await listMyDiaryMonths(user.id, tz);
+  const monthsUtc = await listMyDiaryMonths(user.id);
+  if (monthsLocal.length !== 1 || monthsLocal[0]!.month !== 9) {
+    throw new Error(`meses con zona horaria: se esperaba solo septiembre, llegó ${JSON.stringify(monthsLocal)}`);
+  }
+  if (monthsUtc.length !== 1 || monthsUtc[0]!.month !== 10) {
+    throw new Error(`meses en UTC: se esperaba solo octubre, llegó ${JSON.stringify(monthsUtc)}`);
+  }
+
+  // Imagen por tipo: la foto del artista; y una canción del catálogo con
+  // carátula de álbum (si la BD tiene alguna) trae esa carátula.
+  const [artistEntry] = (await listMyDiary(user.id, 1, 20)).entries;
+  if (artistEntry?.target.coverThumbUrl !== syntheticArtist.photoUrl) {
+    throw new Error("la escucha de un artista no trae su foto");
+  }
+  const songRows = await db.execute<{ recording_id: string; cover: string }>(sql`
+    SELECT t.recording_id, rg.cover_thumb_url AS cover FROM track t
+    JOIN release r ON r.id = t.release_id
+    JOIN release_group rg ON rg.id = r.release_group_id
+    WHERE rg.cover_thumb_url IS NOT NULL
+    LIMIT 1`);
+  const song = (songRows as unknown as { rows?: { recording_id: string }[] }).rows?.[0] ??
+    (songRows as unknown as { recording_id: string }[])[0];
+  if (song) {
+    const songTarget = await resolveDiaryTarget("recording", song.recording_id);
+    const songEntry = await createListenEntry(songTarget, user.id);
+    if (!songEntry.target.coverThumbUrl) throw new Error("la escucha de una canción no trae la carátula de su álbum");
+  } else {
+    console.log("⚠️  sin canciones con carátula en la BD: se omite la carátula de canción");
+  }
+
+  // Want to Listen: el diario propio lo refleja por entrada (crear la escucha
+  // retira el pendiente, así que se marca después).
+  await db.insert(wantToListenEntry).values({ userId: user.id, artistId: syntheticArtist.id });
+  const withWanted = (await listMyDiary(user.id, 1, 20)).entries;
+  const artistRows = withWanted.filter((entry) => entry.target.type === "artist");
+  if (!artistRows.length || !artistRows.every((entry) => entry.inWantToListen === true)) {
+    throw new Error("inWantToListen no refleja el pendiente del artista");
+  }
+  if (withWanted.some((entry) => entry.target.type === "recording" && entry.inWantToListen)) {
+    throw new Error("una canción figura en Want to Listen");
+  }
+  await db.delete(wantToListenEntry).where(eq(wantToListenEntry.userId, user.id));
+  if ((await listMyDiary(user.id, 1, 20)).entries.some((entry) => entry.inWantToListen)) {
+    throw new Error("inWantToListen sigue verdadero sin pendiente");
+  }
+
+  // Presupuesto: una página de 20 entradas (con las subconsultas de carátula,
+  // artista acreditado y Want to Listen) en caliente bajo 50 ms.
+  for (let i = 0; i < 20; i++) await createListenEntry(target, user.id);
+  await listMyDiary(user.id, 1, 20, { timeZone: tz });
+  const started = performance.now();
+  await listMyDiary(user.id, 1, 20, { timeZone: tz });
+  const elapsed = performance.now() - started;
+  console.log(`⏱️  página de 20 entradas: ${elapsed.toFixed(1)} ms`);
+  if (elapsed > 50) throw new Error(`la página de 20 entradas tardó ${elapsed.toFixed(1)} ms (> 50 ms)`);
 }
 
 main()

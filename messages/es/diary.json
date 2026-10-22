@@ -1,5 +1,13 @@
 {
   "title": "Diario",
+  "subtitle": "Tu registro de escuchas",
+  "logListen": "Anotar escucha",
+  "unwantToListen": "Quitar de Pendientes",
+  "targetType": {
+    "artist": "Artista",
+    "album": "Álbum",
+    "song": "Canción"
+  },
   "emptyTitle": "Todavía no registraste nada",
   "emptyDescription": "Registra una escucha de un artista, álbum o canción para que aparezca acá.",
   "profileEmptyTitle": "Sin entradas en el diario",
@@ -25,7 +33,6 @@
   "collapse": "Cerrar",
   "bodyLabel": "Impresión (opcional)",
   "bodyPlaceholder": "Este bajo está ridículamente bueno...",
-  "bodyMax": "Máximo 500 caracteres",
   "contextLabel": "Contexto",
   "reactionLabel": "¿Cómo te sentó?",
   "audienceLabel": "Audiencia",
@@ -50,6 +57,21 @@
   "filterAllYear": "Año",
   "filterAllMonth": "Mes",
   "clearFilters": "Limpiar filtros",
+  "filters": "Filtros",
+  "filtersActive": "Filtros · {count}",
+  "typeLabel": "Tipo",
+  "dateLabel": "Fecha",
+  "filterAnyDate": "Cualquier fecha",
+  "filterWholeYear": "Todo {year}",
+  "removeFilter": "Quitar filtro: {label}",
+  "targetTypePlural": {
+    "artist": "Artistas",
+    "album": "Álbumes",
+    "song": "Canciones"
+  },
+  "characterCount": "{count}/{max}",
+  "cancel": "Cancelar",
+  "saveShortcut": "Ctrl+Enter para guardar",
   "noResultsTitle": "Sin resultados para estos filtros",
   "noResultsDescription": "Prueba con otra búsqueda o quita alguno de los filtros aplicados.",
   "context": {
@@ -69,5 +91,18 @@
     "private": "Privado",
     "followers": "Seguidores",
     "public": "Público"
+  },
+  "rail": {
+    "label": "Contexto del diario",
+    "goTo": "Ir a",
+    "allDiary": "Todo el diario",
+    "toLog": "Para anotar",
+    "toLogHint": "De tus Pendientes",
+    "log": "Anotar",
+    "logItem": "Anotar una escucha de {title}",
+    "seeWanted": "Ver Pendientes",
+    "asOthers": "Así lo ven otros",
+    "asOthersDescription": "Cada escucha se ve según su audiencia: las privadas solo las ves tú.",
+    "asOthersLink": "Ver tu diario en el perfil"
   }
 }

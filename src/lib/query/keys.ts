@@ -21,7 +21,7 @@ export const queryKeys = {
   // páginas independiente para TanStack Query, así que cambiar cualquier filtro
   // dispara una recarga limpia desde la página 1 en vez de mutar estado a mano.
   myDiary: (filters: DiaryFiltersParams) => ["diary", "mine", filters] as const,
-  myDiaryMonths: () => ["diary", "mine", "months"] as const,
+  myDiaryMonths: (timeZone?: string) => ["diary", "mine", "months", timeZone ?? null] as const,
   myFeed: (filters: FeedFiltersParams) => ["feed", "mine", filters] as const,
   myLists: (filters: ListFiltersParams) => ["lists", "mine", filters] as const,
   // Selector de listas del panel del álbum: serie propia (otro tamaño de página que /lists).

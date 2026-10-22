@@ -1,5 +1,13 @@
 {
   "title": "Diary",
+  "subtitle": "Your listening log",
+  "logListen": "Log a listen",
+  "unwantToListen": "Remove from Listen Later",
+  "targetType": {
+    "artist": "Artist",
+    "album": "Album",
+    "song": "Song"
+  },
   "emptyTitle": "Nothing logged yet",
   "emptyDescription": "Log a listen of an artist, album or song and it will show up here.",
   "profileEmptyTitle": "No diary entries",
@@ -25,7 +33,6 @@
   "collapse": "Close",
   "bodyLabel": "Note (optional)",
   "bodyPlaceholder": "That bass is ridiculously good...",
-  "bodyMax": "Up to 500 characters",
   "contextLabel": "Context",
   "reactionLabel": "How did it hit you?",
   "audienceLabel": "Audience",
@@ -50,6 +57,21 @@
   "filterAllYear": "Year",
   "filterAllMonth": "Month",
   "clearFilters": "Clear filters",
+  "filters": "Filters",
+  "filtersActive": "Filters · {count}",
+  "typeLabel": "Type",
+  "dateLabel": "Date",
+  "filterAnyDate": "Any date",
+  "filterWholeYear": "All of {year}",
+  "removeFilter": "Remove filter: {label}",
+  "targetTypePlural": {
+    "artist": "Artists",
+    "album": "Albums",
+    "song": "Songs"
+  },
+  "characterCount": "{count}/{max}",
+  "cancel": "Cancel",
+  "saveShortcut": "Ctrl+Enter to save",
   "noResultsTitle": "No results for these filters",
   "noResultsDescription": "Try a different search or remove one of the filters applied.",
   "context": {
@@ -69,5 +91,18 @@
     "private": "Private",
     "followers": "Followers",
     "public": "Public"
+  },
+  "rail": {
+    "label": "Diary context",
+    "goTo": "Go to",
+    "allDiary": "Whole diary",
+    "toLog": "To log",
+    "toLogHint": "From your Listen Later list",
+    "log": "Log",
+    "logItem": "Log a listen of {title}",
+    "seeWanted": "See Listen Later",
+    "asOthers": "How others see it",
+    "asOthersDescription": "Each listen is shown according to its audience: private ones are only visible to you.",
+    "asOthersLink": "See your diary on your profile"
   }
 }

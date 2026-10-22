@@ -15,4 +15,9 @@ export type ListenReaction = (typeof LISTEN_REACTIONS)[number];
 export const DIARY_AUDIENCES = ["private", "followers", "public"] as const;
 export type DiaryAudience = (typeof DIARY_AUDIENCES)[number];
 
+// Tipos de objetivo por los que se puede filtrar el diario propio (openspec:
+// redesign-diary-page, D6) — los mismos que `SocialTargetType`.
+export const DIARY_TARGET_TYPES = ["artist", "release-group", "recording"] as const;
+export type DiaryTargetType = (typeof DIARY_TARGET_TYPES)[number];
+
 export const DIARY_BODY_MAX = 500;

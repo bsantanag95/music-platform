@@ -2,13 +2,13 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
-import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { ProsePanel, TargetTitle } from "@/components/feed/feed-row-parts";
 import { targetHref } from "@/components/feed/feed-target";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { getUserDiary } from "@/lib/api/diary";
 import type { DiaryListResponse, ListenEntry } from "@/lib/api/schemas";
+import { DiaryCover } from "./diary-row-parts";
 import { ReactionGlyph } from "./ReactionBadge";
 
 const PAGE_SIZE = 20;
@@ -72,11 +72,12 @@ export function DiaryReadList({ initial, username, scrollable, empty }: DiaryRea
       <ul className="divide-y divide-ink-border">
         {entries.map((entry) => {
           const body = entry.body != null && entry.body.trim() !== "" ? entry.body : null;
-          const cover = entry.target.type === "release-group" ? entry.target.coverThumbUrl : null;
           return (
             <li key={entry.id} className="py-3 first:pt-0 last:pb-0">
               <div className="flex gap-3">
-                <CoverThumb cover={cover} label="" className="size-11 shrink-0" />
+                {/* Imagen según el tipo de objetivo, como en el diario propio
+                    (openspec: redesign-diary-page, D2). */}
+                <DiaryCover entry={entry} className="size-11 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 font-data text-xs text-paper-muted">
                     <span>{t(`context.${entry.listenContext}`)}</span>
