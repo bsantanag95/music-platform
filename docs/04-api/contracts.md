@@ -1406,6 +1406,9 @@ Lista paginada de la lista propia. Parámetros opcionales (cambio `redesign-want
 page, pageSize, hasNext, counts: { artist, "release-group" } }`. `counts` es la cantidad de entradas por tipo de
 toda la lista, calculada **sin** el filtro de tipo. `artistName`/`artistId` son el artista principal acreditado de
 un álbum (`null` en entradas de artista).
+Desde `redesign-want-to-listen-views`, `target` también trae `year` (año de primera publicación) y `category`
+(`studio` | `single_ep` | `compilation` | `live_other`) de un álbum (`null` en artistas), y `coverThumbUrl` de una
+entrada de **artista** es su foto (`artist.photo_url`, `null` si no tiene; antes siempre `null`).
 **400** con `VALIDATION_ERROR` si `type` o `sort` no son válidos (o la paginación). **401** con `AUTH_REQUIRED` sin
 sesión.
 

@@ -6,13 +6,18 @@ import type { JourneyStatus } from "./use-journey-statuses";
 // cronológico, no manual.
 export interface WantToListenRowActions {
   busy: boolean;
-  /** Entrada cuyo quitado falló; su renderer muestra el aviso bajo ella. */
+  /** Entrada cuya acción (quitar o registrar la escucha) falló; su renderer muestra el aviso bajo ella. */
   errorId: string | null;
+  /** Registra la escucha: la entrada sale de Pendientes (openspec: redesign-want-to-listen-views). */
+  listened: (id: string) => void;
   remove: (id: string) => void;
+  /** Entrada con el panel "Añadir a una lista" abierto bajo ella. */
+  listOpenId: string | null;
+  openList: (id: string) => void;
+  closeList: () => void;
   /** Estado de recorrido de un artista, resuelto por lote (`useJourneyStatuses`). */
   journeyStatus: (artistId: string) => JourneyStatus;
-  journeyAdded: (artistId: string) => void;
-  journeyError: (artistId: string) => void;
+  activateJourney: (artistId: string) => void;
 }
 
 export interface WantToListenRendererProps {

@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterSelect } from "@/components/ui/FilterSelect";
 import { OWN_DATA_CHANGED_EVENT } from "@/components/quick-actions/quick-actions-changes";
-import { getMyWantToListen, removeFromWantToListen } from "@/lib/api/want-to-listen";
+import { activateArtistJourney } from "@/lib/api/artist-journeys";
+import { createListenEntry, deleteListenEntry } from "@/lib/api/diary";
+import { getMyWantToListen, removeFromWantToListen, toggleWantToListen } from "@/lib/api/want-to-listen";
 import {
   WANT_TO_LISTEN_SORTS,
   type WantToListenCounts,
@@ -18,6 +20,7 @@ import {
   type WantToListenTargetType,
 } from "@/lib/api/schemas";
 import { useJourneyStatuses } from "./use-journey-statuses";
+import { PendingUndoToast } from "./PendingUndoToast";
 import { WantToListenModeSwitcher } from "./WantToListenModeSwitcher";
 import { WantToListenSection } from "./WantToListenSection";
 import { WantToListenTypeSegments } from "./WantToListenTypeSegments";
@@ -31,6 +34,15 @@ interface WantToListenListProps {
 }
 
 const PAGE_SIZE = 20;
+
+// Aviso tras quitar o marcar como escuchada una entrada; `listenId` solo cuando se registró una escucha.
+interface Toast {
+  key: number;
+  entry: WantToListenEntry;
+  listenId?: string;
+  /** El deshacer falló: el aviso lo dice y ya no ofrece Deshacer. */
+  failed?: boolean;
+}
 
 // Carátulas que se cargan con prioridad: las primeras entradas, las que se ven sin desplazarse.
 const PRIORITY_COVERS = 6;
@@ -75,9 +87,13 @@ export function WantToListenList({ initial, initialFilters = {} }: WantToListenL
   const [page, setPage] = useState(initial.page);
   const [hasNext, setHasNext] = useState(initial.hasNext);
   const [busyId, setBusyId] = useState<string | null>(null);
-  // Entrada cuyo quitado falló: el aviso va junto a ella, no al final de la página.
+  // Entrada cuya acción falló: el aviso va junto a ella, no al final de la página.
   const [errorId, setErrorId] = useState<string | null>(null);
-  const [announce, setAnnounce] = useState("");
+  const [listOpenId, setListOpenId] = useState<string | null>(null);
+  // Un solo aviso a la vez (openspec: redesign-want-to-listen-views, D3): una acción nueva reemplaza al anterior.
+  const [toast, setToast] = useState<Toast | null>(null);
+  const [undoing, setUndoing] = useState(false);
+  const toastSeq = useRef(0);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -124,7 +140,49 @@ export function WantToListenList({ initial, initialFilters = {} }: WantToListenL
     void reload(next);
   };
 
+  const dismissToast = useCallback(() => setToast(null), []);
+
   const total = counts.artist + counts["release-group"];
+
+  // Saca la entrada de la lista y descuenta su tipo; sin entradas del tipo filtrado se vuelve a Todo.
+  const dropEntry = (entry: WantToListenEntry) => {
+    setItems((current) => current.filter((item) => item.id !== entry.id));
+    setCounts((current) => ({ ...current, [entry.targetType]: Math.max(0, current[entry.targetType] - 1) }));
+    if (filters.type === entry.targetType && counts[entry.targetType] <= 1) {
+      changeFilters({ ...filters, type: undefined });
+    }
+  };
+
+  // Deshacer vuelve a anotar el objetivo (y, si se había registrado, borra la escucha) y recarga la primera página.
+  const undo = async (current: Toast) => {
+    setUndoing(true);
+    try {
+      if (current.listenId) await deleteListenEntry(current.listenId);
+      await toggleWantToListen({ type: current.entry.targetType, id: current.entry.target.id });
+      setToast(null);
+      await reload(filtersRef.current);
+    } catch {
+      setToast({ ...current, key: ++toastSeq.current, failed: true });
+    } finally {
+      setUndoing(false);
+    }
+  };
+
+  const toastNode = toast ? (
+    <PendingUndoToast
+      key={toast.key}
+      message={
+        toast.failed
+          ? t("undoError")
+          : toast.listenId
+            ? t("listenedToast", { title: toast.entry.target.title })
+            : t("removedToast", { title: toast.entry.target.title })
+      }
+      onUndo={toast.failed ? undefined : () => void undo(toast)}
+      onExpire={dismissToast}
+      undoing={undoing}
+    />
+  ) : null;
 
   if (total === 0) {
     return (
@@ -141,9 +199,7 @@ export function WantToListenList({ initial, initialFilters = {} }: WantToListenL
             </Link>
           }
         />
-        <span role="status" aria-live="polite" className="sr-only">
-          {announce}
-        </span>
+        {toastNode}
       </>
     );
   }
@@ -159,17 +215,38 @@ export function WantToListenList({ initial, initialFilters = {} }: WantToListenL
     setErrorId(null);
     try {
       await removeFromWantToListen({ type: entry.targetType, id: entry.target.id });
-      setItems((current) => current.filter((item) => item.id !== id));
-      setCounts((current) => ({ ...current, [entry.targetType]: Math.max(0, current[entry.targetType] - 1) }));
-      setAnnounce(t("removedAnnouncement", { title: entry.target.title }));
-      // Sin entradas del tipo filtrado no queda nada que ver: se vuelve a Todo.
-      if (filters.type === entry.targetType && counts[entry.targetType] <= 1) {
-        changeFilters({ ...filters, type: undefined });
-      }
+      dropEntry(entry);
+      setToast({ key: ++toastSeq.current, entry });
     } catch {
       setErrorId(id);
     } finally {
       setBusyId(null);
+    }
+  };
+
+  // «Ya lo escuché»: registra la escucha y el servicio del Diario retira la entrada de Pendientes (D2).
+  const handleListened = async (id: string) => {
+    const entry = items.find((item) => item.id === id);
+    if (!entry) return;
+    setBusyId(id);
+    setErrorId(null);
+    try {
+      const created = await createListenEntry({ type: entry.targetType, id: entry.target.id });
+      dropEntry(entry);
+      setToast({ key: ++toastSeq.current, entry, listenId: created.id });
+    } catch {
+      setErrorId(id);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleActivateJourney = async (artistId: string) => {
+    try {
+      await activateArtistJourney(artistId);
+      journeys.markAdded(artistId);
+    } catch {
+      journeys.markError(artistId);
     }
   };
 
@@ -222,10 +299,6 @@ export function WantToListenList({ initial, initialFilters = {} }: WantToListenL
         </div>
       </div>
 
-      <span role="status" aria-live="polite" className="sr-only">
-        {announce}
-      </span>
-
       {modeReady ? (
         <div
           aria-busy={refreshing}
@@ -241,10 +314,13 @@ export function WantToListenList({ initial, initialFilters = {} }: WantToListenL
               actions={{
                 busy: busyId !== null,
                 errorId,
+                listened: (id) => void handleListened(id),
                 remove: (id) => void handleRemove(id),
+                listOpenId,
+                openList: setListOpenId,
+                closeList: () => setListOpenId(null),
                 journeyStatus: journeys.statusOf,
-                journeyAdded: journeys.markAdded,
-                journeyError: journeys.markError,
+                activateJourney: (artistId) => void handleActivateJourney(artistId),
               }}
             />
           ))}
@@ -267,6 +343,8 @@ export function WantToListenList({ initial, initialFilters = {} }: WantToListenL
           )}
         </div>
       ) : null}
+
+      {toastNode}
     </div>
   );
 }
