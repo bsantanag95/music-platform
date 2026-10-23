@@ -5,24 +5,22 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FilterSelect } from "@/components/ui/FilterSelect";
 import { OWN_DATA_CHANGED_EVENT } from "@/components/quick-actions/quick-actions-changes";
 import { activateArtistJourney } from "@/lib/api/artist-journeys";
 import { createListenEntry, deleteListenEntry } from "@/lib/api/diary";
 import { getMyWantToListen, removeFromWantToListen, toggleWantToListen } from "@/lib/api/want-to-listen";
 import {
-  WANT_TO_LISTEN_SORTS,
   type WantToListenCounts,
   type WantToListenEntry,
   type WantToListenFilters,
   type WantToListenListResponse,
-  type WantToListenSort,
   type WantToListenTargetType,
 } from "@/lib/api/schemas";
 import { useJourneyStatuses } from "./use-journey-statuses";
 import { PendingUndoToast } from "./PendingUndoToast";
 import { WantToListenModeSwitcher } from "./WantToListenModeSwitcher";
 import { WantToListenSection } from "./WantToListenSection";
+import { WantToListenSortSelect } from "./WantToListenSortSelect";
 import { WantToListenTypeSegments } from "./WantToListenTypeSegments";
 import { groupWantToListenByType } from "./want-to-listen-shared";
 import { useWantToListenViewMode } from "./use-want-to-listen-view-mode";
@@ -126,7 +124,7 @@ export function WantToListenList({ initial, initialFilters = {} }: WantToListenL
     }
   }, []);
 
-  // Lo anotado desde el diálogo global («Anotar algo» o «+ Añadir») no pasa por esta lista: al avisar
+  // Lo anotado desde el diálogo global («Añadir pendiente» o «+ Añadir») no pasa por esta lista: al avisar
   // un cambio se vuelve a pedir la primera página con los filtros actuales.
   useEffect(() => {
     const onChanged = () => void reload(filtersRef.current);
@@ -279,20 +277,10 @@ export function WantToListenList({ initial, initialFilters = {} }: WantToListenL
           }
         />
         <div className="flex flex-wrap items-center gap-3">
-          <FilterSelect
+          <WantToListenSortSelect
             value={filters.sort ?? "recent"}
-            onChange={(sort) => changeFilters({ ...filters, sort: sort as WantToListenSort })}
-            ariaLabel={t("sortLabel")}
-            label={t("sortLabel")}
-            widthClassName="w-[16ch]"
-            variant="boxed"
-          >
-            {WANT_TO_LISTEN_SORTS.map((sort) => (
-              <option key={sort} value={sort}>
-                {t(`sort.${sort}`)}
-              </option>
-            ))}
-          </FilterSelect>
+            onChange={(sort) => changeFilters({ ...filters, sort })}
+          />
           <div className={modeReady ? "" : "invisible"} aria-hidden={modeReady ? undefined : true}>
             <WantToListenModeSwitcher mode={mode} onChange={setMode} />
           </div>

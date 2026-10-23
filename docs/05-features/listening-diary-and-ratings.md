@@ -282,7 +282,7 @@ de las vistas:
 
 La Fase 2 (`redesign-want-to-listen-toolbar`) suma cabecera y barra:
 
-- **Cabecera:** bajo el título, «Lo que anotaste para escuchar más adelante» y el botón **«Anotar algo»**, que abre
+- **Cabecera:** bajo el título, «Lo que anotaste para escuchar más adelante» y el botón **«Añadir pendiente»**, que abre
   el diálogo global de «+ Añadir» ya en Pendiente. La lista escucha el aviso de cambios del diálogo y vuelve a pedir
   su primera página, así lo anotado aparece sin recargar.
 - **Segmentos** Todo / Artistas / Álbumes con la cantidad de cada tipo, calculada por el servidor sin el filtro de

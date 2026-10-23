@@ -208,14 +208,14 @@ el conmutador SHALL ocultarse sin perder su espacio.
 - **WHEN** el usuario tiene 30 álbumes y solo se cargaron 20
 - **THEN** el encabezado de la sección dice "Álbumes (30)"
 
-### Requirement: Cabecera de Pendientes con "Anotar algo"
+### Requirement: Cabecera de Pendientes con "Añadir pendiente"
 `/me/want-to-listen` SHALL mostrar, bajo el título, una línea que describe la página y un botón
-"Anotar algo" que abre el diálogo global de acciones rápidas ya en la acción Pendiente. Lo
+"Añadir pendiente" que abre el diálogo global de acciones rápidas ya en la acción Pendiente. Lo
 anotado desde ese diálogo SHALL aparecer en la lista sin recargar la página, respetando el filtro
 y el orden activos.
 
 #### Scenario: Anotar desde la página
-- **WHEN** el usuario pulsa "Anotar algo", busca un álbum y lo marca como pendiente
+- **WHEN** el usuario pulsa "Añadir pendiente", busca un álbum y lo marca como pendiente
 - **THEN** el diálogo se abrió en Pendiente y, al guardar, el álbum aparece en la lista sin recargar
 
 ### Requirement: Barra de tipo y orden de Pendientes
