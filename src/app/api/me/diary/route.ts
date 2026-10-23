@@ -6,7 +6,7 @@ import { CreateListenEntryRequestSchema } from "@/lib/api/schemas";
 import { requireSocialActivityAllowed, requireUser } from "@/services/auth/authorization";
 import { createListenEntry, listMyDiary, resolveDiaryTarget, type DiaryFilters } from "@/services/diary/diary";
 import { DIARY_AUDIENCES, DIARY_TARGET_TYPES, LISTEN_CONTEXTS, LISTEN_REACTIONS } from "@/services/diary/types";
-import { parseTimeZoneParam } from "./time-zone-param";
+import { parseTimeZoneParam } from "@/lib/api/time-zone-param";
 
 const REACTION_FILTER_VALUES = [...LISTEN_REACTIONS, "none"] as const;
 

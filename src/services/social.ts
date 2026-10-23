@@ -7,6 +7,7 @@ import { ApiError } from "@/lib/api/errors";
 import { COMMENT_LIKE_COUNT_SQL, likedByViewerSql, thresholdedLikeCount } from "@/services/social/comment-likes";
 import { COMMENT_EFFECTIVE_TOPIC_SQL, COMMENT_REPLY_COUNT_SQL, rootCommentsOnly } from "@/services/social/comment-roots";
 import { isBlockedBetween } from "@/services/social/relations";
+import { emitReplyNotifications } from "@/services/notifications/emit";
 import { isScoreCoherent, starsFromScore } from "@/lib/rating-range";
 import type { SocialTargetType } from "@/lib/api/schemas";
 
@@ -167,8 +168,19 @@ export async function createReply(commentId: string, userId: string, body: strin
   const root = await findVisibleRoot(commentId);
   if (!root.artistId) throw new ApiError("REPLIES_NOT_ALLOWED", 400, "Este comentario no admite respuestas");
   if (await isBlockedBetween(userId, root.userId)) throw new ApiError("BLOCKED", 403, "No puedes realizar esta acción con esta cuenta");
-  const [created] = await db.insert(comment).values({ userId, artistId: root.artistId, parentId: root.id, body: value, topic: null }).returning();
-  if (!created) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo crear la respuesta");
+  // La respuesta y sus avisos van en la misma transacción (D3): si falla el
+  // aviso, no queda una respuesta que nadie ve notificada, y viceversa.
+  const created = await db.transaction(async (tx) => {
+    const [row] = await tx.insert(comment).values({ userId, artistId: root.artistId, parentId: root.id, body: value, topic: null }).returning();
+    if (!row) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo crear la respuesta");
+    await emitReplyNotifications(tx, {
+      commentId: row.id,
+      rootId: root.id,
+      rootAuthorId: root.userId,
+      actorId: userId,
+    });
+    return row;
+  });
   return getComment(created.id);
 }
 

@@ -82,12 +82,19 @@ describe("user-menu-items", () => {
     expect(items.find((i) => i.id === "following")?.href).toBe("/users/ana/connections/following");
   });
 
-  it("adjunta el conteo al ítem con badge solo cuando es > 0", () => {
-    const withPending = buildUserMenuItems({ surface: "panel", pendingFollowRequests: 2 });
+  it("adjunta el conteo al ítem con badge solo en Red y solo cuando es > 0", () => {
+    const withPending = buildUserMenuItems({ username: "ana", surface: "settings", pendingFollowRequests: 2 });
     expect(withPending.find((i) => i.id === "followRequests")?.badgeCount).toBe(2);
 
-    const none = buildUserMenuItems({ surface: "panel", pendingFollowRequests: 0 });
+    const none = buildUserMenuItems({ username: "ana", surface: "settings", pendingFollowRequests: 0 });
     expect(none.find((i) => i.id === "followRequests")?.badgeCount).toBeUndefined();
+  });
+
+  it("el Header y su panel no repiten el contador de solicitudes (lo lleva la campana)", () => {
+    for (const surface of ["header", "panel"] as const) {
+      const items = buildUserMenuItems({ username: "ana", surface, pendingFollowRequests: 4 });
+      expect(items.find((i) => i.id === "followRequests")?.badgeCount).toBeUndefined();
+    }
   });
 
   it("la superficie settings reúne solo los destinos de red y los bloqueos", () => {

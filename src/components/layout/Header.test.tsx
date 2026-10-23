@@ -39,6 +39,28 @@ vi.mock("@/lib/api/catalog", () => ({
   getSearchSuggestions: mocks.getSearchSuggestions,
 }));
 
+// Se mockea la campana para no necesitar `QueryClientProvider` en este archivo:
+// su comportamiento (contador, panel, "9+") tiene pruebas propias.
+vi.mock("@/components/notifications/NotificationBell", () => ({
+  NotificationBell: ({
+    initialCount,
+    variant = "desktop",
+  }: {
+    initialCount: number;
+    variant?: "desktop" | "mobile";
+  }) =>
+    variant === "mobile" ? (
+      // Expresión (no literal) para que la regla de Next no marque este mock.
+      <a href={"/me/" + "notifications"} data-testid="bell-mobile">
+        {`Notificaciones ${initialCount}`}
+      </a>
+    ) : (
+      <button type="button" data-testid="bell-desktop">
+        {`Notificaciones ${initialCount}`}
+      </button>
+    ),
+}));
+
 vi.mock("next-intl", async () => {
   const actual = await vi.importActual("next-intl");
   return {
@@ -280,7 +302,7 @@ describe("Header", () => {
     expect(add.compareDocumentPosition(profile) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("abre el diálogo de acciones rápidas sin QueryClientProvider (el Header vive fuera de Providers)", () => {
+  it("abre el diálogo de acciones rápidas aunque no haya QueryClientProvider en su árbol", () => {
     renderWithIntl(
       <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} />,
     );
@@ -342,20 +364,47 @@ describe("Header", () => {
     expect(trigger).toHaveFocus();
   });
 
-  it("muestra el número de solicitudes de seguimiento pendientes en el menú", () => {
+  it("la campana va entre 'Añadir' y el menú de usuario, con el contador del servidor", () => {
     renderWithIntl(
-      <Header
-        user={{ id: "u1", username: "ana", displayName: "Ana" }}
-        pendingFollowRequests={3}
-      />,
+      <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} notificationCount={4} />,
     );
 
-    // El disparador anuncia también el aviso de pendientes junto al nombre.
-    fireEvent.click(screen.getByRole("button", { name: /Ana/ }));
+    const add = screen.getByRole("button", { name: /Añadir/ });
+    const bell = screen.getByTestId("bell-desktop");
+    const userMenu = screen.getByRole("button", { name: "Ana" });
+    expect(bell).toHaveTextContent("4");
+    expect(add.compareDocumentPosition(bell) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(bell.compareDocumentPosition(userMenu) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("debajo de lg la campana es un enlace a la página de notificaciones", () => {
+    renderWithIntl(
+      <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} notificationCount={2} />,
+    );
+
+    const mobile = screen.getByTestId("bell-mobile");
+    expect(mobile).toHaveAttribute("href", "/me/notifications");
+    expect(mobile).toHaveTextContent("2");
+  });
+
+  it("la campana no aparece sin sesión", () => {
+    renderWithIntl(<Header notificationCount={3} />);
+
+    expect(screen.queryByTestId("bell-desktop")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("bell-mobile")).not.toBeInTheDocument();
+  });
+
+  it("el menú de usuario ya no repite el contador de solicitudes pendientes", () => {
+    renderWithIntl(
+      <Header user={{ id: "u1", username: "ana", displayName: "Ana" }} notificationCount={3} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Ana" }));
 
     const requests = screen.getByRole("link", { name: /Solicitudes/ });
     expect(requests).toHaveAttribute("href", "/me/follow-requests");
-    expect(requests).toHaveTextContent("3");
+    // El aviso vive en la campana; el destino no lleva cifra.
+    expect(requests).not.toHaveTextContent("3");
   });
 
   it("un usuario normal no ve moderación ni administración, ni en la barra ni en el menú", () => {

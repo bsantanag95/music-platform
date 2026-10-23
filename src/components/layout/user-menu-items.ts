@@ -144,8 +144,8 @@ interface BuildUserMenuItemsOptions {
 
 /**
  * Resuelve `USER_MENU_ITEMS` para una superficie: filtra por `surface` y permisos,
- * sustituye `:username` y adjunta el conteo de solicitudes pendientes al ítem
- * con badge cuando es mayor que cero.
+ * sustituye `:username` y, solo en la pantalla Red (`settings`), adjunta el conteo
+ * de solicitudes pendientes al ítem con badge cuando es mayor que cero.
  */
 export function buildUserMenuItems({
   username = "",
@@ -162,8 +162,13 @@ export function buildUserMenuItems({
     href: item.href.replace(":username", encodeURIComponent(username)),
     labelKey: item.labelKey,
     group: item.group,
+    // El contador de solicitudes solo se pinta en Red (openspec:
+    // add-notifications-core, tarea 5.4): en el Header esa información ya la
+    // lleva la campana y en el panel móvil el acceso a la bandeja.
     badgeCount:
-      item.badge === "pendingFollowRequests" && pendingFollowRequests > 0
+      surface === "settings" &&
+      item.badge === "pendingFollowRequests" &&
+      pendingFollowRequests > 0
         ? pendingFollowRequests
         : undefined,
   }));

@@ -37,6 +37,32 @@ export const COMMENT_TOPICS = ["start", "albums", "songs", "general"] as const;
 export type CommentTopic = (typeof COMMENT_TOPICS)[number];
 export const DEFAULT_COMMENT_TOPIC: CommentTopic = "general";
 
+/**
+ * Tipos de notificación de la Fase 1 (openspec: add-notifications-core). La
+ * lista debe coincidir con `chk_notification_kind` de la migración 0075.
+ */
+export const NOTIFICATION_KINDS = [
+  "comment_reply",
+  "thread_reply",
+  "new_follower",
+  "follow_request",
+  "follow_accepted",
+  "moderation",
+] as const;
+export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
+
+/**
+ * Tipos que la persona puede desactivar. El resto (solicitudes de seguimiento
+ * y moderación) son fijos. Debe coincidir con `chk_notification_preference_kind`.
+ */
+export const OPTIONAL_NOTIFICATION_KINDS = [
+  "comment_reply",
+  "thread_reply",
+  "new_follower",
+  "follow_accepted",
+] as const;
+export type OptionalNotificationKind = (typeof OPTIONAL_NOTIFICATION_KINDS)[number];
+
 export const appUser = pgTable(
   "app_user",
   {
@@ -93,6 +119,9 @@ export const appUser = pgTable(
     // activa. Una cuenta desactivada no tiene sesiones y desaparece para las demás
     // personas, pero conserva su contenido; se reactiva al iniciar sesión.
     deactivatedAt: timestamp("deactivated_at", { withTimezone: true }),
+    // Última vez que abrió la bandeja de notificaciones (migración 0075);
+    // el contador solo cuenta filas posteriores. Nulo = nunca la abrió.
+    notificationsSeenAt: timestamp("notifications_seen_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -1836,6 +1865,58 @@ export const commentLike = pgTable(
 );
 
 export type CommentLikeRow = typeof commentLike.$inferSelect;
+
+// Bandeja de notificaciones in-app (openspec: add-notifications-core, migración
+// 0075). Una fila por evento, escrita por `services/notifications/emit.ts` en la
+// misma transacción que la acción. Los CHECK de tipo, coherencia tipo ↔
+// referencia y actor viven en la migración SQL; aquí se reflejan los índices
+// parciales que Drizzle no expresa sobre columnas nullable.
+export const notification = pgTable(
+  "notification",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    recipientId: uuid("recipient_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    kind: text("kind").$type<NotificationKind>().notNull(),
+    actorId: uuid("actor_id").references(() => appUser.id, { onDelete: "cascade" }),
+    commentId: uuid("comment_id").references(() => comment.id, { onDelete: "cascade" }),
+    followId: uuid("follow_id").references(() => userFollow.id, { onDelete: "cascade" }),
+    moderationActionId: uuid("moderation_action_id").references(() => moderationAction.id, {
+      onDelete: "cascade",
+    }),
+    groupKey: text("group_key").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    readAt: timestamp("read_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("idx_notification_recipient_created").on(t.recipientId, t.createdAt.desc()),
+    // idx_notification_recipient_unread y los únicos parciales por objeto se
+    // definen en la migración SQL cruda (índices parciales).
+  ],
+);
+
+export type NotificationRow = typeof notification.$inferSelect;
+
+export const notificationPreference = pgTable(
+  "notification_preference",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    kind: text("kind").$type<OptionalNotificationKind>().notNull(),
+    enabled: boolean("enabled").notNull().default(true),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.kind] }),
+    check(
+      "chk_notification_preference_kind",
+      sql`${t.kind} IN ('comment_reply','thread_reply','new_follower','follow_accepted')`,
+    ),
+  ],
+);
+
+export type NotificationPreferenceRow = typeof notificationPreference.$inferSelect;
 
 export const listenEntry = pgTable(
   "listen_entry",

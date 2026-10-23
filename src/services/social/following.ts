@@ -6,6 +6,7 @@ import type { ProfileVisibility, UserSummary } from "./types";
 import { isBlockedBetween } from "./relations";
 import { activeUserCondition } from "@/services/auth/account-status";
 import { resolveImageUrls } from "@/services/storage/avatar-urls";
+import { emitNotifications, retractFollowRequestNotifications } from "@/services/notifications/emit";
 
 function isUniqueViolation(error: unknown): error is { code: "23505" } {
   return typeof error === "object" && error !== null && "code" in error && error.code === "23505";
@@ -35,17 +36,33 @@ export async function followUser(followerId: string, targetUsername: string): Pr
 
   try {
     await db.transaction(async (tx) => {
-      await tx
+      const [saved] = await tx
         .insert(userFollow)
         .values({ followerId, followedId: target.id, status: newStatus })
         .onConflictDoUpdate({
           target: [userFollow.followerId, userFollow.followedId],
           set: { status: newStatus },
-        });
+        })
+        .returning({ id: userFollow.id });
+      if (!saved) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo guardar el seguimiento");
+
+      // La notificación de seguimiento sale de la MISMA transacción que la
+      // relación: `new_follower` si quedó accepted, `follow_request` si pendiente.
+      await emitNotifications(tx, [
+        {
+          kind: newStatus === "accepted" ? "new_follower" : "follow_request",
+          recipientId: target.id,
+          actorId: followerId,
+          followId: saved.id,
+        },
+      ]);
+
       if (newStatus === "accepted") {
         // Si el objetivo ya había enviado una solicitud pendiente al
-        // seguidor, el seguimiento mutuo se consolida en accepted.
-        await tx
+        // seguidor, el seguimiento mutuo se consolida en accepted. No se emite
+        // nada extra por esa fila (D3), pero su `follow_request` deja de tener
+        // sentido: la solicitud ya no está pendiente y sus botones fallarían.
+        const consolidated = await tx
           .update(userFollow)
           .set({ status: "accepted" })
           .where(
@@ -54,7 +71,12 @@ export async function followUser(followerId: string, targetUsername: string): Pr
               eq(userFollow.followedId, followerId),
               eq(userFollow.status, "pending"),
             ),
-          );
+          )
+          .returning({ id: userFollow.id });
+        await retractFollowRequestNotifications(
+          tx,
+          consolidated.map((row) => row.id),
+        );
       }
     });
   } catch (error) {
@@ -119,7 +141,20 @@ export async function approveRequest(ownerId: string, requesterId: string): Prom
   if (await isBlockedBetween(ownerId, requesterId)) {
     throw new ApiError("BLOCKED", 403, "No puedes aprobar una solicitud de un usuario bloqueado");
   }
-  await db.update(userFollow).set({ status: "accepted" }).where(eq(userFollow.id, request.id));
+  // Aceptar, avisar y retirar la solicitud del dueño son una sola operación
+  // (D3): si algo falla, la solicitud sigue pendiente y sin aviso huérfano.
+  await db.transaction(async (tx) => {
+    await tx.update(userFollow).set({ status: "accepted" }).where(eq(userFollow.id, request.id));
+    await retractFollowRequestNotifications(tx, [request.id]);
+    await emitNotifications(tx, [
+      {
+        kind: "follow_accepted",
+        recipientId: requesterId,
+        actorId: ownerId,
+        followId: request.id,
+      },
+    ]);
+  });
 }
 
 export async function rejectRequest(ownerId: string, requesterId: string): Promise<void> {

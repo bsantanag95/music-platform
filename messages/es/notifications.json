@@ -1,0 +1,70 @@
+{
+  "bell": {
+    "label": "Notificaciones",
+    "labelWithCount": "Notificaciones, {count, plural, =0 {nada sin ver} one {1 sin ver} other {# sin ver}}",
+    "seeAll": "Ver todas",
+    "markAllRead": "Marcar todas como leídas",
+    "markAllReadPending": "Marcando…",
+    "empty": "Aquí verás respuestas, seguidores y avisos de tu cuenta.",
+    "loading": "Cargando notificaciones…",
+    "error": "No se pudieron cargar las notificaciones.",
+    "actionError": "No se pudo completar la acción.",
+    "unread": "Sin leer"
+  },
+  "row": {
+    "twoNames": "{first} y {second}",
+    "moreNames": "{names} y {count, plural, one {# persona más} other {# personas más}}",
+    "commentReply": "{people} {count, plural, one {respondió} other {respondieron}} a tu tema en {artist}",
+    "threadReply": "{people} {count, plural, one {respondió} other {respondieron}} en un hilo de {artist} en el que participaste",
+    "newFollower": "{name} te empezó a seguir",
+    "followRequest": "{name} quiere seguirte",
+    "followAccepted": "{name} aceptó tu solicitud de seguimiento",
+    "approve": "Aprobar",
+    "reject": "Rechazar"
+  },
+  "moderation": {
+    "hideComment": "Se ocultó tu comentario",
+    "hideReview": "Se ocultó tu reseña",
+    "hideList": "Se ocultó tu lista",
+    "restoreComment": "Se restauró tu comentario",
+    "restoreReview": "Se restauró tu reseña",
+    "restoreList": "Se restauró tu lista",
+    "suspendSocial": "Tu actividad social quedó suspendida",
+    "revokeSocial": "Tu suspensión social se revocó: ya puedes volver a publicar",
+    "fallback": "Hay un aviso sobre tu cuenta",
+    "reason": "Motivo: {reason}"
+  },
+  "page": {
+    "title": "Notificaciones",
+    "subtitle": "Respuestas, seguidores y avisos de tu cuenta.",
+    "settings": "Ajustes de notificaciones",
+    "markAllRead": "Marcar todas como leídas",
+    "loadMore": "Cargar más",
+    "loadingMore": "Cargando…",
+    "emptyTitle": "Aquí verás tus notificaciones",
+    "emptyDescription": "Cuando alguien responda a tus temas, te siga o haya un aviso sobre tu cuenta, aparecerá aquí.",
+    "error": "No se pudieron cargar las notificaciones."
+  },
+  "settings": {
+    "title": "Notificaciones",
+    "intro": "Elige qué avisos quieres recibir dentro de la aplicación. Ningún tipo se envía por email ni por notificaciones del navegador.",
+    "fixed": "Siempre activas",
+    "saveError": "No se pudieron guardar las preferencias.",
+    "kinds": {
+      "comment_reply": "Respuestas a tus temas",
+      "thread_reply": "Respuestas en hilos donde participaste",
+      "new_follower": "Nuevos seguidores",
+      "follow_accepted": "Solicitudes aceptadas",
+      "follow_request": "Solicitudes de seguimiento",
+      "moderation": "Avisos de moderación"
+    },
+    "descriptions": {
+      "comment_reply": "Cuando alguien responde al tema que abriste.",
+      "thread_reply": "Cuando alguien responde en un hilo donde ya habías participado.",
+      "new_follower": "Cuando alguien empieza a seguirte.",
+      "follow_accepted": "Cuando alguien acepta tu solicitud para seguirle.",
+      "follow_request": "Las solicitudes siempre llegan: son las que te permiten decidir si aceptas.",
+      "moderation": "Los avisos de moderación siempre llegan: afectan a tu cuenta o a tu contenido."
+    }
+  }
+}

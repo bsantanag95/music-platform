@@ -21,7 +21,6 @@ interface LogoutControls {
 
 interface UserMenuListProps extends LogoutControls {
   username: string;
-  pendingFollowRequests: number;
   surface: UserMenuSurface;
   /** Permisos de plataforma: habilitan las herramientas de rol. */
   permissions?: readonly Permission[];
@@ -35,7 +34,6 @@ interface UserMenuListProps extends LogoutControls {
 // `user-menu-items.ts`, única fuente junto con la pantalla Red de ajustes.
 export function UserMenuList({
   username,
-  pendingFollowRequests,
   surface,
   permissions = [],
   id,
@@ -46,7 +44,7 @@ export function UserMenuList({
 }: UserMenuListProps) {
   const t = useTranslations("common");
   const tErrors = useTranslations("errors");
-  const items = buildUserMenuItems({ username, pendingFollowRequests, surface, permissions });
+  const items = buildUserMenuItems({ username, surface, permissions });
 
   const groups = USER_MENU_GROUP_ORDER.map((group) => ({
     group,
@@ -102,20 +100,13 @@ function UserMenuLink({
   label: string;
   onNavigate?: () => void;
 }) {
-  const t = useTranslations("common");
-
   return (
     <Link
       href={item.href}
       onClick={onNavigate}
-      className="flex items-center justify-between gap-3 rounded px-3 py-2 font-data text-xs text-paper-muted transition-colors hover:bg-ink hover:text-paper"
+      className="flex items-center rounded px-3 py-2 font-data text-xs text-paper-muted transition-colors hover:bg-ink hover:text-paper"
     >
       <span className="truncate">{label}</span>
-      {item.badgeCount != null && (
-        <span className="shrink-0 rounded-sm bg-amber/15 px-1.5 py-0.5 text-amber">
-          {t("pendingFollowRequests", { count: item.badgeCount })}
-        </span>
-      )}
     </Link>
   );
 }
@@ -143,7 +134,6 @@ interface UserMenuProps extends LogoutControls {
   username: string;
   displayName: string;
   avatarUrl?: string | null;
-  pendingFollowRequests: number;
   permissions?: readonly Permission[];
 }
 
@@ -156,13 +146,11 @@ export function UserMenu({
   username,
   displayName,
   avatarUrl = null,
-  pendingFollowRequests,
   permissions = [],
   logoutPending,
   logoutError,
   onLogout,
 }: UserMenuProps) {
-  const t = useTranslations("common");
   const tErrors = useTranslations("errors");
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -216,16 +204,10 @@ export function UserMenu({
           open ? "bg-ink-surface" : ""
         }`}
       >
-        {/* Avatar con un punto ámbar cuando hay solicitudes de seguimiento
-            pendientes: antes solo se veían al abrir el menú. */}
-        <span className="relative">
-          <UserAvatar avatarUrl={avatarUrl} username={username} name={displayName} size="nav" />
-          {pendingFollowRequests > 0 ? (
-            <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-amber ring-2 ring-ink">
-              <span className="sr-only">{t("pendingFollowRequests", { count: pendingFollowRequests })}</span>
-            </span>
-          ) : null}
-        </span>
+        {/* El aviso de solicitudes pendientes vive en la campana de
+            notificaciones (openspec: add-notifications-core, D7): aquí no se
+            duplica con un punto sobre el avatar. */}
+        <UserAvatar avatarUrl={avatarUrl} username={username} name={displayName} size="nav" />
         <span className="max-w-40 truncate">{displayName}</span>
         <ChevronDown open={open} />
       </button>
@@ -245,7 +227,6 @@ export function UserMenu({
               <UserMenuList
                 id={panelId}
                 username={username}
-                pendingFollowRequests={pendingFollowRequests}
                 surface="header"
                 permissions={permissions}
                 onNavigate={() => setOpen(false)}

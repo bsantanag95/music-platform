@@ -9,6 +9,7 @@ import ProfileSettingsPage from "./profile/page";
 import CurationSettingsPage from "./curation/page";
 import PrivacySettingsPage from "./privacy/page";
 import NetworkSettingsPage from "./network/page";
+import NotificationSettingsPage from "./notifications/page";
 import AccountSettingsPage from "./account/page";
 import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
 import { SettingsNav } from "@/components/settings/SettingsNav";
@@ -24,6 +25,7 @@ import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
 import { OwnerMusicIdentityEditor } from "@/components/profiles/OwnerMusicIdentityEditor";
 import { OwnerPromptsEditor } from "@/components/profiles/OwnerPromptsEditor";
+import { NotificationPreferencesForm } from "@/components/notifications/NotificationPreferencesForm";
 
 const m = vi.hoisted(() => ({
   requirePageUser: vi.fn(),
@@ -38,6 +40,7 @@ const m = vi.hoisted(() => ({
   getShowcase: vi.fn(),
   getCurationSummary: vi.fn(),
   getAccessMethod: vi.fn(),
+  getNotificationPreferences: vi.fn(),
   redirect: vi.fn(),
   refresh: vi.fn(),
 }));
@@ -77,6 +80,9 @@ vi.mock("@/services/profiles/identity", () => ({ getExtendedIdentity: m.getExten
 vi.mock("@/services/profiles/showcase", () => ({ getShowcase: m.getShowcase }));
 vi.mock("@/services/profiles/curation", () => ({ getCurationSummary: m.getCurationSummary }));
 vi.mock("@/services/profiles/account-settings", () => ({ getAccessMethod: m.getAccessMethod }));
+vi.mock("@/services/notifications/preferences", () => ({
+  getNotificationPreferences: m.getNotificationPreferences,
+}));
 // El módulo real abre la conexión a la BD al importarse; solo se usa su tope.
 vi.mock("@/services/rating-highlights/rating-highlights", () => ({ RATING_HIGHLIGHT_MAX: 6 }));
 // Los editores reales hablan con la API: aquí solo importa que se monten con su `initial`.
@@ -95,6 +101,9 @@ vi.mock("@/components/profiles/OwnerMusicIdentityEditor", () => ({ OwnerMusicIde
 vi.mock("@/components/profiles/OwnerPromptsEditor", () => ({ OwnerPromptsEditor: () => null }));
 vi.mock("@/components/profiles/OwnerShowcaseEditor", () => ({
   OwnerShowcaseEditor: () => <div>editor de destacados</div>,
+}));
+vi.mock("@/components/notifications/NotificationPreferencesForm", () => ({
+  NotificationPreferencesForm: () => null,
 }));
 
 type El = { type?: unknown; props?: Record<string, unknown> };
@@ -120,6 +129,14 @@ beforeEach(() => {
   m.requirePageUser.mockResolvedValue(owner);
   m.isEmailVerified.mockReturnValue(true);
   m.countPendingFollowRequests.mockResolvedValue(0);
+  m.getNotificationPreferences.mockResolvedValue({
+    comment_reply: true,
+    thread_reply: true,
+    new_follower: true,
+    follow_request: true,
+    follow_accepted: true,
+    moderation: true,
+  });
 });
 
 describe("layout de ajustes", () => {
@@ -387,6 +404,32 @@ describe("pantalla Red", () => {
   it("sin pendientes no hay ningún indicador numérico", async () => {
     renderWithIntl(await NetworkSettingsPage());
     expect(screen.queryByText(/pendingFollowRequests/)).not.toBeInTheDocument();
+  });
+});
+
+describe("pantalla Notificaciones", () => {
+  it("carga las preferencias del dueño y las pasa al formulario", async () => {
+    const preferences = {
+      comment_reply: false,
+      thread_reply: true,
+      new_follower: true,
+      follow_request: true,
+      follow_accepted: true,
+      moderation: true,
+    };
+    m.getNotificationPreferences.mockResolvedValue(preferences);
+
+    const tree = await NotificationSettingsPage();
+
+    expect(m.getNotificationPreferences).toHaveBeenCalledWith("u1");
+    expect(findElement(tree, NotificationPreferencesForm)?.props?.initial).toEqual(preferences);
+  });
+
+  it("muestra el título y la introducción de la pantalla", async () => {
+    renderWithIntl(await NotificationSettingsPage());
+
+    // El encabezado de la pantalla viene del espacio `notifications`.
+    expect(screen.getByText("settings.intro")).toBeInTheDocument();
   });
 });
 

@@ -13,8 +13,9 @@ export function useNotifyQuickActionChange(): () => void {
   return useContext(QuickActionsChangeContext);
 }
 
-// El Header vive fuera de `<Providers>` (no hay `QueryClientProvider` en su árbol), así que el
-// diálogo no invalida las queries directamente: emite este evento y `Providers` lo escucha.
+// El diálogo vive en el Header. Desde `add-notifications-core` el Header también cuelga de
+// `<Providers>`, pero el aviso sigue siendo un evento de `window`: lo consumen páginas de cualquier
+// punto del árbol y así el acoplamiento entre el diálogo y el proveedor queda en un solo lugar.
 export const OWN_DATA_CHANGED_EVENT = "quick-actions:own-data-changed";
 
 export function emitOwnDataChanged(): void {

@@ -183,6 +183,32 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - Un perfil privado no revela contenido no autorizado: las superficies ajenas devuelven lista
   vacía (o `404` en el detalle) sin indicar si el usuario tiene contenido.
 
+## Notificaciones (Fase 1, `add-notifications-core`)
+
+- Toda notificación nace de **un único servicio de emisión**, dentro de la **misma transacción** que la acción que la
+  provoca. Nunca se notifica a alguien por su propia acción, nunca se emite si hay un bloqueo en cualquier dirección
+  entre actor y destinatario, y no se duplica un aviso por el mismo objeto y tipo.
+- Tipos y destinatarios: `comment_reply` (autor del tema respondido), `thread_reply` (autores previos de respuestas
+  visibles del hilo, sin el autor de la raíz ni quien responde), `new_follower` (el seguido de un perfil público),
+  `follow_request` (el dueño de un perfil privado), `follow_accepted` (quien pidió) y `moderation` (autor o dueño del
+  contenido oculto/restaurado, o persona suspendida/revocada).
+- La notificación **desaparece con su objeto**: borrar la respuesta, dejar de seguir, quitar un seguidor, rechazar o
+  cancelar una solicitud, bloquear (que borra los seguimientos) o eliminar la cuenta. No hay limpieza manual.
+- En la lectura se excluye a los actores con cuenta desactivada, cualquier bloqueo entre las partes y las respuestas
+  ocultas o de raíz oculta. Los avisos de moderación son la excepción: se muestran aunque el contenido esté oculto y
+  **nunca nombran al moderador**, solo la acción, el objeto y el motivo.
+- Se agrupan por hilo las respuestas del mismo tema y por día (en la zona del lector) los nuevos seguidores; las
+  solicitudes, las aceptaciones y la moderación no se agrupan. El orden es por el evento más reciente.
+- **Visto no es leído**: el contador cuenta entradas no leídas posteriores a la última apertura de la bandeja, se
+  muestra con tope "9+" y vuelve a cero al abrir la campana o la página. Cada entrada sigue sin leer hasta que se abre
+  su destino o se marca todas como leídas. El contador es una bandeja de entrada, nunca un logro: sin sonido, avisos
+  emergentes, contador en el título de la pestaña, email ni push en esta fase.
+- Preferencias: `comment_reply`, `thread_reply`, `new_follower` y `follow_accepted` se pueden desactivar (activados
+  por defecto); `follow_request` y `moderation` no. Una preferencia aplica a los avisos posteriores y no borra los
+  existentes.
+- Retención: se borran las notificaciones leídas con más de 90 días y cualquier notificación con más de 180, en el
+  propio camino de lectura.
+
 ## Popularidad (Explorar)
 
 Cambio `explore-popular-now` (2026-10, ADR 0041). "Popular" se mide en **personas distintas**, no en acciones, y es la misma regla

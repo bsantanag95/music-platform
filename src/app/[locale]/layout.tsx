@@ -2,7 +2,7 @@ import { resolveImageUrl } from "@/services/storage/avatar-urls";
 import type { Metadata } from "next";
 import { Space_Grotesk, Source_Serif_4, IBM_Plex_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { getMessages, getTimeZone } from "next-intl/server";
 import { Providers } from "./providers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -10,7 +10,7 @@ import { FooterSlot } from "@/components/layout/FooterSlot";
 import { TimeZoneCookie } from "@/components/layout/TimeZoneCookie";
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
-import { countPendingFollowRequests } from "@/services/social/following";
+import { countUnseen } from "@/services/notifications/read";
 import { isExploreEnabled } from "@/lib/config/discovery";
 import "@/app/globals.css";
 
@@ -70,9 +70,11 @@ export default async function RootLayout({
   // Foto de perfil para el menú de usuario del Header (monograma si no hay).
   const avatarUrl = session?.user ? await resolveImageUrl(session.user.avatarImageId) : null;
   const platformPermissions = session?.user ? await getUserPermissions(session.user.id) : [];
-  // Badge del menú de usuario: solicitudes de seguimiento pendientes recibidas.
-  const pendingFollowRequests = session?.user
-    ? await countPendingFollowRequests(session.user.id)
+  // Campana del Header: entradas de la bandeja sin ver. El corte de los
+  // seguidores por día depende de la zona del usuario, igual que en el
+  // cliente (openspec: add-notifications-core, D5 y D7).
+  const notificationCount = session?.user
+    ? await countUnseen(session.user.id, await getTimeZone())
     : 0;
 
   return (
@@ -82,19 +84,23 @@ export default async function RootLayout({
     >
       <body>
         <NextIntlClientProvider messages={messages}>
-          <span id="top" aria-hidden="true" />
-          <TimeZoneCookie />
-          <Header
-            user={publicUser ? { ...publicUser, avatarUrl } : null}
-            exploreEnabled={exploreEnabled}
-            pendingFollowRequests={pendingFollowRequests}
-            platformPermissions={platformPermissions}
-          />
-          <Providers>{children}</Providers>
-          <FooterSlot
-            full={<Footer user={publicUser} exploreEnabled={exploreEnabled} />}
-            minimal={<Footer variant="minimal" />}
-          />
+          {/* `Providers` envuelve también al Header: la campana es una consulta
+              de TanStack Query y necesita el mismo cliente que las páginas. */}
+          <Providers>
+            <span id="top" aria-hidden="true" />
+            <TimeZoneCookie />
+            <Header
+              user={publicUser ? { ...publicUser, avatarUrl } : null}
+              exploreEnabled={exploreEnabled}
+              notificationCount={notificationCount}
+              platformPermissions={platformPermissions}
+            />
+            {children}
+            <FooterSlot
+              full={<Footer user={publicUser} exploreEnabled={exploreEnabled} />}
+              minimal={<Footer variant="minimal" />}
+            />
+          </Providers>
         </NextIntlClientProvider>
       </body>
     </html>

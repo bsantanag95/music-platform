@@ -1,6 +1,7 @@
 import { asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import {
+  NOTIFICATION_KINDS,
   appUser,
   artist,
   artistFollow,
@@ -10,6 +11,7 @@ import {
   listenEntry,
   listenEntryHighlight,
   listSave,
+  notificationPreference,
   rating,
   ratingHighlight,
   recording,
@@ -68,6 +70,10 @@ export interface DataExport {
     following: { username: string | null; deactivated: boolean; status: string }[];
     blocked: { username: string | null; deactivated: boolean }[];
   };
+  notifications: {
+    /** Preferencia efectiva por tipo. Las notificaciones en sí no se exportan. */
+    preferences: Record<string, boolean>;
+  };
   catalog: {
     artists: Record<string, string>;
     releaseGroups: Record<string, string>;
@@ -117,6 +123,7 @@ export async function buildDataExport(userId: string, now: Date = new Date()): P
     followers,
     following,
     blocked,
+    notificationPreferences,
   ] = await Promise.all([
     own(db.select().from(userProfileLink).where(eq(userProfileLink.userId, userId)).orderBy(asc(userProfileLink.position))),
     own(db.select().from(userPinnedItem).where(eq(userPinnedItem.userId, userId)).orderBy(asc(userPinnedItem.position))),
@@ -205,6 +212,17 @@ export async function buildDataExport(userId: string, now: Date = new Date()): P
       .innerJoin(appUser, eq(userBlock.blockedId, appUser.id))
       .where(eq(userBlock.blockerId, userId))
       .orderBy(asc(appUser.username)),
+    // Preferencias de notificación (D9): solo las filas que difieren del defecto.
+    // Las notificaciones en sí no se exportan: contienen textos de otras personas.
+    own(
+      db
+        .select({
+          kind: notificationPreference.kind,
+          enabled: notificationPreference.enabled,
+        })
+        .from(notificationPreference)
+        .where(eq(notificationPreference.userId, userId)),
+    ),
   ]);
 
   const listIds = ownedLists.map((list) => list.id);
@@ -269,6 +287,13 @@ export async function buildDataExport(userId: string, now: Date = new Date()): P
       followers: followers.map((row) => ({ ...person(row), status: row.status })),
       following: following.map((row) => ({ ...person(row), status: row.status })),
       blocked: blocked.map((row) => person(row)),
+    },
+    notifications: {
+      // La ausencia de fila significa "activado".
+      preferences: Object.fromEntries([
+        ...NOTIFICATION_KINDS.map((kind) => [kind, true] as const),
+        ...notificationPreferences.map((row) => [row.kind, row.enabled] as const),
+      ]),
     },
     catalog: {
       artists: Object.fromEntries(artists.map((row) => [row.id, row.name])),

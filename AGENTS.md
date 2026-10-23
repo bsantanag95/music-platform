@@ -161,6 +161,18 @@ de cuál de las filas con el mismo título haya en la BD.
 >   `edition` nula y `held_on` del año anterior, la carga idempotente (`xmin` igual), la lectura de la clase, que el salón no aparece
 >   en las tarjetas de premios, en "Los más premiados" ni en el puntaje de destacados (`competitionNominations`) y que se rechaza una
 >   clase con gala futura o con número de edición.
+> - `smoke-test-notifications.ts` crea un artista sintético (MBID `5e0ce000-0000-4000-8000-00000000a9a0`) y usuarios
+>   `smoke_notif_*`, y los borra al terminar (también si falla). Si se interrumpió, limpiar con
+>   `DELETE FROM moderation_action WHERE actor_id IN (SELECT id FROM app_user WHERE username LIKE 'smoke_notif_%');
+>   DELETE FROM app_user WHERE username LIKE 'smoke_notif_%';
+>   DELETE FROM artist WHERE mbid = '5e0ce000-0000-4000-8000-00000000a9a0';` (el `ON DELETE CASCADE` limpia
+>   notificaciones, seguimientos, comentarios, preferencias y restricciones; la primera sentencia suelta el `RESTRICT`
+>   de `moderation_action.actor_id`). Necesita la migración `0075`. Verifica contra Postgres real cada fuente de emisión
+>   (respuestas a la raíz y a participantes, nuevo seguidor, solicitud y aceptación, moderación de comentario y de
+>   suspensión social), los `CHECK` y los únicos parciales, las cascadas de retracción, los filtros de privacidad
+>   (actor desactivado, bloqueo, respuesta oculta, moderación exenta y sin moderador), la agrupación por hilo y por día
+>   en la zona `tz`, visto vs. leído, preferencias, aislamiento entre destinatarios y el contador bajo 10 ms con 100
+>   seguidores.
 > - `smoke-test-release-calendar.ts` mockea ListenBrainz, MusicBrainz y Cover Art Archive, crea
 >   artistas y release-groups con MBID `5e0ce000-0000-4000-8000-000000008*` y usuarios `smoke_cal_*`,
 >   **respalda el calendario de lanzamientos y lo restaura al terminar** (también si falla) y borra sus

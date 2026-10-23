@@ -17,7 +17,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       }),
   );
 
-  // Lo guardado desde "+ Añadir" (Header, fuera de este árbol) llega como evento de `window`.
+  // Lo guardado desde "+ Añadir" (Header) llega como evento de `window`: el
+  // diálogo avisa por evento en vez de invalidar aquí, porque también se monta
+  // fuera de esta página y el evento mantiene el acoplamiento en un solo lugar.
   useEffect(() => {
     const onChanged = () => invalidateOwnData(queryClient);
     window.addEventListener(OWN_DATA_CHANGED_EVENT, onChanged);

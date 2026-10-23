@@ -1,10 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
 import { createComment, createReply, deleteComment, listComments, listReplies, updateComment, upsertRating } from "./social";
 
-const mocks = vi.hoisted(() => ({ db: { insert: vi.fn(), select: vi.fn(), delete: vi.fn(), update: vi.fn() } }));
+const mocks = vi.hoisted(() => ({ db: { insert: vi.fn(), select: vi.fn(), delete: vi.fn(), update: vi.fn(), transaction: vi.fn() } }));
 vi.mock("@/db", () => ({ db: mocks.db }));
 const isBlockedBetween = vi.hoisted(() => vi.fn().mockResolvedValue(false));
 vi.mock("@/services/social/relations", () => ({ isBlockedBetween }));
+const emitMocks = vi.hoisted(() => ({ emitReplyNotifications: vi.fn().mockResolvedValue(undefined) }));
+vi.mock("@/services/notifications/emit", () => ({ emitReplyNotifications: emitMocks.emitReplyNotifications }));
+
+// La transacción real ejecuta el callback con un `tx` equivalente a `db`; los
+// dobles de `select` / `insert` de cada prueba sirven también dentro de ella.
+mocks.db.transaction.mockImplementation(async (callback: (tx: unknown) => unknown) => callback(mocks.db));
 
 describe("servicio social", () => {
   const target = { type: "artist" as const, id: "00000000-0000-4000-8000-000000000001", column: "artistId" as const };
@@ -275,6 +281,30 @@ describe("servicio social", () => {
       mocks.db.insert.mockClear();
       await expect(createReply(rootId, userId, "Texto")).rejects.toMatchObject({ code: "BLOCKED", status: 403 });
       expect(mocks.db.insert).not.toHaveBeenCalled();
+    });
+
+    it("emite los avisos de la respuesta dentro de la transacción, con la raíz y el actor", async () => {
+      mockSelects([root], [replyRow]);
+      mockReplyInsert();
+      mocks.db.transaction.mockClear();
+      emitMocks.emitReplyNotifications.mockClear();
+
+      await createReply(rootId, userId, "Texto");
+
+      expect(mocks.db.transaction).toHaveBeenCalledTimes(1);
+      expect(emitMocks.emitReplyNotifications).toHaveBeenCalledWith(mocks.db, {
+        commentId: replyId,
+        rootId,
+        rootAuthorId: authorId,
+        actorId: userId,
+      });
+    });
+
+    it("no emite ningún aviso si la respuesta se rechaza", async () => {
+      mockSelects([]);
+      emitMocks.emitReplyNotifications.mockClear();
+      await expect(createReply(rootId, userId, "Texto")).rejects.toMatchObject({ code: "COMMENT_NOT_FOUND" });
+      expect(emitMocks.emitReplyNotifications).not.toHaveBeenCalled();
     });
 
     it("el hilo de una raíz devuelve las respuestas con parentId, de la más antigua a la más reciente", async () => {

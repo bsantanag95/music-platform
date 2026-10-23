@@ -36,6 +36,8 @@ import onboardingEs from "../../messages/es/onboarding.json";
 import onboardingEn from "../../messages/en/onboarding.json";
 import awardsEs from "../../messages/es/awards.json";
 import awardsEn from "../../messages/en/awards.json";
+import notificationsEs from "../../messages/es/notifications.json";
+import notificationsEn from "../../messages/en/notifications.json";
 
 const messagesByLocale = {
   es: {
@@ -56,6 +58,7 @@ const messagesByLocale = {
     quickActions: quickActionsEs,
     onboarding: onboardingEs,
     awards: awardsEs,
+    notifications: notificationsEs,
   },
   en: {
     common: commonEn,
@@ -75,13 +78,22 @@ const messagesByLocale = {
     quickActions: quickActionsEn,
     onboarding: onboardingEn,
     awards: awardsEn,
+    notifications: notificationsEn,
   },
 };
 
 /** Envuelve `ui` con el proveedor de i18n; sirve también para `rerender` (que no conserva el de `renderWithIntl`). */
-export function withIntl(ui: ReactNode, locale: "es" | "en" = "es"): ReactNode {
+export function withIntl(
+  ui: ReactNode,
+  locale: "es" | "en" = "es",
+  options: { timeZone?: string } = {},
+): ReactNode {
   return (
-    <NextIntlClientProvider locale={locale} messages={messagesByLocale[locale]}>
+    <NextIntlClientProvider
+      locale={locale}
+      timeZone={options.timeZone}
+      messages={messagesByLocale[locale]}
+    >
       {ui}
     </NextIntlClientProvider>
   );
@@ -90,6 +102,7 @@ export function withIntl(ui: ReactNode, locale: "es" | "en" = "es"): ReactNode {
 export function renderWithIntl(
   ui: ReactNode,
   locale: "es" | "en" = "es",
+  options: { timeZone?: string } = {},
 ): RenderResult {
-  return render(withIntl(ui, locale));
+  return render(withIntl(ui, locale, options));
 }

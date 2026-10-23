@@ -1,0 +1,70 @@
+{
+  "bell": {
+    "label": "Notifications",
+    "labelWithCount": "Notifications, {count, plural, =0 {none unseen} one {1 unseen} other {# unseen}}",
+    "seeAll": "See all",
+    "markAllRead": "Mark all as read",
+    "markAllReadPending": "Marking…",
+    "empty": "Replies, followers and account notices will show up here.",
+    "loading": "Loading notifications…",
+    "error": "Notifications could not be loaded.",
+    "actionError": "The action could not be completed.",
+    "unread": "Unread"
+  },
+  "row": {
+    "twoNames": "{first} and {second}",
+    "moreNames": "{names} and {count, plural, one {# more person} other {# more people}}",
+    "commentReply": "{people} {count, plural, one {replied} other {replied}} to your thread on {artist}",
+    "threadReply": "{people} {count, plural, one {replied} other {replied}} in a thread on {artist} you took part in",
+    "newFollower": "{name} started following you",
+    "followRequest": "{name} wants to follow you",
+    "followAccepted": "{name} accepted your follow request",
+    "approve": "Approve",
+    "reject": "Reject"
+  },
+  "moderation": {
+    "hideComment": "Your comment was hidden",
+    "hideReview": "Your review was hidden",
+    "hideList": "Your list was hidden",
+    "restoreComment": "Your comment was restored",
+    "restoreReview": "Your review was restored",
+    "restoreList": "Your list was restored",
+    "suspendSocial": "Your social activity was suspended",
+    "revokeSocial": "Your social suspension was lifted: you can post again",
+    "fallback": "There is a notice about your account",
+    "reason": "Reason: {reason}"
+  },
+  "page": {
+    "title": "Notifications",
+    "subtitle": "Replies, followers and account notices.",
+    "settings": "Notification settings",
+    "markAllRead": "Mark all as read",
+    "loadMore": "Load more",
+    "loadingMore": "Loading…",
+    "emptyTitle": "Your notifications will show up here",
+    "emptyDescription": "When someone replies to your threads, follows you or there is a notice about your account, it will appear here.",
+    "error": "Notifications could not be loaded."
+  },
+  "settings": {
+    "title": "Notifications",
+    "intro": "Choose which notices you want to receive in the app. Nothing is sent by email or as browser notifications.",
+    "fixed": "Always on",
+    "saveError": "Preferences could not be saved.",
+    "kinds": {
+      "comment_reply": "Replies to your threads",
+      "thread_reply": "Replies in threads you took part in",
+      "new_follower": "New followers",
+      "follow_accepted": "Accepted requests",
+      "follow_request": "Follow requests",
+      "moderation": "Moderation notices"
+    },
+    "descriptions": {
+      "comment_reply": "When someone replies to the thread you opened.",
+      "thread_reply": "When someone replies in a thread you had already taken part in.",
+      "new_follower": "When someone starts following you.",
+      "follow_accepted": "When someone accepts your request to follow them.",
+      "follow_request": "Requests always arrive: they are how you decide whether to accept.",
+      "moderation": "Moderation notices always arrive: they affect your account or your content."
+    }
+  }
+}

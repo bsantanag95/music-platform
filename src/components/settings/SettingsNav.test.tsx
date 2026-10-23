@@ -25,12 +25,13 @@ describe("settings-screens", () => {
     expect(SETTINGS_DEFAULT_HREF).toBe("/me/settings/profile");
   });
 
-  it("lista las cinco pantallas de ajustes, con Cuenta y seguridad al final", () => {
+  it("lista las seis pantallas de ajustes, con Cuenta y seguridad al final", () => {
     expect(SETTINGS_SCREENS.map((screen) => screen.id)).toEqual([
       "profile",
       "curation",
       "privacy",
       "network",
+      "notifications",
       "account",
     ]);
   });
@@ -46,6 +47,7 @@ describe("SettingsNav", () => {
       "/me/settings/curation",
       "/me/settings/privacy",
       "/me/settings/network",
+      "/me/settings/notifications",
       "/me/settings/account",
     ]);
     expect(links.map((link) => link.textContent)).toEqual([
@@ -53,6 +55,7 @@ describe("SettingsNav", () => {
       "Curaduría",
       "Privacidad y audiencia",
       "Red",
+      "Notificaciones",
       "Cuenta y seguridad",
     ]);
   });

@@ -23,6 +23,7 @@ implementación.
 | [`home.md`](./home.md) | 5 · redefine-content-hierarchy | ✅ Implementado (`add-home-page`; reencuadre álbum-forward del landing anónimo en `reframe-anon-landing-album-forward`) |
 | [`onboarding.md`](./onboarding.md) | redefine-content-hierarchy Fase 1 | ✅ Implementado (cambio `add-two-door-onboarding`: `/welcome` guiada en cuatro pasos — álbumes favoritos, artistas a seguir, primera escucha y Pendientes, con aviso de audiencia, progreso que sobrevive a recargar y resumen final; `improve-welcome-onboarding`, `redesign-welcome-flow`, `harden-welcome-flow` y `extend-welcome-steps`) |
 | [`awards.md`](./awards.md) | actualidad | ✅ Implementado (`add-music-awards`: Grammy 2021–2025, niveles A y B, curaduría en `data/awards/` con resolución asistida y carga idempotente; páginas de ceremonia, historia de categoría e índice; sección en Explorar) · ⏳ insignias en fichas y ganadores históricos |
+| [`notifications.md`](./notifications.md) | 5 · `add-notifications-core` | ✅ Fase 1 implementada (bandeja in-app: respuestas, seguidores, solicitudes y moderación; campana, página `/me/notifications`, preferencias y retención). ⏳ Fases 2 (hitos, lanzamientos) y 3 (email, Web Push) |
 | [`user-profile.md`](./user-profile.md) | 5 · redefine-content-hierarchy Fase 1 | ✅ Implementado (identidad extendida, huella de gusto, álbumes favoritos + destacados/himno, "En rotación", "Reseñas", afinidad, exploración, estantes; orden vertical Q7) |
 
 ## Regla de esta carpeta

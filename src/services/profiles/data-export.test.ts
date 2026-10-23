@@ -81,6 +81,7 @@ beforeEach(() => {
     ],
     user_block: [[{ username: "molesto", deactivatedAt: null }]],
     artist_follow: [[{ id: "af1", userId: "u1", artistId: "a1" }]],
+    notification_preference: [[{ kind: "new_follower", enabled: false }]],
   };
 });
 
@@ -124,6 +125,20 @@ describe("buildDataExport", () => {
     const data = await buildDataExport("u1");
     expect(data.social.following).toContainEqual({ username: null, deactivated: true, status: "accepted" });
     expect(JSON.stringify(data)).not.toContain("oculta");
+  });
+
+  it("no incluye notificaciones: solo las preferencias, con los tipos fijos activados", async () => {
+    const data = await buildDataExport("u1");
+
+    expect(data.notifications.preferences).toMatchObject({
+      comment_reply: true,
+      thread_reply: true,
+      new_follower: false,
+      follow_accepted: true,
+      follow_request: true,
+      moderation: true,
+    });
+    expect(JSON.stringify(data)).not.toMatch(/notification\b/);
   });
 
   it("USER_NOT_FOUND si la cuenta no existe", async () => {

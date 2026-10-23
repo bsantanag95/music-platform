@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { withErrorHandling } from "@/lib/with-error-handling";
 import { requireUser } from "@/services/auth/authorization";
 import { listMyDiaryMonths } from "@/services/diary/diary";
-import { parseTimeZoneParam } from "../time-zone-param";
+import { parseTimeZoneParam } from "@/lib/api/time-zone-param";
 
 // GET devuelve los pares año/mes con al menos una escucha del usuario, para
 // poblar los filtros de Año/Mes de /me/diary (openspec: add-diary-date-navigation),

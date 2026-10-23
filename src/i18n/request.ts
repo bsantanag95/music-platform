@@ -40,6 +40,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       quickActions: (await import(`../../messages/${resolvedLocale}/quickActions.json`)).default,
       legal: (await import(`../../messages/${resolvedLocale}/legal.json`)).default,
       awards: (await import(`../../messages/${resolvedLocale}/awards.json`)).default,
+      notifications: (await import(`../../messages/${resolvedLocale}/notifications.json`)).default,
     },
   };
 });

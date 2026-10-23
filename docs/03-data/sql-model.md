@@ -1199,3 +1199,14 @@ los empates existen.
 - `award_ceremony.held_on` puede ser del aÃ±o de la ceremonia o del anterior (`CHECK EXTRACT(YEAR FROM held_on) BETWEEN year - 1 AND
   year`): la clase "2021" del Grammy Hall of Fame se anunciÃ³ el 21-dic-2020. Una competencia sigue exigiendo el mismo aÃ±o en la
   carga.
+
+## `notification` y `notification_preference` (migración `0075`, openspec `add-notifications-core`, ADR 0045)
+
+**Propósito:** bandeja de notificaciones in-app de la Fase 1 (respuestas a un tema, respuestas en un hilo donde se participó, nuevos seguidores, solicitudes y su aceptación, y acciones de moderación). Una fila por evento, escrita por `src/services/notifications/emit.ts` en la misma transacción que la acción que la produce; nunca se derivan en lectura.
+
+- `notification`: `id` (UUID), `recipient_id` y `actor_id` (FK a `app_user` con `ON DELETE CASCADE`; el actor es nulo solo en `moderation`, que no expone al moderador), `kind` (`CHECK`: `comment_reply`, `thread_reply`, `new_follower`, `follow_request`, `follow_accepted`, `moderation`), `comment_id` / `follow_id` / `moderation_action_id` (FK `CASCADE` al objeto del aviso), `group_key` (`thread:<rootId>`, `followers`, `follow:<followId>` o `moderation:<actionId>`), `created_at` y `read_at` (nulo = no leída). Los `CHECK` exigen exactamente la referencia de cada tipo, `actor_id` obligatorio salvo en moderación y distinto del destinatario. Sin `updated_at`: la fila solo cambia `read_at`.
+- **Retracción por cascada:** borrar la respuesta, el seguimiento (dejar de seguir, quitar seguidor, rechazar, cancelar, bloquear) o la cuenta de cualquiera de las dos partes borra el aviso; `moderation_action` nunca se borra (sus FK al contenido son `SET NULL`), así que los avisos de moderación sobreviven al borrado del objeto.
+- **Índices:** `(recipient_id, created_at DESC)` para la página; parcial `(recipient_id) WHERE read_at IS NULL` para el contador; únicos parciales `(recipient_id, comment_id, kind)`, `(recipient_id, follow_id, kind)` y `(recipient_id, moderation_action_id)` para no duplicar.
+- `notification_preference`: `(user_id, kind)` como PK, `enabled` (`BOOLEAN`) y `CHECK` de `kind` limitado a los desactivables (`comment_reply`, `thread_reply`, `new_follower`, `follow_accepted`). Solo se guardan filas para lo que difiere del defecto (activado).
+- `app_user.notifications_seen_at` (`TIMESTAMPTZ` nulo): última vez que la persona abrió la bandeja; el contador solo cuenta entradas posteriores.
+- **Retención en código** (no en un script operativo): al servir `GET /api/me/notifications` se borran las leídas con más de 90 días y cualquier aviso con más de 180, por destinatario.
