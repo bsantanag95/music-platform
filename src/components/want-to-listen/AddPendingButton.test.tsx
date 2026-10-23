@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { AddPendingButton } from "./AddPendingButton";
 
-// openspec: redesign-want-to-listen-toolbar. «Anotar algo» abre el diálogo global ya en Pendiente.
+// openspec: redesign-want-to-listen-toolbar. «Añadir pendiente» abre el diálogo global ya en Pendiente.
 vi.mock("@/components/quick-actions/QuickActionsDialog", () => ({
   QuickActionsDialog: ({ initialAction, onClose }: { initialAction?: string; onClose: () => void }) => (
     <div role="dialog" data-initial-action={initialAction}>
@@ -18,7 +18,7 @@ vi.mock("@/components/quick-actions/QuickActionsDialog", () => ({
 describe("AddPendingButton", () => {
   it("abre el diálogo en Pendiente y devuelve el foco al cerrar", async () => {
     renderWithIntl(<AddPendingButton />);
-    const trigger = screen.getByRole("button", { name: "Anotar algo" });
+    const trigger = screen.getByRole("button", { name: "Añadir pendiente" });
 
     await userEvent.click(trigger);
     expect(screen.getByRole("dialog")).toHaveAttribute("data-initial-action", "pending");
