@@ -135,10 +135,10 @@ actividad — no hace falta una audiencia explícita. Ver `design.md` del cambio
   por la fila fusionada de opinión (`expand-feed-coverage`), solo cuando son contiguas.
 - Recorridos de artista en el feed: requieren audiencia propia y una lectura ajena de
   Recorridos, que hoy no existen (`expand-feed-coverage`, Open Questions).
-- Notificaciones "Ana te empezó a seguir" — la fuente "seguir a un usuario" del feed
-  principal omite a propósito los eventos cuyo objetivo es el propio lector (a diferencia
-  de "seguir a un artista", que no tiene ese caso posible); ese caso es materia de una
-  superficie de notificación, todavía inexistente.
+- ~~Notificaciones "Ana te empezó a seguir"~~ — resuelto por `add-notifications-core`: la fuente
+  "seguir a un usuario" del feed principal sigue omitiendo a propósito los eventos cuyo objetivo
+  es el propio lector, pero ese caso ya tiene superficie propia en la bandeja de notificaciones
+  (`new_follower`, agrupado por día). Ver [`notifications.md`](./notifications.md).
 - Suprimir o colapsar en el listado cronológico las entradas individuales que ya alimentan
   una convergencia de la red (`add-network-convergence`, OQ2 — hoy el panel es aditivo).
 - Ponderar los tipos de interacción de la convergencia entre sí (reseña > registro) —

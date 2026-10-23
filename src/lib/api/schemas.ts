@@ -2810,3 +2810,113 @@ export const AlbumGenreVotesResponseSchema = z.object({
   reason: z.enum(["signed_out", "deactivated", "suspended", "no_interaction"]).nullable(),
 });
 export type AlbumGenreVotesResponse = z.infer<typeof AlbumGenreVotesResponseSchema>;
+
+// --- Bandeja de notificaciones (openspec: add-notifications-core) ---
+//
+// Espejo de `NOTIFICATION_KINDS` / `OPTIONAL_NOTIFICATION_KINDS` de
+// `src/db/schema.ts` sin importar el módulo de base de datos: este archivo lo
+// usan componentes de cliente.
+
+export const NotificationKindSchema = z.enum([
+  "comment_reply",
+  "thread_reply",
+  "new_follower",
+  "follow_request",
+  "follow_accepted",
+  "moderation",
+]);
+export type NotificationKindValue = z.infer<typeof NotificationKindSchema>;
+
+export const OptionalNotificationKindSchema = z.enum([
+  "comment_reply",
+  "thread_reply",
+  "new_follower",
+  "follow_accepted",
+]);
+export type OptionalNotificationKindValue = z.infer<typeof OptionalNotificationKindSchema>;
+
+/** Persona que aparece en una entrada (la bandeja muestra como mucho dos). */
+export const NotificationActorSchema = z.object({
+  id: z.uuid(),
+  username: z.string(),
+  displayName: z.string().nullable(),
+  avatarUrl: z.string().nullable(),
+});
+
+/** Destino de una entrada: el objeto enlazado y lo necesario para redactarla. */
+export const NotificationTargetSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("artist"),
+    artistId: z.uuid(),
+    artistName: z.string(),
+    rootId: z.uuid(),
+  }),
+  z.object({ type: z.literal("profile"), username: z.string() }),
+  z.object({
+    type: z.literal("moderation"),
+    action: z.enum(["hide", "restore", "suspend_social", "revoke_social"]),
+    contentType: z.enum(["comment", "review", "list", "social_suspension"]),
+    reason: z.string(),
+  }),
+]);
+
+export const NotificationGroupSchema = z.object({
+  /** Clave estable de la entrada; es lo que acepta `POST /read`. */
+  id: z.string(),
+  kind: NotificationKindSchema,
+  lastAt: z.string(),
+  unread: z.boolean(),
+  eventCount: z.number().int(),
+  actorCount: z.number().int(),
+  actors: z.array(NotificationActorSchema),
+  target: NotificationTargetSchema.nullable(),
+});
+export type NotificationGroupValue = z.infer<typeof NotificationGroupSchema>;
+
+export const NotificationsResponseSchema = z.object({
+  groups: z.array(NotificationGroupSchema),
+  nextCursor: z.string().nullable(),
+});
+export type NotificationsResponse = z.infer<typeof NotificationsResponseSchema>;
+
+export const NotificationCountResponseSchema = z.object({ count: z.number().int() });
+export type NotificationCountResponse = z.infer<typeof NotificationCountResponseSchema>;
+
+/** Por claves de entrada o todas; nunca hay un "todas las de otra persona". */
+export const MarkNotificationsReadRequestSchema = z.union([
+  z.object({ all: z.literal(true) }),
+  z.object({ groupKeys: z.array(z.string().trim().min(1).max(200)).min(1).max(100) }),
+]);
+export type MarkNotificationsReadRequest = z.infer<typeof MarkNotificationsReadRequestSchema>;
+
+/** Las seis claves siempre presentes: la pantalla de ajustes las pinta todas. */
+export const NotificationPreferencesSchema = z.object({
+  comment_reply: z.boolean(),
+  thread_reply: z.boolean(),
+  new_follower: z.boolean(),
+  follow_request: z.boolean(),
+  follow_accepted: z.boolean(),
+  moderation: z.boolean(),
+});
+export type NotificationPreferencesValue = z.infer<typeof NotificationPreferencesSchema>;
+
+/**
+ * Cambio parcial. Un tipo fijo se acepta aquí y lo rechaza el servicio con
+ * `VALIDATION_ERROR` (spec: intentar desactivar moderación → 400), así el
+ * mensaje de error es el mismo para la API y para cualquier otro cliente.
+ */
+export const UpdateNotificationPreferencesRequestSchema = z.object({
+  // `.strict()`: un tipo inventado es un error del cliente, no algo que se
+  // ignore en silencio.
+  preferences: NotificationPreferencesSchema.partial().strict(),
+});
+export type UpdateNotificationPreferencesRequest = z.infer<
+  typeof UpdateNotificationPreferencesRequestSchema
+>;
+
+export const NotificationPreferencesResponseSchema = z.object({
+  preferences: NotificationPreferencesSchema,
+});
+export type NotificationPreferencesResponse = z.infer<
+  typeof NotificationPreferencesResponseSchema
+>;

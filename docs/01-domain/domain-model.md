@@ -133,6 +133,22 @@ direcciones, elimina las relaciones y solicitudes existentes entre ambos y restr
 sociales entre las cuentas. Bloquear no es lo mismo que dejar de seguir: es una restricción
 bidireccional con su propia persistencia.
 
+## Notificación
+
+Aviso dirigido a un Usuario por un evento que le concierne: una respuesta a su tema o a un hilo donde participó, un
+nuevo seguidor, una solicitud de seguimiento, la aceptación de una solicitud propia o una acción de moderación sobre su
+contenido o su cuenta.
+
+- Pertenece a **un destinatario** y, salvo en moderación, tiene **un actor** (nunca el propio destinatario). Se
+  materializa como un evento fechado, no se deriva del objeto en el momento de leer.
+- **Nace y desaparece con su objeto**: si se borra la respuesta o el seguimiento, la notificación deja de existir. Los
+  bloqueos, las cuentas desactivadas y el contenido oculto se filtran al leer, no reescriben la fila.
+- Cada evento tiene un estado **leído / no leído**; el conjunto tiene además un estado de **visto** por Usuario (la
+  última vez que abrió la bandeja), que es lo que pone el contador a cero.
+- Un mismo Usuario tiene **preferencias por tipo** (activadas por defecto) que deciden si se le crean avisos
+  posteriores. Solicitudes de seguimiento y moderación no son desactivables.
+- La notificación de moderación no identifica al moderador: describe la acción, el objeto y el motivo.
+
 ## Entidades sociales (a definir en detalle en `05-features/`, cuando se llegue a su entrega)
 
 - **Diario de escucha**: registro histórico de escuchas sobre Artista, Álbum o Canción.

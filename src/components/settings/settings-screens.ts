@@ -3,7 +3,7 @@
 // orden del menú lateral. Una pantalla solo se lista cuando ofrece al menos un
 // control disponible.
 
-export type SettingsScreenId = "profile" | "curation" | "privacy" | "network" | "account";
+export type SettingsScreenId = "profile" | "curation" | "privacy" | "network" | "notifications" | "account";
 
 export interface SettingsScreen {
   id: SettingsScreenId;
@@ -15,6 +15,7 @@ export const SETTINGS_SCREENS: readonly SettingsScreen[] = [
   { id: "curation", href: "/me/settings/curation" },
   { id: "privacy", href: "/me/settings/privacy" },
   { id: "network", href: "/me/settings/network" },
+  { id: "notifications", href: "/me/settings/notifications" },
   { id: "account", href: "/me/settings/account" },
 ];
 

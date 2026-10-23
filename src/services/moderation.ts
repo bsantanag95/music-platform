@@ -11,6 +11,7 @@ import {
   userRestriction,
 } from "@/db/schema";
 import { requirePermissionForUser } from "@/services/auth/authorization";
+import { emitNotifications } from "@/services/notifications/emit";
 
 type ReportTarget = { commentId: string } | { reviewId: string } | { userId: string };
 
@@ -55,6 +56,30 @@ function normalizedReason(reason: string) {
   return value;
 }
 
+type ModerationTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/**
+ * Registra la acción de auditoría y emite su aviso de moderación al autor del
+ * contenido o a la persona restringida (openspec: add-notifications-core). La
+ * notificación no lleva actor: la bandeja no identifica al moderador; el texto
+ * se compone al leer desde `moderation_action.action` + objetivo + `reason`.
+ */
+async function recordModerationAction(
+  tx: ModerationTx,
+  values: typeof moderationAction.$inferInsert,
+  recipientId: string,
+) {
+  const [action] = await tx
+    .insert(moderationAction)
+    .values(values)
+    .returning({ id: moderationAction.id });
+  if (!action) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo registrar la acción de moderación");
+  await emitNotifications(tx, [
+    { kind: "moderation", recipientId, moderationActionId: action.id },
+  ]);
+  return action;
+}
+
 export async function hideComment(actorId: string, commentId: string, reason: string): Promise<void> {
   await requirePermissionForUser(actorId, "moderation.review_content");
   const normalized = normalizedReason(reason);
@@ -62,9 +87,14 @@ export async function hideComment(actorId: string, commentId: string, reason: st
     const [target] = await tx
       .update(comment)
       .set({ moderationStatus: "hidden", moderatedBy: actorId, moderatedAt: new Date(), moderationReason: normalized })
-      .where(eq(comment.id, commentId));
+      .where(eq(comment.id, commentId))
+      .returning({ userId: comment.userId });
     if (!target) throw new ApiError("COMMENT_NOT_FOUND", 404, "El comentario no existe");
-    await tx.insert(moderationAction).values({ actorId, action: "hide", commentId, reason: normalized });
+    await recordModerationAction(
+      tx,
+      { actorId, action: "hide", commentId, reason: normalized },
+      target.userId,
+    );
   });
 }
 
@@ -75,9 +105,14 @@ export async function restoreComment(actorId: string, commentId: string, reason:
     const [target] = await tx
       .update(comment)
       .set({ moderationStatus: "visible", moderatedBy: actorId, moderatedAt: new Date(), moderationReason: normalized })
-      .where(eq(comment.id, commentId));
+      .where(eq(comment.id, commentId))
+      .returning({ userId: comment.userId });
     if (!target) throw new ApiError("COMMENT_NOT_FOUND", 404, "El comentario no existe");
-    await tx.insert(moderationAction).values({ actorId, action: "restore", commentId, reason: normalized });
+    await recordModerationAction(
+      tx,
+      { actorId, action: "restore", commentId, reason: normalized },
+      target.userId,
+    );
   });
 }
 
@@ -88,9 +123,14 @@ export async function hideReview(actorId: string, reviewId: string, reason: stri
     const [target] = await tx
       .update(review)
       .set({ moderationStatus: "hidden", moderatedBy: actorId, moderatedAt: new Date(), moderationReason: normalized })
-      .where(eq(review.id, reviewId));
+      .where(eq(review.id, reviewId))
+      .returning({ userId: review.userId });
     if (!target) throw new ApiError("REVIEW_NOT_FOUND", 404, "La reseña no existe");
-    await tx.insert(moderationAction).values({ actorId, action: "hide", reviewId, reason: normalized });
+    await recordModerationAction(
+      tx,
+      { actorId, action: "hide", reviewId, reason: normalized },
+      target.userId,
+    );
   });
 }
 
@@ -101,9 +141,14 @@ export async function restoreReview(actorId: string, reviewId: string, reason: s
     const [target] = await tx
       .update(review)
       .set({ moderationStatus: "visible", moderatedBy: actorId, moderatedAt: new Date(), moderationReason: normalized })
-      .where(eq(review.id, reviewId));
+      .where(eq(review.id, reviewId))
+      .returning({ userId: review.userId });
     if (!target) throw new ApiError("REVIEW_NOT_FOUND", 404, "La reseña no existe");
-    await tx.insert(moderationAction).values({ actorId, action: "restore", reviewId, reason: normalized });
+    await recordModerationAction(
+      tx,
+      { actorId, action: "restore", reviewId, reason: normalized },
+      target.userId,
+    );
   });
 }
 
@@ -140,58 +185,80 @@ export async function suspendSocialActivity(
   }
   const [user] = await db.select({ id: appUser.id }).from(appUser).where(eq(appUser.id, userId));
   if (!user) throw new ApiError("USER_NOT_FOUND", 404, "El usuario no existe");
-  const [restriction] = await db
-    .insert(userRestriction)
-    .values({ userId, scope: "social_activity", reason: normalized, expiresAt, createdBy: actorId })
-    .returning();
-  if (!restriction) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo crear la restricción");
-  await db.insert(moderationAction).values({
-    actorId,
-    action: "suspend_social",
-    restrictionId: restriction.id,
-    reason: normalized,
+  return db.transaction(async (tx) => {
+    const [restriction] = await tx
+      .insert(userRestriction)
+      .values({ userId, scope: "social_activity", reason: normalized, expiresAt, createdBy: actorId })
+      .returning();
+    if (!restriction) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo crear la restricción");
+    await recordModerationAction(
+      tx,
+      { actorId, action: "suspend_social", restrictionId: restriction.id, reason: normalized },
+      restriction.userId,
+    );
+    return restriction;
   });
-  return restriction;
 }
 
 export async function revokeSocialSuspension(actorId: string, restrictionId: string): Promise<void> {
   await requirePermissionForUser(actorId, "moderation.suspend_social");
-  const revoked = await db
-    .update(userRestriction)
-    .set({ revokedAt: new Date(), revokedBy: actorId })
-    .where(and(eq(userRestriction.id, restrictionId), isNull(userRestriction.revokedAt)))
-    .returning({ id: userRestriction.id });
-  if (revoked.length === 0) {
-    throw new ApiError("RESTRICTION_NOT_FOUND", 404, "La restricción no existe o ya fue revocada");
-  }
-  await db.insert(moderationAction).values({
-    actorId,
-    action: "revoke_social",
-    restrictionId,
-    reason: "Revocación de suspensión social",
+  await db.transaction(async (tx) => {
+    const revoked = await tx
+      .update(userRestriction)
+      .set({ revokedAt: new Date(), revokedBy: actorId })
+      .where(and(eq(userRestriction.id, restrictionId), isNull(userRestriction.revokedAt)))
+      .returning({ id: userRestriction.id, userId: userRestriction.userId });
+    const restriction = revoked[0];
+    if (!restriction) {
+      throw new ApiError("RESTRICTION_NOT_FOUND", 404, "La restricción no existe o ya fue revocada");
+    }
+    await recordModerationAction(
+      tx,
+      {
+        actorId,
+        action: "revoke_social",
+        restrictionId,
+        reason: "Revocación de suspensión social",
+      },
+      restriction.userId,
+    );
   });
 }
 
 export async function hideList(actorId: string, listId: string, reason: string): Promise<void> {
   await requirePermissionForUser(actorId, "moderation.review_content");
   const normalized = normalizedReason(reason);
-  const [target] = await db
-    .update(userList)
-    .set({ moderationStatus: "hidden", moderatedBy: actorId, moderatedAt: new Date(), moderationReason: normalized })
-    .where(eq(userList.id, listId));
-  if (!target) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
-  await db.insert(moderationAction).values({ actorId, action: "hide", listId, reason: normalized });
+  await db.transaction(async (tx) => {
+    const [target] = await tx
+      .update(userList)
+      .set({ moderationStatus: "hidden", moderatedBy: actorId, moderatedAt: new Date(), moderationReason: normalized })
+      .where(eq(userList.id, listId))
+      .returning({ ownerId: userList.ownerId });
+    if (!target) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
+    await recordModerationAction(
+      tx,
+      { actorId, action: "hide", listId, reason: normalized },
+      target.ownerId,
+    );
+  });
 }
 
 export async function restoreList(actorId: string, listId: string, reason: string): Promise<void> {
   await requirePermissionForUser(actorId, "moderation.review_content");
   const normalized = normalizedReason(reason);
-  const [target] = await db
-    .update(userList)
-    .set({ moderationStatus: "visible", moderatedBy: actorId, moderatedAt: new Date(), moderationReason: normalized })
-    .where(eq(userList.id, listId));
-  if (!target) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
-  await db.insert(moderationAction).values({ actorId, action: "restore", listId, reason: normalized });
+  await db.transaction(async (tx) => {
+    const [target] = await tx
+      .update(userList)
+      .set({ moderationStatus: "visible", moderatedBy: actorId, moderatedAt: new Date(), moderationReason: normalized })
+      .where(eq(userList.id, listId))
+      .returning({ ownerId: userList.ownerId });
+    if (!target) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
+    await recordModerationAction(
+      tx,
+      { actorId, action: "restore", listId, reason: normalized },
+      target.ownerId,
+    );
+  });
 }
 
 export async function updateReportStatus(

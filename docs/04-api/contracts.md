@@ -1998,3 +1998,59 @@ publicado. Un `listId` o `itemId` no-UUID devuelve `404`.
 
 Todos estos endpoints devuelven el formato uniforme `{ error, code }` ante errores y no exponen
 credenciales, roles internos ni datos privados innecesarios.
+
+## Notificaciones (cambio `add-notifications-core`)
+
+Bandeja de entrada dentro de la aplicación. Todas las rutas requieren sesión (`401 AUTH_REQUIRED` sin
+ella) y derivan la persona de la sesión: ningún body ni query acepta un destinatario, así que una clave
+de entrada de otra persona no cambia nada. Las notificaciones se materializan al emitir (ADR 0045) y
+se leen con los filtros de privacidad de `docs/05-features/notifications.md`: actores desactivados,
+bloqueos en cualquier dirección y respuestas o raíces ocultas quedan fuera; las de moderación están
+exentas.
+
+### `GET /api/me/notifications?cursor=&tz=`
+
+Entradas agrupadas, de la más reciente a la más antigua (20 por página).
+
+- `cursor` — opaco: el `nextCursor` de la respuesta anterior. Uno mal formado responde
+  `400 VALIDATION_ERROR`.
+- `tz` — zona IANA opcional: parte los seguidores por día local (UTC sin ella). Desconocida →
+  `400 VALIDATION_ERROR`.
+
+**200 OK:** `{ groups: [NotificationGroup], nextCursor: string | null }`. `NotificationGroup`:
+`{ id, kind, lastAt, unread, eventCount, actorCount, actors: [{ id, username, displayName, avatarUrl }],
+target }`. `kind` ∈ `comment_reply` · `thread_reply` · `new_follower` · `follow_request` ·
+`follow_accepted` · `moderation`. `id` es la clave que acepta `POST /read`. `actors` trae como mucho dos
+personas; `actorCount` permite escribir "y N personas más". `target` es `{ type: "artist", artistId,
+artistName, rootId }` (respuestas), `{ type: "profile", username }` (seguimientos),
+`{ type: "moderation", action, contentType, reason }`, o `null`.
+
+La poda de retención (leídas de más de 90 días y cualquiera de más de 180) corre en `after()`, después
+de responder: no depende de un proceso operativo.
+
+### `GET /api/me/notifications/count?tz=`
+
+**200 OK:** `{ count }` — entradas con al menos una notificación sin leer creadas desde la última vez
+que se abrió la bandeja. La interfaz muestra como mucho "9+".
+
+### `PUT /api/me/notifications/seen`
+
+Marca la bandeja como vista: el contador vuelve a 0 y las entradas siguen sin leer. **200 OK:**
+`{ ok: true }`.
+
+### `POST /api/me/notifications/read?tz=`
+
+**Body:** `{ groupKeys: string[] }` (1–100 claves) **o** `{ all: true }`. Marca leídas esas entradas, o
+todas las del usuario. `tz` es el mismo del listado: una clave `followers:<aaaa-mm-dd>` identifica el
+día local. **200 OK:** `{ ok: true }`. Las dos formas a la vez, ninguna, o un día inválido responden
+`400 VALIDATION_ERROR`.
+
+### `GET|PUT /api/me/notification-preferences`
+
+`GET` **200 OK:** `{ preferences }` con las seis claves (`comment_reply`, `thread_reply`,
+`new_follower`, `follow_request`, `follow_accepted`, `moderation`), todas `true` por defecto.
+
+`PUT` **body:** `{ preferences: { <kind>?: boolean } }` — cambio parcial. Un tipo fijo (`follow_request`,
+`moderation`) responde `400 VALIDATION_ERROR`, igual que una clave desconocida. Volver a `true` borra la
+fila: solo se guarda lo que difiere del valor por defecto. **200 OK:** `{ preferences }` completo. Una
+preferencia no borra las notificaciones existentes.

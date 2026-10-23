@@ -13,13 +13,14 @@ import { HeaderSearch } from "./HeaderSearch";
 import { Logo } from "./Logo";
 import { UserMenu, UserMenuList } from "./UserMenu";
 import { QuickActionsButton } from "@/components/quick-actions/QuickActionsButton";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { UserAvatar } from "@/components/social/UserAvatar";
 
 interface HeaderProps {
   user?: (Pick<AuthUser, "id" | "username" | "displayName"> & { avatarUrl?: string | null }) | null;
   exploreEnabled?: boolean;
-  /** Solicitudes de seguimiento pendientes, para el badge del menú de usuario. */
-  pendingFollowRequests?: number;
+  /** Entradas de la bandeja sin ver, calculadas en el servidor (campana). */
+  notificationCount?: number;
   platformPermissions?: Permission[];
 }
 
@@ -33,7 +34,7 @@ interface HeaderProps {
 export function Header({
   user = null,
   exploreEnabled = false,
-  pendingFollowRequests = 0,
+  notificationCount = 0,
   platformPermissions = [],
 }: HeaderProps) {
   const t = useTranslations("common");
@@ -161,14 +162,13 @@ export function Header({
           <LocaleSwitcher t={t} currentLocale={currentLocale} onChange={handleLocaleChange} />
           {currentUser ? (
             <>
-              {/* Atajo de escritura pegado al menú de usuario (openspec: add-header-quick-actions, D10):
-                  el "+" escribe, el menú ve y gestiona. */}
+              {/* El "+" escribe; la campana avisa; el menú ve y gestiona. */}
               <QuickActionsButton />
+              <NotificationBell initialCount={notificationCount} />
               <UserMenu
                 username={currentUser.username}
                 displayName={currentUser.displayName ?? currentUser.username}
                 avatarUrl={currentUser.avatarUrl ?? null}
-                pendingFollowRequests={pendingFollowRequests}
                 permissions={platformPermissions}
                 logoutPending={logoutPending}
                 logoutError={logoutError}
@@ -180,19 +180,25 @@ export function Header({
           )}
         </div>
 
-        {/* Debajo de `lg`, la fila de arriba se reduce a logo + este botón: el
-            buscador, la navegación y la zona de usuario se pliegan en el panel
-            de abajo en vez de desbordar a 375px. */}
-        <button
-          type="button"
-          className="flex size-9 shrink-0 items-center justify-center rounded-md text-paper-muted transition-colors hover:bg-ink-surface hover:text-paper lg:hidden"
-          aria-expanded={menuOpen}
-          aria-controls="header-mobile-menu"
-          aria-label={menuOpen ? t("closeMenu") : t("openMenu")}
-          onClick={() => setMenuOpen((open) => !open)}
-        >
-          <MenuIcon open={menuOpen} />
-        </button>
+        {/* Debajo de `lg`, la fila de arriba se reduce a logo + campana + este
+            botón: el buscador, la navegación y la zona de usuario se pliegan en
+            el panel de abajo en vez de desbordar a 375px. La campana móvil es un
+            enlace a la página (D8), no un panel flotante. */}
+        <div className="flex items-center gap-1 lg:hidden">
+          {currentUser ? (
+            <NotificationBell variant="mobile" initialCount={notificationCount} />
+          ) : null}
+          <button
+            type="button"
+            className="flex size-9 shrink-0 items-center justify-center rounded-md text-paper-muted transition-colors hover:bg-ink-surface hover:text-paper"
+            aria-expanded={menuOpen}
+            aria-controls="header-mobile-menu"
+            aria-label={menuOpen ? t("closeMenu") : t("openMenu")}
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            <MenuIcon open={menuOpen} />
+          </button>
+        </div>
       </div>
 
       {menuOpen ? (
@@ -237,7 +243,6 @@ export function Header({
                 </Link>
                 <UserMenuList
                   username={currentUser.username}
-                  pendingFollowRequests={pendingFollowRequests}
                   surface="panel"
                   permissions={platformPermissions}
                   onNavigate={() => setMenuOpen(false)}

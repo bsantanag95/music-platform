@@ -1,0 +1,326 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { appUser, artist, comment, moderationAction, notification } from "@/db/schema";
+import { countUnseen, listNotificationGroups, markRead, markSeen, pruneNotifications } from "./read";
+
+const mocks = vi.hoisted(() => ({
+  db: { select: vi.fn(), update: vi.fn(), delete: vi.fn() },
+  resolveImageUrls: vi.fn(),
+}));
+
+vi.mock("@/db", () => ({ db: mocks.db }));
+vi.mock("@/services/storage/avatar-urls", () => ({
+  resolveImageUrls: mocks.resolveImageUrls,
+}));
+
+// Las subconsultas no se ejecutan: se reemplazan por columnas reales del
+// esquema (lo único que la agrupación necesita para construir el SQL). Los
+// filtros de D4 se verifican contra Postgres en el smoke test.
+const VISIBLE = {
+  groupKey: notification.groupKey,
+  kind: notification.kind,
+  actorId: notification.actorId,
+  createdAt: notification.createdAt,
+  readAt: notification.readAt,
+  actorUsername: appUser.username,
+  actorDisplayName: appUser.displayName,
+  actorAvatarImageId: appUser.avatarImageId,
+  artistId: artist.id,
+  artistName: artist.name,
+  rootId: comment.parentId,
+  moderationAction: moderationAction.action,
+  moderationReason: moderationAction.reason,
+  moderationContentType: moderationAction.commentId,
+};
+
+const GROUPED = {
+  groupId: notification.id,
+  kind: notification.kind,
+  actorId: notification.actorId,
+  createdAt: notification.createdAt,
+  readAt: notification.readAt,
+  actorUsername: appUser.username,
+  actorDisplayName: appUser.displayName,
+  actorAvatarImageId: appUser.avatarImageId,
+  artistId: artist.id,
+  artistName: artist.name,
+  rootId: comment.parentId,
+  moderationAction: moderationAction.action,
+  moderationReason: moderationAction.reason,
+  moderationContentType: moderationAction.commentId,
+};
+
+type Chain = Record<string, ReturnType<typeof vi.fn>>;
+
+/**
+ * Cadena falsa de drizzle: cualquier método devuelve la misma cadena (que a su
+ * vez es `thenable` y resuelve `rows`), salvo `as`, que devuelve las columnas de
+ * la subconsulta. Sirve para las cinco consultas del listado sin replicar la
+ * forma exacta de cada una.
+ */
+function queryChain(options: { rows?: unknown[]; as?: unknown } = {}): Chain {
+  const chain: Chain = {};
+  for (const method of ["from", "leftJoin", "where", "groupBy", "orderBy", "limit", "having"]) {
+    chain[method] = vi.fn(() => chain);
+  }
+  chain.as = vi.fn(() => options.as ?? chain);
+  Object.defineProperty(chain, "then", {
+    value: (resolve: (value: unknown[]) => unknown) => Promise.resolve(options.rows ?? []).then(resolve),
+  });
+  return chain;
+}
+
+/** Las cinco `select` del listado (bloqueos, visibles, agrupadas, página y personas). */
+function mockPage(rows: unknown[], actors: unknown[]) {
+  mocks.db.select
+    .mockReturnValueOnce(queryChain())
+    .mockReturnValueOnce(queryChain({ as: VISIBLE }))
+    .mockReturnValueOnce(queryChain({ as: GROUPED }))
+    .mockReturnValueOnce(queryChain({ rows }))
+    .mockReturnValueOnce(queryChain({ rows: actors }));
+}
+
+function groupRow(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "thread:root",
+    kind: "comment_reply",
+    lastAt: "2026-10-23T10:00:00.000Z",
+    unread: true,
+    eventCount: 2,
+    actorCount: 2,
+    artistId: "artist-1",
+    artistName: "Banda",
+    rootId: "root",
+    actorUsername: "bruno",
+    moderationAction: null,
+    moderationReason: null,
+    moderationContentType: null,
+    ...overrides,
+  };
+}
+
+function actorRow(overrides: Record<string, unknown> = {}) {
+  return {
+    groupId: "thread:root",
+    id: "u1",
+    username: "bruno",
+    displayName: "Bruno",
+    avatarImageId: null,
+    lastAt: "2026-10-23T10:00:00.000Z",
+    ...overrides,
+  };
+}
+
+function mockUpdate() {
+  const where = vi.fn().mockResolvedValue(undefined);
+  const set = vi.fn(() => ({ where }));
+  mocks.db.update.mockReturnValue({ set });
+  return { set, where };
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.resolveImageUrls.mockResolvedValue(new Map());
+});
+
+describe("listNotificationGroups", () => {
+  it("arma la entrada del hilo con su artista, la fecha en ISO y el punto de no leída", async () => {
+    mockPage([groupRow()], [actorRow()]);
+
+    const result = await listNotificationGroups("me");
+
+    expect(result.nextCursor).toBeNull();
+    expect(result.groups).toEqual([
+      {
+        id: "thread:root",
+        kind: "comment_reply",
+        lastAt: "2026-10-23T10:00:00.000Z",
+        unread: true,
+        eventCount: 2,
+        actorCount: 2,
+        actors: [{ id: "u1", username: "bruno", displayName: "Bruno", avatarUrl: null }],
+        target: { type: "artist", artistId: "artist-1", artistName: "Banda", rootId: "root" },
+      },
+    ]);
+  });
+
+  it("una solicitud de seguimiento enlaza al perfil de quien la envió", async () => {
+    mockPage(
+      [
+        groupRow({
+          id: "follow:abc",
+          kind: "follow_request",
+          artistId: null,
+          artistName: null,
+          rootId: null,
+          actorUsername: "carla",
+        }),
+      ],
+      [actorRow({ groupId: "follow:abc", id: "u3", username: "carla" })],
+    );
+
+    const [group] = (await listNotificationGroups("me")).groups;
+
+    expect(group!.target).toEqual({ type: "profile", username: "carla" });
+  });
+
+  it("la moderación trae acción, objeto y motivo, y no tiene personas", async () => {
+    mockPage(
+      [
+        groupRow({
+          id: "moderation:abc",
+          kind: "moderation",
+          actorCount: 0,
+          artistId: null,
+          artistName: null,
+          rootId: null,
+          actorUsername: null,
+          moderationAction: "hide",
+          moderationReason: "Spam",
+          moderationContentType: "comment",
+        }),
+      ],
+      [],
+    );
+
+    const [group] = (await listNotificationGroups("me")).groups;
+
+    expect(group!.target).toEqual({
+      type: "moderation",
+      action: "hide",
+      contentType: "comment",
+      reason: "Spam",
+    });
+    expect(group!.actors).toEqual([]);
+  });
+
+  it("recorta a dos nombres; el resto queda como cifra del grupo", async () => {
+    mockPage(
+      [groupRow({ actorCount: 3 })],
+      [
+        actorRow({ id: "u1", username: "bruno", displayName: "Bruno" }),
+        actorRow({ id: "u2", username: "carla", displayName: "Carla" }),
+        actorRow({ id: "u3", username: "diego", displayName: "Diego" }),
+      ],
+    );
+
+    const [group] = (await listNotificationGroups("me")).groups;
+
+    expect(group!.actors.map((actor) => actor.displayName)).toEqual(["Bruno", "Carla"]);
+    expect(group!.actorCount).toBe(3);
+  });
+
+  it("devuelve cursor solo cuando queda otra página y lo calcula con la última entrada", async () => {
+    mockPage([groupRow(), groupRow({ id: "follow:abc" })], []);
+
+    const result = await listNotificationGroups("me", { pageSize: 1 });
+
+    expect(result.groups).toHaveLength(1);
+    expect(result.nextCursor).toBe("2026-10-23T10:00:00.000Z|thread:root");
+  });
+
+  it("aplica el cursor al grupo en el HAVING", async () => {
+    const page = queryChain({ rows: [groupRow()] });
+    mocks.db.select
+      .mockReturnValueOnce(queryChain())
+      .mockReturnValueOnce(queryChain({ as: VISIBLE }))
+      .mockReturnValueOnce(queryChain({ as: GROUPED }))
+      .mockReturnValueOnce(page)
+      .mockReturnValueOnce(queryChain({ rows: [] }));
+
+    await listNotificationGroups("me", { cursor: "2026-10-22T10:00:00.000Z|thread:root" });
+
+    expect(page.having).toHaveBeenCalledTimes(1);
+  });
+
+  it("rechaza un cursor mal formado sin consultar la base", async () => {
+    await expect(listNotificationGroups("me", { cursor: "sin-fecha" })).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+      status: 400,
+    });
+    expect(mocks.db.select).not.toHaveBeenCalled();
+  });
+
+  it("consulta las personas de la página en una sola consulta", async () => {
+    mockPage([groupRow()], [actorRow()]);
+
+    await listNotificationGroups("me", { timeZone: "America/Santiago" });
+
+    expect(mocks.db.select).toHaveBeenCalledTimes(5);
+    expect(mocks.resolveImageUrls).toHaveBeenCalledWith([null]);
+  });
+});
+
+describe("countUnseen", () => {
+  it("devuelve el número de entradas con algo sin leer", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(queryChain())
+      .mockReturnValueOnce(queryChain({ as: VISIBLE }))
+      .mockReturnValueOnce(queryChain({ as: GROUPED }))
+      .mockReturnValueOnce(queryChain({ rows: [{ count: 3 }] }));
+
+    expect(await countUnseen("me")).toBe(3);
+  });
+
+  it("sin filas devuelve cero", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(queryChain())
+      .mockReturnValueOnce(queryChain({ as: VISIBLE }))
+      .mockReturnValueOnce(queryChain({ as: GROUPED }))
+      .mockReturnValueOnce(queryChain({ rows: [] }));
+
+    expect(await countUnseen("me")).toBe(0);
+  });
+});
+
+describe("markRead", () => {
+  it("con `all` marca todas las no leídas del destinatario", async () => {
+    const { set } = mockUpdate();
+
+    await markRead("me", { all: true });
+
+    expect(set).toHaveBeenCalledTimes(1);
+    expect(mocks.db.update).toHaveBeenCalledTimes(1);
+  });
+
+  it("con claves marca solo esas entradas y separa el día de los seguidores", async () => {
+    const { set } = mockUpdate();
+
+    await markRead("me", { groupKeys: ["thread:root", "followers:2026-10-23"] });
+
+    expect(set).toHaveBeenCalledTimes(1);
+    expect(set).toHaveBeenCalledWith({ readAt: expect.any(Date) });
+  });
+
+  it("no consulta la base si no hay claves", async () => {
+    await markRead("me", { groupKeys: [] });
+
+    expect(mocks.db.update).not.toHaveBeenCalled();
+  });
+
+  it("rechaza un día de seguidores que no es una fecha", async () => {
+    await expect(markRead("me", { groupKeys: ["followers:ayer"] })).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+    });
+    expect(mocks.db.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("markSeen y retención", () => {
+  it("marca la bandeja como vista con la fecha actual", async () => {
+    const { set } = mockUpdate();
+
+    await markSeen("me");
+
+    expect(set).toHaveBeenCalledWith({ notificationsSeenAt: expect.any(Date) });
+  });
+
+  it("poda solo las filas del destinatario", async () => {
+    const where = vi.fn().mockResolvedValue(undefined);
+    mocks.db.delete.mockReturnValue({ where });
+
+    await pruneNotifications("me");
+
+    expect(where).toHaveBeenCalledTimes(1);
+    expect(mocks.db.delete).toHaveBeenCalledTimes(1);
+  });
+});

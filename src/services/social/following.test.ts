@@ -16,9 +16,14 @@ const mocks = vi.hoisted(() => ({
   db: { select: vi.fn(), insert: vi.fn(), update: vi.fn(), delete: vi.fn(), transaction: vi.fn() },
   isBlockedBetween: vi.fn(),
 }));
+const emitMocks = vi.hoisted(() => ({
+  emitNotifications: vi.fn().mockResolvedValue(undefined),
+  retractFollowRequestNotifications: vi.fn().mockResolvedValue(undefined),
+}));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
 vi.mock("./relations", () => ({ isBlockedBetween: mocks.isBlockedBetween }));
+vi.mock("@/services/notifications/emit", () => emitMocks);
 
 function mockSelectChain(result: unknown[]) {
   const limit = vi.fn().mockResolvedValue(result);
@@ -37,14 +42,19 @@ function mockListChain(result: unknown[]) {
   mocks.db.select.mockReturnValue({ from });
 }
 
-function mockInsertFollow(result?: unknown) {
-  const onConflictDoUpdate = vi.fn().mockResolvedValue(result);
+function mockInsertFollow(result: unknown[] = [{ id: "r1" }]) {
+  const returning = vi.fn().mockResolvedValue(result);
+  const onConflictDoUpdate = vi.fn().mockReturnValue({ returning });
   const values = vi.fn().mockReturnValue({ onConflictDoUpdate });
   mocks.db.insert.mockReturnValue({ values });
+  return { values, returning };
 }
 
 function mockUpdateDelete(): void {
-  mocks.db.update.mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) });
+  const whereResult = Object.assign(Promise.resolve(undefined), {
+    returning: vi.fn().mockResolvedValue([]),
+  });
+  mocks.db.update.mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn(() => whereResult) }) });
   mocks.db.delete.mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
 }
 
@@ -66,6 +76,9 @@ async function expectErrorCode(promise: Promise<unknown>, code: string): Promise
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.isBlockedBetween.mockResolvedValue(false);
+  mocks.db.transaction.mockImplementation(async (callback: (tx: unknown) => unknown) =>
+    callback({ insert: mocks.db.insert, update: mocks.db.update, delete: mocks.db.delete }),
+  );
 });
 
 const follower = "f1";
@@ -92,6 +105,53 @@ describe("seguimiento", () => {
 
     const result = await followUser(follower, "target");
     expect(result).toEqual({ relation: "requested" });
+  });
+
+  it("emite new_follower al seguir un perfil público, con el id del seguimiento", async () => {
+    mockSelectChain([targetPublic]);
+    mockInsertFollow([{ id: "r7" }]);
+    mockUpdateDelete();
+    mockTransaction();
+
+    await followUser(follower, "target");
+
+    expect(emitMocks.emitNotifications).toHaveBeenCalledWith(
+      expect.anything(),
+      [{ kind: "new_follower", recipientId: "t1", actorId: "f1", followId: "r7" }],
+    );
+    expect(emitMocks.retractFollowRequestNotifications).toHaveBeenCalledWith(expect.anything(), []);
+  });
+
+  it("emite follow_request al pedir seguir un perfil privado", async () => {
+    mockSelectChain([targetPrivate]);
+    mockInsertFollow([{ id: "r8" }]);
+    mockUpdateDelete();
+    mockTransaction();
+
+    await followUser(follower, "target");
+
+    expect(emitMocks.emitNotifications).toHaveBeenCalledWith(
+      expect.anything(),
+      [{ kind: "follow_request", recipientId: "t1", actorId: "f1", followId: "r8" }],
+    );
+  });
+
+  it("consolidar un seguimiento mutuo no emite nada extra y retira la solicitud pendiente", async () => {
+    mockSelectChain([targetPublic]);
+    mockInsertFollow([{ id: "r7" }]);
+    const returning = vi.fn().mockResolvedValue([{ id: "r9" }]);
+    const where = vi.fn(() => Object.assign(Promise.resolve(undefined), { returning }));
+    mocks.db.update.mockReturnValue({ set: vi.fn().mockReturnValue({ where }) });
+    mockTransaction();
+
+    await followUser(follower, "target");
+
+    expect(emitMocks.emitNotifications).toHaveBeenCalledTimes(1);
+    expect(emitMocks.emitNotifications).toHaveBeenCalledWith(
+      expect.anything(),
+      [{ kind: "new_follower", recipientId: "t1", actorId: "f1", followId: "r7" }],
+    );
+    expect(emitMocks.retractFollowRequestNotifications).toHaveBeenCalledWith(expect.anything(), ["r9"]);
   });
 
   it("rechaza seguir el propio perfil", async () => {
@@ -125,6 +185,27 @@ describe("seguimiento", () => {
 
     await expect(approveRequest("t1", "f1")).resolves.toBeUndefined();
     expect(mocks.db.update).toHaveBeenCalled();
+  });
+
+  it("aprobar emite follow_accepted a quien pidió y retira su solicitud, en una transacción", async () => {
+    mockSelectChain([{ id: "r1", followerId: "f1", followedId: "t1", status: "pending" }]);
+    mocks.db.update.mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) });
+
+    await approveRequest("t1", "f1");
+
+    expect(mocks.db.transaction).toHaveBeenCalledTimes(1);
+    expect(emitMocks.retractFollowRequestNotifications).toHaveBeenCalledWith(expect.anything(), ["r1"]);
+    expect(emitMocks.emitNotifications).toHaveBeenCalledWith(
+      expect.anything(),
+      [{ kind: "follow_accepted", recipientId: "f1", actorId: "t1", followId: "r1" }],
+    );
+  });
+
+  it("no aprueba ni emite nada si la solicitud no existe", async () => {
+    mockSelectChain([]);
+
+    await expectErrorCode(approveRequest("t1", "f1"), "REQUEST_NOT_FOUND");
+    expect(emitMocks.emitNotifications).not.toHaveBeenCalled();
   });
 
   it("no aprueba una solicitud inexistente o ya resuelta", async () => {
