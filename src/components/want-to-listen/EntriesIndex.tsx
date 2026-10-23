@@ -1,55 +1,96 @@
 "use client";
 
+import { Fragment } from "react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { EntryRemoveError } from "./EntryRemoveError";
-import { RemoveEntryButton } from "./RemoveEntryButton";
-import { WantToListenArtistJourneyAction } from "./WantToListenArtistJourneyAction";
+import { EntryActions } from "./EntryActions";
+import { EntryExtras } from "./EntryExtras";
+import { NotedAgo } from "./entry-parts";
 import { wantToListenHref } from "./want-to-listen-shared";
 import type { WantToListenRendererProps } from "./want-to-listen-items-view";
 
-// Modo Índice: filas de texto compactas para escanear una lista larga. El
-// resaltado de fondo al posar el puntero señala que la fila es interactiva.
-// Las acciones van siempre a contraste normal (atenuadas al 40 % no se
-// distinguían del fondo) y, en pantallas angostas, el artista pasa a una
-// segunda línea para no cortar el título; si las acciones no le dejan ancho
-// al título, bajan a su propia línea.
+// Modo Índice como tabla (openspec: redesign-want-to-listen-views, D6): Título, Artista y Año (solo álbumes),
+// Anotado y acciones. Bajo `sm` quedan Título (con el artista debajo) y acciones; los encabezados siguen para los
+// lectores de pantalla.
 export function EntriesIndex({ entries, actions }: WantToListenRendererProps) {
+  const t = useTranslations("wantToListen");
+  const albums = entries.some((entry) => entry.targetType === "release-group");
+  const columns = albums ? 5 : 3;
+  const head = "px-2 py-1.5 text-left font-data text-[0.7rem] font-normal uppercase tracking-wide text-paper-muted";
+  const cell = "px-2 py-2 align-middle";
+
   return (
-    <ul className="flex flex-col">
-      {entries.map((entry) => (
-        <li
-          key={entry.id}
-          className="flex flex-col gap-1 rounded-md border-b border-ink-border px-2 py-2 transition-colors last:border-b-0 hover:bg-ink-surface"
-        >
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <Link
-              href={wantToListenHref(entry)}
-              className="flex min-w-0 flex-1 basis-40 flex-col font-display text-sm text-paper transition-colors hover:text-amber sm:flex-row sm:items-baseline sm:gap-1.5"
-            >
-              <span className="truncate">{entry.target.title}</span>
-              {entry.target.artistName ? (
-                <span className="truncate font-data text-xs text-paper-muted">{entry.target.artistName}</span>
+    <table className="w-full table-fixed border-collapse">
+      <thead className="max-sm:sr-only">
+        <tr className="border-b border-ink-border">
+          <th scope="col" className={`${head} w-auto`}>
+            {t("colTitle")}
+          </th>
+          {albums ? (
+            <>
+              <th scope="col" className={`${head} w-[28%] max-sm:hidden`}>
+                {t("colArtist")}
+              </th>
+              <th scope="col" className={`${head} w-16 max-sm:hidden`}>
+                {t("colYear")}
+              </th>
+            </>
+          ) : null}
+          <th scope="col" className={`${head} w-36 max-sm:hidden`}>
+            {t("colNoted")}
+          </th>
+          <th scope="col" className={`${head} w-12`}>
+            <span className="sr-only">{t("colActions")}</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {entries.map((entry) => (
+          <Fragment key={entry.id}>
+            <tr className="border-b border-ink-border transition-colors hover:bg-ink-surface">
+              <td className={`${cell} min-w-0`}>
+                <Link
+                  href={wantToListenHref(entry)}
+                  className="block truncate font-display text-sm text-paper transition-colors hover:text-amber"
+                >
+                  {entry.target.title}
+                </Link>
+                {entry.target.artistName ? (
+                  <span className="block truncate font-data text-xs text-paper-muted sm:hidden">
+                    {entry.target.artistName}
+                    {entry.target.year ? ` · ${entry.target.year}` : ""}
+                  </span>
+                ) : null}
+              </td>
+              {albums ? (
+                <>
+                  <td className={`${cell} truncate font-data text-xs text-paper-muted max-sm:hidden`}>
+                    {entry.target.artistName ?? ""}
+                  </td>
+                  <td className={`${cell} font-data text-xs tabular-nums text-paper-muted max-sm:hidden`}>
+                    {entry.target.year ?? ""}
+                  </td>
+                </>
               ) : null}
-            </Link>
-            <div className="flex shrink-0 items-center gap-3">
-              {entry.targetType === "artist" ? (
-                <WantToListenArtistJourneyAction
-                  artistId={entry.target.id}
-                  status={actions.journeyStatus(entry.target.id)}
-                  onAdded={actions.journeyAdded}
-                  onError={actions.journeyError}
-                />
-              ) : null}
-              <RemoveEntryButton
-                title={entry.target.title}
-                busy={actions.busy}
-                onRemove={() => actions.remove(entry.id)}
-              />
-            </div>
-          </div>
-          {actions.errorId === entry.id ? <EntryRemoveError /> : null}
-        </li>
-      ))}
-    </ul>
+              <td className={`${cell} font-data text-xs text-paper-muted max-sm:hidden`}>
+                <NotedAgo iso={entry.createdAt} />
+              </td>
+              <td className={`${cell} text-right`}>
+                <div className="flex justify-end">
+                  <EntryActions entry={entry} actions={actions} />
+                </div>
+              </td>
+            </tr>
+            {actions.errorId === entry.id || actions.listOpenId === entry.id ? (
+              <tr>
+                <td colSpan={columns} className="px-2 pb-3">
+                  <EntryExtras entry={entry} actions={actions} />
+                </td>
+              </tr>
+            ) : null}
+          </Fragment>
+        ))}
+      </tbody>
+    </table>
   );
 }

@@ -8,7 +8,7 @@ export function EntryRemoveError({ className = "" }: { className?: string }) {
   const t = useTranslations("wantToListen");
   return (
     <span role="alert" className={`font-data text-xs text-danger ${className}`}>
-      {t("removeError")}
+      {t("saveError")}
     </span>
   );
 }

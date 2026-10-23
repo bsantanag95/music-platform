@@ -223,4 +223,26 @@ describe("servicio de want-to-listen", () => {
       expect(orderBy.mock.calls[0]).toHaveLength(2);
     },
   );
+
+  // openspec: redesign-want-to-listen-views
+  it("listMyWantToListen trae la foto del artista y el año y la categoría del álbum", async () => {
+    const artistRow = { ...entryRow, artistPhoto: "/uploads/artists/pf.webp" };
+    const albumRow = {
+      id: "00000000-0000-4000-8000-000000000006",
+      createdAt: new Date("2026-01-02T00:00:00Z"),
+      artistId: null,
+      releaseGroupId: "00000000-0000-4000-8000-000000000007",
+      artistName: null,
+      artistPhoto: null,
+      releaseTitle: "Dr. Feelgood",
+      releaseCover: null,
+      releaseYear: 1989,
+      releaseCategory: "studio",
+    };
+    mocks.db.select.mockReturnValueOnce(joinPaged([artistRow, albumRow])).mockReturnValueOnce(countRows(1, 1));
+
+    const result = await listMyWantToListen(user);
+    expect(result.items[0]!.target).toMatchObject({ coverThumbUrl: "/uploads/artists/pf.webp", year: null, category: null });
+    expect(result.items[1]!.target).toMatchObject({ coverThumbUrl: null, year: 1989, category: "studio" });
+  });
 });

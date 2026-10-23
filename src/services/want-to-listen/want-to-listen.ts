@@ -22,6 +22,10 @@ export interface WantToListenEntryDTO {
     /** Artista principal acreditado del álbum; `null` para entradas de artista. */
     artistName: string | null;
     artistId: string | null;
+    /** Año de primera publicación del álbum; `null` para artistas o si no se conoce. */
+    year: number | null;
+    /** Categoría del álbum (`studio`, `single_ep`, `compilation`, `live_other`); `null` para artistas. */
+    category: string | null;
   };
 }
 
@@ -243,10 +247,13 @@ const ENTRY_ROW_SELECT = {
   artistId: wantToListenEntry.artistId,
   releaseGroupId: wantToListenEntry.releaseGroupId,
   artistName: artist.name,
+  artistPhoto: artist.photoUrl,
   creditedArtist: PRIMARY_ARTIST_NAME,
   creditedArtistId: PRIMARY_ARTIST_ID,
   releaseTitle: releaseGroup.title,
   releaseCover: releaseGroup.coverThumbUrl,
+  releaseYear: releaseGroup.firstReleaseYear,
+  releaseCategory: releaseGroup.category,
 } as const;
 
 function entriesFrom() {
@@ -272,15 +279,20 @@ function serializeEntry(row: {
   artistId: string | null;
   releaseGroupId: string | null;
   artistName: string | null;
+  artistPhoto?: string | null;
   creditedArtist: string | null;
   creditedArtistId: string | null;
   releaseTitle: string | null;
   releaseCover: string | null;
+  releaseYear?: number | null;
+  releaseCategory?: string | null;
 }): WantToListenEntryDTO {
   const targetType = targetTypeFromColumns(row.artistId, row.releaseGroupId);
   const targetId = row.artistId ?? row.releaseGroupId ?? "";
   const title = row.artistId ? (row.artistName ?? "") : (row.releaseTitle ?? "");
-  const coverThumbUrl = row.artistId ? null : row.releaseCover;
+  // La foto del artista va en el mismo campo que la carátula del álbum, como en el Diario
+  // (openspec: redesign-want-to-listen-views).
+  const coverThumbUrl = row.artistId ? (row.artistPhoto ?? null) : row.releaseCover;
 
   return {
     id: row.id,
@@ -292,6 +304,8 @@ function serializeEntry(row: {
       coverThumbUrl,
       artistName: row.artistId ? null : row.creditedArtist,
       artistId: row.artistId ? null : row.creditedArtistId,
+      year: row.artistId ? null : (row.releaseYear ?? null),
+      category: row.artistId ? null : (row.releaseCategory ?? null),
     },
   };
 }

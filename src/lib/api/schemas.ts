@@ -1584,6 +1584,9 @@ export const WantToListenTargetInfoSchema = z.object({
   // Artista principal acreditado del álbum; `null` para entradas de artista.
   artistName: z.string().nullable().optional(),
   artistId: z.uuid().nullable().optional(),
+  // Año y categoría del álbum (openspec: redesign-want-to-listen-views); `null` para artistas.
+  year: z.number().int().nullable().optional(),
+  category: z.string().nullable().optional(),
 });
 export type WantToListenTargetInfo = z.infer<typeof WantToListenTargetInfoSchema>;
 
