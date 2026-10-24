@@ -252,12 +252,12 @@ hace que se anotó cada entrada.
 - **THEN** se muestra su inicial en un círculo
 
 ### Requirement: Ya lo escuché desde Pendientes
-Cada entrada SHALL ofrecer "Ya lo escuché", que registra una escucha del objetivo en el Diario; por la auto-remoción,
+Cada entrada SHALL ofrecer, en su menú `⋯`, "Registrar escucha", que registra una escucha del objetivo en el Diario; por la auto-remoción,
 la entrada SHALL salir de la lista y su conteo SHALL descontarse. La página SHALL avisar que quedó en el Diario y
 ofrecer Deshacer, que borra esa escucha y vuelve a anotar el objetivo en Pendientes.
 
 #### Scenario: Cerrar un pendiente
-- **WHEN** el usuario elige "Ya lo escuché" en "Short n' Sweet"
+- **WHEN** el usuario elige "Registrar escucha" en "Short n' Sweet"
 - **THEN** se registra la escucha, el álbum sale de la lista y un aviso dice que quedó en el Diario, con Deshacer
 
 #### Scenario: Deshacer
@@ -265,7 +265,7 @@ ofrecer Deshacer, que borra esa escucha y vuelve a anotar el objetivo en Pendien
 - **THEN** la escucha se borra y el álbum vuelve a la lista
 
 ### Requirement: Menú de acciones de una entrada de Pendientes
-Cada entrada SHALL tener un botón `⋯` que abre un menú con: "Ya lo escuché", "Completar discografía" (artista sin
+Cada entrada SHALL tener un botón `⋯` que abre un menú con: "Registrar escucha", "Completar discografía" (artista sin
 recorrido) o "Ver tu discografía" (artista con recorrido), "Añadir a una lista" y "Quitar de Pendientes". El menú
 SHALL cerrarse con Escape, con un clic fuera o al elegir, SHALL devolver el foco al botón y SHALL permitir moverse con
 las flechas. Mientras no se conoce el estado de recorrido de un artista, la opción de discografía NO SHALL aparecer.
@@ -298,7 +298,7 @@ modo SHALL medir al menos 44 px de alto.
 ### Requirement: Vistas de Pendientes
 `/me/want-to-listen` SHALL usar el mismo ancho máximo en los tres modos, con el título alineado a la izquierda, y el
 título de una entrada NO SHALL quedar reducido por sus acciones. **Detallada** SHALL mostrar filas separadas por una
-línea (sin tarjetas) con carátula o foto, título, datos, "Ya lo escuché" visible desde `sm` y el `⋯`. **Índice** SHALL
+línea (sin tarjetas) con carátula o foto, título, datos y el `⋯` como única acción. **Índice** SHALL
 ser una tabla con encabezados: Título, Artista y Año (álbumes), Anotado y acciones; en pantallas angostas SHALL quedar
 Título (con el artista debajo) y acciones. **Gráfico** SHALL mostrar la carátula o foto con el `⋯` sobre ella y un pie
 con el título y "artista · año" (álbum), sin acciones de texto.
@@ -309,5 +309,5 @@ con el título y "artista · año" (álbum), sin acciones de texto.
 
 #### Scenario: Título completo en móvil
 - **WHEN** abre la página a 375 px en Detallada
-- **THEN** el nombre de cada artista se lee completo y "Ya lo escuché" está en el menú `⋯`
+- **THEN** el nombre de cada artista se lee completo y "Registrar escucha" está en el menú `⋯`
 

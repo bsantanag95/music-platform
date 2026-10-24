@@ -315,14 +315,16 @@ describe("WantToListenList", () => {
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
-  it("Ya lo escuché registra la escucha, saca la entrada y Deshacer borra la escucha", async () => {
+  it("Registrar escucha desde el menú registra la escucha, saca la entrada y Deshacer borra la escucha", async () => {
     mocks.createListenEntry.mockResolvedValue({ id: "l1" });
     mocks.deleteListenEntry.mockResolvedValue(null);
     mocks.toggleWantToListen.mockResolvedValue(albumEntry);
     mocks.getMyWantToListen.mockResolvedValue(initial);
     renderWithIntl(<WantToListenList initial={initial} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Ya escuché The Dark Side of the Moon" }));
+    await userEvent.click(
+      within(await openMenu("The Dark Side of the Moon")).getByRole("menuitem", { name: "Registrar escucha" }),
+    );
 
     expect(mocks.createListenEntry).toHaveBeenCalledWith({ type: "release-group", id: "rg1" });
     expect(screen.queryByRole("link", { name: "The Dark Side of the Moon" })).not.toBeInTheDocument();
@@ -335,11 +337,12 @@ describe("WantToListenList", () => {
     expect(await screen.findByRole("link", { name: "The Dark Side of the Moon" })).toBeInTheDocument();
   });
 
-  it("Ya lo escuché también está en el menú", async () => {
+  it("la fila no repite Registrar escucha fuera del menú", async () => {
     mocks.createListenEntry.mockResolvedValue({ id: "l2" });
     renderWithIntl(<WantToListenList initial={initial} />);
-    await userEvent.click(within(await openMenu("Pink Floyd")).getByRole("menuitem", { name: "Ya lo escuché" }));
+    await userEvent.click(within(await openMenu("Pink Floyd")).getByRole("menuitem", { name: "Registrar escucha" }));
     expect(mocks.createListenEntry).toHaveBeenCalledWith({ type: "artist", id: "a1" });
+    expect(screen.queryByRole("button", { name: /Registrar escucha|Ya escuché/ })).not.toBeInTheDocument();
   });
 
   it("quitar la última entrada del tipo filtrado vuelve a Todo", async () => {
