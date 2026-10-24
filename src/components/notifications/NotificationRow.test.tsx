@@ -84,7 +84,7 @@ describe("NotificationRow", () => {
     const link = screen.getByRole("link", {
       name: /Ana y Bruno respondieron a tu tema en Pink Floyd/,
     });
-    expect(link).toHaveAttribute("href", artistHref("Pink Floyd", "a-1"));
+    expect(link).toHaveAttribute("href", `${artistHref("Pink Floyd", "a-1")}?thread=root-1`);
   });
 
   it("resume los nombres y las personas que faltan cuando hay más de dos", () => {
@@ -127,6 +127,83 @@ describe("NotificationRow", () => {
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
     expect(screen.getByText("Se ocultó tu reseña")).toBeInTheDocument();
     expect(screen.getByText("Motivo: spam")).toBeInTheDocument();
+  });
+
+  it("agrupa a los seguidores del día con dos nombres y el resto como cifra", () => {
+    renderRow(
+      <NotificationRow
+        group={group({
+          id: "followers:2026-10-23",
+          kind: "new_follower",
+          actors: [ANA, BRUNO],
+          actorCount: 5,
+          eventCount: 5,
+          target: { type: "profile", username: "ana" },
+        })}
+      />,
+    );
+
+    expect(
+      screen.getByText("Ana, Bruno y 3 personas más te empezaron a seguir"),
+    ).toBeInTheDocument();
+  });
+
+  it("dos seguidores del día se nombran los dos", () => {
+    renderRow(
+      <NotificationRow
+        group={group({
+          id: "followers:2026-10-23",
+          kind: "new_follower",
+          actors: [ANA, BRUNO],
+          actorCount: 2,
+          target: { type: "profile", username: "ana" },
+        })}
+      />,
+    );
+
+    expect(screen.getByText("Ana y Bruno te empezaron a seguir")).toBeInTheDocument();
+  });
+
+  it("una entrada de moderación sin leer se marca leída con su botón", async () => {
+    const onRead = vi.fn();
+    renderRow(
+      <NotificationRow
+        group={group({
+          id: "moderation:m-1",
+          kind: "moderation",
+          actors: [],
+          actorCount: 0,
+          target: { type: "moderation", action: "hide", contentType: "comment", reason: "spam" },
+        })}
+        onRead={onRead}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Marcar como leída" }));
+
+    expect(onRead).toHaveBeenCalled();
+    await waitFor(() =>
+      expect(mocks.markNotificationsRead).toHaveBeenCalledWith(
+        { groupKeys: ["moderation:m-1"] },
+        "America/Santiago",
+      ),
+    );
+  });
+
+  it("una entrada de moderación ya leída no ofrece el botón", () => {
+    renderRow(
+      <NotificationRow
+        group={group({
+          kind: "moderation",
+          unread: false,
+          actors: [],
+          actorCount: 0,
+          target: { type: "moderation", action: "hide", contentType: "comment", reason: "spam" },
+        })}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "Marcar como leída" })).not.toBeInTheDocument();
   });
 
   it("marca la entrada como leída al abrir su destino", async () => {

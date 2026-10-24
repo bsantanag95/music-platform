@@ -16,9 +16,10 @@
     "moreNames": "{names} y {count, plural, one {# persona más} other {# personas más}}",
     "commentReply": "{people} {count, plural, one {respondió} other {respondieron}} a tu tema en {artist}",
     "threadReply": "{people} {count, plural, one {respondió} other {respondieron}} en un hilo de {artist} en el que participaste",
-    "newFollower": "{name} te empezó a seguir",
+    "newFollower": "{people} {count, plural, one {te empezó} other {te empezaron}} a seguir",
     "followRequest": "{name} quiere seguirte",
     "followAccepted": "{name} aceptó tu solicitud de seguimiento",
+    "markRead": "Marcar como leída",
     "approve": "Aprobar",
     "reject": "Rechazar"
   },

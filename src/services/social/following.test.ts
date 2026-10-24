@@ -119,7 +119,8 @@ describe("seguimiento", () => {
       expect.anything(),
       [{ kind: "new_follower", recipientId: "t1", actorId: "f1", followId: "r7" }],
     );
-    expect(emitMocks.retractFollowRequestNotifications).toHaveBeenCalledWith(expect.anything(), []);
+    // La propia fila se retira siempre: si era una solicitud pendiente, ya quedó aceptada.
+    expect(emitMocks.retractFollowRequestNotifications).toHaveBeenCalledWith(expect.anything(), ["r7"]);
   });
 
   it("emite follow_request al pedir seguir un perfil privado", async () => {
@@ -151,7 +152,7 @@ describe("seguimiento", () => {
       expect.anything(),
       [{ kind: "new_follower", recipientId: "t1", actorId: "f1", followId: "r7" }],
     );
-    expect(emitMocks.retractFollowRequestNotifications).toHaveBeenCalledWith(expect.anything(), ["r9"]);
+    expect(emitMocks.retractFollowRequestNotifications).toHaveBeenCalledWith(expect.anything(), ["r7", "r9"]);
   });
 
   it("rechaza seguir el propio perfil", async () => {

@@ -158,6 +158,31 @@ async function main() {
       "la entrada enlaza al artista y a la raíz del hilo",
     );
     check(thread?.unread === true, "la entrada nace sin leer");
+    check((await social.getRootComment(root.id, ana.id)).id === root.id, "el enlace al hilo puede leer la raíz aparte");
+    let replyAsRoot = false;
+    try {
+      await social.getRootComment(brunoReply.id);
+      replyAsRoot = true;
+    } catch {
+      // Esperado: una respuesta no es una raíz.
+    }
+    check(!replyAsRoot, "una respuesta no se lee como raíz");
+
+    console.log("Paginación por cursor sin saltos ni repeticiones");
+    {
+      const all = await read.listNotificationGroups(bruno.id, { timeZone: "America/Santiago", pageSize: 50 });
+      const seen: string[] = [];
+      let cursor: string | null = null;
+      do {
+        const step: Awaited<ReturnType<typeof read.listNotificationGroups>> = await read.listNotificationGroups(bruno.id, { timeZone: "America/Santiago", pageSize: 1, cursor });
+        seen.push(...step.groups.map((group) => group.id));
+        cursor = step.nextCursor;
+      } while (cursor);
+      check(
+        seen.length === all.groups.length && seen.every((id, index) => id === all.groups[index]?.id),
+        "recorrer de a una entrada da las mismas entradas que una sola página",
+      );
+    }
 
     console.log("Seguimientos: nuevo seguidor, solicitud y aceptación");
     check((await following.followUser(bruno.id, ana.username)).relation === "following", "seguir un perfil público queda aceptado");
@@ -180,6 +205,17 @@ async function main() {
     await following.followUser(diego.id, priv.username);
     await following.cancelRequest(diego.id, priv.username);
     check((await countFor(priv.id, "follow_request")) === 0, "cancelar la solicitud la retira por cascada");
+
+    // Una solicitud pendiente a un perfil que luego se hace público: volver a seguir la acepta y su
+    // `follow_request` (con botones que ya fallarían) sale de la bandeja.
+    await following.followUser(diego.id, priv.username);
+    check((await countFor(priv.id, "follow_request")) === 1, "solicitud pendiente antes de abrir el perfil");
+    await db.update(appUser).set({ profileVisibility: "public" }).where(eq(appUser.id, priv.id));
+    check((await following.followUser(diego.id, priv.username)).relation === "following", "volver a seguir el perfil ya público lo acepta");
+    check((await countFor(priv.id, "follow_request")) === 0, "la solicitud aceptada sale de la bandeja");
+    check((await countFor(priv.id, "new_follower")) === 1, "y queda como nuevo seguidor");
+    await following.unfollowUser(diego.id, priv.username);
+    await db.update(appUser).set({ profileVisibility: "private" }).where(eq(appUser.id, priv.id));
 
     console.log("Bloqueos: no se emite el aviso");
     const [carlaRoot] = await db

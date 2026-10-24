@@ -215,7 +215,21 @@ describe("listNotificationGroups", () => {
     const result = await listNotificationGroups("me", { pageSize: 1 });
 
     expect(result.groups).toHaveLength(1);
-    expect(result.nextCursor).toBe("2026-10-23T10:00:00.000Z|thread:root");
+    expect(result.nextCursor).toBe(`${groupRow().lastAt}|thread:root`);
+  });
+
+  it("el cursor conserva los microsegundos de la fecha que da Postgres", async () => {
+    mockPage(
+      [
+        groupRow({ lastAt: "2026-10-23T10:00:00.123456+00:00" }),
+        groupRow({ id: "follow:abc" }),
+      ],
+      [],
+    );
+
+    const result = await listNotificationGroups("me", { pageSize: 1 });
+
+    expect(result.nextCursor).toBe("2026-10-23T10:00:00.123456+00:00|thread:root");
   });
 
   it("aplica el cursor al grupo en el HAVING", async () => {

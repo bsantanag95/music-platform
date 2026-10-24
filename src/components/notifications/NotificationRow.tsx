@@ -60,10 +60,7 @@ export function NotificationRow({
   // bloquea la navegación: el enlace sigue siendo el que cambia de página. La
   // lista que contiene la fila se actualiza desde el contenedor (`onRead`),
   // porque el panel y la página cachean formas distintas.
-  const handleNavigate = () => {
-    onNavigate?.();
-    if (!group.unread) return;
-
+  const markRead = () => {
     onRead?.();
     void markNotificationsRead({ groupKeys: [group.id] }, timeZone)
       .catch(() => {
@@ -72,6 +69,11 @@ export function NotificationRow({
       .finally(() => {
         void queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_COUNT_KEY });
       });
+  };
+
+  const handleNavigate = () => {
+    onNavigate?.();
+    if (group.unread) markRead();
   };
 
   const resolveRequest = async (action: "approve" | "reject") => {
@@ -138,7 +140,19 @@ export function NotificationRow({
             {body}
           </Link>
         ) : (
-          <div>{body}</div>
+          <div>
+            {body}
+            {/* Sin destino que abrir (moderación): la entrada se marca leída a mano. */}
+            {group.unread ? (
+              <button
+                type="button"
+                onClick={markRead}
+                className="mt-1 font-data text-xs text-amber underline"
+              >
+                {t("row.markRead")}
+              </button>
+            ) : null}
+          </div>
         )}
 
         {requester ? (
@@ -184,26 +198,32 @@ function notificationText(t: NotificationT, group: NotificationGroupValue): stri
   const nameOf = (actor: NotificationGroupValue["actors"][number]) =>
     actor.displayName ?? actor.username;
 
-  if (group.kind === "comment_reply" || group.kind === "thread_reply") {
+  // "Ana", "Ana y Bruno" o "Ana, Bruno y 2 personas más": hasta dos nombres y el resto como cifra,
+  // igual para los hilos y para los seguidores del día.
+  const people = () => {
     const names = group.actors.map(nameOf);
     const remaining = Math.max(0, group.actorCount - names.length);
-    const people =
-      remaining > 0
-        ? t("row.moreNames", { names: names.slice(0, 2).join(", "), count: remaining })
-        : names.length > 1
-          ? t("row.twoNames", { first: names[0]!, second: names[1]! })
-          : (names[0] ?? "");
+    return remaining > 0
+      ? t("row.moreNames", { names: names.slice(0, 2).join(", "), count: remaining })
+      : names.length > 1
+        ? t("row.twoNames", { first: names[0]!, second: names[1]! })
+        : (names[0] ?? "");
+  };
 
+  if (group.kind === "comment_reply" || group.kind === "thread_reply") {
     return t(group.kind === "comment_reply" ? "row.commentReply" : "row.threadReply", {
-      people,
+      people: people(),
       count: Math.max(group.actorCount, 1),
       artist: group.target?.type === "artist" ? group.target.artistName : "",
     });
   }
 
+  if (group.kind === "new_follower") {
+    return t("row.newFollower", { people: people(), count: Math.max(group.actorCount, 1) });
+  }
+
   const name = group.actors[0] ? nameOf(group.actors[0]) : "";
 
-  if (group.kind === "new_follower") return t("row.newFollower", { name });
   if (group.kind === "follow_request") return t("row.followRequest", { name });
   if (group.kind === "follow_accepted") return t("row.followAccepted", { name });
 
@@ -231,7 +251,10 @@ function moderationKey(action: ModerationAction, contentType: ModerationContentT
 function targetHref(group: NotificationGroupValue): string | null {
   const target = group.target;
   if (!target) return null;
-  if (target.type === "artist") return artistHref(target.artistName, target.artistId);
+  // Al hilo, no solo a la página: `Comments` abre `?thread=` y lo lleva a la vista.
+  if (target.type === "artist") {
+    return `${artistHref(target.artistName, target.artistId)}?thread=${encodeURIComponent(target.rootId)}`;
+  }
   if (target.type === "profile") return `/users/${encodeURIComponent(target.username)}`;
   return null;
 }

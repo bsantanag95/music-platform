@@ -11,7 +11,8 @@ las Fases 2 y 3 solo agreguen tipos y canales.
 - El contador es una **bandeja de entrada**, nunca un logro: no hay rachas, medallas ni mensajes de presión
   (`vision.md`).
 - **Visto** no es **leído**: abrir la campana o la página pone el contador a cero, pero cada entrada sigue marcada
-  como no leída (punto ámbar) hasta que se abre su destino o se elige "Marcar todas como leídas".
+  como no leída (punto ámbar) hasta que se abre su destino o se elige "Marcar todas como leídas". Las entradas
+  sin destino que abrir (moderación) llevan su propio "Marcar como leída".
 - Tope visible del contador: **9+**.
 - La bandeja no interrumpe: se actualiza sola cada 60 s sin recargar, y no hace peticiones mientras la pestaña está en
   segundo plano.
@@ -54,6 +55,11 @@ La bandeja y el contador aplican las mismas reglas que el resto de las superfici
   últimas 10 entradas, "Marcar todas como leídas" y "Ver todas". Se abre con clic o teclado (`Escape` cierra y
   devuelve el foco; también se cierra al navegar). Por debajo de `lg`, la campana va en la fila superior junto al
   botón del panel y es un enlace directo a `/me/notifications`.
+- **Destino de cada entrada**: las respuestas llevan **al hilo** en la página del artista
+  (`?thread=<rootId>`): el hilo se abre solo y se lleva a la vista; si la raíz no está en la primera página de
+  comentarios se trae aparte (`GET /api/catalog/comments/{id}`) y se pone primera. Los seguimientos llevan al
+  perfil de la persona. Los grupos nombran hasta dos personas y el resto como cifra ("Ana, Bruno y 3 personas más
+  te empezaron a seguir").
 - **Página `/me/notifications`**: lista paginada ("Cargar más"), "Marcar todas como leídas", enlace a los ajustes y
   estado vacío sobrio ("Aquí verás respuestas, seguidores y avisos de tu cuenta"). Sin sesión redirige al inicio de
   sesión.

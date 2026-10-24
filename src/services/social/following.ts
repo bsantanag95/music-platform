@@ -73,10 +73,12 @@ export async function followUser(followerId: string, targetUsername: string): Pr
             ),
           )
           .returning({ id: userFollow.id });
-        await retractFollowRequestNotifications(
-          tx,
-          consolidated.map((row) => row.id),
-        );
+        // También la propia: una solicitud pendiente que pasa a accepted al volver a seguir un
+        // perfil que ahora es público ya no se puede aprobar.
+        await retractFollowRequestNotifications(tx, [
+          saved.id,
+          ...consolidated.map((row) => row.id),
+        ]);
       }
     });
   } catch (error) {

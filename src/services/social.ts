@@ -195,6 +195,18 @@ export async function listReplies(rootId: string, page = 1, pageSize = 20, viewe
 }
 
 /**
+ * Un comentario raíz visible, con la misma forma que el listado (openspec: add-notifications-core).
+ * Lo usa el enlace de una notificación de respuesta para abrir su hilo aunque la raíz no esté en la
+ * primera página de comentarios. `COMMENT_NOT_FOUND` si no existe, es una respuesta o está oculta.
+ */
+export async function getRootComment(commentId: string, viewerId: string | null = null) {
+  const root = await findVisibleRoot(commentId, { strict: true });
+  const [row] = await db.select({ id: comment.id, body: comment.body, topic: COMMENT_EFFECTIVE_TOPIC_SQL, parentId: comment.parentId, replyCount: COMMENT_REPLY_COUNT_SQL, createdAt: comment.createdAt, likes: COMMENT_LIKE_COUNT_SQL, likedByMe: viewerId ? likedByViewerSql(viewerId) : sql<boolean>`false`, user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName, deactivatedAt: appUser.deactivatedAt } }).from(comment).innerJoin(appUser, eq(comment.userId, appUser.id)).where(eq(comment.id, root.id)).limit(1);
+  if (!row) throw new ApiError("COMMENT_NOT_FOUND", 404, "Comentario no encontrado");
+  return serializeComment(row, { likes: row.likes, likedByMe: row.likedByMe });
+}
+
+/**
  * La raíz visible de un comentario. Con `strict`, el comentario debe SER la raíz (hilo); sin él, si es
  * una respuesta se sube a su raíz (publicar). Una raíz oculta, o una respuesta cuya raíz está oculta,
  * no existe.

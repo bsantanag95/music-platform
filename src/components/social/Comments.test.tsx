@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => {
       this.status = status;
     }
   }
-  return { getComments: vi.fn(), createComment: vi.fn(), updateComment: vi.fn(), deleteComment: vi.fn(), ApiError };
+  return { getComments: vi.fn(), createComment: vi.fn(), updateComment: vi.fn(), deleteComment: vi.fn(), getRootComment: vi.fn(), getReplies: vi.fn(), ApiError };
 });
 
 vi.mock("@/lib/api/client", () => ({ ApiError: mocks.ApiError }));
@@ -24,7 +24,8 @@ vi.mock("@/lib/api/social", () => ({
   createComment: mocks.createComment,
   updateComment: mocks.updateComment,
   deleteComment: mocks.deleteComment,
-  getReplies: vi.fn(),
+  getRootComment: mocks.getRootComment,
+  getReplies: mocks.getReplies,
   createReply: vi.fn(),
 }));
 vi.mock("@/i18n/navigation", () => ({
@@ -58,7 +59,47 @@ const artistProps = {
 };
 
 describe("Comments con temas (artista)", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    window.history.replaceState(null, "", "/");
+    Element.prototype.scrollIntoView = vi.fn();
+  });
+
+  const ROOT = "00000000-0000-4000-8000-0000000000aa";
+
+  it("?thread= de una raíz ya cargada abre su hilo sin pedirla aparte", async () => {
+    window.history.replaceState(null, "", `/?thread=${ROOT}`);
+    mocks.getReplies.mockResolvedValue({ comments: [comment("r1", null, "una respuesta")], page: 1, pageSize: 20, hasNext: false });
+    renderWithIntl(<Comments {...artistProps} topics initial={page([comment("1", "general"), comment(ROOT, "start", "el tema", 1)])} />);
+
+    expect(await screen.findByText("una respuesta")).toBeInTheDocument();
+    expect(mocks.getReplies).toHaveBeenCalledWith(ROOT, 1);
+    expect(mocks.getRootComment).not.toHaveBeenCalled();
+    // Con las respuestas cargadas, el hilo se lleva a la vista.
+    await waitFor(() => expect(Element.prototype.scrollIntoView).toHaveBeenCalled());
+  });
+
+  it("?thread= de una raíz fuera de la primera página la trae, la pone primera y abre el hilo", async () => {
+    window.history.replaceState(null, "", `/?thread=${ROOT}`);
+    mocks.getRootComment.mockResolvedValue(comment(ROOT, "start", "el tema viejo", 1));
+    mocks.getReplies.mockResolvedValue({ comments: [comment("r1", null, "una respuesta")], page: 1, pageSize: 20, hasNext: false });
+    renderWithIntl(<Comments {...artistProps} topics initial={page([comment("1", "general")])} />);
+
+    expect(await screen.findByText("una respuesta")).toBeInTheDocument();
+    expect(mocks.getRootComment).toHaveBeenCalledWith(ROOT);
+    const items = screen.getAllByRole("listitem");
+    expect(items[0]).toHaveTextContent("el tema viejo");
+  });
+
+  it("?thread= de una raíz que ya no existe deja la página como estaba", async () => {
+    window.history.replaceState(null, "", `/?thread=${ROOT}`);
+    mocks.getRootComment.mockRejectedValue(new mocks.ApiError("COMMENT_NOT_FOUND", 404, "no"));
+    renderWithIntl(<Comments {...artistProps} topics initial={page([comment("1", "general")])} />);
+
+    await waitFor(() => expect(mocks.getRootComment).toHaveBeenCalled());
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(mocks.getReplies).not.toHaveBeenCalled();
+  });
 
   it("muestra el título Comentarios, los chips y el tema de cada comentario", () => {
     renderWithIntl(<Comments {...artistProps} topics initial={page([comment("1", "start"), comment("2", "general")])} />);
