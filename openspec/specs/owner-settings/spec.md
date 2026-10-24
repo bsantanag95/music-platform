@@ -9,7 +9,8 @@ El área de ajustes del dueño (`/me/settings`): una pantalla por tipo de ajuste
 El sistema SHALL ofrecer a todo usuario autenticado un área de ajustes bajo `/me/settings` con
 una pantalla por tipo de ajuste: **Perfil** (`/me/settings/profile`), **Curaduría**
 (`/me/settings/curation`), **Privacidad y audiencia** (`/me/settings/privacy`), **Red**
-(`/me/settings/network`) y **Cuenta y seguridad** (`/me/settings/account`). Todas las pantallas
+(`/me/settings/network`), **Notificaciones** (`/me/settings/notifications`, ver `notifications`) y
+**Cuenta y seguridad** (`/me/settings/account`). Todas las pantallas
 SHALL compartir un menú de navegación lateral (pestañas horizontales por debajo del punto de
 corte `md`) que marque la pantalla activa. La ruta `/me/settings` SHALL redirigir a
 `/me/settings/profile`. El área SHALL NOT incluir accesos a la biblioteca (diario, favoritos, por
@@ -36,6 +37,12 @@ disponible. Una petición sin sesión SHALL ser dirigida al inicio de sesión.
 
 - **WHEN** una pantalla del área no ofrece ningún control disponible todavía
 - **THEN** no aparece en el menú lateral
+
+#### Scenario: Pantalla Notificaciones
+
+- **WHEN** el usuario elige "Notificaciones" en el menú lateral
+- **THEN** llega a `/me/settings/notifications` con un interruptor por cada tipo desactivable y la
+  explicación de los tipos que no se pueden desactivar
 
 ### Requirement: Aviso de email sin verificar en el área de ajustes
 
@@ -229,3 +236,4 @@ sesión. Un control SHALL mostrarse únicamente cuando su función esté disponi
 - **WHEN** el usuario pidió cambiar su email y aún no confirmó
 - **THEN** la pantalla indica que hay un cambio pendiente a la dirección nueva y que el email actual
   sigue vigente
+

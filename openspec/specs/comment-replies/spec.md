@@ -132,11 +132,3 @@ de álbum y de canción SHALL NOT mostrar controles de respuesta.
 - **WHEN** una persona abre un álbum o una canción
 - **THEN** no ve botón de responder ni conteo de respuestas
 
-### Requirement: Sin notificaciones en esta etapa
-El sistema SHALL NOT enviar ni generar notificaciones por recibir respuestas. La estructura de datos
-SHALL permitir derivarlas después de la relación entre una respuesta y su raíz.
-
-#### Scenario: Respuesta sin aviso
-- **WHEN** una persona responde al comentario de otra
-- **THEN** no se crea ninguna notificación ni entrada de actividad para la autora de la raíz
-

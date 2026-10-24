@@ -1,6 +1,6 @@
-## MODIFIED Requirements
+## ADDED Requirements
 
-### Requirement: Estructura del Header con acciones rápidas
+### Requirement: Estructura del Header con acciones rápidas y notificaciones
 
 Cuando existe sesión, el Header SHALL separar dos zonas: una **barra general** de
 navegación de contenido y un **menú de usuario** anclado al nombre visible, cuyo control
@@ -197,3 +197,11 @@ accesos y títulos de grupo del menú, el selector de locale y el cierre de sesi
 #### Scenario: El menú de usuario incluye Mis valoraciones
 - **WHEN** un usuario autenticado abre el menú de usuario del Header o el panel móvil
 - **THEN** encuentra el acceso "Valoraciones", después de Diario, que lleva a `/me/ratings`
+
+## REMOVED Requirements
+
+### Requirement: Estructura del Header con acciones rápidas
+
+**Reason**: el Header suma el control de notificaciones y el menú de usuario deja de mostrar el indicador de solicitudes pendientes (`add-notifications-core`); los escenarios del indicador ya no aplican.
+
+**Migration**: reemplazado por "Estructura del Header con acciones rápidas y notificaciones", que conserva el resto del requisito; las solicitudes nuevas se avisan en la campana (`notifications`) y su cifra sigue en la pantalla Red.

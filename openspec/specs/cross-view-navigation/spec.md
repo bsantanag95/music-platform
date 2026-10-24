@@ -63,7 +63,21 @@ artistas y nombres de créditos SHALL conservarse tal como los entrega el catál
 - **WHEN** una persona visita el álbum en español y en inglés
 - **THEN** cambian las etiquetas de navegación y permanecen iguales los datos musicales
 
-### Requirement: Estructura del Header con acciones rápidas
+### Requirement: Header reducido en pantallas de foco
+
+En las pantallas de foco (hoy, `/welcome`) el Header SHALL mostrar solo el logo enlazado a Inicio y el selector de idioma, que conserva la ruta al cambiar de idioma. En el resto de las rutas el Header SHALL conservar su estructura completa.
+
+#### Scenario: Header de una pantalla de foco
+
+- **WHEN** se muestra el Header en `/welcome`, con o sin sesión
+- **THEN** contiene el logo y el selector de idioma, y no contiene el buscador, la navegación general, las acciones rápidas ni el menú de usuario
+
+#### Scenario: Header del resto del sitio
+
+- **WHEN** se muestra el Header en cualquier otra ruta
+- **THEN** conserva el buscador, la navegación general y la zona de usuario
+
+### Requirement: Estructura del Header con acciones rápidas y notificaciones
 
 Cuando existe sesión, el Header SHALL separar dos zonas: una **barra general** de
 navegación de contenido y un **menú de usuario** anclado al nombre visible, cuyo control
@@ -94,6 +108,11 @@ con el buscador del catálogo. El control SHALL presentarse como acción (no com
 texto plano). La barra general queda para lo que el sitio ofrece a cualquiera; la escritura
 de datos propios vive en la zona de usuario.
 
+Con sesión, la zona de usuario SHALL incluir también el control de **notificaciones** (ver
+`notifications`), ubicado entre el control "Añadir" y el menú de usuario en escritorio. Por
+debajo del punto de corte `lg`, el control de notificaciones SHALL quedar en la fila superior,
+junto al botón del panel colapsado, y no dentro del panel.
+
 En escritorio el menú de usuario SHALL desplegarse al posar el cursor sobre el control y
 SHALL replegarse cuando el cursor abandona el conjunto de control y menú. El menú SHALL
 agrupar, en este orden, los accesos a: el perfil propio (`/users/{username}`, "Perfil");
@@ -103,9 +122,8 @@ Actividad (el feed de seguidos, `/me/feed`), Artistas seguidos, Seguidores, Segu
 Solicitudes; las herramientas de rol; los ajustes y el cierre de sesión. Los títulos de
 grupo SHALL mostrarse como rótulos no interactivos y SHALL NOT ser enlaces. Ninguna
 etiqueta de acceso del menú SHALL llevar posesivo ("Mi", "Mis"): la pertenencia la dan los
-títulos de grupo. El menú SHALL mostrar un indicador con el número de solicitudes de
-seguimiento pendientes junto al acceso a solicitudes cuando ese número sea mayor que cero,
-presentado como bandeja de entrada y no como métrica de logro.
+títulos de grupo. El menú SHALL NOT mostrar un indicador numérico junto al acceso a solicitudes: las
+solicitudes pendientes se avisan en el control de notificaciones.
 
 El feed de actividad (`/me/feed`) SHALL alcanzarse desde el menú de usuario, con la
 etiqueta "Actividad", y SHALL NOT ocupar un lugar en la barra general.
@@ -158,8 +176,8 @@ accesos y títulos de grupo del menú, el selector de locale y el cierre de sesi
 #### Scenario: El control "Añadir" va junto al menú de usuario
 
 - **WHEN** un usuario con sesión abre una página con el Header en un viewport de escritorio
-- **THEN** en la zona de usuario el orden es selector de idioma, control "Añadir" y menú de
-  usuario, con el control inmediatamente antes del menú
+- **THEN** en la zona de usuario el orden es selector de idioma, control "Añadir", control de
+  notificaciones y menú de usuario
 
 #### Scenario: El control "Añadir" abre el diálogo de acciones rápidas
 
@@ -197,16 +215,17 @@ accesos y títulos de grupo del menú, el selector de locale y el cierre de sesi
 - **THEN** el menú se despliega sin necesidad de hacer clic
 - **AND** se repliega cuando el cursor abandona el control y el menú
 
-#### Scenario: Indicador de solicitudes pendientes en el menú
+#### Scenario: Solicitudes pendientes sin indicador en el menú
 
 - **WHEN** el usuario abre el menú y tiene solicitudes de seguimiento pendientes
-- **THEN** el acceso a solicitudes muestra el número de pendientes y enlaza a
-  `/me/follow-requests`
+- **THEN** el acceso a solicitudes enlaza a `/me/follow-requests` sin indicador numérico
+- **AND** el control de notificaciones del Header cuenta las solicitudes nuevas
 
-#### Scenario: Sin solicitudes pendientes
+#### Scenario: Notificaciones en la fila superior móvil
 
-- **WHEN** el usuario abre el menú y no tiene solicitudes pendientes
-- **THEN** el acceso a solicitudes no muestra ningún indicador numérico
+- **WHEN** un usuario con sesión abre una página en un viewport por debajo de `lg`
+- **THEN** el control de notificaciones se ve en la fila superior junto al botón del panel,
+  sin abrir el panel
 
 #### Scenario: Feed accesible solo desde el menú
 
@@ -255,18 +274,4 @@ accesos y títulos de grupo del menú, el selector de locale y el cierre de sesi
 #### Scenario: El menú de usuario incluye Mis valoraciones
 - **WHEN** un usuario autenticado abre el menú de usuario del Header o el panel móvil
 - **THEN** encuentra el acceso "Valoraciones", después de Diario, que lleva a `/me/ratings`
-
-### Requirement: Header reducido en pantallas de foco
-
-En las pantallas de foco (hoy, `/welcome`) el Header SHALL mostrar solo el logo enlazado a Inicio y el selector de idioma, que conserva la ruta al cambiar de idioma. En el resto de las rutas el Header SHALL conservar su estructura completa.
-
-#### Scenario: Header de una pantalla de foco
-
-- **WHEN** se muestra el Header en `/welcome`, con o sin sesión
-- **THEN** contiene el logo y el selector de idioma, y no contiene el buscador, la navegación general, las acciones rápidas ni el menú de usuario
-
-#### Scenario: Header del resto del sitio
-
-- **WHEN** se muestra el Header en cualquier otra ruta
-- **THEN** conserva el buscador, la navegación general y la zona de usuario
 
