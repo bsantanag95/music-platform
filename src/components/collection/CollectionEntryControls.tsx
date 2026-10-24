@@ -27,7 +27,13 @@ export function CollectionEntryControls({
   if (editing) {
     return (
       <div className="mt-2 flex w-full flex-col gap-3 rounded border border-ink-border bg-ink p-3">
-        <CollectionEntryForm value={draft} onChange={setDraft} showAudience disabled={busy} />
+        <CollectionEntryForm
+          value={draft}
+          onChange={setDraft}
+          showAudience
+          disabled={busy}
+          savedAttributes={entry.attributes}
+        />
         <div className="flex flex-wrap gap-2">
           <Button
             variant="primary"
@@ -45,7 +51,7 @@ export function CollectionEntryControls({
   }
 
   return (
-    <div className="mt-1 flex flex-wrap items-center gap-2">
+    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
       <label className="sr-only" htmlFor={`collection-audience-${entry.id}`}>
         {t("audienceLabel")}
       </label>
@@ -56,7 +62,7 @@ export function CollectionEntryControls({
         onChange={(event) =>
           actions.onAudienceChange(entry, event.target.value as DiaryAudience)
         }
-        className="filter-select rounded border border-ink-border bg-ink px-2 py-1 font-data text-xs text-paper-muted transition-colors hover:text-paper disabled:opacity-50"
+        className="filter-select rounded border border-ink-border bg-ink px-2 py-1 font-data text-xs text-paper-muted transition-colors hover:text-paper disabled:opacity-50 [@media(pointer:coarse)]:min-h-11"
       >
         {AUDIENCES.map((audience) => (
           <option key={audience} value={audience}>
@@ -71,7 +77,7 @@ export function CollectionEntryControls({
           setDraft(entryToFormValue(entry));
           actions.onStartEdit(entry.id);
         }}
-        className="font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-paper disabled:opacity-50"
+        className="font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-paper disabled:opacity-50 [@media(pointer:coarse)]:min-h-11"
       >
         {t("editEntry")}
       </button>
@@ -79,10 +85,15 @@ export function CollectionEntryControls({
         type="button"
         disabled={busy}
         onClick={() => actions.onRemove(entry)}
-        className="font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-danger disabled:opacity-50"
+        className="font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-danger disabled:opacity-50 [@media(pointer:coarse)]:min-h-11"
       >
         {t("remove")}
       </button>
+      {actions.errorId === entry.id ? (
+        <span role="alert" className="basis-full font-data text-xs text-danger">
+          {t("removeError")}
+        </span>
+      ) : null}
     </div>
   );
 }

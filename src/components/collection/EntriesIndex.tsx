@@ -15,11 +15,17 @@ interface EntriesIndexProps {
   groups: CollectionGroup[];
   actions: CollectionRowActions | null;
   selection: CollectionSelectionState | null;
+  /** Sin carátulas en el Índice: se acepta para compartir la firma de los renderers. */
+  priorityIds?: Set<string>;
+  /** Las secciones son artistas: la fila no repite el artista del encabezado. */
+  groupedByArtist?: boolean;
 }
 
 // Modo "Índice": filas compactas `NN · Álbum — artista · formato`, con los
-// controles ocultos hasta el hover o el foco.
-export function EntriesIndex({ groups, actions, selection }: EntriesIndexProps) {
+// controles siempre visibles en la misma fila (debajo en pantallas angostas).
+// Antes se ocultaban con opacidad hasta el hover, pero seguían ocupando su
+// línea y dejaban un hueco en cada fila.
+export function EntriesIndex({ groups, actions, selection, groupedByArtist = false }: EntriesIndexProps) {
   const t = useTranslations("collection");
   let counter = 0;
 
@@ -35,16 +41,18 @@ export function EntriesIndex({ groups, actions, selection }: EntriesIndexProps) 
               return (
                 <li
                   key={entry.id}
-                  className="group flex flex-col gap-1 border-b border-ink-border py-2 last:border-b-0"
+                  className={`flex flex-col gap-x-4 gap-y-1 border-b border-ink-border py-2 last:border-b-0 ${
+                    actions?.editingId === entry.id ? "" : "sm:flex-row sm:items-center"
+                  }`}
                 >
-                  <div className="flex flex-wrap items-baseline gap-x-2 font-data text-sm">
+                  <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 font-data text-sm">
                     {selection?.active ? (
                       <input
                         type="checkbox"
                         checked={selection.selectedIds.has(entry.id)}
                         onChange={() => selection.onToggle(entry.id)}
                         aria-label={t("selectEntry", { title: entry.album.title })}
-                        className="size-3.5 shrink-0 accent-amber"
+                        className="size-3.5 shrink-0 accent-amber [@media(pointer:coarse)]:size-6"
                       />
                     ) : (
                       <span className="text-paper-muted tabular-nums">
@@ -57,14 +65,14 @@ export function EntriesIndex({ groups, actions, selection }: EntriesIndexProps) 
                     >
                       {entry.album.title || t("albumUnavailable")}
                     </Link>
-                    {entry.album.artistName ? (
+                    {entry.album.artistName && !groupedByArtist ? (
                       <span className="text-paper-muted">— {entry.album.artistName}</span>
                     ) : null}
                     <span className="text-paper-muted">· {t(`format.${entry.format}`)}</span>
                   </div>
 
                   {actions && !selection?.active ? (
-                    <div className="opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100">
+                    <div className={actions.editingId === entry.id ? "" : "shrink-0 [&>div]:mt-0"}>
                       <CollectionEntryControls entry={entry} actions={actions} />
                     </div>
                   ) : null}

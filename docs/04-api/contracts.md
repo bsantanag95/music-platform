@@ -1761,7 +1761,8 @@ album: { id, title, coverThumbUrl, artistId, artistName } }`.
 
 Crea una entrada. **Body:** `{ releaseGroupId, format, attributes?, note?, audience? }`.
 **201 OK:** `{ entry }`. **400** con `VALIDATION_ERROR` si el `format` o un `attribute` está fuera
-del vocabulario, o la `note` supera 140. **404** con `ALBUM_NOT_FOUND` si el álbum no existe.
+del vocabulario, si un atributo de vinilo (`colored-vinyl`, `picture-disc`, `180g`, `gatefold`) llega con
+un formato que no es `vinyl`, o si la `note` supera 140. **404** con `ALBUM_NOT_FOUND` si el álbum no existe.
 
 ### `GET /api/me/collection?page=&pageSize=&format=&attribute=&q=&sort=&group=`
 
@@ -1772,7 +1773,7 @@ conjunto completo (aditivo en `rework-collection-section`):
 - `q` — búsqueda parcial sin distinguir mayúsculas sobre el **título del álbum y el nombre del
   artista acreditado** (a diferencia de listas/favoritos, que solo buscan por título).
 - `sort` — `recent` (default) · `alpha` (título) · `artist` · `format`.
-- `group` — `none` (default) · `format` · `artist`. Solo afecta al orden; el cliente secciona.
+- `group` — `artist` (default) · `format` · `date` (mes de alta). Solo afecta al orden; el cliente secciona.
 
 **200 OK:** `{ entries: [...], page, pageSize, hasNext, counts: { vinyl, cd, cassette, other } }`.
 `counts` se calcula tras aplicar `q` y `attribute` pero **ignorando** `format`, de modo que el
@@ -1792,8 +1793,11 @@ ningún id corresponde a una entrada propia.
 Modifica `format`, `attributes`, `note` o `audience` de una entrada propia. Al menos un campo
 obligatorio. `note: null` limpia la nota.
 
-**Body:** `{ format?, attributes?, note?, audience? }`. **200 OK:** `{ entry }`. **404** con
-`COLLECTION_ENTRY_NOT_FOUND` si no existe o no es del usuario.
+**Body:** `{ format?, attributes?, note?, audience? }`. **200 OK:** `{ entry }`. **400** con
+`VALIDATION_ERROR` si los `attributes` enviados incluyen uno de vinilo y el formato resultante (el enviado o
+el guardado) no es `vinyl`. Si se cambia solo `format` a uno que no es vinilo, los atributos de vinilo
+guardados se quitan (`refine-collection-page-phase1`). **404** con `COLLECTION_ENTRY_NOT_FOUND` si no existe
+o no es del usuario.
 
 ### `DELETE /api/me/collection/{entryId}`
 
@@ -1831,7 +1835,8 @@ audience? }` — una audiencia para todo el lote; sin ella, la audiencia por def
 `followers` (`default-audience`).
 **201 OK:** `{ entries: [...] }`. **400** con `VALIDATION_ERROR` si el lote está vacío, supera 10
 variantes, `audience` no es válida, o alguna variante tiene un `format`/`attribute` fuera del
-vocabulario o una `note` de más de 140 caracteres (ninguna entrada del lote se crea). **404** con `ALBUM_NOT_FOUND` si el
+vocabulario, un atributo de vinilo con un `format` que no es `vinyl` (sin `format` se admiten todos) o una
+`note` de más de 140 caracteres (ninguna entrada del lote se crea). **404** con `ALBUM_NOT_FOUND` si el
 álbum no existe.
 
 ### `GET /api/me/collection/wanted?page=&pageSize=&q=&sort=`
@@ -1846,8 +1851,10 @@ el orden no son válidos.
 Modifica `format`, `attributes`, `note` o `audience` de una entrada de deseo propia. Al menos un campo
 obligatorio. `format: null` vuelve la entrada a "cualquier formato"; `note: null` limpia la nota.
 
-**Body:** `{ format?, attributes?, note?, audience? }`. **200 OK:** `{ entry }`. **404** con
-`WANTED_ENTRY_NOT_FOUND` si no existe o no es del usuario.
+**Body:** `{ format?, attributes?, note?, audience? }`. **200 OK:** `{ entry }`. **400** con
+`VALIDATION_ERROR` si los `attributes` enviados incluyen uno de vinilo y el formato resultante es otro que
+`vinyl` (con `format: null` se admiten todos). Si se cambia solo `format`, los atributos que dejan de aplicar
+se quitan. **404** con `WANTED_ENTRY_NOT_FOUND` si no existe o no es del usuario.
 
 ### `DELETE /api/me/collection/wanted/{entryId}`
 

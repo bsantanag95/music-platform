@@ -7,6 +7,7 @@ import { WantedShelf } from "./WantedShelf";
 import type { WantedEntry, WantedListResponse } from "@/lib/api/schemas";
 
 const mocks = vi.hoisted(() => ({
+  addWantedEntries: vi.fn(),
   getMyWantedEntries: vi.fn(),
   removeWantedEntry: vi.fn(),
   updateWantedEntry: vi.fn(),
@@ -19,6 +20,7 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 vi.mock("@/components/catalog/CoverThumb", () => ({ CoverThumb: () => <span data-cover /> }));
 vi.mock("@/lib/api/wanted", () => ({
+  addWantedEntries: mocks.addWantedEntries,
   getMyWantedEntries: mocks.getMyWantedEntries,
   removeWantedEntry: mocks.removeWantedEntry,
   updateWantedEntry: mocks.updateWantedEntry,
@@ -109,6 +111,39 @@ describe("WantedShelf", () => {
     await user.click(screen.getByRole("button", { name: "Quitar" }));
     await waitFor(() => expect(mocks.removeWantedEntry).toHaveBeenCalledWith(only.id));
     expect(screen.queryByRole("link", { name: "Álbum 1" })).not.toBeInTheDocument();
+  });
+
+  it("Deshacer vuelve a crear la variante quitada con sus datos y su audiencia", async () => {
+    const only = entry({ audience: "private" });
+    mocks.removeWantedEntry.mockResolvedValue(null);
+    mocks.addWantedEntries.mockResolvedValue([{ ...only, id: "restaurada" }]);
+    mocks.getMyWantedEntries.mockResolvedValue(response([]));
+    const user = userEvent.setup();
+    renderShelf(response([only]));
+
+    await user.click(screen.getByRole("button", { name: "Quitar" }));
+    await user.click(await screen.findByRole("button", { name: "Deshacer" }));
+
+    await waitFor(() =>
+      expect(mocks.addWantedEntries).toHaveBeenCalledWith({
+        releaseGroupId: only.album.id,
+        entries: [{ format: "vinyl", attributes: ["limited-edition"], note: "buscando la edición firmada" }],
+        audience: "private",
+      }),
+    );
+  });
+
+  it("si quitar falla, el error aparece junto a la entrada", async () => {
+    mocks.removeWantedEntry.mockRejectedValue(new Error("caída"));
+    const only = entry();
+    mocks.getMyWantedEntries.mockResolvedValue(response([only]));
+    const user = userEvent.setup();
+    renderShelf(response([only]));
+
+    await user.click(screen.getByRole("button", { name: "Quitar" }));
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("No pudimos quitarla. Intenta de nuevo.");
+    expect(alert.closest("li")).toHaveTextContent("Álbum 1");
   });
 
   it("edita el formato y los atributos de una entrada llamando a updateWantedEntry", async () => {

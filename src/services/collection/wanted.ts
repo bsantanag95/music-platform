@@ -2,7 +2,7 @@ import { and, asc, desc, eq, inArray, isNull, sql, type SQL } from "drizzle-orm"
 import { db } from "@/db";
 import { artist, credit, releaseGroup, wantedEntry } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
-import { assertAlbumExists } from "./collection";
+import { assertAlbumExists, assertAttributesFitFormat } from "./collection";
 import type {
   NewWantedVariant,
   WantedEntryChanges,
@@ -12,7 +12,7 @@ import type {
   WantedEntry,
 } from "./wanted-types";
 import { WANTED_SORTS } from "./wanted-types";
-import { normalizeAttributes } from "./vocabulary";
+import { compatibleAttributes, normalizeAttributes } from "./vocabulary";
 import { resolveNewContentAudience } from "@/services/social/default-audience";
 import type { Audience } from "@/services/social/types";
 import type { CollectionFormat, EditionAttribute } from "./vocabulary";
@@ -186,6 +186,7 @@ export async function addWantedEntries(
   if (variants.length === 0 || variants.length > MAX_BATCH) {
     throw new ApiError("VALIDATION_ERROR", 400, "El lote de deseos no es válido");
   }
+  for (const variant of variants) assertAttributesFitFormat(variant.format ?? null, variant.attributes ?? []);
   await assertAlbumExists(releaseGroupId);
   const resolvedAudience = await resolveNewContentAudience(userId, "wanted", audience);
 
@@ -213,15 +214,35 @@ export async function addWantedEntries(
   return getOwnedEntries(created, userId);
 }
 
-/** Edita formato, atributos, nota y/o audiencia de una entrada de deseo propia. `format: null` la vuelve a "cualquier formato". */
+/**
+ * Edita formato, atributos, nota y/o audiencia de una entrada de deseo propia. `format: null` la vuelve a "cualquier
+ * formato". Igual que en la colección: los atributos enviados se validan contra el formato resultante y, si solo
+ * cambia el formato, se quitan los que dejan de aplicar.
+ */
 export async function updateWantedEntry(
   entryId: string,
   userId: string,
   changes: WantedEntryChanges,
 ): Promise<WantedEntry> {
   const patch: Record<string, unknown> = {};
-  if (changes.format !== undefined) patch.format = changes.format;
-  if (changes.attributes !== undefined) patch.attributes = normalizeAttributes(changes.attributes);
+  if (changes.format !== undefined || changes.attributes !== undefined) {
+    const [current] = await db
+      .select({ format: wantedEntry.format, attributes: wantedEntry.attributes })
+      .from(wantedEntry)
+      .where(and(eq(wantedEntry.id, entryId), eq(wantedEntry.userId, userId)))
+      .limit(1);
+    if (!current) {
+      throw new ApiError("WANTED_ENTRY_NOT_FOUND", 404, "La entrada de deseo no existe");
+    }
+    const format = changes.format !== undefined ? changes.format : (current.format as CollectionFormat | null);
+    if (changes.format !== undefined) patch.format = changes.format;
+    if (changes.attributes !== undefined) {
+      assertAttributesFitFormat(format, changes.attributes);
+      patch.attributes = normalizeAttributes(changes.attributes);
+    } else {
+      patch.attributes = compatibleAttributes(format, current.attributes);
+    }
+  }
   if (changes.note !== undefined) patch.note = changes.note;
   if (changes.audience !== undefined) patch.audience = changes.audience;
 

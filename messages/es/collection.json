@@ -37,6 +37,16 @@
   "added": "Agregaste esta copia en {format}",
   "removed": "Quitaste la copia de tu colección",
   "remove": "Quitar",
+  "removedToast": "Quitaste {title} de tu colección",
+  "removedAnnouncement": "Quitaste {title} de tu colección",
+  "restoredAnnouncement": "{title} volvió a tu colección",
+  "wantedRemovedToast": "Quitaste {title} de tu búsqueda",
+  "wantedRemovedAnnouncement": "Quitaste {title} de tu búsqueda",
+  "wantedRestoredAnnouncement": "{title} volvió a tu búsqueda",
+  "undo": "Deshacer",
+  "undoError": "No pudimos deshacer. Intenta de nuevo.",
+  "removeError": "No pudimos quitarla. Intenta de nuevo.",
+  "incompatibleNotice": "{count, plural, one {«{attributes}» es solo para vinilo. Se quitará al guardar.} other {«{attributes}» son solo para vinilo. Se quitarán al guardar.}}",
   "editEntry": "Editar",
   "saveEdit": "Guardar cambios",
   "cancelEdit": "Cancelar",
@@ -65,7 +75,7 @@
   "group": {
     "artist": "Por artista",
     "format": "Por formato",
-    "date": "Por fecha de agregado"
+    "date": "Por fecha de alta"
   },
   "viewModeLabel": "Modo de visualización",
   "viewMode": {

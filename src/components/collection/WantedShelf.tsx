@@ -7,17 +7,25 @@ import {
   type InfiniteData,
 } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterSelect } from "@/components/ui/FilterSelect";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
-import { getMyWantedEntries, removeWantedEntry, updateWantedEntry, type WantedQuery } from "@/lib/api/wanted";
+import {
+  addWantedEntries,
+  getMyWantedEntries,
+  removeWantedEntry,
+  updateWantedEntry,
+  type WantedQuery,
+} from "@/lib/api/wanted";
+import { UndoToast } from "@/components/ui/UndoToast";
+import { compatibleAttributes } from "@/services/collection/vocabulary";
 import { ApiError } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/keys";
 import { albumHref, artistHref } from "@/lib/catalog-links";
-import { formatCollectionDate } from "./collection-shared";
+import { PRIORITY_COVERS, formatCollectionDate, writeFiltersToUrl } from "./collection-shared";
 import {
   WantedVariantForm,
   wantedEntryToFormValue,
@@ -28,6 +36,17 @@ import type { WantedEntry, WantedListResponse, WantedSort } from "@/lib/api/sche
 const PAGE_SIZE = 20;
 
 type WantedPages = InfiniteData<WantedListResponse, number>;
+
+/** Variante recién quitada que el aviso ofrece restaurar. */
+interface UndoState {
+  entry: WantedEntry;
+  undoing: boolean;
+  failed: boolean;
+}
+
+// Controles de texto de cada fila: el mismo estilo que los de la pestaña Tengo.
+const ROW_ACTION =
+  "font-data text-xs text-paper-muted underline decoration-dotted transition-colors disabled:opacity-50 [@media(pointer:coarse)]:min-h-11";
 
 interface WantedShelfProps {
   initial: WantedListResponse;
@@ -71,6 +90,9 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
   const [actionError, setActionError] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<WantedVariantFormValue | null>(null);
+  const [errorId, setErrorId] = useState<string | null>(null);
+  const [undo, setUndo] = useState<UndoState | null>(null);
+  const [announce, setAnnounce] = useState("");
 
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -81,6 +103,11 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
 
   const isFiltered = Boolean(filters.q.trim() || filters.sort !== "recent");
   const apiFilters = useMemo(() => toApiFilters(filters), [filters]);
+
+  // Búsqueda y orden en la URL, junto a `tab=wanted` (que se conserva).
+  useEffect(() => {
+    writeFiltersToUrl({ q: apiFilters.q, sort: apiFilters.sort });
+  }, [apiFilters]);
   const queryKey = queryKeys.myWanted(apiFilters);
   const seeded = sameFilters(filters, seededState);
 
@@ -104,6 +131,7 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
     const snapshot = queryClient.getQueryData<WantedPages>(queryKey);
     setBusyId(entry.id);
     setActionError(false);
+    setErrorId(null);
     queryClient.setQueryData<WantedPages>(queryKey, (old) =>
       old
         ? { ...old, pages: old.pages.map((page) => ({ ...page, entries: page.entries.filter((item) => item.id !== entry.id) })) }
@@ -111,14 +139,45 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
     );
     try {
       await removeWantedEntry(entry.id);
+      setAnnounce(t("wantedRemovedAnnouncement", { title: entry.album.title || t("albumUnavailable") }));
+      setUndo({ entry, undoing: false, failed: false });
     } catch (error) {
       const gone = error instanceof ApiError && error.code === "WANTED_ENTRY_NOT_FOUND";
       if (!gone && snapshot) {
         queryClient.setQueryData(queryKey, snapshot);
-        setActionError(true);
+        setErrorId(entry.id);
       }
     } finally {
       setBusyId(null);
+      void queryClient.invalidateQueries({ queryKey: ["collection", "wanted", "mine"], exact: false });
+    }
+  };
+
+  const clearUndo = useCallback(() => setUndo(null), []);
+
+  // Deshacer vuelve a crear la variante con los mismos datos (entrada nueva: su fecha de alta cambia). Los atributos
+  // que no aplican al formato quedan fuera: el servidor rechazaría la variante heredada incoherente.
+  const handleUndo = async () => {
+    if (!undo || undo.undoing) return;
+    const { entry } = undo;
+    setUndo({ ...undo, undoing: true });
+    try {
+      await addWantedEntries({
+        releaseGroupId: entry.album.id,
+        entries: [
+          {
+            format: entry.format,
+            attributes: compatibleAttributes(entry.format, entry.attributes),
+            note: entry.note,
+          },
+        ],
+        audience: entry.audience,
+      });
+      setUndo(null);
+      setAnnounce(t("wantedRestoredAnnouncement", { title: entry.album.title || t("albumUnavailable") }));
+    } catch {
+      setUndo({ entry, undoing: false, failed: true });
+    } finally {
       void queryClient.invalidateQueries({ queryKey: ["collection", "wanted", "mine"], exact: false });
     }
   };
@@ -180,7 +239,7 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
   };
 
   return (
-    <div className="flex w-full max-w-3xl flex-col gap-5">
+    <div className="flex w-full flex-col gap-5">
       <div className="flex flex-col gap-2">
         <input
           type="search"
@@ -189,14 +248,14 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
           onChange={(event) => setSearchInput(event.target.value)}
           placeholder={t("searchPlaceholder")}
           aria-label={t("searchPlaceholder")}
-          className="w-full rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted"
+          className="w-full rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted [@media(pointer:coarse)]:min-h-11"
         />
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <FilterSelect
             value={filters.sort}
             onChange={(value) => setFilters((current) => ({ ...current, sort: value as WantedSort }))}
             ariaLabel={t("sortLabel")}
-            widthClassName="w-[12ch]"
+            widthClassName="w-[14ch] [@media(pointer:coarse)]:min-h-11"
           >
             <option value="recent">{t("sort.recent")}</option>
             <option value="alpha">{t("sort.alpha")}</option>
@@ -205,13 +264,17 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
             <button
               type="button"
               onClick={clearFilters}
-              className="font-data text-xs text-paper-muted transition-colors hover:text-paper"
+              className="font-data text-xs text-paper-muted transition-colors hover:text-paper [@media(pointer:coarse)]:min-h-11"
             >
               {t("clearFilters")}
             </button>
           ) : null}
         </div>
       </div>
+
+      <span role="status" aria-live="polite" className="sr-only">
+        {announce}
+      </span>
 
       {entries.length === 0 && !isPending ? (
         isFiltered ? (
@@ -232,7 +295,7 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
         )
       ) : (
         <ul className="flex flex-col gap-4">
-          {entries.map((entry) => (
+          {entries.map((entry, index) => (
             <li
               key={entry.id}
               className="flex flex-wrap gap-3 rounded-lg border border-ink-border bg-ink-surface p-4 transition-colors focus-within:border-amber hover:border-amber"
@@ -241,9 +304,14 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
                 href={albumHref(entry.album.artistName, entry.album.title, entry.album.id)}
                 tabIndex={-1}
                 aria-hidden
-                className="shrink-0"
+                className="shrink-0 self-start"
               >
-                <CoverThumb cover={entry.album.coverThumbUrl} label="" className="size-16" />
+                <CoverThumb
+                  cover={entry.album.coverThumbUrl}
+                  label=""
+                  className="size-16"
+                  priority={index < PRIORITY_COVERS}
+                />
               </Link>
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <div className="flex flex-wrap items-baseline gap-x-2">
@@ -274,6 +342,7 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
                       onChange={setEditDraft}
                       showAudience
                       disabled={busyId === entry.id}
+                      savedAttributes={entry.attributes}
                     />
                     <div className="flex flex-wrap gap-2">
                       <Button
@@ -291,9 +360,14 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
                 ) : (
                   <>
                     <div className="flex flex-wrap items-center gap-1.5 font-data text-xs">
-                      <span className="rounded border border-ink-border px-1.5 py-0.5 text-paper">
-                        {entry.format ? t(`format.${entry.format}`) : t("anyFormat")}
-                      </span>
+                      {/* "Cualquier formato" no es un dato de la variante: va como texto secundario, sin caja. */}
+                      {entry.format ? (
+                        <span className="rounded border border-ink-border px-1.5 py-0.5 text-paper">
+                          {t(`format.${entry.format}`)}
+                        </span>
+                      ) : (
+                        <span className="text-paper-muted">{t("anyFormat")}</span>
+                      )}
                       {entry.attributes.map((attribute) => (
                         <span
                           key={attribute}
@@ -309,23 +383,30 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
                         {formatCollectionDate(entry.createdAt, locale)}
                         {` · ${t(`audience.${entry.audience}`)}`}
                       </time>
-                      <span className="flex gap-2">
-                        <Button
-                          variant="ghost"
+                      <span className="flex items-center gap-3">
+                        <button
+                          type="button"
                           disabled={busyId === entry.id}
                           onClick={() => startEdit(entry)}
+                          className={`${ROW_ACTION} hover:text-paper`}
                         >
                           {t("editEntry")}
-                        </Button>
-                        <Button
-                          variant="ghost"
+                        </button>
+                        <button
+                          type="button"
                           disabled={busyId === entry.id}
                           onClick={() => void handleRemove(entry)}
+                          className={`${ROW_ACTION} hover:text-danger`}
                         >
                           {t("remove")}
-                        </Button>
+                        </button>
                       </span>
                     </div>
+                    {errorId === entry.id ? (
+                      <span role="alert" className="font-data text-xs text-danger">
+                        {t("removeError")}
+                      </span>
+                    ) : null}
                   </>
                 )}
               </div>
@@ -344,6 +425,21 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
         <span role="alert" className="text-center font-data text-xs text-danger">
           {t("loadError")}
         </span>
+      ) : null}
+
+      {undo ? (
+        <UndoToast
+          key={undo.entry.id}
+          message={
+            undo.failed
+              ? t("undoError")
+              : t("wantedRemovedToast", { title: undo.entry.album.title || t("albumUnavailable") })
+          }
+          undoLabel={t("undo")}
+          onUndo={undo.failed ? undefined : () => void handleUndo()}
+          onExpire={clearUndo}
+          undoing={undo.undoing}
+        />
       ) : null}
 
       {hasNextPage ? (

@@ -9,6 +9,7 @@ import { EntriesIndex } from "./EntriesIndex";
 import { ShelfGrid } from "./ShelfGrid";
 import type { CollectionGroup } from "./collection-shared";
 import { useCollectionViewMode } from "./use-collection-view-mode";
+import { CollectionPlaceholder } from "./CollectionPlaceholder";
 
 interface CollectionPreviewProps {
   artists: CollectionPreviewArtist[];
@@ -27,7 +28,7 @@ interface CollectionPreviewProps {
 // todo lo que ve viene ya resuelto del servidor.
 export function CollectionPreview({ artists, totalEntries, username }: CollectionPreviewProps) {
   const t = useTranslations("collection");
-  const [mode, setMode] = useCollectionViewMode();
+  const [mode, setMode, modeReady] = useCollectionViewMode();
   const base = `/users/${encodeURIComponent(username)}/collection`;
 
   const groups: CollectionGroup[] = artists.map((artist) => ({
@@ -48,10 +49,16 @@ export function CollectionPreview({ artists, totalEntries, username }: Collectio
   return (
     <div className="flex w-full flex-col gap-5">
       <div className="flex justify-end">
-        <CollectionModeSwitcher mode={mode} onChange={setMode} />
+        <div className={modeReady ? "" : "invisible"} aria-hidden={modeReady ? undefined : true}>
+          <CollectionModeSwitcher mode={mode} onChange={setMode} />
+        </div>
       </div>
 
-      <Renderer groups={groups} actions={null} selection={null} />
+      {modeReady ? (
+        <Renderer groups={groups} actions={null} selection={null} groupedByArtist />
+      ) : (
+        <CollectionPlaceholder />
+      )}
 
       {totalEntries > shown ? (
         <Link

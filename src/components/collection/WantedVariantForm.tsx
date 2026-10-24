@@ -2,10 +2,11 @@
 
 import { useId } from "react";
 import { useTranslations } from "next-intl";
-import { COLLECTION_FORMATS, attributesForFormat } from "@/services/collection/vocabulary";
+import { COLLECTION_FORMATS, attributesForFormat, compatibleAttributes } from "@/services/collection/vocabulary";
 import { COLLECTION_NOTE_MAX } from "@/lib/api/schemas";
 import type { CollectionFormat, EditionAttribute } from "@/services/collection/vocabulary";
 import type { DiaryAudience, WantedEntry } from "@/lib/api/schemas";
+import { IncompatibleAttributesNotice } from "./IncompatibleAttributesNotice";
 
 const AUDIENCES: DiaryAudience[] = ["private", "followers", "public"];
 
@@ -32,12 +33,16 @@ export const EMPTY_WANTED_VARIANT: WantedVariantFormValue = {
   audience: null,
 };
 
-/** Valor inicial del formulario tomado de una entrada de deseo existente (edición). */
+/**
+ * Valor inicial del formulario tomado de una entrada de deseo existente (edición). Deja fuera los atributos que no
+ * aplican a su formato (dato heredado); `IncompatibleAttributesNotice` avisa que se quitarán al guardar.
+ */
 export function wantedEntryToFormValue(entry: WantedEntry): WantedVariantFormValue {
+  const attributes = compatibleAttributes(entry.format, entry.attributes);
   return {
     format: entry.format,
-    attributes: [...entry.attributes],
-    anyEdition: entry.attributes.length === 0,
+    attributes,
+    anyEdition: attributes.length === 0,
     note: entry.note ?? "",
     audience: entry.audience,
   };
@@ -49,6 +54,8 @@ interface WantedVariantFormProps {
   /** Muestra los controles de audiencia (edición); el alta usa el default. */
   showAudience?: boolean;
   disabled?: boolean;
+  /** Atributos guardados de la entrada que se edita: avisa si alguno no aplica al formato. */
+  savedAttributes?: readonly string[];
 }
 
 function optionClasses(active: boolean, disabled?: boolean): string {
@@ -67,7 +74,13 @@ function optionClasses(active: boolean, disabled?: boolean): string {
 // donde es obligatorio), atributos de edición (cero o más) y nota libre
 // (≤140). La audiencia (solo en edición) decide si la entrada aparece en el
 // feed de seguidos; no hay vista pública de la wishlist (expand-feed-coverage).
-export function WantedVariantForm({ value, onChange, showAudience = false, disabled }: WantedVariantFormProps) {
+export function WantedVariantForm({
+  value,
+  onChange,
+  showAudience = false,
+  disabled,
+  savedAttributes,
+}: WantedVariantFormProps) {
   const t = useTranslations("collection");
   const fieldId = useId();
 
@@ -119,6 +132,10 @@ export function WantedVariantForm({ value, onChange, showAudience = false, disab
           ))}
         </div>
       </fieldset>
+
+      {savedAttributes ? (
+        <IncompatibleAttributesNotice format={value.format} savedAttributes={savedAttributes} />
+      ) : null}
 
       <fieldset className="flex flex-col gap-1" disabled={disabled}>
         <legend className="font-data text-xs text-paper-muted">{t("attributesLabel")}</legend>

@@ -41,6 +41,19 @@ describe("useCollectionViewMode", () => {
     expect(result.current[0]).toBe("shelf");
   });
 
+  it("queda listo tras leer la preferencia, también si el almacenamiento lanza", () => {
+    const { result } = renderHook(() => useCollectionViewMode());
+    expect(result.current[2]).toBe(true);
+    installStorage({
+      getItem: () => {
+        throw new Error("bloqueado");
+      },
+    });
+    const blocked = renderHook(() => useCollectionViewMode());
+    expect(blocked.result.current[0]).toBe("shelf");
+    expect(blocked.result.current[2]).toBe(true);
+  });
+
   it("persiste el nuevo modo al actualizar", () => {
     const { result } = renderHook(() => useCollectionViewMode());
     act(() => result.current[1]("detailed"));

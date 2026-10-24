@@ -188,11 +188,52 @@ describe("servicio de wishlist de colección", () => {
       })),
     });
     mocks.db.select
+      .mockReturnValueOnce(whereLimit([{ format: "vinyl", attributes: [] }])) // fila actual
       .mockReturnValueOnce(joinWhereOrderBy([{ ...entryRow, format: "cd", attributes: [] }]))
       .mockReturnValueOnce(joinWhereOrderBy([]));
 
     const entry = await updateWantedEntry(entryRow.id, userId, { format: "cd", attributes: [] });
     expect(entry.format).toBe("cd");
+  });
+
+  it("addWantedEntries rechaza un atributo de vinilo con otro formato sin crear nada", async () => {
+    await expect(
+      addWantedEntries(userId, albumId, [{ format: "vinyl" }, { format: "cassette", attributes: ["180g"] }]),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR", status: 400 });
+    expect(mocks.db.transaction).not.toHaveBeenCalled();
+  });
+
+  it("addWantedEntries acepta un atributo de vinilo sin formato", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(whereLimit([{ id: albumId }]))
+      .mockReturnValueOnce(joinWhereOrderBy([{ ...entryRow, format: null, attributes: ["colored-vinyl"] }]))
+      .mockReturnValueOnce(joinWhereOrderBy([]));
+    mocks.db.transaction = fakeTransaction([entryRow.id]);
+
+    const entries = await addWantedEntries(userId, albumId, [{ attributes: ["colored-vinyl"] }]);
+    expect(entries[0]!.attributes).toEqual(["colored-vinyl"]);
+  });
+
+  it("updateWantedEntry quita los atributos de vinilo al cambiar solo el formato", async () => {
+    const set = vi.fn(() => ({
+      where: vi.fn(() => ({ returning: vi.fn().mockResolvedValue([{ id: entryRow.id }]) })),
+    }));
+    mocks.db.update.mockReturnValue({ set });
+    mocks.db.select
+      .mockReturnValueOnce(whereLimit([{ format: null, attributes: ["colored-vinyl", "signed"] }]))
+      .mockReturnValueOnce(joinWhereOrderBy([{ ...entryRow, format: "cd", attributes: ["signed"] }]))
+      .mockReturnValueOnce(joinWhereOrderBy([]));
+
+    await updateWantedEntry(entryRow.id, userId, { format: "cd" });
+    expect(set).toHaveBeenCalledWith({ format: "cd", attributes: ["signed"] });
+  });
+
+  it("updateWantedEntry rechaza atributos de vinilo con el formato guardado", async () => {
+    mocks.db.select.mockReturnValueOnce(whereLimit([{ format: "cd", attributes: [] }]));
+    await expect(
+      updateWantedEntry(entryRow.id, userId, { attributes: ["gatefold"] }),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR", status: 400 });
+    expect(mocks.db.update).not.toHaveBeenCalled();
   });
 
   it("updateWantedEntry acepta format: null para volver a 'cualquier formato'", async () => {
@@ -201,6 +242,7 @@ describe("servicio de wishlist de colección", () => {
     }));
     mocks.db.update.mockReturnValue({ set });
     mocks.db.select
+      .mockReturnValueOnce(whereLimit([{ format: "cd", attributes: [] }]))
       .mockReturnValueOnce(joinWhereOrderBy([{ ...entryRow, format: null }]))
       .mockReturnValueOnce(joinWhereOrderBy([]));
 
@@ -209,12 +251,18 @@ describe("servicio de wishlist de colección", () => {
   });
 
   it("updateWantedEntry rechaza una entrada ajena o inexistente con WANTED_ENTRY_NOT_FOUND", async () => {
-    mocks.db.update.mockReturnValue({
-      set: vi.fn(() => ({ where: vi.fn(() => ({ returning: vi.fn().mockResolvedValue([]) })) })),
-    });
+    // Con formato o atributos, la lectura previa ya no la encuentra.
+    mocks.db.select.mockReturnValueOnce(whereLimit([]));
     await expect(updateWantedEntry("x", userId, { format: "cd" })).rejects.toMatchObject({
       code: "WANTED_ENTRY_NOT_FOUND",
       status: 404,
+    });
+    // Sin formato ni atributos, la responde el update.
+    mocks.db.update.mockReturnValue({
+      set: vi.fn(() => ({ where: vi.fn(() => ({ returning: vi.fn().mockResolvedValue([]) })) })),
+    });
+    await expect(updateWantedEntry("x", userId, { note: null })).rejects.toMatchObject({
+      code: "WANTED_ENTRY_NOT_FOUND",
     });
   });
 
