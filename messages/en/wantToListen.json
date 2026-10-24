@@ -30,8 +30,7 @@
     "oldest": "Oldest",
     "alpha": "A–Z"
   },
-  "listened": "Listened",
-  "listenedNamed": "I listened to {title}",
+  "listened": "Log listen",
   "actionsFor": "Actions for {title}",
   "actionsMenuLabel": "Actions",
   "journeyView": "See your discography",

@@ -17,7 +17,7 @@ const TOUCH = "[@media(pointer:coarse)]:min-h-11";
 const ITEM = `flex w-full items-center rounded px-2.5 py-2 text-left font-data text-xs transition-colors hover:bg-ink focus-visible:bg-ink ${TOUCH}`;
 
 // Botón `⋯` y menú de una entrada de Pendientes (openspec: redesign-want-to-listen-views, D4), calcado de
-// `FavoriteActions`: Ya lo escuché, discografía (solo artistas, cuando ya se conoce su estado), Añadir a una lista y
+// `FavoriteActions`: Registrar escucha, discografía (solo artistas, cuando ya se conoce su estado), Añadir a una lista y
 // Quitar de Pendientes. Se cierra con Escape, con un clic fuera o al elegir, y devuelve el foco al disparador; las
 // flechas mueven entre opciones.
 export function EntryActions({ entry, actions, triggerClassName = "" }: EntryActionsProps) {

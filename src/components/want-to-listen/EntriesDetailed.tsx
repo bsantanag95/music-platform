@@ -9,8 +9,8 @@ import { wantToListenArtistHref, wantToListenHref } from "./want-to-listen-share
 import type { WantToListenRendererProps } from "./want-to-listen-items-view";
 
 // Modo Detallada (openspec: redesign-want-to-listen-views, D5): filas separadas por una línea, sin tarjetas. Carátula
-// o foto, título, "artista · año · tipo" y cuánto hace que se anotó; a la derecha "Ya lo escuché" (desde `sm`; en
-// pantallas angostas está en el menú, para no quitarle ancho al título) y el `⋯`.
+// o foto, título, "artista · año · tipo" y cuánto hace que se anotó; a la derecha el `⋯`, que
+// reúne «Registrar escucha» y el resto de las acciones.
 export function EntriesDetailed({ entries, actions, priorityIds }: WantToListenRendererProps) {
   const t = useTranslations("wantToListen");
   const facts = useEntryFacts();
@@ -55,15 +55,6 @@ export function EntriesDetailed({ entries, actions, priorityIds }: WantToListenR
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-1">
-                <button
-                  type="button"
-                  disabled={actions.busy}
-                  onClick={() => actions.listened(entry.id)}
-                  aria-label={t("listenedNamed", { title: entry.target.title })}
-                  className="hidden rounded border border-ink-border px-2.5 py-1 font-data text-xs text-paper transition-colors hover:border-amber disabled:opacity-50 sm:inline-flex"
-                >
-                  {t("listened")}
-                </button>
                 <EntryActions entry={entry} actions={actions} />
               </div>
             </div>

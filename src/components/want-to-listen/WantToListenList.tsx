@@ -222,7 +222,7 @@ export function WantToListenList({ initial, initialFilters = {} }: WantToListenL
     }
   };
 
-  // «Ya lo escuché»: registra la escucha y el servicio del Diario retira la entrada de Pendientes (D2).
+  // «Registrar escucha»: registra la escucha y el servicio del Diario retira la entrada de Pendientes (D2).
   const handleListened = async (id: string) => {
     const entry = items.find((item) => item.id === id);
     if (!entry) return;

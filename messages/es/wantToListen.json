@@ -30,8 +30,7 @@
     "oldest": "Más antiguos",
     "alpha": "A–Z"
   },
-  "listened": "Ya lo escuché",
-  "listenedNamed": "Ya escuché {title}",
+  "listened": "Registrar escucha",
   "actionsFor": "Acciones para {title}",
   "actionsMenuLabel": "Acciones",
   "journeyView": "Ver tu discografía",

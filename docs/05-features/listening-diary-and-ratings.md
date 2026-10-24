@@ -297,16 +297,16 @@ La Fase 2 (`redesign-want-to-listen-toolbar`) suma cabecera y barra:
 
 La Fase 3 (`redesign-want-to-listen-views`) rehace las entradas y sus acciones:
 
-- **«Ya lo escuché»** registra la escucha (con los valores de una escucha rápida, como «Anotar» del riel del Diario);
+- **«Registrar escucha»** (en el menú `⋯`) registra la escucha (con los valores de una escucha rápida, como «Anotar» del riel del Diario);
   la regla de auto-remoción saca la entrada. Un aviso dice «… quedó en tu Diario» con **Deshacer**, que borra esa
   escucha y vuelve a anotar el objetivo.
-- **Menú `⋯`** por entrada: Ya lo escuché, Completar discografía o Ver tu discografía (artistas, cuando ya llegó el
+- **Menú `⋯`** por entrada: Registrar escucha, Completar discografía o Ver tu discografía (artistas, cuando ya llegó el
   estado del lote), Añadir a una lista (abre el panel bajo la entrada) y Quitar de Pendientes.
 - **Quitar** es inmediato y el aviso ofrece **Deshacer** durante 6 s (vuelve a anotar; la fecha se reinicia). Un solo
   aviso a la vez.
 - **Datos:** foto del artista en círculo (la inicial como respaldo), «artista · año · tipo» del álbum y «anotado hace
   X». Un artista con recorrido lleva la etiqueta «Discografía en curso».
-- **Detallada** con filas separadas por línea y «Ya lo escuché» visible desde `sm` (en móvil, en el menú); **Índice**
+- **Detallada** con filas separadas por línea y solo el `⋯` como acción; **Índice**
   como tabla (Título, Artista, Año, Anotado; en móvil solo Título y acciones); **Gráfico** con el `⋯` sobre la
   carátula y un pie con título y artista · año.
 - Efecto lateral: el riel «Para anotar» del Diario muestra la foto de los artistas (mismo listado).
