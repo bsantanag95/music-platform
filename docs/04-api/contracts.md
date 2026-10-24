@@ -1256,7 +1256,13 @@ del cliente— y no tiene tema propio: la respuesta del servidor trae `topic` co
   respuesta y en álbum/canción). **El listado devuelve solo raíces.** Las respuestas no generan entradas de
   feed ni de actividad de la comunidad y no entran en «Comentarios populares».
 
-### `PATCH/DELETE /api/catalog/comments/{commentId}`
+### `GET/PATCH/DELETE /api/catalog/comments/{commentId}`
+
+`GET` (cambio `add-notifications-core`) devuelve `{ comment }` con una **raíz** visible, en la misma forma que
+el listado (`replyCount`, `likeCount` umbralizado y `likedByMe` con sesión opcional). Es pública, como el hilo.
+La usa el enlace de una notificación de respuesta (`/artist/<slug>?thread=<rootId>`) para abrir el hilo aunque
+la raíz no esté en la primera página. `400 INVALID_COMMENT` si el id no es UUID; `404 COMMENT_NOT_FOUND` si no
+existe, es una respuesta o está oculta por moderación.
 
 `PATCH` recibe `{ body }` y solo permite editar el comentario propio. `DELETE` realiza borrado físico
 solo del comentario propio y devuelve `204`; devuelve `404 { error, code: "COMMENT_NOT_FOUND" }` si

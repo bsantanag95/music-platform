@@ -1,11 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { SubmitEventHandler } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api/client";
-import { createComment, deleteComment, getComments, updateComment } from "@/lib/api/social";
+import { createComment, deleteComment, getComments, getRootComment, updateComment } from "@/lib/api/social";
 import type { CommentTopic, CommentsResponse } from "@/lib/api/schemas";
 import { ContentActions } from "./ContentActions";
 import { CommentLikeButton } from "./CommentLikeButton";
@@ -58,6 +58,41 @@ export function Comments({
   const [editingBody, setEditingBody] = useState("");
   const [pending, setPending] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
+  // Hilo pedido por el enlace de una notificación de respuesta (`?thread=<rootId>`, openspec:
+  // add-notifications-core): se abre y se lleva a la vista. Si la raíz no está en la primera página,
+  // se trae aparte y se pone primera. Solo con temas (página de artista, la única con hilos). El
+  // parámetro solo cuenta al llegar a la página, así que se lee una vez de la URL y no con un hook.
+  const [focusThread, setFocusThread] = useState<string | null>(null);
+  const [threadReady, setThreadReady] = useState(false);
+
+  useEffect(() => {
+    if (!topics) return;
+    const requested = new URLSearchParams(window.location.search).get("thread");
+    if (requested && /^[0-9a-f-]{36}$/i.test(requested)) setFocusThread(requested);
+  }, [topics]);
+
+  useEffect(() => {
+    if (!focusThread) return;
+    let cancelled = false;
+    // El desplazamiento lo dispara el hilo cuando termina de cargar (`onInitialOpen`).
+    const reveal = () => setThreadReady(true);
+    if (initial.comments.some((item) => item.id === focusThread)) {
+      reveal();
+      return;
+    }
+    getRootComment(focusThread)
+      .then((root) => {
+        if (cancelled) return;
+        setComments((current) => [root, ...current.filter((item) => item.id !== root.id)]);
+        reveal();
+      })
+      .catch(() => {
+        // Raíz borrada u oculta: la página se queda como está, sin error a la vista.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [focusThread, initial.comments]);
 
   const handleCreate: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
@@ -173,7 +208,7 @@ export function Comments({
         <p className="font-body text-paper-muted"><Link href="/auth/login" className="text-amber underline">{t("loginToComment")}</Link></p>
       )}
       {errorCode && <p role="alert" className="font-data text-sm text-danger">{tErrors(`${errorCode}.description`)}</p>}
-      {comments.length === 0 ? <p className="font-body text-paper-muted">{topics && activeTopic ? t(`topicEmpty.${activeTopic}`) : t("noComments")}</p> : <ul className="flex flex-col gap-4">{comments.map((comment) => <li key={comment.id} className="rounded border border-ink-border bg-ink-surface p-4"><div className="flex flex-wrap items-baseline gap-x-2 font-data text-xs text-paper-muted">{comment.user.deactivated ? <span>{t("deactivatedAccount")}</span> : <UserHoverCard username={comment.user.username}><Link href={`/users/${comment.user.username}`} className="hover:text-paper hover:underline">{comment.user.displayName ?? comment.user.username}</Link></UserHoverCard>}{topics && comment.topic ? <><span aria-hidden="true">·</span><CommentTopicLabel topic={comment.topic} /></> : null}</div>{editingId === comment.id ? <div className="mt-2 flex flex-col gap-2"><textarea aria-label={t("editCommentLabel")} value={editingBody} onChange={(event) => setEditingBody(event.target.value)} maxLength={5000} rows={3} className="rounded border border-ink-border bg-ink px-3 py-2" /><div className="flex gap-2"><button type="button" disabled={pending} onClick={() => void handleUpdate(comment.id)} className="rounded bg-amber px-3 py-1 font-data text-xs text-ink">{t("save")}</button><button type="button" onClick={() => setEditingId(null)} className="rounded border border-ink-border px-3 py-1 font-data text-xs text-paper">{t("cancel")}</button></div></div> : <p className="mt-2 whitespace-pre-wrap font-body text-paper">{comment.body}</p>}{editingId !== comment.id && (comment.likeCount != null || (authenticated && userId !== comment.user.id)) && <div className="mt-3"><CommentLikeButton commentId={comment.id} initialLiked={comment.likedByMe} initialCount={comment.likeCount} interactive={authenticated && userId !== comment.user.id} /></div>}{userId === comment.user.id && editingId !== comment.id && <div className="mt-3 flex gap-3"><button type="button" onClick={() => { setEditingId(comment.id); setEditingBody(comment.body); }} className="font-data text-xs text-amber underline">{t("edit")}</button><button type="button" disabled={pending} onClick={() => void handleDelete(comment.id)} className="font-data text-xs text-danger underline">{t("delete")}</button></div>}{authenticated && userId !== comment.user.id && editingId !== comment.id ? <ContentActions targetType="comment" targetId={comment.id} authorUsername={comment.user.username} authorId={comment.user.id} authorDeactivated={comment.user.deactivated === true} canModerate={canModerate} onBlocked={() => setComments((current) => current.filter((item) => item.user.id !== comment.user.id))} /> : null}{topics && editingId !== comment.id ? <CommentThread rootId={comment.id} initialReplyCount={comment.replyCount} authenticated={authenticated} userId={userId} canModerate={canModerate} /> : null}</li>)}</ul>}
+      {comments.length === 0 ? <p className="font-body text-paper-muted">{topics && activeTopic ? t(`topicEmpty.${activeTopic}`) : t("noComments")}</p> : <ul className="flex flex-col gap-4">{comments.map((comment) => <li key={comment.id} id={`comment-${comment.id}`} className="scroll-mt-20 rounded border border-ink-border bg-ink-surface p-4"><div className="flex flex-wrap items-baseline gap-x-2 font-data text-xs text-paper-muted">{comment.user.deactivated ? <span>{t("deactivatedAccount")}</span> : <UserHoverCard username={comment.user.username}><Link href={`/users/${comment.user.username}`} className="hover:text-paper hover:underline">{comment.user.displayName ?? comment.user.username}</Link></UserHoverCard>}{topics && comment.topic ? <><span aria-hidden="true">·</span><CommentTopicLabel topic={comment.topic} /></> : null}</div>{editingId === comment.id ? <div className="mt-2 flex flex-col gap-2"><textarea aria-label={t("editCommentLabel")} value={editingBody} onChange={(event) => setEditingBody(event.target.value)} maxLength={5000} rows={3} className="rounded border border-ink-border bg-ink px-3 py-2" /><div className="flex gap-2"><button type="button" disabled={pending} onClick={() => void handleUpdate(comment.id)} className="rounded bg-amber px-3 py-1 font-data text-xs text-ink">{t("save")}</button><button type="button" onClick={() => setEditingId(null)} className="rounded border border-ink-border px-3 py-1 font-data text-xs text-paper">{t("cancel")}</button></div></div> : <p className="mt-2 whitespace-pre-wrap font-body text-paper">{comment.body}</p>}{editingId !== comment.id && (comment.likeCount != null || (authenticated && userId !== comment.user.id)) && <div className="mt-3"><CommentLikeButton commentId={comment.id} initialLiked={comment.likedByMe} initialCount={comment.likeCount} interactive={authenticated && userId !== comment.user.id} /></div>}{userId === comment.user.id && editingId !== comment.id && <div className="mt-3 flex gap-3"><button type="button" onClick={() => { setEditingId(comment.id); setEditingBody(comment.body); }} className="font-data text-xs text-amber underline">{t("edit")}</button><button type="button" disabled={pending} onClick={() => void handleDelete(comment.id)} className="font-data text-xs text-danger underline">{t("delete")}</button></div>}{authenticated && userId !== comment.user.id && editingId !== comment.id ? <ContentActions targetType="comment" targetId={comment.id} authorUsername={comment.user.username} authorId={comment.user.id} authorDeactivated={comment.user.deactivated === true} canModerate={canModerate} onBlocked={() => setComments((current) => current.filter((item) => item.user.id !== comment.user.id))} /> : null}{topics && editingId !== comment.id ? <CommentThread rootId={comment.id} initialReplyCount={comment.replyCount} authenticated={authenticated} userId={userId} canModerate={canModerate} initialOpen={threadReady && comment.id === focusThread} onInitialOpen={() => setTimeout(() => document.getElementById(`comment-${comment.id}`)?.scrollIntoView({ block: "start" }), 0)} /> : null}</li>)}</ul>}
       {hasNext && <button type="button" disabled={pending} onClick={() => void handleLoadMore()} className="self-start rounded border border-ink-border px-4 py-2 font-display text-sm text-paper disabled:opacity-50">{pending ? t("loadingMore") : t("loadMore")}</button>}
     </section>
   );

@@ -22,6 +22,7 @@ export function createComment(target: Target, id: string, body: string, topic?: 
 export function updateComment(id: string, body: string) { return apiFetch(`/api/catalog/comments/${id}`, CommentMutationResponseSchema, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ body }) }).then((response) => response.comment); }
 // Respuestas de un nivel a comentarios de artista (openspec: add-comment-replies).
 export function getReplies(commentId: string, page = 1, pageSize = 20): Promise<CommentsResponse> { return apiFetch(`/api/catalog/comments/${commentId}/replies?page=${page}&pageSize=${pageSize}`, CommentsResponseSchema); }
+export function getRootComment(commentId: string) { return apiFetch(`/api/catalog/comments/${commentId}`, CommentMutationResponseSchema).then((response) => response.comment); }
 export function createReply(commentId: string, body: string) { return apiFetch(`/api/catalog/comments/${commentId}/replies`, CommentMutationResponseSchema, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ body }) }).then((response) => response.comment); }
 export function deleteComment(id: string) { return apiFetch(`/api/catalog/comments/${id}`, z.null(), { method: "DELETE" }); }
 

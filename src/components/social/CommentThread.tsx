@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { SubmitEventHandler } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -20,6 +20,16 @@ interface CommentThreadProps {
   authenticated: boolean;
   userId?: string;
   canModerate?: boolean;
+  /**
+   * Abre el hilo al montarse (openspec: add-notifications-core): lo pide el enlace de una notificación
+   * de respuesta (`?thread=<rootId>`) para llegar directo a la conversación.
+   */
+  initialOpen?: boolean;
+  /**
+   * Se llama cuando el hilo abierto por `initialOpen` ya cargó sus respuestas, para llevarlo a la
+   * vista recién entonces: antes, la hidratación y el contenido que llega después lo moverían.
+   */
+  onInitialOpen?: () => void;
 }
 
 /**
@@ -27,7 +37,7 @@ interface CommentThreadProps {
  * nivel, de la más antigua a la más reciente, cargadas al desplegarlo. Un solo formulario al final
  * responde a la raíz (no hay anidamiento ni menciones).
  */
-export function CommentThread({ rootId, initialReplyCount, authenticated, userId, canModerate = false }: CommentThreadProps) {
+export function CommentThread({ rootId, initialReplyCount, authenticated, userId, canModerate = false, initialOpen = false, onInitialOpen }: CommentThreadProps) {
   const t = useTranslations("catalog.social");
   const tErrors = useTranslations("errors");
   const regionId = useId();
@@ -68,6 +78,16 @@ export function CommentThread({ rootId, initialReplyCount, authenticated, userId
       });
     }
   }
+
+  // Una sola vez por montaje: si el visitante cierra el hilo, no se vuelve a abrir solo.
+  const openedOnMount = useRef(false);
+  useEffect(() => {
+    if (!initialOpen || openedOnMount.current) return;
+    openedOnMount.current = true;
+    void toggle().then(() => onInitialOpen?.());
+    // `toggle` cambia en cada render; solo importa el primer montaje con `initialOpen`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialOpen]);
 
   const handleCreate: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();

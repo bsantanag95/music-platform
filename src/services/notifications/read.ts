@@ -487,7 +487,9 @@ function isModerationAction(value: string): value is ModerationAction {
  * `followers:<aaaa-mm-dd>`), así que la primera barra separa sin ambigüedad.
  */
 function encodeCursor(cursor: { lastAt: string; id: string }): string {
-  return `${new Date(cursor.lastAt).toISOString()}|${cursor.id}`;
+  // `lastAt` va tal cual sale de Postgres (microsegundos): pasarlo por `Date` lo recortaría a
+  // milisegundos y la comparación del cursor podría saltarse una entrada.
+  return `${cursor.lastAt}|${cursor.id}`;
 }
 
 function parseCursor(cursor: string | null | undefined): { lastAt: string; id: string } | null {

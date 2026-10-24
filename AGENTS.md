@@ -171,7 +171,8 @@ de cuál de las filas con el mismo título haya en la BD.
 >   (respuestas a la raíz y a participantes, nuevo seguidor, solicitud y aceptación, moderación de comentario y de
 >   suspensión social), los `CHECK` y los únicos parciales, las cascadas de retracción, los filtros de privacidad
 >   (actor desactivado, bloqueo, respuesta oculta, moderación exenta y sin moderador), la agrupación por hilo y por día
->   en la zona `tz`, visto vs. leído, preferencias, aislamiento entre destinatarios y el contador bajo 10 ms con 100
+>   en la zona `tz`, la lectura aparte de la raíz para el enlace al hilo, la paginación por cursor sin saltos, la
+>   solicitud pendiente que se acepta al volver a seguir un perfil que se hizo público, visto vs. leído, preferencias, aislamiento entre destinatarios y el contador bajo 10 ms con 100
 >   seguidores.
 > - `smoke-test-release-calendar.ts` mockea ListenBrainz, MusicBrainz y Cover Art Archive, crea
 >   artistas y release-groups con MBID `5e0ce000-0000-4000-8000-000000008*` y usuarios `smoke_cal_*`,
