@@ -21,7 +21,7 @@ import {
   COLLECTION_PREVIEW_PER_ARTIST,
   COLLECTION_SORTS,
 } from "./types";
-import { normalizeAttributes } from "./vocabulary";
+import { compatibleAttributes, incompatibleAttributes, normalizeAttributes } from "./vocabulary";
 import type { CollectionFormat, EditionAttribute } from "./vocabulary";
 import { resolveNewContentAudience } from "@/services/social/default-audience";
 
@@ -256,7 +256,21 @@ export async function assertAlbumExists(releaseGroupId: string) {
  * cada llamada crea una entrada, aunque ya exista otra para el mismo álbum y
  * formato.
  */
+/**
+ * Rechaza atributos que no aplican al formato (los de vinilo con otro soporte).
+ * Lo comparten la colección y la wishlist; con formato `null` no rechaza nada.
+ */
+export function assertAttributesFitFormat(
+  format: CollectionFormat | null,
+  attributes: readonly string[],
+): void {
+  if (incompatibleAttributes(format, attributes).length > 0) {
+    throw new ApiError("VALIDATION_ERROR", 400, "Los atributos no corresponden al formato");
+  }
+}
+
 export async function addEntry(userId: string, input: NewCollectionEntry): Promise<CollectionEntry> {
+  assertAttributesFitFormat(input.format, input.attributes ?? []);
   await assertAlbumExists(input.releaseGroupId);
 
   const [created] = await db
@@ -275,15 +289,36 @@ export async function addEntry(userId: string, input: NewCollectionEntry): Promi
   return getOwnedEntry(created.id, userId);
 }
 
-/** Edita una entrada propia (formato, atributos, nota, audiencia). */
+/**
+ * Edita una entrada propia (formato, atributos, nota, audiencia). Cuando cambian
+ * formato o atributos se lee la fila: los atributos enviados se validan contra
+ * el formato resultante y, si solo cambia el formato, se quitan los que dejan de
+ * aplicar (lo mismo que hace el formulario).
+ */
 export async function updateEntry(
   entryId: string,
   userId: string,
   changes: CollectionEntryChanges,
 ): Promise<CollectionEntry> {
   const patch: Record<string, unknown> = {};
-  if (changes.format !== undefined) patch.format = changes.format;
-  if (changes.attributes !== undefined) patch.attributes = normalizeAttributes(changes.attributes);
+  if (changes.format !== undefined || changes.attributes !== undefined) {
+    const [current] = await db
+      .select({ format: collectionEntry.format, attributes: collectionEntry.attributes })
+      .from(collectionEntry)
+      .where(and(eq(collectionEntry.id, entryId), eq(collectionEntry.userId, userId)))
+      .limit(1);
+    if (!current) {
+      throw new ApiError("COLLECTION_ENTRY_NOT_FOUND", 404, "La entrada de colección no existe");
+    }
+    const format = changes.format ?? (current.format as CollectionFormat);
+    if (changes.format !== undefined) patch.format = changes.format;
+    if (changes.attributes !== undefined) {
+      assertAttributesFitFormat(format, changes.attributes);
+      patch.attributes = normalizeAttributes(changes.attributes);
+    } else {
+      patch.attributes = compatibleAttributes(format, current.attributes);
+    }
+  }
   if (changes.note !== undefined) patch.note = changes.note;
   if (changes.audience !== undefined) patch.audience = changes.audience;
 

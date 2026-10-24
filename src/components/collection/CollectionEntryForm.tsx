@@ -6,6 +6,7 @@ import { COLLECTION_FORMATS, attributesForFormat } from "@/services/collection/v
 import { COLLECTION_NOTE_MAX } from "@/lib/api/schemas";
 import type { CollectionFormat, EditionAttribute } from "@/services/collection/vocabulary";
 import type { DiaryAudience } from "@/lib/api/schemas";
+import { IncompatibleAttributesNotice } from "./IncompatibleAttributesNotice";
 
 const AUDIENCES: DiaryAudience[] = ["private", "followers", "public"];
 
@@ -29,6 +30,8 @@ interface CollectionEntryFormProps {
   /** Muestra los controles de audiencia (edición); el alta usa el default. */
   showAudience?: boolean;
   disabled?: boolean;
+  /** Atributos guardados de la entrada que se edita: avisa si alguno no aplica al formato. */
+  savedAttributes?: readonly string[];
 }
 
 // Formulario controlado de una copia física: formato (obligatorio), atributos de
@@ -40,6 +43,7 @@ export function CollectionEntryForm({
   onChange,
   showAudience,
   disabled,
+  savedAttributes,
 }: CollectionEntryFormProps) {
   const t = useTranslations("collection");
   const fieldId = useId();
@@ -75,6 +79,10 @@ export function CollectionEntryForm({
           ))}
         </select>
       </label>
+
+      {savedAttributes ? (
+        <IncompatibleAttributesNotice format={value.format} savedAttributes={savedAttributes} />
+      ) : null}
 
       <fieldset className="flex flex-col gap-1" disabled={disabled}>
         <legend className="font-data text-xs text-paper-muted">{t("attributesLabel")}</legend>

@@ -19,7 +19,7 @@ function toURLSearchParams(searchParams: SearchParams): URLSearchParams {
 }
 
 function tabClasses(active: boolean): string {
-  return `rounded border px-3 py-1.5 font-data text-xs transition-colors ${
+  return `inline-flex items-center rounded border px-3 py-1.5 font-data text-xs transition-colors [@media(pointer:coarse)]:min-h-11 ${
     active
       ? "border-amber bg-amber/10 text-amber"
       : "border-ink-border text-paper-muted hover:text-paper"
@@ -37,7 +37,8 @@ export default async function CollectionPage({
   const tab = params.get("tab") === "wanted" ? "wanted" : "own";
 
   return (
-    <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-12">
+    // Mismo ancho y título a la izquierda que Calificaciones, Favoritos, Diario y Pendientes.
+    <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-4 py-12">
       <h1 className="font-display text-2xl text-paper">{t("title")}</h1>
 
       <div role="tablist" aria-label={t("title")} className="flex gap-1.5">

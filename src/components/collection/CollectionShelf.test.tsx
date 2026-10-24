@@ -8,6 +8,7 @@ import { COLLECTION_VIEW_MODE_STORAGE_KEY } from "./collection-view-mode";
 import type { CollectionEntry, CollectionListResponse } from "@/lib/api/schemas";
 
 const mocks = vi.hoisted(() => ({
+  addCollectionEntry: vi.fn(),
   getMyCollection: vi.fn(),
   getUserCollection: vi.fn(),
   removeCollectionEntry: vi.fn(),
@@ -22,6 +23,7 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 vi.mock("@/components/catalog/CoverThumb", () => ({ CoverThumb: () => <span data-cover /> }));
 vi.mock("@/lib/api/collection", () => ({
+  addCollectionEntry: mocks.addCollectionEntry,
   getMyCollection: mocks.getMyCollection,
   getUserCollection: mocks.getUserCollection,
   removeCollectionEntry: mocks.removeCollectionEntry,
@@ -213,6 +215,99 @@ describe("CollectionShelf", () => {
   it("en modo lectura sin copias ni filtros: estado vacío del perfil", () => {
     renderShelf(response([]), { readOnly: true, username: "nick" });
     expect(screen.getByText("Sin colección")).toBeInTheDocument();
+  });
+
+  it("en la Estantería ofrece Quitar y Deshacer vuelve a crear la copia con sus datos", async () => {
+    const only = entry();
+    mocks.removeCollectionEntry.mockResolvedValue(null);
+    mocks.addCollectionEntry.mockResolvedValue({ ...only, id: "restaurada" });
+    mocks.getMyCollection.mockResolvedValue(response([]));
+    const user = userEvent.setup();
+    renderShelf(response([only]));
+
+    await user.click(screen.getByRole("button", { name: "Quitar" }));
+    await waitFor(() => expect(mocks.removeCollectionEntry).toHaveBeenCalledWith(only.id));
+    await user.click(await screen.findByRole("button", { name: "Deshacer" }));
+
+    await waitFor(() =>
+      expect(mocks.addCollectionEntry).toHaveBeenCalledWith({
+        releaseGroupId: only.album.id,
+        format: "vinyl",
+        attributes: ["limited-edition"],
+        note: "portada alternativa",
+        audience: "followers",
+      }),
+    );
+  });
+
+  it("si quitar falla, la copia vuelve y el error aparece junto a ella", async () => {
+    mocks.removeCollectionEntry.mockRejectedValue(new Error("caída"));
+    const only = entry();
+    mocks.getMyCollection.mockResolvedValue(response([only]));
+    const user = userEvent.setup();
+    renderShelf(response([only]));
+
+    await user.click(screen.getByRole("button", { name: "Quitar" }));
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("No pudimos quitarla. Intenta de nuevo.");
+    expect(alert.closest("li")).toHaveTextContent("Álbum 1");
+    expect(screen.queryByRole("button", { name: "Deshacer" })).toBeNull();
+  });
+
+  it("en el Índice los controles se ven sin hover y no reservan una línea oculta", async () => {
+    window.localStorage.setItem(COLLECTION_VIEW_MODE_STORAGE_KEY, "index");
+    renderShelf(response([entry()]));
+    const edit = await screen.findByRole("button", { name: "Editar" });
+    expect(edit.closest("[class*='opacity-0']")).toBeNull();
+  });
+
+  it("en modo selección, tocar la carátula marca la copia sin navegar", async () => {
+    const user = userEvent.setup();
+    const { container } = renderShelf(response([entry()]));
+
+    await user.click(screen.getByRole("button", { name: "Seleccionar" }));
+    const coverButton = container.querySelector("li button[aria-hidden]") as HTMLButtonElement;
+    await user.click(coverButton);
+
+    expect(screen.getByLabelText("Seleccionar Álbum 1")).toBeChecked();
+    expect(coverButton.className).toContain("ring-amber");
+  });
+
+  it("escribe los filtros en la URL y conserva la pestaña", async () => {
+    window.history.replaceState(null, "", "/es/me/collection?preview=1");
+    mocks.getMyCollection.mockResolvedValue(response([]));
+    const user = userEvent.setup();
+    renderShelf(response([entry()]));
+
+    await user.selectOptions(screen.getByLabelText("Filtrar por formato"), "cd");
+    await waitFor(() => expect(window.location.search).toBe("?preview=1&format=cd"));
+    window.history.replaceState(null, "", "/");
+  });
+
+  it("en Lista detallada agrupada por artista la fila no repite el artista", async () => {
+    window.localStorage.setItem(COLLECTION_VIEW_MODE_STORAGE_KEY, "detailed");
+    renderShelf(response([entry()]));
+    expect(await screen.findByRole("heading", { name: /Artista 1/ })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Artista 1" })).toBeNull();
+  });
+
+  it("al editar una copia heredada incoherente avisa y guarda sin el atributo de vinilo", async () => {
+    window.localStorage.setItem(COLLECTION_VIEW_MODE_STORAGE_KEY, "detailed");
+    const legacy = entry({ format: "cd", attributes: ["colored-vinyl"] });
+    mocks.updateCollectionEntry.mockResolvedValue({ ...legacy, attributes: [] });
+    const user = userEvent.setup();
+    renderShelf(response([legacy]));
+
+    await user.click(await screen.findByRole("button", { name: "Editar" }));
+    expect(screen.getByRole("note")).toHaveTextContent("«Vinilo de color» es solo para vinilo. Se quitará al guardar.");
+    await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
+
+    await waitFor(() =>
+      expect(mocks.updateCollectionEntry).toHaveBeenCalledWith(
+        legacy.id,
+        expect.objectContaining({ format: "cd", attributes: [] }),
+      ),
+    );
   });
 
   it("agrupa por formato en secciones tituladas", () => {

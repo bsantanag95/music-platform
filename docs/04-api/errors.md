@@ -24,7 +24,7 @@ además del `error` legible:
 
 | `code` | Status HTTP | Dónde ocurre |
 |---|---|---|
-| `VALIDATION_ERROR` | 400 | `search`: falta el query param `q` o llega vacío tras normalizar, o `type` no es `artist | album | song`; `search/suggest`: `type` no es `artist | album | song | user`; `recording/[id]`: el id no es UUID; `me/release-groups/[id]/marks`: el id no es UUID; comentarios: paginación inválida. |
+| `VALIDATION_ERROR` | 400 | `search`: falta el query param `q` o llega vacío tras normalizar, o `type` no es `artist | album | song`; `search/suggest`: `type` no es `artist | album | song | user`; `recording/[id]`: el id no es UUID; `me/release-groups/[id]/marks`: el id no es UUID; comentarios: paginación inválida; colección física y wishlist: un atributo de vinilo (`colored-vinyl`, `picture-disc`, `180g`, `gatefold`) con un formato que no es vinilo. |
 | `ARTIST_NOT_FOUND` | 404 | `artist/[id]`: no se encontró el artista. (En `search` ya no aplica: una búsqueda sin coincidencias es `200` con lista vacía.) |
 | `ALBUM_NOT_FOUND` | 404 | `release-group/[id]` y `me/release-groups/[id]/marks`: el `id` no corresponde a ningún `release_group`. |
 | `NO_EDITIONS_FOUND` | 404 | `release-group/[id]`: MusicBrainz no tiene ninguna edición ingerible para ese álbum. |

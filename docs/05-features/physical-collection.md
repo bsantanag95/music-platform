@@ -45,6 +45,12 @@ Formato y atributos son 100% dato del usuario: el catálogo no modela soporte f�
 Fuente única: `src/services/collection/vocabulary.ts`. Ampliarlo requiere una migración que
 altere el `CHECK` de `collection_entry.attributes` (ver `drizzle/0012_physical_collection.sql`).
 
+Los atributos de soporte de vinilo (`colored-vinyl`, `picture-disc`, `180g`, `gatefold`) solo van con el
+formato vinilo: el formulario no los ofrece con otro formato y, desde `refine-collection-page-phase1`, el
+servicio rechaza la combinación (`VALIDATION_ERROR`) y los quita si una edición cambia solo el formato. Una
+copia heredada con la combinación incoherente se corrige al editarla: el formulario avisa ("«Vinilo de
+color» es solo para vinilo. Se quitará al guardar.") y guarda sin el atributo.
+
 ## Superficies
 
 - **Página de álbum**: acción autenticada "Agregar a la colección" (selector de formato,
@@ -59,11 +65,22 @@ altere el `CHECK` de `collection_entry.attributes` (ver `drizzle/0012_physical_c
     Índice —, con preferencia local por visitante (`localStorage`), global (misma mecánica que el
     detalle de lista). Ante la ausencia de carátula, silueta de disco.
   - **Toolbar**: buscador con debounce (título de álbum **o** artista acreditado), filtro por
-    formato y por atributo, orden (recencia / alfabético / artista / formato) y agrupación (sin
-    agrupar / por formato / por artista). Los filtros van a la URL cuando difieren del default.
+    formato y por atributo, orden (recencia / alfabético / artista / formato) y agrupación (por
+    artista —default— / por formato / por fecha de alta). Los filtros se escriben en la URL con
+    `history.replaceState` cuando difieren del default (sin historial ni recarga) y la página los
+    lee al cargar; la pestaña Busco hace lo mismo con su búsqueda y orden.
   - **Gestión**: edición de cada copia en línea (formato, atributos, nota, audiencia) con
-    actualización optimista; selector rápido de audiencia por ficha; modo "Seleccionar" + barra
-    de acción fija para cambiar la audiencia de varias copias a la vez.
+    actualización optimista; selector rápido de audiencia por ficha (Lista detallada e Índice);
+    "Quitar" en los tres modos, con un aviso que ofrece **Deshacer** durante 6 s (vuelve a crear la
+    copia con los mismos datos: es una entrada nueva y su fecha de alta cambia); el quitado se
+    anuncia a lectores de pantalla y, si falla, el error aparece junto a esa copia. Modo
+    "Seleccionar" + barra de acción fija para cambiar la audiencia de varias copias a la vez; en
+    ese modo tocar la carátula marca la copia (sin abrir el álbum) y la marcada se resalta.
+  - **Página** (`refine-collection-page-phase1`): `max-w-4xl` con el título a la izquierda, como
+    las demás páginas propias; el modo de vista no salta (marcador neutro hasta leer la
+    preferencia); el Índice muestra los controles en la fila, sin ocultarlos hasta el hover; en
+    Lista detallada agrupada por artista la fila no repite el artista; con puntero grueso los
+    controles miden 44 px; las seis primeras carátulas cargan con prioridad.
 - **Perfil de usuario** (`/users/[username]`): la misma estantería en **modo lectura** (sin
   toolbar, sin edición, sin selección; el conmutador de modos sí está disponible), filtrada por
   la matriz de visibilidad (bloqueo, perfil privado, relación de seguimiento) aplicada a la
@@ -118,7 +135,10 @@ código, la tabla `wanted_entry` y la API no cambian.
   no replicar esa superficie completa en la v1. Es también la única vía para **editar** una
   entrada de deseo ya creada (formato, atributos, nota) — en particular las creadas sin formato
   desde el alta rápida del menú "···" — ya que ni la página de álbum ni ese menú ofrecen edición,
-  solo alta y baja (mismo criterio que la colección: la edición vive en `/me/collection`).
+  solo alta y baja (mismo criterio que la colección: la edición vive en `/me/collection`). Desde
+  `refine-collection-page-phase1`, quitar ofrece **Deshacer** igual que en Tengo, los controles de
+  cada fila tienen el mismo estilo que los de Tengo y "Cualquier formato" se muestra como texto
+  secundario, no como un dato en caja.
 
 ### API de la wishlist
 

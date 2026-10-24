@@ -254,6 +254,13 @@ interfaz:
   `username` (sus altas solo llegan al feed de seguidos según la audiencia de cada entrada,
   `expand-feed-coverage`).
 - **Pendiente** (want-to-listen) **no** se agrega: no tiene superficie pública.
+
+**Atributos de vinilo solo con vinilo** (`refine-collection-page-phase1`): en la colección física y en la
+wishlist, `colored-vinyl`, `picture-disc`, `180g` y `gatefold` solo acompañan al formato `vinyl` (en la
+wishlist, también a "cualquier formato"). El servicio rechaza la combinación incoherente con
+`VALIDATION_ERROR` y, si una edición cambia solo el formato, quita los atributos que dejan de aplicar. Las
+entradas heredadas incoherentes se corrigen al editarlas: el formulario avisa y las guarda sin esos
+atributos. La regla vive en `src/services/collection/` (no hay `CHECK` en SQL).
 - **Favorita de la comunidad** por pista: hasta 3 pistas del álbum con al menos 5 reacciones
   `loved`/`obsessed` en entradas de diario públicas. La tracklist no muestra medias de
   estrellas por pista (Modelo C: en una canción, lo primario es la reacción).

@@ -2,6 +2,7 @@ import type { CollectionEntry, DiaryAudience } from "@/lib/api/schemas";
 import type { CollectionEntryFormValue } from "./CollectionEntryForm";
 import type { CollectionGrouping } from "@/services/collection/types";
 import { albumHref, artistHref } from "@/lib/catalog-links";
+import { compatibleAttributes } from "@/services/collection/vocabulary";
 
 export function collectionAlbumHref(entry: CollectionEntry): string {
   return albumHref(entry.album.artistName, entry.album.title, entry.album.id);
@@ -21,14 +22,44 @@ export function formatCollectionDate(iso: string, locale: string): string {
   });
 }
 
-/** Valor inicial del formulario de edición tomado de una entrada existente. */
+/**
+ * Valor inicial del formulario de edición tomado de una entrada existente. Deja
+ * fuera los atributos que no aplican a su formato (dato heredado);
+ * `IncompatibleAttributesNotice` avisa que se quitarán al guardar.
+ */
 export function entryToFormValue(entry: CollectionEntry): CollectionEntryFormValue {
   return {
     format: entry.format,
-    attributes: [...entry.attributes],
+    attributes: compatibleAttributes(entry.format, entry.attributes),
     note: entry.note ?? "",
     audience: entry.audience,
   };
+}
+
+/**
+ * Query de la URL con los filtros activos: reemplaza las claves indicadas y
+ * conserva las demás (p. ej. `tab`). Un valor `undefined` es el defecto y no se
+ * escribe. Pura, para poder probarla sin `window`.
+ */
+export function filtersQueryString(
+  currentSearch: string,
+  filters: Record<string, string | undefined>,
+): string {
+  const params = new URLSearchParams(currentSearch);
+  for (const [key, value] of Object.entries(filters)) {
+    params.delete(key);
+    if (value) params.set(key, value);
+  }
+  return params.toString();
+}
+
+// Filtros en la URL sin crear historial: recargar o compartir abre la misma
+// selección (la página los lee al cargar).
+export function writeFiltersToUrl(filters: Record<string, string | undefined>) {
+  const query = filtersQueryString(window.location.search, filters);
+  const next = `${window.location.pathname}${query ? `?${query}` : ""}`;
+  if (next === `${window.location.pathname}${window.location.search}`) return;
+  window.history.replaceState(window.history.state, "", next);
 }
 
 // Acciones de gestión por fila. `null` en modo lectura (perfil ajeno).
@@ -40,7 +71,12 @@ export interface CollectionRowActions {
   onSaveEdit: (entry: CollectionEntry, value: CollectionEntryFormValue) => void;
   onAudienceChange: (entry: CollectionEntry, audience: DiaryAudience) => void;
   onRemove: (entry: CollectionEntry) => void;
+  /** Entrada cuyo último intento de quitar falló: el error se muestra junto a ella. */
+  errorId: string | null;
 }
+
+/** Ids de las primeras entradas, cuyas carátulas cargan con prioridad. */
+export const PRIORITY_COVERS = 6;
 
 export interface CollectionSelectionState {
   active: boolean;

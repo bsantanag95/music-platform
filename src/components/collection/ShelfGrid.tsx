@@ -19,11 +19,15 @@ interface ShelfGridProps {
   groups: CollectionGroup[];
   actions: CollectionRowActions | null;
   selection: CollectionSelectionState | null;
+  /** Entradas cuyas carátulas cargan con prioridad (las primeras). */
+  priorityIds?: Set<string>;
+  /** Las secciones son artistas: la Estantería ya muestra el artista al pie, no cambia nada. */
+  groupedByArtist?: boolean;
 }
 
 // Modo "Estantería": cuadrícula de carátulas cuadradas donde predomina lo
 // visual. El panel de edición se despliega a ancho completo bajo la ficha.
-export function ShelfGrid({ groups, actions, selection }: ShelfGridProps) {
+export function ShelfGrid({ groups, actions, selection, priorityIds }: ShelfGridProps) {
   return (
     <div className="flex flex-col gap-8">
       {groups.map((group) => (
@@ -32,7 +36,12 @@ export function ShelfGrid({ groups, actions, selection }: ShelfGridProps) {
           <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {group.entries.map((entry) => (
               <Fragment key={entry.id}>
-                <ShelfTile entry={entry} actions={actions} selection={selection} />
+                <ShelfTile
+                  entry={entry}
+                  actions={actions}
+                  selection={selection}
+                  priority={priorityIds?.has(entry.id) ?? false}
+                />
                 {actions?.editingId === entry.id ? (
                   <li className="col-span-full">
                     <CollectionEntryControls entry={entry} actions={actions} />
@@ -51,25 +60,46 @@ function ShelfTile({
   entry,
   actions,
   selection,
+  priority,
 }: {
   entry: CollectionEntry;
   actions: CollectionRowActions | null;
   selection: CollectionSelectionState | null;
+  priority: boolean;
 }) {
   const t = useTranslations("collection");
   const artistHref = collectionArtistHref(entry);
   const busy = actions?.busyId === entry.id;
+  const selecting = Boolean(selection?.active);
+  const selected = selecting && selection!.selectedIds.has(entry.id);
+  const cover = <CoverThumb cover={entry.album.coverThumbUrl} label="" className="aspect-square w-full" priority={priority} />;
 
   return (
-    <li className="group relative flex flex-col gap-1.5">
+    <li className="group relative flex min-w-0 flex-col gap-1.5">
       <div className="relative">
-        <Link
-          href={collectionAlbumHref(entry)}
-          aria-label={entry.album.title || t("albumUnavailable")}
-          className="block overflow-hidden rounded-lg border border-ink-border transition-colors hover:border-amber focus-visible:border-amber"
-        >
-          <CoverThumb cover={entry.album.coverThumbUrl} label="" className="aspect-square w-full" />
-        </Link>
+        {selecting ? (
+          // En modo selección la carátula marca la copia en vez de abrir el álbum. La casilla de abajo es el
+          // control accesible; este botón solo agranda el área (fuera del orden de tabulación).
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-hidden
+            onClick={() => selection!.onToggle(entry.id)}
+            className={`block w-full overflow-hidden rounded-lg border transition-colors ${
+              selected ? "border-amber ring-2 ring-amber" : "border-ink-border hover:border-amber"
+            }`}
+          >
+            {cover}
+          </button>
+        ) : (
+          <Link
+            href={collectionAlbumHref(entry)}
+            aria-label={entry.album.title || t("albumUnavailable")}
+            className="block overflow-hidden rounded-lg border border-ink-border transition-colors hover:border-amber focus-visible:border-amber"
+          >
+            {cover}
+          </Link>
+        )}
         <span className="absolute left-1.5 top-1.5 rounded bg-ink/80 px-1.5 py-0.5 font-data text-[0.65rem] text-paper">
           {t(`format.${entry.format}`)}
         </span>
@@ -79,7 +109,7 @@ function ShelfTile({
             checked={selection.selectedIds.has(entry.id)}
             onChange={() => selection.onToggle(entry.id)}
             aria-label={t("selectEntry", { title: entry.album.title })}
-            className="absolute right-1.5 top-1.5 size-4 accent-amber"
+            className="absolute right-1.5 top-1.5 size-4 accent-amber [@media(pointer:coarse)]:size-6"
           />
         ) : null}
       </div>
@@ -107,15 +137,31 @@ function ShelfTile({
         ) : null}
       </div>
 
-      {actions && !selection?.active && actions.editingId !== entry.id ? (
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => actions.onStartEdit(entry.id)}
-          className="self-start font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-paper disabled:opacity-50"
-        >
-          {t("editEntry")}
-        </button>
+      {actions && !selecting && actions.editingId !== entry.id ? (
+        <div className="flex flex-wrap items-center gap-x-3">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => actions.onStartEdit(entry.id)}
+            className="font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-paper disabled:opacity-50 [@media(pointer:coarse)]:min-h-11"
+          >
+            {t("editEntry")}
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => actions.onRemove(entry)}
+            className="font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-danger disabled:opacity-50 [@media(pointer:coarse)]:min-h-11"
+          >
+            {t("remove")}
+          </button>
+        </div>
+      ) : null}
+
+      {actions?.errorId === entry.id ? (
+        <span role="alert" className="font-data text-xs text-danger">
+          {t("removeError")}
+        </span>
       ) : null}
     </li>
   );

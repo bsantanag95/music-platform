@@ -67,6 +67,29 @@ export function attributesForFormat(format: CollectionFormat | null): EditionAtt
 }
 
 /**
+ * Atributos de la lista que no aplican al formato: los de vinilo cuando el
+ * formato es otro. Con formato `null` ninguno (la búsqueda "en cualquier
+ * formato" admite todo el vocabulario). Sirve tanto para rechazar un alta o una
+ * edición incoherente como para avisar de un dato heredado en el formulario.
+ */
+export function incompatibleAttributes(
+  format: CollectionFormat | null,
+  attributes: readonly string[],
+): EditionAttribute[] {
+  const allowed = new Set<string>(attributesForFormat(format));
+  return normalizeAttributes(attributes).filter((attribute) => !allowed.has(attribute));
+}
+
+/** Los atributos de la lista que sí aplican al formato, normalizados. */
+export function compatibleAttributes(
+  format: CollectionFormat | null,
+  attributes: readonly string[],
+): EditionAttribute[] {
+  const allowed = new Set<string>(attributesForFormat(format));
+  return normalizeAttributes(attributes).filter((attribute) => allowed.has(attribute));
+}
+
+/**
  * Deduplica y ordena los atributos según el orden canónico de
  * `EDITION_ATTRIBUTES`, para persistir siempre la misma representación.
  * Asume que los valores ya fueron validados contra el vocabulario.

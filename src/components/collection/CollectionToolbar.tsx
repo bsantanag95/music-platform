@@ -76,14 +76,14 @@ export function CollectionToolbar({
         onChange={(event) => onSearchInput(event.target.value)}
         placeholder={t("searchPlaceholder")}
         aria-label={t("searchPlaceholder")}
-        className="w-full rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted"
+        className="w-full rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted [@media(pointer:coarse)]:min-h-11"
       />
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <FilterSelect
           value={filters.format}
           onChange={(value) => onChange({ ...filters, format: value as CollectionFormat | "" })}
           ariaLabel={t("filterFormatLabel")}
-          widthClassName="w-[20ch]"
+          widthClassName="w-[22ch] [@media(pointer:coarse)]:min-h-11"
         >
           <option value="">{t("allFormats")}</option>
           {COLLECTION_FORMATS.map((format) => (
@@ -98,7 +98,7 @@ export function CollectionToolbar({
             onChange({ ...filters, attribute: value as EditionAttribute | "" })
           }
           ariaLabel={t("filterAttributeLabel")}
-          widthClassName="w-[21ch]"
+          widthClassName="w-[23ch] [@media(pointer:coarse)]:min-h-11"
         >
           <option value="">{t("allAttributes")}</option>
           {EDITION_ATTRIBUTES.map((attribute) => (
@@ -130,7 +130,7 @@ export function CollectionToolbar({
               onChange({ ...filters, group, sort });
             }}
             ariaLabel={t("groupLabel")}
-            widthClassName="w-[13ch]"
+            widthClassName="w-[20ch] [@media(pointer:coarse)]:min-h-11"
           >
             <option value="artist">{t("group.artist")}</option>
             <option value="format">{t("group.format")}</option>
@@ -145,7 +145,7 @@ export function CollectionToolbar({
             value={filters.sort}
             onChange={(value) => onChange({ ...filters, sort: value as CollectionSort })}
             ariaLabel={t("sortLabel")}
-            widthClassName="w-[12ch]"
+            widthClassName="w-[14ch] [@media(pointer:coarse)]:min-h-11"
           >
             {availableSortOptions(filters).map((option) => (
               <option key={option} value={option}>
@@ -158,7 +158,7 @@ export function CollectionToolbar({
           <button
             type="button"
             onClick={onClear}
-            className="font-data text-xs text-paper-muted transition-colors hover:text-paper"
+            className="font-data text-xs text-paper-muted transition-colors hover:text-paper [@media(pointer:coarse)]:min-h-11"
           >
             {t("clearFilters")}
           </button>

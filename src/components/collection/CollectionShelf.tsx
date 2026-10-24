@@ -12,6 +12,7 @@ import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
+  addCollectionEntry,
   getMyCollection,
   getUserCollection,
   removeCollectionEntry,
@@ -21,6 +22,8 @@ import {
 } from "@/lib/api/collection";
 import { ApiError } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/keys";
+import { UndoToast } from "@/components/ui/UndoToast";
+import { compatibleAttributes } from "@/services/collection/vocabulary";
 import type { CollectionEntry, CollectionListResponse, DiaryAudience } from "@/lib/api/schemas";
 import { useCollectionViewMode } from "./use-collection-view-mode";
 import { CollectionModeSwitcher } from "./CollectionModeSwitcher";
@@ -33,8 +36,11 @@ import {
 import { ShelfGrid } from "./ShelfGrid";
 import { EntriesDetailed } from "./EntriesDetailed";
 import { EntriesIndex } from "./EntriesIndex";
+import { CollectionPlaceholder } from "./CollectionPlaceholder";
 import {
+  PRIORITY_COVERS,
   groupEntries,
+  writeFiltersToUrl,
   type CollectionRowActions,
   type CollectionSelectionState,
 } from "./collection-shared";
@@ -44,6 +50,13 @@ const PAGE_SIZE = 20;
 const AUDIENCES: DiaryAudience[] = ["private", "followers", "public"];
 
 type CollectionPages = InfiniteData<CollectionListResponse, number>;
+
+/** Copia recién quitada que el aviso ofrece restaurar. */
+interface UndoState {
+  entry: CollectionEntry;
+  undoing: boolean;
+  failed: boolean;
+}
 
 interface CollectionShelfProps {
   initial: CollectionListResponse;
@@ -105,7 +118,7 @@ export function CollectionShelf({
   const t = useTranslations("collection");
   const locale = useLocale();
   const queryClient = useQueryClient();
-  const [mode, setMode] = useCollectionViewMode();
+  const [mode, setMode, modeReady] = useCollectionViewMode();
 
   const seededState = useMemo(() => toFiltersState(initialFilters), [initialFilters]);
   const [filters, setFilters] = useState<CollectionFiltersState>(seededState);
@@ -116,6 +129,8 @@ export function CollectionShelf({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [actionError, setActionError] = useState(false);
+  const [errorId, setErrorId] = useState<string | null>(null);
+  const [undo, setUndo] = useState<UndoState | null>(null);
   const [announce, setAnnounce] = useState("");
 
   // Debounce del buscador.
@@ -128,6 +143,18 @@ export function CollectionShelf({
 
   const isFiltered = collectionFiltersActive(filters);
   const apiFilters = useMemo(() => toApiFilters(filters), [filters]);
+
+  // Los filtros viajan a la URL (sin historial): recargar o compartir abre la misma selección. Las demás claves
+  // (`tab`, `preview`) se conservan.
+  useEffect(() => {
+    writeFiltersToUrl({
+      q: apiFilters.q,
+      format: apiFilters.format,
+      attribute: apiFilters.attribute,
+      sort: apiFilters.sort,
+      group: apiFilters.group,
+    });
+  }, [apiFilters]);
   const mineQueryKey = queryKeys.myCollection(apiFilters);
   const queryKey = readOnly
     ? (["collection", "user", username, preview, apiFilters] as const)
@@ -271,17 +298,45 @@ export function CollectionShelf({
     const snapshot = queryClient.getQueryData<CollectionPages>(mineQueryKey);
     setBusyId(entry.id);
     setActionError(false);
+    setErrorId(null);
     patchLocal((item) => (item.id === entry.id ? null : item));
     try {
       await removeCollectionEntry(entry.id);
+      setAnnounce(t("removedAnnouncement", { title: entry.album.title || t("albumUnavailable") }));
+      setUndo({ entry, undoing: false, failed: false });
     } catch (error) {
       const gone = error instanceof ApiError && error.code === "COLLECTION_ENTRY_NOT_FOUND";
       if (!gone && snapshot) {
         queryClient.setQueryData(mineQueryKey, snapshot);
-        setActionError(true);
+        setErrorId(entry.id);
       }
     } finally {
       setBusyId(null);
+      void invalidateMine();
+    }
+  };
+
+  const clearUndo = useCallback(() => setUndo(null), []);
+
+  // Deshacer vuelve a crear la copia con los mismos datos (es una entrada nueva: su fecha de alta cambia). Los
+  // atributos que no aplican al formato quedan fuera: el servidor rechazaría la copia heredada incoherente.
+  const handleUndo = async () => {
+    if (!undo || undo.undoing) return;
+    const { entry } = undo;
+    setUndo({ ...undo, undoing: true });
+    try {
+      await addCollectionEntry({
+        releaseGroupId: entry.album.id,
+        format: entry.format,
+        attributes: compatibleAttributes(entry.format, entry.attributes),
+        note: entry.note,
+        audience: entry.audience,
+      });
+      setUndo(null);
+      setAnnounce(t("restoredAnnouncement", { title: entry.album.title || t("albumUnavailable") }));
+    } catch {
+      setUndo({ entry, undoing: false, failed: true });
+    } finally {
       void invalidateMine();
     }
   };
@@ -353,12 +408,17 @@ export function CollectionShelf({
         onSaveEdit: handleSaveEdit,
         onAudienceChange: handleAudienceChange,
         onRemove: handleRemove,
+        errorId,
       };
 
   const selection: CollectionSelectionState | null =
     !readOnly && selectionMode ? { active: true, selectedIds, onToggle: toggleSelect } : null;
 
   const Renderer = mode === "detailed" ? EntriesDetailed : mode === "index" ? EntriesIndex : ShelfGrid;
+  const priorityIds = useMemo(
+    () => new Set(entries.slice(0, PRIORITY_COVERS).map((entry) => entry.id)),
+    [entries],
+  );
 
   const emptyBlock = isFiltered ? (
     <EmptyState title={t("noResultsTitle")} description={t("noResultsDescription")} />
@@ -380,7 +440,7 @@ export function CollectionShelf({
   );
 
   return (
-    <div className="flex w-full max-w-3xl flex-col gap-5">
+    <div className="flex w-full flex-col gap-5">
       <p className="font-data text-xs text-paper-muted">
         {t("countVinyl", { count: counts.vinyl })}
         <span aria-hidden> · </span>
@@ -402,7 +462,9 @@ export function CollectionShelf({
         ) : (
           <span />
         )}
-        <CollectionModeSwitcher mode={mode} onChange={setMode} />
+        <div className={modeReady ? "" : "invisible"} aria-hidden={modeReady ? undefined : true}>
+          <CollectionModeSwitcher mode={mode} onChange={setMode} />
+        </div>
       </div>
 
       <CollectionToolbar
@@ -419,8 +481,16 @@ export function CollectionShelf({
 
       {entries.length === 0 && !isPending ? (
         emptyBlock
+      ) : !modeReady ? (
+        <CollectionPlaceholder />
       ) : (
-        <Renderer groups={groups} actions={actions} selection={selection} />
+        <Renderer
+          groups={groups}
+          actions={actions}
+          selection={selection}
+          priorityIds={priorityIds}
+          groupedByArtist={filters.group === "artist"}
+        />
       )}
 
       {actionError ? (
@@ -446,6 +516,21 @@ export function CollectionShelf({
         </Button>
       ) : null}
 
+      {undo ? (
+        <UndoToast
+          key={undo.entry.id}
+          message={
+            undo.failed
+              ? t("undoError")
+              : t("removedToast", { title: undo.entry.album.title || t("albumUnavailable") })
+          }
+          undoLabel={t("undo")}
+          onUndo={undo.failed ? undefined : () => void handleUndo()}
+          onExpire={clearUndo}
+          undoing={undo.undoing}
+        />
+      ) : null}
+
       {selectionMode && selectedIds.size > 0 ? (
         <div className="sticky bottom-4 z-10 mx-auto flex w-full max-w-md flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-lg border border-amber bg-ink-surface px-4 py-3">
           <span className="font-data text-xs text-paper">
@@ -458,7 +543,7 @@ export function CollectionShelf({
               type="button"
               disabled={bulkBusy}
               onClick={() => void handleBulkAudience(audience)}
-              className="rounded border border-ink-border px-2 py-1 font-data text-xs text-paper-muted transition-colors hover:border-amber hover:text-paper disabled:opacity-50"
+              className="rounded border border-ink-border px-2 py-1 font-data text-xs text-paper-muted transition-colors hover:border-amber hover:text-paper disabled:opacity-50 [@media(pointer:coarse)]:min-h-11"
             >
               {t(`audience.${audience}`)}
             </button>
@@ -466,7 +551,7 @@ export function CollectionShelf({
           <button
             type="button"
             onClick={exitSelection}
-            className="font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-paper"
+            className="font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-paper [@media(pointer:coarse)]:min-h-11"
           >
             {t("selectionDone")}
           </button>
