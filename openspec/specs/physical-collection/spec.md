@@ -206,13 +206,16 @@ aceptar, combinables y aplicados en servidor sobre el conjunto completo:
   (coincidencia parcial sin distinguir mayúsculas);
 - **filtro por formato** y **filtro por atributo** (un valor cada uno);
 - **orden** (`sort`): recencia (default), alfabético por título, por artista, o por formato;
-- **agrupación** (`group`): sin agrupar (default), por formato, o por artista.
+- **agrupación** (`group`): sin agrupar (`none`, default), por artista, por formato o por mes de
+  alta (`date`).
 
 La respuesta SHALL incluir el **conteo por formato** (`counts`), calculado sobre el conjunto
 tras aplicar `q` y el filtro de atributo pero **ignorando** el filtro de formato, de modo que el
-encabezado muestre siempre la distribución entre formatos. El encabezado SHALL presentar ese
-conteo como dato y SHALL NOT incluir barras de progreso, pendientes ni insignias de
-completitud.
+encabezado muestre siempre la distribución entre formatos, y el **total** de copias del usuario
+sin ningún filtro (`total`). El encabezado SHALL presentar el conteo como **segmentos por
+formato** (Todo y los cuatro formatos, cada uno con su cifra) que filtran al elegirlos; un
+formato sin copias SHALL quedar deshabilitado. El encabezado SHALL NOT incluir barras de
+progreso, pendientes ni insignias de completitud.
 
 #### Scenario: Ver la colección propia
 - **WHEN** un usuario autenticado abre su página de colección
@@ -255,6 +258,18 @@ completitud.
 #### Scenario: Paginación inválida
 - **WHEN** se envía una paginación fuera de rango
 - **THEN** la API responde `400` con código `VALIDATION_ERROR` y no ejecuta la lectura
+
+#### Scenario: Sin agrupar por defecto
+- **WHEN** el usuario abre su colección sin elegir agrupación
+- **THEN** ve todas sus copias en una sola sección, ordenadas por recencia
+
+#### Scenario: Elegir un formato desde el encabezado
+- **WHEN** el usuario toca el segmento "Vinilo 3"
+- **THEN** ve solo sus vinilos, el segmento queda marcado y los demás conservan su cifra
+
+#### Scenario: Total sin filtros
+- **WHEN** el usuario busca "dokken" en una colección de 13 copias
+- **THEN** la respuesta sigue trayendo `total: 13`
 
 ### Requirement: Colección ajena en el perfil
 El sistema SHALL exponer la lectura paginada de la colección de un usuario por `username`,
@@ -445,13 +460,18 @@ generar una entrada nueva.
 
 ### Requirement: Página de la colección propia
 La página `/me/collection` SHALL usar el mismo ancho y encabezado alineado a la izquierda que las
-demás páginas propias de biblioteca. Los filtros activos de cada pestaña (pestaña, búsqueda,
-formato, atributo, orden y agrupación) SHALL escribirse en la URL cuando difieren del valor por
-defecto, sin recargar la página, de modo que una recarga o un enlace copiado muestren la misma
-selección. Con puntero grueso, los controles de cada entrada, las pestañas, el conmutador de modo
-y la barra de selección SHALL medir al menos 44 px de alto. En modo selección, tocar la ficha de
-una copia SHALL marcarla o desmarcarla (sin abrir el álbum) y la copia marcada SHALL distinguirse
-visualmente.
+demás páginas propias de biblioteca, con una línea de descripción y, en la pestaña Tengo, la
+acción **"Añadir copia"**, que abre el diálogo de acciones rápidas en la acción Colección. Las
+pestañas Tengo y Busco SHALL mostrar el total de cada una y la cifra de la pestaña abierta SHALL
+actualizarse al quitar, deshacer o agregar. La barra de herramientas SHALL ocupar una sola fila
+en pantallas anchas; en pantallas angostas los filtros de edición, agrupación y orden SHALL
+quedar detrás de un botón "Filtros" que indica cuántos hay activos. Los filtros activos de cada
+pestaña (pestaña, búsqueda, formato, atributo, orden y agrupación) SHALL escribirse en la URL
+cuando difieren del valor por defecto, sin recargar la página, de modo que una recarga o un
+enlace copiado muestren la misma selección. Con puntero grueso, los controles de cada entrada,
+las pestañas, el conmutador de modo y la barra de selección SHALL medir al menos 44 px de alto.
+En modo selección, tocar la ficha de una copia SHALL marcarla o desmarcarla (sin abrir el álbum)
+y la copia marcada SHALL distinguirse visualmente.
 
 #### Scenario: Filtros en la URL
 - **WHEN** el dueño filtra por `vinyl` y busca "dokken"
@@ -464,4 +484,20 @@ visualmente.
 #### Scenario: Marcar tocando la ficha
 - **WHEN** el dueño está en modo selección y toca la carátula de una copia
 - **THEN** la copia queda marcada y resaltada, y la página no navega al álbum
+
+#### Scenario: Pestañas con total
+- **WHEN** el dueño tiene 13 copias y 6 variantes en búsqueda
+- **THEN** las pestañas dicen "Tengo 13" y "Busco 6"
+
+#### Scenario: La cifra sigue a los cambios
+- **WHEN** el dueño quita una copia en Tengo
+- **THEN** la pestaña pasa a "Tengo 12" sin recargar, y vuelve a 13 si deshace
+
+#### Scenario: Añadir una copia desde la página
+- **WHEN** el dueño pulsa "Añadir copia" y agrega un álbum en vinilo desde el diálogo
+- **THEN** la estantería se recarga y muestra la copia nueva
+
+#### Scenario: Filtros en móvil
+- **WHEN** el dueño abre la página en una pantalla angosta con un atributo filtrado
+- **THEN** ve el buscador y un botón "Filtros 1" que despliega edición, agrupación y orden
 
