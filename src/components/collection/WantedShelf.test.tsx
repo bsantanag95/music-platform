@@ -49,7 +49,7 @@ function entry(overrides: Partial<WantedEntry> = {}): WantedEntry {
 }
 
 function response(entries: WantedEntry[], overrides: Partial<WantedListResponse> = {}): WantedListResponse {
-  return { entries, page: 1, pageSize: 20, hasNext: false, ...overrides };
+  return { entries, page: 1, pageSize: 20, hasNext: false, total: entries.length, ...overrides };
 }
 
 function renderShelf(

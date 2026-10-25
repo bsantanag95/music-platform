@@ -59,14 +59,23 @@ color» es solo para vinilo. Se quitará al guardar.") y guarda sin el atributo.
   bloquea la carga del contenido musical. **Es la única vía de alta** — no hay buscador de
   catálogo embebido en `/me/collection` (ver "Fuera de alcance").
 - **`/me/collection`** (rework `rework-collection-section`): la estantería personal.
-  - **Encabezado-retrato** con el conteo por formato como dato (`24 vinilos · 11 CD · …`), sin
-    barras de progreso ni "pendientes".
+  - **Encabezado** (`redesign-collection-header-toolbar`): título, una línea de descripción y
+    **"Añadir copia"**, que abre el diálogo de acciones rápidas del Header ya en la acción Colección
+    (al guardar, el diálogo avisa y la estantería se recarga). Debajo, las pestañas **Tengo N** /
+    **Busco N** con el total sin filtros de cada una; la cifra de la pestaña abierta sigue a lo que
+    se quita, se deshace o se agrega (el estante la informa a `CollectionTabs`).
+  - **Retrato por formato que filtra**: segmentos `Todo 13 · Vinilo 3 · CD 10 · Cassette 0 · Otro 0`
+    con las cifras de `counts` (ignoran el filtro de formato); tocar uno filtra y uno sin copias
+    queda deshabilitado. Reemplaza la línea de texto y el selector de formato. Sin barras de
+    progreso ni "pendientes".
   - **Tres modos de visualización a elegir** — Estantería (grilla de carátulas), Lista detallada,
     Índice —, con preferencia local por visitante (`localStorage`), global (misma mecánica que el
     detalle de lista). Ante la ausencia de carátula, silueta de disco.
-  - **Toolbar**: buscador con debounce (título de álbum **o** artista acreditado), filtro por
-    formato y por atributo, orden (recencia / alfabético / artista / formato) y agrupación (por
-    artista —default— / por formato / por fecha de alta). Los filtros se escriben en la URL con
+  - **Toolbar** en una sola fila: buscador con debounce (título de álbum **o** artista
+    acreditado), Edición (atributo), Agrupar (sin agrupar —default— / por artista / por formato /
+    por fecha de alta) y Orden (recencia / alfabético / artista / formato), con la etiqueta dentro
+    de cada selector, y al final el conmutador de modo y "Seleccionar". En pantallas angostas
+    Edición, Agrupar y Orden quedan detrás de **"Filtros"**, que muestra cuántos hay activos. Los filtros se escriben en la URL con
     `history.replaceState` cuando difieren del default (sin historial ni recarga) y la página los
     lee al cargar; la pestaña Busco hace lo mismo con su búsqueda y orden.
   - **Gestión**: edición de cada copia en línea (formato, atributos, nota, audiencia) con
@@ -128,7 +137,8 @@ código, la tabla `wanted_entry` y la API no cambian.
   sin formato, un click, sin formulario) y "Ya la tengo" (deep-link `?collection=have` que abre la
   página de álbum ya en el flujo de "La tengo"). Desde `extend-album-quick-actions` van como
   acciones extra del menú de acciones del disco compartido, junto a "Ver en listas".
-- **`/me/collection`**: segunda pestaña "Busco" (`?tab=wanted`) junto a la existente. A
+- **`/me/collection`**: segunda pestaña "Busco" (`?tab=wanted`) junto a la existente, con su
+  total en la pestaña y la barra en una fila (buscador + Orden). A
   diferencia de "Tengo", es una lista simple con búsqueda y orden (recencia/alfabético), sin los
   tres modos de visualización, filtro por formato/atributo, agrupación ni cambio de audiencia en
   lote — ver `openspec/changes/add-collection-wishlist/design.md` (decisión D5) para el porqué de

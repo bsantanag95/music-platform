@@ -1,5 +1,11 @@
 {
   "title": "Physical collection",
+  "description": "The copies on your shelf and the ones you're hunting for.",
+  "addCopy": "Add a copy",
+  "filtersButton": "Filters",
+  "editionLabel": "Edition",
+  "allEditions": "All",
+  "allFormatsShort": "All",
   "emptyTitle": "You haven't added any records to your collection yet",
   "emptyDescription": "Add an album to your collection from its page to show off your physical records.",
   "emptyCta": "Browse the catalog",
@@ -57,12 +63,7 @@
   "loadError": "We could not load the collection. Try again.",
   "loadedAnnouncement": "{count, plural, one {# more copy loaded} other {# more copies loaded}}",
   "searchPlaceholder": "Search by album or artist",
-  "filterByFormat": "Format",
-  "filterByAttribute": "Attribute",
   "filterFormatLabel": "Filter by format",
-  "filterAttributeLabel": "Filter by attribute",
-  "allFormats": "All formats",
-  "allAttributes": "All attributes",
   "clearFilters": "Clear filters",
   "sortLabel": "Sort",
   "sort": {
@@ -73,6 +74,7 @@
   },
   "groupLabel": "Group",
   "group": {
+    "none": "No grouping",
     "artist": "By artist",
     "format": "By format",
     "date": "By date added"
@@ -92,10 +94,6 @@
   "selectEntry": "Select {title}",
   "selectedCount": "{count, plural, one {# selected} other {# selected}}",
   "changeAudience": "Change audience to",
-  "countVinyl": "{count, plural, =0 {no vinyl} one {# vinyl} other {# vinyl}}",
-  "countCd": "{count, plural, =0 {no CDs} one {# CD} other {# CDs}}",
-  "countCassette": "{count, plural, =0 {no cassettes} one {# cassette} other {# cassettes}}",
-  "countOther": "{count, plural, =0 {no other} one {# other} other {# other}}",
   "format": {
     "vinyl": "Vinyl",
     "cd": "CD",

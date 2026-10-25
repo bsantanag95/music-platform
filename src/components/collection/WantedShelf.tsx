@@ -11,7 +11,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FilterSelect } from "@/components/ui/FilterSelect";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import {
   addWantedEntries,
@@ -25,6 +24,8 @@ import { compatibleAttributes } from "@/services/collection/vocabulary";
 import { ApiError } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/keys";
 import { albumHref, artistHref } from "@/lib/catalog-links";
+import { ToolbarSelect } from "./ToolbarSelect";
+import { useReportCollectionTotal } from "./CollectionTabs";
 import { PRIORITY_COVERS, formatCollectionDate, writeFiltersToUrl } from "./collection-shared";
 import {
   WantedVariantForm,
@@ -126,6 +127,8 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
     () => data?.pages.flatMap((page) => page?.entries ?? []) ?? (seeded ? initial.entries : []),
     [data, seeded, initial.entries],
   );
+  // La cifra de la pestaña Busco (sin filtros).
+  useReportCollectionTotal("wanted", data?.pages[0]?.total ?? initial.total);
 
   const handleRemove = async (entry: WantedEntry) => {
     const snapshot = queryClient.getQueryData<WantedPages>(queryKey);
@@ -134,7 +137,14 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
     setErrorId(null);
     queryClient.setQueryData<WantedPages>(queryKey, (old) =>
       old
-        ? { ...old, pages: old.pages.map((page) => ({ ...page, entries: page.entries.filter((item) => item.id !== entry.id) })) }
+        ? {
+            ...old,
+            pages: old.pages.map((page, index) => ({
+              ...page,
+              entries: page.entries.filter((item) => item.id !== entry.id),
+              total: index === 0 ? Math.max(0, page.total - 1) : page.total,
+            })),
+          }
         : old,
     );
     try {
@@ -240,7 +250,7 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
 
   return (
     <div className="flex w-full flex-col gap-5">
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <input
           type="search"
           autoComplete="off"
@@ -248,28 +258,25 @@ export function WantedShelf({ initial, initialFilters }: WantedShelfProps) {
           onChange={(event) => setSearchInput(event.target.value)}
           placeholder={t("searchPlaceholder")}
           aria-label={t("searchPlaceholder")}
-          className="w-full rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted [@media(pointer:coarse)]:min-h-11"
+          className="h-10 min-w-0 flex-1 basis-56 rounded-md border border-ink-border bg-ink-surface px-3.5 font-data text-sm text-paper placeholder:text-paper-muted [@media(pointer:coarse)]:h-11"
         />
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <FilterSelect
-            value={filters.sort}
-            onChange={(value) => setFilters((current) => ({ ...current, sort: value as WantedSort }))}
-            ariaLabel={t("sortLabel")}
-            widthClassName="w-[14ch] [@media(pointer:coarse)]:min-h-11"
+        <ToolbarSelect
+          label={t("sortLabel")}
+          value={filters.sort}
+          onChange={(value) => setFilters((current) => ({ ...current, sort: value as WantedSort }))}
+        >
+          <option value="recent">{t("sort.recent")}</option>
+          <option value="alpha">{t("sort.alpha")}</option>
+        </ToolbarSelect>
+        {isFiltered ? (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-paper [@media(pointer:coarse)]:min-h-11"
           >
-            <option value="recent">{t("sort.recent")}</option>
-            <option value="alpha">{t("sort.alpha")}</option>
-          </FilterSelect>
-          {isFiltered ? (
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="font-data text-xs text-paper-muted transition-colors hover:text-paper [@media(pointer:coarse)]:min-h-11"
-            >
-              {t("clearFilters")}
-            </button>
-          ) : null}
-        </div>
+            {t("clearFilters")}
+          </button>
+        ) : null}
       </div>
 
       <span role="status" aria-live="polite" className="sr-only">

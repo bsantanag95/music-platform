@@ -92,6 +92,11 @@ const entryRow = {
   albumCover: null,
 };
 
+// select().from().where()  → countOwnCollection (total sin filtros)
+function whereCount(value: number) {
+  return { from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ value }]) })) };
+}
+
 describe("servicio de colección física", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -257,12 +262,15 @@ describe("servicio de colección física", () => {
     mocks.db.select
       .mockReturnValueOnce({ from: vi.fn(() => chain) })
       .mockReturnValueOnce(joinWhereGroupBy([{ format: "vinyl", count: 21 }]))
+      .mockReturnValueOnce(whereCount(30))
       .mockReturnValueOnce(joinWhereOrderBy([]));
 
     const result = await listOwnCollection(userId, 1, 20, { format: "vinyl" });
     expect(result.entries).toHaveLength(20);
     expect(result.hasNext).toBe(true);
     expect(result.counts.vinyl).toBe(21);
+    // El total no depende de los filtros.
+    expect(result.total).toBe(30);
     // El filtro de formato se tradujo a una condición en el where.
     expect(where).toHaveBeenCalled();
   });
@@ -277,6 +285,7 @@ describe("servicio de colección física", () => {
           { format: "mixtape", count: 1 },
         ]),
       )
+      .mockReturnValueOnce(whereCount(7))
       .mockReturnValueOnce(joinWhereOrderBy([]));
 
     const result = await listOwnCollection(userId, 1, 20, { format: "vinyl" });
@@ -289,6 +298,7 @@ describe("servicio de colección física", () => {
     mocks.db.select
       .mockReturnValueOnce(paged)
       .mockReturnValueOnce(joinWhereGroupBy([{ format: "vinyl", count: 1 }]))
+      .mockReturnValueOnce(whereCount(1))
       .mockReturnValueOnce(joinWhereOrderBy([]));
 
     const result = await listOwnCollection(userId, 1, 20, { q: "moon", sort: "artist" });
@@ -305,12 +315,13 @@ describe("servicio de colección física", () => {
   it("listOwnCollection vacía no consulta artistas", async () => {
     mocks.db.select
       .mockReturnValueOnce(joinWherePaged([]))
-      .mockReturnValueOnce(joinWhereGroupBy([]));
+      .mockReturnValueOnce(joinWhereGroupBy([]))
+      .mockReturnValueOnce(whereCount(0));
     const result = await listOwnCollection(userId);
     expect(result.entries).toEqual([]);
     expect(result.counts).toEqual({ vinyl: 0, cd: 0, cassette: 0, other: 0 });
-    // paginado + conteo, sin la consulta de artistas.
-    expect(mocks.db.select).toHaveBeenCalledTimes(2);
+    // paginado + conteo por formato + total, sin la consulta de artistas.
+    expect(mocks.db.select).toHaveBeenCalledTimes(3);
   });
 
   it("updateEntriesAudienceBulk actualiza las entradas propias y devuelve sus ids", async () => {

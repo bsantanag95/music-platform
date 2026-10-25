@@ -2409,7 +2409,7 @@ export const COLLECTION_SORTS = ["recent", "alpha", "artist", "format"] as const
 export const CollectionSortSchema = z.enum(COLLECTION_SORTS);
 export type CollectionSort = z.infer<typeof CollectionSortSchema>;
 
-export const COLLECTION_GROUPINGS = ["artist", "format", "date"] as const;
+export const COLLECTION_GROUPINGS = ["none", "artist", "format", "date"] as const;
 export const CollectionGroupingSchema = z.enum(COLLECTION_GROUPINGS);
 export type CollectionGrouping = z.infer<typeof CollectionGroupingSchema>;
 
@@ -2430,6 +2430,8 @@ export const CollectionListResponseSchema = z.object({
   pageSize: z.number().int(),
   hasNext: z.boolean(),
   counts: CollectionCountsSchema,
+  /** Copias del usuario sin ningún filtro. Solo la lectura propia lo trae (cifra de la pestaña Tengo). */
+  total: z.number().int().nonnegative().optional(),
 });
 export type CollectionListResponse = z.infer<typeof CollectionListResponseSchema>;
 
@@ -2524,6 +2526,8 @@ export const WantedListResponseSchema = z.object({
   page: z.number().int(),
   pageSize: z.number().int(),
   hasNext: z.boolean(),
+  /** Entradas de deseo del usuario sin ningún filtro (cifra de la pestaña Busco). */
+  total: z.number().int().nonnegative(),
 });
 export type WantedListResponse = z.infer<typeof WantedListResponseSchema>;
 

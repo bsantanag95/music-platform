@@ -1,5 +1,11 @@
 {
   "title": "Colección física",
+  "description": "Las copias que tienes en tu estantería y las que andas buscando.",
+  "addCopy": "Añadir copia",
+  "filtersButton": "Filtros",
+  "editionLabel": "Edición",
+  "allEditions": "Todas",
+  "allFormatsShort": "Todo",
   "emptyTitle": "Todavía no agregaste discos a tu colección",
   "emptyDescription": "Agrega un álbum a tu colección desde su página para presumir tus discos en físico.",
   "emptyCta": "Buscar en el catálogo",
@@ -57,12 +63,7 @@
   "loadError": "No pudimos cargar la colección. Intenta de nuevo.",
   "loadedAnnouncement": "{count, plural, one {# copia más cargada} other {# copias más cargadas}}",
   "searchPlaceholder": "Buscar por álbum o artista",
-  "filterByFormat": "Formato",
-  "filterByAttribute": "Atributo",
   "filterFormatLabel": "Filtrar por formato",
-  "filterAttributeLabel": "Filtrar por atributo",
-  "allFormats": "Todos los formatos",
-  "allAttributes": "Todos los atributos",
   "clearFilters": "Limpiar filtros",
   "sortLabel": "Ordenar",
   "sort": {
@@ -73,6 +74,7 @@
   },
   "groupLabel": "Agrupar",
   "group": {
+    "none": "Sin agrupar",
     "artist": "Por artista",
     "format": "Por formato",
     "date": "Por fecha de alta"
@@ -92,10 +94,6 @@
   "selectEntry": "Seleccionar {title}",
   "selectedCount": "{count, plural, one {# seleccionada} other {# seleccionadas}}",
   "changeAudience": "Cambiar audiencia a",
-  "countVinyl": "{count, plural, =0 {sin vinilos} one {# vinilo} other {# vinilos}}",
-  "countCd": "{count, plural, =0 {sin CD} one {# CD} other {# CD}}",
-  "countCassette": "{count, plural, =0 {sin cassettes} one {# cassette} other {# cassettes}}",
-  "countOther": "{count, plural, =0 {sin otros} one {# otro} other {# otros}}",
   "format": {
     "vinyl": "Vinilo",
     "cd": "CD",

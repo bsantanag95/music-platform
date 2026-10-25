@@ -33,11 +33,31 @@ describe("CollectionToolbar", () => {
     expect(labels.map((el) => el.textContent)).toEqual(["Agrupar", "Ordenar"]);
   });
 
-  it("oculta en Ordenar la opción que coincide con el Agrupar activo (por defecto: Por artista)", () => {
+  it("por defecto no agrupa y ofrece los cuatro órdenes", () => {
     renderWithIntl(<Harness />);
+    expect((screen.getByLabelText("Agrupar") as HTMLSelectElement).value).toBe("none");
     const sortSelect = screen.getByLabelText("Ordenar") as HTMLSelectElement;
-    const optionValues = Array.from(sortSelect.options).map((o) => o.value);
-    expect(optionValues).toEqual(["recent", "alpha", "format"]);
+    expect(Array.from(sortSelect.options).map((o) => o.value)).toEqual(["recent", "alpha", "artist", "format"]);
+  });
+
+  it("oculta en Ordenar la opción que coincide con el Agrupar activo", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<Harness />);
+    await user.selectOptions(screen.getByLabelText("Agrupar"), "artist");
+    const sortSelect = screen.getByLabelText("Ordenar") as HTMLSelectElement;
+    expect(Array.from(sortSelect.options).map((o) => o.value)).toEqual(["recent", "alpha", "format"]);
+  });
+
+  it("el botón Filtros dice cuántos filtros ocultables hay activos y despliega el panel", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<Harness />);
+    const button = screen.getByRole("button", { name: "Filtros" });
+    expect(button).toHaveAttribute("aria-expanded", "false");
+    await user.selectOptions(screen.getByLabelText("Edición"), "signed");
+    await user.selectOptions(screen.getByLabelText("Ordenar"), "alpha");
+    expect(screen.getByRole("button", { name: "Filtros 2" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Filtros 2" }));
+    expect(screen.getByRole("button", { name: "Filtros 2" })).toHaveAttribute("aria-expanded", "true");
   });
 
   it("al agrupar por formato, resetea Ordenar a Recientes si estaba en Por formato", async () => {
@@ -45,10 +65,9 @@ describe("CollectionToolbar", () => {
     const onValue = vi.fn();
     renderWithIntl(<Harness onValue={onValue} />);
 
-    // Por defecto se agrupa por artista, así que "Por formato" sigue
-    // disponible en Ordenar en este punto.
+    // Por defecto no se agrupa, así que "Por formato" está disponible en Ordenar.
     await user.selectOptions(screen.getByLabelText("Ordenar"), "format");
-    expect(onValue).toHaveBeenLastCalledWith(expect.objectContaining({ sort: "format", group: "artist" }));
+    expect(onValue).toHaveBeenLastCalledWith(expect.objectContaining({ sort: "format", group: "none" }));
 
     await user.selectOptions(screen.getByLabelText("Agrupar"), "format");
     expect(onValue).toHaveBeenLastCalledWith(expect.objectContaining({ sort: "recent", group: "format" }));
