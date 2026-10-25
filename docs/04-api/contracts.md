@@ -1773,9 +1773,12 @@ conjunto completo (aditivo en `rework-collection-section`):
 - `q` — búsqueda parcial sin distinguir mayúsculas sobre el **título del álbum y el nombre del
   artista acreditado** (a diferencia de listas/favoritos, que solo buscan por título).
 - `sort` — `recent` (default) · `alpha` (título) · `artist` · `format`.
-- `group` — `artist` (default) · `format` · `date` (mes de alta). Solo afecta al orden; el cliente secciona.
+- `group` — `none` (default, sin agrupar) · `artist` · `format` · `date` (mes de alta). Solo afecta al orden; el
+  cliente secciona.
 
-**200 OK:** `{ entries: [...], page, pageSize, hasNext, counts: { vinyl, cd, cassette, other } }`.
+**200 OK:** `{ entries: [...], page, pageSize, hasNext, counts: { vinyl, cd, cassette, other }, total }`.
+`total` (aditivo en `redesign-collection-header-toolbar`) es la cantidad de copias del usuario sin ningún
+filtro: la cifra de la pestaña Tengo. La lectura de perfil (`/api/users/[username]/collection`) no lo trae.
 `counts` se calcula tras aplicar `q` y `attribute` pero **ignorando** `format`, de modo que el
 encabezado siempre muestre la distribución completa entre formatos. **400** con `VALIDATION_ERROR`
 si la paginación, un filtro, el orden o la agrupación no son válidos.
@@ -1843,8 +1846,9 @@ vocabulario, un atributo de vinilo con un `format` que no es `vinyl` (sin `forma
 
 Wishlist propia paginada. `q` busca parcialmente sobre el título del álbum y el artista
 acreditado; `sort` es `recent` (default) o `alpha`. **200 OK:**
-`{ entries: [...], page, pageSize, hasNext }`. **400** con `VALIDATION_ERROR` si la paginación o
-el orden no son válidos.
+`{ entries: [...], page, pageSize, hasNext, total }`, donde `total` (aditivo en
+`redesign-collection-header-toolbar`) es la cantidad de entradas del usuario sin filtros (cifra de la pestaña
+Busco). **400** con `VALIDATION_ERROR` si la paginación o el orden no son válidos.
 
 ### `PATCH /api/me/collection/wanted/{entryId}`
 

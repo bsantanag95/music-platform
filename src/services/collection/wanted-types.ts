@@ -53,4 +53,6 @@ export interface WantedPage {
   page: number;
   pageSize: number;
   hasNext: boolean;
+  /** Entradas del usuario sin filtros (cifra de la pestaña Busco). */
+  total: number;
 }

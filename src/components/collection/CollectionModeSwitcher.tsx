@@ -39,9 +39,12 @@ const ICONS: Record<CollectionViewMode, React.ReactNode> = {
 export function CollectionModeSwitcher({
   mode,
   onChange,
+  iconsOnly = false,
 }: {
   mode: CollectionViewMode;
   onChange: (next: CollectionViewMode) => void;
+  /** Solo íconos también en pantallas anchas (con `title` y nombre accesible), para la barra en una fila. */
+  iconsOnly?: boolean;
 }) {
   const t = useTranslations("collection");
 
@@ -76,12 +79,13 @@ export function CollectionModeSwitcher({
             aria-checked={selected}
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(value)}
+            title={iconsOnly ? t(`viewMode.${value}`) : undefined}
             className={`inline-flex items-center gap-1.5 rounded px-2 py-1 font-data text-xs transition-colors [@media(pointer:coarse)]:min-h-11 ${
               selected ? "bg-amber/10 text-amber" : "text-paper-muted hover:text-paper"
             }`}
           >
             {ICONS[value]}
-            <span className="sr-only sm:not-sr-only">{t(`viewMode.${value}`)}</span>
+            <span className={iconsOnly ? "sr-only" : "sr-only sm:not-sr-only"}>{t(`viewMode.${value}`)}</span>
           </button>
         );
       })}

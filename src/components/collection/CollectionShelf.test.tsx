@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { CollectionShelf } from "./CollectionShelf";
+import { CollectionTabs } from "./CollectionTabs";
 import { COLLECTION_VIEW_MODE_STORAGE_KEY } from "./collection-view-mode";
 import type { CollectionEntry, CollectionListResponse } from "@/lib/api/schemas";
 
@@ -101,8 +102,11 @@ describe("CollectionShelf", () => {
 
   it("muestra el encabezado con el conteo por formato y las entradas", () => {
     renderShelf(response([entry(), entry()], { counts: { vinyl: 2, cd: 1, cassette: 0, other: 0 } }));
-    expect(screen.getByText(/2 vinilos/)).toBeInTheDocument();
-    expect(screen.getByText(/1 CD/)).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Todo 3" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: "Vinilo 2" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "CD 1" })).toBeInTheDocument();
+    // Un formato sin copias queda deshabilitado.
+    expect(screen.getByRole("radio", { name: "Cassette 0" })).toBeDisabled();
     expect(screen.getByRole("link", { name: "Álbum 1" })).toBeInTheDocument();
   });
 
@@ -118,16 +122,17 @@ describe("CollectionShelf", () => {
   it("filtro sin resultados muestra el estado filtrado-vacío", async () => {
     const user = userEvent.setup();
     mocks.getMyCollection.mockResolvedValue(response([]));
-    renderShelf(response([entry()]));
-    await user.selectOptions(screen.getByLabelText("Filtrar por formato"), "cd");
+    renderShelf(response([entry()], { counts: { vinyl: 1, cd: 1, cassette: 0, other: 0 } }));
+    await user.click(screen.getByRole("radio", { name: "CD 1" }));
     expect(await screen.findByText("Sin resultados")).toBeInTheDocument();
   });
 
   it("en modo Lista detallada muestra formato, atributos y nota", async () => {
     window.localStorage.setItem(COLLECTION_VIEW_MODE_STORAGE_KEY, "detailed");
     renderShelf(response([entry()]));
-    expect(await screen.findByText("Vinilo", { selector: "span" })).toBeInTheDocument();
-    expect(screen.getByText("Edición limitada", { selector: "span" })).toBeInTheDocument();
+    const row = within(await screen.findByRole("listitem"));
+    expect(row.getByText("Vinilo", { selector: "span" })).toBeInTheDocument();
+    expect(row.getByText("Edición limitada", { selector: "span" })).toBeInTheDocument();
     expect(screen.getByText("portada alternativa")).toBeInTheDocument();
   });
 
@@ -175,9 +180,9 @@ describe("CollectionShelf", () => {
 
   it("en modo lectura: conteos, buscador y filtros sí; selección, edición y audiencia no", () => {
     renderShelf(response([entry()]), { readOnly: true, username: "nick" });
-    expect(screen.getByText(/1 vinilo/)).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Vinilo 1" })).toBeInTheDocument();
     expect(screen.getByRole("searchbox", { name: "Buscar por álbum o artista" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Filtrar por formato")).toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "Filtrar por formato" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Seleccionar" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Editar" })).not.toBeInTheDocument();
     expect(screen.queryByText("Seguidores", { selector: "span" })).not.toBeInTheDocument();
@@ -188,9 +193,9 @@ describe("CollectionShelf", () => {
   it("en modo lectura, filtrar pide la colección DEL PERFIL con el filtro (no la del visitante)", async () => {
     const user = userEvent.setup();
     mocks.getUserCollection.mockResolvedValue(response([]));
-    renderShelf(response([entry()]), { readOnly: true, username: "nick" });
+    renderShelf(response([entry()], { counts: { vinyl: 1, cd: 1, cassette: 0, other: 0 } }), { readOnly: true, username: "nick" });
 
-    await user.selectOptions(screen.getByLabelText("Filtrar por formato"), "cd");
+    await user.click(screen.getByRole("radio", { name: "CD 1" }));
 
     await waitFor(() =>
       expect(mocks.getUserCollection).toHaveBeenCalledWith(
@@ -277,16 +282,42 @@ describe("CollectionShelf", () => {
     window.history.replaceState(null, "", "/es/me/collection?preview=1");
     mocks.getMyCollection.mockResolvedValue(response([]));
     const user = userEvent.setup();
-    renderShelf(response([entry()]));
+    renderShelf(response([entry()], { counts: { vinyl: 1, cd: 1, cassette: 0, other: 0 } }));
 
-    await user.selectOptions(screen.getByLabelText("Filtrar por formato"), "cd");
+    await user.click(screen.getByRole("radio", { name: "CD 1" }));
     await waitFor(() => expect(window.location.search).toBe("?preview=1&format=cd"));
     window.history.replaceState(null, "", "/");
   });
 
+  it("sin agrupar por defecto: una sola sección sin encabezado", () => {
+    renderShelf(response([entry(), entry()]));
+    expect(screen.queryByRole("heading", { level: 3 })).toBeNull();
+    expect(screen.getAllByRole("listitem")).toHaveLength(2);
+  });
+
+  it("informa el total a las pestañas y lo descuenta al quitar", async () => {
+    const only = entry();
+    mocks.removeCollectionEntry.mockResolvedValue(null);
+    mocks.getMyCollection.mockResolvedValue(response([], { total: 0 }));
+    const user = userEvent.setup();
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    renderWithIntl(
+      <QueryClientProvider client={client}>
+        <CollectionTabs active="own" initialTotals={{ own: 1, wanted: 4 }}>
+          <CollectionShelf initial={response([only], { total: 1 })} />
+        </CollectionTabs>
+      </QueryClientProvider>,
+    );
+    // El mock de `Link` no conserva `role="tab"`: se buscan como enlaces.
+    expect(screen.getByRole("link", { name: "Tengo 1" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Quitar" }));
+    expect(await screen.findByRole("link", { name: "Tengo 0" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Busco 4" })).toBeInTheDocument();
+  });
+
   it("en Lista detallada agrupada por artista la fila no repite el artista", async () => {
     window.localStorage.setItem(COLLECTION_VIEW_MODE_STORAGE_KEY, "detailed");
-    renderShelf(response([entry()]));
+    renderShelf(response([entry()]), { initialFilters: { group: "artist" } });
     expect(await screen.findByRole("heading", { name: /Artista 1/ })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Artista 1" })).toBeNull();
   });

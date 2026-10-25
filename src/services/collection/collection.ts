@@ -79,7 +79,7 @@ function normalizeSortGroup(filters: CollectionFilters): {
   group: CollectionGrouping;
 } {
   const sort = filters.sort ?? "recent";
-  const group = filters.group ?? "artist";
+  const group = filters.group ?? "none";
   if (!COLLECTION_SORTS.includes(sort)) {
     throw new ApiError("VALIDATION_ERROR", 400, "El orden no es válido");
   }
@@ -410,6 +410,7 @@ export async function listOwnCollection(
     .offset((page - 1) * pageSize);
 
   const counts = await collectionCounts(scope);
+  const total = await countOwnCollection(userId);
 
   return {
     entries: await serializePage(rows.slice(0, pageSize)),
@@ -417,7 +418,17 @@ export async function listOwnCollection(
     pageSize,
     hasNext: rows.length > pageSize,
     counts,
+    total,
   };
+}
+
+/** Copias del usuario sin filtros: la cifra de la pestaña Tengo. */
+export async function countOwnCollection(userId: string): Promise<number> {
+  const [row] = await db
+    .select({ value: count() })
+    .from(collectionEntry)
+    .where(eq(collectionEntry.userId, userId));
+  return Number(row?.value ?? 0);
 }
 
 /** Colección de un usuario visible para un lector, filtrada por audiencia. */

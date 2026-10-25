@@ -118,18 +118,28 @@ export function groupEntries(
     return [];
   }
 
+  // Sin agrupar: una sola sección sin encabezado, en el orden del servidor.
+  if (grouping === "none") {
+    return [{ key: "all", heading: null, count: entries.length, entries }];
+  }
+
   if (grouping === "date") {
     // Secciones contiguas por mes-año de alta, en el orden de llegada (el
     // servidor ya entrega el mes más reciente primero).
     const groups: CollectionGroup[] = [];
     for (const entry of entries) {
-      const key = entry.createdAt.slice(0, 7);
+      const month = entry.createdAt.slice(0, 7);
       const last = groups[groups.length - 1];
-      if (last && last.key === key) {
+      if (last && last.entries[0]!.createdAt.slice(0, 7) === month) {
         last.entries.push(entry);
         last.count = last.entries.length;
       } else {
-        groups.push({ key, heading: monthLabel(entry.createdAt), count: 1, entries: [entry] });
+        groups.push({
+          key: `${month}#${groups.length}`,
+          heading: monthLabel(entry.createdAt),
+          count: 1,
+          entries: [entry],
+        });
       }
     }
     return groups;
@@ -147,16 +157,19 @@ export function groupEntries(
     }).filter((group) => group.entries.length > 0);
   }
 
-  // grouping === "artist": secciones contiguas en el orden de llegada.
+  // grouping === "artist": secciones contiguas en el orden de llegada. La clave
+  // lleva la posición: mientras llega la página reordenada, los datos previos
+  // (en otro orden) pueden repetir un artista en dos secciones, y una clave
+  // repetida deja nodos huérfanos al reconciliar.
   const groups: CollectionGroup[] = [];
   for (const entry of entries) {
     const name = entry.album.artistName ?? unknownArtistLabel;
     const last = groups[groups.length - 1];
-    if (last && last.key === name) {
+    if (last && last.heading === name) {
       last.entries.push(entry);
       last.count = last.entries.length;
     } else {
-      groups.push({ key: name, heading: name, count: 1, entries: [entry] });
+      groups.push({ key: `${name}#${groups.length}`, heading: name, count: 1, entries: [entry] });
     }
   }
   return groups;

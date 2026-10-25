@@ -24,7 +24,8 @@ export interface CollectionEntry {
 export const COLLECTION_SORTS = ["recent", "alpha", "artist", "format"] as const;
 export type CollectionSort = (typeof COLLECTION_SORTS)[number];
 
-export const COLLECTION_GROUPINGS = ["artist", "format", "date"] as const;
+// `none` (sin agrupar) es el defecto desde redesign-collection-header-toolbar.
+export const COLLECTION_GROUPINGS = ["none", "artist", "format", "date"] as const;
 export type CollectionGrouping = (typeof COLLECTION_GROUPINGS)[number];
 
 export interface CollectionFilters {
@@ -66,6 +67,8 @@ export interface CollectionPage {
   pageSize: number;
   hasNext: boolean;
   counts: CollectionCounts;
+  /** Copias del usuario sin filtros; solo en la lectura propia. */
+  total?: number;
 }
 
 // Cuánto del estante "Colección" se muestra en el Nivel 2 del perfil antes de la

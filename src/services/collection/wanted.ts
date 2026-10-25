@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, isNull, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNull, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, credit, releaseGroup, wantedEntry } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
@@ -301,13 +301,24 @@ export async function listOwnWanted(
     .orderBy(...orderClauses(sort))
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);
+  const total = await countOwnWanted(userId);
 
   return {
     entries: await serializePage(rows.slice(0, pageSize)),
     page,
     pageSize,
     hasNext: rows.length > pageSize,
+    total,
   };
+}
+
+/** Entradas de deseo del usuario sin filtros: la cifra de la pestaña Busco. */
+export async function countOwnWanted(userId: string): Promise<number> {
+  const [row] = await db
+    .select({ value: count() })
+    .from(wantedEntry)
+    .where(eq(wantedEntry.userId, userId));
+  return Number(row?.value ?? 0);
 }
 
 /** Entradas de deseo propias del usuario para un álbum concreto (página de álbum). */

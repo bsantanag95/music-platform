@@ -37,6 +37,8 @@ import { ShelfGrid } from "./ShelfGrid";
 import { EntriesDetailed } from "./EntriesDetailed";
 import { EntriesIndex } from "./EntriesIndex";
 import { CollectionPlaceholder } from "./CollectionPlaceholder";
+import { CollectionFormatSegments } from "./CollectionFormatSegments";
+import { useReportCollectionTotal } from "./CollectionTabs";
 import {
   PRIORITY_COVERS,
   groupEntries,
@@ -84,7 +86,7 @@ function toFiltersState(params?: CollectionQuery): CollectionFiltersState {
     format: (params?.format as CollectionFiltersState["format"]) ?? "",
     attribute: (params?.attribute as CollectionFiltersState["attribute"]) ?? "",
     sort: params?.sort ?? "recent",
-    group: (params?.group as CollectionFiltersState["group"]) ?? "artist",
+    group: (params?.group as CollectionFiltersState["group"]) ?? "none",
   };
 }
 
@@ -94,7 +96,7 @@ function toApiFilters(filters: CollectionFiltersState): Omit<CollectionQuery, "p
     format: filters.format || undefined,
     attribute: filters.attribute || undefined,
     sort: filters.sort === "recent" ? undefined : filters.sort,
-    group: filters.group === "artist" ? undefined : filters.group,
+    group: filters.group === "none" ? undefined : filters.group,
   };
 }
 
@@ -180,6 +182,8 @@ export function CollectionShelf({
     [data, seeded, initial.entries],
   );
   const counts = data?.pages[0]?.counts ?? initial.counts;
+  // La cifra de la pestaña Tengo (sin filtros); en el perfil no hay pestañas ni `total`.
+  useReportCollectionTotal("own", readOnly ? undefined : (data?.pages[0]?.total ?? initial.total));
 
   const groups = useMemo(
     () =>
@@ -206,6 +210,7 @@ export function CollectionShelf({
           ...old,
           pages: old.pages.map((page, pageIndex) => {
             let counts = page.counts;
+            let total = page.total;
             const nextEntries: CollectionEntry[] = [];
             for (const entry of page.entries) {
               const result = mutate(entry);
@@ -215,12 +220,13 @@ export function CollectionShelf({
                     ...counts,
                     [entry.format]: Math.max(0, counts[entry.format] - 1),
                   };
+                  if (total !== undefined) total = Math.max(0, total - 1);
                 }
                 continue;
               }
               nextEntries.push(result);
             }
-            return { ...page, entries: nextEntries, counts };
+            return { ...page, entries: nextEntries, counts, total };
           }),
         };
       });
@@ -441,29 +447,33 @@ export function CollectionShelf({
 
   return (
     <div className="flex w-full flex-col gap-5">
-      <p className="font-data text-xs text-paper-muted">
-        {t("countVinyl", { count: counts.vinyl })}
-        <span aria-hidden> · </span>
-        {t("countCd", { count: counts.cd })}
-        <span aria-hidden> · </span>
-        {t("countCassette", { count: counts.cassette })}
-        <span aria-hidden> · </span>
-        {t("countOther", { count: counts.other })}
-      </p>
-
+      {/* Retrato por formato a la izquierda; modo de vista y "Seleccionar" a la derecha, en la misma fila. */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        {!readOnly && entries.length > 0 ? (
-          <Button
-            variant="secondary"
-            onClick={() => (selectionMode ? exitSelection() : setSelectionMode(true))}
-          >
-            {selectionMode ? t("selectionDone") : t("selectMode")}
-          </Button>
-        ) : (
-          <span />
-        )}
-        <div className={modeReady ? "" : "invisible"} aria-hidden={modeReady ? undefined : true}>
-          <CollectionModeSwitcher mode={mode} onChange={setMode} />
+        <div className="min-w-0 max-w-full">
+          <CollectionFormatSegments
+            counts={counts}
+            value={filters.format}
+            onChange={(format) => setFilters((current) => ({ ...current, format }))}
+          />
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <div className={modeReady ? "" : "invisible"} aria-hidden={modeReady ? undefined : true}>
+            <CollectionModeSwitcher mode={mode} onChange={setMode} iconsOnly />
+          </div>
+          {!readOnly && entries.length > 0 ? (
+            <button
+              type="button"
+              aria-pressed={selectionMode}
+              onClick={() => (selectionMode ? exitSelection() : setSelectionMode(true))}
+              className={`inline-flex h-10 items-center rounded-md border px-3 font-data text-xs transition-colors [@media(pointer:coarse)]:h-11 ${
+                selectionMode
+                  ? "border-amber bg-amber/10 text-amber"
+                  : "border-ink-border text-paper-muted hover:text-paper"
+              }`}
+            >
+              {selectionMode ? t("selectionDone") : t("selectMode")}
+            </button>
+          ) : null}
         </div>
       </div>
 

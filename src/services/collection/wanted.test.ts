@@ -300,9 +300,11 @@ describe("servicio de wishlist de colección", () => {
     const rows = Array.from({ length: 21 }, (_, i) => ({ ...entryRow, id: `entry-${i}` }));
     mocks.db.select
       .mockReturnValueOnce(joinWherePaged(rows))
+      .mockReturnValueOnce({ from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ value: 9 }]) })) }) // total
       .mockReturnValueOnce(joinWhereOrderBy([]));
 
     const result = await listOwnWanted(userId, 1, 20, { q: "moon" });
+    expect(result.total).toBe(9);
     expect(result.entries).toHaveLength(20);
     expect(result.hasNext).toBe(true);
   });
