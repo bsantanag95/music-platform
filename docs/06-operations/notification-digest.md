@@ -90,7 +90,7 @@ schtasks /Create /TN "music-platform notification digest" /SC WEEKLY /D MON /ST 
   /TR "C:\Users\besan\Documents\Proyectos\music-platform\scripts\send-notification-digests.cmd"
 ```
 
-El wrapper redirige la salida a `logs\notification-digest.log` (ignorado por git). Ajustar la ruta
+El wrapper crea `logs\` si no existe (está ignorado por git, así que falta en un checkout nuevo) y redirige la salida a `logs\notification-digest.log`. Ajustar la ruta
 del wrapper si el repo se mueve.
 
 ## Paso al cron del proveedor
