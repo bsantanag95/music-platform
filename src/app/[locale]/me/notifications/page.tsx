@@ -1,17 +1,21 @@
 import { getTimeZone, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { requirePageUser } from "@/services/auth/page-auth";
-import { listNotificationGroups } from "@/services/notifications/read";
+import { hasNewReleases, listNotificationGroups } from "@/services/notifications/read";
 import { NotificationsView } from "@/components/notifications/NotificationsView";
 
-// Bandeja completa (openspec: add-notifications-core, D8). La primera página se
-// resuelve aquí, en la zona horaria del usuario, y el cliente sigue el cursor.
-// `requirePageUser` manda a iniciar sesión sin sesión.
+// Bandeja completa (openspec: add-notifications-core, D8;
+// add-notification-milestones-and-releases, D8). La primera página de "Para ti"
+// se resuelve aquí, en la zona horaria del usuario; "Novedades" se pide al
+// abrir su pestaña. `requirePageUser` manda a iniciar sesión sin sesión.
 export default async function NotificationsPage() {
   const t = await getTranslations("notifications");
   const user = await requirePageUser();
   const timeZone = await getTimeZone();
-  const initial = await listNotificationGroups(user.id, { timeZone });
+  const [initial, initialNewReleases] = await Promise.all([
+    listNotificationGroups(user.id, { timeZone }),
+    hasNewReleases(user.id),
+  ]);
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-10 sm:py-12">
@@ -28,7 +32,7 @@ export default async function NotificationsPage() {
         </Link>
       </header>
 
-      <NotificationsView initial={initial} />
+      <NotificationsView initial={initial} initialNewReleases={initialNewReleases} />
     </main>
   );
 }

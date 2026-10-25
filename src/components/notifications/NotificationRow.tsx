@@ -1,17 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations, useTimeZone } from "next-intl";
+import { useLocale, useTranslations, useTimeZone } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@/i18n/navigation";
 import { ApiError, apiFetch } from "@/lib/api/client";
-import {
-  NoContentSchema,
-  type NotificationGroupValue,
-} from "@/lib/api/schemas";
-import { artistHref } from "@/lib/catalog-links";
+import { NoContentSchema, type NotificationGroupValue } from "@/lib/api/schemas";
+import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
+import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import { RelativeDate } from "@/components/feed/feed-row-parts";
 import { UserAvatar } from "@/components/social/UserAvatar";
+import { AppImage } from "@/components/ui/AppImage";
 import { markNotificationsRead } from "./api";
 import { NOTIFICATIONS_COUNT_KEY } from "./query-keys";
 
@@ -27,11 +26,15 @@ interface NotificationRowProps {
 
 type ModerationAction = "hide" | "restore" | "suspend_social" | "revoke_social";
 type ModerationContentType = "comment" | "review" | "list" | "social_suspension";
+type ReleaseTarget = Extract<NotificationGroupValue["target"], { type: "release" }>;
 
-// Fila de la bandeja (openspec: add-notifications-core, D8). Las respuestas y
-// los seguidores enlazan a su objeto; la moderación no enlaza (el contenido
-// puede estar oculto) y solo redacta acción, objeto y motivo, sin nombrar al
-// moderador. La solicitud de seguimiento conserva Aprobar / Rechazar en línea.
+// Fila de la bandeja (openspec: add-notifications-core, D8;
+// add-notification-milestones-and-releases, D8). Las respuestas y los
+// seguidores enlazan a su objeto; la moderación no enlaza (el contenido puede
+// estar oculto) y solo redacta acción, objeto y motivo, sin nombrar al
+// moderador. Los hitos no tienen actor: llevan un icono y enlazan al hilo o a
+// la lista. Los lanzamientos llevan la carátula de 250 px (o el placeholder) y
+// enlazan al disco. La solicitud de seguimiento conserva Aprobar / Rechazar.
 export function NotificationRow({
   group,
   onNavigate,
@@ -40,10 +43,11 @@ export function NotificationRow({
 }: NotificationRowProps) {
   const t = useTranslations("notifications");
   const tErrors = useTranslations("errors");
+  const locale = useLocale();
   const timeZone = useTimeZone();
   const queryClient = useQueryClient();
 
-  const text = notificationText(t, group);
+  const text = notificationText(t, group, locale);
   const reason =
     group.target?.type === "moderation"
       ? t("moderation.reason", { reason: group.target.reason })
@@ -117,18 +121,7 @@ export function NotificationRow({
 
   return (
     <li className="flex items-start gap-3 px-3 py-2.5">
-      {group.kind === "moderation" ? (
-        <ModerationIcon />
-      ) : actor ? (
-        <UserAvatar
-          avatarUrl={actor.avatarUrl}
-          username={actor.username}
-          name={actorName}
-          size="menu"
-        />
-      ) : (
-        <span className="size-9 shrink-0" aria-hidden="true" />
-      )}
+      <LeadingVisual group={group} actor={actor} actorName={actorName} />
 
       <div className="min-w-0 flex-1">
         {href ? (
@@ -187,14 +180,56 @@ export function NotificationRow({
   );
 }
 
+interface LeadingVisualProps {
+  group: NotificationGroupValue;
+  actor: NotificationGroupValue["actors"][number] | undefined;
+  actorName: string;
+}
+
+/** Icono, carátula o avatar de la fila, según la familia de la entrada. */
+function LeadingVisual({ group, actor, actorName }: LeadingVisualProps) {
+  if (group.kind === "moderation") return <ModerationIcon />;
+  if (group.kind === "comment_like_milestone") return <MilestoneIcon kind="like" />;
+  if (group.kind === "list_save_milestone") return <MilestoneIcon kind="save" />;
+  if (group.target?.type === "release") return <ReleaseCover target={group.target} />;
+  if (actor) {
+    return (
+      <UserAvatar
+        avatarUrl={actor.avatarUrl}
+        username={actor.username}
+        name={actorName}
+        size="menu"
+      />
+    );
+  }
+  return <span className="size-9 shrink-0" aria-hidden="true" />;
+}
+
+function ReleaseCover({ target }: { target: ReleaseTarget }) {
+  return (
+    <span className="relative size-10 shrink-0 overflow-hidden rounded ring-1 ring-ink-border">
+      {target.coverUrl ? (
+        <AppImage src={target.coverUrl} alt="" fill sizes="40px" className="object-cover" />
+      ) : (
+        <DiscPlaceholder alt="" className="size-full" />
+      )}
+    </span>
+  );
+}
+
 type NotificationT = (key: string, values?: Record<string, string | number | Date>) => string;
 
 /**
  * Texto de la entrada. Los plurales viven en los mensajes ICU: `count` es el
  * número de personas distintas del grupo (el verbo concuerda con él) y
- * `people` ya trae "Ana y Bruno" o "Ana, Bruno y 2 personas más".
+ * `people` ya trae "Ana y Bruno" o "Ana, Bruno y 2 personas más". Los hitos y
+ * los lanzamientos no tienen personas: usan su propio objeto y su cifra.
  */
-function notificationText(t: NotificationT, group: NotificationGroupValue): string {
+function notificationText(
+  t: NotificationT,
+  group: NotificationGroupValue,
+  locale: string,
+): string {
   const nameOf = (actor: NotificationGroupValue["actors"][number]) =>
     actor.displayName ?? actor.username;
 
@@ -228,10 +263,69 @@ function notificationText(t: NotificationT, group: NotificationGroupValue): stri
   if (group.kind === "follow_accepted") return t("row.followAccepted", { name });
 
   const target = group.target;
+
+  if (group.kind === "comment_like_milestone") {
+    if (target?.type !== "comment") return t("row.milestoneFallback");
+    return t("row.commentLikeMilestone", {
+      subject: target.subjectName,
+      count: target.milestone,
+    });
+  }
+
+  if (group.kind === "list_save_milestone") {
+    if (target?.type !== "list") return t("row.milestoneFallback");
+    return t(
+      target.isCamino ? "row.listSaveMilestoneCamino" : "row.listSaveMilestone",
+      { title: target.title, count: target.milestone },
+    );
+  }
+
+  if (
+    group.kind === "artist_release" ||
+    group.kind === "artist_release_announced" ||
+    group.kind === "artist_single"
+  ) {
+    if (target?.type !== "release") return t("row.releaseFallback");
+    if (group.kind === "artist_release_announced") {
+      const date = target.releaseDate
+        ? formatReleaseDate(target.releaseDate, locale)
+        : null;
+      return date
+        ? t("row.releaseAnnounced", {
+            artist: target.artistName,
+            title: target.title,
+            date,
+          })
+        : t("row.releaseAnnouncedNoDate", {
+            artist: target.artistName,
+            title: target.title,
+          });
+    }
+    const key =
+      target.category === "single"
+        ? "row.releaseSingle"
+        : target.category === "ep"
+          ? "row.releaseEp"
+          : "row.releaseAlbum";
+    return t(key, { artist: target.artistName, title: target.title });
+  }
+
   if (target?.type === "moderation") {
     return t(moderationKey(target.action, target.contentType));
   }
   return t("moderation.fallback");
+}
+
+/** `YYYY-MM-DD` a "14 de noviembre" en el idioma activo; `null` si no es una fecha. */
+function formatReleaseDate(iso: string, locale: string): string | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  if (!match) return null;
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+  return new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  }).format(date);
 }
 
 function moderationKey(action: ModerationAction, contentType: ModerationContentType): string {
@@ -255,8 +349,54 @@ function targetHref(group: NotificationGroupValue): string | null {
   if (target.type === "artist") {
     return `${artistHref(target.artistName, target.artistId)}?thread=${encodeURIComponent(target.rootId)}`;
   }
+  // Hito de likes: al hilo en un artista; a la página del álbum o de la canción en los demás.
+  if (target.type === "comment") {
+    if (target.subject === "album") {
+      return albumHref(target.subjectArtistName, target.subjectName, target.subjectId);
+    }
+    if (target.subject === "song") {
+      return songHref(target.subjectArtistName, target.subjectName, target.subjectId);
+    }
+    const page = artistHref(target.subjectName, target.subjectId);
+    return target.rootId ? `${page}?thread=${encodeURIComponent(target.rootId)}` : page;
+  }
   if (target.type === "profile") return `/users/${encodeURIComponent(target.username)}`;
+  // El destinatario de un hito de guardados es el dueño: enlaza a su superficie.
+  if (target.type === "list") {
+    return target.isCamino
+      ? `/me/caminos/${encodeURIComponent(target.listId)}`
+      : `/me/lists/${encodeURIComponent(target.listId)}`;
+  }
+  if (target.type === "release") {
+    return albumHref(target.artistName, target.title, target.releaseGroupId);
+  }
   return null;
+}
+
+function MilestoneIcon({ kind }: { kind: "like" | "save" }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="flex size-9 shrink-0 items-center justify-center rounded-full bg-amber/15 text-amber"
+    >
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {kind === "like" ? (
+          <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z" />
+        ) : (
+          <path d="M6 4h12a1 1 0 0 1 1 1v15l-7-4-7 4V5a1 1 0 0 1 1-1z" />
+        )}
+      </svg>
+    </span>
+  );
 }
 
 function ModerationIcon() {

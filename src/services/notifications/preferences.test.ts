@@ -30,7 +30,7 @@ beforeEach(() => {
 });
 
 describe("getNotificationPreferences", () => {
-  it("sin filas, todo está activado y los tipos fijos se incluyen", async () => {
+  it("sin filas, cada tipo usa su defecto y los fijos se incluyen", async () => {
     mockPreferences([]);
 
     expect(await getNotificationPreferences("me")).toEqual({
@@ -40,6 +40,11 @@ describe("getNotificationPreferences", () => {
       follow_request: true,
       follow_accepted: true,
       moderation: true,
+      comment_like_milestone: true,
+      list_save_milestone: false,
+      artist_release: true,
+      artist_release_announced: false,
+      artist_single: false,
     });
   });
 
@@ -84,5 +89,17 @@ describe("updateNotificationPreferences", () => {
     expect(where).toHaveBeenCalledTimes(1);
     expect(mocks.db.insert).not.toHaveBeenCalled();
     expect(result.new_follower).toBe(true);
+  });
+
+  it("activar un tipo que nace apagado sí guarda la fila", async () => {
+    const { values } = mockWrites();
+    mockPreferences([{ kind: "artist_single", enabled: true }]);
+
+    const result = await updateNotificationPreferences("me", { artist_single: true });
+
+    expect(values).toHaveBeenCalledWith([
+      { userId: "me", kind: "artist_single", enabled: true },
+    ]);
+    expect(result.artist_single).toBe(true);
   });
 });

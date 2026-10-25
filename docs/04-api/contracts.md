@@ -2012,19 +2012,21 @@ publicado. Un `listId` o `itemId` no-UUID devuelve `404`.
 Todos estos endpoints devuelven el formato uniforme `{ error, code }` ante errores y no exponen
 credenciales, roles internos ni datos privados innecesarios.
 
-## Notificaciones (cambio `add-notifications-core`)
+## Notificaciones (cambios `add-notifications-core` y `add-notification-milestones-and-releases`)
 
 Bandeja de entrada dentro de la aplicación. Todas las rutas requieren sesión (`401 AUTH_REQUIRED` sin
 ella) y derivan la persona de la sesión: ningún body ni query acepta un destinatario, así que una clave
-de entrada de otra persona no cambia nada. Las notificaciones se materializan al emitir (ADR 0045) y
-se leen con los filtros de privacidad de `docs/05-features/notifications.md`: actores desactivados,
-bloqueos en cualquier dirección y respuestas o raíces ocultas quedan fuera; las de moderación están
-exentas.
+de entrada de otra persona no cambia nada. Las notificaciones se materializan al emitir (ADR 0045 y
+ADR 0046) y se leen con los filtros de privacidad de `docs/05-features/notifications.md`: actores
+desactivados, bloqueos en cualquier dirección, respuestas o raíces ocultas, listas ocultas y discos
+retirados de la discografía quedan fuera; las de moderación están exentas.
 
-### `GET /api/me/notifications?cursor=&tz=`
+### `GET /api/me/notifications?tab=&cursor=&tz=`
 
 Entradas agrupadas, de la más reciente a la más antigua (20 por página).
 
+- `tab` — `for_you` (por defecto) o `releases`. `for_you` reúne la Fase 1 y los hitos; `releases`, los
+  tres tipos de lanzamiento. Cualquier otro valor responde `400 VALIDATION_ERROR`.
 - `cursor` — opaco: el `nextCursor` de la respuesta anterior. Uno mal formado responde
   `400 VALIDATION_ERROR`.
 - `tz` — zona IANA opcional: parte los seguidores por día local (UTC sin ella). Desconocida →
@@ -2033,37 +2035,63 @@ Entradas agrupadas, de la más reciente a la más antigua (20 por página).
 **200 OK:** `{ groups: [NotificationGroup], nextCursor: string | null }`. `NotificationGroup`:
 `{ id, kind, lastAt, unread, eventCount, actorCount, actors: [{ id, username, displayName, avatarUrl }],
 target }`. `kind` ∈ `comment_reply` · `thread_reply` · `new_follower` · `follow_request` ·
-`follow_accepted` · `moderation`. `id` es la clave que acepta `POST /read`. `actors` trae como mucho dos
-personas; `actorCount` permite escribir "y N personas más". `target` es `{ type: "artist", artistId,
-artistName, rootId }` (respuestas), `{ type: "profile", username }` (seguimientos),
-`{ type: "moderation", action, contentType, reason }`, o `null`.
+`follow_accepted` · `moderation` · `comment_like_milestone` · `list_save_milestone` · `artist_release` ·
+`artist_release_announced` · `artist_single`. `id` es la clave que acepta `POST /read`. `actors` trae
+como mucho dos personas; `actorCount` permite escribir "y N personas más". Los hitos y los lanzamientos
+no tienen actor: `actors` vacío y `actorCount` 0. `target` es uno de:
+
+- `{ type: "artist", artistId, artistName, rootId }` — respuestas.
+- `{ type: "profile", username }` — seguimientos.
+- `{ type: "moderation", action, contentType, reason }` — moderación.
+- `{ type: "comment", subject, subjectId, subjectName, subjectArtistName, rootId, milestone }` — hito de
+  likes; `subject` ∈ `artist` · `album` · `song` (página donde vive el comentario), `subjectName` es el
+  nombre del artista o el título del disco / la canción, `subjectArtistName` el artista principal del disco
+  o la canción (`null` en un artista), `rootId` la raíz del hilo solo en artistas (`null` en álbum y
+  canción, que no tienen hilos) y `milestone` el más alto del grupo.
+- `{ type: "list", listId, title, isCamino, milestone }` — hito de guardados; `isCamino` decide entre
+  `/me/lists/<id>` y `/me/caminos/<id>`.
+- `{ type: "release", releaseGroupId, title, artistName, category, releaseDate, coverUrl }` —
+  lanzamientos; `category` ∈ `album` · `ep` · `single`, `releaseDate` es `YYYY-MM-DD` o `null` si el
+  disco solo tiene año, y `coverUrl` es la miniatura de 250 px o `null`.
+
+o `null` si el grupo no puede construir su destino.
 
 La poda de retención (leídas de más de 90 días y cualquiera de más de 180) corre en `after()`, después
 de responder: no depende de un proceso operativo.
 
 ### `GET /api/me/notifications/count?tz=`
 
-**200 OK:** `{ count }` — entradas con al menos una notificación sin leer creadas desde la última vez
-que se abrió la bandeja. La interfaz muestra como mucho "9+".
+**200 OK:** `{ count, newReleases }`.
 
-### `PUT /api/me/notifications/seen`
+- `count` — entradas de "Para ti" con al menos una notificación sin leer creadas desde la última vez
+  que se abrió la bandeja. La interfaz muestra como mucho "9+". Nunca suma lanzamientos.
+- `newReleases` — booleano: hay novedades de "Novedades" sin leer desde su propia marca. La pestaña
+  muestra un punto, sin cifra.
 
-Marca la bandeja como vista: el contador vuelve a 0 y las entradas siguen sin leer. **200 OK:**
-`{ ok: true }`.
+### `PUT /api/me/notifications/seen?tab=`
+
+Marca la pestaña como vista: el contador de "Para ti" (o el punto de "Novedades") vuelve a 0 y las
+entradas siguen sin leer. `tab` acepta `for_you` (por defecto) y `releases`; otro valor responde
+`400 VALIDATION_ERROR`. Las dos marcas son independientes. **200 OK:** `{ ok: true }`.
 
 ### `POST /api/me/notifications/read?tz=`
 
 **Body:** `{ groupKeys: string[] }` (1–100 claves) **o** `{ all: true }`. Marca leídas esas entradas, o
-todas las del usuario. `tz` es el mismo del listado: una clave `followers:<aaaa-mm-dd>` identifica el
-día local. **200 OK:** `{ ok: true }`. Las dos formas a la vez, ninguna, o un día inválido responden
-`400 VALIDATION_ERROR`.
+todas las del usuario (de las dos pestañas). `tz` es el mismo del listado: una clave
+`followers:<aaaa-mm-dd>` identifica el día local. **200 OK:** `{ ok: true }`. Las dos formas a la vez,
+ninguna, o un día inválido responden `400 VALIDATION_ERROR`.
 
 ### `GET|PUT /api/me/notification-preferences`
 
-`GET` **200 OK:** `{ preferences }` con las seis claves (`comment_reply`, `thread_reply`,
-`new_follower`, `follow_request`, `follow_accepted`, `moderation`), todas `true` por defecto.
+`GET` **200 OK:** `{ preferences }` con las **nueve** claves desactivables: `comment_reply`,
+`thread_reply`, `new_follower`, `follow_accepted`, `comment_like_milestone`, `list_save_milestone`,
+`artist_release`, `artist_release_announced` y `artist_single`. El valor devuelto es el **efectivo**:
+la fila guardada si existe y, si no, el defecto del tipo. Defectos: activados `comment_reply`,
+`thread_reply`, `new_follower`, `follow_accepted`, `comment_like_milestone` y `artist_release`;
+desactivados `list_save_milestone`, `artist_release_announced` y `artist_single`. `follow_request` y
+`moderation` son fijas y no aparecen.
 
 `PUT` **body:** `{ preferences: { <kind>?: boolean } }` — cambio parcial. Un tipo fijo (`follow_request`,
-`moderation`) responde `400 VALIDATION_ERROR`, igual que una clave desconocida. Volver a `true` borra la
-fila: solo se guarda lo que difiere del valor por defecto. **200 OK:** `{ preferences }` completo. Una
+`moderation`) responde `400 VALIDATION_ERROR`, igual que una clave desconocida. Volver al defecto del
+tipo borra la fila: solo se guarda lo que difiere. **200 OK:** `{ preferences }` completo. Una
 preferencia no borra las notificaciones existentes.

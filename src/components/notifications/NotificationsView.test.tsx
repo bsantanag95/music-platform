@@ -95,8 +95,12 @@ describe("NotificationsView", () => {
     expect(screen.getByText(/respondió a tu tema en Pink Floyd/)).toBeInTheDocument();
     expect(screen.getByText(/te empezó a seguir/)).toBeInTheDocument();
     await waitFor(() => expect(mocks.markNotificationsSeen).toHaveBeenCalledTimes(1));
+    expect(mocks.markNotificationsSeen).toHaveBeenCalledWith("for_you");
     // Abrir la página pone el contador a cero, pero no marca las entradas como leídas.
-    expect(client.getQueryData(NOTIFICATIONS_COUNT_KEY)).toEqual({ count: 0 });
+    expect(client.getQueryData(NOTIFICATIONS_COUNT_KEY)).toEqual({
+      count: 0,
+      newReleases: false,
+    });
     expect(mocks.markNotificationsRead).not.toHaveBeenCalled();
     // Sin cursor no se ofrece "Cargar más".
     expect(screen.queryByRole("button", { name: "Cargar más" })).not.toBeInTheDocument();
@@ -113,6 +117,7 @@ describe("NotificationsView", () => {
     expect(mocks.fetchNotificationPage).toHaveBeenCalledWith({
       cursor: "cursor-1",
       timeZone: "America/Santiago",
+      tab: "for_you",
     });
     expect(await screen.findByText(/en Otra/)).toBeInTheDocument();
     await waitFor(() =>
@@ -147,7 +152,10 @@ describe("NotificationsView", () => {
       expect(screen.getByRole("button", { name: "Marcar todas como leídas" })).toBeDisabled(),
     );
     expect(screen.queryByText(/Sin leer/)).not.toBeInTheDocument();
-    expect(client.getQueryData(NOTIFICATIONS_COUNT_KEY)).toEqual({ count: 0 });
+    expect(client.getQueryData(NOTIFICATIONS_COUNT_KEY)).toEqual({
+      count: 0,
+      newReleases: false,
+    });
   });
 
   it("si 'Marcar todas' falla conserva las entradas sin leer y avisa", async () => {
@@ -168,6 +176,54 @@ describe("NotificationsView", () => {
       screen.getByText(/Cuando alguien responda a tus temas, te siga o haya un aviso/),
     ).toBeInTheDocument();
     expect(screen.queryByText(/Sin leer/)).not.toBeInTheDocument();
+  });
+
+  it("Novedades pide su página, mueve su marca y apaga el punto", async () => {
+    mocks.fetchNotificationPage.mockResolvedValue(
+      page([
+        entry({
+          id: "release:rg-1",
+          kind: "artist_release",
+          actors: [],
+          actorCount: 0,
+          eventCount: 1,
+          target: {
+            type: "release",
+            releaseGroupId: "rg-1",
+            title: "Disco nuevo",
+            artistName: "Pink Floyd",
+            category: "album",
+            releaseDate: "2026-10-20",
+            coverUrl: null,
+          },
+        }),
+      ]),
+    );
+    renderView(<NotificationsView initial={page([])} initialNewReleases />);
+
+    // El punto sin cifra existe en la pestaña hasta abrirla.
+    expect(screen.getByText("Novedades sin ver")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("tab", { name: /Novedades/ }));
+
+    expect(mocks.fetchNotificationPage).toHaveBeenCalledWith({
+      timeZone: "America/Santiago",
+      tab: "releases",
+    });
+    expect(mocks.markNotificationsSeen).toHaveBeenCalledWith("releases");
+    expect(await screen.findByText(/el nuevo álbum de Pink Floyd/)).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText("Novedades sin ver")).not.toBeInTheDocument());
+  });
+
+  it("Novedades vacía explica que ahí aparecerán los discos de los artistas seguidos", async () => {
+    mocks.fetchNotificationPage.mockResolvedValue(page([]));
+    renderView(<NotificationsView initial={page([])} />);
+
+    await userEvent.click(screen.getByRole("tab", { name: "Novedades" }));
+
+    expect(
+      await screen.findByRole("heading", { name: "Aquí verás los discos de tus artistas" }),
+    ).toBeInTheDocument();
   });
 
   it("una entrada leída al abrirla deja de mostrar el punto", async () => {

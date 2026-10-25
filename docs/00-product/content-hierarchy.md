@@ -143,7 +143,7 @@ natural?"* — y el éxito se mide por si `álbum→crítica`, `canción→hábi
 | **Rating de canción** | Se mantiene, degradado a secundario tras la reacción cualitativa (`liked`/`loved`/`obsessed`/`neutral`/`disliked`). No se elimina en Fase 1; se mide antes de cualquier retirada. **Actualización 2026-09 (`redesign-song-page`):** las estrellas de la canción pasan a estar siempre visibles en su panel "Tu relación" (ya lo estaban en cada fila de la lista del álbum desde `rework-album-tracklist`); la reacción se sigue eligiendo al registrar la escucha en el diario. |
 | **Diario** | Manual, intencional y explícito — *"tu registro personal de experiencias musicales"*, nunca *"historial automático de escuchas"*. Importación desde streaming, fuera de alcance. |
 | **`review`** | Entidad propia (tabla `reviews`), distinta de `comment`. Larga, editable, con rating asociado, peso social alto. Puede reutilizar UI/infra de `comment` pero no depende de ese modelo. En Fase 1 la escritura se restringe a álbumes en la capa de validación, no en el esquema. |
-| **Seguir artista** | Relación unilateral usuario → artista, separada del seguimiento usuario → usuario. En Fase 1 solo alimenta afinidad, descubrimiento y organización personal. Notificaciones de lanzamiento, fuera de alcance (el esquema las deja preparadas). |
+| **Seguir artista** | Relación unilateral usuario → artista, separada del seguimiento usuario → usuario. En Fase 1 alimenta afinidad, descubrimiento y organización personal. **Actualización 2026-10 (`add-notification-milestones-and-releases`):** sus lanzamientos ya generan avisos en la pestaña "Novedades" de la bandeja, desde el calendario de Inicio (ADR 0046); no cambia la relación ni el esquema. |
 | **Perfil** | ~~Sección "Álbumes favoritos"~~ (retirada el 2026-09-21, `simplify-profile-curation`: repetía la fila de álbumes de Favoritos). Hoy: Tarjeta de Identidad (artista, álbum e himno) + **"Empieza por aquí"** (antes destacados mixtos, ahora con la nota a la vista). |
 | **Onboarding** | Dos puertas complementarias: "elegí entre 3 y 5 álbumes que te definen" (→ favoritos de álbum, sin rating ni diario automáticos) y "¿qué estás escuchando ahora?" (→ primera entrada de diario). Ninguna obligatoria. |
 | **Descubrimiento** | Ruta `/[locale]/explore` como contenedor conceptual; Fase 1 abre en una experiencia centrada en álbumes. Arranque en frío con curaduría semilla + reglas de catálogo + curaduría editorial mínima (que no debe volverse dependencia operativa diaria). |
@@ -185,7 +185,6 @@ comunidad.
 - Curva de decaimiento sofisticada de "en rotación" (half-life / exponencial).
 - Tercera escala temporal de rotación: hábitos a ~1 año.
 - Ponderación por tipo de interacción en la convergencia de red (reseña > registro).
-- Notificaciones de lanzamiento para "seguir artista".
 - Importación de escuchas desde servicios de streaming.
 - Reseñas de canción / artista como superficie prominente.
 - Eventos tier 4 interleaved en el listado cronológico (hoy van en una franja aparte).

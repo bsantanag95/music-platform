@@ -87,7 +87,7 @@ function renderBell(ui: React.ReactElement) {
 describe("NotificationBell", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.fetchNotificationCount.mockResolvedValue({ count: 0 });
+    mocks.fetchNotificationCount.mockResolvedValue({ count: 0, newReleases: false });
     mocks.fetchNotificationPage.mockResolvedValue(page([]));
   });
 
@@ -112,6 +112,7 @@ describe("NotificationBell", () => {
     await userEvent.click(screen.getByRole("button", { name: /Notificaciones/ }));
 
     expect(mocks.markNotificationsSeen).toHaveBeenCalled();
+    expect(mocks.markNotificationsSeen).toHaveBeenCalledWith("for_you");
     expect(
       await screen.findByText(/respondió a tu tema en Pink Floyd/),
     ).toBeInTheDocument();
@@ -135,6 +136,23 @@ describe("NotificationBell", () => {
 
     expect(screen.queryByRole("link", { name: "Ver todas" })).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
+  });
+
+  it("la pestaña Novedades lleva un punto sin cifra que se apaga al abrirla", async () => {
+    renderBell(<NotificationBell initialCount={0} initialNewReleases />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Notificaciones" }));
+
+    expect(screen.getByText("Novedades sin ver")).toBeInTheDocument();
+    // El punto no suma al contador de la campana.
+    expect(screen.queryByText("9+")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("tab", { name: /Novedades/ }));
+
+    expect(mocks.markNotificationsSeen).toHaveBeenCalledWith("releases");
+    await waitFor(() =>
+      expect(screen.queryByText("Novedades sin ver")).not.toBeInTheDocument(),
+    );
   });
 
   it("muestra el estado vacío cuando no hay entradas", async () => {

@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactElement } from "react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
-import { artistHref } from "@/lib/catalog-links";
+import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 import type { NotificationGroupValue } from "@/lib/api/schemas";
 import { NotificationRow } from "./NotificationRow";
 
@@ -276,6 +276,254 @@ describe("NotificationRow", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "No pudimos completar la solicitud. Intenta de nuevo en un momento.",
     );
+  });
+
+  it("un hito de me gusta no tiene persona y enlaza al hilo", () => {
+    renderRow(
+      <NotificationRow
+        group={group({
+          id: "likes:comment-1",
+          kind: "comment_like_milestone",
+          actors: [],
+          actorCount: 0,
+          target: {
+            type: "comment",
+            subject: "artist",
+            subjectId: "a-1",
+            subjectName: "Pink Floyd",
+            subjectArtistName: null,
+            rootId: "root-1",
+            milestone: 25,
+          },
+        })}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: /Tu comentario sobre Pink Floyd llegó a 25 me gusta/ }),
+    ).toHaveAttribute("href", `${artistHref("Pink Floyd", "a-1")}?thread=root-1`);
+  });
+
+  it("un hito de me gusta en un álbum nombra el disco y enlaza a su página", () => {
+    renderRow(
+      <NotificationRow
+        group={group({
+          id: "likes:comment-2",
+          kind: "comment_like_milestone",
+          actors: [],
+          actorCount: 0,
+          target: {
+            type: "comment",
+            subject: "album",
+            subjectId: "rg-1",
+            subjectName: "The Wall",
+            subjectArtistName: "Pink Floyd",
+            rootId: null,
+            milestone: 10,
+          },
+        })}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: /Tu comentario sobre The Wall llegó a 10 me gusta/ }),
+    ).toHaveAttribute("href", albumHref("Pink Floyd", "The Wall", "rg-1"));
+  });
+
+  it("un hito de me gusta en una canción enlaza a la canción", () => {
+    renderRow(
+      <NotificationRow
+        group={group({
+          id: "likes:comment-3",
+          kind: "comment_like_milestone",
+          actors: [],
+          actorCount: 0,
+          target: {
+            type: "comment",
+            subject: "song",
+            subjectId: "rec-1",
+            subjectName: "Comfortably Numb",
+            subjectArtistName: "Pink Floyd",
+            rootId: null,
+            milestone: 50,
+          },
+        })}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: /Tu comentario sobre Comfortably Numb llegó a 50 me gusta/ }),
+    ).toHaveAttribute("href", songHref("Pink Floyd", "Comfortably Numb", "rec-1"));
+  });
+
+  it("el primer guardado concuerda en singular", () => {
+    renderRow(
+      <NotificationRow
+        group={group({
+          id: "saves:list-9",
+          kind: "list_save_milestone",
+          actors: [],
+          actorCount: 0,
+          target: { type: "list", listId: "list-9", title: "Raras", isCamino: false, milestone: 1 },
+        })}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: /Tu lista «Raras» ya la guardó 1 persona/ })).toBeInTheDocument();
+  });
+
+  it("un hito de guardados enlaza a la lista propia del dueño", () => {
+    renderRow(
+      <NotificationRow
+        group={group({
+          id: "saves:list-1",
+          kind: "list_save_milestone",
+          actors: [],
+          actorCount: 0,
+          target: {
+            type: "list",
+            listId: "list-1",
+            title: "Mis favoritos",
+            isCamino: false,
+            milestone: 10,
+          },
+        })}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", {
+        name: /Tu lista «Mis favoritos» ya la guardaron 10 personas/,
+      }),
+    ).toHaveAttribute("href", "/me/lists/list-1");
+  });
+
+  it("un hito de guardados de un Camino usa su ruta y su nombre", () => {
+    renderRow(
+      <NotificationRow
+        group={group({
+          id: "saves:camino-1",
+          kind: "list_save_milestone",
+          actors: [],
+          actorCount: 0,
+          target: {
+            type: "list",
+            listId: "camino-1",
+            title: "Ruta larga",
+            isCamino: true,
+            milestone: 5,
+          },
+        })}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", {
+        name: /Tu Camino «Ruta larga» ya lo guardaron 5 personas/,
+      }),
+    ).toHaveAttribute("href", "/me/caminos/camino-1");
+  });
+
+  it("un lanzamiento muestra su categoría y enlaza al disco", () => {
+    renderRow(
+      <NotificationRow
+        group={group({
+          id: "release:rg-1",
+          kind: "artist_release",
+          actors: [],
+          actorCount: 0,
+          target: {
+            type: "release",
+            releaseGroupId: "rg-1",
+            title: "Disco nuevo",
+            artistName: "Pink Floyd",
+            category: "ep",
+            releaseDate: "2026-10-20",
+            coverUrl: null,
+          },
+        })}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: /Salió Disco nuevo, el nuevo EP de Pink Floyd/ }),
+    ).toHaveAttribute("href", albumHref("Pink Floyd", "Disco nuevo", "rg-1"));
+  });
+
+  it("un sencillo se redacta como sencillo", () => {
+    renderRow(
+      <NotificationRow
+        group={group({
+          id: "single:rg-2",
+          kind: "artist_single",
+          actors: [],
+          actorCount: 0,
+          target: {
+            type: "release",
+            releaseGroupId: "rg-2",
+            title: "Canción",
+            artistName: "Pink Floyd",
+            category: "single",
+            releaseDate: "2026-10-20",
+            coverUrl: null,
+          },
+        })}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: /Salió Canción, el nuevo sencillo de Pink Floyd/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("un anunciado con fecha la escribe en el idioma activo", () => {
+    renderRow(
+      <NotificationRow
+        group={group({
+          id: "announced:rg-3",
+          kind: "artist_release_announced",
+          actors: [],
+          actorCount: 0,
+          target: {
+            type: "release",
+            releaseGroupId: "rg-3",
+            title: "Por salir",
+            artistName: "Pink Floyd",
+            category: "album",
+            releaseDate: "2026-11-14",
+            coverUrl: null,
+          },
+        })}
+      />,
+    );
+
+    expect(
+      screen.getByText("Pink Floyd anunció Por salir para el 14 de noviembre"),
+    ).toBeInTheDocument();
+  });
+
+  it("un anunciado sin fecha exacta omite la fecha", () => {
+    renderRow(
+      <NotificationRow
+        group={group({
+          id: "announced:rg-4",
+          kind: "artist_release_announced",
+          actors: [],
+          actorCount: 0,
+          target: {
+            type: "release",
+            releaseGroupId: "rg-4",
+            title: "Por salir",
+            artistName: "Pink Floyd",
+            category: "album",
+            releaseDate: null,
+            coverUrl: null,
+          },
+        })}
+      />,
+    );
+
+    expect(screen.getByText("Pink Floyd anunció Por salir")).toBeInTheDocument();
   });
 
   it("anuncia las entradas sin leer a lectores de pantalla", () => {

@@ -7,6 +7,7 @@ import NotificationsPage from "./page";
 const mocks = vi.hoisted(() => ({
   requirePageUser: vi.fn(),
   listNotificationGroups: vi.fn(),
+  hasNewReleases: vi.fn(),
 }));
 
 vi.mock("next-intl/server", () => ({
@@ -16,6 +17,7 @@ vi.mock("next-intl/server", () => ({
 vi.mock("@/services/auth/page-auth", () => ({ requirePageUser: mocks.requirePageUser }));
 vi.mock("@/services/notifications/read", () => ({
   listNotificationGroups: mocks.listNotificationGroups,
+  hasNewReleases: mocks.hasNewReleases,
 }));
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, ...rest }: { href: string; children: ReactNode }) => (
@@ -37,6 +39,7 @@ describe("/me/notifications", () => {
     vi.clearAllMocks();
     mocks.requirePageUser.mockResolvedValue({ id: "u1", username: "ana" });
     mocks.listNotificationGroups.mockResolvedValue(emptyPage);
+    mocks.hasNewReleases.mockResolvedValue(false);
   });
 
   it("exige sesión y carga la primera página en la zona del usuario", async () => {

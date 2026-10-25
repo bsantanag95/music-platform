@@ -19,6 +19,11 @@ const ALL_ON: NotificationPreferencesValue = {
   follow_request: true,
   follow_accepted: true,
   moderation: true,
+  comment_like_milestone: true,
+  list_save_milestone: true,
+  artist_release: true,
+  artist_release_announced: true,
+  artist_single: true,
 };
 
 function renderForm(initial: Partial<NotificationPreferencesValue> = {}) {
@@ -32,7 +37,7 @@ describe("NotificationPreferencesForm", () => {
     renderForm({ new_follower: false });
 
     const switches = screen.getAllByRole("switch");
-    expect(switches).toHaveLength(4);
+    expect(switches).toHaveLength(9);
     expect(screen.getByRole("switch", { name: "Nuevos seguidores" })).toHaveAttribute(
       "aria-checked",
       "false",
@@ -41,6 +46,19 @@ describe("NotificationPreferencesForm", () => {
       "aria-checked",
       "true",
     );
+  });
+
+  it("separa las preferencias en las secciones Para ti y Novedades", () => {
+    renderForm();
+
+    expect(screen.getByRole("heading", { name: "Para ti" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Novedades" })).toBeInTheDocument();
+    // Los tres avisos de lanzamientos son opcionales y viven en su sección.
+    expect(screen.getByRole("switch", { name: "Discos nuevos" })).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: "Discos anunciados" })).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: "Sencillos nuevos" })).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: "Hitos de me gusta" })).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: "Hitos de guardados" })).toBeInTheDocument();
   });
 
   it("los tipos fijos no tienen interruptor: se explican como siempre activas", () => {

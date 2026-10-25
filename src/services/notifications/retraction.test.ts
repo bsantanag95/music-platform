@@ -28,8 +28,10 @@ describe("retracción por cascada de las notificaciones", () => {
       "notification_actor_id_app_user_id_fk",
       "notification_comment_id_comment_id_fk",
       "notification_follow_id_user_follow_id_fk",
+      "notification_list_id_user_list_id_fk",
       "notification_moderation_action_id_moderation_action_id_fk",
       "notification_recipient_id_app_user_id_fk",
+      "notification_release_group_id_release_group_id_fk",
     ]);
     expect(deletes.every((fk) => fk.onDelete === "cascade")).toBe(true);
   });

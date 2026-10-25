@@ -11,6 +11,12 @@
     "actionError": "No se pudo completar la acción.",
     "unread": "Sin leer"
   },
+  "tabs": {
+    "label": "Secciones de la bandeja",
+    "for_you": "Para ti",
+    "releases": "Novedades",
+    "newReleasesUnseen": "Novedades sin ver"
+  },
   "row": {
     "twoNames": "{first} y {second}",
     "moreNames": "{names} y {count, plural, one {# persona más} other {# personas más}}",
@@ -19,6 +25,16 @@
     "newFollower": "{people} {count, plural, one {te empezó} other {te empezaron}} a seguir",
     "followRequest": "{name} quiere seguirte",
     "followAccepted": "{name} aceptó tu solicitud de seguimiento",
+    "commentLikeMilestone": "Tu comentario sobre {subject} llegó a {count} me gusta",
+    "listSaveMilestone": "Tu lista «{title}» ya la {count, plural, one {guardó # persona} other {guardaron # personas}}",
+    "listSaveMilestoneCamino": "Tu Camino «{title}» ya lo {count, plural, one {guardó # persona} other {guardaron # personas}}",
+    "releaseAlbum": "Salió {title}, el nuevo álbum de {artist}",
+    "releaseEp": "Salió {title}, el nuevo EP de {artist}",
+    "releaseSingle": "Salió {title}, el nuevo sencillo de {artist}",
+    "releaseAnnounced": "{artist} anunció {title} para el {date}",
+    "releaseAnnouncedNoDate": "{artist} anunció {title}",
+    "milestoneFallback": "Tu contenido alcanzó un hito nuevo",
+    "releaseFallback": "Hay una novedad de un artista que sigues",
     "markRead": "Marcar como leída",
     "approve": "Aprobar",
     "reject": "Rechazar"
@@ -37,27 +53,41 @@
   },
   "page": {
     "title": "Notificaciones",
-    "subtitle": "Respuestas, seguidores y avisos de tu cuenta.",
+    "subtitle": "Respuestas, seguidores, hitos y novedades de tus artistas.",
     "settings": "Ajustes de notificaciones",
     "markAllRead": "Marcar todas como leídas",
     "loadMore": "Cargar más",
     "loadingMore": "Cargando…",
     "emptyTitle": "Aquí verás tus notificaciones",
     "emptyDescription": "Cuando alguien responda a tus temas, te siga o haya un aviso sobre tu cuenta, aparecerá aquí.",
+    "emptyReleasesTitle": "Aquí verás los discos de tus artistas",
+    "emptyReleasesDescription": "Cuando un artista que sigues saque un disco o anuncie uno, aparecerá aquí.",
     "error": "No se pudieron cargar las notificaciones."
+  },
+  "panel": {
+    "emptyReleases": "Aquí aparecerán los discos de los artistas que sigues."
   },
   "settings": {
     "title": "Notificaciones",
     "intro": "Elige qué avisos quieres recibir dentro de la aplicación. Ningún tipo se envía por email ni por notificaciones del navegador.",
     "fixed": "Siempre activas",
     "saveError": "No se pudieron guardar las preferencias.",
+    "sections": {
+      "forYou": "Para ti",
+      "releases": "Novedades"
+    },
     "kinds": {
       "comment_reply": "Respuestas a tus temas",
       "thread_reply": "Respuestas en hilos donde participaste",
       "new_follower": "Nuevos seguidores",
       "follow_accepted": "Solicitudes aceptadas",
       "follow_request": "Solicitudes de seguimiento",
-      "moderation": "Avisos de moderación"
+      "moderation": "Avisos de moderación",
+      "comment_like_milestone": "Hitos de me gusta",
+      "list_save_milestone": "Hitos de guardados",
+      "artist_release": "Discos nuevos",
+      "artist_release_announced": "Discos anunciados",
+      "artist_single": "Sencillos nuevos"
     },
     "descriptions": {
       "comment_reply": "Cuando alguien responde al tema que abriste.",
@@ -65,7 +95,12 @@
       "new_follower": "Cuando alguien empieza a seguirte.",
       "follow_accepted": "Cuando alguien acepta tu solicitud para seguirle.",
       "follow_request": "Las solicitudes siempre llegan: son las que te permiten decidir si aceptas.",
-      "moderation": "Los avisos de moderación siempre llegan: afectan a tu cuenta o a tu contenido."
+      "moderation": "Los avisos de moderación siempre llegan: afectan a tu cuenta o a tu contenido.",
+      "comment_like_milestone": "Cuando tu comentario alcanza una cifra redonda de me gusta.",
+      "list_save_milestone": "Cuando tu lista alcanza una cifra redonda de personas que la guardaron.",
+      "artist_release": "Cuando un artista que sigues publica un álbum o un EP.",
+      "artist_release_announced": "Cuando un artista que sigues anuncia un disco con fecha.",
+      "artist_single": "Cuando un artista que sigues publica un sencillo."
     }
   }
 }

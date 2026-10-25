@@ -10,12 +10,20 @@ import {
 } from "./saved-lists";
 
 const mocks = vi.hoisted(() => ({
-  db: { select: vi.fn(), insert: vi.fn(), delete: vi.fn() },
+  db: {
+    select: vi.fn(),
+    insert: vi.fn(),
+    delete: vi.fn(),
+    update: vi.fn(),
+    transaction: vi.fn(),
+  },
+  tx: { select: vi.fn(), insert: vi.fn(), update: vi.fn() },
   relationsFor: vi.fn(),
   enrichLists: vi.fn(),
   generatedRefsFor: vi.fn(async (_ids: string[]) => new Map<string, { templateKey: string; periodKey: string }>()),
   countsByListId: vi.fn(async () => new Map()),
   deriveJourneyState: vi.fn(() => "in_progress"),
+  emitMilestoneNotification: vi.fn(),
 }));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
@@ -27,6 +35,9 @@ vi.mock("@/services/discovery/collections/generated", () => ({
 vi.mock("@/services/journeys/progress", () => ({
   countsByListId: mocks.countsByListId,
   deriveJourneyState: mocks.deriveJourneyState,
+}));
+vi.mock("@/services/notifications/emit", () => ({
+  emitMilestoneNotification: mocks.emitMilestoneNotification,
 }));
 
 function chain<T>(result: T): T {
@@ -43,6 +54,29 @@ function chain<T>(result: T): T {
     },
   });
   return proxy as T;
+}
+
+/** Inserta dentro de la transacción; `created` distingue el guardado nuevo del re-guardado. */
+function txInsert(created: boolean) {
+  const returning = vi.fn().mockResolvedValue(created ? [{ saverId: saver }] : []);
+  const onConflictDoNothing = vi.fn(() => ({ returning }));
+  const values = vi.fn(() => ({ onConflictDoNothing }));
+  mocks.tx.insert.mockReturnValue({ values });
+  return { values, onConflictDoNothing, returning };
+}
+
+/** Conteo de personas activas que guardaron la lista. */
+function txSaveCount(count: number) {
+  const where = vi.fn().mockResolvedValue([{ count }]);
+  mocks.tx.select.mockReturnValue({ from: () => ({ innerJoin: () => ({ where }) }) });
+  return { where };
+}
+
+function txUpdate() {
+  const where = vi.fn().mockResolvedValue(undefined);
+  const set = vi.fn(() => ({ where }));
+  mocks.tx.update.mockReturnValue({ set });
+  return { set, where };
 }
 
 const saver = "00000000-0000-4000-8000-000000000001";
@@ -68,6 +102,15 @@ const savedJoinRow = {
 describe("servicio de listas guardadas", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.db.select.mockReset();
+    mocks.db.delete.mockReset();
+    mocks.db.transaction.mockReset();
+    mocks.tx.select.mockReset();
+    mocks.tx.insert.mockReset();
+    mocks.tx.update.mockReset();
+    mocks.db.transaction.mockImplementation(
+      async (callback: (tx: unknown) => Promise<unknown>) => callback(mocks.tx),
+    );
     mocks.relationsFor.mockResolvedValue(new Map([[owner, "none"]]));
     mocks.enrichLists.mockResolvedValue(new Map([[listId, { itemCount: 4, coverThumbs: ["c1"] }]]));
   });
@@ -80,13 +123,67 @@ describe("servicio de listas guardadas", () => {
       )
       // buildSavedSummaries
       .mockReturnValueOnce(chain([savedJoinRow]));
-    mocks.db.insert.mockReturnValue(chain(undefined));
+    txInsert(true);
+    txSaveCount(1);
 
     const result = await saveList(saver, listId, true);
     expect(result.id).toBe(listId);
     expect(result.owner.username).toBe("otra");
     expect(result.itemCount).toBe(4);
     expect(result.unavailable).toBe(false);
+  });
+
+  it("el primer guardado avisa el hito 1 al dueño de la lista", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(
+        chain([{ id: listId, ownerId: owner, audience: "public", ownerVisibility: "public" }]),
+      )
+      .mockReturnValueOnce(chain([savedJoinRow]));
+    txInsert(true);
+    txSaveCount(1);
+
+    await saveList(saver, listId);
+
+    expect(mocks.emitMilestoneNotification).toHaveBeenCalledWith(mocks.tx, {
+      kind: "list_save_milestone",
+      recipientId: owner,
+      listId,
+      milestone: 1,
+    });
+  });
+
+  it("al cruzar la quinta persona avisa solo el hito 5", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(
+        chain([{ id: listId, ownerId: owner, audience: "public", ownerVisibility: "public" }]),
+      )
+      .mockReturnValueOnce(chain([savedJoinRow]));
+    txInsert(true);
+    txSaveCount(5);
+
+    await saveList(saver, listId);
+
+    expect(mocks.emitMilestoneNotification).toHaveBeenCalledTimes(1);
+    expect(mocks.emitMilestoneNotification).toHaveBeenCalledWith(
+      mocks.tx,
+      expect.objectContaining({ milestone: 5 }),
+    );
+  });
+
+  it("re-guardar solo cambia following: no cuenta ni avisa", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(
+        chain([{ id: listId, ownerId: owner, audience: "public", ownerVisibility: "public" }]),
+      )
+      .mockReturnValueOnce(chain([{ ...savedJoinRow, following: true }]));
+    txInsert(false);
+    const { set } = txUpdate();
+
+    await saveList(saver, listId, true);
+
+    expect(set).toHaveBeenCalledWith({ following: true });
+    expect(mocks.tx.select).not.toHaveBeenCalled();
+    expect(mocks.emitMilestoneNotification).not.toHaveBeenCalled();
   });
 
   it("rechaza guardar la propia lista", async () => {
@@ -152,38 +249,49 @@ describe("servicio de listas guardadas", () => {
   });
 
   describe("setListTracking", () => {
-    it("activa tracking sin tocar following en el upsert", async () => {
+    const trackingRow = {
+      id: listId,
+      ownerId: owner,
+      entityType: "release-group",
+      audience: "public",
+      ownerVisibility: "public",
+    };
+
+    it("activa tracking sin tocar following y sin avisar si ya estaba guardada", async () => {
       mocks.db.select
-        .mockReturnValueOnce(
-          chain([
-            {
-              id: listId,
-              ownerId: owner,
-              entityType: "release-group",
-              audience: "public",
-              ownerVisibility: "public",
-            },
-          ]),
-        )
-        .mockReturnValueOnce(chain([savedJoinRow]));
-      let conflictSet: unknown;
-      let insertValues: unknown;
-      mocks.db.insert.mockReturnValueOnce({
-        values: (v: unknown) => {
-          insertValues = v;
-          return {
-            onConflictDoUpdate: (opts: { set: unknown }) => {
-              conflictSet = opts.set;
-              return chain(undefined);
-            },
-          };
-        },
-      });
+        .mockReturnValueOnce(chain([trackingRow]))
+        .mockReturnValueOnce(chain([{ ...savedJoinRow, tracking: true }]));
+      const { values } = txInsert(false);
+      const { set } = txUpdate();
 
       await setListTracking(saver, listId, true);
 
-      expect(insertValues).toMatchObject({ saverId: saver, listId, following: false, tracking: true });
-      expect(conflictSet).toEqual({ tracking: true });
+      expect(values).toHaveBeenCalledWith({
+        saverId: saver,
+        listId,
+        following: false,
+        tracking: true,
+      });
+      expect(set).toHaveBeenCalledWith({ tracking: true });
+      expect(mocks.tx.select).not.toHaveBeenCalled();
+      expect(mocks.emitMilestoneNotification).not.toHaveBeenCalled();
+    });
+
+    it("tracking sobre una lista sin guardar crea el guardado y avisa el hito 1", async () => {
+      mocks.db.select
+        .mockReturnValueOnce(chain([trackingRow]))
+        .mockReturnValueOnce(chain([{ ...savedJoinRow, tracking: true }]));
+      txInsert(true);
+      txSaveCount(1);
+
+      await setListTracking(saver, listId, true);
+
+      expect(mocks.emitMilestoneNotification).toHaveBeenCalledWith(mocks.tx, {
+        kind: "list_save_milestone",
+        recipientId: owner,
+        listId,
+        milestone: 1,
+      });
     });
 
     it("rechaza trackear una lista que no es de álbumes", async () => {

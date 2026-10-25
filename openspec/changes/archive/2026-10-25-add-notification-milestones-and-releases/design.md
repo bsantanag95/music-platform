@@ -71,8 +71,11 @@ En la misma transacción que el `INSERT` en `comment_like` / `list_save` (las do
    `tracking` no cuenta).
 2. Contar con la misma regla que la cifra pública (likes: `countLikes`, sin cuentas desactivadas; guardados: personas
    distintas con cuenta activa).
-3. `highestMilestone(scale, count)`: si existe y no hay ya una notificación de ese hito o de uno mayor para ese
-   objeto, se emite **solo ese**. Saltar de 9 a 30 likes avisa 25, no 10 y 25.
+3. `crossedMilestone(scale, count)`: el hito que **cruza** este like o guardado (el de `count` si es distinto del de
+   `count - 1`). Si existe y no hay ya una notificación de ese hito o de uno mayor para ese objeto, se emite. Un
+   objeto que ya había pasado un hito sin aviso (antes del despliegue, o con el tipo apagado) no lo recibe con
+   retraso: su próximo aviso es el siguiente hito. (Revisión 2026-10-25: la primera implementación usaba
+   `highestMilestone` y avisaba el 10 con el like 16 de un comentario viejo.)
 4. El único parcial `(recipient_id, kind, comment_id|list_id, milestone)` absorbe carreras: dos likes simultáneos
    que cruzan el mismo hito escriben una fila.
 

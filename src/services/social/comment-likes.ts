@@ -2,6 +2,12 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { comment, commentLike } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
+import type { NotificationTx } from "@/services/notifications/emit";
+import { emitMilestoneNotification } from "@/services/notifications/emit";
+import {
+  COMMENT_LIKE_MILESTONES,
+  crossedMilestone,
+} from "@/services/notifications/milestones";
 import { isBlockedBetween } from "./relations";
 
 // Likes en comentarios (openspec: add-comment-likes). Registro anónimo: la
@@ -50,6 +56,15 @@ async function countLikes(commentId: string): Promise<number> {
   return row?.count ?? 0;
 }
 
+/** Mismo conteo dentro de la transacción del like (ve la fila recién insertada). */
+async function countLikesInTx(tx: NotificationTx, commentId: string): Promise<number> {
+  const [row] = await tx
+    .select({ count: COMMENT_LIKE_COUNT_SQL })
+    .from(comment)
+    .where(eq(comment.id, commentId));
+  return row?.count ?? 0;
+}
+
 async function findComment(commentId: string) {
   const [row] = await db
     .select({ id: comment.id, userId: comment.userId, moderationStatus: comment.moderationStatus, parentId: comment.parentId })
@@ -78,6 +93,10 @@ async function findComment(commentId: string) {
 /**
  * Da like (idempotente). El llamador ya verificó sesión y suspensión social.
  * Rechaza el comentario propio y los bloqueos en cualquier dirección.
+ *
+ * El like y su hito se escriben en la misma transacción (openspec:
+ * add-notification-milestones-and-releases, D3): solo un like nuevo cuenta y
+ * el conteo usa la misma regla que la cifra pública (sin cuentas desactivadas).
  */
 export async function likeComment(commentId: string, userId: string): Promise<CommentLikeState> {
   const target = await findComment(commentId);
@@ -87,8 +106,32 @@ export async function likeComment(commentId: string, userId: string): Promise<Co
   if (await isBlockedBetween(userId, target.userId)) {
     throw new ApiError("BLOCKED", 403, "No puedes realizar esta acción con esta cuenta");
   }
-  await db.insert(commentLike).values({ commentId, userId }).onConflictDoNothing();
-  return { liked: true, likeCount: thresholdedLikeCount(await countLikes(commentId)) };
+
+  return db.transaction(async (tx) => {
+    const inserted = await tx
+      .insert(commentLike)
+      .values({ commentId, userId })
+      .onConflictDoNothing()
+      .returning({ userId: commentLike.userId });
+    const count = await countLikesInTx(tx, commentId);
+
+    // Un re-like no vuelve a contar: el hito ya ocurrió y un unlike no lo retira.
+    if (inserted.length > 0) {
+      const milestone = crossedMilestone(COMMENT_LIKE_MILESTONES, count);
+      if (milestone !== null) {
+        await emitMilestoneNotification(tx, {
+          kind: "comment_like_milestone",
+          recipientId: target.userId,
+          commentId,
+          // La raíz del hilo: el propio comentario cuando es una raíz.
+          rootId: target.parentId ?? commentId,
+          milestone,
+        });
+      }
+    }
+
+    return { liked: true, likeCount: thresholdedLikeCount(count) };
+  });
 }
 
 /** Quita el like (idempotente). Sigue permitido bajo suspensión social y bloqueo. */

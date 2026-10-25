@@ -1,8 +1,18 @@
-import { and, desc, eq, inArray, isNull, lt, notExists, or, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, lt, notExists, or, sql, type SQL, type SQLWrapper } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
-import { appUser, artist, comment, moderationAction, notification, userBlock } from "@/db/schema";
-import type { NotificationKind } from "@/db/schema";
+import {
+  appUser,
+  artist,
+  comment,
+  moderationAction,
+  notification,
+  recording,
+  releaseGroup,
+  userBlock,
+  userList,
+} from "@/db/schema";
+import type { NotificationKind, NotificationTab } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { DEFAULT_TIME_ZONE, parseTimeZone } from "@/lib/time-zone";
 import { resolveImageUrls } from "@/services/storage/avatar-urls";
@@ -28,6 +38,9 @@ export type ModerationAction = (typeof MODERATION_ACTIONS)[number];
 /** Objeto al que se refiere una acción de moderación. */
 export type ModerationContentType = "comment" | "review" | "list" | "social_suspension";
 
+/** Página donde vive un comentario. */
+export type CommentSubject = "artist" | "album" | "song";
+
 /** Persona que aparece en la entrada (máximo dos por grupo en la interfaz). */
 export interface NotificationActor {
   id: string;
@@ -48,6 +61,41 @@ export type NotificationTarget =
       action: ModerationAction;
       contentType: ModerationContentType;
       reason: string;
+    }
+  | {
+      type: "comment";
+      /** Dónde está el comentario: página de artista, de álbum o de canción. */
+      subject: CommentSubject;
+      /** Id del artista, del álbum (release-group) o de la canción (grabación). */
+      subjectId: string;
+      /** Nombre del artista o título del álbum / la canción. */
+      subjectName: string;
+      /** Artista principal del álbum o la canción (para su URL); `null` en un artista. */
+      subjectArtistName: string | null;
+      /** Raíz del hilo: solo los comentarios de artista tienen hilo (`?thread=`). */
+      rootId: string | null;
+      /** Hito más alto del grupo. */
+      milestone: number;
+    }
+  | {
+      type: "list";
+      listId: string;
+      title: string;
+      /** Un Camino enlaza a su ruta propia, no a la de listas. */
+      isCamino: boolean;
+      /** Hito más alto del grupo. */
+      milestone: number;
+    }
+  | {
+      type: "release";
+      releaseGroupId: string;
+      title: string;
+      artistName: string;
+      category: "album" | "ep" | "single";
+      /** Fecha exacta conocida o `null` si el disco solo tiene año. */
+      releaseDate: string | null;
+      /** Miniatura de 250 px o `null` (placeholder en la interfaz). */
+      coverUrl: string | null;
     };
 
 export interface NotificationGroup {
@@ -71,20 +119,30 @@ export interface NotificationPage {
 }
 
 // ---------------------------------------------------------------------------
-// Filtros de privacidad (D4)
+// Filtros de privacidad (D4) y pestañas (D7)
 // ---------------------------------------------------------------------------
 
-/**
- * Filas de `notification` que el destinatario puede ver. Excluye actores
- * desactivados, bloqueos en cualquier dirección y respuestas ocultas (o con la
- * raíz oculta). `moderation` queda exenta: es justamente el asunto del aviso.
- */
-function visibleNotifications(recipientId: string) {
-  const actor = alias(appUser, "notification_actor");
-  const reply = alias(comment, "notification_reply");
-  const root = alias(comment, "notification_root");
+/** Tipos de cada pestaña: "Para ti" (Fase 1 + hitos) y "Novedades" (lanzamientos). */
+export const TAB_KINDS: Record<NotificationTab, readonly NotificationKind[]> = {
+  for_you: [
+    "comment_reply",
+    "thread_reply",
+    "new_follower",
+    "follow_request",
+    "follow_accepted",
+    "moderation",
+    "comment_like_milestone",
+    "list_save_milestone",
+  ],
+  releases: ["artist_release", "artist_release_announced", "artist_single"],
+};
 
-  const blocked = notExists(
+/**
+ * Bloqueo en cualquier dirección entre el destinatario y el actor del aviso.
+ * Se expresa como subconsulta para no unir `user_block` a la fila.
+ */
+function blockedBetween(recipientId: string) {
+  return notExists(
     db
       .select({ one: sql`1` })
       .from(userBlock)
@@ -95,14 +153,42 @@ function visibleNotifications(recipientId: string) {
         ),
       ),
   );
+}
+
+/**
+ * Filas de `notification` que el destinatario puede ver en la pestaña. Excluye
+ * actores desactivados, bloqueos en cualquier dirección, respuestas ocultas (o
+ * con la raíz oculta), listas ocultas por moderación y discos retirados de la
+ * discografía. `moderation` queda exenta: es justamente el asunto del aviso.
+ */
+function visibleNotifications(recipientId: string, tab: NotificationTab) {
+  const actor = alias(appUser, "notification_actor");
+  const reply = alias(comment, "notification_reply");
+  const root = alias(comment, "notification_root");
+  // Álbum o canción de un comentario (los hitos de likes no son solo de artista).
+  const commentAlbum = alias(releaseGroup, "notification_comment_album");
+  const commentSong = alias(recording, "notification_comment_song");
 
   // La notificación apunta a la respuesta; la raíz del hilo es su `parent_id`.
+  // En un comentario raíz no hay `parent_id`: el propio comentario es el hilo.
   const replyVisible = or(
     isNull(notification.commentId),
     and(
       eq(reply.moderationStatus, "visible"),
       or(isNull(reply.parentId), eq(root.moderationStatus, "visible")),
     ),
+  );
+
+  const listVisible = or(
+    isNull(notification.listId),
+    eq(userList.moderationStatus, "visible"),
+  );
+
+  // `cover_blocked_at` no oculta el aviso: solo la carátula (la interfaz usa el
+  // placeholder). `discography_unlisted_at` sí: el disco ya no es de la persona.
+  const releaseVisible = or(
+    isNull(notification.releaseGroupId),
+    isNull(releaseGroup.discographyUnlistedAt),
   );
 
   return db
@@ -115,9 +201,32 @@ function visibleNotifications(recipientId: string) {
       actorUsername: actor.username,
       actorDisplayName: actor.displayName,
       actorAvatarImageId: actor.avatarImageId,
-      artistId: artist.id,
-      artistName: artist.name,
-      rootId: reply.parentId,
+      // Las columnas de tablas unidas llevan alias explícito: la subconsulta se
+      // referencia después por nombre y, sin alias, `user_list.kind`,
+      // `user_list.id` o `release_group.title` chocarían con los de otra tabla.
+      artistId: sql<string | null>`${artist.id}`.as("artist_id"),
+      artistName: sql<string | null>`${artist.name}`.as("artist_name"),
+      rootId: sql<string | null>`coalesce(${reply.parentId}, ${reply.id})`.as("root_id"),
+      commentSubject: sql<CommentSubject | null>`case
+        when ${reply.artistId} is not null then 'artist'
+        when ${reply.releaseGroupId} is not null then 'album'
+        when ${reply.recordingId} is not null then 'song'
+        else null end`.as("comment_subject"),
+      commentSubjectId: sql<string | null>`coalesce(${reply.artistId}, ${reply.releaseGroupId}, ${reply.recordingId})`.as(
+        "comment_subject_id",
+      ),
+      commentSubjectName: sql<string | null>`coalesce(${artist.name}, ${commentAlbum.title}, ${commentSong.title})`.as(
+        "comment_subject_name",
+      ),
+      commentSubjectArtistName: sql<string | null>`(
+        select a3.name
+        from credit c3
+        join artist a3 on a3.id = c3.artist_id
+        where c3.role = 'primary'
+          and (c3.release_group_id = ${reply.releaseGroupId} or c3.recording_id = ${reply.recordingId})
+        order by c3.position
+        limit 1
+      )`.as("comment_subject_artist_name"),
       moderationAction: moderationAction.action,
       moderationReason: moderationAction.reason,
       moderationContentType: sql<ModerationContentType | null>`case
@@ -126,22 +235,50 @@ function visibleNotifications(recipientId: string) {
         when ${moderationAction.listId} is not null then 'list'
         when ${moderationAction.restrictionId} is not null then 'social_suspension'
         else null end`.as("moderation_content_type"),
+      milestone: notification.milestone,
+      listId: sql<string | null>`${userList.id}`.as("list_id"),
+      listTitle: sql<string | null>`${userList.title}`.as("list_title"),
+      listKind: sql<string | null>`${userList.kind}`.as("list_kind"),
+      releaseGroupId: sql<string | null>`${releaseGroup.id}`.as("release_group_id"),
+      releaseTitle: sql<string | null>`${releaseGroup.title}`.as("release_title"),
+      releaseArtistName: sql<string | null>`(
+        select a2.name
+        from credit c2
+        join artist a2 on a2.id = c2.artist_id
+        where c2.release_group_id = ${releaseGroup.id} and c2.role = 'primary'
+        order by c2.position
+        limit 1
+      )`.as("release_artist_name"),
+      releaseCategory: releaseGroup.category,
+      releasePrimaryType: releaseGroup.primaryType,
+      releaseDate: sql<string | null>`${releaseGroup.firstReleaseDate}::text`.as("release_date"),
+      releaseCoverUrl: sql<string | null>`case
+        when ${releaseGroup.coverBlockedAt} is not null then null
+        else ${releaseGroup.coverThumbUrl}
+      end`.as("release_cover_url"),
     })
     .from(notification)
     .leftJoin(actor, eq(actor.id, notification.actorId))
     .leftJoin(reply, eq(reply.id, notification.commentId))
     .leftJoin(root, eq(root.id, reply.parentId))
     .leftJoin(artist, eq(artist.id, reply.artistId))
+    .leftJoin(commentAlbum, eq(commentAlbum.id, reply.releaseGroupId))
+    .leftJoin(commentSong, eq(commentSong.id, reply.recordingId))
     .leftJoin(moderationAction, eq(moderationAction.id, notification.moderationActionId))
+    .leftJoin(userList, eq(userList.id, notification.listId))
+    .leftJoin(releaseGroup, eq(releaseGroup.id, notification.releaseGroupId))
     .where(
       and(
         eq(notification.recipientId, recipientId),
+        inArray(notification.kind, [...TAB_KINDS[tab]]),
         or(
           eq(notification.kind, "moderation"),
           and(
             or(isNull(notification.actorId), isNull(actor.deactivatedAt)),
-            blocked,
+            blockedBetween(recipientId),
             replyVisible,
+            listVisible,
+            releaseVisible,
           ),
         ),
       ),
@@ -149,7 +286,79 @@ function visibleNotifications(recipientId: string) {
     .as("visible_notification");
 }
 
-type VisibleSource = ReturnType<typeof visibleNotifications>;
+type GroupKeySource = { groupKey: SQLWrapper; createdAt: SQLWrapper };
+
+/**
+ * Filas mínimas para el contador de "Para ti": solo la clave, la fecha y el
+ * estado de lectura, con los mismos filtros de privacidad. Evita planificar los
+ * joins de artista, moderación y disco que el contador no necesita.
+ */
+function visibleForYouKeys(recipientId: string) {
+  const actor = alias(appUser, "notification_actor");
+  const reply = alias(comment, "notification_reply");
+  const root = alias(comment, "notification_root");
+
+  return db
+    .select({
+      groupKey: notification.groupKey,
+      createdAt: notification.createdAt,
+      readAt: notification.readAt,
+    })
+    .from(notification)
+    .leftJoin(actor, eq(actor.id, notification.actorId))
+    .leftJoin(reply, eq(reply.id, notification.commentId))
+    .leftJoin(root, eq(root.id, reply.parentId))
+    .leftJoin(userList, eq(userList.id, notification.listId))
+    .where(
+      and(
+        eq(notification.recipientId, recipientId),
+        inArray(notification.kind, [...TAB_KINDS.for_you]),
+        or(
+          eq(notification.kind, "moderation"),
+          and(
+            or(isNull(notification.actorId), isNull(actor.deactivatedAt)),
+            blockedBetween(recipientId),
+            or(
+              isNull(notification.commentId),
+              and(
+                eq(reply.moderationStatus, "visible"),
+                or(isNull(reply.parentId), eq(root.moderationStatus, "visible")),
+              ),
+            ),
+            or(isNull(notification.listId), eq(userList.moderationStatus, "visible")),
+          ),
+        ),
+      ),
+    )
+    .as("for_you_notification");
+}
+
+/**
+ * Filas mínimas para el punto de "Novedades". Los tres tipos de lanzamiento
+ * tienen actor, comentario y lista nulos por `CHECK`, así que solo importa el
+ * disco (retirado de la discografía) y la pestaña.
+ */
+function visibleReleaseKeys(recipientId: string) {
+  return db
+    .select({
+      groupKey: notification.groupKey,
+      createdAt: notification.createdAt,
+      readAt: notification.readAt,
+    })
+    .from(notification)
+    .leftJoin(releaseGroup, eq(releaseGroup.id, notification.releaseGroupId))
+    .where(
+      and(
+        eq(notification.recipientId, recipientId),
+        inArray(notification.kind, [...TAB_KINDS.releases]),
+        or(
+          isNull(notification.releaseGroupId),
+          isNull(releaseGroup.discographyUnlistedAt),
+        ),
+      ),
+    )
+    .as("release_notification");
+}
 
 // ---------------------------------------------------------------------------
 // Agrupación (D5)
@@ -160,7 +369,7 @@ type VisibleSource = ReturnType<typeof visibleNotifications>;
  * día local. El resto (`thread:<root>`, `follow:<id>`, `moderation:<id>`) no se
  * agrupa más allá de su propia clave.
  */
-function groupIdOf(source: VisibleSource, zone: string): SQL<string> {
+function groupIdOf(source: GroupKeySource, zone: string): SQL<string> {
   return sql<string>`case
     when ${source.groupKey} = 'followers'
       then ${source.groupKey} || ':' || to_char((${source.createdAt} at time zone ${zone})::date, 'YYYY-MM-DD')
@@ -173,8 +382,8 @@ function groupIdOf(source: VisibleSource, zone: string): SQL<string> {
  * Agrupar por una columna (y no por una expresión `CASE`) evita que Postgres
  * compare el `SELECT` con el `GROUP BY` de forma sintáctica y no los reconozca.
  */
-function groupedNotifications(recipientId: string, zone: string) {
-  const source = visibleNotifications(recipientId);
+function groupedNotifications(recipientId: string, zone: string, tab: NotificationTab) {
+  const source = visibleNotifications(recipientId, tab);
   return db
     .select({
       groupId: groupIdOf(source, zone).as("group_id"),
@@ -187,10 +396,25 @@ function groupedNotifications(recipientId: string, zone: string) {
       actorAvatarImageId: source.actorAvatarImageId,
       artistId: source.artistId,
       artistName: source.artistName,
+      commentSubject: source.commentSubject,
+      commentSubjectId: source.commentSubjectId,
+      commentSubjectName: source.commentSubjectName,
+      commentSubjectArtistName: source.commentSubjectArtistName,
       rootId: source.rootId,
       moderationAction: source.moderationAction,
       moderationReason: source.moderationReason,
       moderationContentType: source.moderationContentType,
+      milestone: source.milestone,
+      listId: source.listId,
+      listTitle: source.listTitle,
+      listKind: source.listKind,
+      releaseGroupId: source.releaseGroupId,
+      releaseTitle: source.releaseTitle,
+      releaseArtistName: source.releaseArtistName,
+      releaseCategory: source.releaseCategory,
+      releasePrimaryType: source.releasePrimaryType,
+      releaseDate: source.releaseDate,
+      releaseCoverUrl: source.releaseCoverUrl,
     })
     .from(source)
     .as("grouped_notification");
@@ -203,6 +427,8 @@ export interface ListNotificationGroupsOptions {
   cursor?: string | null;
   /** Zona IANA del lector (`tz`); sin ella, UTC. */
   timeZone?: string | null;
+  /** Pestaña: "Para ti" por defecto (compatible con la Fase 1). */
+  tab?: NotificationTab;
   pageSize?: number;
 }
 
@@ -216,10 +442,11 @@ export async function listNotificationGroups(
   options: ListNotificationGroupsOptions = {},
 ): Promise<NotificationPage> {
   const zone = parseTimeZone(options.timeZone) ?? DEFAULT_TIME_ZONE;
+  const tab = options.tab ?? "for_you";
   const pageSize = options.pageSize ?? PAGE_SIZE;
   const cursor = parseCursor(options.cursor);
 
-  const source = groupedNotifications(recipientId, zone);
+  const source = groupedNotifications(recipientId, zone, tab);
   const lastAtOfGroup = sql`max(${source.createdAt})`;
 
   const baseQuery = db
@@ -235,11 +462,27 @@ export async function listNotificationGroups(
       // Campos del destino: se toman del evento más reciente del grupo.
       artistId: sql<string | null>`(array_agg(${source.artistId} order by ${source.createdAt} desc))[1]`,
       artistName: sql<string | null>`(array_agg(${source.artistName} order by ${source.createdAt} desc))[1]`,
+      commentSubject: sql<string | null>`(array_agg(${source.commentSubject} order by ${source.createdAt} desc))[1]`,
+      commentSubjectId: sql<string | null>`(array_agg(${source.commentSubjectId} order by ${source.createdAt} desc))[1]`,
+      commentSubjectName: sql<string | null>`(array_agg(${source.commentSubjectName} order by ${source.createdAt} desc))[1]`,
+      commentSubjectArtistName: sql<string | null>`(array_agg(${source.commentSubjectArtistName} order by ${source.createdAt} desc))[1]`,
       rootId: sql<string | null>`(array_agg(${source.rootId} order by ${source.createdAt} desc))[1]`,
       actorUsername: sql<string | null>`(array_agg(${source.actorUsername} order by ${source.createdAt} desc))[1]`,
       moderationAction: sql<string | null>`(array_agg(${source.moderationAction} order by ${source.createdAt} desc))[1]`,
       moderationReason: sql<string | null>`(array_agg(${source.moderationReason} order by ${source.createdAt} desc))[1]`,
       moderationContentType: sql<string | null>`(array_agg(${source.moderationContentType} order by ${source.createdAt} desc))[1]`,
+      // Un grupo de hitos muestra el hito más alto.
+      milestone: sql<number | null>`max(${source.milestone})`,
+      listId: sql<string | null>`(array_agg(${source.listId} order by ${source.createdAt} desc))[1]`,
+      listTitle: sql<string | null>`(array_agg(${source.listTitle} order by ${source.createdAt} desc))[1]`,
+      listKind: sql<string | null>`(array_agg(${source.listKind} order by ${source.createdAt} desc))[1]`,
+      releaseGroupId: sql<string | null>`(array_agg(${source.releaseGroupId} order by ${source.createdAt} desc))[1]`,
+      releaseTitle: sql<string | null>`(array_agg(${source.releaseTitle} order by ${source.createdAt} desc))[1]`,
+      releaseArtistName: sql<string | null>`(array_agg(${source.releaseArtistName} order by ${source.createdAt} desc))[1]`,
+      releaseCategory: sql<string | null>`(array_agg(${source.releaseCategory} order by ${source.createdAt} desc))[1]`,
+      releasePrimaryType: sql<string | null>`(array_agg(${source.releasePrimaryType} order by ${source.createdAt} desc))[1]`,
+      releaseDate: sql<string | null>`(array_agg(${source.releaseDate} order by ${source.createdAt} desc))[1]`,
+      releaseCoverUrl: sql<string | null>`(array_agg(${source.releaseCoverUrl} order by ${source.createdAt} desc))[1]`,
     })
     .from(source)
     .groupBy(source.groupId)
@@ -272,10 +515,10 @@ export async function listNotificationGroups(
  */
 export async function countUnseen(recipientId: string, timeZone?: string | null): Promise<number> {
   const zone = parseTimeZone(timeZone) ?? DEFAULT_TIME_ZONE;
-  const source = groupedNotifications(recipientId, zone);
+  const source = visibleForYouKeys(recipientId);
 
   const [row] = await db
-    .select({ count: sql<number>`count(distinct ${source.groupId})::int` })
+    .select({ count: sql<number>`count(distinct ${groupIdOf(source, zone)})::int` })
     .from(source)
     .where(
       and(
@@ -288,6 +531,30 @@ export async function countUnseen(recipientId: string, timeZone?: string | null)
     );
 
   return row?.count ?? 0;
+}
+
+/**
+ * ¿Hay novedades de lanzamiento sin leer desde la última vez que se abrió
+ * "Novedades"? El punto de la pestaña no lleva cifra (D7).
+ */
+export async function hasNewReleases(recipientId: string): Promise<boolean> {
+  const source = visibleReleaseKeys(recipientId);
+
+  const [row] = await db
+    .select({ one: sql<number>`1` })
+    .from(source)
+    .where(
+      and(
+        isNull(source.readAt),
+        sql`${source.createdAt} > coalesce(
+          (select ${appUser.notificationsReleasesSeenAt} from ${appUser} where ${appUser.id} = ${recipientId}),
+          '-infinity'::timestamptz
+        )`,
+      ),
+    )
+    .limit(1);
+
+  return row !== undefined;
 }
 
 /**
@@ -351,10 +618,22 @@ export async function markRead(
 
 /**
  * Registra que la persona abrió la bandeja: el contador vuelve a 0, pero las
- * entradas siguen sin leer hasta que se abran o se marquen (D6).
+ * entradas siguen sin leer hasta que se abran o se marquen (D6). Abrir
+ * "Novedades" mueve su propia marca y no la de "Para ti" (D7).
  */
-export async function markSeen(recipientId: string): Promise<void> {
-  await db.update(appUser).set({ notificationsSeenAt: new Date() }).where(eq(appUser.id, recipientId));
+export async function markSeen(
+  recipientId: string,
+  tab: NotificationTab = "for_you",
+): Promise<void> {
+  const now = new Date();
+  await db
+    .update(appUser)
+    .set(
+      tab === "releases"
+        ? { notificationsReleasesSeenAt: now }
+        : { notificationsSeenAt: now },
+    )
+    .where(eq(appUser.id, recipientId));
 }
 
 /**
@@ -437,11 +716,26 @@ type GroupRow = {
   actorCount: number;
   artistId: string | null;
   artistName: string | null;
+  commentSubject: string | null;
+  commentSubjectId: string | null;
+  commentSubjectName: string | null;
+  commentSubjectArtistName: string | null;
   rootId: string | null;
   actorUsername: string | null;
   moderationAction: string | null;
   moderationReason: string | null;
   moderationContentType: string | null;
+  milestone: number | null;
+  listId: string | null;
+  listTitle: string | null;
+  listKind: string | null;
+  releaseGroupId: string | null;
+  releaseTitle: string | null;
+  releaseArtistName: string | null;
+  releaseCategory: string | null;
+  releasePrimaryType: string | null;
+  releaseDate: string | null;
+  releaseCoverUrl: string | null;
 };
 
 function toGroup(row: GroupRow, actors: NotificationActor[]): NotificationGroup {
@@ -469,12 +763,76 @@ function targetFor(row: GroupRow): NotificationTarget | null {
     };
   }
 
+  if (row.kind === "comment_like_milestone") {
+    if (
+      !isCommentSubject(row.commentSubject) ||
+      !row.commentSubjectId ||
+      row.commentSubjectName === null ||
+      row.milestone === null
+    ) {
+      return null;
+    }
+    return {
+      type: "comment",
+      subject: row.commentSubject,
+      subjectId: row.commentSubjectId,
+      subjectName: row.commentSubjectName,
+      subjectArtistName: row.commentSubject === "artist" ? null : row.commentSubjectArtistName,
+      // Solo la página de artista tiene hilos; en álbum y canción se enlaza a la página.
+      rootId: row.commentSubject === "artist" ? row.rootId : null,
+      milestone: row.milestone,
+    };
+  }
+
+  if (row.kind === "list_save_milestone") {
+    if (!row.listId || row.listTitle === null || row.milestone === null) return null;
+    return {
+      type: "list",
+      listId: row.listId,
+      title: row.listTitle,
+      isCamino: row.listKind === "custom_journey",
+      milestone: row.milestone,
+    };
+  }
+
+  if (
+    row.kind === "artist_release" ||
+    row.kind === "artist_release_announced" ||
+    row.kind === "artist_single"
+  ) {
+    if (!row.releaseGroupId || row.releaseTitle === null) return null;
+    return {
+      type: "release",
+      releaseGroupId: row.releaseGroupId,
+      title: row.releaseTitle,
+      artistName: row.releaseArtistName ?? "",
+      category: normaliseCategory(row.releasePrimaryType, row.releaseCategory),
+      releaseDate: row.releaseDate,
+      coverUrl: row.releaseCoverUrl,
+    };
+  }
+
   if (row.artistId && row.artistName && row.rootId) {
     return { type: "artist", artistId: row.artistId, artistName: row.artistName, rootId: row.rootId };
   }
 
   if (row.actorUsername) return { type: "profile", username: row.actorUsername };
   return null;
+}
+
+/** Álbum / EP / sencillo a partir de los tipos crudos de MusicBrainz y la categoría propia. */
+function normaliseCategory(
+  primaryType: string | null,
+  category: string | null,
+): "album" | "ep" | "single" {
+  if (primaryType === "Single") return "single";
+  if (primaryType === "EP") return "ep";
+  if (primaryType === "Album") return "album";
+  return category === "single_ep" ? "single" : "album";
+}
+
+function isCommentSubject(value: string | null): value is CommentSubject {
+  return value === "artist" || value === "album" || value === "song";
 }
 
 function isModerationAction(value: string): value is ModerationAction {

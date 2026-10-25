@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   footer: vi.fn((props: { user: Record<string, unknown> | null }) => <div data-testid="footer" data-user={JSON.stringify(props.user)} />),
   resolveSession: vi.fn(),
   countUnseen: vi.fn().mockResolvedValue(0),
+  hasNewReleases: vi.fn().mockResolvedValue(false),
   getTimeZone: vi.fn().mockResolvedValue("America/Santiago"),
   getUserPermissions: vi.fn().mockResolvedValue([]),
 }));
@@ -23,7 +24,10 @@ vi.mock("next-intl", () => ({ NextIntlClientProvider: ({ children }: { children:
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: mocks.resolveSession }));
 vi.mock("@/services/auth/authorization", () => ({ getUserPermissions: mocks.getUserPermissions }));
 vi.mock("@/services/storage/avatar-urls", () => ({ resolveImageUrl: async () => null }));
-vi.mock("@/services/notifications/read", () => ({ countUnseen: mocks.countUnseen }));
+vi.mock("@/services/notifications/read", () => ({
+  countUnseen: mocks.countUnseen,
+  hasNewReleases: mocks.hasNewReleases,
+}));
 vi.mock("@/components/layout/Header", () => ({ Header: mocks.header }));
 vi.mock("@/components/layout/Footer", () => ({ Footer: mocks.footer }));
 vi.mock("@/components/layout/FooterSlot", () => ({
@@ -57,11 +61,14 @@ describe("RootLayout", () => {
     const headerProps = mocks.header.mock.calls[0]?.[0] as {
       user: Record<string, unknown>;
       notificationCount: number;
+      newReleases: boolean;
     };
     expect(headerProps.user).not.toHaveProperty("passwordHash");
     expect(headerProps.user).not.toHaveProperty("createdAt");
     expect(headerProps.notificationCount).toBe(0);
+    expect(headerProps.newReleases).toBe(false);
     expect(mocks.countUnseen).toHaveBeenCalledWith("u1", "America/Santiago");
+    expect(mocks.hasNewReleases).toHaveBeenCalledWith("u1");
 
     // El Footer recibe el mismo usuario público que el Header, sin la foto.
     expect(mocks.footer).toHaveBeenCalledWith(

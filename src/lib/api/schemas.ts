@@ -2824,6 +2824,11 @@ export const NotificationKindSchema = z.enum([
   "follow_request",
   "follow_accepted",
   "moderation",
+  "comment_like_milestone",
+  "list_save_milestone",
+  "artist_release",
+  "artist_release_announced",
+  "artist_single",
 ]);
 export type NotificationKindValue = z.infer<typeof NotificationKindSchema>;
 
@@ -2832,8 +2837,17 @@ export const OptionalNotificationKindSchema = z.enum([
   "thread_reply",
   "new_follower",
   "follow_accepted",
+  "comment_like_milestone",
+  "list_save_milestone",
+  "artist_release",
+  "artist_release_announced",
+  "artist_single",
 ]);
 export type OptionalNotificationKindValue = z.infer<typeof OptionalNotificationKindSchema>;
+
+/** Pestañas de la bandeja. Sin `tab`, el listado y `seen` actúan sobre "Para ti". */
+export const NotificationTabSchema = z.enum(["for_you", "releases"]);
+export type NotificationTabValue = z.infer<typeof NotificationTabSchema>;
 
 /** Persona que aparece en una entrada (la bandeja muestra como mucho dos). */
 export const NotificationActorSchema = z.object({
@@ -2858,6 +2872,31 @@ export const NotificationTargetSchema = z.discriminatedUnion("type", [
     contentType: z.enum(["comment", "review", "list", "social_suspension"]),
     reason: z.string(),
   }),
+  z.object({
+    type: z.literal("comment"),
+    subject: z.enum(["artist", "album", "song"]),
+    subjectId: z.uuid(),
+    subjectName: z.string(),
+    subjectArtistName: z.string().nullable(),
+    rootId: z.uuid().nullable(),
+    milestone: z.number().int().positive(),
+  }),
+  z.object({
+    type: z.literal("list"),
+    listId: z.uuid(),
+    title: z.string(),
+    isCamino: z.boolean(),
+    milestone: z.number().int().positive(),
+  }),
+  z.object({
+    type: z.literal("release"),
+    releaseGroupId: z.uuid(),
+    title: z.string(),
+    artistName: z.string(),
+    category: z.enum(["album", "ep", "single"]),
+    releaseDate: z.string().nullable(),
+    coverUrl: z.string().nullable(),
+  }),
 ]);
 
 export const NotificationGroupSchema = z.object({
@@ -2879,7 +2918,11 @@ export const NotificationsResponseSchema = z.object({
 });
 export type NotificationsResponse = z.infer<typeof NotificationsResponseSchema>;
 
-export const NotificationCountResponseSchema = z.object({ count: z.number().int() });
+export const NotificationCountResponseSchema = z.object({
+  count: z.number().int(),
+  /** Punto de "Novedades": sin cifra (D7). */
+  newReleases: z.boolean(),
+});
 export type NotificationCountResponse = z.infer<typeof NotificationCountResponseSchema>;
 
 /** Por claves de entrada o todas; nunca hay un "todas las de otra persona". */
@@ -2889,7 +2932,7 @@ export const MarkNotificationsReadRequestSchema = z.union([
 ]);
 export type MarkNotificationsReadRequest = z.infer<typeof MarkNotificationsReadRequestSchema>;
 
-/** Las seis claves siempre presentes: la pantalla de ajustes las pinta todas. */
+/** Las once claves siempre presentes: la pantalla de ajustes las pinta todas. */
 export const NotificationPreferencesSchema = z.object({
   comment_reply: z.boolean(),
   thread_reply: z.boolean(),
@@ -2897,6 +2940,11 @@ export const NotificationPreferencesSchema = z.object({
   follow_request: z.boolean(),
   follow_accepted: z.boolean(),
   moderation: z.boolean(),
+  comment_like_milestone: z.boolean(),
+  list_save_milestone: z.boolean(),
+  artist_release: z.boolean(),
+  artist_release_announced: z.boolean(),
+  artist_single: z.boolean(),
 });
 export type NotificationPreferencesValue = z.infer<typeof NotificationPreferencesSchema>;
 

@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   NOTIFICATION_KINDS,
@@ -59,15 +59,47 @@ export type ModerationNotificationEvent = {
   moderationActionId: string;
 };
 
+/**
+ * Hito de un objeto propio (openspec: add-notification-milestones-and-releases,
+ * D1 y D3). No lleva actor: los likes y los guardados son anónimos.
+ */
+export type MilestoneNotificationEvent =
+  | {
+      kind: "comment_like_milestone";
+      recipientId: string;
+      commentId: string;
+      /** Raíz del hilo; da la clave de agrupación `likes:<commentId>`. */
+      rootId: string;
+      milestone: number;
+    }
+  | {
+      kind: "list_save_milestone";
+      recipientId: string;
+      listId: string;
+      milestone: number;
+    };
+
+/**
+ * Aviso de lanzamiento (openspec: add-notification-milestones-and-releases,
+ * D6). No lleva actor: un disco no tiene una persona detrás.
+ */
+export type ReleaseNotificationEvent = {
+  kind: "artist_release" | "artist_release_announced" | "artist_single";
+  recipientId: string;
+  releaseGroupId: string;
+};
+
 export type NotificationEvent =
   | CommentNotificationEvent
   | FollowNotificationEvent
-  | ModerationNotificationEvent;
+  | ModerationNotificationEvent
+  | MilestoneNotificationEvent
+  | ReleaseNotificationEvent;
 
-const OPTIONAL_KINDS: readonly string[] = OPTIONAL_NOTIFICATION_KINDS;
+const OPTIONAL_KINDS = OPTIONAL_NOTIFICATION_KINDS;
 
 function isOptionalKind(kind: NotificationKind): kind is OptionalNotificationKind {
-  return OPTIONAL_KINDS.includes(kind);
+  return kind in OPTIONAL_KINDS;
 }
 
 /** Clave de agrupación (D5); el emisor es quien la deriva, nunca la fuente. */
@@ -85,13 +117,24 @@ function groupKeyFor(event: NotificationEvent): string {
       return `follow:${event.followId}`;
     case "moderation":
       return `moderation:${event.moderationActionId}`;
+    case "comment_like_milestone":
+      // Todos los hitos del mismo comentario son una sola entrada.
+      return `likes:${event.commentId}`;
+    case "list_save_milestone":
+      return `saves:${event.listId}`;
+    case "artist_release":
+    case "artist_single":
+      return `release:${event.releaseGroupId}`;
+    case "artist_release_announced":
+      return `announced:${event.releaseGroupId}`;
   }
 }
 
 /**
  * Identidad lógica del aviso: replica los únicos parciales de la migración
- * (`recipient_id` + objeto + tipo). Sirve para deduplicar dentro del mismo lote
- * antes de insertar, sin depender de que Postgres lo haga por nosotros.
+ * (`recipient_id` + objeto + tipo; el hito forma parte de la clave). Sirve para
+ * deduplicar dentro del mismo lote antes de insertar, sin depender de que
+ * Postgres lo haga por nosotros.
  */
 function eventKey(event: NotificationEvent): string {
   const base = `${event.recipientId}:${event.kind}`;
@@ -105,11 +148,22 @@ function eventKey(event: NotificationEvent): string {
       return `${base}:${event.followId}`;
     case "moderation":
       return `${base}:${event.moderationActionId}`;
+    case "comment_like_milestone":
+      return `${base}:${event.commentId}:${event.milestone}`;
+    case "list_save_milestone":
+      return `${base}:${event.listId}:${event.milestone}`;
+    case "artist_release":
+    case "artist_release_announced":
+    case "artist_single":
+      return `${base}:${event.releaseGroupId}`;
   }
 }
 
-function hasActor(event: NotificationEvent): event is Exclude<NotificationEvent, ModerationNotificationEvent> {
-  return event.kind !== "moderation";
+/** Avisos que llevan actor (y por tanto pasan por la regla de bloqueos). */
+type ActorNotificationEvent = CommentNotificationEvent | FollowNotificationEvent;
+
+function hasActor(event: NotificationEvent): event is ActorNotificationEvent {
+  return "actorId" in event;
 }
 
 /**
@@ -143,8 +197,9 @@ async function withoutBlockedPairs(
 }
 
 /**
- * Descarta los tipos desactivables que la persona tiene apagados. Solo se
- * consultan las filas existentes (la ausencia de fila = activado).
+ * Descarta los tipos desactivables que la persona tiene apagados. La ausencia
+ * de fila significa el defecto del tipo (D5): se leen las filas existentes y se
+ * compara cada evento contra su valor efectivo.
  */
 async function withEnabledPreferences(
   tx: NotificationTx,
@@ -156,22 +211,26 @@ async function withEnabledPreferences(
   const recipients = [...new Set(optional.map((event) => event.recipientId))];
   const kinds = [...new Set(optional.map((event) => event.kind))] as OptionalNotificationKind[];
 
-  const disabledRows = await tx
-    .select({ userId: notificationPreference.userId, kind: notificationPreference.kind })
+  const rows = await tx
+    .select({
+      userId: notificationPreference.userId,
+      kind: notificationPreference.kind,
+      enabled: notificationPreference.enabled,
+    })
     .from(notificationPreference)
     .where(
       and(
         inArray(notificationPreference.userId, recipients),
         inArray(notificationPreference.kind, kinds),
-        eq(notificationPreference.enabled, false),
       ),
     );
 
-  if (disabledRows.length === 0) return [...events];
+  const saved = new Map(rows.map((row) => [`${row.userId}:${row.kind}`, row.enabled]));
+  const enabledFor = (recipientId: string, kind: OptionalNotificationKind) =>
+    saved.get(`${recipientId}:${kind}`) ?? OPTIONAL_NOTIFICATION_KINDS[kind];
 
-  const disabled = new Set(disabledRows.map((row) => `${row.userId}:${row.kind}`));
   return events.filter(
-    (event) => !isOptionalKind(event.kind) || !disabled.has(`${event.recipientId}:${event.kind}`),
+    (event) => !isOptionalKind(event.kind) || enabledFor(event.recipientId, event.kind),
   );
 }
 
@@ -209,7 +268,11 @@ export async function emitNotifications(
         kind: event.kind,
         actorId: hasActor(event) ? event.actorId : null,
         commentId:
-          event.kind === "comment_reply" || event.kind === "thread_reply" ? event.commentId : null,
+          event.kind === "comment_reply" ||
+          event.kind === "thread_reply" ||
+          event.kind === "comment_like_milestone"
+            ? event.commentId
+            : null,
         followId:
           event.kind === "new_follower" ||
           event.kind === "follow_request" ||
@@ -217,6 +280,17 @@ export async function emitNotifications(
             ? event.followId
             : null,
         moderationActionId: event.kind === "moderation" ? event.moderationActionId : null,
+        milestone:
+          event.kind === "comment_like_milestone" || event.kind === "list_save_milestone"
+            ? event.milestone
+            : null,
+        listId: event.kind === "list_save_milestone" ? event.listId : null,
+        releaseGroupId:
+          event.kind === "artist_release" ||
+          event.kind === "artist_release_announced" ||
+          event.kind === "artist_single"
+            ? event.releaseGroupId
+            : null,
         groupKey: groupKeyFor(event),
       })),
     )
@@ -227,6 +301,139 @@ export async function emitNotifications(
 // importen de `@/db/schema` solo para hablar de notificaciones.
 export { NOTIFICATION_KINDS };
 export type { NotificationKind, OptionalNotificationKind };
+
+/**
+ * Emite el hito de un objeto propio (D3). No avisa si ya hay una notificación
+ * de ese hito o de uno mayor para el mismo objeto: saltar de 9 a 30 avisa 25, y
+ * volver a dar like tras un unlike no repite el aviso. El único parcial
+ * `(recipient_id, objeto, kind, milestone)` absorbe las carreras; aquí se
+ * consulta antes para no escribir una fila que la regla de "solo el más alto"
+ * descartaría.
+ */
+export async function emitMilestoneNotification(
+  tx: NotificationTx,
+  event: MilestoneNotificationEvent,
+): Promise<void> {
+  const objectCondition =
+    event.kind === "comment_like_milestone"
+      ? eq(notification.commentId, event.commentId)
+      : eq(notification.listId, event.listId);
+
+  const [existing] = await tx
+    .select({ id: notification.id })
+    .from(notification)
+    .where(
+      and(
+        eq(notification.recipientId, event.recipientId),
+        eq(notification.kind, event.kind),
+        objectCondition,
+        gte(notification.milestone, event.milestone),
+      ),
+    )
+    .limit(1);
+
+  if (existing) return;
+  await emitNotifications(tx, [event]);
+}
+
+/** Días de historia que cubre un aviso de "ya salió" (D6). */
+export const ARTIST_RELEASE_WINDOW_DAYS = 14;
+
+/** Disco del calendario que puede generar un aviso de lanzamiento. */
+export interface ReleaseNotificationCandidate {
+  releaseGroupId: string;
+  /** Fecha de primer lanzamiento verificada (`YYYY-MM-DD`). */
+  releaseDate: string;
+  category: "album" | "ep" | "single";
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function shiftDay(day: string, days: number): string {
+  return new Date(Date.parse(`${day}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10);
+}
+
+/** Lote de discos que comparten aviso, ya deduplicado. */
+export interface ReleaseNotificationBatch {
+  kind: ReleaseNotificationEvent["kind"];
+  releaseGroupIds: string[];
+}
+
+/**
+ * Clasifica los discos del calendario en los avisos que generan (D6). Separado
+ * del `INSERT … SELECT` para poder probar la ventana y la deduplicación sin
+ * base de datos.
+ *
+ * - Álbum / EP de los últimos 14 días → `artist_release`.
+ * - Álbum / EP con fecha futura → `artist_release_announced`.
+ * - Sencillo de los últimos 14 días → `artist_single`. Un sencillo por salir no avisa: si
+ *   generara un anunciado, le llegaría a quien activó los anunciados con los sencillos apagados.
+ */
+export function releaseNotificationBatches(
+  entries: readonly ReleaseNotificationCandidate[],
+  today: string,
+): ReleaseNotificationBatch[] {
+  const from = shiftDay(today, -ARTIST_RELEASE_WINDOW_DAYS);
+
+  const byKind: Record<ReleaseNotificationEvent["kind"], Set<string>> = {
+    artist_release: new Set(),
+    artist_release_announced: new Set(),
+    artist_single: new Set(),
+  };
+
+  for (const entry of entries) {
+    const single = entry.category === "single";
+    if (entry.releaseDate > today) {
+      if (!single) byKind.artist_release_announced.add(entry.releaseGroupId);
+    } else if (entry.releaseDate >= from) {
+      byKind[single ? "artist_single" : "artist_release"].add(entry.releaseGroupId);
+    }
+  }
+
+  return (Object.keys(byKind) as Array<ReleaseNotificationEvent["kind"]>)
+    .map((kind) => ({ kind, releaseGroupIds: [...byKind[kind]] }))
+    .filter((batch) => batch.releaseGroupIds.length > 0);
+}
+
+/**
+ * Avisa a quien sigue a un artista acreditado de que un disco salió o está
+ * anunciado (D6). Un `INSERT … SELECT … ON CONFLICT DO NOTHING` por tipo:
+ * destinatarios, cuenta activa y preferencia (con su defecto) se resuelven en
+ * SQL, sin una fila por seguidor en memoria. El único
+ * `(recipient_id, release_group_id, kind)` hace idempotente la sincronización
+ * diaria.
+ */
+export async function emitArtistReleaseNotifications(
+  tx: NotificationTx,
+  entries: readonly ReleaseNotificationCandidate[],
+  today: string,
+): Promise<void> {
+  for (const { kind, releaseGroupIds: ids } of releaseNotificationBatches(entries, today)) {
+    const values = sql.join(
+      ids.map((id) => sql`(${id}::uuid)`),
+      sql`, `,
+    );
+    const defaultEnabled = OPTIONAL_NOTIFICATION_KINDS[kind];
+    const groupKeyPrefix = kind === "artist_release_announced" ? "announced:" : "release:";
+
+    await tx.execute(sql`
+      INSERT INTO notification (recipient_id, kind, release_group_id, group_key)
+      SELECT DISTINCT
+        af.user_id,
+        ${kind},
+        t.release_group_id,
+        ${groupKeyPrefix} || t.release_group_id::text
+      FROM (VALUES ${values}) AS t (release_group_id)
+      JOIN credit c ON c.release_group_id = t.release_group_id AND c.role = 'primary'
+      JOIN artist_follow af ON af.artist_id = c.artist_id
+      JOIN app_user u ON u.id = af.user_id AND u.deactivated_at IS NULL
+      LEFT JOIN notification_preference p
+        ON p.user_id = af.user_id AND p.kind = ${kind}
+      WHERE coalesce(p.enabled, ${defaultEnabled})
+      ON CONFLICT DO NOTHING
+    `);
+  }
+}
 
 /**
  * Retira la `follow_request` de un seguimiento que dejó de estar pendiente

@@ -8,6 +8,7 @@ import {
   communityBoost,
   filterFeed,
   selectAnonymous,
+  singlesFromFeed,
   type RankCandidate,
 } from "./release-calendar";
 
@@ -64,6 +65,79 @@ describe("filterFeed", () => {
     );
     expect(rows).toHaveLength(1);
     expect(rows[0]!.hasCover).toBe(false);
+  });
+});
+
+describe("singlesFromFeed", () => {
+  it("solo toma sencillos de artistas seguidos dentro de la ventana", () => {
+    const rows = singlesFromFeed(
+      [
+        feedRow({ release_group_mbid: "s1", release_group_primary_type: "Single" }),
+        feedRow({
+          release_group_mbid: "s2",
+          release_group_primary_type: "Single",
+          artist_mbids: ["otro"],
+        }),
+        feedRow({ release_group_mbid: "album", release_group_primary_type: "Album" }),
+        feedRow({
+          release_group_mbid: "viejo",
+          release_group_primary_type: "Single",
+          release_date: addDays(TODAY, -31),
+        }),
+        feedRow({
+          release_group_mbid: "lejano",
+          release_group_primary_type: "Single",
+          release_date: addDays(TODAY, 91),
+        }),
+        feedRow({
+          release_group_mbid: "parcial",
+          release_group_primary_type: "Single",
+          release_date: "2026-10",
+        }),
+      ],
+      TODAY,
+      new Set(["a-1"]),
+    );
+
+    expect(rows.map((row) => row.releaseGroupMbid)).toEqual(["s1"]);
+  });
+
+  it("incluye los bordes de la ventana y deduce la carátula del caa_id", () => {
+    const rows = singlesFromFeed(
+      [
+        feedRow({
+          release_group_mbid: "pasado",
+          release_group_primary_type: "Single",
+          release_date: addDays(TODAY, -30),
+          caa_id: null,
+        }),
+        feedRow({
+          release_group_mbid: "futuro",
+          release_group_primary_type: "Single",
+          release_date: addDays(TODAY, 90),
+        }),
+      ],
+      TODAY,
+      new Set(["a-1"]),
+    );
+
+    expect(rows.map((row) => row.releaseGroupMbid)).toEqual(["pasado", "futuro"]);
+    expect(rows[0]!.hasCover).toBe(false);
+    expect(rows[1]!.hasCover).toBe(true);
+  });
+
+  it("deduplica por release-group y no toca el calendario", () => {
+    const feed = [
+      feedRow({ release_group_mbid: "s1", release_group_primary_type: "Single" }),
+      feedRow({
+        release_group_mbid: "s1",
+        release_group_primary_type: "Single",
+        release_mbid: "otra-edicion",
+      }),
+    ];
+
+    expect(singlesFromFeed(feed, TODAY, new Set(["a-1"]))).toHaveLength(1);
+    expect(filterFeed(feed, TODAY)).toEqual([]);
   });
 });
 

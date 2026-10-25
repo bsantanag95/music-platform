@@ -183,29 +183,50 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - Un perfil privado no revela contenido no autorizado: las superficies ajenas devuelven lista
   vacía (o `404` en el detalle) sin indicar si el usuario tiene contenido.
 
-## Notificaciones (Fase 1, `add-notifications-core`)
+## Notificaciones (Fases 1 y 2, `add-notifications-core` y `add-notification-milestones-and-releases`)
 
 - Toda notificación nace de **un único servicio de emisión**, dentro de la **misma transacción** que la acción que la
-  provoca. Nunca se notifica a alguien por su propia acción, nunca se emite si hay un bloqueo en cualquier dirección
-  entre actor y destinatario, y no se duplica un aviso por el mismo objeto y tipo.
-- Tipos y destinatarios: `comment_reply` (autor del tema respondido), `thread_reply` (autores previos de respuestas
-  visibles del hilo, sin el autor de la raíz ni quien responde), `new_follower` (el seguido de un perfil público),
-  `follow_request` (el dueño de un perfil privado), `follow_accepted` (quien pidió) y `moderation` (autor o dueño del
-  contenido oculto/restaurado, o persona suspendida/revocada).
-- La notificación **desaparece con su objeto**: borrar la respuesta, dejar de seguir, quitar un seguidor, rechazar o
-  cancelar una solicitud, bloquear (que borra los seguimientos) o eliminar la cuenta. No hay limpieza manual.
-- En la lectura se excluye a los actores con cuenta desactivada, cualquier bloqueo entre las partes y las respuestas
-  ocultas o de raíz oculta. Los avisos de moderación son la excepción: se muestran aunque el contenido esté oculto y
-  **nunca nombran al moderador**, solo la acción, el objeto y el motivo.
-- Se agrupan por hilo las respuestas del mismo tema y por día (en la zona del lector) los nuevos seguidores; las
-  solicitudes, las aceptaciones y la moderación no se agrupan. El orden es por el evento más reciente.
-- **Visto no es leído**: el contador cuenta entradas no leídas posteriores a la última apertura de la bandeja, se
+  provoca (o, para lanzamientos, de la sincronización del calendario). Nunca se notifica a alguien por su propia acción,
+  nunca se emite si hay un bloqueo en cualquier dirección entre actor y destinatario, y no se duplica un aviso por el
+  mismo objeto y tipo.
+- Tipos y destinatarios de la Fase 1: `comment_reply` (autor del tema respondido), `thread_reply` (autores previos de
+  respuestas visibles del hilo, sin el autor de la raíz ni quien responde), `new_follower` (el seguido de un perfil
+  público), `follow_request` (el dueño de un perfil privado), `follow_accepted` (quien pidió) y `moderation` (autor o
+  dueño del contenido oculto/restaurado, o persona suspendida/revocada).
+- **Hitos** (`comment_like_milestone`, `list_save_milestone`): avisan al autor de un comentario o al dueño de una lista
+  cuando el objeto llega a una cifra redonda de me gusta o de personas que lo guardaron. No tienen actor y nunca dicen
+  quién dio el like o guardó. Escalas: likes `10, 25, 50, 100, 500, 1000, 2500, 5000, 10000` y luego cada `10000`;
+  guardados `1, 5, 10, 25, 50, 100, 500, 1000` y luego cada `1000`. Solo se avisa el **hito que cruza** el like o el
+  guardado nuevo, una sola vez: un hito ya pasado sin aviso no se avisa con retraso. El hito se escribe con el like o el guardado **nuevo** (un re-like no cuenta),
+  el conteo excluye cuentas desactivadas, un unlike **no retira** el aviso y volver a dar like no lo repite.
+- **Lanzamientos** (`artist_release`, `artist_release_announced`, `artist_single`): avisan a quien sigue a un artista
+  acreditado como **principal** en un disco del calendario de Inicio. Álbum o EP de los últimos **14 días** →
+  `artist_release`; álbum o EP con fecha futura → `artist_release_announced` (un sencillo por salir no se anuncia); sencillo de los últimos 14 días →
+  `artist_single`. El fan-out es un `INSERT … SELECT` idempotente por persona, disco y tipo. Una reedición o un tipo
+  secundario no genera aviso. Los sencillos solo se verifican y vinculan si alguien con `artist_single` activo sigue al
+  artista, y **no** entran al calendario ni al riel de Inicio.
+- La notificación **desaparece con su objeto**: borrar la respuesta, el comentario, la lista, el disco, dejar de seguir,
+  quitar un seguidor, rechazar o cancelar una solicitud, bloquear (que borra los seguimientos) o eliminar la cuenta. No
+  hay limpieza manual.
+- En la lectura se excluye a los actores con cuenta desactivada, cualquier bloqueo entre las partes, las respuestas
+  ocultas o de raíz oculta, un hito cuyo comentario o lista dejó de ser visible, y un lanzamiento de un disco retirado
+  de la discografía. Los avisos de moderación son la excepción: se muestran aunque el contenido esté oculto y **nunca
+  nombran al moderador**, solo la acción, el objeto y el motivo.
+- Se agrupan por hilo las respuestas del mismo tema y por día (en la zona del lector) los nuevos seguidores; los hitos
+  se agrupan por objeto y muestran la cifra más alta; los lanzamientos, por disco. Las solicitudes, las aceptaciones y
+  la moderación no se agrupan. El orden es por el evento más reciente.
+- **Dos pestañas**: "Para ti" (Fase 1 e hitos) y "Novedades" (lanzamientos). El contador de la campana cuenta solo
+  "Para ti"; "Novedades" lleva un **punto sin cifra**. Abrir cada pestaña mueve su propia marca de visto
+  (`notifications_seen_at` / `notifications_releases_seen_at`), y una no apaga la otra.
+- **Visto no es leído**: el contador cuenta entradas no leídas posteriores a la última apertura de la pestaña, se
   muestra con tope "9+" y vuelve a cero al abrir la campana o la página. Cada entrada sigue sin leer hasta que se abre
   su destino o se marca todas como leídas. El contador es una bandeja de entrada, nunca un logro: sin sonido, avisos
   emergentes, contador en el título de la pestaña, email ni push en esta fase.
-- Preferencias: `comment_reply`, `thread_reply`, `new_follower` y `follow_accepted` se pueden desactivar (activados
-  por defecto); `follow_request` y `moderation` no. Una preferencia aplica a los avisos posteriores y no borra los
-  existentes.
+- Preferencias: las nueve claves desactivables (`comment_reply`, `thread_reply`, `new_follower`, `follow_accepted`,
+  `comment_like_milestone`, `list_save_milestone`, `artist_release`, `artist_release_announced`, `artist_single`) usan
+  el **defecto del tipo** cuando no hay fila. Activados por defecto: los cuatro de la Fase 1, `comment_like_milestone` y
+  `artist_release`. Desactivados por defecto: `list_save_milestone`, `artist_release_announced` y `artist_single`.
+  `follow_request` y `moderation` son fijas. Una preferencia aplica a los avisos posteriores y no borra los existentes.
 - Retención: se borran las notificaciones leídas con más de 90 días y cualquier notificación con más de 180, en el
   propio camino de lectura.
 

@@ -217,9 +217,12 @@ declarado) y de `user_follow` (usuario → usuario).
   lo sumo una vez.
 - Índice `idx_artist_follow_artist` para recuperación por artista.
 
-**Espacio para el futuro:** las notificaciones de lanzamiento (fuera de alcance en Fase 2)
-se agregarían de forma aditiva — una tabla `artist_release_seen` o una columna `notify` —
-sin migrar esta relación.
+**Notificaciones de lanzamiento (implementadas en `add-notification-milestones-and-releases`, ADR 0046):** no
+necesitaron columnas nuevas aquí. La sincronización del calendario resuelve el fan-out con un
+`INSERT … SELECT` sobre `credit` (`role = 'primary'`) → `artist_follow` → `app_user` activo →
+`notification_preference`; el aviso vive en `notification` con `release_group_id` y el único
+`(recipient_id, release_group_id, kind)` lo hace idempotente. "Seguir" sigue siendo solo la fila de
+esta tabla.
 
 ## `user_block`
 
@@ -1200,13 +1203,14 @@ los empates existen.
   year`): la clase "2021" del Grammy Hall of Fame se anunció el 21-dic-2020. Una competencia sigue exigiendo el mismo año en la
   carga.
 
-## `notification` y `notification_preference` (migraci�n `0075`, openspec `add-notifications-core`, ADR 0045)
+## `notification` y `notification_preference` (migraciones `0075` y `0076`, openspec `add-notifications-core` y `add-notification-milestones-and-releases`, ADR 0045 y 0046)
 
-**Prop�sito:** bandeja de notificaciones in-app de la Fase 1 (respuestas a un tema, respuestas en un hilo donde se particip�, nuevos seguidores, solicitudes y su aceptaci�n, y acciones de moderaci�n). Una fila por evento, escrita por `src/services/notifications/emit.ts` en la misma transacci�n que la acci�n que la produce; nunca se derivan en lectura.
+**Propósito:** bandeja de notificaciones in-app: respuestas a un tema, respuestas en un hilo donde se participó, nuevos seguidores, solicitudes y su aceptación, acciones de moderación, hitos de likes y guardados, y lanzamientos de artistas seguidos. Una fila por evento, escrita por `src/services/notifications/emit.ts` en la misma transacción que la acción que la produce (o por la sincronización del calendario); nunca se derivan en lectura.
 
-- `notification`: `id` (UUID), `recipient_id` y `actor_id` (FK a `app_user` con `ON DELETE CASCADE`; el actor es nulo solo en `moderation`, que no expone al moderador), `kind` (`CHECK`: `comment_reply`, `thread_reply`, `new_follower`, `follow_request`, `follow_accepted`, `moderation`), `comment_id` / `follow_id` / `moderation_action_id` (FK `CASCADE` al objeto del aviso), `group_key` (`thread:<rootId>`, `followers`, `follow:<followId>` o `moderation:<actionId>`), `created_at` y `read_at` (nulo = no le�da). Los `CHECK` exigen exactamente la referencia de cada tipo, `actor_id` obligatorio salvo en moderaci�n y distinto del destinatario. Sin `updated_at`: la fila solo cambia `read_at`.
-- **Retracci�n por cascada:** borrar la respuesta, el seguimiento (dejar de seguir, quitar seguidor, rechazar, cancelar, bloquear) o la cuenta de cualquiera de las dos partes borra el aviso; `moderation_action` nunca se borra (sus FK al contenido son `SET NULL`), as� que los avisos de moderaci�n sobreviven al borrado del objeto.
-- **�ndices:** `(recipient_id, created_at DESC)` para la p�gina; parcial `(recipient_id) WHERE read_at IS NULL` para el contador; �nicos parciales `(recipient_id, comment_id, kind)`, `(recipient_id, follow_id, kind)` y `(recipient_id, moderation_action_id)` para no duplicar.
-- `notification_preference`: `(user_id, kind)` como PK, `enabled` (`BOOLEAN`) y `CHECK` de `kind` limitado a los desactivables (`comment_reply`, `thread_reply`, `new_follower`, `follow_accepted`). Solo se guardan filas para lo que difiere del defecto (activado).
-- `app_user.notifications_seen_at` (`TIMESTAMPTZ` nulo): �ltima vez que la persona abri� la bandeja; el contador solo cuenta entradas posteriores.
-- **Retenci�n en c�digo** (no en un script operativo): al servir `GET /api/me/notifications` se borran las le�das con m�s de 90 d�as y cualquier aviso con m�s de 180, por destinatario.
+- `notification`: `id` (UUID), `recipient_id` y `actor_id` (FK a `app_user` con `ON DELETE CASCADE`; el actor es nulo en `moderation` y en los cinco tipos de la `0076`), `kind` (`CHECK`: `comment_reply`, `thread_reply`, `new_follower`, `follow_request`, `follow_accepted`, `moderation`, `comment_like_milestone`, `list_save_milestone`, `artist_release`, `artist_release_announced`, `artist_single`), `comment_id` / `follow_id` / `moderation_action_id` / `list_id` / `release_group_id` (FK `CASCADE` al objeto del aviso), `milestone` (`INTEGER`, obligatorio y `> 0` solo en los dos hitos), `group_key` (`thread:<rootId>`, `followers`, `follow:<followId>`, `moderation:<actionId>`, `likes:<commentId>`, `saves:<listId>`, `release:<rgId>` o `announced:<rgId>`), `created_at` y `read_at` (nulo = no leída). Los `CHECK` exigen exactamente la referencia de cada tipo: los hitos llevan `milestone` y su objeto (`comment_id` o `list_id`), los lanzamientos llevan `release_group_id` y ningún hito, `actor_id` es obligatorio salvo en moderación y los cinco tipos nuevos, y siempre distinto del destinatario. Sin `updated_at`: la fila solo cambia `read_at`.
+- **Retracción por cascada:** borrar la respuesta, el comentario, la lista, el disco, el seguimiento (dejar de seguir, quitar seguidor, rechazar, cancelar, bloquear) o la cuenta de cualquiera de las dos partes borra el aviso; `moderation_action` nunca se borra (sus FK al contenido son `SET NULL`), así que los avisos de moderación sobreviven al borrado del objeto.
+- **Índices:** `(recipient_id, created_at DESC)` para la página; parcial `(recipient_id) WHERE read_at IS NULL` para el contador; únicos parciales `(recipient_id, comment_id, kind, coalesce(milestone, 0))` (reemplaza al de la `0075`), `(recipient_id, follow_id, kind)`, `(recipient_id, moderation_action_id)`, `(recipient_id, list_id, milestone)` y `(recipient_id, release_group_id, kind)` para no duplicar. El `coalesce(milestone, 0)` deja que un mismo comentario tenga un hito por cifra y siga admitiendo el único de respuestas.
+- `notification_preference`: `(user_id, kind)` como PK, `enabled` (`BOOLEAN`) y `CHECK` de `kind` limitado a los nueve desactivables (`comment_reply`, `thread_reply`, `new_follower`, `follow_accepted`, `comment_like_milestone`, `list_save_milestone`, `artist_release`, `artist_release_announced`, `artist_single`). Solo se guardan filas para lo que difiere del **defecto del tipo**: activados `comment_reply`, `thread_reply`, `new_follower`, `follow_accepted`, `comment_like_milestone` y `artist_release`; desactivados `list_save_milestone`, `artist_release_announced` y `artist_single`. `follow_request` y `moderation` son fijas y no admiten fila. La ausencia de fila significa el defecto del tipo, no "activado".
+- `app_user.notifications_seen_at` (`TIMESTAMPTZ` nulo): última vez que la persona abrió "Para ti" (la bandeja); el contador solo cuenta entradas posteriores. `app_user.notifications_releases_seen_at` (`TIMESTAMPTZ` nulo, `0076`): la marca aparte de "Novedades"; el punto de esa pestaña solo mira entradas posteriores. Las dos marcas son independientes.
+- **Retención en código** (no en un script operativo): al servir `GET /api/me/notifications` se borran las leídas con más de 90 días y cualquier aviso con más de 180, por destinatario.
+- **Origen del fan-out de lanzamientos:** la emisión lee `credit` (`role = 'primary'`) → `artist_follow` → `app_user` activo → `notification_preference` (con su defecto) en un `INSERT … SELECT … ON CONFLICT DO NOTHING` por tipo. No añade columnas a `artist_follow`.

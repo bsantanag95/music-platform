@@ -11,6 +11,12 @@
     "actionError": "The action could not be completed.",
     "unread": "Unread"
   },
+  "tabs": {
+    "label": "Inbox sections",
+    "for_you": "For you",
+    "releases": "Releases",
+    "newReleasesUnseen": "Unseen releases"
+  },
   "row": {
     "twoNames": "{first} and {second}",
     "moreNames": "{names} and {count, plural, one {# more person} other {# more people}}",
@@ -19,6 +25,16 @@
     "newFollower": "{people} started following you",
     "followRequest": "{name} wants to follow you",
     "followAccepted": "{name} accepted your follow request",
+    "commentLikeMilestone": "Your comment on {subject} reached {count} likes",
+    "listSaveMilestone": "{count, plural, one {# person has} other {# people have}} saved your list “{title}”",
+    "listSaveMilestoneCamino": "{count, plural, one {# person has} other {# people have}} saved your Journey “{title}”",
+    "releaseAlbum": "{title}, the new album by {artist}, is out",
+    "releaseEp": "{title}, the new EP by {artist}, is out",
+    "releaseSingle": "{title}, the new single by {artist}, is out",
+    "releaseAnnounced": "{artist} announced {title} for {date}",
+    "releaseAnnouncedNoDate": "{artist} announced {title}",
+    "milestoneFallback": "Your content reached a new milestone",
+    "releaseFallback": "There is news from an artist you follow",
     "markRead": "Mark as read",
     "approve": "Approve",
     "reject": "Reject"
@@ -37,27 +53,41 @@
   },
   "page": {
     "title": "Notifications",
-    "subtitle": "Replies, followers and account notices.",
+    "subtitle": "Replies, followers, milestones and news from your artists.",
     "settings": "Notification settings",
     "markAllRead": "Mark all as read",
     "loadMore": "Load more",
     "loadingMore": "Loading…",
     "emptyTitle": "Your notifications will show up here",
     "emptyDescription": "When someone replies to your threads, follows you or there is a notice about your account, it will appear here.",
+    "emptyReleasesTitle": "Your artists' releases will show up here",
+    "emptyReleasesDescription": "When an artist you follow releases or announces an album, it will appear here.",
     "error": "Notifications could not be loaded."
+  },
+  "panel": {
+    "emptyReleases": "Releases from the artists you follow will show up here."
   },
   "settings": {
     "title": "Notifications",
     "intro": "Choose which notices you want to receive in the app. Nothing is sent by email or as browser notifications.",
     "fixed": "Always on",
     "saveError": "Preferences could not be saved.",
+    "sections": {
+      "forYou": "For you",
+      "releases": "Releases"
+    },
     "kinds": {
       "comment_reply": "Replies to your threads",
       "thread_reply": "Replies in threads you took part in",
       "new_follower": "New followers",
       "follow_accepted": "Accepted requests",
       "follow_request": "Follow requests",
-      "moderation": "Moderation notices"
+      "moderation": "Moderation notices",
+      "comment_like_milestone": "Like milestones",
+      "list_save_milestone": "Save milestones",
+      "artist_release": "New releases",
+      "artist_release_announced": "Announced releases",
+      "artist_single": "New singles"
     },
     "descriptions": {
       "comment_reply": "When someone replies to the thread you opened.",
@@ -65,7 +95,12 @@
       "new_follower": "When someone starts following you.",
       "follow_accepted": "When someone accepts your request to follow them.",
       "follow_request": "Requests always arrive: they are how you decide whether to accept.",
-      "moderation": "Moderation notices always arrive: they affect your account or your content."
+      "moderation": "Moderation notices always arrive: they affect your account or your content.",
+      "comment_like_milestone": "When your comment reaches a round number of likes.",
+      "list_save_milestone": "When your list reaches a round number of people who saved it.",
+      "artist_release": "When an artist you follow releases an album or an EP.",
+      "artist_release_announced": "When an artist you follow announces a release with a date.",
+      "artist_single": "When an artist you follow releases a single."
     }
   }
 }
