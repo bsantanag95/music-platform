@@ -38,9 +38,10 @@ export type CommentTopic = (typeof COMMENT_TOPICS)[number];
 export const DEFAULT_COMMENT_TOPIC: CommentTopic = "general";
 
 /**
- * Tipos de notificación (openspec: add-notifications-core y
- * add-notification-milestones-and-releases). La lista debe coincidir con
- * `chk_notification_kind` de la migración 0076.
+ * Tipos de notificación (openspec: add-notifications-core,
+ * add-notification-milestones-and-releases y
+ * add-notification-digest-and-awards). La lista debe coincidir con
+ * `chk_notification_kind` de la migración 0077.
  */
 export const NOTIFICATION_KINDS = [
   "comment_reply",
@@ -54,6 +55,8 @@ export const NOTIFICATION_KINDS = [
   "artist_release",
   "artist_release_announced",
   "artist_single",
+  "artist_award_nomination",
+  "artist_award_win",
 ] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
@@ -73,8 +76,22 @@ export const OPTIONAL_NOTIFICATION_KINDS = {
   artist_release: true,
   artist_release_announced: false,
   artist_single: false,
-} as const satisfies Partial<Record<NotificationKind, boolean>>;
+  // Preferencia única de los premios (D6): gobierna las dos clases de aviso,
+  // que por eso no son claves de preferencia por separado.
+  artist_award: true,
+} as const satisfies Partial<Record<NotificationKind | "artist_award", boolean>>;
 export type OptionalNotificationKind = keyof typeof OPTIONAL_NOTIFICATION_KINDS;
+
+/**
+ * Preferencia que gobierna un tipo de aviso agrupado: las dos clases de premio
+ * comparten `artist_award` (D6). El resto se gobierna por su propio tipo.
+ */
+export const GROUPED_NOTIFICATION_PREFERENCE: Partial<
+  Record<NotificationKind, OptionalNotificationKind>
+> = {
+  artist_award_nomination: "artist_award",
+  artist_award_win: "artist_award",
+};
 
 /** Pestañas de la bandeja (D7): "Para ti" y "Novedades". */
 export const NOTIFICATION_TABS = ["for_you", "releases"] as const;
@@ -144,6 +161,11 @@ export const appUser = pgTable(
     notificationsReleasesSeenAt: timestamp("notifications_releases_seen_at", {
       withTimezone: true,
     }),
+    // Resumen semanal por email (migración 0077, openspec:
+    // add-notification-digest-and-awards, D2). Opt-in; `sent_at` es el fin de la
+    // ventana del último resumen enviado (nulo = nunca se envió).
+    notificationDigestEnabled: boolean("notification_digest_enabled").notNull().default(false),
+    notificationDigestSentAt: timestamp("notification_digest_sent_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -1888,9 +1910,10 @@ export const commentLike = pgTable(
 
 export type CommentLikeRow = typeof commentLike.$inferSelect;
 
-// Bandeja de notificaciones in-app (openspec: add-notifications-core y
-// add-notification-milestones-and-releases, migraciones 0075 y 0076). Una fila
-// por evento, escrita por `services/notifications/emit.ts` en la misma
+// Bandeja de notificaciones in-app (openspec: add-notifications-core,
+// add-notification-milestones-and-releases y
+// add-notification-digest-and-awards, migraciones 0075–0077). Una fila por
+// evento, escrita por `services/notifications/emit.ts` en la misma
 // transacción que la acción. Los CHECK de tipo, coherencia tipo ↔ referencia y
 // actor viven en la migración SQL; aquí se reflejan los índices parciales que
 // Drizzle no expresa sobre columnas nullable.
@@ -1914,6 +1937,11 @@ export const notification = pgTable(
     listId: uuid("list_id").references(() => userList.id, { onDelete: "cascade" }),
     // Avisos de lanzamiento: el disco del catálogo.
     releaseGroupId: uuid("release_group_id").references(() => releaseGroup.id, {
+      onDelete: "cascade",
+    }),
+    // Avisos de premios (migración 0077): la ceremonia, no la nominación (que
+    // se reescribe en cada recarga de una categoría).
+    awardCeremonyId: uuid("award_ceremony_id").references(() => awardCeremony.id, {
       onDelete: "cascade",
     }),
     groupKey: text("group_key").notNull(),
@@ -1942,7 +1970,7 @@ export const notificationPreference = pgTable(
     primaryKey({ columns: [t.userId, t.kind] }),
     check(
       "chk_notification_preference_kind",
-      sql`${t.kind} IN ('comment_reply','thread_reply','new_follower','follow_accepted','comment_like_milestone','list_save_milestone','artist_release','artist_release_announced','artist_single')`,
+      sql`${t.kind} IN ('comment_reply','thread_reply','new_follower','follow_accepted','comment_like_milestone','list_save_milestone','artist_release','artist_release_announced','artist_single','artist_award')`,
     ),
   ],
 );

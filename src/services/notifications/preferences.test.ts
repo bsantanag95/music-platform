@@ -1,8 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getNotificationPreferences, updateNotificationPreferences } from "./preferences";
+import {
+  getNotificationPreferences,
+  getNotificationSettings,
+  setNotificationDigestEnabled,
+  updateNotificationPreferences,
+  updateNotificationSettings,
+} from "./preferences";
 
 const mocks = vi.hoisted(() => ({
-  db: { select: vi.fn(), insert: vi.fn(), delete: vi.fn(), transaction: vi.fn() },
+  db: {
+    select: vi.fn(),
+    insert: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    transaction: vi.fn(),
+  },
 }));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
@@ -13,6 +25,27 @@ function mockPreferences(rows: Array<{ kind: string; enabled: boolean }>) {
   mocks.db.select.mockReturnValue({ from });
 }
 
+/**
+ * Cola una lectura de `app_user` (`.limit(1)`). Los ajustes encadenan varias
+ * lecturas por llamada, así que el orden importa: se encolan en el orden en que
+ * las hace el código.
+ */
+function queueUserRow(row: { emailDigest: boolean; emailVerifiedAt: Date | null } | null) {
+  const limit = vi.fn().mockResolvedValue(row ? [row] : []);
+  const where = vi.fn(() => ({ limit }));
+  const from = vi.fn(() => ({ where }));
+  mocks.db.select.mockReturnValueOnce({ from });
+  return { where, limit };
+}
+
+/** Cola una lectura de `notificationPreference` (devuelve las filas directo). */
+function queuePreferences(rows: Array<{ kind: string; enabled: boolean }>) {
+  const where = vi.fn().mockResolvedValue(rows);
+  const from = vi.fn(() => ({ where }));
+  mocks.db.select.mockReturnValueOnce({ from });
+  return { where };
+}
+
 function mockWrites() {
   const onConflictDoUpdate = vi.fn().mockResolvedValue(undefined);
   const values = vi.fn(() => ({ onConflictDoUpdate }));
@@ -20,6 +53,13 @@ function mockWrites() {
   const where = vi.fn().mockResolvedValue(undefined);
   mocks.db.delete.mockReturnValue({ where });
   return { values, onConflictDoUpdate, where };
+}
+
+function mockUserUpdate() {
+  const where = vi.fn().mockResolvedValue(undefined);
+  const set = vi.fn(() => ({ where }));
+  mocks.db.update.mockReturnValue({ set });
+  return { set, where };
 }
 
 beforeEach(() => {
@@ -45,6 +85,7 @@ describe("getNotificationPreferences", () => {
       artist_release: true,
       artist_release_announced: false,
       artist_single: false,
+      artist_award: true,
     });
   });
 
@@ -101,5 +142,100 @@ describe("updateNotificationPreferences", () => {
       { userId: "me", kind: "artist_single", enabled: true },
     ]);
     expect(result.artist_single).toBe(true);
+  });
+});
+
+describe("resumen semanal", () => {
+  it("los ajustes traen el opt-in y si el email está verificado", async () => {
+    queueUserRow({ emailDigest: true, emailVerifiedAt: new Date("2026-10-01T00:00:00.000Z") });
+    mockPreferences([]);
+
+    const settings = await getNotificationSettings("me");
+
+    expect(settings.emailDigest).toBe(true);
+    expect(settings.emailVerified).toBe(true);
+    expect(settings.preferences.artist_award).toBe(true);
+  });
+
+  it("sin verificar, emailVerified es falso", async () => {
+    queueUserRow({ emailDigest: false, emailVerifiedAt: null });
+    mockPreferences([]);
+
+    const settings = await getNotificationSettings("me");
+
+    expect(settings.emailDigest).toBe(false);
+    expect(settings.emailVerified).toBe(false);
+  });
+
+  it("una cuenta inexistente responde USER_NOT_FOUND", async () => {
+    queueUserRow(null);
+    mockPreferences([]);
+
+    await expect(getNotificationSettings("me")).rejects.toMatchObject({
+      code: "USER_NOT_FOUND",
+      status: 404,
+    });
+  });
+
+  it("activar sin email verificado responde 409 y no escribe", async () => {
+    queueUserRow({ emailDigest: false, emailVerifiedAt: null });
+
+    await expect(setNotificationDigestEnabled("me", true)).rejects.toMatchObject({
+      code: "EMAIL_NOT_VERIFIED",
+      status: 409,
+    });
+    expect(mocks.db.update).not.toHaveBeenCalled();
+  });
+
+  it("activar con el email verificado enciende el resumen", async () => {
+    queueUserRow({ emailDigest: false, emailVerifiedAt: new Date("2026-10-01T00:00:00.000Z") });
+    const { set } = mockUserUpdate();
+
+    await setNotificationDigestEnabled("me", true);
+
+    expect(set).toHaveBeenCalledWith({ notificationDigestEnabled: true });
+  });
+
+  it("desactivar no exige verificación y apaga el resumen", async () => {
+    const { set } = mockUserUpdate();
+
+    await setNotificationDigestEnabled("me", false);
+
+    expect(set).toHaveBeenCalledWith({ notificationDigestEnabled: false });
+    // No se consulta el email para apagar.
+    expect(mocks.db.select).not.toHaveBeenCalled();
+  });
+
+  it("el cambio parcial aplica el resumen y los tipos, y devuelve el estado", async () => {
+    // Orden de lecturas: verificación, preferencias tras escribir, ajustes
+    // (cuenta) y preferencias de la respuesta.
+    queueUserRow({ emailDigest: false, emailVerifiedAt: new Date("2026-10-01T00:00:00.000Z") });
+    queuePreferences([{ kind: "comment_reply", enabled: false }]);
+    queueUserRow({ emailDigest: true, emailVerifiedAt: new Date("2026-10-01T00:00:00.000Z") });
+    mockPreferences([{ kind: "comment_reply", enabled: false }]);
+    const { set } = mockUserUpdate();
+    mockWrites();
+
+    const settings = await updateNotificationSettings("me", {
+      emailDigest: true,
+      preferences: { comment_reply: false },
+    });
+
+    expect(set).toHaveBeenCalledWith({ notificationDigestEnabled: true });
+    expect(settings.emailDigest).toBe(true);
+    expect(settings.preferences.comment_reply).toBe(false);
+  });
+
+  it("un cambio solo de tipos no toca el resumen", async () => {
+    // Orden de lecturas: preferencias tras escribir, cuenta de los ajustes y
+    // preferencias de la respuesta.
+    queuePreferences([]);
+    queueUserRow({ emailDigest: false, emailVerifiedAt: new Date("2026-10-01T00:00:00.000Z") });
+    mockPreferences([]);
+    mockWrites();
+
+    await updateNotificationSettings("me", { preferences: { new_follower: true } });
+
+    expect(mocks.db.update).not.toHaveBeenCalled();
   });
 });

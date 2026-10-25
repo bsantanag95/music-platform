@@ -23,8 +23,28 @@ describe("getEmailTransport", () => {
 
   it("falla cerrado con un proveedor no implementado", () => {
     vi.stubEnv("NODE_ENV", "development");
-    vi.stubEnv("EMAIL_TRANSPORT", "resend");
+    vi.stubEnv("EMAIL_TRANSPORT", "smtp");
     expect(() => getEmailTransport()).toThrow(EmailConfigError);
+  });
+
+  it("exige RESEND_API_KEY y EMAIL_FROM con EMAIL_TRANSPORT=resend", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("EMAIL_TRANSPORT", "resend");
+    vi.stubEnv("RESEND_API_KEY", "");
+    vi.stubEnv("EMAIL_FROM", "music@example.com");
+    expect(() => getEmailTransport()).toThrow(EmailConfigError);
+
+    vi.stubEnv("RESEND_API_KEY", "re_123");
+    vi.stubEnv("EMAIL_FROM", "");
+    expect(() => getEmailTransport()).toThrow(EmailConfigError);
+  });
+
+  it("devuelve el adaptador de Resend con la configuración completa", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("EMAIL_TRANSPORT", "resend");
+    vi.stubEnv("RESEND_API_KEY", "re_123");
+    vi.stubEnv("EMAIL_FROM", "music@example.com");
+    expect(getEmailTransport()).toBeDefined();
   });
 });
 

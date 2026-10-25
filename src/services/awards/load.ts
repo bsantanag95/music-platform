@@ -37,6 +37,8 @@ export interface CeremonyLoadStats {
 export interface LoadStats {
   stubsCreated: number;
   ceremonies: CeremonyLoadStats[];
+  /** Ids de las ceremonias de este premio, para emitir sus avisos después. */
+  ceremonyIds: string[];
   ceremoniesRemoved: number;
   categoriesRemoved: number;
 }
@@ -153,7 +155,7 @@ async function loadCeremony(
   categoryIds: Map<string, string>,
   entry: CeremonyEntry,
   subjects: Map<string, SubjectIds>,
-): Promise<CeremonyLoadStats> {
+): Promise<{ stats: CeremonyLoadStats; ceremonyId: string }> {
   const data = entry.data;
   const [ceremony] = await tx
     .insert(awardCeremony)
@@ -229,7 +231,7 @@ async function loadCeremony(
   await tx
     .delete(awardCategoryEdition)
     .where(and(eq(awardCategoryEdition.ceremonyId, ceremonyId), notInArray(awardCategoryEdition.id, editionIds)));
-  return stats;
+  return { stats, ceremonyId };
 }
 
 /**
@@ -258,7 +260,12 @@ export async function loadAward(files: AwardFiles): Promise<LoadStats> {
 
     const { ids, removed } = await upsertCategories(tx, awardId, files);
     const ceremonies: CeremonyLoadStats[] = [];
-    for (const entry of files.ceremonies) ceremonies.push(await loadCeremony(tx, awardId, ids, entry, subjects));
+    const ceremonyIds: string[] = [];
+    for (const entry of files.ceremonies) {
+      const loaded = await loadCeremony(tx, awardId, ids, entry, subjects);
+      ceremonies.push(loaded.stats);
+      ceremonyIds.push(loaded.ceremonyId);
+    }
 
     const years = files.ceremonies.map((c) => c.data.year);
     const gone = await tx
@@ -266,7 +273,13 @@ export async function loadAward(files: AwardFiles): Promise<LoadStats> {
       .where(and(eq(awardCeremony.awardId, awardId), years.length > 0 ? notInArray(awardCeremony.year, years) : undefined))
       .returning({ id: awardCeremony.id });
 
-    return { stubsCreated: counter.created, ceremonies, ceremoniesRemoved: gone.length, categoriesRemoved: removed };
+    return {
+      stubsCreated: counter.created,
+      ceremonies,
+      ceremonyIds,
+      ceremoniesRemoved: gone.length,
+      categoriesRemoved: removed,
+    };
   });
 }
 

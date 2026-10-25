@@ -151,6 +151,14 @@
     "title": "Email delivery unavailable",
     "description": "Email delivery isn't configured. Please try again later."
   },
+  "EMAIL_NOT_VERIFIED": {
+    "title": "Email not verified",
+    "description": "Verify your email to turn on the weekly digest."
+  },
+  "INVALID_UNSUBSCRIBE_TOKEN": {
+    "title": "Invalid unsubscribe link",
+    "description": "This link isn't valid. You can turn the digest off in your notification settings."
+  },
   "USER_NOT_FOUND": {
     "title": "User not found",
     "description": "The requested user does not exist or is not available."

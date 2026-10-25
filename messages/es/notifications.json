@@ -33,6 +33,12 @@
     "releaseSingle": "Salió {title}, el nuevo sencillo de {artist}",
     "releaseAnnounced": "{artist} anunció {title} para el {date}",
     "releaseAnnouncedNoDate": "{artist} anunció {title}",
+    "awardNomination": "{artist} tiene {count, plural, one {# nominación} other {# nominaciones}} en {award} {year}",
+    "awardNominationMore": "{artist} y {otherArtists, plural, one {# artista más} other {# artistas más}} tienen {count, plural, one {# nominación} other {# nominaciones}} en {award} {year}",
+    "awardWin": "{artist} ganó {count, plural, one {# premio} other {# premios}} en {award} {year}",
+    "awardWinMore": "{artist} y {otherArtists, plural, one {# artista más} other {# artistas más}} ganaron {count, plural, one {# premio} other {# premios}} en {award} {year}",
+    "awardHallOfFame": "{artist} entró al {award} {year}",
+    "awardHallOfFameMore": "{artist} y {otherArtists, plural, one {# artista más} other {# artistas más}} entraron al {award} {year}",
     "milestoneFallback": "Tu contenido alcanzó un hito nuevo",
     "releaseFallback": "Hay una novedad de un artista que sigues",
     "markRead": "Marcar como leída",
@@ -69,12 +75,19 @@
   },
   "settings": {
     "title": "Notificaciones",
-    "intro": "Elige qué avisos quieres recibir dentro de la aplicación. Ningún tipo se envía por email ni por notificaciones del navegador.",
+    "intro": "Elige qué avisos quieres recibir dentro de la aplicación y si quieres un resumen semanal por email.",
     "fixed": "Siempre activas",
     "saveError": "No se pudieron guardar las preferencias.",
     "sections": {
       "forYou": "Para ti",
-      "releases": "Novedades"
+      "releases": "Novedades",
+      "email": "Por email"
+    },
+    "digest": {
+      "label": "Resumen semanal",
+      "description": "Un correo a la semana con lo que no leíste: respuestas, seguidores y novedades de los artistas que sigues.",
+      "needsVerification": "Verifica tu email para activarlo.",
+      "verify": "Verificar email"
     },
     "kinds": {
       "comment_reply": "Respuestas a tus temas",
@@ -87,7 +100,8 @@
       "list_save_milestone": "Hitos de guardados",
       "artist_release": "Discos nuevos",
       "artist_release_announced": "Discos anunciados",
-      "artist_single": "Sencillos nuevos"
+      "artist_single": "Sencillos nuevos",
+      "artist_award": "Premios de artistas que sigues"
     },
     "descriptions": {
       "comment_reply": "Cuando alguien responde al tema que abriste.",
@@ -100,7 +114,32 @@
       "list_save_milestone": "Cuando tu lista alcanza una cifra redonda de personas que la guardaron.",
       "artist_release": "Cuando un artista que sigues publica un álbum o un EP.",
       "artist_release_announced": "Cuando un artista que sigues anuncia un disco con fecha.",
-      "artist_single": "Cuando un artista que sigues publica un sencillo."
+      "artist_single": "Cuando un artista que sigues publica un sencillo.",
+      "artist_award": "Cuando un artista que sigues recibe una nominación o gana un premio."
     }
+  },
+  "digest": {
+    "subject": "Tu semana en {app}: {count, plural, one {# novedad} other {# novedades}}",
+    "heading": "Tu semana en {app}",
+    "intro": "Esto es lo que pasó esta semana: {count, plural, one {# entrada sin leer} other {# entradas sin leer}}.",
+    "forYou": "Para ti",
+    "releases": "Novedades",
+    "more": "y {count, plural, one {# entrada más} other {# entradas más}}",
+    "inbox": "Ver en la bandeja",
+    "footer": "Recibes este resumen porque lo activaste en tus ajustes de notificaciones.",
+    "unsubscribe": "Darte de baja de estos resúmenes"
+  },
+  "unsubscribePage": {
+    "title": "Darte de baja del resumen",
+    "description": "Dejarás de recibir el resumen semanal por email. El resto de tus avisos no cambia.",
+    "confirm": "Darte de baja",
+    "submitting": "Dando de baja…",
+    "doneTitle": "Resumen desactivado",
+    "doneDescription": "No volverás a recibir el resumen semanal. Puedes activarlo de nuevo cuando quieras.",
+    "invalidTitle": "Link inválido",
+    "invalidDescription": "Este link no es válido o ya no sirve. Puedes desactivar el resumen desde tus ajustes de notificaciones.",
+    "error": "No se pudo procesar la baja. Inténtalo de nuevo.",
+    "goToSettings": "Ajustes de notificaciones",
+    "goHome": "Volver al inicio"
   }
 }

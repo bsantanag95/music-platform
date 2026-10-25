@@ -1,7 +1,6 @@
 import { asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import {
-  NOTIFICATION_KINDS,
   appUser,
   artist,
   artistFollow,
@@ -30,6 +29,7 @@ import {
   wantToListenEntry,
 } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
+import { resolveNotificationPreferences } from "@/services/notifications/preferences";
 import { resolveImageUrl } from "@/services/storage/avatar-urls";
 
 // Exportación de los datos propios (spec account-lifecycle, "Exportar los datos
@@ -73,6 +73,8 @@ export interface DataExport {
   notifications: {
     /** Preferencia efectiva por tipo. Las notificaciones en sí no se exportan. */
     preferences: Record<string, boolean>;
+    /** Resumen semanal por email (opt-in, `add-notification-digest-and-awards`). */
+    emailDigest: boolean;
   };
   catalog: {
     artists: Record<string, string>;
@@ -289,11 +291,8 @@ export async function buildDataExport(userId: string, now: Date = new Date()): P
       blocked: blocked.map((row) => person(row)),
     },
     notifications: {
-      // La ausencia de fila significa "activado".
-      preferences: Object.fromEntries([
-        ...NOTIFICATION_KINDS.map((kind) => [kind, true] as const),
-        ...notificationPreferences.map((row) => [row.kind, row.enabled] as const),
-      ]),
+      preferences: resolveNotificationPreferences(notificationPreferences),
+      emailDigest: user.notificationDigestEnabled,
     },
     catalog: {
       artists: Object.fromEntries(artists.map((row) => [row.id, row.name])),

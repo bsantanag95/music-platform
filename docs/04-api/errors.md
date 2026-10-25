@@ -64,7 +64,9 @@ además del `error` legible:
 | `PASSWORD_REUSED` | 400 | `POST /api/auth/password/reset`: la contraseña nueva es igual a la actual. El token **no** se consume, así que el usuario puede reintentar con el mismo link. |
 | `INVALID_VERIFICATION_TOKEN` | 400 | `POST /api/auth/email/verify`: el token de verificación de email no existe, expiró o ya fue usado. No distingue entre esos casos. |
 | `EMAIL_ALREADY_VERIFIED` | 409 | `POST /api/auth/email/verify/resend`: la cuenta ya tiene el email verificado. |
-| `EMAIL_CONFIG_MISSING` | 503 | `POST /api/auth/password/forgot` y `POST /api/auth/email/verify/resend`: no hay un transporte de email real configurado en producción (fail-closed); el flujo no genera token ni envía correo. |
+| `EMAIL_CONFIG_MISSING` | 503 | `POST /api/auth/password/forgot`, `POST /api/auth/email/verify/resend` y el envío del resumen semanal: no hay un transporte de email real configurado en producción (fail-closed); el flujo no genera token ni envía correo. |
+| `EMAIL_NOT_VERIFIED` | 409 | `PUT /api/me/notification-preferences` con `emailDigest: true`: la cuenta no tiene el email verificado. No cambia nada; la pantalla ofrece verificarlo (`add-notification-digest-and-awards`). |
+| `INVALID_UNSUBSCRIBE_TOKEN` | 400 | `POST /api/notifications/unsubscribe?token=`: falta el token o no coincide con la firma (alterado, de otra persona o firmado con otro secreto). No cambia nada; no distingue si la cuenta existe. |
 | `REAUTH_REQUIRED` | 403 | Acción sensible en una cuenta **sin contraseña** con la sesión de más de 10 minutos: hay que confirmar la identidad con Google (`GET /api/auth/google/start?intent=reauth`). No se ejecutó nada. |
 | `USERNAME_CHANGE_COOLDOWN` | 409 | `PUT /api/me/account/username`: ya se cambió el usuario hace menos de 30 días. El mensaje incluye la fecha (ISO) en que vuelve a estar permitido. |
 | `LAST_ACCESS_METHOD` | 409 | `DELETE /api/me/account/identities/google`: Google es el único método de acceso (la cuenta no tiene contraseña); crear una contraseña primero. |

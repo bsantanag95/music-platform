@@ -62,6 +62,7 @@ const user = {
   selfRoles: ["dj"],
   genres: ["jazz"],
   listeningFormats: ["vinyl"],
+  notificationDigestEnabled: false,
   createdAt: new Date("2026-01-01"),
 };
 
@@ -137,8 +138,22 @@ describe("buildDataExport", () => {
       follow_accepted: true,
       follow_request: true,
       moderation: true,
+      // Los premios son una sola preferencia (D6) y nace activada.
+      artist_award: true,
+      // Defectos que no son "activado" también salen efectivos.
+      list_save_milestone: false,
     });
+    // El resumen semanal es opt-in y sale como tal.
+    expect(data.notifications.emailDigest).toBe(false);
     expect(JSON.stringify(data)).not.toMatch(/notification\b/);
+  });
+
+  it("exporta el resumen semanal activado si la persona lo activó", async () => {
+    h.rows.app_user = [[{ ...user, notificationDigestEnabled: true }]];
+
+    const data = await buildDataExport("u1");
+
+    expect(data.notifications.emailDigest).toBe(true);
   });
 
   it("USER_NOT_FOUND si la cuenta no existe", async () => {

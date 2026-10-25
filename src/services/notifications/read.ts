@@ -4,6 +4,8 @@ import { db } from "@/db";
 import {
   appUser,
   artist,
+  award,
+  awardCeremony,
   comment,
   moderationAction,
   notification,
@@ -96,6 +98,24 @@ export type NotificationTarget =
       releaseDate: string | null;
       /** Miniatura de 250 px o `null` (placeholder en la interfaz). */
       coverUrl: string | null;
+    }
+  | {
+      type: "award";
+      ceremonyId: string;
+      awardSlug: string;
+      /**
+       * Nombre del premio. La tabla `award` no lo guarda: es el slug, y la
+       * interfaz lo localiza con `awards.names.<slug>` (con el slug de respaldo).
+       */
+      awardName: string;
+      year: number;
+      isHallOfFame: boolean;
+      /** Artista seguido con más nominaciones (o premios) de la ceremonia. */
+      artistName: string;
+      /** Cuántos artistas seguidos están involucrados (el de `artistName` incluido). */
+      artistCount: number;
+      /** Nominaciones (o premios, si el aviso es de victoria) que suman entre todos. */
+      count: number;
     };
 
 export interface NotificationGroup {
@@ -122,7 +142,7 @@ export interface NotificationPage {
 // Filtros de privacidad (D4) y pestañas (D7)
 // ---------------------------------------------------------------------------
 
-/** Tipos de cada pestaña: "Para ti" (Fase 1 + hitos) y "Novedades" (lanzamientos). */
+/** Tipos de cada pestaña: "Para ti" (Fase 1 + hitos) y "Novedades" (lanzamientos y premios). */
 export const TAB_KINDS: Record<NotificationTab, readonly NotificationKind[]> = {
   for_you: [
     "comment_reply",
@@ -134,7 +154,13 @@ export const TAB_KINDS: Record<NotificationTab, readonly NotificationKind[]> = {
     "comment_like_milestone",
     "list_save_milestone",
   ],
-  releases: ["artist_release", "artist_release_announced", "artist_single"],
+  releases: [
+    "artist_release",
+    "artist_release_announced",
+    "artist_single",
+    "artist_award_nomination",
+    "artist_award_win",
+  ],
 };
 
 /**
@@ -153,6 +179,27 @@ function blockedBetween(recipientId: string) {
         ),
       ),
   );
+}
+
+/**
+ * ¿Sigue el destinatario a algún artista involucrado en la ceremonia de la
+ * fila? Un artista cuenta si es el sujeto de la nominación o si es artista
+ * principal del disco o la canción nominados. Con `onlyWon` se exige además que
+ * la nominación sea ganadora. La misma regla que usa el emisor, aplicada al
+ * leer: una corrección de las nominaciones oculta la entrada sin reescribirla.
+ */
+function followedInCeremony(recipientId: string, onlyWon: boolean): SQL {
+  return sql`exists (
+    select 1
+    from award_category_edition ace
+    join award_nomination n on n.category_edition_id = ace.id
+    left join credit c on c.role = 'primary'
+      and (c.release_group_id = n.release_group_id or c.recording_id = n.recording_id)
+    join artist_follow af on af.user_id = ${recipientId}
+      and af.artist_id = coalesce(n.artist_id, c.artist_id)
+    where ace.ceremony_id = ${notification.awardCeremonyId}
+      ${onlyWon ? sql`and n.won` : sql``}
+  )`;
 }
 
 /**
@@ -189,6 +236,19 @@ function visibleNotifications(recipientId: string, tab: NotificationTab) {
   const releaseVisible = or(
     isNull(notification.releaseGroupId),
     isNull(releaseGroup.discographyUnlistedAt),
+  );
+
+  // Un aviso de premios se calcula al leer: si una corrección de las
+  // nominaciones deja la ceremonia sin artistas seguidos, la entrada
+  // desaparece. El de victoria exige además una nominación ganadora, para que
+  // una recarga que quita la victoria no deje un "ganó" sin sustento.
+  const awardVisible = or(
+    isNull(notification.awardCeremonyId),
+    and(
+      eq(notification.kind, "artist_award_nomination"),
+      followedInCeremony(recipientId, false),
+    ),
+    and(eq(notification.kind, "artist_award_win"), followedInCeremony(recipientId, true)),
   );
 
   return db
@@ -256,6 +316,10 @@ function visibleNotifications(recipientId: string, tab: NotificationTab) {
         when ${releaseGroup.coverBlockedAt} is not null then null
         else ${releaseGroup.coverThumbUrl}
       end`.as("release_cover_url"),
+      ceremonyId: sql<string | null>`${awardCeremony.id}`.as("award_ceremony_id"),
+      awardSlug: sql<string | null>`${award.slug}`.as("award_slug"),
+      awardYear: sql<number | null>`${awardCeremony.year}`.as("award_year"),
+      awardKind: sql<string | null>`${award.kind}`.as("award_kind"),
     })
     .from(notification)
     .leftJoin(actor, eq(actor.id, notification.actorId))
@@ -267,6 +331,8 @@ function visibleNotifications(recipientId: string, tab: NotificationTab) {
     .leftJoin(moderationAction, eq(moderationAction.id, notification.moderationActionId))
     .leftJoin(userList, eq(userList.id, notification.listId))
     .leftJoin(releaseGroup, eq(releaseGroup.id, notification.releaseGroupId))
+    .leftJoin(awardCeremony, eq(awardCeremony.id, notification.awardCeremonyId))
+    .leftJoin(award, eq(award.id, awardCeremony.awardId))
     .where(
       and(
         eq(notification.recipientId, recipientId),
@@ -279,6 +345,7 @@ function visibleNotifications(recipientId: string, tab: NotificationTab) {
             replyVisible,
             listVisible,
             releaseVisible,
+            awardVisible,
           ),
         ),
       ),
@@ -334,9 +401,10 @@ function visibleForYouKeys(recipientId: string) {
 }
 
 /**
- * Filas mínimas para el punto de "Novedades". Los tres tipos de lanzamiento
- * tienen actor, comentario y lista nulos por `CHECK`, así que solo importa el
- * disco (retirado de la discografía) y la pestaña.
+ * Filas mínimas para el punto de "Novedades". Los tres tipos de lanzamiento y
+ * los dos de premios tienen actor, comentario y lista nulos por `CHECK`, así que
+ * solo importan el disco (retirado de la discografía) y los artistas seguidos
+ * de la ceremonia.
  */
 function visibleReleaseKeys(recipientId: string) {
   return db
@@ -354,6 +422,14 @@ function visibleReleaseKeys(recipientId: string) {
         or(
           isNull(notification.releaseGroupId),
           isNull(releaseGroup.discographyUnlistedAt),
+        ),
+        or(
+          isNull(notification.awardCeremonyId),
+          and(
+            eq(notification.kind, "artist_award_nomination"),
+            followedInCeremony(recipientId, false),
+          ),
+          and(eq(notification.kind, "artist_award_win"), followedInCeremony(recipientId, true)),
         ),
       ),
     )
@@ -415,6 +491,10 @@ function groupedNotifications(recipientId: string, zone: string, tab: Notificati
       releasePrimaryType: source.releasePrimaryType,
       releaseDate: source.releaseDate,
       releaseCoverUrl: source.releaseCoverUrl,
+      ceremonyId: source.ceremonyId,
+      awardSlug: source.awardSlug,
+      awardYear: source.awardYear,
+      awardKind: source.awardKind,
     })
     .from(source)
     .as("grouped_notification");
@@ -454,6 +534,9 @@ export async function listNotificationGroups(
       id: source.groupId,
       kind: sql<NotificationKind>`case
         when bool_or(${source.kind} = 'comment_reply') then 'comment_reply'
+        -- Una ceremonia con nominación y victoria es una sola entrada: manda la
+        -- victoria, que es la noticia.
+        when bool_or(${source.kind} = 'artist_award_win') then 'artist_award_win'
         else min(${source.kind}) end`,
       lastAt: sql<string>`to_json(${lastAtOfGroup}) #>> '{}'`,
       unread: sql<boolean>`bool_or(${source.readAt} is null)`,
@@ -483,6 +566,10 @@ export async function listNotificationGroups(
       releasePrimaryType: sql<string | null>`(array_agg(${source.releasePrimaryType} order by ${source.createdAt} desc))[1]`,
       releaseDate: sql<string | null>`(array_agg(${source.releaseDate} order by ${source.createdAt} desc))[1]`,
       releaseCoverUrl: sql<string | null>`(array_agg(${source.releaseCoverUrl} order by ${source.createdAt} desc))[1]`,
+      ceremonyId: sql<string | null>`(array_agg(${source.ceremonyId} order by ${source.createdAt} desc))[1]`,
+      awardSlug: sql<string | null>`(array_agg(${source.awardSlug} order by ${source.createdAt} desc))[1]`,
+      awardYear: sql<number | null>`(array_agg(${source.awardYear} order by ${source.createdAt} desc))[1]`,
+      awardKind: sql<string | null>`(array_agg(${source.awardKind} order by ${source.createdAt} desc))[1]`,
     })
     .from(source)
     .groupBy(source.groupId)
@@ -496,11 +583,16 @@ export async function listNotificationGroups(
     : await baseQuery;
 
   const page = rows.slice(0, pageSize);
-  const actors = await actorsByGroup(source, page.map((row) => row.id));
+  const [actors, awardTargets] = await Promise.all([
+    actorsByGroup(source, page.map((row) => row.id)),
+    awardTargetsByGroup(recipientId, page),
+  ]);
   const last = page[page.length - 1];
 
   return {
-    groups: page.map((row) => toGroup(row, actors.get(row.id) ?? [])),
+    groups: page.map((row) =>
+      toGroup(row, actors.get(row.id) ?? [], awardTargets.get(row.id) ?? null),
+    ),
     nextCursor:
       rows.length > pageSize && last
         ? encodeCursor({ lastAt: last.lastAt, id: last.id })
@@ -706,6 +798,149 @@ async function actorsByGroup(
   return byGroup;
 }
 
+/**
+ * Datos de una entrada de premios, calculados al leer (openspec:
+ * add-notification-digest-and-awards, D6).
+ */
+interface AwardTargetRow {
+  ceremonyId: string;
+  awardSlug: string;
+  /** El slug: la tabla no guarda el nombre y la interfaz lo localiza. */
+  awardName: string;
+  year: number;
+  isHallOfFame: boolean;
+  /** Artista seguido con más nominaciones (o premios, si la entrada es de victoria). */
+  artistName: string;
+  /** Cuántos artistas seguidos están involucrados. */
+  artistCount: number;
+  /** Nominaciones (o premios) que suman entre todos los artistas seguidos. */
+  count: number;
+}
+
+interface AwardArtistCount {
+  ceremonyId: string;
+  artistId: string;
+  artistName: string;
+  nominations: number;
+  wins: number;
+}
+
+/**
+ * Cifras por artista seguido y ceremonia, en una sola consulta para toda la
+ * página. Un artista cuenta si es el sujeto de la nominación o si es artista
+ * principal del disco o la canción nominados; las nominaciones se cuentan
+ * distintas porque un mismo disco puede estar nominado en dos categorías.
+ */
+async function awardArtistCounts(
+  recipientId: string,
+  ceremonyIds: string[],
+): Promise<Map<string, AwardArtistCount[]>> {
+  const byCeremony = new Map<string, AwardArtistCount[]>();
+  if (ceremonyIds.length === 0) return byCeremony;
+
+  const ids = sql.join(
+    ceremonyIds.map((id) => sql`${id}::uuid`),
+    sql`, `,
+  );
+
+  const rows = (await db.execute(sql`
+    with involved as (
+      select ace.ceremony_id, n.id as nomination_id, n.won, n.artist_id
+      from award_category_edition ace
+      join award_nomination n on n.category_edition_id = ace.id
+      where n.artist_id is not null and ace.ceremony_id in (${ids})
+      union all
+      select ace.ceremony_id, n.id, n.won, c.artist_id
+      from award_category_edition ace
+      join award_nomination n on n.category_edition_id = ace.id
+      join credit c on c.role = 'primary'
+        and (c.release_group_id = n.release_group_id or c.recording_id = n.recording_id)
+      where ace.ceremony_id in (${ids})
+    )
+    select i.ceremony_id, i.artist_id, ar.name as artist_name,
+           count(distinct i.nomination_id)::int as nominations,
+           (count(distinct i.nomination_id) filter (where i.won))::int as wins
+    from involved i
+    join artist_follow af on af.artist_id = i.artist_id and af.user_id = ${recipientId}
+    join artist ar on ar.id = i.artist_id
+    group by i.ceremony_id, i.artist_id, ar.name
+  `)) as unknown as Array<{
+    ceremony_id: string;
+    artist_id: string;
+    artist_name: string;
+    nominations: number;
+    wins: number;
+  }>;
+
+  for (const row of rows) {
+    const list = byCeremony.get(row.ceremony_id) ?? [];
+    list.push({
+      ceremonyId: row.ceremony_id,
+      artistId: row.artist_id,
+      artistName: row.artist_name,
+      nominations: row.nominations,
+      wins: row.wins,
+    });
+    byCeremony.set(row.ceremony_id, list);
+  }
+  return byCeremony;
+}
+
+/**
+ * Destino de cada entrada de premios de la página: el artista seguido con más
+ * nominaciones (o premios), cuántos son y cuántos suman. Una entrada sin
+ * artistas seguidos no se muestra (el filtro de visibilidad ya la excluye).
+ */
+async function awardTargetsByGroup(
+  recipientId: string,
+  rows: GroupRow[],
+): Promise<Map<string, AwardTargetRow>> {
+  const byGroup = new Map<string, AwardTargetRow>();
+  const awardGroups = rows.filter(
+    (row) =>
+      row.ceremonyId !== null &&
+      row.awardSlug !== null &&
+      row.awardYear !== null &&
+      (row.kind === "artist_award_nomination" || row.kind === "artist_award_win"),
+  );
+  if (awardGroups.length === 0) return byGroup;
+
+  const counts = await awardArtistCounts(recipientId, [
+    ...new Set(awardGroups.map((row) => row.ceremonyId as string)),
+  ]);
+
+  for (const row of awardGroups) {
+    const wins = row.kind === "artist_award_win";
+    const involved = (counts.get(row.ceremonyId as string) ?? []).filter((artist) =>
+      wins ? artist.wins > 0 : artist.nominations > 0,
+    );
+    if (involved.length === 0) continue;
+
+    involved.sort(
+      (a, b) =>
+        (wins ? b.wins - a.wins : b.nominations - a.nominations) ||
+        a.artistName.localeCompare(b.artistName),
+    );
+    const top = involved[0];
+    if (!top) continue;
+
+    byGroup.set(row.id, {
+      ceremonyId: row.ceremonyId as string,
+      awardSlug: row.awardSlug as string,
+      awardName: row.awardSlug as string,
+      year: row.awardYear as number,
+      isHallOfFame: row.awardKind === "hall_of_fame",
+      artistName: top.artistName,
+      artistCount: involved.length,
+      count: involved.reduce(
+        (total, artist) => total + (wins ? artist.wins : artist.nominations),
+        0,
+      ),
+    });
+  }
+  return byGroup;
+}
+
 type GroupRow = {
   id: string;
   kind: NotificationKind;
@@ -736,9 +971,17 @@ type GroupRow = {
   releasePrimaryType: string | null;
   releaseDate: string | null;
   releaseCoverUrl: string | null;
+  ceremonyId: string | null;
+  awardSlug: string | null;
+  awardYear: number | null;
+  awardKind: string | null;
 };
 
-function toGroup(row: GroupRow, actors: NotificationActor[]): NotificationGroup {
+function toGroup(
+  row: GroupRow,
+  actors: NotificationActor[],
+  awardTarget: AwardTargetRow | null,
+): NotificationGroup {
   return {
     id: row.id,
     kind: row.kind,
@@ -747,11 +990,11 @@ function toGroup(row: GroupRow, actors: NotificationActor[]): NotificationGroup 
     eventCount: row.eventCount,
     actorCount: row.actorCount,
     actors,
-    target: targetFor(row),
+    target: targetFor(row, awardTarget),
   };
 }
 
-function targetFor(row: GroupRow): NotificationTarget | null {
+function targetFor(row: GroupRow, awardTarget: AwardTargetRow | null): NotificationTarget | null {
   if (row.kind === "moderation") {
     if (!row.moderationAction || !row.moderationContentType || !row.moderationReason) return null;
     if (!isModerationAction(row.moderationAction)) return null;
@@ -810,6 +1053,11 @@ function targetFor(row: GroupRow): NotificationTarget | null {
       releaseDate: row.releaseDate,
       coverUrl: row.releaseCoverUrl,
     };
+  }
+
+  if (row.kind === "artist_award_nomination" || row.kind === "artist_award_win") {
+    if (!awardTarget) return null;
+    return { type: "award", ...awardTarget };
   }
 
   if (row.artistId && row.artistName && row.rootId) {

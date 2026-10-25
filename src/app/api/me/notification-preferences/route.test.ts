@@ -4,14 +4,14 @@ import { ApiError } from "@/lib/api/errors";
 import { GET, PUT } from "./route";
 
 const mocks = vi.hoisted(() => ({
-  getNotificationPreferences: vi.fn(),
-  updateNotificationPreferences: vi.fn(),
+  getNotificationSettings: vi.fn(),
+  updateNotificationSettings: vi.fn(),
   requireUser: vi.fn(),
 }));
 
 vi.mock("@/services/notifications/preferences", () => ({
-  getNotificationPreferences: mocks.getNotificationPreferences,
-  updateNotificationPreferences: mocks.updateNotificationPreferences,
+  getNotificationSettings: mocks.getNotificationSettings,
+  updateNotificationSettings: mocks.updateNotificationSettings,
 }));
 vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser }));
 
@@ -23,7 +23,14 @@ const preferences = {
   follow_request: true,
   follow_accepted: true,
   moderation: true,
+  comment_like_milestone: true,
+  list_save_milestone: false,
+  artist_release: true,
+  artist_release_announced: false,
+  artist_single: false,
+  artist_award: true,
 };
+const settings = { preferences, emailDigest: false, emailVerified: true };
 
 function request(body: unknown) {
   return new NextRequest("http://localhost/api/me/notification-preferences", {
@@ -42,18 +49,18 @@ describe("GET /api/me/notification-preferences", () => {
 
     expect(response.status).toBe(401);
     expect(await response.json()).toMatchObject({ code: "AUTH_REQUIRED" });
-    expect(mocks.getNotificationPreferences).not.toHaveBeenCalled();
+    expect(mocks.getNotificationSettings).not.toHaveBeenCalled();
   });
 
-  it("devuelve las seis claves, fijas incluidas", async () => {
+  it("devuelve las preferencias, el resumen y si el email está verificado", async () => {
     mocks.requireUser.mockResolvedValue(user);
-    mocks.getNotificationPreferences.mockResolvedValue(preferences);
+    mocks.getNotificationSettings.mockResolvedValue(settings);
 
     const response = await GET();
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ preferences });
-    expect(mocks.getNotificationPreferences).toHaveBeenCalledWith(user.id);
+    expect(await response.json()).toEqual(settings);
+    expect(mocks.getNotificationSettings).toHaveBeenCalledWith(user.id);
   });
 });
 
@@ -64,25 +71,57 @@ describe("PUT /api/me/notification-preferences", () => {
     const response = await PUT(request({ preferences: { thread_reply: false } }));
 
     expect(response.status).toBe(401);
-    expect(mocks.updateNotificationPreferences).not.toHaveBeenCalled();
+    expect(mocks.updateNotificationSettings).not.toHaveBeenCalled();
   });
 
-  it("guarda un cambio parcial y devuelve el mapa completo", async () => {
+  it("guarda un cambio de tipos y devuelve los ajustes completos", async () => {
     mocks.requireUser.mockResolvedValue(user);
-    mocks.updateNotificationPreferences.mockResolvedValue(preferences);
+    mocks.updateNotificationSettings.mockResolvedValue(settings);
 
     const response = await PUT(request({ preferences: { thread_reply: false } }));
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ preferences });
-    expect(mocks.updateNotificationPreferences).toHaveBeenCalledWith(user.id, {
-      thread_reply: false,
+    expect(await response.json()).toEqual(settings);
+    expect(mocks.updateNotificationSettings).toHaveBeenCalledWith(user.id, {
+      preferences: { thread_reply: false },
     });
+  });
+
+  it("activa el resumen semanal", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    mocks.updateNotificationSettings.mockResolvedValue({
+      ...settings,
+      emailDigest: true,
+    });
+
+    const response = await PUT(request({ emailDigest: true }));
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ emailDigest: true });
+    expect(mocks.updateNotificationSettings).toHaveBeenCalledWith(user.id, {
+      emailDigest: true,
+    });
+  });
+
+  it("activar el resumen sin el email verificado responde 409 EMAIL_NOT_VERIFIED", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    mocks.updateNotificationSettings.mockRejectedValue(
+      new ApiError(
+        "EMAIL_NOT_VERIFIED",
+        409,
+        "Verifica tu email para activar el resumen semanal",
+      ),
+    );
+
+    const response = await PUT(request({ emailDigest: true }));
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ code: "EMAIL_NOT_VERIFIED" });
   });
 
   it("un tipo fijo responde 400 VALIDATION_ERROR", async () => {
     mocks.requireUser.mockResolvedValue(user);
-    mocks.updateNotificationPreferences.mockRejectedValue(
+    mocks.updateNotificationSettings.mockRejectedValue(
       new ApiError("VALIDATION_ERROR", 400, "Este tipo de notificación no se puede desactivar"),
     );
 
@@ -96,12 +135,13 @@ describe("PUT /api/me/notification-preferences", () => {
     [{}],
     [{ preferences: { moderation: "no" } }],
     [{ preferences: { inventado: false } }],
+    [{ emailDigest: "si" }],
     [null],
   ])("rechaza el cuerpo %j con VALIDATION_ERROR", async (body) => {
     const response = await PUT(request(body));
 
     expect(response.status).toBe(400);
     expect(await response.json()).toMatchObject({ code: "VALIDATION_ERROR" });
-    expect(mocks.updateNotificationPreferences).not.toHaveBeenCalled();
+    expect(mocks.updateNotificationSettings).not.toHaveBeenCalled();
   });
 });

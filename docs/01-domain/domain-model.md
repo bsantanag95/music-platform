@@ -137,21 +137,30 @@ bidireccional con su propia persistencia.
 
 Aviso dirigido a un Usuario por un evento que le concierne: una respuesta a su tema o a un hilo donde participó, un
 nuevo seguidor, una solicitud de seguimiento, la aceptación de una solicitud propia, una acción de moderación sobre su
-contenido o su cuenta, un **hito** de su comentario o de su lista, o un **lanzamiento** de un artista que sigue.
+contenido o su cuenta, un **hito** de su comentario o de su lista, un **lanzamiento** de un artista que sigue o un
+**premio** (nominación o victoria) de un artista que sigue.
 
 - Pertenece a **un destinatario**. Los tipos de la Fase 1 (salvo moderación) tienen **un actor** (nunca el propio
-  destinatario); los hitos y los lanzamientos **no tienen actor**: un like o un guardado es anónimo y un disco no
-  pertenece a ninguna persona. Se materializa como un evento fechado, no se deriva del objeto en el momento de leer.
-- **Nace y desaparece con su objeto**: si se borra la respuesta, el comentario, la lista, el disco o el seguimiento,
-  la notificación deja de existir. Los bloqueos, las cuentas desactivadas, el contenido oculto y los discos retirados
-  de la discografía se filtran al leer, no reescriben la fila.
+  destinatario); los hitos, los lanzamientos y los premios **no tienen actor**: un like o un guardado es anónimo, y un
+  disco o una ceremonia no pertenecen a ninguna persona. Se materializa como un evento fechado, no se deriva del objeto
+  en el momento de leer.
+- **Nace y desaparece con su objeto**: si se borra la respuesta, el comentario, la lista, el disco, la ceremonia o el
+  seguimiento, la notificación deja de existir. Los bloqueos, las cuentas desactivadas, el contenido oculto, los discos
+  retirados de la discografía y las ceremonias que se quedan sin artistas seguidos se filtran al leer, no reescriben la
+  fila.
 - Un **hito** registra que el objeto alcanzó una cifra redonda de me gusta o de personas que lo guardaron. Es un hecho
   pasado: bajar el conteo no lo retira y volver a subir por debajo del siguiente no lo repite. Un **lanzamiento** nace
-  de la sincronización del calendario y es idempotente por persona, disco y tipo.
+  de la sincronización del calendario y es idempotente por persona, disco y tipo. Un **premio** nace de la carga de
+  premios, apunta a la **ceremonia** (no a la nominación, que se reemplaza al corregirla) y es idempotente por persona,
+  ceremonia y tipo; a quién nombra se recalcula al leer.
 - Cada evento tiene un estado **leído / no leído**; el conjunto tiene además un estado de **visto** por Usuario y por
   pestaña ("Para ti" / "Novedades"), que es lo que pone el contador o el punto a cero.
 - Un mismo Usuario tiene **preferencias por tipo**, con un **defecto por tipo** (no todas activadas): la ausencia de
-  preferencia significa el defecto. Solicitudes de seguimiento y moderación no son desactivables.
+  preferencia significa el defecto. Solicitudes de seguimiento y moderación no son desactivables. Las dos clases de
+  premio comparten **una sola preferencia** (`artist_award`).
+- Además de la bandeja, la cuenta puede activar un **resumen semanal por email** (opt-in, apagado por defecto, exige
+  email verificado): es un canal sobre la misma lectura, no un tipo de aviso, y se puede dar de baja en un clic desde el
+  propio correo.
 - La notificación de moderación no identifica al moderador: describe la acción, el objeto y el motivo.
 
 ## Entidades sociales (a definir en detalle en `05-features/`, cuando se llegue a su entrega)

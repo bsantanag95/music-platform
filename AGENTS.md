@@ -161,23 +161,33 @@ de cuál de las filas con el mismo título haya en la BD.
 >   `edition` nula y `held_on` del año anterior, la carga idempotente (`xmin` igual), la lectura de la clase, que el salón no aparece
 >   en las tarjetas de premios, en "Los más premiados" ni en el puntaje de destacados (`competitionNominations`) y que se rechaza una
 >   clase con gala futura o con número de edición.
-> - `smoke-test-notifications.ts` crea un artista sintético (MBID `5e0ce000-0000-4000-8000-00000000a9a0`), cuatro
->   discos (`…a9b0`, `…a9b1`, `…a9b2` y `…a9c0`, el de un comentario con hito) y usuarios `smoke_notif_*`, y los borra al terminar (también si falla). Si se
->   interrumpió, limpiar con
+> - `smoke-test-notifications.ts` crea un artista sintético (MBID `5e0ce000-0000-4000-8000-00000000a9a0`), cinco
+>   discos (`…a9b0`, `…a9b1`, `…a9b2`, `…a9c0` el de un comentario con hito y `…a9d0` el de los premios), dos premios
+>   sintéticos (`smoke-notif-premio`, de competencia, y `smoke-notif-salon`, un salón de la fama) y usuarios
+>   `smoke_notif_*`, y los borra al terminar (también si falla). Si se interrumpió, limpiar con
 >   `DELETE FROM moderation_action WHERE actor_id IN (SELECT id FROM app_user WHERE username LIKE 'smoke_notif_%');
 >   DELETE FROM app_user WHERE username LIKE 'smoke_notif_%';
+>   DELETE FROM award WHERE slug LIKE 'smoke-notif-%';
 >   DELETE FROM release_group WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000a9%';
 >   DELETE FROM artist WHERE mbid = '5e0ce000-0000-4000-8000-00000000a9a0';` (el `ON DELETE CASCADE` limpia
->   notificaciones, seguimientos, comentarios, listas, preferencias y restricciones; la primera sentencia suelta el
->   `RESTRICT` de `moderation_action.actor_id`). Necesita las migraciones `0075` y `0076`. Verifica contra Postgres real
+>   notificaciones, seguimientos, comentarios, listas, preferencias y restricciones, y el del premio sus ceremonias y
+>   avisos; la primera sentencia suelta el `RESTRICT` de `moderation_action.actor_id`). Necesita las migraciones
+>   `0075`, `0076` y `0077`. Verifica contra Postgres real
 >   cada fuente de emisión (respuestas a la raíz y a participantes, nuevo seguidor, solicitud y aceptación, moderación de
->   comentario y de suspensión social, hitos de likes y de guardados, lanzamientos), los `CHECK` y los únicos parciales,
+>   comentario y de suspensión social, hitos de likes y de guardados, lanzamientos, premios), los `CHECK` y los únicos
+>   parciales,
 >   las cascadas de retracción, los filtros de privacidad (actor desactivado, bloqueo, respuesta o comentario oculto,
 >   lista oculta, disco retirado, moderación exenta y sin moderador), la agrupación por hilo y por día en la zona `tz`,
 >   la lectura aparte de la raíz para el enlace al hilo, la paginación por cursor sin saltos, la solicitud pendiente que
 >   se acepta al volver a seguir un perfil que se hizo público, visto vs. leído, los defectos de preferencias por tipo,
 >   las pestañas "Para ti" / "Novedades", el contador que no suma novedades, `newReleases`, la escala de hitos (10, 25, solo el hito que se cruza, sin hitos atrasados en un comentario que ya los había pasado, el destino de un hito en un comentario de álbum,
->   repetición), aislamiento entre destinatarios y el contador bajo 10 ms con 100 seguidores.
+>   repetición), aislamiento entre destinatarios y el contador bajo 10 ms con 100 seguidores. Desde
+>   `add-notification-digest-and-awards` también verifica los avisos de premios (nominación, victoria, Salón de la Fama,
+>   la historia fuera de la ventana de 30 días que no avisa, la ceremonia anunciada que solo emite nominaciones, una
+>   entrada por ceremonia con la victoria por delante, la carga repetida, la corrección que oculta la entrada sin borrar
+>   la fila y la preferencia única `artist_award`), el resumen semanal con un transporte simulado (opt-in, email
+>   verificado, semana vacía, todo leído, doble corrida, fallo de una entrega, `--dry-run`) y la baja firmada (token
+>   válido, alterado, firmado con otro secreto y de una cuenta inexistente).
 > - `smoke-test-release-calendar.ts` mockea ListenBrainz, MusicBrainz y Cover Art Archive, crea
 >   artistas y release-groups con MBID `5e0ce000-0000-4000-8000-000000008*` y usuarios `smoke_cal_*`,
 >   **respalda el calendario de lanzamientos y lo restaura al terminar** (también si falla) y borra sus

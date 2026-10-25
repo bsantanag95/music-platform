@@ -33,6 +33,12 @@
     "releaseSingle": "{title}, the new single by {artist}, is out",
     "releaseAnnounced": "{artist} announced {title} for {date}",
     "releaseAnnouncedNoDate": "{artist} announced {title}",
+    "awardNomination": "{artist} has {count, plural, one {# nomination} other {# nominations}} for {award} {year}",
+    "awardNominationMore": "{artist} and {otherArtists, plural, one {# more artist} other {# more artists}} have {count, plural, one {# nomination} other {# nominations}} for {award} {year}",
+    "awardWin": "{artist} won {count, plural, one {# award} other {# awards}} at {award} {year}",
+    "awardWinMore": "{artist} and {otherArtists, plural, one {# more artist} other {# more artists}} won {count, plural, one {# award} other {# awards}} at {award} {year}",
+    "awardHallOfFame": "{artist} was inducted into {award} {year}",
+    "awardHallOfFameMore": "{artist} and {otherArtists, plural, one {# more artist} other {# more artists}} were inducted into {award} {year}",
     "milestoneFallback": "Your content reached a new milestone",
     "releaseFallback": "There is news from an artist you follow",
     "markRead": "Mark as read",
@@ -69,12 +75,19 @@
   },
   "settings": {
     "title": "Notifications",
-    "intro": "Choose which notices you want to receive in the app. Nothing is sent by email or as browser notifications.",
+    "intro": "Choose which notices you want to receive in the app, and whether you want a weekly email digest.",
     "fixed": "Always on",
     "saveError": "Preferences could not be saved.",
     "sections": {
       "forYou": "For you",
-      "releases": "Releases"
+      "releases": "Releases",
+      "email": "By email"
+    },
+    "digest": {
+      "label": "Weekly digest",
+      "description": "One email a week with what you missed: replies, followers and news from the artists you follow.",
+      "needsVerification": "Verify your email to turn it on.",
+      "verify": "Verify email"
     },
     "kinds": {
       "comment_reply": "Replies to your threads",
@@ -87,7 +100,8 @@
       "list_save_milestone": "Save milestones",
       "artist_release": "New releases",
       "artist_release_announced": "Announced releases",
-      "artist_single": "New singles"
+      "artist_single": "New singles",
+      "artist_award": "Awards for artists you follow"
     },
     "descriptions": {
       "comment_reply": "When someone replies to the thread you opened.",
@@ -100,7 +114,32 @@
       "list_save_milestone": "When your list reaches a round number of people who saved it.",
       "artist_release": "When an artist you follow releases an album or an EP.",
       "artist_release_announced": "When an artist you follow announces a release with a date.",
-      "artist_single": "When an artist you follow releases a single."
+      "artist_single": "When an artist you follow releases a single.",
+      "artist_award": "When an artist you follow is nominated for or wins an award."
     }
+  },
+  "digest": {
+    "subject": "Your week on {app}: {count, plural, one {# update} other {# updates}}",
+    "heading": "Your week on {app}",
+    "intro": "Here is what happened this week: {count, plural, one {# unread entry} other {# unread entries}}.",
+    "forYou": "For you",
+    "releases": "Releases",
+    "more": "and {count, plural, one {# more entry} other {# more entries}}",
+    "inbox": "Open notifications",
+    "footer": "You receive this digest because you turned it on in your notification settings.",
+    "unsubscribe": "Unsubscribe from these digests"
+  },
+  "unsubscribePage": {
+    "title": "Unsubscribe from the digest",
+    "description": "You'll stop receiving the weekly email digest. Your other notifications stay the same.",
+    "confirm": "Unsubscribe",
+    "submitting": "Unsubscribing…",
+    "doneTitle": "Digest turned off",
+    "doneDescription": "You won't receive the weekly digest anymore. You can turn it back on whenever you want.",
+    "invalidTitle": "Invalid link",
+    "invalidDescription": "This link isn't valid or no longer works. You can turn the digest off in your notification settings.",
+    "error": "The unsubscribe couldn't be processed. Please try again.",
+    "goToSettings": "Notification settings",
+    "goHome": "Back home"
   }
 }

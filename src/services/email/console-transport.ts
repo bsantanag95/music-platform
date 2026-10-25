@@ -7,8 +7,13 @@ import type { EmailMessage, EmailTransport } from "./types";
  */
 export const consoleTransport: EmailTransport = {
   async send(message: EmailMessage): Promise<void> {
+    const headers = Object.entries(message.headers ?? {});
+    const headerLine =
+      headers.length > 0
+        ? `Cabeceras: ${headers.map(([name, value]) => `${name}: ${value}`).join(" | ")}\n`
+        : "";
     console.log(
-      `[email:console] Para: ${message.to} | Asunto: ${message.subject}\n${message.text}\n`,
+      `[email:console] Para: ${message.to} | Asunto: ${message.subject}\n${headerLine}${message.text}\n`,
     );
   },
 };

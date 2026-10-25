@@ -526,6 +526,124 @@ describe("NotificationRow", () => {
     expect(screen.getByText("Pink Floyd anunció Por salir")).toBeInTheDocument();
   });
 
+  it("una nominación nombra el premio localizado y enlaza a la ceremonia", () => {
+    renderRow(
+      <NotificationRow
+        group={group({
+          id: "award:cer-1",
+          kind: "artist_award_nomination",
+          actors: [],
+          actorCount: 0,
+          target: {
+            type: "award",
+            ceremonyId: "cer-1",
+            awardSlug: "grammy",
+            awardName: "grammy",
+            year: 2027,
+            isHallOfFame: false,
+            artistName: "Pink Floyd",
+            artistCount: 1,
+            count: 2,
+          },
+        })}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", {
+        name: /Pink Floyd tiene 2 nominaciones en Premios Grammy 2027/,
+      }),
+    ).toHaveAttribute("href", "/awards/grammy/2027");
+  });
+
+  it("una victoria con varios artistas seguidos concuerda en plural", () => {
+    renderRow(
+      <NotificationRow
+        group={group({
+          id: "award:cer-2",
+          kind: "artist_award_win",
+          actors: [],
+          actorCount: 0,
+          target: {
+            type: "award",
+            ceremonyId: "cer-2",
+            awardSlug: "brit-awards",
+            awardName: "brit-awards",
+            year: 2026,
+            isHallOfFame: false,
+            artistName: "Pink Floyd",
+            artistCount: 2,
+            count: 3,
+          },
+        })}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", {
+        name: /Pink Floyd y 1 artista más ganaron 3 premios en Premios Brit 2026/,
+      }),
+    ).toHaveAttribute("href", "/awards/brit-awards/2026");
+  });
+
+  it("el Salón de la Fama enlaza a su clase y no a una ceremonia", () => {
+    renderRow(
+      <NotificationRow
+        group={group({
+          id: "award:cer-3",
+          kind: "artist_award_win",
+          actors: [],
+          actorCount: 0,
+          target: {
+            type: "award",
+            ceremonyId: "cer-3",
+            awardSlug: "grammy-hall-of-fame",
+            awardName: "grammy-hall-of-fame",
+            year: 2026,
+            isHallOfFame: true,
+            artistName: "Pink Floyd",
+            artistCount: 1,
+            count: 1,
+          },
+        })}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", {
+        name: /Pink Floyd entró al Salón de la Fama de los Grammy 2026/,
+      }),
+    ).toHaveAttribute("href", "/hall-of-fame/grammy-hall-of-fame/2026");
+  });
+
+  it("un premio sin nombre localizado cae al slug", () => {
+    renderRow(
+      <NotificationRow
+        group={group({
+          id: "award:cer-4",
+          kind: "artist_award_nomination",
+          actors: [],
+          actorCount: 0,
+          target: {
+            type: "award",
+            ceremonyId: "cer-4",
+            awardSlug: "premio-raro",
+            awardName: "premio-raro",
+            year: 2026,
+            isHallOfFame: false,
+            artistName: "Pink Floyd",
+            artistCount: 1,
+            count: 1,
+          },
+        })}
+      />,
+    );
+
+    expect(
+      screen.getByText(/Pink Floyd tiene 1 nominación en premio-raro 2026/),
+    ).toBeInTheDocument();
+  });
+
   it("anuncia las entradas sin leer a lectores de pantalla", () => {
     const { unmount } = renderRow(<NotificationRow group={group({})} />);
     expect(screen.getByText("(Sin leer)")).toBeInTheDocument();

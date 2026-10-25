@@ -291,10 +291,14 @@ para vincular (ADR 0010), así que no se crea contraseña local alguna.
 restablecimiento y **todas las sesiones** del usuario (sin autologin: se exige login explícito). Un
 token inexistente, expirado o ya usado responde `400 INVALID_RESET_TOKEN` sin distinguir el caso.
 
-El envío de correo pasa por una interfaz de transporte (`src/services/email/`). Hoy solo está
-implementado el adaptador `console` (desarrollo); en producción, sin un proveedor real configurado,
-el flujo falla cerrado con `503 EMAIL_CONFIG_MISSING` para no exponer un flujo que no entrega correo
-ni filtrar el token por logs. Los tests mockean el transporte; nunca se envía correo real.
+El envío de correo pasa por una interfaz de transporte (`src/services/email/`). El adaptador
+`console` (desarrollo) escribe el mensaje por consola y está prohibido en producción; el adaptador
+`resend` (`src/services/email/resend-transport.ts`, único punto de salida a Resend, por HTTP sin
+dependencia nueva) se activa con `EMAIL_TRANSPORT=resend` y exige `RESEND_API_KEY` y `EMAIL_FROM`.
+Sin transporte real configurado, el flujo falla cerrado con `503 EMAIL_CONFIG_MISSING` para no
+exponer un flujo que no entrega correo ni filtrar el token por logs. Un error de entrega lanza
+`EmailDeliveryError` con el estado HTTP y nunca registra el cuerpo de la respuesta (puede repetir el
+destinatario y el contenido). Los tests mockean `fetch`; nunca se envía correo real.
 
 El locale del correo se valida contra `src/i18n/routing.ts` (default `es`) y no se persiste, porque
 el envío es sincrónico al pedido. La página `/<locale>/auth/reset-password` pre-valida el token sin

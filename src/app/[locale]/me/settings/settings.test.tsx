@@ -40,7 +40,7 @@ const m = vi.hoisted(() => ({
   getShowcase: vi.fn(),
   getCurationSummary: vi.fn(),
   getAccessMethod: vi.fn(),
-  getNotificationPreferences: vi.fn(),
+  getNotificationSettings: vi.fn(),
   redirect: vi.fn(),
   refresh: vi.fn(),
 }));
@@ -81,7 +81,7 @@ vi.mock("@/services/profiles/showcase", () => ({ getShowcase: m.getShowcase }));
 vi.mock("@/services/profiles/curation", () => ({ getCurationSummary: m.getCurationSummary }));
 vi.mock("@/services/profiles/account-settings", () => ({ getAccessMethod: m.getAccessMethod }));
 vi.mock("@/services/notifications/preferences", () => ({
-  getNotificationPreferences: m.getNotificationPreferences,
+  getNotificationSettings: m.getNotificationSettings,
 }));
 // El módulo real abre la conexión a la BD al importarse; solo se usa su tope.
 vi.mock("@/services/rating-highlights/rating-highlights", () => ({ RATING_HIGHLIGHT_MAX: 6 }));
@@ -129,13 +129,23 @@ beforeEach(() => {
   m.requirePageUser.mockResolvedValue(owner);
   m.isEmailVerified.mockReturnValue(true);
   m.countPendingFollowRequests.mockResolvedValue(0);
-  m.getNotificationPreferences.mockResolvedValue({
-    comment_reply: true,
-    thread_reply: true,
-    new_follower: true,
-    follow_request: true,
-    follow_accepted: true,
-    moderation: true,
+  m.getNotificationSettings.mockResolvedValue({
+    preferences: {
+      comment_reply: true,
+      thread_reply: true,
+      new_follower: true,
+      follow_request: true,
+      follow_accepted: true,
+      moderation: true,
+      comment_like_milestone: true,
+      list_save_milestone: false,
+      artist_release: true,
+      artist_release_announced: false,
+      artist_single: false,
+      artist_award: true,
+    },
+    emailDigest: false,
+    emailVerified: true,
   });
 });
 
@@ -408,21 +418,31 @@ describe("pantalla Red", () => {
 });
 
 describe("pantalla Notificaciones", () => {
-  it("carga las preferencias del dueño y las pasa al formulario", async () => {
-    const preferences = {
-      comment_reply: false,
-      thread_reply: true,
-      new_follower: true,
-      follow_request: true,
-      follow_accepted: true,
-      moderation: true,
+  it("carga los ajustes del dueño y los pasa al formulario", async () => {
+    const settings = {
+      preferences: {
+        comment_reply: false,
+        thread_reply: true,
+        new_follower: true,
+        follow_request: true,
+        follow_accepted: true,
+        moderation: true,
+        comment_like_milestone: true,
+        list_save_milestone: false,
+        artist_release: true,
+        artist_release_announced: false,
+        artist_single: false,
+        artist_award: true,
+      },
+      emailDigest: true,
+      emailVerified: false,
     };
-    m.getNotificationPreferences.mockResolvedValue(preferences);
+    m.getNotificationSettings.mockResolvedValue(settings);
 
     const tree = await NotificationSettingsPage();
 
-    expect(m.getNotificationPreferences).toHaveBeenCalledWith("u1");
-    expect(findElement(tree, NotificationPreferencesForm)?.props?.initial).toEqual(preferences);
+    expect(m.getNotificationSettings).toHaveBeenCalledWith("u1");
+    expect(findElement(tree, NotificationPreferencesForm)?.props?.initial).toEqual(settings);
   });
 
   it("muestra el título y la introducción de la pantalla", async () => {

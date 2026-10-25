@@ -1,5 +1,7 @@
+import { db } from "@/db";
 import { AWARDS_DATA_DIR, readAllAwards } from "@/services/awards/curation-files";
 import { loadAward } from "@/services/awards/load";
+import { emitArtistAwardNotifications } from "@/services/notifications/emit";
 
 /**
  * Carga los premios de `data/awards/` en la base (openspec: add-music-awards, design D4, ADR 0032). Valida todos
@@ -31,6 +33,7 @@ async function main() {
     process.exit(1);
   }
 
+  const today = new Date().toISOString().slice(0, 10);
   for (const files of awards) {
     const stats = await loadAward(files);
     console.log(`\n${files.slug}: ${stats.stubsCreated} stubs de catálogo creados`);
@@ -42,6 +45,21 @@ async function main() {
     }
     if (stats.ceremoniesRemoved || stats.categoriesRemoved) {
       console.log(`  Borradas por no estar en los archivos: ${stats.ceremoniesRemoved} ceremonias, ${stats.categoriesRemoved} categorías`);
+    }
+
+    // Avisos de premios de artistas seguidos (openspec:
+    // add-notification-digest-and-awards, D6). Después de la transacción del
+    // premio, en la suya: un fallo al avisar no invalida la carga.
+    try {
+      await db.transaction((tx) =>
+        emitArtistAwardNotifications(tx, stats.ceremonyIds, today),
+      );
+    } catch (error) {
+      console.error(
+        `  No se pudieron emitir los avisos de premios: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
     }
   }
   process.exit(0);
