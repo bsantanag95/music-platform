@@ -8,8 +8,11 @@ interface DialogProps {
   title: string;
   onClose: () => void;
   children: ReactNode;
-  /** `"md"` (por defecto) para formularios; `"lg"` para contenido de lectura (una reseña). */
-  size?: "md" | "lg";
+  /**
+   * `"md"` (por defecto) para formularios; `"lg"` para contenido de lectura (una reseña); `"sheet"` para una hoja
+   * lateral de edición: a la derecha y a todo el alto desde `sm`, desde abajo en pantallas angostas.
+   */
+  size?: "md" | "lg" | "sheet";
 }
 
 const FOCUSABLE = "button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href]";
@@ -67,7 +70,9 @@ export function Dialog({ open, title, onClose, children, size = "md" }: DialogPr
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-ink/70 p-4"
+      className={`fixed inset-0 z-50 flex overflow-y-auto bg-ink/70 ${
+        size === "sheet" ? "items-end justify-center sm:items-stretch sm:justify-end" : "items-center justify-center p-4"
+      }`}
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -77,7 +82,11 @@ export function Dialog({ open, title, onClose, children, size = "md" }: DialogPr
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`flex max-h-[90vh] w-full ${size === "lg" ? "max-w-2xl" : "max-w-md"} flex-col gap-4 overflow-y-auto rounded-lg border border-ink-border bg-ink-surface p-6`}
+        className={
+          size === "sheet"
+            ? "flex max-h-[90vh] w-full flex-col gap-4 overflow-y-auto rounded-t-xl border border-ink-border bg-ink-surface p-6 sm:max-h-none sm:max-w-md sm:rounded-none sm:border-y-0 sm:border-r-0"
+            : `flex max-h-[90vh] w-full ${size === "lg" ? "max-w-2xl" : "max-w-md"} flex-col gap-4 overflow-y-auto rounded-lg border border-ink-border bg-ink-surface p-6`
+        }
       >
         <h2 id={titleId} className="font-display text-lg text-paper">
           {title}

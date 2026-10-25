@@ -3,8 +3,9 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
-import { CollectionEntryControls } from "./CollectionEntryControls";
 import { CollectionGroupHeading } from "./CollectionGroupHeading";
+import { EntryMenu } from "./EntryMenu";
+import { RemoveError } from "./entry-parts";
 import {
   collectionAlbumHref,
   collectionArtistHref,
@@ -24,10 +25,10 @@ interface EntriesDetailedProps {
   groupedByArtist?: boolean;
 }
 
-// Modo "Lista detallada": fila con carátula, título, artista, chips de formato y
-// atributos, nota, audiencia y fecha, más los controles de gestión. Con las
-// secciones por artista, el artista ya está en el encabezado y la fila no lo
-// repite.
+// Modo "Lista detallada" (openspec: redesign-collection-views, D7): filas compactas separadas por una línea, con
+// carátula de 48 px, título, "artista · año", formato y atributos, nota y, a la derecha, la insignia de audiencia (que
+// abre el mismo menú que el `⋯`), la fecha de alta y el `⋯`. En pantallas angostas la columna derecha baja bajo el
+// texto. Con las secciones por artista, el artista ya está en el encabezado y la fila no lo repite.
 export function EntriesDetailed({
   groups,
   actions,
@@ -41,26 +42,27 @@ export function EntriesDetailed({
   return (
     <div className="flex flex-col gap-8">
       {groups.map((group) => (
-        <section key={group.key} className="flex flex-col gap-3">
+        <section key={group.key} className="flex flex-col gap-2">
           <CollectionGroupHeading group={group} />
-          <ul className="flex flex-col gap-4">
+          <ul className="flex flex-col divide-y divide-ink-border border-y border-ink-border">
             {group.entries.map((entry) => {
               const selecting = Boolean(selection?.active);
-              const selected =
-                selecting && selection!.selectedIds.has(entry.id);
+              const selected = selecting && selection!.selectedIds.has(entry.id);
+              const title = entry.album.title || t("albumUnavailable");
+              const artistHref = collectionArtistHref(entry);
               const cover = (
                 <CoverThumb
                   cover={entry.album.coverThumbUrl}
                   label=""
-                  className="size-16"
+                  className="size-12"
                   priority={priorityIds?.has(entry.id) ?? false}
                 />
               );
               return (
                 <li
                   key={entry.id}
-                  className={`flex flex-wrap gap-3 rounded-lg border bg-ink-surface p-4 transition-colors focus-within:border-amber hover:border-amber ${
-                    selected ? "border-amber" : "border-ink-border"
+                  className={`flex flex-wrap items-start gap-x-3 gap-y-2 py-3 transition-colors sm:flex-nowrap ${
+                    selected ? "bg-amber/5" : ""
                   }`}
                 >
                   {selecting ? (
@@ -68,10 +70,8 @@ export function EntriesDetailed({
                       type="checkbox"
                       checked={selected}
                       onChange={() => selection!.onToggle(entry.id)}
-                      aria-label={t("selectEntry", {
-                        title: entry.album.title,
-                      })}
-                      className="mt-1 size-4 shrink-0 accent-amber [@media(pointer:coarse)]:size-6"
+                      aria-label={t("selectEntry", { title: entry.album.title })}
+                      className="mt-4 size-4 shrink-0 accent-amber [@media(pointer:coarse)]:size-6"
                     />
                   ) : null}
 
@@ -82,17 +82,12 @@ export function EntriesDetailed({
                       tabIndex={-1}
                       aria-hidden
                       onClick={() => selection!.onToggle(entry.id)}
-                      className="shrink-0 self-start"
+                      className={`shrink-0 overflow-hidden rounded ${selected ? "ring-2 ring-amber" : ""}`}
                     >
                       {cover}
                     </button>
                   ) : (
-                    <Link
-                      href={collectionAlbumHref(entry)}
-                      tabIndex={-1}
-                      aria-hidden
-                      className="shrink-0 self-start"
-                    >
+                    <Link href={collectionAlbumHref(entry)} tabIndex={-1} aria-hidden className="shrink-0 overflow-hidden rounded">
                       {cover}
                     </Link>
                   )}
@@ -103,57 +98,56 @@ export function EntriesDetailed({
                         href={collectionAlbumHref(entry)}
                         className="font-display text-base text-paper transition-colors hover:text-amber"
                       >
-                        {entry.album.title || t("albumUnavailable")}
+                        {title}
                       </Link>
                       {entry.album.artistName && !groupedByArtist ? (
-                        collectionArtistHref(entry) ? (
+                        artistHref ? (
                           <Link
-                            href={collectionArtistHref(entry)!}
-                            className="font-data text-sm text-paper-muted transition-colors hover:text-paper"
+                            href={artistHref}
+                            className="font-data text-xs text-paper-muted transition-colors hover:text-paper"
                           >
                             {entry.album.artistName}
                           </Link>
                         ) : (
-                          <span className="font-data text-sm text-paper-muted">
-                            {entry.album.artistName}
-                          </span>
+                          <span className="font-data text-xs text-paper-muted">{entry.album.artistName}</span>
                         )
+                      ) : null}
+                      {entry.album.year ? (
+                        <span className="font-data text-xs text-paper-muted">{entry.album.year}</span>
                       ) : null}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-1.5 font-data text-xs">
+                    <div className="flex flex-wrap items-center gap-1.5 font-data text-[0.7rem]">
                       <span className="rounded border border-ink-border px-1.5 py-0.5 text-paper">
                         {t(`format.${entry.format}`)}
                       </span>
                       {entry.attributes.map((attribute) => (
-                        <span
-                          key={attribute}
-                          className="rounded border border-ink-border px-1.5 py-0.5 text-paper-muted"
-                        >
+                        <span key={attribute} className="rounded border border-ink-border px-1.5 py-0.5 text-paper-muted">
                           {t(`attribute.${attribute}`)}
                         </span>
                       ))}
                     </div>
 
                     {entry.note ? (
-                      <p className="font-body text-sm text-paper-muted">
-                        {entry.note}
-                      </p>
+                      <p className="font-body text-sm italic text-paper-muted">{entry.note}</p>
                     ) : null}
 
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-data text-xs text-paper-muted">
-                      {actions ? (
-                        <span>{t(`audience.${entry.audience}`)}</span>
-                      ) : null}
-                      <time dateTime={entry.createdAt}>
-                        {formatCollectionDate(entry.createdAt, locale)}
-                      </time>
-                    </div>
+                    {actions?.errorId === entry.id ? <RemoveError /> : null}
+                  </div>
 
-                    {actions && !selection?.active ? (
-                      <CollectionEntryControls
-                        entry={entry}
-                        actions={actions}
+                  <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
+                    <time dateTime={entry.createdAt} className="font-data text-[0.7rem] text-paper-muted">
+                      {formatCollectionDate(entry.createdAt, locale)}
+                    </time>
+                    {actions && !selecting ? (
+                      <EntryMenu
+                        title={title}
+                        audience={entry.audience}
+                        busy={actions.busyId === entry.id}
+                        showBadge
+                        onEdit={() => actions.onEdit(entry)}
+                        onAudienceChange={(audience) => actions.onAudienceChange(entry, audience)}
+                        onRemove={() => actions.onRemove(entry)}
                       />
                     ) : null}
                   </div>

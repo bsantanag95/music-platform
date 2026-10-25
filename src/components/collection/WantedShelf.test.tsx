@@ -7,6 +7,8 @@ import { WantedShelf } from "./WantedShelf";
 import type { WantedEntry, WantedListResponse } from "@/lib/api/schemas";
 
 const mocks = vi.hoisted(() => ({
+  addCollectionEntry: vi.fn(),
+  removeCollectionEntry: vi.fn(),
   addWantedEntries: vi.fn(),
   getMyWantedEntries: vi.fn(),
   removeWantedEntry: vi.fn(),
@@ -19,6 +21,10 @@ vi.mock("@/i18n/navigation", () => ({
   ),
 }));
 vi.mock("@/components/catalog/CoverThumb", () => ({ CoverThumb: () => <span data-cover /> }));
+vi.mock("@/lib/api/collection", () => ({
+  addCollectionEntry: mocks.addCollectionEntry,
+  removeCollectionEntry: mocks.removeCollectionEntry,
+}));
 vi.mock("@/lib/api/wanted", () => ({
   addWantedEntries: mocks.addWantedEntries,
   getMyWantedEntries: mocks.getMyWantedEntries,
@@ -62,6 +68,21 @@ function renderShelf(
       <WantedShelf initial={initial} {...props} />
     </QueryClientProvider>,
   );
+}
+
+
+async function openMenu(user: ReturnType<typeof userEvent.setup>, title = "Álbum 1") {
+  await user.click(await screen.findByRole("button", { name: `Acciones de ${title}` }));
+}
+
+async function menuEdit(user: ReturnType<typeof userEvent.setup>, title = "Álbum 1") {
+  await openMenu(user, title);
+  await user.click(screen.getByRole("menuitem", { name: "Editar copia…" }));
+}
+
+async function menuRemove(user: ReturnType<typeof userEvent.setup>, title = "Álbum 1") {
+  await openMenu(user, title);
+  await user.click(screen.getByRole("menuitem", { name: "Quitar" }));
 }
 
 describe("WantedShelf", () => {
@@ -108,7 +129,7 @@ describe("WantedShelf", () => {
     const user = userEvent.setup();
     renderShelf(response([only]));
 
-    await user.click(screen.getByRole("button", { name: "Quitar" }));
+    await menuRemove(user);
     await waitFor(() => expect(mocks.removeWantedEntry).toHaveBeenCalledWith(only.id));
     expect(screen.queryByRole("link", { name: "Álbum 1" })).not.toBeInTheDocument();
   });
@@ -121,7 +142,7 @@ describe("WantedShelf", () => {
     const user = userEvent.setup();
     renderShelf(response([only]));
 
-    await user.click(screen.getByRole("button", { name: "Quitar" }));
+    await menuRemove(user);
     await user.click(await screen.findByRole("button", { name: "Deshacer" }));
 
     await waitFor(() =>
@@ -140,10 +161,81 @@ describe("WantedShelf", () => {
     const user = userEvent.setup();
     renderShelf(response([only]));
 
-    await user.click(screen.getByRole("button", { name: "Quitar" }));
+    await menuRemove(user);
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("No pudimos quitarla. Intenta de nuevo.");
     expect(alert.closest("li")).toHaveTextContent("Álbum 1");
+  });
+
+  it("Lo conseguí con formato crea la copia, quita la variante y Deshacer revierte las dos", async () => {
+    const only = entry({ format: "vinyl", attributes: ["limited-edition"], note: "con OBI" });
+    mocks.addCollectionEntry.mockResolvedValue({ id: "copia-1" });
+    mocks.removeWantedEntry.mockResolvedValue(null);
+    mocks.removeCollectionEntry.mockResolvedValue(null);
+    mocks.addWantedEntries.mockResolvedValue([only]);
+    mocks.getMyWantedEntries.mockResolvedValue(response([]));
+    const user = userEvent.setup();
+    renderShelf(response([only]));
+
+    await user.click(screen.getByRole("button", { name: "Lo conseguí" }));
+    await waitFor(() =>
+      expect(mocks.addCollectionEntry).toHaveBeenCalledWith({
+        releaseGroupId: only.album.id,
+        format: "vinyl",
+        attributes: ["limited-edition"],
+        note: "con OBI",
+      }),
+    );
+    expect(mocks.removeWantedEntry).toHaveBeenCalledWith(only.id);
+
+    await user.click(await screen.findByRole("button", { name: "Deshacer" }));
+    await waitFor(() => expect(mocks.removeCollectionEntry).toHaveBeenCalledWith("copia-1"));
+    expect(mocks.addWantedEntries).toHaveBeenCalledWith(
+      expect.objectContaining({ releaseGroupId: only.album.id, audience: only.audience }),
+    );
+  });
+
+  it("Lo conseguí sin formato pide el formato antes de crear la copia", async () => {
+    const only = entry({ format: null, attributes: ["colored-vinyl"] });
+    mocks.addCollectionEntry.mockResolvedValue({ id: "copia-2" });
+    mocks.removeWantedEntry.mockResolvedValue(null);
+    mocks.getMyWantedEntries.mockResolvedValue(response([]));
+    const user = userEvent.setup();
+    renderShelf(response([only]));
+
+    await user.click(screen.getByRole("button", { name: "Lo conseguí" }));
+    expect(mocks.addCollectionEntry).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "CD" }));
+    // "Vinilo de color" no aplica a un CD: no viaja.
+    await waitFor(() =>
+      expect(mocks.addCollectionEntry).toHaveBeenCalledWith(expect.objectContaining({ format: "cd", attributes: [] })),
+    );
+  });
+
+  it("si la variante no se puede quitar, borra la copia recién creada y avisa", async () => {
+    const only = entry();
+    mocks.addCollectionEntry.mockResolvedValue({ id: "copia-3" });
+    mocks.removeWantedEntry.mockRejectedValue(new Error("caída"));
+    mocks.removeCollectionEntry.mockResolvedValue(null);
+    mocks.getMyWantedEntries.mockResolvedValue(response([only]));
+    const user = userEvent.setup();
+    renderShelf(response([only]));
+
+    await user.click(screen.getByRole("button", { name: "Lo conseguí" }));
+    expect(await screen.findByText("No pudimos pasarla a tu colección. Intenta de nuevo.")).toBeInTheDocument();
+    expect(mocks.removeCollectionEntry).toHaveBeenCalledWith("copia-3");
+    expect(screen.getByRole("link", { name: "Álbum 1" })).toBeInTheDocument();
+  });
+
+  it("muestra Ya tienes cuando el álbum está en la colección", () => {
+    renderShelf(
+      response([
+        entry({ owned: [{ format: "cd", attributes: ["remaster"] }, { format: "vinyl", attributes: [] }] }),
+        entry({ owned: [] }),
+      ]),
+    );
+    expect(screen.getAllByText(/Ya tienes:/)).toHaveLength(1);
+    expect(screen.getByText(/Ya tienes:/)).toHaveTextContent("Ya tienes: CD · Remasterizada (+1)");
   });
 
   it("edita el formato y los atributos de una entrada llamando a updateWantedEntry", async () => {
@@ -152,7 +244,7 @@ describe("WantedShelf", () => {
     const user = userEvent.setup();
     renderShelf(response([only]));
 
-    await user.click(screen.getByRole("button", { name: "Editar" }));
+    await menuEdit(user);
     await user.click(screen.getByLabelText("CD"));
     await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
 
@@ -171,7 +263,7 @@ describe("WantedShelf", () => {
     renderShelf(response([only]));
 
     expect(screen.getByText(/Seguidores/)).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Editar" }));
+    await menuEdit(user);
     await user.click(screen.getByLabelText("Privado"));
     await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
 
@@ -189,7 +281,7 @@ describe("WantedShelf", () => {
     const user = userEvent.setup();
     renderShelf(response([only]));
 
-    await user.click(screen.getByRole("button", { name: "Editar" }));
+    await menuEdit(user);
     await user.click(screen.getByLabelText("Cualquier formato"));
     await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
 
@@ -206,7 +298,7 @@ describe("WantedShelf", () => {
     const user = userEvent.setup();
     renderShelf(response([only]));
 
-    await user.click(screen.getByRole("button", { name: "Editar" }));
+    await menuEdit(user);
     await user.click(screen.getByRole("button", { name: "Cancelar" }));
 
     expect(screen.queryByRole("button", { name: "Guardar cambios" })).not.toBeInTheDocument();

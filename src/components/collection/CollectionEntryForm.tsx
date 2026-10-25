@@ -2,7 +2,7 @@
 
 import { useId } from "react";
 import { useTranslations } from "next-intl";
-import { COLLECTION_FORMATS, attributesForFormat } from "@/services/collection/vocabulary";
+import { COLLECTION_FORMATS, attributesForFormat, groupedAttributes } from "@/services/collection/vocabulary";
 import { COLLECTION_NOTE_MAX } from "@/lib/api/schemas";
 import type { CollectionFormat, EditionAttribute } from "@/services/collection/vocabulary";
 import type { DiaryAudience } from "@/lib/api/schemas";
@@ -86,28 +86,39 @@ export function CollectionEntryForm({
 
       <fieldset className="flex flex-col gap-1" disabled={disabled}>
         <legend className="font-data text-xs text-paper-muted">{t("attributesLabel")}</legend>
-        <div className="flex flex-wrap gap-1.5">
-          {availableAttributes.map((attribute) => {
-            const active = value.attributes.includes(attribute);
-            return (
-              <label
-                key={attribute}
-                className={`cursor-pointer rounded border px-2 py-1 font-data text-xs transition-colors ${
-                  active
-                    ? "border-amber bg-amber/10 text-amber"
-                    : "border-ink-border text-paper-muted hover:text-paper"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  className="sr-only"
-                  checked={active}
-                  onChange={() => toggleAttribute(attribute)}
-                />
-                {t(`attribute.${attribute}`)}
-              </label>
-            );
-          })}
+        {/* Por grupo (Edición, Soporte, Región y contenido, Otros); los grupos sin opciones para el formato no se
+            muestran. */}
+        <div className="flex flex-col gap-2">
+          {groupedAttributes(availableAttributes).map((group) => (
+            <div key={group.key} className="flex flex-col gap-1">
+              <span className="font-data text-[0.65rem] uppercase tracking-wide text-paper-muted/70">
+                {t(`attributeGroup.${group.key}`)}
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {group.attributes.map((attribute) => {
+                  const active = value.attributes.includes(attribute);
+                  return (
+                    <label
+                      key={attribute}
+                      className={`inline-flex cursor-pointer items-center rounded border px-2 py-1 font-data text-xs transition-colors [@media(pointer:coarse)]:min-h-11 ${
+                        active
+                          ? "border-amber bg-amber/10 text-amber"
+                          : "border-ink-border text-paper-muted hover:text-paper"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={active}
+                        onChange={() => toggleAttribute(attribute)}
+                      />
+                      {t(`attribute.${attribute}`)}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       </fieldset>
 

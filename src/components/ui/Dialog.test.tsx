@@ -13,6 +13,22 @@ describe("Dialog", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
+  it("la variante sheet se ancla al borde (derecha desde sm, abajo en móvil) y mantiene el foco atrapado", async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    render(
+      <Dialog open title="Editar copia" onClose={onClose} size="sheet">
+        <input aria-label="Nota" />
+      </Dialog>,
+    );
+    const sheet = await screen.findByRole("dialog", { name: "Editar copia" });
+    expect(sheet.parentElement?.className).toContain("sm:justify-end");
+    expect(sheet.parentElement?.className).toContain("items-end");
+    expect(screen.getByLabelText("Nota")).toHaveFocus();
+    await user.keyboard("{Escape}");
+    expect(onClose).toHaveBeenCalled();
+  });
+
   it("abre con el foco en el primer campo, con el título como nombre accesible", async () => {
     render(
       <Dialog open title="Cambiar usuario" onClose={vi.fn()}>

@@ -301,6 +301,12 @@ wishlist, también a "cualquier formato"). El servicio rechaza la combinación i
 `VALIDATION_ERROR` y, si una edición cambia solo el formato, quita los atributos que dejan de aplicar. Las
 entradas heredadas incoherentes se corrigen al editarlas: el formulario avisa y las guarda sin esos
 atributos. La regla vive en `src/services/collection/` (no hay `CHECK` en SQL).
+
+**"Lo conseguí"** (`redesign-collection-views`): la colección y la búsqueda siguen siendo independientes; solo una
+acción explícita del dueño en la pestaña Busco pasa una variante a la colección: crea una copia con el formato (si la
+variante buscaba "cualquier formato", el que el dueño elige en ese momento), los atributos que aplican a ese formato y
+la nota, con la audiencia por defecto de la colección, y luego quita la variante. Si quitar la variante falla, se borra
+la copia recién creada. "Deshacer" quita la copia y vuelve a crear la variante.
 - **Favorita de la comunidad** por pista: hasta 3 pistas del álbum con al menos 5 reacciones
   `loved`/`obsessed` en entradas de diario públicas. La tracklist no muestra medias de
   estrellas por pista (Modelo C: en una canción, lo primario es la reacción).

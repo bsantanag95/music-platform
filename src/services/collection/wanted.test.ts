@@ -27,6 +27,12 @@ function whereLimit(rows: unknown[]) {
   return { from: vi.fn(() => ({ where })) };
 }
 
+// select().from().where().orderBy()  → "Ya tienes"
+function whereOrderBy(rows: unknown[]) {
+  const orderBy = vi.fn().mockResolvedValue(rows);
+  return { from: vi.fn(() => ({ where: vi.fn(() => ({ orderBy })) })) };
+}
+
 // select().from().innerJoin().where().orderBy()
 function joinWhereOrderBy(rows: unknown[]) {
   const orderBy = vi.fn().mockResolvedValue(rows);
@@ -301,12 +307,27 @@ describe("servicio de wishlist de colección", () => {
     mocks.db.select
       .mockReturnValueOnce(joinWherePaged(rows))
       .mockReturnValueOnce({ from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ value: 9 }]) })) }) // total
-      .mockReturnValueOnce(joinWhereOrderBy([]));
+      .mockReturnValueOnce(joinWhereOrderBy([]))
+      .mockReturnValueOnce(whereOrderBy([])); // "Ya tienes"
 
     const result = await listOwnWanted(userId, 1, 20, { q: "moon" });
     expect(result.total).toBe(9);
     expect(result.entries).toHaveLength(20);
     expect(result.hasNext).toBe(true);
+  });
+
+  it("listOwnWanted trae el año del álbum y las copias que ya se tienen", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(joinWherePaged([{ ...entryRow, albumDate: "1973-03-01" }]))
+      .mockReturnValueOnce({ from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([{ value: 1 }]) })) })
+      .mockReturnValueOnce(joinWhereOrderBy([]))
+      .mockReturnValueOnce(
+        whereOrderBy([{ releaseGroupId: albumId, format: "cd", attributes: ["remaster", "remaster"] }]),
+      );
+
+    const result = await listOwnWanted(userId);
+    expect(result.entries[0]!.album.year).toBe(1973);
+    expect(result.entries[0]!.owned).toEqual([{ format: "cd", attributes: ["remaster"] }]);
   });
 
   it("listOwnWantedForReleaseGroup devuelve las variantes deseadas de un álbum", async () => {

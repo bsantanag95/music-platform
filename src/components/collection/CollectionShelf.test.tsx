@@ -93,6 +93,21 @@ function renderShelf(
   );
 }
 
+
+async function openMenu(user: ReturnType<typeof userEvent.setup>, title = "Álbum 1") {
+  await user.click(await screen.findByRole("button", { name: `Acciones de ${title}` }));
+}
+
+async function menuEdit(user: ReturnType<typeof userEvent.setup>, title = "Álbum 1") {
+  await openMenu(user, title);
+  await user.click(screen.getByRole("menuitem", { name: "Editar copia…" }));
+}
+
+async function menuRemove(user: ReturnType<typeof userEvent.setup>, title = "Álbum 1") {
+  await openMenu(user, title);
+  await user.click(screen.getByRole("menuitem", { name: "Quitar" }));
+}
+
 describe("CollectionShelf", () => {
   beforeEach(() => {
     seq = 0;
@@ -143,7 +158,7 @@ describe("CollectionShelf", () => {
     const user = userEvent.setup();
     renderShelf(response([only]));
 
-    await user.click(screen.getByRole("button", { name: "Editar" }));
+    await menuEdit(user);
     await user.selectOptions(screen.getByLabelText("Formato"), "cd");
     await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
     // "Formato" ahora solo existe en el panel de edición (el filtro usa
@@ -184,7 +199,7 @@ describe("CollectionShelf", () => {
     expect(screen.getByRole("searchbox", { name: "Buscar por álbum o artista" })).toBeInTheDocument();
     expect(screen.getByRole("radiogroup", { name: "Filtrar por formato" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Seleccionar" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Editar" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Acciones de/ })).not.toBeInTheDocument();
     expect(screen.queryByText("Seguidores", { selector: "span" })).not.toBeInTheDocument();
     // el conmutador de modos sí está disponible para el visitante
     expect(screen.getByRole("radiogroup", { name: "Modo de visualización" })).toBeInTheDocument();
@@ -230,7 +245,7 @@ describe("CollectionShelf", () => {
     const user = userEvent.setup();
     renderShelf(response([only]));
 
-    await user.click(screen.getByRole("button", { name: "Quitar" }));
+    await menuRemove(user);
     await waitFor(() => expect(mocks.removeCollectionEntry).toHaveBeenCalledWith(only.id));
     await user.click(await screen.findByRole("button", { name: "Deshacer" }));
 
@@ -252,18 +267,66 @@ describe("CollectionShelf", () => {
     const user = userEvent.setup();
     renderShelf(response([only]));
 
-    await user.click(screen.getByRole("button", { name: "Quitar" }));
+    await menuRemove(user);
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("No pudimos quitarla. Intenta de nuevo.");
     expect(alert.closest("li")).toHaveTextContent("Álbum 1");
     expect(screen.queryByRole("button", { name: "Deshacer" })).toBeNull();
   });
 
-  it("en el Índice los controles se ven sin hover y no reservan una línea oculta", async () => {
+  it("el Índice es una tabla con el menú de acciones en cada fila", async () => {
     window.localStorage.setItem(COLLECTION_VIEW_MODE_STORAGE_KEY, "index");
-    renderShelf(response([entry()]));
-    const edit = await screen.findByRole("button", { name: "Editar" });
-    expect(edit.closest("[class*='opacity-0']")).toBeNull();
+    renderShelf(response([entry(), entry()]));
+    expect(await screen.findByRole("table")).toBeInTheDocument();
+    const rows = screen.getAllByRole("row");
+    expect(rows).toHaveLength(3);
+    expect(within(rows[1]!).getByRole("button", { name: "Acciones de Álbum 1" })).toBeInTheDocument();
+  });
+
+  it("el menú cambia la audiencia sin abrir la hoja", async () => {
+    const only = entry();
+    mocks.updateCollectionEntry.mockResolvedValue({ ...only, audience: "public" });
+    mocks.getMyCollection.mockResolvedValue(response([{ ...only, audience: "public" }]));
+    const user = userEvent.setup();
+    renderShelf(response([only]));
+    await openMenu(user);
+    await user.click(screen.getByRole("menuitemradio", { name: "Público" }));
+    await waitFor(() => expect(mocks.updateCollectionEntry).toHaveBeenCalledWith(only.id, { audience: "public" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("la hoja de edición agrupa los atributos y sin opciones de vinilo para un CD", async () => {
+    const user = userEvent.setup();
+    renderShelf(response([entry({ format: "cd", attributes: [] })]));
+    await menuEdit(user);
+    const sheet = screen.getByRole("dialog", { name: "Editar copia" });
+    expect(within(sheet).getByText("Edición")).toBeInTheDocument();
+    expect(within(sheet).getByText("Región y contenido")).toBeInTheDocument();
+    expect(within(sheet).queryByText("Vinilo de color")).toBeNull();
+  });
+
+  it("muestra el año del álbum junto al artista", () => {
+    renderShelf(response([entry({ album: { id: "a9", title: "Appetite", coverThumbUrl: null, artistId: null, artistName: "Guns", year: 1987 } })]));
+    expect(screen.getByText("Guns · 1987")).toBeInTheDocument();
+  });
+
+  it("quita varias copias en lote tras confirmar", async () => {
+    const a = entry();
+    const b = entry();
+    mocks.removeCollectionEntry.mockResolvedValue(null);
+    mocks.getMyCollection.mockResolvedValue(response([]));
+    const user = userEvent.setup();
+    renderShelf(response([a, b]));
+
+    await user.click(screen.getByRole("button", { name: "Seleccionar" }));
+    await user.click(screen.getByRole("button", { name: "Seleccionar todo" }));
+    await user.click(screen.getByRole("button", { name: "Quitar…" }));
+    expect(screen.getByText("¿Quitar 2 copias?")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Quitar" }));
+
+    await waitFor(() => expect(mocks.removeCollectionEntry).toHaveBeenCalledTimes(2));
+    expect(mocks.removeCollectionEntry).toHaveBeenCalledWith(a.id);
+    expect(mocks.removeCollectionEntry).toHaveBeenCalledWith(b.id);
   });
 
   it("en modo selección, tocar la carátula marca la copia sin navegar", async () => {
@@ -310,7 +373,7 @@ describe("CollectionShelf", () => {
     );
     // El mock de `Link` no conserva `role="tab"`: se buscan como enlaces.
     expect(screen.getByRole("link", { name: "Tengo 1" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Quitar" }));
+    await menuRemove(user);
     expect(await screen.findByRole("link", { name: "Tengo 0" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Busco 4" })).toBeInTheDocument();
   });
@@ -329,7 +392,7 @@ describe("CollectionShelf", () => {
     const user = userEvent.setup();
     renderShelf(response([legacy]));
 
-    await user.click(await screen.findByRole("button", { name: "Editar" }));
+    await menuEdit(user);
     expect(screen.getByRole("note")).toHaveTextContent("«Vinilo de color» es solo para vinilo. Se quitará al guardar.");
     await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
 

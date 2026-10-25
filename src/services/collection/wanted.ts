@@ -1,6 +1,6 @@
 import { and, asc, count, desc, eq, inArray, isNull, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { artist, credit, releaseGroup, wantedEntry } from "@/db/schema";
+import { artist, collectionEntry, credit, releaseGroup, wantedEntry } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { assertAlbumExists, assertAttributesFitFormat } from "./collection";
 import type {
@@ -11,7 +11,7 @@ import type {
   WantedSort,
   WantedEntry,
 } from "./wanted-types";
-import { WANTED_SORTS } from "./wanted-types";
+import { WANTED_SORTS, type OwnedCopy } from "./wanted-types";
 import { compatibleAttributes, normalizeAttributes } from "./vocabulary";
 import { resolveNewContentAudience } from "@/services/social/default-audience";
 import type { Audience } from "@/services/social/types";
@@ -33,7 +33,15 @@ interface WantedRow {
   releaseGroupId: string;
   albumTitle: string | null;
   albumCover: string | null;
+  albumDate?: string | null;
 }
+
+/** Año a partir de `first_release_date` (`YYYY-MM-DD`, a veces parcial). */
+function releaseYear(date: string | null | undefined): number | null {
+  const year = date ? Number.parseInt(date.slice(0, 4), 10) : Number.NaN;
+  return Number.isFinite(year) ? year : null;
+}
+
 
 // Mismo patrón que collection.ts: subquery escalar del artista principal
 // acreditado, para el buscador `q` y el orden alfabético por artista.
@@ -141,6 +149,7 @@ function serializeEntry(
       coverThumbUrl: row.albumCover,
       artistId: primaryArtist?.id ?? null,
       artistName: primaryArtist?.name ?? null,
+      year: releaseYear(row.albumDate),
     },
   };
 }
@@ -156,6 +165,7 @@ const entrySelection = {
   releaseGroupId: wantedEntry.releaseGroupId,
   albumTitle: releaseGroup.title,
   albumCover: releaseGroup.coverThumbUrl,
+  albumDate: releaseGroup.firstReleaseDate,
 } as const;
 
 function normalizeVariant(variant: NewWantedVariant): {
@@ -302,14 +312,40 @@ export async function listOwnWanted(
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);
   const total = await countOwnWanted(userId);
+  const entries = await serializePage(rows.slice(0, pageSize));
 
   return {
-    entries: await serializePage(rows.slice(0, pageSize)),
+    entries: await withOwnedCopies(userId, entries),
     page,
     pageSize,
     hasNext: rows.length > pageSize,
     total,
   };
+}
+
+/**
+ * "Ya tienes": copias de la colección del dueño para los álbumes de la página, en una sola consulta. Solo el listado
+ * propio de Busco lo agrega; la colección y la búsqueda siguen siendo independientes.
+ */
+async function withOwnedCopies(userId: string, entries: WantedEntry[]): Promise<WantedEntry[]> {
+  if (entries.length === 0) return entries;
+  const albumIds = [...new Set(entries.map((entry) => entry.album.id))];
+  const rows = await db
+    .select({
+      releaseGroupId: collectionEntry.releaseGroupId,
+      format: collectionEntry.format,
+      attributes: collectionEntry.attributes,
+    })
+    .from(collectionEntry)
+    .where(and(eq(collectionEntry.userId, userId), inArray(collectionEntry.releaseGroupId, albumIds)))
+    .orderBy(desc(collectionEntry.createdAt));
+  const byAlbum = new Map<string, OwnedCopy[]>();
+  for (const row of rows) {
+    const copies = byAlbum.get(row.releaseGroupId) ?? [];
+    copies.push({ format: row.format as CollectionFormat, attributes: normalizeAttributes(row.attributes) });
+    byAlbum.set(row.releaseGroupId, copies);
+  }
+  return entries.map((entry) => ({ ...entry, owned: byAlbum.get(entry.album.id) ?? [] }));
 }
 
 /** Entradas de deseo del usuario sin filtros: la cifra de la pestaña Busco. */

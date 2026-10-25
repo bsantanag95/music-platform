@@ -14,13 +14,23 @@ export interface WantedEntry {
   audience: Audience;
   createdAt: string;
   updatedAt: string;
+  /** Copias del mismo álbum en la colección; solo el listado propio lo trae. */
+  owned?: OwnedCopy[];
   album: {
     id: string;
     title: string;
     coverThumbUrl: string | null;
     artistId: string | null;
     artistName: string | null;
+    /** Año de la primera publicación del álbum (`first_release_date`); `null` si no se conoce. */
+    year?: number | null;
   };
+}
+
+/** Copia de la colección del mismo álbum que una entrada de deseo ("Ya tienes"). */
+export interface OwnedCopy {
+  format: CollectionFormat;
+  attributes: EditionAttribute[];
 }
 
 /** Una variante deseada dentro de un alta en lote (1 a `MAX_WANTED_BATCH`). */
