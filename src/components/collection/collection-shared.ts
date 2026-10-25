@@ -14,6 +14,11 @@ export function collectionArtistHref(entry: CollectionEntry): string | null {
     : null;
 }
 
+/** "Artista · 1987", solo el artista o solo el año, según lo que se conozca. */
+export function albumByline(album: { artistName: string | null; year?: number | null }): string {
+  return [album.artistName, album.year ?? null].filter((part) => part !== null && part !== "").join(" · ");
+}
+
 export function formatCollectionDate(iso: string, locale: string): string {
   return new Date(iso).toLocaleDateString(locale, {
     year: "numeric",
@@ -63,12 +68,11 @@ export function writeFiltersToUrl(filters: Record<string, string | undefined>) {
 }
 
 // Acciones de gestión por fila. `null` en modo lectura (perfil ajeno).
+// La edición se abre en una hoja lateral (`CollectionEditSheet`) que monta el
+// orquestador; las vistas solo piden abrirla desde el menú `⋯`.
 export interface CollectionRowActions {
   busyId: string | null;
-  editingId: string | null;
-  onStartEdit: (id: string) => void;
-  onCancelEdit: () => void;
-  onSaveEdit: (entry: CollectionEntry, value: CollectionEntryFormValue) => void;
+  onEdit: (entry: CollectionEntry) => void;
   onAudienceChange: (entry: CollectionEntry, audience: DiaryAudience) => void;
   onRemove: (entry: CollectionEntry) => void;
   /** Entrada cuyo último intento de quitar falló: el error se muestra junto a ella. */

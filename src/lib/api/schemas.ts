@@ -2360,6 +2360,8 @@ export const CollectionAlbumSchema = z.object({
   coverThumbUrl: z.string().nullable(),
   artistId: z.uuid().nullable(),
   artistName: z.string().nullable(),
+  /** Año de la primera publicación del álbum (aditivo en redesign-collection-views). */
+  year: z.number().int().nullable().optional(),
 });
 export type CollectionAlbum = z.infer<typeof CollectionAlbumSchema>;
 
@@ -2471,6 +2473,8 @@ export const WantedEntrySchema = z.object({
   audience: DiaryAudienceSchema,
   createdAt: z.string(),
   updatedAt: z.string(),
+  /** Copias del mismo álbum en la colección ("Ya tienes"); solo el listado propio lo trae. */
+  owned: z.array(z.object({ format: CollectionFormatSchema, attributes: z.array(EditionAttributeSchema) })).optional(),
   album: CollectionAlbumSchema,
 });
 export type WantedEntry = z.infer<typeof WantedEntrySchema>;

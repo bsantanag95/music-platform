@@ -39,6 +39,40 @@ export const EDITION_ATTRIBUTES = [
 ] as const;
 export type EditionAttribute = (typeof EDITION_ATTRIBUTES)[number];
 
+/**
+ * Grupos de atributos para presentarlos en los formularios (redesign-collection-views, D3), en el mismo orden que
+ * `EDITION_ATTRIBUTES`. Solo presentación: el vocabulario y su `CHECK` no cambian.
+ */
+export const ATTRIBUTE_GROUPS = [
+  {
+    key: "edition",
+    attributes: [
+      "limited-edition",
+      "numbered",
+      "first-press",
+      "reissue",
+      "remaster",
+      "anniversary-edition",
+      "deluxe-edition",
+    ],
+  },
+  { key: "medium", attributes: ["colored-vinyl", "picture-disc", "180g", "gatefold", "box-set"] },
+  { key: "regionContent", attributes: ["regional-edition", "bonus-tracks", "extra-disc"] },
+  { key: "other", attributes: ["signed", "promo"] },
+] as const satisfies readonly { key: string; attributes: readonly EditionAttribute[] }[];
+export type AttributeGroupKey = (typeof ATTRIBUTE_GROUPS)[number]["key"];
+
+/** Grupos con los atributos disponibles para un formato, sin los grupos que quedan vacíos. */
+export function groupedAttributes(
+  available: readonly EditionAttribute[],
+): { key: AttributeGroupKey; attributes: EditionAttribute[] }[] {
+  const allowed = new Set(available);
+  return ATTRIBUTE_GROUPS.map((group) => ({
+    key: group.key,
+    attributes: group.attributes.filter((attribute) => allowed.has(attribute)),
+  })).filter((group) => group.attributes.length > 0);
+}
+
 export const COLLECTION_NOTE_MAX = 140;
 
 const EDITION_ATTRIBUTE_SET = new Set<string>(EDITION_ATTRIBUTES);

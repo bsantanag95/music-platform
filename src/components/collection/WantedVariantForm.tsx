@@ -2,7 +2,12 @@
 
 import { useId } from "react";
 import { useTranslations } from "next-intl";
-import { COLLECTION_FORMATS, attributesForFormat, compatibleAttributes } from "@/services/collection/vocabulary";
+import {
+  COLLECTION_FORMATS,
+  attributesForFormat,
+  compatibleAttributes,
+  groupedAttributes,
+} from "@/services/collection/vocabulary";
 import { COLLECTION_NOTE_MAX } from "@/lib/api/schemas";
 import type { CollectionFormat, EditionAttribute } from "@/services/collection/vocabulary";
 import type { DiaryAudience, WantedEntry } from "@/lib/api/schemas";
@@ -59,7 +64,7 @@ interface WantedVariantFormProps {
 }
 
 function optionClasses(active: boolean, disabled?: boolean): string {
-  return `rounded border px-2 py-1 font-data text-xs transition-colors ${
+  return `inline-flex items-center rounded border px-2 py-1 font-data text-xs transition-colors [@media(pointer:coarse)]:min-h-11 ${
     disabled
       ? "cursor-not-allowed border-ink-border text-paper-muted opacity-40"
       : "cursor-pointer " +
@@ -139,31 +144,43 @@ export function WantedVariantForm({
 
       <fieldset className="flex flex-col gap-1" disabled={disabled}>
         <legend className="font-data text-xs text-paper-muted">{t("attributesLabel")}</legend>
-        <div className="flex flex-wrap gap-1.5">
-          <label className={optionClasses(value.anyEdition)}>
-            <input
-              type="checkbox"
-              className="sr-only"
-              checked={value.anyEdition}
-              onChange={(event) => setAnyEdition(event.target.checked)}
-            />
-            {t("anyEdition")}
-          </label>
-          {availableAttributes.map((attribute) => {
-            const active = value.attributes.includes(attribute);
-            return (
-              <label key={attribute} className={optionClasses(active, value.anyEdition)}>
-                <input
-                  type="checkbox"
-                  className="sr-only"
-                  checked={active}
-                  disabled={value.anyEdition}
-                  onChange={() => toggleAttribute(attribute)}
-                />
-                {t(`attribute.${attribute}`)}
-              </label>
-            );
-          })}
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap gap-1.5">
+            <label className={optionClasses(value.anyEdition)}>
+              <input
+                type="checkbox"
+                className="sr-only"
+                checked={value.anyEdition}
+                onChange={(event) => setAnyEdition(event.target.checked)}
+              />
+              {t("anyEdition")}
+            </label>
+          </div>
+          {/* Mismos grupos que en el formulario de una copia. */}
+          {groupedAttributes(availableAttributes).map((group) => (
+            <div key={group.key} className="flex flex-col gap-1">
+              <span className="font-data text-[0.65rem] uppercase tracking-wide text-paper-muted/70">
+                {t(`attributeGroup.${group.key}`)}
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {group.attributes.map((attribute) => {
+                  const active = value.attributes.includes(attribute);
+                  return (
+                    <label key={attribute} className={optionClasses(active, value.anyEdition)}>
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={active}
+                        disabled={value.anyEdition}
+                        onChange={() => toggleAttribute(attribute)}
+                      />
+                      {t(`attribute.${attribute}`)}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       </fieldset>
 

@@ -18,6 +18,8 @@ export interface CollectionEntry {
     coverThumbUrl: string | null;
     artistId: string | null;
     artistName: string | null;
+    /** Año de la primera publicación del álbum (`first_release_date`); `null` si no se conoce. */
+    year?: number | null;
   };
 }
 

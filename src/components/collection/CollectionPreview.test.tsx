@@ -122,7 +122,8 @@ describe("CollectionPreview", () => {
     expect(screen.getByRole("link", { name: "Ver los 12" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("radio", { name: "Índice" }));
-    expect(screen.getAllByRole("listitem")).toHaveLength(4);
+    // El Índice es una tabla: encabezado + 4 filas.
+    expect(screen.getAllByRole("row")).toHaveLength(5);
     expect(screen.getByRole("link", { name: "Ver los 12" })).toBeInTheDocument();
     expect(window.localStorage.getItem(COLLECTION_VIEW_MODE_STORAGE_KEY)).toBe("index");
   });

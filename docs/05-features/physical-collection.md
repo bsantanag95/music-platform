@@ -78,13 +78,21 @@ color» es solo para vinilo. Se quitará al guardar.") y guarda sin el atributo.
     Edición, Agrupar y Orden quedan detrás de **"Filtros"**, que muestra cuántos hay activos. Los filtros se escriben en la URL con
     `history.replaceState` cuando difieren del default (sin historial ni recarga) y la página los
     lee al cargar; la pestaña Busco hace lo mismo con su búsqueda y orden.
-  - **Gestión**: edición de cada copia en línea (formato, atributos, nota, audiencia) con
-    actualización optimista; selector rápido de audiencia por ficha (Lista detallada e Índice);
-    "Quitar" en los tres modos, con un aviso que ofrece **Deshacer** durante 6 s (vuelve a crear la
-    copia con los mismos datos: es una entrada nueva y su fecha de alta cambia); el quitado se
-    anuncia a lectores de pantalla y, si falla, el error aparece junto a esa copia. Modo
-    "Seleccionar" + barra de acción fija para cambiar la audiencia de varias copias a la vez; en
+  - **Gestión** (`redesign-collection-views`): cada copia tiene un menú **`⋯`** con "Editar copia…",
+    las tres audiencias y "Quitar" (en la Estantería, sobre la carátula; en Lista detallada,
+    además, una insignia con la audiencia que abre el mismo menú). La edición se abre en una
+    **hoja lateral** (a la derecha en pantallas anchas, desde abajo en móviles) con el mismo
+    formulario que el alta y los atributos agrupados (Edición, Soporte, Región y contenido, Otros);
+    guarda de forma optimista. "Quitar" ofrece **Deshacer** durante 6 s (vuelve a crear la copia
+    con los mismos datos: es una entrada nueva y su fecha de alta cambia); el quitado se anuncia a
+    lectores de pantalla y, si falla, el error aparece junto a esa copia. Modo "Seleccionar" +
+    barra fija en una fila: "Seleccionar todo" (lo cargado), cambio de audiencia en lote y
+    **quitar en lote con confirmación** (sin deshacer; una baja por copia, como en Favoritos); en
     ese modo tocar la carátula marca la copia (sin abrir el álbum) y la marcada se resalta.
+  - **Vistas** (`redesign-collection-views`): el pie de cada copia dice "artista · año"
+    (`album.year`) y "formato · primer atributo +N"; una copia privada lleva un candado en la
+    Estantería. Lista detallada usa filas compactas separadas por una línea; el Índice es una
+    tabla (#, Álbum, Artista, Formato, Edición, Añadida, acciones).
   - **Página** (`refine-collection-page-phase1`): `max-w-4xl` con el título a la izquierda, como
     las demás páginas propias; el modo de vista no salta (marcador neutro hasta leer la
     preferencia); el Índice muestra los controles en la fila, sin ocultarlos hasta el hover; en
@@ -148,7 +156,10 @@ código, la tabla `wanted_entry` y la API no cambian.
   solo alta y baja (mismo criterio que la colección: la edición vive en `/me/collection`). Desde
   `refine-collection-page-phase1`, quitar ofrece **Deshacer** igual que en Tengo, los controles de
   cada fila tienen el mismo estilo que los de Tengo y "Cualquier formato" se muestra como texto
-  secundario, no como un dato en caja.
+  secundario, no como un dato en caja. Desde `redesign-collection-views` la fila es compacta como la Lista
+  detallada de Tengo ("Buscas: …"), con el mismo menú `⋯` y la misma hoja de edición; muestra **"Ya tienes: CD ·
+  Remasterizada"** cuando el álbum ya está en la colección (`owned` en la API) y ofrece **"Lo conseguí"**, que pasa la
+  variante a Tengo (ver `01-domain/business-rules.md`).
 
 ### API de la wishlist
 
@@ -162,7 +173,8 @@ pestaña "Quiero". Detalle en `04-api/contracts.md`. Código de error propio:
 
 - Superficie en el perfil ajeno. (La audiencia por entrada llegó en `expand-feed-coverage`, solo
   para el feed.)
-- Mover una entrada de la wishlist a la colección con un click ("ya la conseguí").
+- ~~Mover una entrada de la wishlist a la colección con un click ("ya la conseguí")~~: llegó en
+  `redesign-collection-views` ("Lo conseguí").
 - Contador social ("cuántas personas quieren este disco") y notificaciones de disponibilidad.
 - Paridad completa de vistas/filtros/agrupación con la pestaña "Tengo".
 

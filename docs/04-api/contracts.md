@@ -1755,7 +1755,8 @@ Vocabulario de `attributes`: `limited-edition`, `numbered`, `first-press`, `reis
 `box-set`, `regional-edition`, `bonus-tracks`, `extra-disc`, `signed`, `promo`.
 
 Forma de `entry`: `{ id, format, attributes: [...], note, audience, createdAt, updatedAt,
-album: { id, title, coverThumbUrl, artistId, artistName } }`.
+album: { id, title, coverThumbUrl, artistId, artistName, year? } }`. `album.year` (aditivo en
+`redesign-collection-views`) es el año de `first_release_date`, o `null` si no se conoce.
 
 ### `POST /api/me/collection`
 
@@ -1827,8 +1828,10 @@ seguidos (`GET /api/me/feed`, `kind: "wanted"`). Las entradas anteriores a `0061
 cerrado de `format`/`attributes` que la colección física. **No es un toggle idempotente:** `POST`
 siempre crea entradas nuevas, y se permiten varias entradas por álbum sin deduplicar.
 
-Forma de `entry`: `{ id, format, attributes: [...], note, audience, createdAt, updatedAt,
-album: { id, title, coverThumbUrl, artistId, artistName } }`.
+Forma de `entry`: `{ id, format, attributes: [...], note, audience, createdAt, updatedAt, owned?,
+album: { id, title, coverThumbUrl, artistId, artistName, year? } }`. Aditivos en `redesign-collection-views`:
+`album.year` (como en la colección) y `owned`, las copias del mismo álbum en la colección del dueño
+(`[{ format, attributes }]`, la más reciente primero), que solo trae el listado propio (`GET`).
 
 ### `POST /api/me/collection/wanted`
 

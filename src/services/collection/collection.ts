@@ -41,7 +41,15 @@ interface EntryRow {
   releaseGroupId: string;
   albumTitle: string | null;
   albumCover: string | null;
+  albumDate?: string | null;
 }
+
+/** Año a partir de `first_release_date` (`YYYY-MM-DD`, a veces parcial). */
+function releaseYear(date: string | null | undefined): number | null {
+  const year = date ? Number.parseInt(date.slice(0, 4), 10) : Number.NaN;
+  return Number.isFinite(year) ? year : null;
+}
+
 
 // Nombre del artista principal acreditado del álbum de una entrada. Subquery
 // escalar: no multiplica filas aunque haya varios créditos primarios (toma el de
@@ -199,6 +207,7 @@ function serializeEntry(
       coverThumbUrl: row.albumCover,
       artistId: primaryArtist?.id ?? null,
       artistName: primaryArtist?.name ?? null,
+      year: releaseYear(row.albumDate),
     },
   };
 }
@@ -214,6 +223,7 @@ const entrySelection = {
   releaseGroupId: collectionEntry.releaseGroupId,
   albumTitle: releaseGroup.title,
   albumCover: releaseGroup.coverThumbUrl,
+  albumDate: releaseGroup.firstReleaseDate,
 } as const;
 
 const EMPTY_COUNTS: CollectionCounts = { vinyl: 0, cd: 0, cassette: 0, other: 0 };

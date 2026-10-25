@@ -47,9 +47,14 @@ import {
   type CollectionSelectionState,
 } from "./collection-shared";
 import type { CollectionEntryFormValue } from "./CollectionEntryForm";
+import { CollectionEditSheet } from "./CollectionEditSheet";
 
 const PAGE_SIZE = 20;
 const AUDIENCES: DiaryAudience[] = ["private", "followers", "public"];
+
+// Botones de la barra de selección: una fila, cada uno sin partirse.
+const BAR_BUTTON =
+  "shrink-0 rounded border border-ink-border px-2 py-1 font-data text-xs text-paper-muted transition-colors hover:border-amber hover:text-paper disabled:opacity-50 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:px-3";
 
 type CollectionPages = InfiniteData<CollectionListResponse, number>;
 
@@ -127,7 +132,9 @@ export function CollectionShelf({
   const [searchInput, setSearchInput] = useState(seededState.q);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editing, setEditing] = useState<CollectionEntry | null>(null);
+  const [editError, setEditError] = useState(false);
+  const [confirmBulkRemove, setConfirmBulkRemove] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [actionError, setActionError] = useState(false);
@@ -255,6 +262,7 @@ export function CollectionShelf({
     const snapshot = queryClient.getQueryData<CollectionPages>(mineQueryKey);
     setBusyId(entry.id);
     setActionError(false);
+    setEditError(false);
     const note = value.note.trim() === "" ? null : value.note.trim();
     patchLocal((item) =>
       item.id === entry.id
@@ -290,10 +298,11 @@ export function CollectionShelf({
         note,
         audience: value.audience,
       });
-      setEditingId(null);
+      setEditing(null);
     } catch {
       if (snapshot) queryClient.setQueryData(mineQueryKey, snapshot);
-      setActionError(true);
+      // El error se muestra en la hoja, que sigue abierta con el borrador.
+      setEditError(true);
     } finally {
       setBusyId(null);
       void invalidateMine();
@@ -360,8 +369,15 @@ export function CollectionShelf({
   const exitSelection = useCallback(() => {
     setSelectionMode(false);
     setSelectedIds(new Set());
+    setConfirmBulkRemove(false);
     setAnnounce("");
   }, []);
+
+  const selectAll = () => {
+    const next = new Set(entries.map((entry) => entry.id));
+    setSelectedIds(next);
+    setAnnounce(t("selectedCount", { count: next.size }));
+  };
 
   useEffect(() => {
     if (!selectionMode) return;
@@ -391,6 +407,35 @@ export function CollectionShelf({
     }
   };
 
+  // Quitar en lote (openspec: redesign-collection-views, D8): no hay `DELETE` en lote, así que se quita cada copia y,
+  // si alguna falla, se restaura toda la lista y se avisa. Sin "Deshacer": se pide confirmación antes.
+  const handleBulkRemove = async () => {
+    const chosen = entries.filter((entry) => selectedIds.has(entry.id));
+    if (chosen.length === 0) return;
+    const snapshot = queryClient.getQueryData<CollectionPages>(mineQueryKey);
+    setBulkBusy(true);
+    setActionError(false);
+    setErrorId(null);
+    setConfirmBulkRemove(false);
+    const ids = new Set(chosen.map((entry) => entry.id));
+    patchLocal((item) => (ids.has(item.id) ? null : item));
+    const results = await Promise.allSettled(chosen.map((entry) => removeCollectionEntry(entry.id)));
+    const failed = results.some(
+      (result) =>
+        result.status === "rejected" &&
+        !(result.reason instanceof ApiError && result.reason.code === "COLLECTION_ENTRY_NOT_FOUND"),
+    );
+    if (failed) {
+      if (snapshot) queryClient.setQueryData(mineQueryKey, snapshot);
+      setActionError(true);
+    } else {
+      exitSelection();
+      setAnnounce(t("bulkRemovedAnnouncement", { count: chosen.length }));
+    }
+    setBulkBusy(false);
+    void invalidateMine();
+  };
+
   const clearFilters = () => {
     setSearchInput("");
     setFilters(EMPTY_COLLECTION_FILTERS);
@@ -408,10 +453,10 @@ export function CollectionShelf({
     ? null
     : {
         busyId,
-        editingId,
-        onStartEdit: setEditingId,
-        onCancelEdit: () => setEditingId(null),
-        onSaveEdit: handleSaveEdit,
+        onEdit: (entry) => {
+          setEditError(false);
+          setEditing(entry);
+        },
         onAudienceChange: handleAudienceChange,
         onRemove: handleRemove,
         errorId,
@@ -541,29 +586,85 @@ export function CollectionShelf({
         />
       ) : null}
 
-      {selectionMode && selectedIds.size > 0 ? (
-        <div className="sticky bottom-4 z-10 mx-auto flex w-full max-w-md flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-lg border border-amber bg-ink-surface px-4 py-3">
-          <span className="font-data text-xs text-paper">
+      {editing ? (
+        <CollectionEditSheet
+          key={editing.id}
+          entry={editing}
+          busy={busyId === editing.id}
+          error={editError}
+          onSave={(entry, value) => void handleSaveEdit(entry, value)}
+          onCancel={() => setEditing(null)}
+          onRemove={(entry) => {
+            setEditing(null);
+            void handleRemove(entry);
+          }}
+        />
+      ) : null}
+
+      {selectionMode ? (
+        <div
+          role="region"
+          aria-label={t("bulkBarLabel")}
+          className="sticky bottom-4 z-10 mx-auto flex w-full max-w-full items-center gap-2 overflow-x-auto rounded-lg border border-amber bg-ink-surface px-3 py-2 sm:w-auto"
+        >
+          <span className="shrink-0 font-data text-xs text-paper">
             {t("selectedCount", { count: selectedIds.size })}
           </span>
-          <span className="font-data text-xs text-paper-muted">{t("changeAudience")}</span>
-          {AUDIENCES.map((audience) => (
-            <button
-              key={audience}
-              type="button"
-              disabled={bulkBusy}
-              onClick={() => void handleBulkAudience(audience)}
-              className="rounded border border-ink-border px-2 py-1 font-data text-xs text-paper-muted transition-colors hover:border-amber hover:text-paper disabled:opacity-50 [@media(pointer:coarse)]:min-h-11"
-            >
-              {t(`audience.${audience}`)}
-            </button>
-          ))}
+          <button type="button" onClick={selectAll} className={BAR_BUTTON}>
+            {t("selectAll")}
+          </button>
+          {selectedIds.size > 0 ? (
+            <>
+              <span aria-hidden className="h-5 w-px shrink-0 bg-ink-border" />
+              <span className="shrink-0 font-data text-xs text-paper-muted">{t("changeAudience")}</span>
+              {AUDIENCES.map((audience) => (
+                <button
+                  key={audience}
+                  type="button"
+                  disabled={bulkBusy}
+                  onClick={() => void handleBulkAudience(audience)}
+                  className={BAR_BUTTON}
+                >
+                  {t(`audience.${audience}`)}
+                </button>
+              ))}
+              <span aria-hidden className="h-5 w-px shrink-0 bg-ink-border" />
+              {confirmBulkRemove ? (
+                <>
+                  <span className="shrink-0 font-data text-xs text-paper">
+                    {t("bulkRemoveConfirm", { count: selectedIds.size })}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={bulkBusy}
+                    onClick={() => void handleBulkRemove()}
+                    className={`${BAR_BUTTON} border-danger text-danger hover:bg-danger/10`}
+                  >
+                    {t("bulkRemove")}
+                  </button>
+                  <button type="button" onClick={() => setConfirmBulkRemove(false)} className={BAR_BUTTON}>
+                    {t("cancelEdit")}
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  disabled={bulkBusy}
+                  onClick={() => setConfirmBulkRemove(true)}
+                  className={`${BAR_BUTTON} text-danger hover:border-danger`}
+                >
+                  {t("bulkRemoveStart")}
+                </button>
+              )}
+            </>
+          ) : null}
           <button
             type="button"
             onClick={exitSelection}
-            className="font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-paper [@media(pointer:coarse)]:min-h-11"
+            aria-label={t("selectionDone")}
+            className="ml-auto inline-flex size-8 shrink-0 items-center justify-center rounded text-paper-muted transition-colors hover:text-paper [@media(pointer:coarse)]:size-11"
           >
-            {t("selectionDone")}
+            <span aria-hidden>✕</span>
           </button>
         </div>
       ) : null}
