@@ -9,6 +9,7 @@ import {
   userBlock,
 } from "@/db/schema";
 import type { NotificationKind, OptionalNotificationKind } from "@/db/schema";
+import { preferenceKindOf } from "./preferences";
 
 // Emisión de notificaciones in-app (openspec: add-notifications-core, D3).
 //
@@ -97,10 +98,6 @@ export type NotificationEvent =
   | ReleaseNotificationEvent;
 
 const OPTIONAL_KINDS = OPTIONAL_NOTIFICATION_KINDS;
-
-function isOptionalKind(kind: NotificationKind): kind is OptionalNotificationKind {
-  return kind in OPTIONAL_KINDS;
-}
 
 /** Clave de agrupación (D5); el emisor es quien la deriva, nunca la fuente. */
 function groupKeyFor(event: NotificationEvent): string {
@@ -199,17 +196,20 @@ async function withoutBlockedPairs(
 /**
  * Descarta los tipos desactivables que la persona tiene apagados. La ausencia
  * de fila significa el defecto del tipo (D5): se leen las filas existentes y se
- * compara cada evento contra su valor efectivo.
+ * compara cada evento contra su valor efectivo. Los dos tipos de premio
+ * comparten la preferencia `artist_award` (D6).
  */
 async function withEnabledPreferences(
   tx: NotificationTx,
   events: readonly NotificationEvent[],
 ): Promise<NotificationEvent[]> {
-  const optional = events.filter((event) => isOptionalKind(event.kind));
+  const optional = events.filter((event) => preferenceKindOf(event.kind) !== null);
   if (optional.length === 0) return [...events];
 
   const recipients = [...new Set(optional.map((event) => event.recipientId))];
-  const kinds = [...new Set(optional.map((event) => event.kind))] as OptionalNotificationKind[];
+  const kinds = [
+    ...new Set(optional.map((event) => preferenceKindOf(event.kind) as OptionalNotificationKind)),
+  ];
 
   const rows = await tx
     .select({
@@ -227,11 +227,12 @@ async function withEnabledPreferences(
 
   const saved = new Map(rows.map((row) => [`${row.userId}:${row.kind}`, row.enabled]));
   const enabledFor = (recipientId: string, kind: OptionalNotificationKind) =>
-    saved.get(`${recipientId}:${kind}`) ?? OPTIONAL_NOTIFICATION_KINDS[kind];
+    saved.get(`${recipientId}:${kind}`) ?? OPTIONAL_KINDS[kind];
 
-  return events.filter(
-    (event) => !isOptionalKind(event.kind) || enabledFor(event.recipientId, event.kind),
-  );
+  return events.filter((event) => {
+    const kind = preferenceKindOf(event.kind);
+    return kind === null || enabledFor(event.recipientId, kind);
+  });
 }
 
 /**
@@ -433,6 +434,117 @@ export async function emitArtistReleaseNotifications(
       ON CONFLICT DO NOTHING
     `);
   }
+}
+
+/** Días hacia atrás en que una ceremonia de competencia aún avisa (D6). */
+export const ARTIST_AWARD_WINDOW_DAYS = 30;
+
+/**
+ * Avisa a quien sigue a un artista nominado o premiado en las ceremonias recién
+ * cargadas (openspec: add-notification-digest-and-awards, D6).
+ *
+ * - `artist_award_nomination`: ceremonia de competencia que se celebra en el
+ *   futuro o en los últimos 30 días.
+ * - `artist_award_win`: competencia de los últimos 30 días con al menos una
+ *   nominación ganadora de un artista seguido, o clase de Salón de la Fama del
+ *   año en curso.
+ *
+ * Un artista cuenta como nominado si es el sujeto de la nominación o si es
+ * artista principal (`credit.role = 'primary'`) del disco o la canción
+ * nominados. La fila no guarda a quién: la referencia estable es la ceremonia y
+ * el único `(recipient_id, award_ceremony_id, kind)` hace idempotente la carga.
+ * La historia fuera de la ventana no avisa.
+ */
+export async function emitArtistAwardNotifications(
+  tx: NotificationTx,
+  ceremonyIds: readonly string[],
+  today: string,
+): Promise<void> {
+  if (ceremonyIds.length === 0) return;
+
+  const values = sql.join(
+    ceremonyIds.map((id) => sql`(${id}::uuid)`),
+    sql`, `,
+  );
+  const defaultEnabled = OPTIONAL_NOTIFICATION_KINDS.artist_award;
+
+  // Nominaciones de competencia: futuro o últimos 30 días.
+  await tx.execute(sql`
+    WITH target (ceremony_id) AS (VALUES ${values}),
+    involved AS (
+      SELECT n.id AS nomination_id, n.won, ace.ceremony_id, n.artist_id AS artist_id
+      FROM target t
+      JOIN award_category_edition ace ON ace.ceremony_id = t.ceremony_id
+      JOIN award_nomination n ON n.category_edition_id = ace.id
+      WHERE n.artist_id IS NOT NULL
+      UNION ALL
+      SELECT n.id, n.won, ace.ceremony_id, c.artist_id
+      FROM target t
+      JOIN award_category_edition ace ON ace.ceremony_id = t.ceremony_id
+      JOIN award_nomination n ON n.category_edition_id = ace.id
+      JOIN credit c ON c.role = 'primary'
+        AND (c.release_group_id = n.release_group_id OR c.recording_id = n.recording_id)
+    )
+    INSERT INTO notification (recipient_id, kind, award_ceremony_id, group_key)
+    SELECT DISTINCT
+      af.user_id,
+      'artist_award_nomination',
+      i.ceremony_id,
+      'award:' || i.ceremony_id::text
+    FROM involved i
+    JOIN award_ceremony c ON c.id = i.ceremony_id
+    JOIN award a ON a.id = c.award_id AND a.kind = 'competition'
+    JOIN artist_follow af ON af.artist_id = i.artist_id
+    JOIN app_user u ON u.id = af.user_id AND u.deactivated_at IS NULL
+    LEFT JOIN notification_preference p
+      ON p.user_id = af.user_id AND p.kind = 'artist_award'
+    WHERE c.held_on >= ${today}::date - (${ARTIST_AWARD_WINDOW_DAYS})::int
+      AND coalesce(p.enabled, ${defaultEnabled})
+    ON CONFLICT DO NOTHING
+  `);
+
+  // Premios: competencia reciente con victoria o clase de Salón de la Fama del
+  // año en curso (sus incorporaciones no tienen nominaciones de competencia).
+  await tx.execute(sql`
+    WITH target (ceremony_id) AS (VALUES ${values}),
+    involved AS (
+      SELECT n.id AS nomination_id, n.won, ace.ceremony_id, n.artist_id AS artist_id
+      FROM target t
+      JOIN award_category_edition ace ON ace.ceremony_id = t.ceremony_id
+      JOIN award_nomination n ON n.category_edition_id = ace.id
+      WHERE n.artist_id IS NOT NULL
+      UNION ALL
+      SELECT n.id, n.won, ace.ceremony_id, c.artist_id
+      FROM target t
+      JOIN award_category_edition ace ON ace.ceremony_id = t.ceremony_id
+      JOIN award_nomination n ON n.category_edition_id = ace.id
+      JOIN credit c ON c.role = 'primary'
+        AND (c.release_group_id = n.release_group_id OR c.recording_id = n.recording_id)
+    )
+    INSERT INTO notification (recipient_id, kind, award_ceremony_id, group_key)
+    SELECT DISTINCT
+      af.user_id,
+      'artist_award_win',
+      i.ceremony_id,
+      'award:' || i.ceremony_id::text
+    FROM involved i
+    JOIN award_ceremony c ON c.id = i.ceremony_id
+    JOIN award a ON a.id = c.award_id
+    JOIN artist_follow af ON af.artist_id = i.artist_id
+    JOIN app_user u ON u.id = af.user_id AND u.deactivated_at IS NULL
+    LEFT JOIN notification_preference p
+      ON p.user_id = af.user_id AND p.kind = 'artist_award'
+    WHERE (
+        (
+          a.kind = 'competition'
+          AND c.held_on BETWEEN ${today}::date - (${ARTIST_AWARD_WINDOW_DAYS})::int AND ${today}::date
+          AND i.won
+        )
+        OR (a.kind = 'hall_of_fame' AND c.year = EXTRACT(YEAR FROM ${today}::date))
+      )
+      AND coalesce(p.enabled, ${defaultEnabled})
+    ON CONFLICT DO NOTHING
+  `);
 }
 
 /**

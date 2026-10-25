@@ -100,3 +100,5 @@ detalle de cada superficie vive en `05-features/`.
 ## Fase 6 — PWA y beta cerrada
 
 Entregable: manifest, service worker con shell offline, instalabilidad, y lanzamiento a un grupo pequeño y controlado antes de abrir al público. El objetivo de esta beta es encontrar los huecos del modelo de datos que solo aparecen con uso real (ediciones raras, artistas con nombres ambiguos, discografías gigantes), no crecimiento.
+
+Entra aquí **Web Push** para las notificaciones: la bandeja ya tiene los tipos, las preferencias y el resumen semanal por email (Fase 3, ADR 0047), y la tabla admite el push como canal, pero requiere service worker, manifest y una decisión de permisos que todavía no está tomada. No se implementa antes de esta fase.

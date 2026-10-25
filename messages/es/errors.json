@@ -151,6 +151,14 @@
     "title": "Envío de email no disponible",
     "description": "El envío de emails no está configurado. Intenta más tarde."
   },
+  "EMAIL_NOT_VERIFIED": {
+    "title": "Email sin verificar",
+    "description": "Verifica tu email para activar el resumen semanal."
+  },
+  "INVALID_UNSUBSCRIBE_TOKEN": {
+    "title": "Link de baja inválido",
+    "description": "Este link no es válido. Puedes desactivar el resumen desde tus ajustes de notificaciones."
+  },
   "USER_NOT_FOUND": {
     "title": "Usuario no encontrado",
     "description": "El usuario solicitado no existe o no está disponible."

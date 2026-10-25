@@ -1,34 +1,41 @@
 export {};
 
-// Smoke test de los cambios add-notifications-core y
-// add-notification-milestones-and-releases contra Postgres REAL (el SQL que las
-// pruebas unitarias mockean): cada fuente de emisión (respuestas, seguimientos,
-// moderación, hitos y lanzamientos), los CHECK de las migraciones 0075 y 0076,
-// las cascadas de retracción, los filtros de privacidad, la agrupación por día
-// en la zona del lector, visto vs. leído, preferencias con defecto por tipo, las
-// dos pestañas, el contador sin novedades y el contador bajo 10 ms.
-// Crea un artista sintético (MBID `5e0ce000-0000-4000-8000-00000000a9a0`), tres
-// discos (`…a9b0`, `…a9b1`, `…a9b2`) y usuarios `smoke_notif_*`, y los borra al
-// terminar (también si falla). Si se interrumpió, limpiar con
+// Smoke test de los cambios add-notifications-core,
+// add-notification-milestones-and-releases y add-notification-digest-and-awards
+// contra Postgres REAL (el SQL que las pruebas unitarias mockean): cada fuente de
+// emisión (respuestas, seguimientos, moderación, hitos, lanzamientos y premios),
+// los CHECK de las migraciones 0075 a 0077, las cascadas de retracción, los
+// filtros de privacidad, la agrupación por día en la zona del lector, visto vs.
+// leído, preferencias con defecto por tipo, las dos pestañas, el contador sin
+// novedades, el contador bajo 10 ms, el resumen semanal con un transporte
+// simulado y la baja firmada.
+// Crea un artista sintético (MBID `5e0ce000-0000-4000-8000-00000000a9a0`),
+// cuatro discos (`…a9b0`, `…a9b1`, `…a9b2`, `…a9c0` y `…a9d0`, el de los premios),
+// dos premios sintéticos (`smoke-notif-premio` y `smoke-notif-salon`) y usuarios
+// `smoke_notif_*`, y los borra al terminar (también si falla). Si se interrumpió,
+// limpiar con
 //   DELETE FROM moderation_action WHERE actor_id IN (SELECT id FROM app_user WHERE username LIKE 'smoke_notif_%');
 //   DELETE FROM app_user WHERE username LIKE 'smoke_notif_%';
+//   DELETE FROM award WHERE slug LIKE 'smoke-notif-%';
 //   DELETE FROM release_group WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000a9%';
 //   DELETE FROM artist WHERE mbid = '5e0ce000-0000-4000-8000-00000000a9a0';
 // (el `ON DELETE CASCADE` limpia notificaciones, seguimientos, comentarios,
-// listas, preferencias y restricciones; la primera sentencia suelta el
-// `RESTRICT` de `moderation_action.actor_id`).
-// Necesita las migraciones 0075 y 0076 aplicadas. Correr contra una BD de scratch:
+// listas, preferencias y restricciones, y el del premio sus ceremonias y avisos;
+// la primera sentencia suelta el `RESTRICT` de `moderation_action.actor_id`).
+// Necesita las migraciones 0075, 0076 y 0077 aplicadas. Correr contra una BD de scratch:
 //   ALLOW_SMOKE_ON_REAL_DB=1 npx tsx --env-file=.env scripts/smoke-test-notifications.ts
 
 import { randomUUID } from "node:crypto";
 import { createRequire } from "node:module";
-import { and, eq, like, sql, type SQL } from "drizzle-orm";
+import { and, eq, isNotNull, like, sql, type SQL } from "drizzle-orm";
 import { assertSmokeAllowed } from "./assert-smoke-allowed";
 import { db } from "../src/db";
 import {
   appUser,
   artist,
   artistFollow,
+  award,
+  awardCeremony,
   comment,
   commentLike,
   credit,
@@ -42,6 +49,9 @@ import {
   userRole,
 } from "../src/db/schema";
 import type { NotificationKind, OptionalNotificationKind } from "../src/db/schema";
+import type { AwardFiles, CeremonyEntry } from "../src/services/awards/curation-files";
+import type { CeremonyFile } from "../src/services/awards/curation-schema";
+import { EmailDeliveryError, type EmailMessage, type EmailTransport } from "../src/services/email";
 
 assertSmokeAllowed();
 
@@ -52,7 +62,13 @@ const ALBUM_MBID = "5e0ce000-0000-4000-8000-00000000a9b0";
 const COMMENT_ALBUM_MBID = "5e0ce000-0000-4000-8000-00000000a9c0";
 const ANNOUNCED_MBID = "5e0ce000-0000-4000-8000-00000000a9b1";
 const SINGLE_MBID = "5e0ce000-0000-4000-8000-00000000a9b2";
+/** Disco nominado en los premios sintéticos (lo cubre la limpieza `…a9%`). */
+const AWARD_ALBUM_MBID = "5e0ce000-0000-4000-8000-00000000a9d0";
+/** Premio de competencia y salón de la fama del smoke (limpieza `smoke-notif-%`). */
+const AWARD_SLUG = "smoke-notif-premio";
+const HALL_SLUG = "smoke-notif-salon";
 const TODAY = new Date().toISOString().slice(0, 10);
+const AWARD_YEAR = Number(TODAY.slice(0, 4));
 
 function check(condition: unknown, message: string): void {
   if (!condition) throw new Error(`FALLÓ: ${message}`);
@@ -85,18 +101,47 @@ async function loadServices() {
     }
     return originalLoad.call(this, request, parent, isMain);
   };
-  const [social, following, moderation, read, preferences, commentLikes, savedLists, emit] =
-    await Promise.all([
-      import("../src/services/social"),
-      import("../src/services/social/following"),
-      import("../src/services/moderation"),
-      import("../src/services/notifications/read"),
-      import("../src/services/notifications/preferences"),
-      import("../src/services/social/comment-likes"),
-      import("../src/services/lists/saved-lists"),
-      import("../src/services/notifications/emit"),
-    ]);
-  return { social, following, moderation, read, preferences, commentLikes, savedLists, emit };
+  const [
+    social,
+    following,
+    moderation,
+    read,
+    preferences,
+    commentLikes,
+    savedLists,
+    emit,
+    awards,
+    digest,
+    sendDigests,
+    unsubscribe,
+  ] = await Promise.all([
+    import("../src/services/social"),
+    import("../src/services/social/following"),
+    import("../src/services/moderation"),
+    import("../src/services/notifications/read"),
+    import("../src/services/notifications/preferences"),
+    import("../src/services/social/comment-likes"),
+    import("../src/services/lists/saved-lists"),
+    import("../src/services/notifications/emit"),
+    import("../src/services/awards/load"),
+    import("../src/services/notifications/digest"),
+    import("../src/services/notifications/send-digests"),
+    import("../src/services/notifications/unsubscribe"),
+  ]);
+  return {
+    social,
+    following,
+    moderation,
+    read,
+    preferences,
+    commentLikes,
+    savedLists,
+    emit,
+    awards,
+    digest,
+    sendDigests,
+    unsubscribe,
+  };
 }
 
 const newUser = (label: string, extra: Record<string, unknown> = {}) => ({
@@ -107,8 +152,20 @@ const newUser = (label: string, extra: Record<string, unknown> = {}) => ({
 });
 
 async function main() {
-  const { social, following, moderation, read, preferences, commentLikes, savedLists, emit } =
-    await loadServices();
+  const {
+    social,
+    following,
+    moderation,
+    read,
+    preferences,
+    commentLikes,
+    savedLists,
+    emit,
+    awards,
+    digest,
+    sendDigests,
+    unsubscribe,
+  } = await loadServices();
 
   const ana = newUser("ana");
   const bruno = newUser("bruno");
@@ -639,6 +696,556 @@ async function main() {
       "borrar el disco borra su aviso por cascada",
     );
 
+    console.log("Premios: la carga avisa a quien sigue a un artista nominado o ganador");
+    const awardAlbumTitle = `Smoke premio disco ${suffix}`;
+    const awardCredits = [{ name: art.name, artist: { id: ARTIST_MBID, name: art.name } }];
+    const awardAlbumSeed = {
+      kind: "release_group" as const,
+      title: awardAlbumTitle,
+      category: "studio" as const,
+      credits: awardCredits,
+    };
+    const awardAlbumLink = {
+      status: "manual" as const,
+      mbid: AWARD_ALBUM_MBID,
+      seed: awardAlbumSeed,
+    };
+    const awardArtistLink = {
+      status: "manual" as const,
+      mbid: ARTIST_MBID,
+      seed: { kind: "artist" as const, name: art.name, mbType: "Group" },
+    };
+
+    const [awardAlbum] = await db
+      .insert(releaseGroup)
+      .values({
+        mbid: AWARD_ALBUM_MBID,
+        title: awardAlbumTitle,
+        category: "studio",
+        primaryType: "Album",
+        firstReleaseDate: `${AWARD_YEAR - 1}-05-01`,
+      })
+      .returning();
+    if (!awardAlbum) throw new Error("no se creó el disco de los premios");
+    await db
+      .insert(credit)
+      .values({ artistId: art.id, releaseGroupId: awardAlbum.id, position: 0, role: "primary" });
+
+    const awardCategories = {
+      award: AWARD_SLUG,
+      kind: "competition" as const,
+      voting: "academy" as const,
+      categories: [
+        {
+          key: "album-of-the-year",
+          tier: "general" as const,
+          subject: "release_group" as const,
+          honors: "performer" as const,
+          name: { es: "Álbum del año", en: "Album of the Year" },
+          order: 1,
+        },
+        {
+          key: "artist-of-the-year",
+          tier: "general" as const,
+          subject: "artist" as const,
+          honors: "performer" as const,
+          name: { es: "Artista del año", en: "Artist of the Year" },
+          order: 2,
+        },
+      ],
+    };
+    const hallCategories = {
+      award: HALL_SLUG,
+      kind: "hall_of_fame" as const,
+      voting: "jury" as const,
+      categories: [
+        {
+          key: "recordings",
+          tier: "general" as const,
+          subject: "release_group" as const,
+          honors: "performer" as const,
+          name: { es: "Grabaciones", en: "Recordings" },
+          order: 1,
+        },
+      ],
+    };
+
+    const ceremonyEntry = (
+      slug: string,
+      year: number,
+      edition: number | undefined,
+      heldOn: string,
+      categories: CeremonyFile["categories"],
+    ): CeremonyEntry => ({
+      path: `${slug}/ceremonies/${year}.json`,
+      fileName: `${slug}/ceremonies/${year}.json`,
+      data: { award: slug, year, edition, heldOn, sourceUrl: "https://example.org/smoke-notif", categories },
+    });
+
+    // A (año en curso, hoy): el disco de `art` gana → victoria. La nominación de
+    // la misma ceremonia comparte grupo y la agregación prefiere la victoria.
+    const ceremonyA = ceremonyEntry(AWARD_SLUG, AWARD_YEAR, 1, TODAY, [
+      {
+        key: "album-of-the-year",
+        coverage: "winner_only",
+        nominees: [
+          { title: awardAlbumTitle, artist: art.name, won: true, resolved: awardAlbumLink },
+        ],
+      },
+      {
+        key: "artist-of-the-year",
+        coverage: "winner_only",
+        nominees: [{ title: "Otro Artista", won: true }],
+      },
+    ]);
+    // B (año siguiente, anunciada): `art` gana un premio y suma dos nominaciones.
+    // Como la ceremonia aún no se celebró, solo emite nominaciones.
+    const ceremonyB = ceremonyEntry(AWARD_SLUG, AWARD_YEAR + 1, 2, `${AWARD_YEAR + 1}-01-15`, [
+      {
+        key: "album-of-the-year",
+        coverage: "complete",
+        nominees: [
+          { title: awardAlbumTitle, artist: art.name, won: true, resolved: awardAlbumLink },
+          { title: "Otro Álbum", artist: "Otro", won: false },
+          { title: "Tercer Álbum", artist: "Tercero", won: false },
+        ],
+      },
+      {
+        key: "artist-of-the-year",
+        coverage: "complete",
+        nominees: [
+          { title: art.name, won: false, resolved: awardArtistLink },
+          { title: "Otro Artista", won: true },
+          { title: "Tercer Artista", won: false },
+        ],
+      },
+    ]);
+    // C (hace dos años): la historia no avisa.
+    const ceremonyC = ceremonyEntry(AWARD_SLUG, AWARD_YEAR - 2, 3, `${AWARD_YEAR - 2}-06-01`, [
+      {
+        key: "album-of-the-year",
+        coverage: "complete",
+        nominees: [
+          { title: awardAlbumTitle, artist: art.name, won: true, resolved: awardAlbumLink },
+          { title: "Otro Álbum", artist: "Otro", won: false },
+          { title: "Tercer Álbum", artist: "Tercero", won: false },
+        ],
+      },
+    ]);
+    const awardFiles: AwardFiles = {
+      slug: AWARD_SLUG,
+      categories: awardCategories,
+      ceremonies: [ceremonyA, ceremonyB, ceremonyC],
+    };
+    const hallFiles: AwardFiles = {
+      slug: HALL_SLUG,
+      categories: hallCategories,
+      ceremonies: [
+        ceremonyEntry(HALL_SLUG, AWARD_YEAR, undefined, TODAY, [
+          {
+            key: "recordings",
+            coverage: "complete",
+            nominees: [
+              { title: awardAlbumTitle, artist: art.name, won: true, resolved: awardAlbumLink },
+            ],
+          },
+        ]),
+      ],
+    };
+
+    const premios = newUser("premios");
+    const sinpremios = newUser("sinpremios");
+    await db.insert(appUser).values([premios, sinpremios]);
+    await db.insert(artistFollow).values([
+      { userId: premios.id, artistId: art.id },
+      { userId: sinpremios.id, artistId: art.id },
+    ]);
+    check(
+      (await preferences.getNotificationPreferences(premios.id)).artist_award === true,
+      "el aviso de premios nace activado",
+    );
+    await preferences.updateNotificationPreferences(sinpremios.id, { artist_award: false });
+
+    const firstLoad = await awards.loadAward(awardFiles);
+    check(firstLoad.ceremonyIds.length === 3, "la carga devuelve las ceremonias que tocó");
+    const hallLoad = await awards.loadAward(hallFiles);
+    check(hallLoad.ceremonyIds.length === 1, "la carga del salón devuelve su clase");
+
+    const [competitionAward] = await db
+      .select({ id: award.id })
+      .from(award)
+      .where(eq(award.slug, AWARD_SLUG));
+    const ceremonyRows = await db
+      .select({ id: awardCeremony.id, year: awardCeremony.year })
+      .from(awardCeremony)
+      .where(eq(awardCeremony.awardId, competitionAward!.id));
+    const ceremonyByYear = new Map(ceremonyRows.map((row) => [row.year, row.id]));
+    const ceremonyAId = ceremonyByYear.get(AWARD_YEAR);
+    const ceremonyBId = ceremonyByYear.get(AWARD_YEAR + 1);
+    const ceremonyCId = ceremonyByYear.get(AWARD_YEAR - 2);
+    const [hallAward] = await db.select({ id: award.id }).from(award).where(eq(award.slug, HALL_SLUG));
+    const [hallCeremony] = await db
+      .select({ id: awardCeremony.id })
+      .from(awardCeremony)
+      .where(eq(awardCeremony.awardId, hallAward!.id));
+    if (!ceremonyAId || !ceremonyBId || !ceremonyCId || !hallCeremony) {
+      throw new Error("no se encontraron las ceremonias sintéticas");
+    }
+
+    const emitAwards = async (ceremonyIds: readonly string[]) => {
+      await db.transaction((tx) => emit.emitArtistAwardNotifications(tx, ceremonyIds, TODAY));
+    };
+    await emitAwards(firstLoad.ceremonyIds);
+    await emitAwards(hallLoad.ceremonyIds);
+
+    const awardRows = (recipientId: string) =>
+      countOf(and(eq(notification.recipientId, recipientId), isNotNull(notification.awardCeremonyId)));
+
+    check(
+      (await awardRows(premios.id)) === 4,
+      "la carga escribe cuatro avisos: dos por la ceremonia con victoria, uno por la anunciada y uno del salón",
+    );
+    check((await awardRows(sinpremios.id)) === 0, "con la preferencia apagada no se escribe ningún aviso");
+    check(
+      (await countOf(eq(notification.awardCeremonyId, ceremonyCId))) === 0,
+      "la historia fuera de la ventana de 30 días no avisa",
+    );
+    check(
+      (await countFor(premios.id, "artist_award_nomination")) === 2,
+      "la ceremonia anunciada emite nominaciones",
+    );
+    check(
+      (await countFor(premios.id, "artist_award_win")) === 2,
+      "una victoria en la competencia reciente y otra en el salón del año en curso",
+    );
+
+    const premiosPage = await read.listNotificationGroups(premios.id, { tab: "releases", pageSize: 50 });
+    const awardGroups = premiosPage.groups.filter((group) => group.target?.type === "award");
+    check(awardGroups.length === 3, "tres ceremonias con avisos dan tres entradas");
+    check(awardGroups.every((group) => group.unread), "las entradas de premios nacen sin leer");
+
+    const entryA = awardGroups.find(
+      (group) => group.target?.type === "award" && group.target.ceremonyId === ceremonyAId,
+    );
+    check(entryA !== undefined, "la ceremonia con victoria tiene su entrada");
+    check(entryA?.kind === "artist_award_win", "la victoria manda sobre la nominación de la misma ceremonia");
+    check(entryA?.eventCount === 2, "las dos filas de la ceremonia se leen como una sola entrada");
+    check(
+      entryA?.target?.type === "award" &&
+        entryA.target.awardSlug === AWARD_SLUG &&
+        entryA.target.awardName === AWARD_SLUG &&
+        entryA.target.year === AWARD_YEAR &&
+        entryA.target.isHallOfFame === false &&
+        entryA.target.artistName === art.name &&
+        entryA.target.artistCount === 1 &&
+        entryA.target.count === 1,
+      "el destino enlaza a la ceremonia y cuenta un premio de un artista seguido",
+    );
+
+    const entryB = awardGroups.find(
+      (group) => group.target?.type === "award" && group.target.ceremonyId === ceremonyBId,
+    );
+    check(entryB?.kind === "artist_award_nomination", "la ceremonia anunciada se lee como nominación");
+    check(
+      entryB?.target?.type === "award" &&
+        entryB.target.count === 2 &&
+        entryB.target.artistCount === 1 &&
+        entryB.target.year === AWARD_YEAR + 1,
+      "la cifra suma las dos nominaciones del artista seguido",
+    );
+
+    const entryHall = awardGroups.find(
+      (group) => group.target?.type === "award" && group.target.ceremonyId === hallCeremony.id,
+    );
+    check(
+      entryHall?.kind === "artist_award_win" &&
+        entryHall.target?.type === "award" &&
+        entryHall.target.isHallOfFame === true &&
+        entryHall.target.year === AWARD_YEAR &&
+        entryHall.target.count === 1,
+      "la clase del Salón de la Fama se lee como ingreso",
+    );
+
+    await preferences.updateNotificationPreferences(sinpremios.id, { artist_award: true });
+    await emitAwards(firstLoad.ceremonyIds);
+    await emitAwards(hallLoad.ceremonyIds);
+    check(
+      (await awardRows(sinpremios.id)) === 4,
+      "al reactivar la preferencia, la siguiente emisión escribe lo pendiente",
+    );
+    check((await awardRows(premios.id)) === 4, "volver a emitir no duplica los avisos");
+
+    const reload = await awards.loadAward(awardFiles);
+    check(
+      reload.ceremonyIds.join(",") === firstLoad.ceremonyIds.join(","),
+      "recargar el premio conserva las mismas ceremonias",
+    );
+    await emitAwards(reload.ceremonyIds);
+    check((await awardRows(premios.id)) === 4, "recargar y reemitir no duplica los avisos");
+
+    // Una corrección de las nominaciones (aquí, quitar el crédito del disco)
+    // deja la ceremonia sin artistas seguidos: la entrada se oculta al leer, sin
+    // reescribir la fila.
+    await db
+      .delete(credit)
+      .where(and(eq(credit.releaseGroupId, awardAlbum.id), eq(credit.artistId, art.id)));
+    const afterCorrection = await read.listNotificationGroups(premios.id, {
+      tab: "releases",
+      pageSize: 50,
+    });
+    const correctedGroups = afterCorrection.groups.filter((group) => group.target?.type === "award");
+    check(
+      !correctedGroups.some(
+        (group) => group.target?.type === "award" && group.target.ceremonyId === ceremonyAId,
+      ),
+      "sin artista seguido, la victoria desaparece de la bandeja",
+    );
+    check(
+      !correctedGroups.some(
+        (group) => group.target?.type === "award" && group.target.ceremonyId === hallCeremony.id,
+      ),
+      "el salón también se oculta sin crédito",
+    );
+    const entryBAfter = correctedGroups.find(
+      (group) => group.target?.type === "award" && group.target.ceremonyId === ceremonyBId,
+    );
+    check(
+      entryBAfter?.target?.type === "award" && entryBAfter.target.count === 1,
+      "la nominación directa sigue visible y su cifra baja a una",
+    );
+    check((await awardRows(premios.id)) === 4, "la fila no se borra: solo se filtra al leer");
+    await db
+      .insert(credit)
+      .values({ artistId: art.id, releaseGroupId: awardAlbum.id, position: 0, role: "primary" });
+    const restoredAwards = await read.listNotificationGroups(premios.id, {
+      tab: "releases",
+      pageSize: 50,
+    });
+    check(
+      restoredAwards.groups.some(
+        (group) => group.target?.type === "award" && group.target.ceremonyId === ceremonyAId,
+      ),
+      "al restaurar el crédito, la entrada vuelve",
+    );
+
+    console.log("Resumen semanal: opt-in, verificado y una corrida por semana");
+    process.env.EMAIL_UNSUBSCRIBE_SECRET ??= "smoke-unsubscribe-secret";
+    process.env.NEXT_PUBLIC_APP_URL ??= "https://smoke.example";
+
+    const verified = { emailVerifiedAt: new Date() };
+    const digestA = newUser("digest_a", { ...verified, notificationDigestEnabled: true });
+    const digestRead = newUser("digest_read", { ...verified, notificationDigestEnabled: true });
+    const digestOld = newUser("digest_old", { ...verified, notificationDigestEnabled: true });
+    const digestFail = newUser("digest_fail", { ...verified, notificationDigestEnabled: true });
+    const digestUnverified = newUser("digest_unverified", { notificationDigestEnabled: true });
+    const digestNeedsVerify = newUser("digest_needs_verify");
+    const digestOff = newUser("digest_off", verified);
+    const digestDeactivated = newUser("digest_deactivated", {
+      ...verified,
+      notificationDigestEnabled: true,
+      deactivatedAt: new Date(),
+    });
+    const digestSent = newUser("digest_sent", {
+      ...verified,
+      notificationDigestEnabled: true,
+      notificationDigestSentAt: new Date(),
+    });
+    const digestUsers = [
+      digestA,
+      digestRead,
+      digestOld,
+      digestFail,
+      digestUnverified,
+      digestNeedsVerify,
+      digestOff,
+      digestDeactivated,
+      digestSent,
+    ];
+    await db.insert(appUser).values(digestUsers);
+
+    const [digestCommentA] = await db
+      .insert(comment)
+      .values({ userId: ana.id, artistId: art.id, topic: "general", body: "resumen uno" })
+      .returning();
+    const [digestCommentB] = await db
+      .insert(comment)
+      .values({ userId: ana.id, artistId: art.id, topic: "general", body: "resumen dos" })
+      .returning();
+    if (!digestCommentA || !digestCommentB) throw new Error("no se crearon los temas del resumen");
+
+    // Todas las personas con contenido sin leer, también las que no deberían
+    // recibirlo: así el filtro es de elegibilidad y no de bandeja vacía.
+    await db.insert(notification).values(
+      digestUsers.map((user) => ({
+        recipientId: user.id,
+        kind: "comment_reply" as const,
+        actorId: ana.id,
+        commentId: digestCommentA.id,
+        groupKey: `thread:${digestCommentA.id}`,
+      })),
+    );
+    await db
+      .update(notification)
+      .set({ readAt: new Date() })
+      .where(
+        and(
+          eq(notification.recipientId, digestRead.id),
+          eq(notification.commentId, digestCommentA.id),
+        ),
+      );
+    await db
+      .update(notification)
+      .set({ createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000) })
+      .where(eq(notification.recipientId, digestOld.id));
+    await db.insert(notification).values([
+      {
+        recipientId: digestA.id,
+        kind: "comment_reply" as const,
+        actorId: ana.id,
+        commentId: digestCommentB.id,
+        groupKey: `thread:${digestCommentB.id}`,
+      },
+      {
+        recipientId: digestA.id,
+        kind: "artist_release" as const,
+        releaseGroupId: single.id,
+        groupKey: `release:${single.id}`,
+      },
+    ]);
+
+    check(
+      (await codeOf(() => preferences.setNotificationDigestEnabled(digestNeedsVerify.id, true))) ===
+        "EMAIL_NOT_VERIFIED",
+      "activar el resumen sin email verificado responde EMAIL_NOT_VERIFIED",
+    );
+
+    const sentMessages: EmailMessage[] = [];
+    const transport: EmailTransport = {
+      async send(message) {
+        sentMessages.push(message);
+        if (message.to === digestFail.email) throw new EmailDeliveryError(500);
+      },
+    };
+    const digestNow = new Date();
+    const digestWindowStart = new Date(digestNow.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const digestPreview = await digest.buildDigest(digestA.id, digestWindowStart, digestNow);
+    check(
+      digestPreview.forYou.total === 2 &&
+        digestPreview.releases.total === 1 &&
+        digestPreview.total === 3,
+      "el resumen separa lo no leído en las dos secciones",
+    );
+    const oldPreview = await digest.buildDigest(digestOld.id, digestWindowStart, digestNow);
+    check(oldPreview.total === 0, "la ventana deja fuera lo anterior a siete días");
+    const firstRun = await sendDigests.sendNotificationDigests(digestNow, {
+      transport,
+      sendIntervalMs: 0,
+    });
+    if (firstRun.status !== "done") throw new Error("FALLÓ: la corrida del resumen quedó bloqueada");
+    check(firstRun.recipients >= 4, "la corrida toma las personas opt-in con email verificado");
+    check(firstRun.sent >= 1, "entrega el resumen de quien tiene novedades");
+    check(firstRun.failed >= 1, "un fallo de entrega se cuenta y no corta el lote");
+    check(firstRun.empty >= 2, "una semana sin entradas sin leer no envía nada");
+
+    const messagesFor = (email: string) => sentMessages.filter((message) => message.to === email);
+    check(messagesFor(digestA.email).length === 1, "el resumen sale una vez");
+    check(messagesFor(digestRead.email).length === 0, "lo ya leído no entra en el resumen");
+    check(messagesFor(digestOld.email).length === 0, "lo anterior a la ventana de 7 días no entra");
+    check(messagesFor(digestUnverified.email).length === 0, "sin email verificado no se envía");
+    check(messagesFor(digestOff.email).length === 0, "sin opt-in no se envía");
+    check(messagesFor(digestDeactivated.email).length === 0, "una cuenta desactivada no recibe el resumen");
+    check(messagesFor(digestSent.email).length === 0, "quien ya recibió el de esta semana no lo repite");
+
+    const digestMessage = messagesFor(digestA.email)[0];
+    if (!digestMessage) throw new Error("FALLÓ: no se capturó el resumen de la persona opt-in");
+    check(digestMessage.subject.includes("3"), "el asunto lleva la cifra de entradas");
+    check(
+      digestMessage.text.includes("Para ti") && digestMessage.text.includes("Novedades"),
+      "el correo trae las dos secciones",
+    );
+    check(
+      digestMessage.headers?.["List-Unsubscribe"]?.includes("/api/notifications/unsubscribe?token=") === true &&
+        digestMessage.headers["List-Unsubscribe-Post"] === "List-Unsubscribe=One-Click",
+      "el correo lleva las cabeceras de baja en un clic",
+    );
+
+    const [digestAMark] = await db
+      .select({ sentAt: appUser.notificationDigestSentAt })
+      .from(appUser)
+      .where(eq(appUser.id, digestA.id));
+    check(digestAMark?.sentAt !== null, "la marca del último envío se escribe después de entregar");
+    const [digestFailMark] = await db
+      .select({ sentAt: appUser.notificationDigestSentAt })
+      .from(appUser)
+      .where(eq(appUser.id, digestFail.id));
+    check(digestFailMark?.sentAt === null, "un fallo de entrega no mueve la marca");
+    const [digestReadMark] = await db
+      .select({ sentAt: appUser.notificationDigestSentAt })
+      .from(appUser)
+      .where(eq(appUser.id, digestRead.id));
+    check(digestReadMark?.sentAt === null, "una semana vacía tampoco mueve la marca");
+
+    const secondRun = await sendDigests.sendNotificationDigests(new Date(digestNow.getTime() + 60_000), {
+      transport,
+      sendIntervalMs: 0,
+    });
+    if (secondRun.status !== "done") throw new Error("FALLÓ: la segunda corrida quedó bloqueada");
+    check(
+      messagesFor(digestA.email).length === 1,
+      "la segunda corrida de la misma semana no repite el resumen",
+    );
+    check(
+      messagesFor(digestFail.email).length === 2,
+      "la persona cuyo envío falló se reintenta en la corrida siguiente",
+    );
+
+    const beforeDryRun = sentMessages.length;
+    const dryRun = await sendDigests.sendNotificationDigests(new Date(digestNow.getTime() + 120_000), {
+      dryRun: true,
+      transport,
+      sendIntervalMs: 0,
+    });
+    if (dryRun.status !== "done") throw new Error("FALLÓ: el dry-run quedó bloqueado");
+    check(dryRun.dryRun === true && dryRun.sent === 0, "el dry-run no entrega nada");
+    check(dryRun.wouldSend >= 1, "el dry-run cuenta lo que se habría enviado");
+    check(sentMessages.length === beforeDryRun, "el dry-run no toca el transporte");
+
+    console.log("Baja del resumen: token firmado y sin sesión");
+    const issuedWeek = sendDigests.weekStartUtc(digestNow).toISOString().slice(0, 10);
+    const token = unsubscribe.unsubscribeToken(digestA.id, issuedWeek);
+    check(unsubscribe.isValidUnsubscribeToken(token), "el token de la baja es válido");
+    check(!unsubscribe.isValidUnsubscribeToken(`${token}x`), "un token alterado no vale");
+    check(
+      (await codeOf(() => unsubscribe.unsubscribeFromDigest(`${token}x`))) ===
+        "INVALID_UNSUBSCRIBE_TOKEN",
+      "un token alterado responde INVALID_UNSUBSCRIBE_TOKEN",
+    );
+    const apiUrl = digestMessage.headers?.["List-Unsubscribe"] ?? "";
+    const emailedToken = decodeURIComponent(apiUrl.replace(/^</, "").replace(/>$/, "").split("token=")[1] ?? "");
+    check(emailedToken === token, "el enlace del correo usa el token de la persona");
+    check(
+      unsubscribe.unsubscribePageUrl("es", token).includes("/es/notifications/unsubscribe?token=") &&
+        unsubscribe.unsubscribeApiUrl(token).includes("/api/notifications/unsubscribe?token="),
+      "la página y el endpoint de baja llevan el token",
+    );
+
+    const previousSecret = process.env.EMAIL_UNSUBSCRIBE_SECRET;
+    process.env.EMAIL_UNSUBSCRIBE_SECRET = "otro-secreto";
+    check(!unsubscribe.isValidUnsubscribeToken(token), "un token firmado con otro secreto no vale");
+    process.env.EMAIL_UNSUBSCRIBE_SECRET = previousSecret;
+
+    const ghostToken = unsubscribe.unsubscribeToken(randomUUID(), issuedWeek);
+    check(
+      (await codeOf(() => unsubscribe.unsubscribeFromDigest(ghostToken))) === null,
+      "un token válido de una cuenta inexistente no falla",
+    );
+    await unsubscribe.unsubscribeFromDigest(token);
+    const [unsubscribed] = await db
+      .select({ enabled: appUser.notificationDigestEnabled })
+      .from(appUser)
+      .where(eq(appUser.id, digestA.id));
+    check(unsubscribed?.enabled === false, "el token válido apaga el resumen");
+
     console.log("Agrupación por día en la zona del lector");
     const firstFollower = await db
       .select({ id: userFollow.id })
@@ -807,6 +1414,8 @@ async function main() {
       sql`${moderationAction.actorId} IN (SELECT id FROM app_user WHERE username LIKE 'smoke_notif_%')`,
     );
     await db.delete(appUser).where(like(appUser.username, "smoke_notif_%"));
+    // El premio arrastra ceremonias, nominaciones y avisos por cascada.
+    await db.delete(award).where(like(award.slug, "smoke-notif-%"));
     await db.delete(releaseGroup).where(sql`${releaseGroup.mbid}::text LIKE '5e0ce000-0000-4000-8000-00000000a9%'`);
     await db.delete(artist).where(eq(artist.mbid, ARTIST_MBID));
   }

@@ -196,7 +196,7 @@ ancla; si la resolución no lo encuentra, se cambia `anchor` por el álbum donde
    la `seed` del candidato elegido. `--retry` vuelve a buscar los ambiguos y no encontrados.
 4. **Cargar:** `npx tsx --env-file=.env scripts/load-awards.ts`. Valida todo y aborta sin escribir si algo falla; crea
    como stub los álbumes, grabaciones (con su disco ancla) y artistas que falten, desde la semilla, sin consultar
-   MusicBrainz. Idempotente.
+   MusicBrainz. Idempotente. Al terminar, emite los avisos de las ceremonias que tocó (ver abajo).
 
 Los nominados `ambiguous` o `not_found` se cargan igual, como texto sin enlace.
 
@@ -207,6 +207,28 @@ en portugués, clásico) y las canciones sin sencillo homónimo como disco ancla
 su disco ancla (el sencillo homónimo, por omisión) existe en MusicBrainz con ese título; las que no, quedan como texto sin
 enlace, igual que los 56 ambiguos de esos dos premios. Mejorar la cifra es curaduría (cambiar `anchor` por el álbum, `searchAs`
 o fijar a mano), no código.
+
+## Avisos a los seguidores (`add-notification-digest-and-awards`)
+
+La carga de premios también alimenta la bandeja de notificaciones (ADR 0047): quien sigue a un artista nominado o
+galardonado recibe un aviso en la pestaña **"Novedades"**.
+
+- **La carga avisa; la historia no.** `loadAward` devuelve los ids de las ceremonias que escribió y
+  `scripts/load-awards.ts` emite después, por premio. Solo emiten las ceremonias de **competencia** de los últimos
+  **30 días** y las clases de **Salón de la Fama** del año en curso: cargar `data/awards/` con años anteriores no
+  dispara avisos de ceremonias viejas. Un anuncio de ceremonias futuras emite nominaciones, nunca victorias.
+- **Un fallo al emitir no invalida la carga.** Los premios ya quedaron guardados; el error se registra y la próxima
+  carga lo reintenta. El fan-out es idempotente: una fila por persona, ceremonia y tipo.
+- **A quién avisa.** Una nominación llega a quien sigue al artista nominado o al artista `primary` del disco o la
+  canción nominados; una victoria, a quien sigue a un ganador. Los salones de la fama solo emiten `artist_award_win`
+  ("entró"), porque no tienen nominaciones. La cuenta tiene que estar activa y el aviso de premios encendido (una sola
+  preferencia, `artist_award`, para nominaciones y victorias).
+- **El aviso apunta a la ceremonia, no a la nominación.** La carga reemplaza todas las nominaciones de una categoría
+  cuando cambian; una referencia a la nominación desaparecería en la recarga. La fila guarda la ceremonia y la lectura
+  recalcula los artistas seguidos, cuántos son y cuántas nominaciones o premios suman. Si una corrección deja la
+  ceremonia sin artistas seguidos, la entrada desaparece sin tocar la fila.
+- La fila enlaza a `/awards/<slug>/<year>` o, en un salón de la fama, a `/hall-of-fame/<slug>/<year>`. Detalle en
+  `docs/05-features/notifications.md`.
 
 ## Notas
 

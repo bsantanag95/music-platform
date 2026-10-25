@@ -183,7 +183,7 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - Un perfil privado no revela contenido no autorizado: las superficies ajenas devuelven lista
   vacía (o `404` en el detalle) sin indicar si el usuario tiene contenido.
 
-## Notificaciones (Fases 1 y 2, `add-notifications-core` y `add-notification-milestones-and-releases`)
+## Notificaciones (Fases 1 a 3, `add-notifications-core`, `add-notification-milestones-and-releases` y `add-notification-digest-and-awards`)
 
 - Toda notificación nace de **un único servicio de emisión**, dentro de la **misma transacción** que la acción que la
   provoca (o, para lanzamientos, de la sincronización del calendario). Nunca se notifica a alguien por su propia acción,
@@ -205,28 +205,47 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
   `artist_single`. El fan-out es un `INSERT … SELECT` idempotente por persona, disco y tipo. Una reedición o un tipo
   secundario no genera aviso. Los sencillos solo se verifican y vinculan si alguien con `artist_single` activo sigue al
   artista, y **no** entran al calendario ni al riel de Inicio.
+- **Premios** (`artist_award_nomination`, `artist_award_win`): avisan a quien sigue a un artista nominado (directamente o
+  como artista `primary` del disco o la canción nominados) o a un ganador. La emite la **carga de premios**, no una
+  consulta en vivo; solo las ceremonias de competencia de los últimos **30 días** y las clases de Salón de la Fama del
+  año en curso, así que cargar la historia no avisa. Un anuncio futuro emite nominaciones, nunca victorias. Los salones
+  de la fama solo emiten `artist_award_win`. El aviso apunta a la **ceremonia**, nunca a la nominación (la carga
+  reemplaza nominaciones al corregirlas); la lectura recalcula los artistas seguidos, cuántos son y cuántas nominaciones
+  o premios suman, y si no queda ninguno la entrada no se muestra. Las dos clases comparten **una sola preferencia**
+  (`artist_award`) y una victoria y una nominación de la misma ceremonia se agrupan en una entrada. Un fallo al emitir se
+  registra y **no** invalida la carga; el fan-out es idempotente por persona, ceremonia y tipo.
 - La notificación **desaparece con su objeto**: borrar la respuesta, el comentario, la lista, el disco, dejar de seguir,
   quitar un seguidor, rechazar o cancelar una solicitud, bloquear (que borra los seguimientos) o eliminar la cuenta. No
   hay limpieza manual.
 - En la lectura se excluye a los actores con cuenta desactivada, cualquier bloqueo entre las partes, las respuestas
-  ocultas o de raíz oculta, un hito cuyo comentario o lista dejó de ser visible, y un lanzamiento de un disco retirado
-  de la discografía. Los avisos de moderación son la excepción: se muestran aunque el contenido esté oculto y **nunca
+  ocultas o de raíz oculta, un hito cuyo comentario o lista dejó de ser visible, un lanzamiento de un disco retirado
+  de la discografía y un premio cuya ceremonia ya no tiene ningún artista seguido con nominación o victoria visibles.
+  Los avisos de moderación son la excepción: se muestran aunque el contenido esté oculto y **nunca
   nombran al moderador**, solo la acción, el objeto y el motivo.
 - Se agrupan por hilo las respuestas del mismo tema y por día (en la zona del lector) los nuevos seguidores; los hitos
-  se agrupan por objeto y muestran la cifra más alta; los lanzamientos, por disco. Las solicitudes, las aceptaciones y
-  la moderación no se agrupan. El orden es por el evento más reciente.
-- **Dos pestañas**: "Para ti" (Fase 1 e hitos) y "Novedades" (lanzamientos). El contador de la campana cuenta solo
-  "Para ti"; "Novedades" lleva un **punto sin cifra**. Abrir cada pestaña mueve su propia marca de visto
+  se agrupan por objeto y muestran la cifra más alta; los lanzamientos, por disco; los premios, por ceremonia (una
+  victoria y una nominación de la misma ceremonia son una sola entrada y se prefiere la victoria). Las solicitudes, las
+  aceptaciones y la moderación no se agrupan. El orden es por el evento más reciente.
+- **Dos pestañas**: "Para ti" (Fase 1 e hitos) y "Novedades" (lanzamientos y premios). El contador de la campana cuenta
+  solo "Para ti"; "Novedades" lleva un **punto sin cifra**. Abrir cada pestaña mueve su propia marca de visto
   (`notifications_seen_at` / `notifications_releases_seen_at`), y una no apaga la otra.
 - **Visto no es leído**: el contador cuenta entradas no leídas posteriores a la última apertura de la pestaña, se
   muestra con tope "9+" y vuelve a cero al abrir la campana o la página. Cada entrada sigue sin leer hasta que se abre
   su destino o se marca todas como leídas. El contador es una bandeja de entrada, nunca un logro: sin sonido, avisos
-  emergentes, contador en el título de la pestaña, email ni push en esta fase.
-- Preferencias: las nueve claves desactivables (`comment_reply`, `thread_reply`, `new_follower`, `follow_accepted`,
-  `comment_like_milestone`, `list_save_milestone`, `artist_release`, `artist_release_announced`, `artist_single`) usan
-  el **defecto del tipo** cuando no hay fila. Activados por defecto: los cuatro de la Fase 1, `comment_like_milestone` y
-  `artist_release`. Desactivados por defecto: `list_save_milestone`, `artist_release_announced` y `artist_single`.
-  `follow_request` y `moderation` son fijas. Una preferencia aplica a los avisos posteriores y no borra los existentes.
+  emergentes, contador en el título de la pestaña ni Web Push en esta fase.
+- Preferencias: las diez claves desactivables (`comment_reply`, `thread_reply`, `new_follower`, `follow_accepted`,
+  `comment_like_milestone`, `list_save_milestone`, `artist_release`, `artist_release_announced`, `artist_single` y
+  `artist_award`) usan el **defecto del tipo** cuando no hay fila. Activados por defecto: los cuatro de la Fase 1,
+  `comment_like_milestone`, `artist_release` y `artist_award`. Desactivados por defecto: `list_save_milestone`,
+  `artist_release_announced` y `artist_single`. `follow_request` y `moderation` son fijas. `artist_award` gobierna las
+  dos clases de premio a la vez. Una preferencia aplica a los avisos posteriores y no borra los existentes.
+- **Resumen semanal por email** (`notification_digest_enabled`, opt-in, apagado por defecto): reutiliza la lectura de la
+  bandeja y solo incluye entradas **no leídas** de la ventana desde el último envío (o 7 días) hasta ahora, en dos
+  secciones de hasta 8 entradas. Exige email **verificado**: activarlo sin verificar responde `409 EMAIL_NOT_VERIFIED`.
+  Una semana vacía no se envía ni mueve la marca. El envío programado toma un lock y es idempotente por semana; la marca
+  (`notification_digest_sent_at`) se escribe **después** de que el transporte acepta el mensaje, y un fallo de una
+  persona no corta el lote ni mueve su marca. La baja en un clic usa un token HMAC sin expiración y solo apaga el
+  resumen; un `GET` de la página nunca cambia estado.
 - Retención: se borran las notificaciones leídas con más de 90 días y cualquier notificación con más de 180, en el
   propio camino de lectura.
 

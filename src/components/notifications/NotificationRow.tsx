@@ -7,6 +7,8 @@ import { Link } from "@/i18n/navigation";
 import { ApiError, apiFetch } from "@/lib/api/client";
 import { NoContentSchema, type NotificationGroupValue } from "@/lib/api/schemas";
 import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
+import { notificationText } from "@/lib/notifications/text";
+import { ceremonyHref, hallClassHref } from "@/components/awards/award-links";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import { RelativeDate } from "@/components/feed/feed-row-parts";
 import { UserAvatar } from "@/components/social/UserAvatar";
@@ -24,17 +26,18 @@ interface NotificationRowProps {
   onResolved?: () => void;
 }
 
-type ModerationAction = "hide" | "restore" | "suspend_social" | "revoke_social";
-type ModerationContentType = "comment" | "review" | "list" | "social_suspension";
 type ReleaseTarget = Extract<NotificationGroupValue["target"], { type: "release" }>;
 
 // Fila de la bandeja (openspec: add-notifications-core, D8;
-// add-notification-milestones-and-releases, D8). Las respuestas y los
-// seguidores enlazan a su objeto; la moderación no enlaza (el contenido puede
-// estar oculto) y solo redacta acción, objeto y motivo, sin nombrar al
-// moderador. Los hitos no tienen actor: llevan un icono y enlazan al hilo o a
-// la lista. Los lanzamientos llevan la carátula de 250 px (o el placeholder) y
-// enlazan al disco. La solicitud de seguimiento conserva Aprobar / Rechazar.
+// add-notification-milestones-and-releases, D8;
+// add-notification-digest-and-awards, D8). Las respuestas y los seguidores
+// enlazan a su objeto; la moderación no enlaza (el contenido puede estar oculto)
+// y solo redacta acción, objeto y motivo, sin nombrar al moderador. Los hitos no
+// tienen actor: llevan un icono y enlazan al hilo o a la lista. Los lanzamientos
+// llevan la carátula de 250 px (o el placeholder) y enlazan al disco. Los premios
+// llevan el trofeo y enlazan a la ceremonia (o a la clase del Salón de la Fama),
+// con el nombre del premio localizado. La solicitud de seguimiento conserva
+// Aprobar / Rechazar.
 export function NotificationRow({
   group,
   onNavigate,
@@ -42,12 +45,16 @@ export function NotificationRow({
   onResolved,
 }: NotificationRowProps) {
   const t = useTranslations("notifications");
+  const tAwards = useTranslations("awards");
   const tErrors = useTranslations("errors");
   const locale = useLocale();
   const timeZone = useTimeZone();
   const queryClient = useQueryClient();
 
-  const text = notificationText(t, group, locale);
+  const text = notificationText(t, group, locale, {
+    awardName: (slug, fallback) =>
+      tAwards.has(`names.${slug}`) ? tAwards(`names.${slug}`) : fallback,
+  });
   const reason =
     group.target?.type === "moderation"
       ? t("moderation.reason", { reason: group.target.reason })
@@ -192,6 +199,7 @@ function LeadingVisual({ group, actor, actorName }: LeadingVisualProps) {
   if (group.kind === "comment_like_milestone") return <MilestoneIcon kind="like" />;
   if (group.kind === "list_save_milestone") return <MilestoneIcon kind="save" />;
   if (group.target?.type === "release") return <ReleaseCover target={group.target} />;
+  if (group.target?.type === "award") return <AwardIcon won={group.kind === "artist_award_win"} />;
   if (actor) {
     return (
       <UserAvatar
@@ -215,131 +223,6 @@ function ReleaseCover({ target }: { target: ReleaseTarget }) {
       )}
     </span>
   );
-}
-
-type NotificationT = (key: string, values?: Record<string, string | number | Date>) => string;
-
-/**
- * Texto de la entrada. Los plurales viven en los mensajes ICU: `count` es el
- * número de personas distintas del grupo (el verbo concuerda con él) y
- * `people` ya trae "Ana y Bruno" o "Ana, Bruno y 2 personas más". Los hitos y
- * los lanzamientos no tienen personas: usan su propio objeto y su cifra.
- */
-function notificationText(
-  t: NotificationT,
-  group: NotificationGroupValue,
-  locale: string,
-): string {
-  const nameOf = (actor: NotificationGroupValue["actors"][number]) =>
-    actor.displayName ?? actor.username;
-
-  // "Ana", "Ana y Bruno" o "Ana, Bruno y 2 personas más": hasta dos nombres y el resto como cifra,
-  // igual para los hilos y para los seguidores del día.
-  const people = () => {
-    const names = group.actors.map(nameOf);
-    const remaining = Math.max(0, group.actorCount - names.length);
-    return remaining > 0
-      ? t("row.moreNames", { names: names.slice(0, 2).join(", "), count: remaining })
-      : names.length > 1
-        ? t("row.twoNames", { first: names[0]!, second: names[1]! })
-        : (names[0] ?? "");
-  };
-
-  if (group.kind === "comment_reply" || group.kind === "thread_reply") {
-    return t(group.kind === "comment_reply" ? "row.commentReply" : "row.threadReply", {
-      people: people(),
-      count: Math.max(group.actorCount, 1),
-      artist: group.target?.type === "artist" ? group.target.artistName : "",
-    });
-  }
-
-  if (group.kind === "new_follower") {
-    return t("row.newFollower", { people: people(), count: Math.max(group.actorCount, 1) });
-  }
-
-  const name = group.actors[0] ? nameOf(group.actors[0]) : "";
-
-  if (group.kind === "follow_request") return t("row.followRequest", { name });
-  if (group.kind === "follow_accepted") return t("row.followAccepted", { name });
-
-  const target = group.target;
-
-  if (group.kind === "comment_like_milestone") {
-    if (target?.type !== "comment") return t("row.milestoneFallback");
-    return t("row.commentLikeMilestone", {
-      subject: target.subjectName,
-      count: target.milestone,
-    });
-  }
-
-  if (group.kind === "list_save_milestone") {
-    if (target?.type !== "list") return t("row.milestoneFallback");
-    return t(
-      target.isCamino ? "row.listSaveMilestoneCamino" : "row.listSaveMilestone",
-      { title: target.title, count: target.milestone },
-    );
-  }
-
-  if (
-    group.kind === "artist_release" ||
-    group.kind === "artist_release_announced" ||
-    group.kind === "artist_single"
-  ) {
-    if (target?.type !== "release") return t("row.releaseFallback");
-    if (group.kind === "artist_release_announced") {
-      const date = target.releaseDate
-        ? formatReleaseDate(target.releaseDate, locale)
-        : null;
-      return date
-        ? t("row.releaseAnnounced", {
-            artist: target.artistName,
-            title: target.title,
-            date,
-          })
-        : t("row.releaseAnnouncedNoDate", {
-            artist: target.artistName,
-            title: target.title,
-          });
-    }
-    const key =
-      target.category === "single"
-        ? "row.releaseSingle"
-        : target.category === "ep"
-          ? "row.releaseEp"
-          : "row.releaseAlbum";
-    return t(key, { artist: target.artistName, title: target.title });
-  }
-
-  if (target?.type === "moderation") {
-    return t(moderationKey(target.action, target.contentType));
-  }
-  return t("moderation.fallback");
-}
-
-/** `YYYY-MM-DD` a "14 de noviembre" en el idioma activo; `null` si no es una fecha. */
-function formatReleaseDate(iso: string, locale: string): string | null {
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
-  if (!match) return null;
-  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
-  return new Intl.DateTimeFormat(locale, {
-    day: "numeric",
-    month: "long",
-    timeZone: "UTC",
-  }).format(date);
-}
-
-function moderationKey(action: ModerationAction, contentType: ModerationContentType): string {
-  if (action === "suspend_social") return "moderation.suspendSocial";
-  if (action === "revoke_social") return "moderation.revokeSocial";
-  if (action === "restore") {
-    if (contentType === "comment") return "moderation.restoreComment";
-    if (contentType === "review") return "moderation.restoreReview";
-    if (contentType === "list") return "moderation.restoreList";
-  }
-  if (contentType === "comment") return "moderation.hideComment";
-  if (contentType === "review") return "moderation.hideReview";
-  if (contentType === "list") return "moderation.hideList";
-  return "moderation.fallback";
 }
 
 function targetHref(group: NotificationGroupValue): string | null {
@@ -370,6 +253,12 @@ function targetHref(group: NotificationGroupValue): string | null {
   if (target.type === "release") {
     return albumHref(target.artistName, target.title, target.releaseGroupId);
   }
+  // Ceremonia o clase del Salón de la Fama, según la clase de premio.
+  if (target.type === "award") {
+    return target.isHallOfFame
+      ? hallClassHref(target.awardSlug, target.year)
+      : ceremonyHref(target.awardSlug, target.year);
+  }
   return null;
 }
 
@@ -394,6 +283,34 @@ function MilestoneIcon({ kind }: { kind: "like" | "save" }) {
         ) : (
           <path d="M6 4h12a1 1 0 0 1 1 1v15l-7-4-7 4V5a1 1 0 0 1 1-1z" />
         )}
+      </svg>
+    </span>
+  );
+}
+
+/**
+ * Trofeo de premio. La victoria va en ámbar lleno y la nominación en el mismo
+ * tono apagado que el resto de iconos: la fila ya lo dice con el texto.
+ */
+function AwardIcon({ won }: { won: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`flex size-9 shrink-0 items-center justify-center rounded-full ${
+        won ? "bg-amber text-ink" : "bg-amber/15 text-amber"
+      }`}
+    >
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3" />
       </svg>
     </span>
   );

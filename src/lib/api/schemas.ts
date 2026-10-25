@@ -397,6 +397,8 @@ export const ErrorCodeSchema = z.enum([
   "FEATURED_NOT_FOUND",
   "FEATURED_ORDER_CONFLICT",
   "TEMPLATE_NOT_FOUND",
+  "EMAIL_NOT_VERIFIED",
+  "INVALID_UNSUBSCRIBE_TOKEN",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 
@@ -2829,6 +2831,8 @@ export const NotificationKindSchema = z.enum([
   "artist_release",
   "artist_release_announced",
   "artist_single",
+  "artist_award_nomination",
+  "artist_award_win",
 ]);
 export type NotificationKindValue = z.infer<typeof NotificationKindSchema>;
 
@@ -2842,6 +2846,7 @@ export const OptionalNotificationKindSchema = z.enum([
   "artist_release",
   "artist_release_announced",
   "artist_single",
+  "artist_award",
 ]);
 export type OptionalNotificationKindValue = z.infer<typeof OptionalNotificationKindSchema>;
 
@@ -2897,6 +2902,18 @@ export const NotificationTargetSchema = z.discriminatedUnion("type", [
     releaseDate: z.string().nullable(),
     coverUrl: z.string().nullable(),
   }),
+  z.object({
+    type: z.literal("award"),
+    ceremonyId: z.uuid(),
+    awardSlug: z.string(),
+    /** Slug del premio: la interfaz lo localiza con `awards.names.<slug>`. */
+    awardName: z.string(),
+    year: z.number().int(),
+    isHallOfFame: z.boolean(),
+    artistName: z.string(),
+    artistCount: z.number().int(),
+    count: z.number().int(),
+  }),
 ]);
 
 export const NotificationGroupSchema = z.object({
@@ -2932,7 +2949,7 @@ export const MarkNotificationsReadRequestSchema = z.union([
 ]);
 export type MarkNotificationsReadRequest = z.infer<typeof MarkNotificationsReadRequestSchema>;
 
-/** Las once claves siempre presentes: la pantalla de ajustes las pinta todas. */
+/** Las trece claves siempre presentes: la pantalla de ajustes las pinta todas. */
 export const NotificationPreferencesSchema = z.object({
   comment_reply: z.boolean(),
   thread_reply: z.boolean(),
@@ -2945,6 +2962,8 @@ export const NotificationPreferencesSchema = z.object({
   artist_release: z.boolean(),
   artist_release_announced: z.boolean(),
   artist_single: z.boolean(),
+  // Una sola clave para las dos clases de premio (D6).
+  artist_award: z.boolean(),
 });
 export type NotificationPreferencesValue = z.infer<typeof NotificationPreferencesSchema>;
 
@@ -2953,18 +2972,32 @@ export type NotificationPreferencesValue = z.infer<typeof NotificationPreference
  * `VALIDATION_ERROR` (spec: intentar desactivar moderación → 400), así el
  * mensaje de error es el mismo para la API y para cualquier otro cliente.
  */
-export const UpdateNotificationPreferencesRequestSchema = z.object({
-  // `.strict()`: un tipo inventado es un error del cliente, no algo que se
-  // ignore en silencio.
-  preferences: NotificationPreferencesSchema.partial().strict(),
-});
+export const UpdateNotificationPreferencesRequestSchema = z
+  .object({
+    // `.strict()`: un tipo inventado es un error del cliente, no algo que se
+    // ignore en silencio.
+    preferences: NotificationPreferencesSchema.partial().strict().optional(),
+    /** Opt-in del resumen semanal por email (D2). */
+    emailDigest: z.boolean().optional(),
+  })
+  // Un `PUT` sin ningún campo no cambia nada: es un error del cliente.
+  .refine((value) => value.preferences !== undefined || value.emailDigest !== undefined, {
+    message: "Indica al menos una preferencia",
+  });
 export type UpdateNotificationPreferencesRequest = z.infer<
   typeof UpdateNotificationPreferencesRequestSchema
 >;
 
 export const NotificationPreferencesResponseSchema = z.object({
   preferences: NotificationPreferencesSchema,
+  emailDigest: z.boolean(),
+  /** Sin email verificado no se puede activar el resumen. */
+  emailVerified: z.boolean(),
 });
 export type NotificationPreferencesResponse = z.infer<
   typeof NotificationPreferencesResponseSchema
 >;
+
+/** Respuesta de la baja en un clic del resumen (D5). */
+export const UnsubscribeResponseSchema = z.object({ unsubscribed: z.literal(true) });
+export type UnsubscribeResponse = z.infer<typeof UnsubscribeResponseSchema>;

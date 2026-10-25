@@ -2012,14 +2012,16 @@ publicado. Un `listId` o `itemId` no-UUID devuelve `404`.
 Todos estos endpoints devuelven el formato uniforme `{ error, code }` ante errores y no exponen
 credenciales, roles internos ni datos privados innecesarios.
 
-## Notificaciones (cambios `add-notifications-core` y `add-notification-milestones-and-releases`)
+## Notificaciones (cambios `add-notifications-core`, `add-notification-milestones-and-releases` y `add-notification-digest-and-awards`)
 
-Bandeja de entrada dentro de la aplicación. Todas las rutas requieren sesión (`401 AUTH_REQUIRED` sin
-ella) y derivan la persona de la sesión: ningún body ni query acepta un destinatario, así que una clave
-de entrada de otra persona no cambia nada. Las notificaciones se materializan al emitir (ADR 0045 y
-ADR 0046) y se leen con los filtros de privacidad de `docs/05-features/notifications.md`: actores
-desactivados, bloqueos en cualquier dirección, respuestas o raíces ocultas, listas ocultas y discos
-retirados de la discografía quedan fuera; las de moderación están exentas.
+Bandeja de entrada dentro de la aplicación. Salvo la baja del resumen, todas las rutas requieren sesión
+(`401 AUTH_REQUIRED` sin ella) y derivan la persona de la sesión: ningún body ni query acepta un
+destinatario, así que una clave de entrada de otra persona no cambia nada. Las notificaciones se
+materializan al emitir (ADR 0045 y ADR 0046) y se leen con los filtros de privacidad de
+`docs/05-features/notifications.md`: actores desactivados, bloqueos en cualquier dirección, respuestas
+o raíces ocultas, listas ocultas y discos retirados de la discografía quedan fuera; las de moderación
+están exentas. Los premios se filtran al leer: la entrada solo existe mientras la persona siga a algún
+artista de la ceremonia.
 
 ### `GET /api/me/notifications?tab=&cursor=&tz=`
 
@@ -2036,9 +2038,11 @@ Entradas agrupadas, de la más reciente a la más antigua (20 por página).
 `{ id, kind, lastAt, unread, eventCount, actorCount, actors: [{ id, username, displayName, avatarUrl }],
 target }`. `kind` ∈ `comment_reply` · `thread_reply` · `new_follower` · `follow_request` ·
 `follow_accepted` · `moderation` · `comment_like_milestone` · `list_save_milestone` · `artist_release` ·
-`artist_release_announced` · `artist_single`. `id` es la clave que acepta `POST /read`. `actors` trae
-como mucho dos personas; `actorCount` permite escribir "y N personas más". Los hitos y los lanzamientos
-no tienen actor: `actors` vacío y `actorCount` 0. `target` es uno de:
+`artist_release_announced` · `artist_single` · `artist_award_nomination` · `artist_award_win`. `id` es la
+clave que acepta `POST /read`. `actors` trae como mucho dos personas; `actorCount` permite escribir "y N
+personas más". Los hitos, los lanzamientos y los premios no tienen actor: `actors` vacío y `actorCount` 0.
+Los dos tipos de premio comparten una sola entrada por ceremonia (prefiere la victoria). `target` es uno
+de:
 
 - `{ type: "artist", artistId, artistName, rootId }` — respuestas.
 - `{ type: "profile", username }` — seguimientos.
@@ -2053,6 +2057,11 @@ no tienen actor: `actors` vacío y `actorCount` 0. `target` es uno de:
 - `{ type: "release", releaseGroupId, title, artistName, category, releaseDate, coverUrl }` —
   lanzamientos; `category` ∈ `album` · `ep` · `single`, `releaseDate` es `YYYY-MM-DD` o `null` si el
   disco solo tiene año, y `coverUrl` es la miniatura de 250 px o `null`.
+- `{ type: "award", ceremonyId, awardSlug, awardName, year, isHallOfFame, artistName, artistCount, count }`
+  — premios. `awardName` es el slug del premio (la interfaz lo localiza con `awards.names.<slug>` y cae al
+  slug), `artistName` el primer artista seguido y `artistCount` cuántos están involucrados; `count` suma
+  las nominaciones (o los premios, si la entrada es una victoria) de esos artistas. `isHallOfFame` decide
+  entre `/awards/<slug>/<year>` y `/hall-of-fame/<slug>/<year>`.
 
 o `null` si el grupo no puede construir su destino.
 
@@ -2083,15 +2092,33 @@ ninguna, o un día inválido responden `400 VALIDATION_ERROR`.
 
 ### `GET|PUT /api/me/notification-preferences`
 
-`GET` **200 OK:** `{ preferences }` con las **nueve** claves desactivables: `comment_reply`,
-`thread_reply`, `new_follower`, `follow_accepted`, `comment_like_milestone`, `list_save_milestone`,
-`artist_release`, `artist_release_announced` y `artist_single`. El valor devuelto es el **efectivo**:
-la fila guardada si existe y, si no, el defecto del tipo. Defectos: activados `comment_reply`,
-`thread_reply`, `new_follower`, `follow_accepted`, `comment_like_milestone` y `artist_release`;
-desactivados `list_save_milestone`, `artist_release_announced` y `artist_single`. `follow_request` y
-`moderation` son fijas y no aparecen.
+`GET` **200 OK:** `{ preferences, emailDigest, emailVerified }`.
 
-`PUT` **body:** `{ preferences: { <kind>?: boolean } }` — cambio parcial. Un tipo fijo (`follow_request`,
-`moderation`) responde `400 VALIDATION_ERROR`, igual que una clave desconocida. Volver al defecto del
-tipo borra la fila: solo se guarda lo que difiere. **200 OK:** `{ preferences }` completo. Una
-preferencia no borra las notificaciones existentes.
+- `preferences` trae las **doce** claves del contrato: las diez desactivables (`comment_reply`,
+  `thread_reply`, `new_follower`, `follow_accepted`, `comment_like_milestone`, `list_save_milestone`,
+  `artist_release`, `artist_release_announced`, `artist_single` y `artist_award`, que gobierna los dos
+  tipos de premio) y las dos fijas (`follow_request` y `moderation`, siempre `true`; la interfaz las
+  muestra como texto, no como interruptor). El valor es el **efectivo**: la fila guardada si existe y,
+  si no, el defecto del tipo. Defectos: activados `comment_reply`, `thread_reply`, `new_follower`,
+  `follow_accepted`, `comment_like_milestone`, `artist_release` y `artist_award`; desactivados
+  `list_save_milestone`, `artist_release_announced` y `artist_single`.
+- `emailDigest` — opt-in del resumen semanal por email; desactivado por defecto.
+- `emailVerified` — hay email verificado. Sin él, la interfaz deshabilita el interruptor y ofrece
+  verificarlo.
+
+`PUT` **body:** `{ preferences?: { <kind>?: boolean }, emailDigest?: boolean }` — cambio parcial; al
+menos uno de los dos campos. Un tipo fijo (`follow_request`, `moderation`) responde
+`400 VALIDATION_ERROR`, igual que una clave desconocida (`artist_award_nomination` y `artist_award_win`
+tampoco son claves: se usa `artist_award`). Volver al defecto del tipo borra la fila: solo se guarda lo
+que difiere. Activar `emailDigest` sin el email verificado responde `409 EMAIL_NOT_VERIFIED` y no cambia
+nada; desactivarlo siempre se permite. **200 OK:** los tres campos completos. Una preferencia no borra
+las notificaciones existentes.
+
+### `POST /api/notifications/unsubscribe?token=`
+
+Baja en un clic del resumen semanal (RFC 8058), la que invoca el cliente de correo desde la cabecera
+`List-Unsubscribe`. **No requiere sesión** y el token firmado solo sirve para apagar
+`notification_digest_enabled` de esa persona. **200 OK:** `{ unsubscribed: true }` (también si la cuenta
+ya no existe: no distingue). Sin token, o con uno alterado o firmado con otro secreto, responde
+`400 INVALID_UNSUBSCRIBE_TOKEN` y no cambia nada. Un `GET` sobre esta ruta no existe: el enlace del
+cuerpo del correo abre la página de confirmación, que es quien hace el `POST`.

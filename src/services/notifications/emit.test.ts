@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
+import { PgDialect } from "drizzle-orm/pg-core";
+import type { SQL } from "drizzle-orm";
 import { comment, notification, userBlock } from "@/db/schema";
 import {
   ARTIST_RELEASE_WINDOW_DAYS,
+  emitArtistAwardNotifications,
   emitArtistReleaseNotifications,
   emitMilestoneNotification,
   emitNotifications,
@@ -492,6 +495,56 @@ describe("emitArtistReleaseNotifications", () => {
     );
 
     expect(executed).toEqual([]);
+  });
+});
+
+describe("emitArtistAwardNotifications", () => {
+  const today = "2026-10-25";
+  const ceremony = "5e0ce000-0000-4000-8000-00000000a9a1";
+  const render = (query: unknown) =>
+    new PgDialect().sqlToQuery(query as SQL).sql.replace(/\s+/g, " ");
+
+  it("no escribe nada sin ceremonias", async () => {
+    const { tx, executed } = fakeTx();
+
+    await emitArtistAwardNotifications(tx, [], today);
+
+    expect(executed).toEqual([]);
+  });
+
+  it("emite nominaciones y premios con un INSERT … SELECT por tipo", async () => {
+    const { tx, executed } = fakeTx();
+
+    await emitArtistAwardNotifications(tx, [ceremony], today);
+
+    expect(executed).toHaveLength(2);
+    const nomination = render(executed[0]);
+    expect(nomination).toContain("'artist_award_nomination'");
+    expect(nomination).toContain("a.kind = 'competition'");
+    expect(nomination).toContain("held_on >= ");
+    expect(nomination).toContain("'award:' || i.ceremony_id::text");
+    expect(nomination).toContain("coalesce(p.enabled, ");
+
+    const win = render(executed[1]);
+    expect(win).toContain("'artist_award_win'");
+    expect(win).toContain("BETWEEN ");
+    expect(win).toContain("a.kind = 'hall_of_fame'");
+    expect(win).toContain("EXTRACT(YEAR FROM ");
+    expect(win).toContain("AND i.won");
+  });
+
+  it("filtra por artista principal del disco o la canción nominados", async () => {
+    const { tx, executed } = fakeTx();
+
+    await emitArtistAwardNotifications(tx, [ceremony], today);
+
+    for (const query of executed) {
+      const text = render(query);
+      expect(text).toContain("c.role = 'primary'");
+      expect(text).toContain("c.release_group_id = n.release_group_id");
+      expect(text).toContain("c.recording_id = n.recording_id");
+      expect(text).toContain("u.deactivated_at IS NULL");
+    }
   });
 });
 

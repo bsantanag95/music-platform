@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   appUser,
   artist,
+  award,
+  awardCeremony,
   comment,
   moderationAction,
   notification,
@@ -19,7 +21,7 @@ import {
 } from "./read";
 
 const mocks = vi.hoisted(() => ({
-  db: { select: vi.fn(), update: vi.fn(), delete: vi.fn() },
+  db: { select: vi.fn(), update: vi.fn(), delete: vi.fn(), execute: vi.fn() },
   resolveImageUrls: vi.fn(),
 }));
 
@@ -57,6 +59,10 @@ const VISIBLE = {
   releasePrimaryType: releaseGroup.primaryType,
   releaseDate: releaseGroup.firstReleaseDate,
   releaseCoverUrl: releaseGroup.coverThumbUrl,
+  ceremonyId: notification.awardCeremonyId,
+  awardSlug: award.slug,
+  awardYear: awardCeremony.year,
+  awardKind: award.kind,
 };
 
 const GROUPED = {
@@ -85,6 +91,10 @@ const GROUPED = {
   releasePrimaryType: releaseGroup.primaryType,
   releaseDate: releaseGroup.firstReleaseDate,
   releaseCoverUrl: releaseGroup.coverThumbUrl,
+  ceremonyId: notification.awardCeremonyId,
+  awardSlug: award.slug,
+  awardYear: awardCeremony.year,
+  awardKind: award.kind,
 };
 
 type Chain = Record<string, ReturnType<typeof vi.fn>>;
@@ -143,6 +153,10 @@ function groupRow(overrides: Record<string, unknown> = {}) {
     releasePrimaryType: null,
     releaseDate: null,
     releaseCoverUrl: null,
+    ceremonyId: null,
+    awardSlug: null,
+    awardYear: null,
+    awardKind: null,
     commentSubject: null,
     commentSubjectId: null,
     commentSubjectName: null,
@@ -173,6 +187,7 @@ function mockUpdate() {
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.resolveImageUrls.mockResolvedValue(new Map());
+  mocks.db.execute.mockResolvedValue([]);
 });
 
 describe("listNotificationGroups", () => {
@@ -415,7 +430,173 @@ describe("listNotificationGroups", () => {
       "artist_release",
       "artist_release_announced",
       "artist_single",
+      "artist_award_nomination",
+      "artist_award_win",
     ]);
+  });
+
+  it("una nominación de premios nombra al artista con más y suma las cifras del grupo", async () => {
+    mockPage(
+      [
+        groupRow({
+          id: "award:ceremony-1",
+          kind: "artist_award_nomination",
+          actorCount: 0,
+          actorUsername: null,
+          artistId: null,
+          artistName: null,
+          rootId: null,
+          ceremonyId: "ceremony-1",
+          awardSlug: "grammy",
+          awardYear: 2027,
+          awardKind: "competition",
+        }),
+      ],
+      [],
+    );
+    mocks.db.execute.mockResolvedValue([
+      {
+        ceremony_id: "ceremony-1",
+        artist_id: "artist-1",
+        artist_name: "Banda",
+        nominations: 3,
+        wins: 0,
+      },
+      {
+        ceremony_id: "ceremony-1",
+        artist_id: "artist-2",
+        artist_name: "Otra banda",
+        nominations: 2,
+        wins: 0,
+      },
+    ]);
+
+    const [group] = (await listNotificationGroups("me", { tab: "releases" })).groups;
+
+    expect(group!.target).toEqual({
+      type: "award",
+      ceremonyId: "ceremony-1",
+      awardSlug: "grammy",
+      awardName: "grammy",
+      year: 2027,
+      isHallOfFame: false,
+      artistName: "Banda",
+      artistCount: 2,
+      count: 5,
+    });
+    // Una sola consulta para todas las entradas de premios de la página.
+    expect(mocks.db.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it("una victoria cuenta solo premios y manda sobre la nominación del mismo grupo", async () => {
+    mockPage(
+      [
+        groupRow({
+          id: "award:ceremony-1",
+          kind: "artist_award_win",
+          actorCount: 0,
+          actorUsername: null,
+          artistId: null,
+          artistName: null,
+          rootId: null,
+          ceremonyId: "ceremony-1",
+          awardSlug: "grammy",
+          awardYear: 2026,
+          awardKind: "competition",
+        }),
+      ],
+      [],
+    );
+    mocks.db.execute.mockResolvedValue([
+      {
+        ceremony_id: "ceremony-1",
+        artist_id: "artist-1",
+        artist_name: "Banda",
+        nominations: 3,
+        wins: 2,
+      },
+      {
+        ceremony_id: "ceremony-1",
+        artist_id: "artist-2",
+        artist_name: "Otra banda",
+        nominations: 4,
+        wins: 0,
+      },
+    ]);
+
+    const [group] = (await listNotificationGroups("me", { tab: "releases" })).groups;
+
+    expect(group!.target).toMatchObject({
+      type: "award",
+      isHallOfFame: false,
+      artistName: "Banda",
+      artistCount: 1,
+      count: 2,
+    });
+  });
+
+  it("un Salón de la Fama se marca como tal y no inventa un destino sin artistas seguidos", async () => {
+    mockPage(
+      [
+        groupRow({
+          id: "award:hall-1",
+          kind: "artist_award_win",
+          actorCount: 0,
+          actorUsername: null,
+          artistId: null,
+          artistName: null,
+          rootId: null,
+          ceremonyId: "hall-1",
+          awardSlug: "grammy-hall-of-fame",
+          awardYear: 2026,
+          awardKind: "hall_of_fame",
+        }),
+      ],
+      [],
+    );
+    mocks.db.execute.mockResolvedValue([
+      {
+        ceremony_id: "hall-1",
+        artist_id: "artist-1",
+        artist_name: "Banda",
+        nominations: 1,
+        wins: 1,
+      },
+    ]);
+
+    const [group] = (await listNotificationGroups("me", { tab: "releases" })).groups;
+
+    expect(group!.target).toMatchObject({
+      type: "award",
+      isHallOfFame: true,
+      artistName: "Banda",
+      artistCount: 1,
+      count: 1,
+    });
+
+    // Sin artistas seguidos (corrección de las nominaciones) no hay destino.
+    mockPage(
+      [
+        groupRow({
+          id: "award:hall-2",
+          kind: "artist_award_win",
+          actorCount: 0,
+          actorUsername: null,
+          artistId: null,
+          artistName: null,
+          rootId: null,
+          ceremonyId: "hall-2",
+          awardSlug: "grammy-hall-of-fame",
+          awardYear: 2026,
+          awardKind: "hall_of_fame",
+        }),
+      ],
+      [],
+    );
+    mocks.db.execute.mockResolvedValue([]);
+
+    const [hidden] = (await listNotificationGroups("me", { tab: "releases" })).groups;
+    expect(hidden!.target).toBeNull();
   });
 
   it("recorta a dos nombres; el resto queda como cifra del grupo", async () => {
