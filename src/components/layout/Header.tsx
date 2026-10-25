@@ -21,6 +21,8 @@ interface HeaderProps {
   exploreEnabled?: boolean;
   /** Entradas de la bandeja sin ver, calculadas en el servidor (campana). */
   notificationCount?: number;
+  /** Punto de "Novedades" calculado en el servidor (pestaña del panel). */
+  newReleases?: boolean;
   platformPermissions?: Permission[];
 }
 
@@ -35,6 +37,7 @@ export function Header({
   user = null,
   exploreEnabled = false,
   notificationCount = 0,
+  newReleases = false,
   platformPermissions = [],
 }: HeaderProps) {
   const t = useTranslations("common");
@@ -164,7 +167,10 @@ export function Header({
             <>
               {/* El "+" escribe; la campana avisa; el menú ve y gestiona. */}
               <QuickActionsButton />
-              <NotificationBell initialCount={notificationCount} />
+              <NotificationBell
+                initialCount={notificationCount}
+                initialNewReleases={newReleases}
+              />
               <UserMenu
                 username={currentUser.username}
                 displayName={currentUser.displayName ?? currentUser.username}
@@ -186,7 +192,11 @@ export function Header({
             enlace a la página (D8), no un panel flotante. */}
         <div className="flex items-center gap-1 lg:hidden">
           {currentUser ? (
-            <NotificationBell variant="mobile" initialCount={notificationCount} />
+            <NotificationBell
+              variant="mobile"
+              initialCount={notificationCount}
+              initialNewReleases={newReleases}
+            />
           ) : null}
           <button
             type="button"

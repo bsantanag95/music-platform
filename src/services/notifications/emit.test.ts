@@ -1,6 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
-import { comment, userBlock } from "@/db/schema";
-import { emitNotifications, emitReplyNotifications, retractFollowRequestNotifications, type NotificationEvent, type NotificationTx } from "./emit";
+import { comment, notification, userBlock } from "@/db/schema";
+import {
+  ARTIST_RELEASE_WINDOW_DAYS,
+  emitArtistReleaseNotifications,
+  emitMilestoneNotification,
+  emitNotifications,
+  emitReplyNotifications,
+  releaseNotificationBatches,
+  retractFollowRequestNotifications,
+  type NotificationEvent,
+  type NotificationTx,
+} from "./emit";
 
 const mocks = vi.hoisted(() => ({ select: vi.fn() }));
 
@@ -15,28 +25,41 @@ const FOLLOW = "00000000-0000-4000-8000-0000000000f3";
 const ACTION = "00000000-0000-4000-8000-0000000000f4";
 
 type Block = { blockerId: string; blockedId: string };
-type Disabled = { userId: string; kind: string };
+type PreferenceRow = { userId: string; kind: string; enabled: boolean };
 
 /**
- * Transacción falsa: distingue la consulta de bloqueos, la de preferencias y la
- * de participantes del hilo por la tabla del `from`, y captura las filas
- * insertadas.
+ * Transacción falsa: distingue la consulta de bloqueos, la de preferencias, la
+ * de participantes del hilo y la de hitos ya emitidos por la tabla del `from`,
+ * captura las filas insertadas y los `INSERT … SELECT` de lanzamientos.
  */
-function fakeTx(data: { blocks?: Block[]; disabled?: Disabled[]; participants?: Array<{ userId: string }> } = {}) {
+function fakeTx(
+  data: {
+    blocks?: Block[];
+    disabled?: PreferenceRow[];
+    participants?: Array<{ userId: string }>;
+    milestones?: Array<{ id: string }>;
+  } = {},
+) {
   const inserted: Array<Record<string, unknown>> = [];
   const deleted = vi.fn().mockResolvedValue(undefined);
   const onConflictDoNothing = vi.fn().mockResolvedValue(undefined);
+  const executed: unknown[] = [];
 
   const rowsFor = (table: unknown) => {
     if (table === userBlock) return data.blocks ?? [];
     if (table === comment) return data.participants ?? [];
+    if (table === notification) return data.milestones ?? [];
     return data.disabled ?? [];
   };
 
   const tx = {
     select: vi.fn(() => ({
       from: (table: unknown) => ({
-        where: vi.fn().mockResolvedValue(rowsFor(table)),
+        where: vi.fn(() =>
+          Object.assign(Promise.resolve(rowsFor(table)), {
+            limit: vi.fn().mockResolvedValue(rowsFor(table)),
+          }),
+        ),
       }),
     })),
     insert: vi.fn(() => ({
@@ -46,9 +69,19 @@ function fakeTx(data: { blocks?: Block[]; disabled?: Disabled[]; participants?: 
       }),
     })),
     delete: vi.fn(() => ({ where: deleted })),
+    execute: vi.fn((query: unknown) => {
+      executed.push(query);
+      return Promise.resolve(undefined);
+    }),
   };
 
-  return { tx: tx as unknown as NotificationTx & typeof tx, inserted, onConflictDoNothing, deleted };
+  return {
+    tx: tx as unknown as NotificationTx & typeof tx,
+    inserted,
+    onConflictDoNothing,
+    deleted,
+    executed,
+  };
 }
 
 function commentReply(overrides: Partial<NotificationEvent> = {}): NotificationEvent {
@@ -76,6 +109,9 @@ describe("emitNotifications", () => {
         commentId: REPLY,
         followId: null,
         moderationActionId: null,
+        milestone: null,
+        listId: null,
+        releaseGroupId: null,
         groupKey: `thread:${ROOT}`,
       },
     ]);
@@ -112,7 +148,7 @@ describe("emitNotifications", () => {
 
   it("respeta la preferencia desactivada de un tipo opcional", async () => {
     const { tx, inserted } = fakeTx({
-      disabled: [{ userId: ANA, kind: "comment_reply" }],
+      disabled: [{ userId: ANA, kind: "comment_reply", enabled: false }],
     });
 
     await emitNotifications(tx, [commentReply(), commentReply({ kind: "thread_reply", recipientId: CARLA })]);
@@ -123,8 +159,8 @@ describe("emitNotifications", () => {
   it("ignora la preferencia de otro usuario o de un tipo fijo", async () => {
     const { tx, inserted } = fakeTx({
       disabled: [
-        { userId: CARLA, kind: "comment_reply" },
-        { userId: ANA, kind: "follow_request" },
+        { userId: CARLA, kind: "comment_reply", enabled: false },
+        { userId: ANA, kind: "follow_request", enabled: false },
       ],
     });
 
@@ -184,9 +220,269 @@ describe("emitNotifications", () => {
         commentId: null,
         followId: null,
         moderationActionId: ACTION,
+        milestone: null,
+        listId: null,
+        releaseGroupId: null,
         groupKey: `moderation:${ACTION}`,
       },
     ]);
+  });
+
+  it("un hito guarda su cifra y se agrupa por el objeto", async () => {
+    const { tx, inserted } = fakeTx({
+      disabled: [{ userId: CARLA, kind: "list_save_milestone", enabled: true }],
+    });
+
+    await emitNotifications(tx, [
+      {
+        kind: "comment_like_milestone",
+        recipientId: ANA,
+        commentId: REPLY,
+        rootId: ROOT,
+        milestone: 25,
+      },
+      {
+        kind: "list_save_milestone",
+        recipientId: CARLA,
+        listId: ACTION,
+        milestone: 5,
+      },
+    ]);
+
+    expect(inserted).toEqual([
+      {
+        recipientId: ANA,
+        kind: "comment_like_milestone",
+        actorId: null,
+        commentId: REPLY,
+        followId: null,
+        moderationActionId: null,
+        milestone: 25,
+        listId: null,
+        releaseGroupId: null,
+        groupKey: `likes:${REPLY}`,
+      },
+      {
+        recipientId: CARLA,
+        kind: "list_save_milestone",
+        actorId: null,
+        commentId: null,
+        followId: null,
+        moderationActionId: null,
+        milestone: 5,
+        listId: ACTION,
+        releaseGroupId: null,
+        groupKey: `saves:${ACTION}`,
+      },
+    ]);
+  });
+
+  it("un lanzamiento activado por defecto avisa y uno apagado no", async () => {
+    const { tx, inserted } = fakeTx();
+
+    await emitNotifications(tx, [
+      { kind: "artist_release", recipientId: ANA, releaseGroupId: REPLY },
+      { kind: "artist_single", recipientId: CARLA, releaseGroupId: ROOT },
+    ]);
+
+    expect(inserted).toEqual([
+      {
+        recipientId: ANA,
+        kind: "artist_release",
+        actorId: null,
+        commentId: null,
+        followId: null,
+        moderationActionId: null,
+        milestone: null,
+        listId: null,
+        releaseGroupId: REPLY,
+        groupKey: `release:${REPLY}`,
+      },
+    ]);
+  });
+});
+
+describe("emitMilestoneNotification", () => {
+  it("inserta el hito con su cifra y sin actor", async () => {
+    const { tx, inserted } = fakeTx();
+
+    await emitMilestoneNotification(tx, {
+      kind: "comment_like_milestone",
+      recipientId: ANA,
+      commentId: REPLY,
+      rootId: ROOT,
+      milestone: 25,
+    });
+
+    expect(inserted).toEqual([
+      {
+        recipientId: ANA,
+        kind: "comment_like_milestone",
+        actorId: null,
+        commentId: REPLY,
+        followId: null,
+        moderationActionId: null,
+        milestone: 25,
+        listId: null,
+        releaseGroupId: null,
+        groupKey: `likes:${REPLY}`,
+      },
+    ]);
+  });
+
+  it("no repite ni retrocede si ya hay un hito igual o mayor para el objeto", async () => {
+    const { tx, inserted } = fakeTx({ milestones: [{ id: "n1" }] });
+
+    await emitMilestoneNotification(tx, {
+      kind: "comment_like_milestone",
+      recipientId: ANA,
+      commentId: REPLY,
+      rootId: ROOT,
+      milestone: 25,
+    });
+
+    expect(tx.insert).not.toHaveBeenCalled();
+    expect(inserted).toEqual([]);
+  });
+
+  it("el hito de guardados se agrupa por la lista y respeta su preferencia", async () => {
+    const { tx, inserted } = fakeTx({
+      disabled: [{ userId: ANA, kind: "list_save_milestone", enabled: true }],
+    });
+
+    await emitMilestoneNotification(tx, {
+      kind: "list_save_milestone",
+      recipientId: ANA,
+      listId: ACTION,
+      milestone: 5,
+    });
+
+    expect(inserted).toEqual([
+      {
+        recipientId: ANA,
+        kind: "list_save_milestone",
+        actorId: null,
+        commentId: null,
+        followId: null,
+        moderationActionId: null,
+        milestone: 5,
+        listId: ACTION,
+        releaseGroupId: null,
+        groupKey: `saves:${ACTION}`,
+      },
+    ]);
+  });
+
+  it("un hito apagado no se inserta", async () => {
+    const { tx, inserted } = fakeTx({
+      disabled: [{ userId: ANA, kind: "list_save_milestone", enabled: false }],
+    });
+
+    await emitMilestoneNotification(tx, {
+      kind: "list_save_milestone",
+      recipientId: ANA,
+      listId: ACTION,
+      milestone: 1,
+    });
+
+    expect(inserted).toEqual([]);
+  });
+});
+
+describe("releaseNotificationBatches", () => {
+  const today = "2026-10-23";
+
+  it("clasifica álbum, EP y sencillo de los últimos 14 días", () => {
+    expect(
+      releaseNotificationBatches(
+        [
+          { releaseGroupId: "album", releaseDate: "2026-10-20", category: "album" },
+          { releaseGroupId: "ep", releaseDate: "2026-10-10", category: "ep" },
+          { releaseGroupId: "single", releaseDate: "2026-10-22", category: "single" },
+        ],
+        today,
+      ),
+    ).toEqual([
+      { kind: "artist_release", releaseGroupIds: ["album", "ep"] },
+      { kind: "artist_single", releaseGroupIds: ["single"] },
+    ]);
+  });
+
+  it("incluye el borde de la ventana y descarta lo anterior", () => {
+    const from = new Date(Date.parse(`${today}T00:00:00Z`) - ARTIST_RELEASE_WINDOW_DAYS * 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+
+    expect(
+      releaseNotificationBatches(
+        [
+          { releaseGroupId: "borde", releaseDate: from, category: "album" },
+          { releaseGroupId: "fuera", releaseDate: "2026-10-08", category: "album" },
+        ],
+        today,
+      ),
+    ).toEqual([{ kind: "artist_release", releaseGroupIds: ["borde"] }]);
+  });
+
+  it("cualquier tipo con fecha futura se anuncia, no se publica", () => {
+    expect(
+      releaseNotificationBatches(
+        [
+          { releaseGroupId: "futuro", releaseDate: "2026-10-24", category: "single" },
+          { releaseGroupId: "hoy", releaseDate: today, category: "album" },
+        ],
+        today,
+      ),
+    ).toEqual([
+      { kind: "artist_release", releaseGroupIds: ["hoy"] },
+      { kind: "artist_release_announced", releaseGroupIds: ["futuro"] },
+    ]);
+  });
+
+  it("deduplica el mismo disco y no devuelve lotes vacíos", () => {
+    expect(
+      releaseNotificationBatches(
+        [
+          { releaseGroupId: "album", releaseDate: "2026-10-20", category: "album" },
+          { releaseGroupId: "album", releaseDate: "2026-10-20", category: "album" },
+        ],
+        today,
+      ),
+    ).toEqual([{ kind: "artist_release", releaseGroupIds: ["album"] }]);
+
+    expect(releaseNotificationBatches([], today)).toEqual([]);
+  });
+});
+
+describe("emitArtistReleaseNotifications", () => {
+  const today = "2026-10-23";
+
+  it("ejecuta un INSERT … SELECT por tipo con los discos ya clasificados", async () => {
+    const { tx, executed } = fakeTx();
+
+    await emitArtistReleaseNotifications(
+      tx,
+      [
+        { releaseGroupId: "album", releaseDate: "2026-10-20", category: "album" },
+        { releaseGroupId: "album", releaseDate: "2026-10-20", category: "album" },
+        { releaseGroupId: "single", releaseDate: "2026-10-22", category: "single" },
+      ],
+      today,
+    );
+
+    expect(executed).toHaveLength(2);
+  });
+
+  it("no escribe nada si ningún disco cae en la ventana ni en el futuro", async () => {
+    const { tx, executed } = fakeTx();
+
+    await emitArtistReleaseNotifications(
+      tx,
+      [{ releaseGroupId: "viejo", releaseDate: "2026-01-01", category: "album" }],
+      today,
+    );
+
+    expect(executed).toEqual([]);
   });
 });
 

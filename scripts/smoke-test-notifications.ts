@@ -1,20 +1,23 @@
 export {};
 
-// Smoke test del cambio add-notifications-core contra Postgres REAL (el SQL que
-// las pruebas unitarias mockean): cada fuente de emisión (respuestas, seguimientos
-// y moderación), los CHECK de la migración 0075, las cascadas de retracción, los
-// filtros de privacidad, la agrupación por día en la zona del lector, visto vs.
-// leído, preferencias y el contador bajo 10 ms.
-// Crea un artista sintético (MBID `5e0ce000-0000-4000-8000-00000000a9a0`) y
-// usuarios `smoke_notif_*`, y los borra al terminar (también si falla). Si se
-// interrumpió, limpiar con
+// Smoke test de los cambios add-notifications-core y
+// add-notification-milestones-and-releases contra Postgres REAL (el SQL que las
+// pruebas unitarias mockean): cada fuente de emisión (respuestas, seguimientos,
+// moderación, hitos y lanzamientos), los CHECK de las migraciones 0075 y 0076,
+// las cascadas de retracción, los filtros de privacidad, la agrupación por día
+// en la zona del lector, visto vs. leído, preferencias con defecto por tipo, las
+// dos pestañas, el contador sin novedades y el contador bajo 10 ms.
+// Crea un artista sintético (MBID `5e0ce000-0000-4000-8000-00000000a9a0`), tres
+// discos (`…a9b0`, `…a9b1`, `…a9b2`) y usuarios `smoke_notif_*`, y los borra al
+// terminar (también si falla). Si se interrumpió, limpiar con
 //   DELETE FROM moderation_action WHERE actor_id IN (SELECT id FROM app_user WHERE username LIKE 'smoke_notif_%');
 //   DELETE FROM app_user WHERE username LIKE 'smoke_notif_%';
+//   DELETE FROM release_group WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000a9%';
 //   DELETE FROM artist WHERE mbid = '5e0ce000-0000-4000-8000-00000000a9a0';
 // (el `ON DELETE CASCADE` limpia notificaciones, seguimientos, comentarios,
-// preferencias y restricciones; la primera sentencia suelta el `RESTRICT` de
-// `moderation_action.actor_id`).
-// Necesita la migración 0075 aplicada. Correr contra una BD de scratch:
+// listas, preferencias y restricciones; la primera sentencia suelta el
+// `RESTRICT` de `moderation_action.actor_id`).
+// Necesita las migraciones 0075 y 0076 aplicadas. Correr contra una BD de scratch:
 //   ALLOW_SMOKE_ON_REAL_DB=1 npx tsx --env-file=.env scripts/smoke-test-notifications.ts
 
 import { randomUUID } from "node:crypto";
@@ -25,12 +28,17 @@ import { db } from "../src/db";
 import {
   appUser,
   artist,
+  artistFollow,
   comment,
+  commentLike,
+  credit,
   moderationAction,
   notification,
   notificationPreference,
+  releaseGroup,
   userBlock,
   userFollow,
+  userList,
   userRole,
 } from "../src/db/schema";
 import type { NotificationKind, OptionalNotificationKind } from "../src/db/schema";
@@ -39,6 +47,10 @@ assertSmokeAllowed();
 
 const suffix = randomUUID().slice(0, 8);
 const ARTIST_MBID = "5e0ce000-0000-4000-8000-00000000a9a0";
+const ALBUM_MBID = "5e0ce000-0000-4000-8000-00000000a9b0";
+const ANNOUNCED_MBID = "5e0ce000-0000-4000-8000-00000000a9b1";
+const SINGLE_MBID = "5e0ce000-0000-4000-8000-00000000a9b2";
+const TODAY = new Date().toISOString().slice(0, 10);
 
 function check(condition: unknown, message: string): void {
   if (!condition) throw new Error(`FALLÓ: ${message}`);
@@ -71,14 +83,18 @@ async function loadServices() {
     }
     return originalLoad.call(this, request, parent, isMain);
   };
-  const [social, following, moderation, read, preferences] = await Promise.all([
-    import("../src/services/social"),
-    import("../src/services/social/following"),
-    import("../src/services/moderation"),
-    import("../src/services/notifications/read"),
-    import("../src/services/notifications/preferences"),
-  ]);
-  return { social, following, moderation, read, preferences };
+  const [social, following, moderation, read, preferences, commentLikes, savedLists, emit] =
+    await Promise.all([
+      import("../src/services/social"),
+      import("../src/services/social/following"),
+      import("../src/services/moderation"),
+      import("../src/services/notifications/read"),
+      import("../src/services/notifications/preferences"),
+      import("../src/services/social/comment-likes"),
+      import("../src/services/lists/saved-lists"),
+      import("../src/services/notifications/emit"),
+    ]);
+  return { social, following, moderation, read, preferences, commentLikes, savedLists, emit };
 }
 
 const newUser = (label: string, extra: Record<string, unknown> = {}) => ({
@@ -89,7 +105,8 @@ const newUser = (label: string, extra: Record<string, unknown> = {}) => ({
 });
 
 async function main() {
-  const { social, following, moderation, read, preferences } = await loadServices();
+  const { social, following, moderation, read, preferences, commentLikes, savedLists, emit } =
+    await loadServices();
 
   const ana = newUser("ana");
   const bruno = newUser("bruno");
@@ -110,6 +127,15 @@ async function main() {
         eq(notification.recipientId, recipientId),
         eq(notification.kind, kind),
         commentId ? eq(notification.commentId, commentId) : undefined,
+      ),
+    );
+  const milestoneCount = (recipientId: string, kind: NotificationKind, milestone: number, where?: SQL) =>
+    countOf(
+      and(
+        eq(notification.recipientId, recipientId),
+        eq(notification.kind, kind),
+        eq(notification.milestone, milestone),
+        where,
       ),
     );
 
@@ -324,6 +350,252 @@ async function main() {
       "un tipo fijo no se puede desactivar",
     );
 
+    console.log("Defectos por tipo (0076)");
+    const defaults = await preferences.getNotificationPreferences(ana.id);
+    check(defaults.comment_like_milestone === true, "el hito de likes nace activado");
+    check(defaults.list_save_milestone === false, "el hito de guardados nace desactivado");
+    check(defaults.artist_release === true, "el disco publicado nace activado");
+    check(defaults.artist_release_announced === false, "el disco anunciado nace desactivado");
+    check(defaults.artist_single === false, "el sencillo nace desactivado");
+
+    console.log("Hitos de likes");
+    const hitoUsers = Array.from({ length: 30 }, (_, index) => newUser(`hito${index}`));
+    await db.insert(appUser).values(hitoUsers);
+    const [hitoComment] = await db
+      .insert(comment)
+      .values({ userId: ana.id, artistId: art.id, topic: "general", body: "hito de likes" })
+      .returning();
+    if (!hitoComment) throw new Error("no se creó el comentario del hito");
+    const hitoFilter = eq(notification.commentId, hitoComment.id);
+
+    for (let index = 0; index < 9; index += 1) {
+      await commentLikes.likeComment(hitoComment.id, hitoUsers[index]!.id);
+    }
+    check(
+      (await milestoneCount(ana.id, "comment_like_milestone", 10, hitoFilter)) === 0,
+      "nueve likes todavía no avisan",
+    );
+    await commentLikes.likeComment(hitoComment.id, hitoUsers[9]!.id);
+    check(
+      (await milestoneCount(ana.id, "comment_like_milestone", 10, hitoFilter)) === 1,
+      "el décimo like avisa el hito 10 al autor",
+    );
+    await commentLikes.likeComment(hitoComment.id, hitoUsers[10]!.id);
+    check(
+      (await countFor(ana.id, "comment_like_milestone", hitoComment.id)) === 1,
+      "el undécimo like no repite el hito",
+    );
+
+    // Salto: 14 likes entran por fuera del servicio y el siguiente like ve 26.
+    await db.insert(commentLike).values(
+      hitoUsers.slice(11, 25).map((user) => ({ commentId: hitoComment.id, userId: user.id })),
+    );
+    await commentLikes.likeComment(hitoComment.id, hitoUsers[25]!.id);
+    check(
+      (await milestoneCount(ana.id, "comment_like_milestone", 25, hitoFilter)) === 1,
+      "un salto avisa solo el hito más alto (25)",
+    );
+    check(
+      (await countFor(ana.id, "comment_like_milestone", hitoComment.id)) === 2,
+      "hay un aviso por cada hito alcanzado, no por cada like",
+    );
+
+    await commentLikes.unlikeComment(hitoComment.id, hitoUsers[0]!.id);
+    check(
+      (await countFor(ana.id, "comment_like_milestone", hitoComment.id)) === 2,
+      "un unlike no retira el hito",
+    );
+    await commentLikes.likeComment(hitoComment.id, hitoUsers[0]!.id);
+    check(
+      (await countFor(ana.id, "comment_like_milestone", hitoComment.id)) === 2,
+      "volver a dar like no repite el hito",
+    );
+
+    await moderation.hideComment(mod.id, hitoComment.id, "smoke: hito oculto");
+    const hiddenHitoPage = await read.listNotificationGroups(ana.id, { tab: "for_you", pageSize: 100 });
+    check(
+      !hiddenHitoPage.groups.some((group) => group.id === `likes:${hitoComment.id}`),
+      "un hito de comentario oculto sale de la bandeja",
+    );
+    await moderation.restoreComment(mod.id, hitoComment.id, "smoke: hito restaurado");
+    const restoredHitoPage = await read.listNotificationGroups(ana.id, { tab: "for_you", pageSize: 100 });
+    const hitoGroup = restoredHitoPage.groups.find((group) => group.id === `likes:${hitoComment.id}`);
+    check(hitoGroup?.target?.type === "comment" && hitoGroup.target.milestone === 25, "el grupo muestra el hito más alto");
+    check(hitoGroup?.actors.length === 0 && hitoGroup.actorCount === 0, "el hito no expone a nadie");
+
+    await db.delete(comment).where(eq(comment.id, hitoComment.id));
+    check(
+      (await countFor(ana.id, "comment_like_milestone", hitoComment.id)) === 0,
+      "borrar el comentario borra sus hitos por cascada",
+    );
+
+    console.log("Hitos de guardados");
+    const [savedList] = await db
+      .insert(userList)
+      .values({
+        ownerId: ana.id,
+        entityType: "release-group",
+        title: `Smoke lista ${suffix}`,
+        audience: "public",
+      })
+      .returning();
+    if (!savedList) throw new Error("no se creó la lista del hito");
+    const listFilter = eq(notification.listId, savedList.id);
+
+    await preferences.updateNotificationPreferences(ana.id, { list_save_milestone: true });
+    await savedLists.saveList(hitoUsers[0]!.id, savedList.id);
+    check(
+      (await milestoneCount(ana.id, "list_save_milestone", 1, listFilter)) === 1,
+      "el primer guardado avisa el hito 1",
+    );
+    for (let index = 1; index < 5; index += 1) {
+      await savedLists.saveList(hitoUsers[index]!.id, savedList.id);
+    }
+    check(
+      (await milestoneCount(ana.id, "list_save_milestone", 5, listFilter)) === 1,
+      "la quinta persona avisa el hito 5",
+    );
+    check(
+      (await countFor(ana.id, "list_save_milestone")) === 2,
+      "solo hay un aviso por hito, no por guardado",
+    );
+
+    await savedLists.setListTracking(hitoUsers[0]!.id, savedList.id, true);
+    check(
+      (await countFor(ana.id, "list_save_milestone")) === 2,
+      "cambiar el seguimiento de una lista ya guardada no cuenta ni avisa",
+    );
+
+    await db.update(userList).set({ moderationStatus: "hidden" }).where(eq(userList.id, savedList.id));
+    const hiddenListPage = await read.listNotificationGroups(ana.id, { tab: "for_you", pageSize: 100 });
+    check(
+      !hiddenListPage.groups.some((group) => group.id === `saves:${savedList.id}`),
+      "un hito de lista oculta sale de la bandeja",
+    );
+    await db.update(userList).set({ moderationStatus: "visible" }).where(eq(userList.id, savedList.id));
+
+    await db.delete(userList).where(eq(userList.id, savedList.id));
+    check(
+      (await countFor(ana.id, "list_save_milestone")) === 0,
+      "borrar la lista borra sus hitos por cascada",
+    );
+
+    console.log("Lanzamientos: defectos, pestañas y contador aparte");
+    const novedades = newUser("novedades");
+    await db.insert(appUser).values(novedades);
+    await db.insert(artistFollow).values({ userId: novedades.id, artistId: art.id });
+
+    const [album] = await db
+      .insert(releaseGroup)
+      .values({
+        mbid: ALBUM_MBID,
+        title: `Smoke disco ${suffix}`,
+        category: "studio",
+        primaryType: "Album",
+        firstReleaseDate: TODAY,
+      })
+      .returning();
+    const [announced] = await db
+      .insert(releaseGroup)
+      .values({
+        mbid: ANNOUNCED_MBID,
+        title: `Smoke anunciado ${suffix}`,
+        category: "studio",
+        primaryType: "Album",
+        firstReleaseDate: "2099-01-01",
+      })
+      .returning();
+    const [single] = await db
+      .insert(releaseGroup)
+      .values({
+        mbid: SINGLE_MBID,
+        title: `Smoke sencillo ${suffix}`,
+        category: "single_ep",
+        primaryType: "Single",
+        firstReleaseDate: TODAY,
+      })
+      .returning();
+    if (!album || !announced || !single) throw new Error("no se crearon los discos sintéticos");
+    await db.insert(credit).values([
+      { artistId: art.id, releaseGroupId: album.id, position: 1, role: "primary" },
+      { artistId: art.id, releaseGroupId: announced.id, position: 1, role: "primary" },
+      { artistId: art.id, releaseGroupId: single.id, position: 1, role: "primary" },
+    ]);
+
+    const emitReleases = () =>
+      db.transaction((tx) =>
+        emit.emitArtistReleaseNotifications(
+          tx,
+          [
+            { releaseGroupId: album.id, releaseDate: TODAY, category: "album" as const },
+            { releaseGroupId: announced.id, releaseDate: "2099-01-01", category: "album" as const },
+            { releaseGroupId: single.id, releaseDate: TODAY, category: "single" as const },
+          ],
+          TODAY,
+        ),
+      );
+
+    await emitReleases();
+    check((await countFor(novedades.id, "artist_release")) === 1, "el disco publicado avisa con su defecto activado");
+    check(
+      (await countFor(novedades.id, "artist_release_announced")) === 0,
+      "el anunciado no avisa mientras su defecto es desactivado",
+    );
+    check(
+      (await countFor(novedades.id, "artist_single")) === 0,
+      "el sencillo no avisa mientras su defecto es desactivado",
+    );
+
+    check((await read.countUnseen(novedades.id, "UTC")) === 0, "el contador de la campana no suma novedades");
+    check((await read.hasNewReleases(novedades.id)) === true, "el punto de Novedades sí se enciende");
+    const releasesPage = await read.listNotificationGroups(novedades.id, { tab: "releases", pageSize: 20 });
+    check(releasesPage.groups.length === 1, "la pestaña Novedades trae el disco publicado");
+    check(
+      releasesPage.groups[0]?.target?.type === "release" &&
+        releasesPage.groups[0].target.releaseGroupId === album.id &&
+        releasesPage.groups[0].target.category === "album",
+      "la fila enlaza al disco con su categoría",
+    );
+    const forYouPage = await read.listNotificationGroups(novedades.id, { tab: "for_you", pageSize: 20 });
+    check(forYouPage.groups.length === 0, "la pestaña Para ti no mezcla lanzamientos");
+
+    await read.markSeen(novedades.id, "releases");
+    check((await read.hasNewReleases(novedades.id)) === false, "abrir Novedades apaga su punto");
+    check((await read.countUnseen(novedades.id, "UTC")) === 0, "y no toca el contador de Para ti");
+
+    await preferences.updateNotificationPreferences(novedades.id, {
+      artist_release_announced: true,
+      artist_single: true,
+    });
+    await emitReleases();
+    check(
+      (await countFor(novedades.id, "artist_release_announced")) === 1,
+      "activado, el anunciado avisa",
+    );
+    check((await countFor(novedades.id, "artist_single")) === 1, "activado, el sencillo avisa");
+    check((await read.hasNewReleases(novedades.id)) === true, "los avisos nuevos vuelven a encender el punto");
+    await emitReleases();
+    check(
+      (await countFor(novedades.id, "artist_release")) === 1 &&
+        (await countFor(novedades.id, "artist_release_announced")) === 1 &&
+        (await countFor(novedades.id, "artist_single")) === 1,
+      "repetir la sincronización no duplica avisos",
+    );
+
+    await db.update(releaseGroup).set({ discographyUnlistedAt: new Date() }).where(eq(releaseGroup.id, album.id));
+    const afterUnlisted = await read.listNotificationGroups(novedades.id, { tab: "releases", pageSize: 20 });
+    check(
+      !afterUnlisted.groups.some((group) => group.target?.type === "release" && group.target.releaseGroupId === album.id),
+      "un disco retirado de la discografía sale de la bandeja",
+    );
+    await db.update(releaseGroup).set({ discographyUnlistedAt: null }).where(eq(releaseGroup.id, album.id));
+
+    await db.delete(releaseGroup).where(eq(releaseGroup.id, album.id));
+    check(
+      (await countFor(novedades.id, "artist_release")) === 0,
+      "borrar el disco borra su aviso por cascada",
+    );
+
     console.log("Agrupación por día en la zona del lector");
     const firstFollower = await db
       .select({ id: userFollow.id })
@@ -492,6 +764,7 @@ async function main() {
       sql`${moderationAction.actorId} IN (SELECT id FROM app_user WHERE username LIKE 'smoke_notif_%')`,
     );
     await db.delete(appUser).where(like(appUser.username, "smoke_notif_%"));
+    await db.delete(releaseGroup).where(sql`${releaseGroup.mbid}::text LIKE '5e0ce000-0000-4000-8000-00000000a9%'`);
     await db.delete(artist).where(eq(artist.mbid, ARTIST_MBID));
   }
 }
@@ -502,3 +775,4 @@ main()
     console.error(error);
     process.exit(1);
   });
+

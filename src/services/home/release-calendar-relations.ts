@@ -62,6 +62,37 @@ export async function relatedArtistMbidsOfAnyUser(): Promise<string[]> {
   return rows.map((row) => row.mbid);
 }
 
+/**
+ * MBID de los artistas que sigue al menos una persona con cuenta activa y el
+ * aviso de sencillos activado (openspec: add-notification-milestones-and-releases,
+ * D6). Un sencillo fuera de esta lista no se verifica ni se vincula: el riel de
+ * Inicio no cambia.
+ */
+export async function singleWantedArtistMbids(): Promise<string[]> {
+  const rows = await db.execute<{ mbid: string }>(sql`
+    SELECT DISTINCT a.mbid::text AS mbid
+    FROM artist_follow f
+    JOIN app_user u ON u.id = f.user_id AND u.deactivated_at IS NULL
+    JOIN artist a ON a.id = f.artist_id
+    LEFT JOIN notification_preference p ON p.user_id = f.user_id AND p.kind = 'artist_single'
+    WHERE a.mbid IS NOT NULL
+      AND coalesce(p.enabled, false)
+  `);
+  return rows.map((row) => row.mbid);
+}
+
+/** MBID de los artistas que sigue al menos una persona con cuenta activa. */
+export async function followedArtistMbidsOfAnyUser(): Promise<string[]> {
+  const rows = await db.execute<{ mbid: string }>(sql`
+    SELECT DISTINCT a.mbid::text AS mbid
+    FROM artist_follow f
+    JOIN app_user u ON u.id = f.user_id AND u.deactivated_at IS NULL
+    JOIN artist a ON a.id = f.artist_id
+    WHERE a.mbid IS NOT NULL
+  `);
+  return rows.map((row) => row.mbid);
+}
+
 export interface RelatedArtist {
   artistId: string;
   mbid: string;

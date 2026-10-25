@@ -45,7 +45,12 @@ export interface CalendarCandidate {
   artistCreditName: string;
   artistMbids: string[];
   releaseDate: string;
-  primaryType: "Album" | "EP";
+  /**
+   * Tipo del feed. El calendario solo deja pasar Álbum y EP; los sencillos
+   * viajan aparte para el aviso opcional (openspec:
+   * add-notification-milestones-and-releases, D6).
+   */
+  primaryType: "Album" | "EP" | "Single";
   hasCover: boolean;
 }
 
@@ -72,6 +77,42 @@ export function filterFeed(rows: LBFreshRelease[], today: string): CalendarCandi
       artistMbids: row.artist_mbids ?? [],
       releaseDate: date,
       primaryType: type,
+      hasCover: row.caa_id !== null && row.caa_id !== undefined,
+    });
+  }
+  return [...byMbid.values()];
+}
+
+/**
+ * Sencillos del feed que solo interesan por el aviso opcional (openspec:
+ * add-notification-milestones-and-releases, D6): un `Single` de un artista
+ * seguido por alguien con el aviso activado, con fecha exacta dentro de la
+ * ventana. Viajan aparte de `filterFeed`: no entran al calendario ni al riel de
+ * Inicio, solo se verifican, se vinculan y se avisan.
+ */
+export function singlesFromFeed(
+  rows: readonly LBFreshRelease[],
+  today: string,
+  wantedArtistMbids: ReadonlySet<string>,
+): CalendarCandidate[] {
+  const from = addDays(today, -PAST_DAYS);
+  const to = addDays(today, FUTURE_DAYS);
+  const byMbid = new Map<string, CalendarCandidate>();
+  for (const row of rows) {
+    const mbid = row.release_group_mbid;
+    if (!mbid || byMbid.has(mbid)) continue;
+    if (row.release_group_primary_type !== "Single") continue;
+    if (!(row.artist_mbids ?? []).some((artistMbid) => wantedArtistMbids.has(artistMbid))) continue;
+    const date = normalizeReleaseDate(row.release_date);
+    if (!date || date < from || date > to) continue;
+    byMbid.set(mbid, {
+      releaseGroupMbid: mbid,
+      releaseMbid: row.release_mbid || null,
+      title: row.release_name,
+      artistCreditName: row.artist_credit_name,
+      artistMbids: row.artist_mbids ?? [],
+      releaseDate: date,
+      primaryType: "Single",
       hasCover: row.caa_id !== null && row.caa_id !== undefined,
     });
   }

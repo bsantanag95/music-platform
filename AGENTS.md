@@ -161,19 +161,23 @@ de cuál de las filas con el mismo título haya en la BD.
 >   `edition` nula y `held_on` del año anterior, la carga idempotente (`xmin` igual), la lectura de la clase, que el salón no aparece
 >   en las tarjetas de premios, en "Los más premiados" ni en el puntaje de destacados (`competitionNominations`) y que se rechaza una
 >   clase con gala futura o con número de edición.
-> - `smoke-test-notifications.ts` crea un artista sintético (MBID `5e0ce000-0000-4000-8000-00000000a9a0`) y usuarios
->   `smoke_notif_*`, y los borra al terminar (también si falla). Si se interrumpió, limpiar con
+> - `smoke-test-notifications.ts` crea un artista sintético (MBID `5e0ce000-0000-4000-8000-00000000a9a0`), tres
+>   discos (`…a9b0`, `…a9b1`, `…a9b2`) y usuarios `smoke_notif_*`, y los borra al terminar (también si falla). Si se
+>   interrumpió, limpiar con
 >   `DELETE FROM moderation_action WHERE actor_id IN (SELECT id FROM app_user WHERE username LIKE 'smoke_notif_%');
 >   DELETE FROM app_user WHERE username LIKE 'smoke_notif_%';
+>   DELETE FROM release_group WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000a9%';
 >   DELETE FROM artist WHERE mbid = '5e0ce000-0000-4000-8000-00000000a9a0';` (el `ON DELETE CASCADE` limpia
->   notificaciones, seguimientos, comentarios, preferencias y restricciones; la primera sentencia suelta el `RESTRICT`
->   de `moderation_action.actor_id`). Necesita la migración `0075`. Verifica contra Postgres real cada fuente de emisión
->   (respuestas a la raíz y a participantes, nuevo seguidor, solicitud y aceptación, moderación de comentario y de
->   suspensión social), los `CHECK` y los únicos parciales, las cascadas de retracción, los filtros de privacidad
->   (actor desactivado, bloqueo, respuesta oculta, moderación exenta y sin moderador), la agrupación por hilo y por día
->   en la zona `tz`, la lectura aparte de la raíz para el enlace al hilo, la paginación por cursor sin saltos, la
->   solicitud pendiente que se acepta al volver a seguir un perfil que se hizo público, visto vs. leído, preferencias, aislamiento entre destinatarios y el contador bajo 10 ms con 100
->   seguidores.
+>   notificaciones, seguimientos, comentarios, listas, preferencias y restricciones; la primera sentencia suelta el
+>   `RESTRICT` de `moderation_action.actor_id`). Necesita las migraciones `0075` y `0076`. Verifica contra Postgres real
+>   cada fuente de emisión (respuestas a la raíz y a participantes, nuevo seguidor, solicitud y aceptación, moderación de
+>   comentario y de suspensión social, hitos de likes y de guardados, lanzamientos), los `CHECK` y los únicos parciales,
+>   las cascadas de retracción, los filtros de privacidad (actor desactivado, bloqueo, respuesta o comentario oculto,
+>   lista oculta, disco retirado, moderación exenta y sin moderador), la agrupación por hilo y por día en la zona `tz`,
+>   la lectura aparte de la raíz para el enlace al hilo, la paginación por cursor sin saltos, la solicitud pendiente que
+>   se acepta al volver a seguir un perfil que se hizo público, visto vs. leído, los defectos de preferencias por tipo,
+>   las pestañas "Para ti" / "Novedades", el contador que no suma novedades, `newReleases`, la escala de hitos (10, 25,
+>   salto y repetición), aislamiento entre destinatarios y el contador bajo 10 ms con 100 seguidores.
 > - `smoke-test-release-calendar.ts` mockea ListenBrainz, MusicBrainz y Cover Art Archive, crea
 >   artistas y release-groups con MBID `5e0ce000-0000-4000-8000-000000008*` y usuarios `smoke_cal_*`,
 >   **respalda el calendario de lanzamientos y lo restaura al terminar** (también si falla) y borra sus
@@ -181,10 +185,13 @@ de cuál de las filas con el mismo título haya en la BD.
 >   `DELETE FROM app_user WHERE username LIKE 'smoke_cal_%'; DELETE FROM release_calendar_entry WHERE
 >   release_group_mbid::text LIKE '5e0ce000%'; DELETE FROM release_group WHERE mbid::text LIKE
 >   '5e0ce000%'; DELETE FROM artist WHERE mbid::text LIKE '5e0ce000%';` y volver a correr
->   `scripts/sync-release-calendar.ts`. Necesita la migración `0063` aplicada. Verifica el lock, las
+>   `scripts/sync-release-calendar.ts`. Necesita las migraciones `0063` y `0076` aplicadas. Verifica el lock, las
 >   exclusiones (sencillo, en vivo, reedición, sin carátula, no indexado), que solo lo mostrado entra al
 >   catálogo, la selección personal ("Anunciado", catálogo a 150 días, relleno "Destacado"), el
->   reemplazo de la ventana y que un fallo conserva el calendario.
+>   reemplazo de la ventana, que un fallo conserva el calendario y, desde `add-notification-milestones-and-releases`,
+>   los avisos de lanzamiento (seguidor, colaboración con un segundo artista principal, repetición sin duplicados,
+>   ventana de 14 días, anunciado, sencillo con y sin la opción activa, reedición sin aviso, riel sin sencillos y
+>   fan-out de 500 seguidores).
 > - `smoke-test-album-editions.ts` y `smoke-test-personnel-credits.ts` (fixtures
 >   compartidos en `scripts/smoke-album-fixtures.ts`) crean un álbum, ediciones,
 >   grabaciones, obras, un sello y artistas con MBID sintéticos `5e0ce000-0000-4000-8000-*`

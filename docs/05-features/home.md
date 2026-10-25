@@ -393,6 +393,17 @@ anterior. Pasos: feed → popularidad → selección → verificación en MusicB
 búsqueda `rgid:(…)` por lote de 50) → stub + carátula por el pipeline existente → reemplazo
 transaccional. ~40 s con datos reales.
 
+Los discos de artistas **seguidos** se verifican y vinculan **antes** que el resto de la cola (tope de
+150): el tope no debe dejar sin aviso justo a quien sigue al artista. Después del reemplazo, la
+sincronización emite los avisos de lanzamiento de las notificaciones (openspec
+`add-notification-milestones-and-releases`, ADR 0046) en una transacción propia: si fallan, el
+calendario ya quedó actualizado y la próxima lo reintenta.
+
+**Sencillos aparte.** Del mismo feed se toman los `Single` de artistas seguidos por alguien con el
+aviso `artist_single` activado. Se verifican y vinculan dentro del mismo tope, pero **no** entran en
+`release_calendar_entry` ni en el riel de Inicio: el calendario sigue siendo de Álbumes y EPs. Un
+sencillo que nadie pidió no se verifica ni se vincula.
+
 Al terminar, la sincronización marca para resincronizar las discografías guardadas a las que les falta
 un disco del calendario (`artist.discography_refresh_requested_at`, openspec
 `refresh-discography-on-new-releases`): la próxima visita a ese artista lo trae sin esperar los 7 días.

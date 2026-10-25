@@ -4,10 +4,13 @@
 // extra: cuando es TRUE, las actualizaciones de metadatos de esa lista entran en
 // el feed de quien la sigue (ver src/services/feed/feed.ts).
 
-import { and, count, desc, eq, inArray } from "drizzle-orm";
+import { and, count, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, listSave, userList } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
+import type { NotificationTx } from "@/services/notifications/emit";
+import { emitMilestoneNotification } from "@/services/notifications/emit";
+import { LIST_SAVE_MILESTONES, highestMilestone } from "@/services/notifications/milestones";
 import { relationsFor } from "@/services/social/relations";
 import { audiencesForProfile } from "@/services/social/visibility";
 import type { Audience, FollowRelation } from "@/services/social/types";
@@ -76,6 +79,36 @@ function audiencesFor(
   });
 }
 
+/** Personas distintas con cuenta activa que guardaron la lista. */
+async function countActiveSaves(tx: NotificationTx, listId: string): Promise<number> {
+  const [row] = await tx
+    .select({ count: sql<number>`count(*)::int` })
+    .from(listSave)
+    .innerJoin(appUser, eq(appUser.id, listSave.saverId))
+    .where(and(eq(listSave.listId, listId), activeUserCondition()));
+  return row?.count ?? 0;
+}
+
+/**
+ * Avisa al dueño si un guardado nuevo cruzó un hito (openspec:
+ * add-notification-milestones-and-releases, D3). El emisor descarta el aviso si
+ * la persona tiene el tipo apagado (nace desactivado) y no repite hitos.
+ */
+async function emitSaveMilestone(
+  tx: NotificationTx,
+  ownerId: string,
+  listId: string,
+): Promise<void> {
+  const milestone = highestMilestone(LIST_SAVE_MILESTONES, await countActiveSaves(tx, listId));
+  if (milestone === null) return;
+  await emitMilestoneNotification(tx, {
+    kind: "list_save_milestone",
+    recipientId: ownerId,
+    listId,
+    milestone,
+  });
+}
+
 /**
  * Guarda (o actualiza `following` de) una lista ajena visible.
  * Idempotente por (saverId, listId).
@@ -113,13 +146,25 @@ export async function saveList(
     throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
   }
 
-  await db
-    .insert(listSave)
-    .values({ saverId, listId, following })
-    .onConflictDoUpdate({
-      target: [listSave.saverId, listSave.listId],
-      set: { following },
-    });
+  await db.transaction(async (tx) => {
+    // Solo un guardado nuevo cuenta para un hito; re-guardar solo cambia
+    // `following` (openspec: add-notification-milestones-and-releases, D3).
+    const [created] = await tx
+      .insert(listSave)
+      .values({ saverId, listId, following })
+      .onConflictDoNothing()
+      .returning({ saverId: listSave.saverId });
+
+    if (created) {
+      await emitSaveMilestone(tx, row.ownerId, listId);
+      return;
+    }
+
+    await tx
+      .update(listSave)
+      .set({ following })
+      .where(and(eq(listSave.saverId, saverId), eq(listSave.listId, listId)));
+  });
 
   const [saved] = await buildSavedSummaries(saverId, [{ listId }]);
   if (!saved) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo guardar la lista");
@@ -183,13 +228,25 @@ export async function setListTracking(
     throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
   }
 
-  await db
-    .insert(listSave)
-    .values({ saverId: trackerId, listId, following: false, tracking })
-    .onConflictDoUpdate({
-      target: [listSave.saverId, listSave.listId],
-      set: { tracking },
-    });
+  await db.transaction(async (tx) => {
+    // Tracking sobre una lista sin guardar crea el guardado: ese guardado nuevo
+    // también puede cruzar un hito (D3).
+    const [created] = await tx
+      .insert(listSave)
+      .values({ saverId: trackerId, listId, following: false, tracking })
+      .onConflictDoNothing()
+      .returning({ saverId: listSave.saverId });
+
+    if (created) {
+      await emitSaveMilestone(tx, row.ownerId, listId);
+      return;
+    }
+
+    await tx
+      .update(listSave)
+      .set({ tracking })
+      .where(and(eq(listSave.saverId, trackerId), eq(listSave.listId, listId)));
+  });
 
   const [saved] = await buildSavedSummaries(trackerId, [{ listId }]);
   if (!saved) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo activar el tracking");

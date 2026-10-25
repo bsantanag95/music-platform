@@ -10,7 +10,7 @@ import { FooterSlot } from "@/components/layout/FooterSlot";
 import { TimeZoneCookie } from "@/components/layout/TimeZoneCookie";
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
-import { countUnseen } from "@/services/notifications/read";
+import { countUnseen, hasNewReleases } from "@/services/notifications/read";
 import { isExploreEnabled } from "@/lib/config/discovery";
 import "@/app/globals.css";
 
@@ -72,10 +72,15 @@ export default async function RootLayout({
   const platformPermissions = session?.user ? await getUserPermissions(session.user.id) : [];
   // Campana del Header: entradas de la bandeja sin ver. El corte de los
   // seguidores por día depende de la zona del usuario, igual que en el
-  // cliente (openspec: add-notifications-core, D5 y D7).
-  const notificationCount = session?.user
-    ? await countUnseen(session.user.id, await getTimeZone())
-    : 0;
+  // cliente (openspec: add-notifications-core, D5 y D7). El punto de
+  // "Novedades" es aparte y no suma al contador (D8 de la Fase 2).
+  const timeZone = session?.user ? await getTimeZone() : undefined;
+  const [notificationCount, newReleases] = session?.user
+    ? await Promise.all([
+        countUnseen(session.user.id, timeZone),
+        hasNewReleases(session.user.id),
+      ])
+    : [0, false];
 
   return (
     <html
@@ -93,6 +98,7 @@ export default async function RootLayout({
               user={publicUser ? { ...publicUser, avatarUrl } : null}
               exploreEnabled={exploreEnabled}
               notificationCount={notificationCount}
+              newReleases={newReleases}
               platformPermissions={platformPermissions}
             />
             {children}

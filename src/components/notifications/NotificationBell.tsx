@@ -11,6 +11,8 @@ import { NOTIFICATIONS_COUNT_KEY } from "./query-keys";
 interface NotificationBellProps {
   /** Contador calculado en el servidor, para que el primer render no parpadee. */
   initialCount: number;
+  /** Punto de "Novedades" calculado en el servidor (D8). */
+  initialNewReleases?: boolean;
   /**
    * `desktop` abre el panel; `mobile` es un enlace a la página. El Header
    * monta uno u otro según el breakpoint, no el componente: el panel flotante
@@ -24,23 +26,28 @@ interface NotificationBellProps {
  * visible, sin refetch en segundo plano (D7); al recuperar el foco también se
  * actualiza, porque TanStack Query lo hace por defecto.
  */
-function useNotificationCount(initialCount: number) {
+function useNotificationCount(initialCount: number, initialNewReleases: boolean) {
   const timeZone = useTimeZone();
   return useQuery({
     queryKey: NOTIFICATIONS_COUNT_KEY,
     queryFn: () => fetchNotificationCount(timeZone),
-    initialData: { count: initialCount },
+    initialData: { count: initialCount, newReleases: initialNewReleases },
     refetchInterval: 60_000,
     refetchIntervalInBackground: false,
   });
 }
 
-export function NotificationBell({ initialCount, variant = "desktop" }: NotificationBellProps) {
+export function NotificationBell({
+  initialCount,
+  initialNewReleases = false,
+  variant = "desktop",
+}: NotificationBellProps) {
   const t = useTranslations("notifications");
   const queryClient = useQueryClient();
   const pathname = usePathname();
-  const { data } = useNotificationCount(initialCount);
+  const { data } = useNotificationCount(initialCount, initialNewReleases);
   const count = data?.count ?? initialCount;
+  const newReleases = data?.newReleases ?? initialNewReleases;
 
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -86,8 +93,11 @@ export function NotificationBell({ initialCount, variant = "desktop" }: Notifica
       return;
     }
     setOpen(true);
-    queryClient.setQueryData(NOTIFICATIONS_COUNT_KEY, { count: 0 });
-    void markNotificationsSeen().catch(() => {
+    queryClient.setQueryData<{ count: number; newReleases: boolean } | undefined>(
+      NOTIFICATIONS_COUNT_KEY,
+      (current) => (current ? { ...current, count: 0 } : { count: 0, newReleases }),
+    );
+    void markNotificationsSeen("for_you").catch(() => {
       void queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_COUNT_KEY });
     });
   };
@@ -124,7 +134,11 @@ export function NotificationBell({ initialCount, variant = "desktop" }: Notifica
       </button>
       {open ? (
         <div className="absolute right-0 top-full z-20 w-[22rem] max-w-[calc(100vw-2rem)] pt-2">
-          <NotificationPanel id={panelId} onNavigate={() => setOpen(false)} />
+          <NotificationPanel
+            id={panelId}
+            newReleases={newReleases}
+            onNavigate={() => setOpen(false)}
+          />
         </div>
       ) : null}
     </div>

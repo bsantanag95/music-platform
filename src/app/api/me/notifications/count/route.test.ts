@@ -5,15 +5,22 @@ import { GET } from "./route";
 
 const mocks = vi.hoisted(() => ({
   countUnseen: vi.fn(),
+  hasNewReleases: vi.fn(),
   requireUser: vi.fn(),
 }));
 
-vi.mock("@/services/notifications/read", () => ({ countUnseen: mocks.countUnseen }));
+vi.mock("@/services/notifications/read", () => ({
+  countUnseen: mocks.countUnseen,
+  hasNewReleases: mocks.hasNewReleases,
+}));
 vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.requireUser }));
 
 const user = { id: "00000000-0000-4000-8000-000000000001" };
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.hasNewReleases.mockResolvedValue(false);
+});
 
 describe("GET /api/me/notifications/count", () => {
   it("sin sesión devuelve 401 AUTH_REQUIRED", async () => {
@@ -26,15 +33,17 @@ describe("GET /api/me/notifications/count", () => {
     expect(mocks.countUnseen).not.toHaveBeenCalled();
   });
 
-  it("cuenta las entradas del usuario de la sesión", async () => {
+  it("cuenta las entradas del usuario de la sesión y suma el punto de Novedades", async () => {
     mocks.requireUser.mockResolvedValue(user);
     mocks.countUnseen.mockResolvedValue(9);
+    mocks.hasNewReleases.mockResolvedValue(true);
 
     const response = await GET(new NextRequest("http://localhost/api/me/notifications/count"));
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ count: 9 });
+    expect(await response.json()).toEqual({ count: 9, newReleases: true });
     expect(mocks.countUnseen).toHaveBeenCalledWith(user.id, undefined);
+    expect(mocks.hasNewReleases).toHaveBeenCalledWith(user.id);
   });
 
   it("pasa la zona horaria de tz", async () => {
@@ -46,6 +55,7 @@ describe("GET /api/me/notifications/count", () => {
     );
 
     expect(mocks.countUnseen).toHaveBeenCalledWith(user.id, "America/Santiago");
+    expect(mocks.hasNewReleases).toHaveBeenCalledWith(user.id);
   });
 
   it("rechaza una zona horaria desconocida", async () => {

@@ -25,6 +25,10 @@ import { requestDiscographyRefreshes } from "../catalog/discography-refresh-requ
 import { ingestCredits } from "../catalog/ingest-discography";
 import { upsertReleaseGroupStubs } from "../catalog/ingest-release-group";
 import {
+  emitArtistReleaseNotifications,
+  type ReleaseNotificationCandidate,
+} from "../notifications/emit";
+import {
   PAST_DAYS,
   FUTURE_DAYS,
   classifyVerification,
@@ -32,10 +36,15 @@ import {
   filterFeed,
   isoDay,
   selectAnonymous,
+  singlesFromFeed,
   type CalendarCandidate,
   type RankCandidate,
 } from "./release-calendar";
-import { relatedArtistMbidsOfAnyUser } from "./release-calendar-relations";
+import {
+  followedArtistMbidsOfAnyUser,
+  relatedArtistMbidsOfAnyUser,
+  singleWantedArtistMbids,
+} from "./release-calendar-relations";
 
 /** Vigencia de una sincronización exitosa. */
 export const CALENDAR_TTL_MS = 24 * 60 * 60 * 1000;
@@ -141,6 +150,50 @@ interface WorkingEntry extends CalendarCandidate {
   previousReleaseDate: string | null;
 }
 
+/** Lo mínimo de una entrada para decidir el aviso de lanzamiento que genera. */
+type NotificationSourceEntry = Pick<
+  WorkingEntry,
+  "releaseGroupId" | "exclusion" | "firstReleaseDate" | "releaseDate" | "primaryType"
+>;
+
+/**
+ * Cola de verificación y vínculo: los discos de artistas **seguidos** primero, después los
+ * sencillos pedidos y por último el resto de artistas con relación. El tope no debe dejar sin
+ * aviso justo a quien sigue al artista (D6).
+ */
+export function notificationLinkQueue<T>(
+  followed: readonly T[],
+  singles: readonly T[],
+  others: readonly T[],
+  cap = RELATED_LINK_CAP,
+): T[] {
+  return [...followed, ...singles, ...others].slice(0, cap);
+}
+
+/**
+ * Discos que generan aviso tras el reemplazo de la ventana: los vinculados y no excluidos, con la
+ * fecha verificada (o la del feed) y su categoría. Los sencillos viajan aparte y solo llegan aquí
+ * si alguien los pidió (D6).
+ */
+export function releaseNotificationCandidates(
+  entries: readonly NotificationSourceEntry[],
+  singles: readonly NotificationSourceEntry[],
+): ReleaseNotificationCandidate[] {
+  const candidates: ReleaseNotificationCandidate[] = [];
+  for (const entry of [...entries, ...singles]) {
+    if (!entry.releaseGroupId || entry.exclusion) continue;
+    const releaseDate = entry.firstReleaseDate ?? entry.releaseDate;
+    if (!releaseDate) continue;
+    candidates.push({
+      releaseGroupId: entry.releaseGroupId,
+      releaseDate,
+      category:
+        entry.primaryType === "Single" ? "single" : entry.primaryType === "EP" ? "ep" : "album",
+    });
+  }
+  return candidates;
+}
+
 function needsVerification(entry: WorkingEntry, now: number): boolean {
   if (!entry.verifiedAt) return true;
   if (now - entry.verifiedAt.getTime() > VERIFICATION_TTL_MS) return true;
@@ -189,6 +242,7 @@ async function runSync(
     }),
   ];
   const candidates = filterFeed([...past, ...future], today);
+  const feedRows = [...past, ...future];
 
   // 2. Popularidad de los artistas de los discos con carátula (los únicos que entran a la
   //    selección anónima).
@@ -341,15 +395,49 @@ async function runSync(
   });
 
   // 6. Discos de artistas con los que algún usuario tiene relación: se verifican y vinculan para
-  //    que la selección personal (por request) tenga página y fecha verificada.
+  //    que la selección personal (por request) tenga página y fecha verificada. Los de artistas
+  //    seguidos van primero para que el tope no deje sin aviso a quien los sigue (D6).
   const related = new Set(await relatedArtistMbidsOfAnyUser());
-  const relatedEntries = [...entries.values()]
-    .filter((e) => e.artistMbids.some((mbid) => related.has(mbid)))
-    .sort((a, b) => a.releaseDate.localeCompare(b.releaseDate))
-    .slice(0, RELATED_LINK_CAP);
-  await verify(relatedEntries.filter((e) => needsVerification(e, now) || (!e.releaseGroupId && !mbItems.has(e.releaseGroupMbid))));
-  await link(relatedEntries);
-  await resolveCovers(relatedEntries.filter((e) => e.hasCover && !e.exclusion && e.releaseGroupId));
+  const [followed, singleWanted] = await Promise.all([
+    followedArtistMbidsOfAnyUser(),
+    singleWantedArtistMbids(),
+  ]);
+  const followedMbids = new Set(followed);
+  const byDate = (a: WorkingEntry, b: WorkingEntry) => a.releaseDate.localeCompare(b.releaseDate);
+
+  const relatedEntries = [...entries.values()].filter((e) =>
+    e.artistMbids.some((mbid) => related.has(mbid)),
+  );
+  const followedEntries = relatedEntries
+    .filter((e) => e.artistMbids.some((mbid) => followedMbids.has(mbid)))
+    .sort(byDate);
+  const otherEntries = relatedEntries
+    .filter((e) => !e.artistMbids.some((mbid) => followedMbids.has(mbid)))
+    .sort(byDate);
+
+  // Sencillos: mismo feed, solo de artistas seguidos con el aviso activado. No entran al
+  // calendario ni al riel; se verifican, vinculan y avisan (D6).
+  const singleEntries: WorkingEntry[] = singlesFromFeed(
+    feedRows,
+    today,
+    new Set(singleWanted),
+  ).map((entry) => ({
+    ...entry,
+    listeners: null,
+    verifiedAt: null,
+    firstReleaseDate: null,
+    exclusion: null,
+    releaseGroupId: null,
+    anonymousRank: null,
+    previousReleaseDate: null,
+  }));
+
+  const linkQueue = notificationLinkQueue(followedEntries, singleEntries, otherEntries);
+  await verify(
+    linkQueue.filter((e) => needsVerification(e, now) || (!e.releaseGroupId && !mbItems.has(e.releaseGroupMbid))),
+  );
+  await link(linkQueue);
+  await resolveCovers(linkQueue.filter((e) => e.hasCover && !e.exclusion && e.releaseGroupId));
 
   // 7. Reemplazo transaccional de la ventana completa.
   const rows = [...entries.values()].map((e) => ({
@@ -359,7 +447,8 @@ async function runSync(
     artistCreditName: e.artistCreditName,
     artistMbids: e.artistMbids,
     releaseDate: e.releaseDate,
-    primaryType: e.primaryType,
+    // Los sencillos viajan aparte y nunca entran a `entries`: aquí solo hay álbum o EP.
+    primaryType: e.primaryType as "Album" | "EP",
     hasCover: e.hasCover,
     artistListeners: e.listeners,
     verifiedAt: e.verifiedAt,
@@ -376,7 +465,23 @@ async function runSync(
     }
   });
 
-  // 8. Artistas con discografía guardada a los que les falta un disco del calendario: su próxima
+  // 8. Avisos de lanzamiento, en una transacción propia y después del reemplazo de la ventana:
+  //    si fallan, el calendario ya quedó actualizado y la próxima sincronización lo reintenta
+  //    (los únicos evitan duplicados). Nunca lanza (openspec:
+  //    add-notification-milestones-and-releases, D6).
+  try {
+    await db.transaction((tx) =>
+      emitArtistReleaseNotifications(
+        tx,
+        releaseNotificationCandidates([...entries.values()], singleEntries),
+        today,
+      ),
+    );
+  } catch (error) {
+    console.error("[release-calendar] no se pudieron emitir los avisos de lanzamiento", error);
+  }
+
+  // 9. Artistas con discografía guardada a los que les falta un disco del calendario: su próxima
   //    visita la resincroniza completa (openspec: refresh-discography-on-new-releases). Nunca lanza.
   const refreshRequests = await requestDiscographyRefreshes();
 

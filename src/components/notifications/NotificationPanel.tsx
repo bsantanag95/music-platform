@@ -1,13 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTimeZone, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import type { NotificationsResponse } from "@/lib/api/schemas";
-import { fetchNotificationPage, markNotificationsRead } from "./api";
+import type {
+  NotificationTabValue,
+  NotificationsResponse,
+} from "@/lib/api/schemas";
+import { fetchNotificationPage, markNotificationsRead, markNotificationsSeen } from "./api";
 import { NotificationRow } from "./NotificationRow";
-import { NOTIFICATIONS_COUNT_KEY, NOTIFICATIONS_LIST_KEY } from "./query-keys";
+import { NotificationTabs } from "./NotificationTabs";
+import {
+  NOTIFICATIONS_COUNT_KEY,
+  NOTIFICATIONS_LIST_PREFIX,
+  notificationListKey,
+} from "./query-keys";
 
 /** El panel muestra las diez entradas más recientes; "Ver todas" lleva a la página. */
 const PANEL_LIMIT = 10;
@@ -15,41 +23,60 @@ const PANEL_LIMIT = 10;
 interface NotificationPanelProps {
   /** `id` del contenedor, para `aria-controls` del disparador. */
   id?: string;
+  /** Punto de "Novedades" que ya trae el contador de la campana. */
+  newReleases: boolean;
   onNavigate?: () => void;
 }
 
 // Panel desplegable de la campana en escritorio (openspec: add-notifications-core,
-// D8). Solo se monta al abrirse, así cada apertura trae datos frescos y no hay
-// una consulta viva con el panel cerrado.
-export function NotificationPanel({ id, onNavigate }: NotificationPanelProps) {
+// D8; add-notification-milestones-and-releases, D8). Solo se monta al abrirse,
+// así cada apertura trae datos frescos y no hay una consulta viva con el panel
+// cerrado. Cada pestaña tiene su propia consulta y su propio estado vacío.
+export function NotificationPanel({ id, newReleases, onNavigate }: NotificationPanelProps) {
   const t = useTranslations("notifications");
   const timeZone = useTimeZone();
   const queryClient = useQueryClient();
+  const panelId = useId();
+  const [tab, setTab] = useState<NotificationTabValue>("for_you");
   const [marking, setMarking] = useState(false);
   const [markError, setMarkError] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: NOTIFICATIONS_LIST_KEY,
-    queryFn: () => fetchNotificationPage({ timeZone }),
+    queryKey: notificationListKey(tab),
+    queryFn: () => fetchNotificationPage({ timeZone, tab }),
     staleTime: 0,
   });
 
   const groups = data?.groups.slice(0, PANEL_LIMIT) ?? [];
   const hasUnread = data?.groups.some((group) => group.unread) ?? false;
 
+  // Abrir "Novedades" apaga el punto en el acto y mueve solo su marca (D7).
+  const changeTab = (next: NotificationTabValue) => {
+    setTab(next);
+    if (next !== "releases") return;
+    queryClient.setQueryData<{ count: number; newReleases: boolean } | undefined>(
+      NOTIFICATIONS_COUNT_KEY,
+      (current) => (current ? { ...current, newReleases: false } : current),
+    );
+    void markNotificationsSeen("releases").catch(() => {
+      void queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_COUNT_KEY });
+    });
+  };
+
   const markAllRead = async () => {
     setMarking(true);
     setMarkError(false);
     try {
       await markNotificationsRead({ all: true }, timeZone);
-      queryClient.setQueryData<NotificationsResponse | undefined>(
-        NOTIFICATIONS_LIST_KEY,
+      // El servidor marca las filas de las dos pestañas: el caché las refleja.
+      queryClient.setQueriesData<NotificationsResponse | undefined>(
+        { queryKey: NOTIFICATIONS_LIST_PREFIX },
         (page) =>
           page
             ? { ...page, groups: page.groups.map((group) => ({ ...group, unread: false })) }
             : page,
       );
-      queryClient.setQueryData(NOTIFICATIONS_COUNT_KEY, { count: 0 });
+      queryClient.setQueryData(NOTIFICATIONS_COUNT_KEY, { count: 0, newReleases: false });
     } catch {
       setMarkError(true);
     } finally {
@@ -61,11 +88,11 @@ export function NotificationPanel({ id, onNavigate }: NotificationPanelProps) {
   // refresca el contador (la fila de `follow_request` cae en el servidor).
   const removeGroup = (groupId: string) => {
     queryClient.setQueryData<NotificationsResponse | undefined>(
-      NOTIFICATIONS_LIST_KEY,
+      notificationListKey(tab),
       (page) =>
         page ? { ...page, groups: page.groups.filter((group) => group.id !== groupId) } : page,
     );
-    void queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_LIST_KEY });
+    void queryClient.invalidateQueries({ queryKey: notificationListKey(tab) });
   };
 
   return (
@@ -85,7 +112,22 @@ export function NotificationPanel({ id, onNavigate }: NotificationPanelProps) {
         </Link>
       </div>
 
-      <div className="themed-scrollbar max-h-[26rem] overflow-y-auto">
+      <div className="px-4 pt-1.5">
+        <NotificationTabs
+          active={tab}
+          newReleases={newReleases}
+          onChange={changeTab}
+          label={t("tabs.label")}
+          panelId={panelId}
+        />
+      </div>
+
+      <div
+        id={`${panelId}-panel-${tab}`}
+        role="tabpanel"
+        aria-labelledby={`${panelId}-tab-${tab}`}
+        className="themed-scrollbar max-h-[26rem] overflow-y-auto"
+      >
         {isLoading ? (
           <p className="px-4 py-6 text-center font-body text-sm text-paper-muted">
             {t("bell.loading")}
@@ -96,7 +138,7 @@ export function NotificationPanel({ id, onNavigate }: NotificationPanelProps) {
           </p>
         ) : groups.length === 0 ? (
           <p className="px-4 py-6 text-center font-body text-sm text-paper-muted">
-            {t("bell.empty")}
+            {tab === "releases" ? t("panel.emptyReleases") : t("bell.empty")}
           </p>
         ) : (
           <ul className="divide-y divide-ink-border">

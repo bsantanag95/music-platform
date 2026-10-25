@@ -67,7 +67,34 @@ describe("GET /api/me/notifications", () => {
     expect(mocks.listNotificationGroups).toHaveBeenCalledWith(user.id, {
       cursor: "2026-10-22T10:00:00.000Z|thread:root",
       timeZone: "America/Santiago",
+      tab: "for_you",
     });
+  });
+
+  it("con tab=releases pide solo las novedades", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    mocks.listNotificationGroups.mockResolvedValue({ groups: [], nextCursor: null });
+
+    const response = await GET(
+      new NextRequest("http://localhost/api/me/notifications?tab=releases"),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.listNotificationGroups).toHaveBeenCalledWith(user.id, {
+      cursor: null,
+      timeZone: undefined,
+      tab: "releases",
+    });
+  });
+
+  it("rechaza una pestaña desconocida sin consultar el servicio", async () => {
+    const response = await GET(
+      new NextRequest("http://localhost/api/me/notifications?tab=otra"),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(mocks.listNotificationGroups).not.toHaveBeenCalled();
   });
 
   it("programa la poda al responder, no antes", async () => {
