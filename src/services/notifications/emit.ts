@@ -365,8 +365,9 @@ export interface ReleaseNotificationBatch {
  * base de datos.
  *
  * - Álbum / EP de los últimos 14 días → `artist_release`.
- * - Sencillo de los últimos 14 días → `artist_single`.
- * - Cualquier tipo con fecha futura → `artist_release_announced`.
+ * - Álbum / EP con fecha futura → `artist_release_announced`.
+ * - Sencillo de los últimos 14 días → `artist_single`. Un sencillo por salir no avisa: si
+ *   generara un anunciado, le llegaría a quien activó los anunciados con los sencillos apagados.
  */
 export function releaseNotificationBatches(
   entries: readonly ReleaseNotificationCandidate[],
@@ -381,10 +382,11 @@ export function releaseNotificationBatches(
   };
 
   for (const entry of entries) {
-    if (entry.releaseDate > today) byKind.artist_release_announced.add(entry.releaseGroupId);
-    else if (entry.releaseDate >= from) {
-      const kind = entry.category === "single" ? "artist_single" : "artist_release";
-      byKind[kind].add(entry.releaseGroupId);
+    const single = entry.category === "single";
+    if (entry.releaseDate > today) {
+      if (!single) byKind.artist_release_announced.add(entry.releaseGroupId);
+    } else if (entry.releaseDate >= from) {
+      byKind[single ? "artist_single" : "artist_release"].add(entry.releaseGroupId);
     }
   }
 

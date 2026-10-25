@@ -2036,8 +2036,11 @@ no tienen actor: `actors` vacío y `actorCount` 0. `target` es uno de:
 - `{ type: "artist", artistId, artistName, rootId }` — respuestas.
 - `{ type: "profile", username }` — seguimientos.
 - `{ type: "moderation", action, contentType, reason }` — moderación.
-- `{ type: "comment", artistId, artistName, rootId, milestone }` — hito de likes; `milestone` es el
-  más alto del grupo.
+- `{ type: "comment", subject, subjectId, subjectName, subjectArtistName, rootId, milestone }` — hito de
+  likes; `subject` ∈ `artist` · `album` · `song` (página donde vive el comentario), `subjectName` es el
+  nombre del artista o el título del disco / la canción, `subjectArtistName` el artista principal del disco
+  o la canción (`null` en un artista), `rootId` la raíz del hilo solo en artistas (`null` en álbum y
+  canción, que no tienen hilos) y `milestone` el más alto del grupo.
 - `{ type: "list", listId, title, isCamino, milestone }` — hito de guardados; `isCamino` decide entre
   `/me/lists/<id>` y `/me/caminos/<id>`.
 - `{ type: "release", releaseGroupId, title, artistName, category, releaseDate, coverUrl }` —

@@ -6,7 +6,7 @@ import type { NotificationTx } from "@/services/notifications/emit";
 import { emitMilestoneNotification } from "@/services/notifications/emit";
 import {
   COMMENT_LIKE_MILESTONES,
-  highestMilestone,
+  crossedMilestone,
 } from "@/services/notifications/milestones";
 import { isBlockedBetween } from "./relations";
 
@@ -117,7 +117,7 @@ export async function likeComment(commentId: string, userId: string): Promise<Co
 
     // Un re-like no vuelve a contar: el hito ya ocurrió y un unlike no lo retira.
     if (inserted.length > 0) {
-      const milestone = highestMilestone(COMMENT_LIKE_MILESTONES, count);
+      const milestone = crossedMilestone(COMMENT_LIKE_MILESTONES, count);
       if (milestone !== null) {
         await emitMilestoneNotification(tx, {
           kind: "comment_like_milestone",

@@ -143,6 +143,10 @@ function groupRow(overrides: Record<string, unknown> = {}) {
     releasePrimaryType: null,
     releaseDate: null,
     releaseCoverUrl: null,
+    commentSubject: null,
+    commentSubjectId: null,
+    commentSubjectName: null,
+    commentSubjectArtistName: null,
     ...overrides,
   };
 }
@@ -251,6 +255,10 @@ describe("listNotificationGroups", () => {
           actorCount: 0,
           actorUsername: null,
           milestone: 25,
+          commentSubject: "artist",
+          commentSubjectId: "artist-1",
+          commentSubjectName: "Banda",
+          commentSubjectArtistName: null,
         }),
       ],
       [],
@@ -260,10 +268,46 @@ describe("listNotificationGroups", () => {
 
     expect(group!.target).toEqual({
       type: "comment",
-      artistId: "artist-1",
-      artistName: "Banda",
+      subject: "artist",
+      subjectId: "artist-1",
+      subjectName: "Banda",
+      subjectArtistName: null,
       rootId: "root",
       milestone: 25,
+    });
+  });
+
+  it("un hito de me gusta en un álbum nombra el disco y no lleva hilo", async () => {
+    mockPage(
+      [
+        groupRow({
+          id: "likes:comment-2",
+          kind: "comment_like_milestone",
+          actorCount: 0,
+          actorUsername: null,
+          artistId: null,
+          artistName: null,
+          rootId: "comment-2",
+          milestone: 10,
+          commentSubject: "album",
+          commentSubjectId: "rg-1",
+          commentSubjectName: "The Wall",
+          commentSubjectArtistName: "Pink Floyd",
+        }),
+      ],
+      [],
+    );
+
+    const [group] = (await listNotificationGroups("me")).groups;
+
+    expect(group!.target).toEqual({
+      type: "comment",
+      subject: "album",
+      subjectId: "rg-1",
+      subjectName: "The Wall",
+      subjectArtistName: "Pink Floyd",
+      rootId: null,
+      milestone: 10,
     });
   });
 

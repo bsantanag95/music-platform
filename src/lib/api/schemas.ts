@@ -2874,9 +2874,11 @@ export const NotificationTargetSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     type: z.literal("comment"),
-    artistId: z.uuid(),
-    artistName: z.string(),
-    rootId: z.uuid(),
+    subject: z.enum(["artist", "album", "song"]),
+    subjectId: z.uuid(),
+    subjectName: z.string(),
+    subjectArtistName: z.string().nullable(),
+    rootId: z.uuid().nullable(),
     milestone: z.number().int().positive(),
   }),
   z.object({

@@ -5,8 +5,9 @@
 Cuando un like nuevo hace que un comentario (raíz o respuesta) alcance un hito, el sistema SHALL crear una
 notificación `comment_like_milestone` para su autor, en la misma transacción que el like, sin actor ni nombres. Los
 hitos SHALL ser 10, 25, 50, 100, 500, 1000, 2500, 5000, 10000 y luego cada 10000. El conteo SHALL seguir la regla de
-la cifra pública de likes (sin cuentas desactivadas). Si el conteo salta varios hitos, el sistema SHALL avisar solo el
-más alto. Un hito SHALL avisarse una sola vez por comentario: quitar un like no lo retira y volver a dar like no lo
+la cifra pública de likes (sin cuentas desactivadas). El sistema SHALL avisar solo el hito que cruza el like nuevo:
+un hito que el comentario ya había pasado sin aviso (antes de que existieran los hitos o con el tipo desactivado)
+SHALL NOT avisarse con retraso. Un hito SHALL avisarse una sola vez por comentario: quitar un like no lo retira y volver a dar like no lo
 repite.
 
 #### Scenario: Décimo like
@@ -24,17 +25,17 @@ repite.
 - **WHEN** el comentario baja de 10 a 9 likes y vuelve a 10
 - **THEN** Ana conserva una sola notificación del hito 10
 
-#### Scenario: Varios hitos de golpe
+#### Scenario: Hito ya pasado
 
-- **WHEN** el conteo de un comentario pasa de 9 a 30 (cuentas reactivadas o likes simultáneos)
-- **THEN** Ana recibe solo el hito 25
+- **WHEN** el comentario de Ana ya tenía 15 likes antes de existir los hitos y recibe uno nuevo
+- **THEN** no recibe el hito 10 con retraso; su próximo aviso es el 25
 
 ### Requirement: Hitos de guardados de una lista propia
 
 Cuando una persona nueva guarda una lista o un Camino propio (incluido activar su seguimiento de progreso), el
 sistema SHALL crear una notificación `list_save_milestone` para el dueño si el número de personas distintas con
 cuenta activa que la guardaron alcanza un hito: 1, 5, 10, 25, 50, 100, 500, 1000 y luego cada 1000. Las mismas reglas
-de una sola vez y del hito más alto que en los likes SHALL aplicar. Cambiar `following` o `tracking` de un guardado
+de una sola vez y del hito que cruza el guardado nuevo que en los likes SHALL aplicar. Cambiar `following` o `tracking` de un guardado
 existente SHALL NOT contar como guardado nuevo.
 
 #### Scenario: Primera persona que guarda
@@ -51,8 +52,9 @@ existente SHALL NOT contar como guardado nuevo.
 
 Al sincronizar el calendario de lanzamientos, el sistema SHALL crear una notificación `artist_release` para cada
 persona con cuenta activa que sigue a un artista con crédito principal en un álbum o EP del calendario, vinculado al
-catálogo, sin exclusiones y con fecha verificada dentro de los últimos 14 días; `artist_release_announced` para los
-que tienen fecha futura; y `artist_single` para los sencillos de esos artistas, que SHALL NOT entrar al riel de
+catálogo, sin exclusiones y con fecha verificada dentro de los últimos 14 días; `artist_release_announced` para los álbumes y EP
+que tienen fecha futura; y `artist_single` para los sencillos de esos artistas publicados en los últimos 14 días (un
+sencillo por salir SHALL NOT avisarse como anunciado), que SHALL NOT entrar al riel de
 Inicio. Cada persona SHALL recibir a lo sumo una notificación por disco y tipo, aunque siga a varios de sus artistas
 o la sincronización se repita. Un aviso SHALL NOT exigir carátula. Un fallo al avisar SHALL NOT invalidar la
 sincronización del calendario.

@@ -10,7 +10,7 @@ import { appUser, listSave, userList } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import type { NotificationTx } from "@/services/notifications/emit";
 import { emitMilestoneNotification } from "@/services/notifications/emit";
-import { LIST_SAVE_MILESTONES, highestMilestone } from "@/services/notifications/milestones";
+import { LIST_SAVE_MILESTONES, crossedMilestone } from "@/services/notifications/milestones";
 import { relationsFor } from "@/services/social/relations";
 import { audiencesForProfile } from "@/services/social/visibility";
 import type { Audience, FollowRelation } from "@/services/social/types";
@@ -99,7 +99,7 @@ async function emitSaveMilestone(
   ownerId: string,
   listId: string,
 ): Promise<void> {
-  const milestone = highestMilestone(LIST_SAVE_MILESTONES, await countActiveSaves(tx, listId));
+  const milestone = crossedMilestone(LIST_SAVE_MILESTONES, await countActiveSaves(tx, listId));
   if (milestone === null) return;
   await emitMilestoneNotification(tx, {
     kind: "list_save_milestone",

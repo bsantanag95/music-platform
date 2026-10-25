@@ -46,7 +46,8 @@ Los hitos avisan de un hecho propio, sin nombres ni actores: nunca dicen quién 
   pena interrumpir.
 - Escala de **guardados** de una lista o Camino: `1, 5, 10, 25, 50, 100, 500, 1000` y luego cada `1000`. El primero
   avisa porque guardar una lista es mucho más raro que dar un like.
-- Solo se avisa el **hito más alto alcanzado**: un salto de 9 a 30 avisa 25, no 10 y 25.
+- Solo se avisa el **hito que cruza** el like o el guardado nuevo: un comentario que ya tenía 15 likes antes de que
+  existieran los hitos (o con el aviso apagado) no recibe el 10 con retraso; su próximo aviso es el 25.
 - El hito se escribe en la misma transacción que el like o el guardado nuevo. Un re-like no cuenta, un unlike no
   retira el aviso y volver a dar like no lo repite.
 - El conteo excluye cuentas desactivadas, igual que la cifra pública; al reactivar una cuenta, sus likes vuelven a
@@ -57,8 +58,8 @@ Los hitos avisan de un hecho propio, sin nombres ni actores: nunca dicen quién 
 - La fuente es el **calendario de Inicio** (ADR 0029, ListenBrainz): no hay una segunda fuente ni requests extra.
   Después de reemplazar la ventana, la sincronización emite los avisos en una transacción propia; si fallan, el
   calendario ya quedó actualizado y la próxima sincronización lo reintenta.
-- Álbum o EP con fecha en los últimos **14 días** → `artist_release`; fecha futura → `artist_release_announced`;
-  sencillo en los últimos 14 días → `artist_single`. Una reedición o un disco con tipo secundario no genera aviso.
+- Álbum o EP con fecha en los últimos **14 días** → `artist_release`; álbum o EP con fecha futura →
+  `artist_release_announced`; sencillo en los últimos 14 días → `artist_single` (un sencillo por salir no se anuncia). Una reedición o un disco con tipo secundario no genera aviso.
 - Los destinatarios son las personas que siguen a **alguien acreditado como principal** en el disco, con cuenta
   activa y el tipo activado. El fan-out se resuelve en SQL y es idempotente: un aviso por persona, disco y tipo.
 - Los **sencillos** solo se verifican y vinculan si alguien activó `artist_single` y sigue al artista. No entran al

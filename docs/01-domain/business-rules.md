@@ -196,12 +196,12 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - **Hitos** (`comment_like_milestone`, `list_save_milestone`): avisan al autor de un comentario o al dueño de una lista
   cuando el objeto llega a una cifra redonda de me gusta o de personas que lo guardaron. No tienen actor y nunca dicen
   quién dio el like o guardó. Escalas: likes `10, 25, 50, 100, 500, 1000, 2500, 5000, 10000` y luego cada `10000`;
-  guardados `1, 5, 10, 25, 50, 100, 500, 1000` y luego cada `1000`. Solo se avisa el **hito más alto alcanzado**, una
-  sola vez: un salto de 9 a 30 avisa 25. El hito se escribe con el like o el guardado **nuevo** (un re-like no cuenta),
+  guardados `1, 5, 10, 25, 50, 100, 500, 1000` y luego cada `1000`. Solo se avisa el **hito que cruza** el like o el
+  guardado nuevo, una sola vez: un hito ya pasado sin aviso no se avisa con retraso. El hito se escribe con el like o el guardado **nuevo** (un re-like no cuenta),
   el conteo excluye cuentas desactivadas, un unlike **no retira** el aviso y volver a dar like no lo repite.
 - **Lanzamientos** (`artist_release`, `artist_release_announced`, `artist_single`): avisan a quien sigue a un artista
   acreditado como **principal** en un disco del calendario de Inicio. Álbum o EP de los últimos **14 días** →
-  `artist_release`; cualquier tipo con fecha futura → `artist_release_announced`; sencillo de los últimos 14 días →
+  `artist_release`; álbum o EP con fecha futura → `artist_release_announced` (un sencillo por salir no se anuncia); sencillo de los últimos 14 días →
   `artist_single`. El fan-out es un `INSERT … SELECT` idempotente por persona, disco y tipo. Una reedición o un tipo
   secundario no genera aviso. Los sencillos solo se verifican y vinculan si alguien con `artist_single` activo sigue al
   artista, y **no** entran al calendario ni al riel de Inicio.

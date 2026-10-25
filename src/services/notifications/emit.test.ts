@@ -424,11 +424,11 @@ describe("releaseNotificationBatches", () => {
     ).toEqual([{ kind: "artist_release", releaseGroupIds: ["borde"] }]);
   });
 
-  it("cualquier tipo con fecha futura se anuncia, no se publica", () => {
+  it("un álbum o EP con fecha futura se anuncia, no se publica", () => {
     expect(
       releaseNotificationBatches(
         [
-          { releaseGroupId: "futuro", releaseDate: "2026-10-24", category: "single" },
+          { releaseGroupId: "futuro", releaseDate: "2026-10-24", category: "ep" },
           { releaseGroupId: "hoy", releaseDate: today, category: "album" },
         ],
         today,
@@ -437,6 +437,15 @@ describe("releaseNotificationBatches", () => {
       { kind: "artist_release", releaseGroupIds: ["hoy"] },
       { kind: "artist_release_announced", releaseGroupIds: ["futuro"] },
     ]);
+  });
+
+  it("un sencillo por salir no se anuncia: avisa recién al salir, como sencillo", () => {
+    expect(
+      releaseNotificationBatches(
+        [{ releaseGroupId: "sencillo-futuro", releaseDate: "2026-10-24", category: "single" }],
+        today,
+      ),
+    ).toEqual([]);
   });
 
   it("deduplica el mismo disco y no devuelve lotes vacíos", () => {

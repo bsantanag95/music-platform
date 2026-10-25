@@ -25,7 +25,7 @@
     "newFollower": "{people} started following you",
     "followRequest": "{name} wants to follow you",
     "followAccepted": "{name} accepted your follow request",
-    "commentLikeMilestone": "Your comment on {artist} reached {count} likes",
+    "commentLikeMilestone": "Your comment on {subject} reached {count} likes",
     "listSaveMilestone": "{count, plural, one {# person has} other {# people have}} saved your list “{title}”",
     "listSaveMilestoneCamino": "{count, plural, one {# person has} other {# people have}} saved your Journey “{title}”",
     "releaseAlbum": "{title}, the new album by {artist}, is out",

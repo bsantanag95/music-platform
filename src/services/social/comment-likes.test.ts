@@ -106,23 +106,30 @@ describe("likeComment", () => {
     });
   });
 
-  it("el undécimo like sigue pidiendo el mismo hito: el emisor no lo repite", async () => {
+  it("el undécimo like no cruza ningún hito y no emite", async () => {
     selects(visible());
     insertLike();
     txCount(11);
 
     await likeComment(COMMENT, VIEWER);
 
-    expect(mocks.emitMilestoneNotification).toHaveBeenCalledWith(
-      mocks.tx,
-      expect.objectContaining({ milestone: 10 }),
-    );
+    expect(mocks.emitMilestoneNotification).not.toHaveBeenCalled();
   });
 
-  it("un salto a 30 avisa solo el hito más alto", async () => {
+  it("un comentario que ya pasó el 10 sin aviso no lo recibe con retraso", async () => {
     selects(visible());
     insertLike();
-    txCount(30);
+    txCount(16);
+
+    await likeComment(COMMENT, VIEWER);
+
+    expect(mocks.emitMilestoneNotification).not.toHaveBeenCalled();
+  });
+
+  it("el like que lleva el conteo a 25 avisa ese hito", async () => {
+    selects(visible());
+    insertLike();
+    txCount(25);
 
     await likeComment(COMMENT, VIEWER);
 

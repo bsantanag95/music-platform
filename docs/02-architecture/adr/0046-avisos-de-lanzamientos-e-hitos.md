@@ -33,9 +33,10 @@ segunda fuente sería duplicar requests, filtros y criterios de calidad.
    insertan con `ON CONFLICT DO NOTHING … RETURNING`: solo un like o un guardado **nuevo** cuenta, y el conteo usa la
    misma regla que la cifra pública (sin cuentas desactivadas). El hito se emite dentro de esa transacción, así que
    una acción que falla no deja un aviso huérfano.
-3. **Solo el hito más alto y una sola vez.** Las escalas son likes `10, 25, 50, 100, 500, 1000, 2500, 5000, 10000` y
-   luego cada `10000`; guardados `1, 5, 10, 25, 50, 100, 500, 1000` y luego cada `1000`. Un salto de 9 a 30 avisa
-   25, no 10 y 25. El único parcial `(recipient_id, objeto, kind, coalesce(milestone, 0))` absorbe las carreras y
+3. **Solo el hito que se cruza y una sola vez.** Las escalas son likes `10, 25, 50, 100, 500, 1000, 2500, 5000, 10000`
+   y luego cada `10000`; guardados `1, 5, 10, 25, 50, 100, 500, 1000` y luego cada `1000`. Se avisa el hito que
+   cruza el like o el guardado nuevo: un comentario que ya tenía 15 likes antes de los hitos no avisa 10 con el
+   siguiente like. El único parcial `(recipient_id, objeto, kind, coalesce(milestone, 0))` absorbe las carreras y
    hace que un re-like no repita el aviso. Un unlike **no retira** el hito: el hecho de que ocurrió no deja de ser
    cierto.
 4. **El calendario es la única fuente de lanzamientos.** Después de reemplazar la ventana, la sincronización emite
@@ -44,7 +45,8 @@ segunda fuente sería duplicar requests, filtros y criterios de calidad.
    `coalesce(preference.enabled, defecto)`. No hay una fila por seguidor en memoria ni una consulta por artista.
    - Álbum o EP de los últimos **14 días** → `artist_release`.
    - Sencillo de los últimos 14 días → `artist_single`.
-   - Cualquier tipo con fecha futura → `artist_release_announced`.
+   - Álbum o EP con fecha futura → `artist_release_announced`. Un sencillo por salir no avisa (le llegaría a quien
+     activó los anunciados con los sencillos apagados); avisa como `artist_single` al salir.
    - Una reedición o un tipo secundario ya quedó fuera del calendario: no genera aviso.
 5. **Los avisos no bloquean la sincronización.** Se emiten en una transacción propia, después del reemplazo de la
    ventana, dentro de un `try/catch` que registra el fallo y no lo relanza. Si fallan, el calendario ya quedó

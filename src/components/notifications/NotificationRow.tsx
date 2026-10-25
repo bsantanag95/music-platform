@@ -6,7 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@/i18n/navigation";
 import { ApiError, apiFetch } from "@/lib/api/client";
 import { NoContentSchema, type NotificationGroupValue } from "@/lib/api/schemas";
-import { albumHref, artistHref } from "@/lib/catalog-links";
+import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import { RelativeDate } from "@/components/feed/feed-row-parts";
 import { UserAvatar } from "@/components/social/UserAvatar";
@@ -267,7 +267,7 @@ function notificationText(
   if (group.kind === "comment_like_milestone") {
     if (target?.type !== "comment") return t("row.milestoneFallback");
     return t("row.commentLikeMilestone", {
-      artist: target.artistName,
+      subject: target.subjectName,
       count: target.milestone,
     });
   }
@@ -349,8 +349,16 @@ function targetHref(group: NotificationGroupValue): string | null {
   if (target.type === "artist") {
     return `${artistHref(target.artistName, target.artistId)}?thread=${encodeURIComponent(target.rootId)}`;
   }
+  // Hito de likes: al hilo en un artista; a la página del álbum o de la canción en los demás.
   if (target.type === "comment") {
-    return `${artistHref(target.artistName, target.artistId)}?thread=${encodeURIComponent(target.rootId)}`;
+    if (target.subject === "album") {
+      return albumHref(target.subjectArtistName, target.subjectName, target.subjectId);
+    }
+    if (target.subject === "song") {
+      return songHref(target.subjectArtistName, target.subjectName, target.subjectId);
+    }
+    const page = artistHref(target.subjectName, target.subjectId);
+    return target.rootId ? `${page}?thread=${encodeURIComponent(target.rootId)}` : page;
   }
   if (target.type === "profile") return `/users/${encodeURIComponent(target.username)}`;
   // El destinatario de un hito de guardados es el dueño: enlaza a su superficie.

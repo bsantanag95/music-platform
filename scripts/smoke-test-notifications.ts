@@ -48,6 +48,8 @@ assertSmokeAllowed();
 const suffix = randomUUID().slice(0, 8);
 const ARTIST_MBID = "5e0ce000-0000-4000-8000-00000000a9a0";
 const ALBUM_MBID = "5e0ce000-0000-4000-8000-00000000a9b0";
+/** Disco del comentario con hito de likes (lo cubre la limpieza `…a9%`). */
+const COMMENT_ALBUM_MBID = "5e0ce000-0000-4000-8000-00000000a9c0";
 const ANNOUNCED_MBID = "5e0ce000-0000-4000-8000-00000000a9b1";
 const SINGLE_MBID = "5e0ce000-0000-4000-8000-00000000a9b2";
 const TODAY = new Date().toISOString().slice(0, 10);
@@ -386,14 +388,55 @@ async function main() {
       "el undécimo like no repite el hito",
     );
 
-    // Salto: 14 likes entran por fuera del servicio y el siguiente like ve 26.
+    // 13 likes entran por fuera del servicio (24) y el siguiente like cruza el 25.
     await db.insert(commentLike).values(
-      hitoUsers.slice(11, 25).map((user) => ({ commentId: hitoComment.id, userId: user.id })),
+      hitoUsers.slice(11, 24).map((user) => ({ commentId: hitoComment.id, userId: user.id })),
     );
-    await commentLikes.likeComment(hitoComment.id, hitoUsers[25]!.id);
+    await commentLikes.likeComment(hitoComment.id, hitoUsers[24]!.id);
     check(
       (await milestoneCount(ana.id, "comment_like_milestone", 25, hitoFilter)) === 1,
-      "un salto avisa solo el hito más alto (25)",
+      "el like que cruza el 25 avisa ese hito",
+    );
+
+    // Un comentario que pasó el 10 antes de que hubiera hitos no lo avisa con retraso.
+    const [lateComment] = await db
+      .insert(comment)
+      .values({ userId: ana.id, artistId: art.id, topic: "general", body: "hito atrasado" })
+      .returning();
+    if (!lateComment) throw new Error("no se creó el comentario del hito atrasado");
+    await db.insert(commentLike).values(
+      hitoUsers.slice(0, 12).map((user) => ({ commentId: lateComment.id, userId: user.id })),
+    );
+    await commentLikes.likeComment(lateComment.id, hitoUsers[12]!.id);
+    check(
+      (await countFor(ana.id, "comment_like_milestone", lateComment.id)) === 0,
+      "un hito ya pasado no se avisa con el siguiente like",
+    );
+
+    // Un comentario de álbum: la entrada nombra el disco y no lleva hilo.
+    const [commentAlbum] = await db
+      .insert(releaseGroup)
+      .values({ mbid: COMMENT_ALBUM_MBID, title: `Smoke disco comentado ${suffix}`, category: "studio" })
+      .returning();
+    if (!commentAlbum) throw new Error("no se creó el álbum sintético");
+    const [albumComment] = await db
+      .insert(comment)
+      .values({ userId: ana.id, releaseGroupId: commentAlbum.id, body: "hito en un álbum" })
+      .returning();
+    if (!albumComment) throw new Error("no se creó el comentario del álbum");
+    await db.insert(commentLike).values(
+      hitoUsers.slice(0, 9).map((user) => ({ commentId: albumComment.id, userId: user.id })),
+    );
+    await commentLikes.likeComment(albumComment.id, hitoUsers[9]!.id);
+    const albumPage = await read.listNotificationGroups(ana.id, { tab: "for_you", pageSize: 100 });
+    const albumEntry = albumPage.groups.find((group) => group.id === `likes:${albumComment.id}`);
+    check(
+      albumEntry?.target?.type === "comment" &&
+        albumEntry.target.subject === "album" &&
+        albumEntry.target.subjectName === commentAlbum.title &&
+        albumEntry.target.rootId === null &&
+        albumEntry.target.milestone === 10,
+      "el hito de un comentario de álbum nombra el disco, sin hilo",
     );
     check(
       (await countFor(ana.id, "comment_like_milestone", hitoComment.id)) === 2,

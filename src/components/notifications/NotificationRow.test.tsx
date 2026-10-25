@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactElement } from "react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
-import { artistHref, albumHref } from "@/lib/catalog-links";
+import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 import type { NotificationGroupValue } from "@/lib/api/schemas";
 import { NotificationRow } from "./NotificationRow";
 
@@ -288,8 +288,10 @@ describe("NotificationRow", () => {
           actorCount: 0,
           target: {
             type: "comment",
-            artistId: "a-1",
-            artistName: "Pink Floyd",
+            subject: "artist",
+            subjectId: "a-1",
+            subjectName: "Pink Floyd",
+            subjectArtistName: null,
             rootId: "root-1",
             milestone: 25,
           },
@@ -300,6 +302,74 @@ describe("NotificationRow", () => {
     expect(
       screen.getByRole("link", { name: /Tu comentario sobre Pink Floyd llegó a 25 me gusta/ }),
     ).toHaveAttribute("href", `${artistHref("Pink Floyd", "a-1")}?thread=root-1`);
+  });
+
+  it("un hito de me gusta en un álbum nombra el disco y enlaza a su página", () => {
+    renderRow(
+      <NotificationRow
+        group={group({
+          id: "likes:comment-2",
+          kind: "comment_like_milestone",
+          actors: [],
+          actorCount: 0,
+          target: {
+            type: "comment",
+            subject: "album",
+            subjectId: "rg-1",
+            subjectName: "The Wall",
+            subjectArtistName: "Pink Floyd",
+            rootId: null,
+            milestone: 10,
+          },
+        })}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: /Tu comentario sobre The Wall llegó a 10 me gusta/ }),
+    ).toHaveAttribute("href", albumHref("Pink Floyd", "The Wall", "rg-1"));
+  });
+
+  it("un hito de me gusta en una canción enlaza a la canción", () => {
+    renderRow(
+      <NotificationRow
+        group={group({
+          id: "likes:comment-3",
+          kind: "comment_like_milestone",
+          actors: [],
+          actorCount: 0,
+          target: {
+            type: "comment",
+            subject: "song",
+            subjectId: "rec-1",
+            subjectName: "Comfortably Numb",
+            subjectArtistName: "Pink Floyd",
+            rootId: null,
+            milestone: 50,
+          },
+        })}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: /Tu comentario sobre Comfortably Numb llegó a 50 me gusta/ }),
+    ).toHaveAttribute("href", songHref("Pink Floyd", "Comfortably Numb", "rec-1"));
+  });
+
+  it("el primer guardado concuerda en singular", () => {
+    renderRow(
+      <NotificationRow
+        group={group({
+          id: "saves:list-9",
+          kind: "list_save_milestone",
+          actors: [],
+          actorCount: 0,
+          target: { type: "list", listId: "list-9", title: "Raras", isCamino: false, milestone: 1 },
+        })}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: /Tu lista «Raras» ya la guardó 1 persona/ })).toBeInTheDocument();
   });
 
   it("un hito de guardados enlaza a la lista propia del dueño", () => {

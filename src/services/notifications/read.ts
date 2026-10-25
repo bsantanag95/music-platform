@@ -7,6 +7,7 @@ import {
   comment,
   moderationAction,
   notification,
+  recording,
   releaseGroup,
   userBlock,
   userList,
@@ -37,6 +38,9 @@ export type ModerationAction = (typeof MODERATION_ACTIONS)[number];
 /** Objeto al que se refiere una acción de moderación. */
 export type ModerationContentType = "comment" | "review" | "list" | "social_suspension";
 
+/** Página donde vive un comentario. */
+export type CommentSubject = "artist" | "album" | "song";
+
 /** Persona que aparece en la entrada (máximo dos por grupo en la interfaz). */
 export interface NotificationActor {
   id: string;
@@ -60,9 +64,16 @@ export type NotificationTarget =
     }
   | {
       type: "comment";
-      artistId: string;
-      artistName: string;
-      rootId: string;
+      /** Dónde está el comentario: página de artista, de álbum o de canción. */
+      subject: CommentSubject;
+      /** Id del artista, del álbum (release-group) o de la canción (grabación). */
+      subjectId: string;
+      /** Nombre del artista o título del álbum / la canción. */
+      subjectName: string;
+      /** Artista principal del álbum o la canción (para su URL); `null` en un artista. */
+      subjectArtistName: string | null;
+      /** Raíz del hilo: solo los comentarios de artista tienen hilo (`?thread=`). */
+      rootId: string | null;
       /** Hito más alto del grupo. */
       milestone: number;
     }
@@ -154,6 +165,9 @@ function visibleNotifications(recipientId: string, tab: NotificationTab) {
   const actor = alias(appUser, "notification_actor");
   const reply = alias(comment, "notification_reply");
   const root = alias(comment, "notification_root");
+  // Álbum o canción de un comentario (los hitos de likes no son solo de artista).
+  const commentAlbum = alias(releaseGroup, "notification_comment_album");
+  const commentSong = alias(recording, "notification_comment_song");
 
   // La notificación apunta a la respuesta; la raíz del hilo es su `parent_id`.
   // En un comentario raíz no hay `parent_id`: el propio comentario es el hilo.
@@ -193,6 +207,26 @@ function visibleNotifications(recipientId: string, tab: NotificationTab) {
       artistId: sql<string | null>`${artist.id}`.as("artist_id"),
       artistName: sql<string | null>`${artist.name}`.as("artist_name"),
       rootId: sql<string | null>`coalesce(${reply.parentId}, ${reply.id})`.as("root_id"),
+      commentSubject: sql<CommentSubject | null>`case
+        when ${reply.artistId} is not null then 'artist'
+        when ${reply.releaseGroupId} is not null then 'album'
+        when ${reply.recordingId} is not null then 'song'
+        else null end`.as("comment_subject"),
+      commentSubjectId: sql<string | null>`coalesce(${reply.artistId}, ${reply.releaseGroupId}, ${reply.recordingId})`.as(
+        "comment_subject_id",
+      ),
+      commentSubjectName: sql<string | null>`coalesce(${artist.name}, ${commentAlbum.title}, ${commentSong.title})`.as(
+        "comment_subject_name",
+      ),
+      commentSubjectArtistName: sql<string | null>`(
+        select a3.name
+        from credit c3
+        join artist a3 on a3.id = c3.artist_id
+        where c3.role = 'primary'
+          and (c3.release_group_id = ${reply.releaseGroupId} or c3.recording_id = ${reply.recordingId})
+        order by c3.position
+        limit 1
+      )`.as("comment_subject_artist_name"),
       moderationAction: moderationAction.action,
       moderationReason: moderationAction.reason,
       moderationContentType: sql<ModerationContentType | null>`case
@@ -228,6 +262,8 @@ function visibleNotifications(recipientId: string, tab: NotificationTab) {
     .leftJoin(reply, eq(reply.id, notification.commentId))
     .leftJoin(root, eq(root.id, reply.parentId))
     .leftJoin(artist, eq(artist.id, reply.artistId))
+    .leftJoin(commentAlbum, eq(commentAlbum.id, reply.releaseGroupId))
+    .leftJoin(commentSong, eq(commentSong.id, reply.recordingId))
     .leftJoin(moderationAction, eq(moderationAction.id, notification.moderationActionId))
     .leftJoin(userList, eq(userList.id, notification.listId))
     .leftJoin(releaseGroup, eq(releaseGroup.id, notification.releaseGroupId))
@@ -360,6 +396,10 @@ function groupedNotifications(recipientId: string, zone: string, tab: Notificati
       actorAvatarImageId: source.actorAvatarImageId,
       artistId: source.artistId,
       artistName: source.artistName,
+      commentSubject: source.commentSubject,
+      commentSubjectId: source.commentSubjectId,
+      commentSubjectName: source.commentSubjectName,
+      commentSubjectArtistName: source.commentSubjectArtistName,
       rootId: source.rootId,
       moderationAction: source.moderationAction,
       moderationReason: source.moderationReason,
@@ -422,6 +462,10 @@ export async function listNotificationGroups(
       // Campos del destino: se toman del evento más reciente del grupo.
       artistId: sql<string | null>`(array_agg(${source.artistId} order by ${source.createdAt} desc))[1]`,
       artistName: sql<string | null>`(array_agg(${source.artistName} order by ${source.createdAt} desc))[1]`,
+      commentSubject: sql<string | null>`(array_agg(${source.commentSubject} order by ${source.createdAt} desc))[1]`,
+      commentSubjectId: sql<string | null>`(array_agg(${source.commentSubjectId} order by ${source.createdAt} desc))[1]`,
+      commentSubjectName: sql<string | null>`(array_agg(${source.commentSubjectName} order by ${source.createdAt} desc))[1]`,
+      commentSubjectArtistName: sql<string | null>`(array_agg(${source.commentSubjectArtistName} order by ${source.createdAt} desc))[1]`,
       rootId: sql<string | null>`(array_agg(${source.rootId} order by ${source.createdAt} desc))[1]`,
       actorUsername: sql<string | null>`(array_agg(${source.actorUsername} order by ${source.createdAt} desc))[1]`,
       moderationAction: sql<string | null>`(array_agg(${source.moderationAction} order by ${source.createdAt} desc))[1]`,
@@ -672,6 +716,10 @@ type GroupRow = {
   actorCount: number;
   artistId: string | null;
   artistName: string | null;
+  commentSubject: string | null;
+  commentSubjectId: string | null;
+  commentSubjectName: string | null;
+  commentSubjectArtistName: string | null;
   rootId: string | null;
   actorUsername: string | null;
   moderationAction: string | null;
@@ -716,12 +764,22 @@ function targetFor(row: GroupRow): NotificationTarget | null {
   }
 
   if (row.kind === "comment_like_milestone") {
-    if (!row.artistId || !row.artistName || !row.rootId || row.milestone === null) return null;
+    if (
+      !isCommentSubject(row.commentSubject) ||
+      !row.commentSubjectId ||
+      row.commentSubjectName === null ||
+      row.milestone === null
+    ) {
+      return null;
+    }
     return {
       type: "comment",
-      artistId: row.artistId,
-      artistName: row.artistName,
-      rootId: row.rootId,
+      subject: row.commentSubject,
+      subjectId: row.commentSubjectId,
+      subjectName: row.commentSubjectName,
+      subjectArtistName: row.commentSubject === "artist" ? null : row.commentSubjectArtistName,
+      // Solo la página de artista tiene hilos; en álbum y canción se enlaza a la página.
+      rootId: row.commentSubject === "artist" ? row.rootId : null,
       milestone: row.milestone,
     };
   }
@@ -771,6 +829,10 @@ function normaliseCategory(
   if (primaryType === "EP") return "ep";
   if (primaryType === "Album") return "album";
   return category === "single_ep" ? "single" : "album";
+}
+
+function isCommentSubject(value: string | null): value is CommentSubject {
+  return value === "artist" || value === "album" || value === "song";
 }
 
 function isModerationAction(value: string): value is ModerationAction {

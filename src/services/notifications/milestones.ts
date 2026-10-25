@@ -45,3 +45,14 @@ export function highestMilestone(scale: MilestoneScale, count: number): number |
 
   return highest;
 }
+
+/**
+ * Hito que cruza la interacción que acaba de llevar el conteo a `count`, o `null` si no cruzó
+ * ninguno. Solo avisa lo que esta interacción alcanzó: un comentario que ya tenía 15 likes
+ * antes de que existieran los hitos (o cuando la persona los tenía apagados) no avisa 10 con
+ * el siguiente like; su próximo aviso es el 25.
+ */
+export function crossedMilestone(scale: MilestoneScale, count: number): number | null {
+  const reached = highestMilestone(scale, count);
+  return reached !== null && reached !== highestMilestone(scale, count - 1) ? reached : null;
+}
