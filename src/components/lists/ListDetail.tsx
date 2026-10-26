@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Link } from "@/i18n/navigation";
 import { ListDetailHeader } from "./ListDetailHeader";
 import { ListItemsView } from "./ListItemsView";
 import { removeItemFromList, reorderListItems } from "@/lib/api/lists";
@@ -50,7 +51,13 @@ export function ListDetail({ initial, saveCount }: ListDetailProps) {
   };
 
   return (
-    <div className="flex w-full max-w-3xl flex-col gap-6">
+    <div className="flex w-full flex-col gap-6">
+      <Link
+        href="/me/lists"
+        className="-my-2 inline-flex min-h-8 items-center self-start font-data text-xs text-paper-muted transition-colors hover:text-amber [@media(pointer:coarse)]:min-h-11"
+      >
+        {t("backToLists")}
+      </Link>
       <ListDetailHeader list={list} canManage saveCount={saveCount} onUpdated={setList} />
 
       {list.items.length === 0 ? (

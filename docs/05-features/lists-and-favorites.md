@@ -158,6 +158,26 @@ algorítmico).
   /api/me/lists/{id}/pin`, `POST|GET /api/me/saved-lists`, `DELETE /api/me/saved-lists/{id}`,
   `GET /api/lists/discover`. Ver `docs/04-api/contracts.md`.
 
+### Fase 1 del rediseño (`refine-me-lists-page-phase1`)
+
+Una auditoría en escritorio y a 375 px corrigió lo que fallaba sin cambiar el diseño de tarjetas y vistas:
+
+- **Página:** `max-w-4xl`, título a la izquierda con una línea de descripción (como Pendientes, Favoritos y Colección).
+  El detalle propio usa el mismo ancho y abre con «← Listas».
+- **Filtros en la URL:** buscar, tipo y orden de Mis listas se escriben como `?q=&type=&sort=` (solo lo que difiere del
+  defecto, con `replaceState`, conservando `tab`) y la página los lee al abrir; un valor inválido se ignora. El listado
+  de un perfil ajeno no los escribe.
+- **Tarjetas:** Fijar, Editar y Eliminar nombran la lista («Eliminar Best AOR songs») y miden 32 px (44 con puntero
+  grueso). Un fallo al borrar o al fijar se avisa bajo esa tarjeta.
+- **Eliminar** abre un diálogo, en la tarjeta y en el detalle, que nombra la lista, dice cuántos elementos se pierden y
+  que no se puede deshacer (el borrado es físico).
+- **Reordenar en el detalle:** las flechas miden 32 px (44 con puntero grueso); las que no aplican en un extremo quedan
+  invisibles pero conservan su lugar. En Índice los controles están siempre visibles. El modo guardado se lee antes de
+  pintar (marcador neutro), sin el salto desde Detallada.
+
+Pendiente para las fases siguientes: «Nueva lista» en la cabecera de las tres pestañas (hoy solo en Mis listas, aunque
+el requisito de la sección lo pide en todas), pestañas con totales, Descubrir como enlace a `/lists`, estantería y menú ⋯.
+
 ### Continuación pendiente: listas seguidas en el feed
 
 El efecto de `following` sobre el feed de actividad —que la actualización de una lista

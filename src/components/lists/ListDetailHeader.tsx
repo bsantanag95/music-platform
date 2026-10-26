@@ -12,6 +12,7 @@ import { RelativeDate } from "@/components/feed/feed-row-parts";
 import { UserHoverCard } from "@/components/profiles/UserHoverCard";
 import { entityTypeKey } from "./lists-shared";
 import { deleteList, updateList } from "@/lib/api/lists";
+import { DeleteListDialog } from "./DeleteListDialog";
 import type { DiaryAudience, UserListDetail } from "@/lib/api/schemas";
 
 interface OwnerInfo {
@@ -62,11 +63,12 @@ export function ListDetailHeader({
   const [audience, setAudience] = useState<DiaryAudience>(list.audience);
   const [pendingDelete, setPendingDelete] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<"save" | "delete" | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const saveMeta = async () => {
     setBusy(true);
-    setError(false);
+    setError(null);
     try {
       const updated = await updateList(list.id, {
         title,
@@ -76,7 +78,7 @@ export function ListDetailHeader({
       onUpdated?.(updated);
       setEditing(false);
     } catch {
-      setError(true);
+      setError("save");
     } finally {
       setBusy(false);
     }
@@ -84,13 +86,15 @@ export function ListDetailHeader({
 
   const remove = async () => {
     setBusy(true);
-    setError(false);
+    setDeleting(true);
+    setError(null);
     try {
       await deleteList(list.id);
       onDeleted?.();
       router.push("/me/lists");
     } catch {
-      setError(true);
+      setError("delete");
+      setDeleting(false);
     } finally {
       setBusy(false);
     }
@@ -113,38 +117,26 @@ export function ListDetailHeader({
                 <button
                   type="button"
                   onClick={() => setEditing((v) => !v)}
-                  className="text-paper-muted underline decoration-dotted transition-colors hover:text-paper"
+                  className="inline-flex min-h-8 items-center px-1 text-paper-muted underline decoration-dotted transition-colors hover:text-paper [@media(pointer:coarse)]:min-h-11"
                 >
                   {editing ? t("collapse") : t("edit")}
                 </button>
-                {pendingDelete ? (
-                  <>
-                    <span className="text-danger">{t("deleteShort")}</span>
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void remove()}
-                      className="text-danger underline decoration-dotted transition-colors hover:text-paper disabled:opacity-50"
-                    >
-                      {busy ? t("deleting") : t("delete")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPendingDelete(false)}
-                      className="text-paper-muted transition-colors hover:text-paper"
-                    >
-                      {t("collapse")}
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setPendingDelete(true)}
-                    className="text-paper-muted underline decoration-dotted transition-colors hover:text-danger"
-                  >
-                    {t("delete")}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setPendingDelete(true)}
+                  className="inline-flex min-h-8 items-center px-1 text-paper-muted underline decoration-dotted transition-colors hover:text-danger disabled:opacity-50 [@media(pointer:coarse)]:min-h-11"
+                >
+                  {deleting ? t("deleting") : t("delete")}
+                </button>
+                <DeleteListDialog
+                  list={pendingDelete ? list : null}
+                  onCancel={() => setPendingDelete(false)}
+                  onConfirm={() => {
+                    setPendingDelete(false);
+                    void remove();
+                  }}
+                />
               </div>
             ) : null}
           </div>
@@ -271,7 +263,7 @@ export function ListDetailHeader({
 
       {error ? (
         <span role="alert" className="font-data text-xs text-danger">
-          {t("saveError")}
+          {t(error === "delete" ? "deleteError" : "saveError")}
         </span>
       ) : null}
     </div>

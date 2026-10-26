@@ -75,4 +75,35 @@ describe("ListItemsView", () => {
     renderWithIntl(<ListItemsView items={items} entityType="release-group" />);
     expect(screen.queryByRole("button", { name: 'Bajar “Rumours”' })).toBeNull();
   });
+
+  // openspec: refine-me-lists-page-phase1
+  it("los controles que no aplican en un extremo no se ven pero conservan su lugar", () => {
+    const manage = { busy: false, onReorder: vi.fn(), onRemove: vi.fn() };
+    renderWithIntl(<ListItemsView items={items} entityType="release-group" manage={manage} />);
+    expect(screen.getByRole("button", { name: "Mover “Rumours” al principio", hidden: true }).className).toContain(
+      "invisible",
+    );
+    expect(screen.getByRole("button", { name: "Subir “Rumours”", hidden: true }).className).toContain("invisible");
+    expect(screen.getByRole("button", { name: "Bajar “Rumours”" }).className).not.toContain("invisible");
+    expect(screen.getByRole("button", { name: "Bajar “Tusk”", hidden: true }).className).toContain("invisible");
+  });
+
+  it("los controles de reordenar miden 32 px y crecen a 44 con puntero grueso", () => {
+    const manage = { busy: false, onReorder: vi.fn(), onRemove: vi.fn() };
+    renderWithIntl(<ListItemsView items={items} entityType="release-group" manage={manage} />);
+    const down = screen.getByRole("button", { name: "Bajar “Rumours”" });
+    expect(down.className).toContain("size-8");
+    expect(down.className).toContain("[@media(pointer:coarse)]:size-11");
+    expect(screen.getByRole("button", { name: "Quitar “Rumours”" }).className).toContain(
+      "[@media(pointer:coarse)]:min-h-11",
+    );
+  });
+
+  it("en Índice los controles quedan siempre visibles", async () => {
+    const manage = { busy: false, onReorder: vi.fn(), onRemove: vi.fn() };
+    renderWithIntl(<ListItemsView items={items} entityType="release-group" manage={manage} />);
+    await userEvent.click(screen.getByRole("radio", { name: "Índice" }));
+    const controls = screen.getByRole("button", { name: "Bajar “Rumours”" }).closest("div")!.parentElement!;
+    expect(controls.className).not.toContain("opacity-0");
+  });
 });

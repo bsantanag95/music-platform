@@ -27,8 +27,6 @@
   "collapse": "Close",
   "edit": "Edit",
   "delete": "Delete",
-  "deleteConfirm": "Delete this list? This action cannot be undone.",
-  "deleting": "Deleting...",
   "items": "Items",
   "noItems": "This list has no items yet.",
   "addItem": "Add item",
@@ -129,7 +127,6 @@
     "emptyAction": "Create the first list",
     "emptySignedOutAction": "Sign in to create the first one"
   },
-  "deleteShort": "Delete?",
   "moveUp": "Move “{title}” up",
   "moveDown": "Move “{title}” down",
   "moveToStart": "Move “{title}” to the top",
@@ -152,5 +149,18 @@
   "graphicSelect": "Select “{title}”",
   "graphicSelected": "“{title}” selected",
   "graphicActionsLabel": "Actions on “{title}”",
-  "graphicDone": "Done"
+  "graphicDone": "Done",
+  "description": "Your lists, the ones you saved from others and the ones the community publishes.",
+  "backToLists": "← Lists",
+  "pinNamed": "Pin {title}",
+  "unpinNamed": "Unpin {title}",
+  "editNamed": "Edit {title}",
+  "deleteNamed": "Delete {title}",
+  "deleteDialogTitle": "Delete “{title}”?",
+  "deleteDialogMessage": "{count, plural, =0 {The list is empty.} one {Its only item will be lost.} other {Its # items and their order will be lost.}} This can't be undone.",
+  "deleteDialogConfirm": "Delete list",
+  "cancel": "Cancel",
+  "deleteError": "We couldn't delete the list. Try again.",
+  "pinError": "We couldn't change the pinned list. Try again.",
+  "deleting": "Deleting…"
 }
