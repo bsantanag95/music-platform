@@ -20,11 +20,13 @@ interface ListFormProps {
   // Cuando se crea desde "Añadir a lista" en una página de catálogo, el tipo
   // de contenido queda fijado al del objetivo y no se muestra el selector.
   fixedEntityType?: ListEntityType;
+  /** Sin caja propia: dentro de un diálogo, que ya enmarca el formulario (openspec: redesign-me-lists-toolbar). */
+  bare?: boolean;
 }
 
 // Formulario de creación de lista: título obligatorio, descripción opcional,
 // tipo de entidad (artistas, álbumes o canciones) y audiencia.
-export function ListForm({ onCreated, onCancel, fixedEntityType }: ListFormProps) {
+export function ListForm({ onCreated, onCancel, fixedEntityType, bare = false }: ListFormProps) {
   const t = useTranslations("lists");
   const [entityType, setEntityType] = useState<ListEntityType>(fixedEntityType ?? "artist");
   const [title, setTitle] = useState("");
@@ -52,7 +54,9 @@ export function ListForm({ onCreated, onCancel, fixedEntityType }: ListFormProps
   };
 
   return (
-    <div className="flex w-full flex-col gap-3 rounded border border-ink-border bg-ink-surface p-4">
+    <div
+      className={`flex w-full flex-col gap-3 ${bare ? "" : "rounded border border-ink-border bg-ink-surface p-4"}`}
+    >
       {fixedEntityType ? (
         <p className="font-data text-sm text-paper-muted">
           {t("entityTypeLabel")}: {t(entityTypeLabelKey(fixedEntityType))}

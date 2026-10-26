@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactElement } from "react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { MyListsTab } from "./MyListsTab";
-import type { ListsListResponse, UserListSummary } from "@/lib/api/schemas";
+import type { MyListsResponse, UserListSummary } from "@/lib/api/schemas";
 
 const mocks = vi.hoisted(() => ({
   getMyLists: vi.fn(),
@@ -47,11 +47,13 @@ function list(overrides: Partial<UserListSummary> = {}): UserListSummary {
   };
 }
 
-function response(lists: UserListSummary[]): ListsListResponse {
-  return { lists, page: 1, pageSize: 20, hasNext: false };
+function response(lists: UserListSummary[]): MyListsResponse {
+  const counts = { artist: 0, "release-group": 0, recording: 0 };
+  for (const list of lists) counts[list.entityType] += 1;
+  return { lists, page: 1, pageSize: 20, hasNext: false, counts };
 }
 
-function renderTab(initial: ListsListResponse, props: Partial<Parameters<typeof MyListsTab>[0]> = {}): ReactElement {
+function renderTab(initial: MyListsResponse, props: Partial<Parameters<typeof MyListsTab>[0]> = {}): ReactElement {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return renderWithIntl(
     <QueryClientProvider client={client}>
@@ -152,5 +154,20 @@ describe("MyListsTab", () => {
     expect(screen.getByPlaceholderText("Buscar en tus listas")).toHaveValue("aor");
     expect(screen.getByText("Best AOR songs")).toBeInTheDocument();
     expect(mocks.getMyLists).not.toHaveBeenCalled();
+  });
+
+  // openspec: redesign-me-lists-toolbar
+  it("muestra los segmentos de tipo con sus cifras y deshabilita un tipo vacío", () => {
+    renderTab(response([list(), list({ id: "a1b2c3d4-0000-4000-8000-000000000002", entityType: "artist" })]));
+    expect(screen.getByRole("button", { name: /^Todo\s*2$/ })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: /^Álbumes\s*1$/ })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^Canciones\s*0$/ })).toBeDisabled();
+    expect(screen.getByLabelText("Ordenar")).toHaveValue("recent");
+  });
+
+  it("sin ninguna lista no muestra la barra, solo el estado vacío", () => {
+    renderTab(response([]));
+    expect(screen.queryByPlaceholderText("Buscar en tus listas")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Nueva lista" })).toBeInTheDocument();
   });
 });

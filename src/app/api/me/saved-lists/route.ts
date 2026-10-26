@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withErrorHandling } from "@/lib/with-error-handling";
 import { parsePagination } from "@/lib/api/pagination";
 import { ApiError } from "@/lib/api/errors";
+import { parseListFilters } from "@/lib/api/list-filters";
 import { SaveListRequestSchema } from "@/lib/api/schemas";
 import { requireSocialActivityAllowed, requireUser } from "@/services/auth/authorization";
 import { listSavedLists, saveList } from "@/services/lists/saved-lists";
@@ -9,8 +10,9 @@ import { listSavedLists, saveList } from "@/services/lists/saved-lists";
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const { page, pageSize } = parsePagination(searchParams);
+  const filters = parseListFilters(searchParams);
   const user = await requireUser();
-  return NextResponse.json(await listSavedLists(user.id, page, pageSize));
+  return NextResponse.json(await listSavedLists(user.id, page, pageSize, filters));
 });
 
 export const POST = withErrorHandling(async (request: NextRequest) => {

@@ -255,6 +255,8 @@ describe("servicio de listas", () => {
     mocks.db.select
       // página de listas (join con pin)
       .mockReturnValueOnce(chain([{ list: albumListRow, pinnedAt: new Date("2026-02-01T00:00:00Z") }]))
+      // cifras por tipo (openspec: redesign-me-lists-toolbar)
+      .mockReturnValueOnce(chain([{ entityType: "release-group", n: 5 }, { entityType: "artist", n: 2 }]))
       // enrichLists: conteos
       .mockReturnValueOnce(chain([{ listId: albumListRow.id, n: 3 }]))
       // enrichLists: carátulas
@@ -269,6 +271,7 @@ describe("servicio de listas", () => {
     expect(result.lists[0]?.itemCount).toBe(3);
     expect(result.lists[0]?.coverThumbs).toEqual(["http://c/1", "http://c/2"]);
     expect(result.lists[0]?.pinned).toBe(true);
+    expect(result.counts).toEqual({ artist: 2, "release-group": 5, recording: 0 });
 
     await expect(listMyLists(owner, 0)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
   });
@@ -276,6 +279,7 @@ describe("servicio de listas", () => {
   it("listMyLists agenda el espejo de las carátulas de las tarjetas", async () => {
     mocks.db.select
       .mockReturnValueOnce(chain([{ list: albumListRow, pinnedAt: null }]))
+      .mockReturnValueOnce(chain([]))
       .mockReturnValueOnce(chain([{ listId: albumListRow.id, n: 2 }]))
       .mockReturnValueOnce(
         chain([

@@ -50,8 +50,7 @@
   "tablistLabel": "List sections",
   "tabs": {
     "mine": "My lists",
-    "saved": "Saved",
-    "discover": "Discover"
+    "saved": "Saved"
   },
   "searchPlaceholder": "Search your lists",
   "typeFilterLabel": "Filter by type",
@@ -81,10 +80,7 @@
   "unavailable": "No longer available",
   "unavailableHint": "The owner made it private or stopped sharing it.",
   "savedEmptyTitle": "You have not saved any lists yet",
-  "savedEmptyDescription": "When you find someone else's list you want to keep close, save it from its page or from Discover.",
-  "discoverEmptyTitle": "No public lists yet",
-  "discoverEmptyDescription": "When the community publishes lists, they will show up here, newest first.",
-  "discoverHint": "Public lists from the community, newest first.",
+  "savedEmptyDescription": "When you find someone else's list you want to keep close, save it from its page or from Community.",
   "savesCount": "{count, plural, one {# save} other {# saves}}",
   "community": {
     "pageTitle": "Community lists",
@@ -162,5 +158,9 @@
   "cancel": "Cancel",
   "deleteError": "We couldn't delete the list. Try again.",
   "pinError": "We couldn't change the pinned list. Try again.",
-  "deleting": "Deleting…"
+  "deleting": "Deleting…",
+  "typeSegmentAll": "All",
+  "discoverLink": "Discover in Community →",
+  "savedSearchPlaceholder": "Search your saved lists",
+  "savedNoResultsDescription": "None of your saved lists match those filters."
 }

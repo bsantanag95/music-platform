@@ -9,9 +9,8 @@ cronológico descendente, sin recomendación algorítmica ni personalización po
 ### Requirement: Descubrir listas públicas de la comunidad
 
 El sistema SHALL exponer un listado paginado de listas de audiencia `public` de otros
-usuarios, en **orden cronológico descendente por fecha de creación por defecto**, en dos
-superficies: la pestaña "Descubrir" de `/me/lists` (con sesión) y la superficie pública
-`/lists` (con y **sin** sesión). El listado SHALL aceptar filtros opcionales por texto (`q`, sobre
+usuarios, en **orden cronológico descendente por fecha de creación por defecto**, en la superficie pública
+`/lists` (con y **sin** sesión); `/me/lists` solo enlaza a ella. El listado SHALL aceptar filtros opcionales por texto (`q`, sobre
 título y descripción), por tipo de entidad (`entityType`) y un orden alternativo por conteo agregado
 de guardados descendente (`sort=popular`); sin estos parámetros el comportamiento SHALL ser el
 cronológico descrito. El listado SHALL NOT usar recomendación algorítmica ni personalización por
@@ -33,7 +32,7 @@ rango o un valor de filtro inválido SHALL responder `400` con código `VALIDATI
 
 #### Scenario: Ver listas públicas recientes
 
-- **WHEN** un usuario autenticado abre la pestaña "Descubrir"
+- **WHEN** un usuario autenticado abre la sección "Recientes" de `/lists`
 - **THEN** ve listas públicas de otros usuarios, de la más reciente a la más antigua, con
   dueño, conteo y carátulas
 

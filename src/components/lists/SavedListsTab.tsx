@@ -1,6 +1,7 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
@@ -14,29 +15,53 @@ import { PLATFORM_OWNER_NAME, titleLocaleOf } from "@/services/discovery/collect
 import { ListCard } from "./ListCard";
 import { SaveListButton } from "./SaveListButton";
 import { ListsGrid, entityTypeKey } from "./lists-shared";
+import { ListsToolbar } from "./ListsToolbar";
+import { useListsSection } from "./ListsSection";
+import { useListFilters, type ListFiltersState } from "./use-list-filters";
 
 const PAGE_SIZE = 20;
 
 // Pestaña "Guardadas": listas ajenas que el usuario marcó. Una lista que dejó
 // de ser visible se muestra como "ya no disponible" con la opción de quitarla,
-// nunca se filtra en silencio.
-export function SavedListsTab({ initial }: { initial: SavedListsResponse }) {
+// nunca se filtra en silencio. Misma barra que Mis listas, con filtros en la URL (openspec: redesign-me-lists-toolbar).
+export function SavedListsTab({
+  initial,
+  initialFilters,
+}: {
+  initial: SavedListsResponse;
+  /** Filtros leídos de la URL; `initial` ya viene filtrado con ellos. */
+  initialFilters?: Partial<ListFiltersState>;
+}) {
   const t = useTranslations("lists");
   const locale = useLocale();
+  const { reportTotal } = useListsSection();
+  const { filters, setFilters, searchInput, setSearchInput, isFiltered, params, clear } = useListFilters(
+    initialFilters,
+    { syncUrl: true },
+  );
+  const [openedKey] = useState(() => JSON.stringify(params));
 
-  const { data, hasNextPage, isFetchingNextPage, fetchNextPage, isError, refetch } =
+  const { data, hasNextPage, isFetchingNextPage, fetchNextPage, isError, isPending, refetch } =
     useInfiniteQuery({
-      queryKey: queryKeys.savedLists(),
-      queryFn: ({ pageParam }) => getSavedLists(pageParam, PAGE_SIZE),
+      queryKey: queryKeys.savedLists(params),
+      queryFn: ({ pageParam }) => getSavedLists(pageParam, PAGE_SIZE, params),
       initialPageParam: 1,
       getNextPageParam: (last) => (last.hasNext ? last.page + 1 : undefined),
-      initialData: { pages: [initial], pageParams: [1] },
+      initialData: JSON.stringify(params) === openedKey ? { pages: [initial], pageParams: [1] } : undefined,
       staleTime: 30_000,
+      placeholderData: keepPreviousData,
     });
 
-  const lists = data?.pages.flatMap((page) => page.lists) ?? initial.lists;
+  const lists = data?.pages.flatMap((page) => page.lists) ?? [];
+  const counts = data?.pages[0]?.counts ?? initial.counts;
+  const total = counts.artist + counts["release-group"] + counts.recording;
 
-  if (lists.length === 0) {
+  // Dejar de guardar una lista baja el total de la pestaña (D4).
+  useEffect(() => {
+    reportTotal("saved", total);
+  }, [total, reportTotal]);
+
+  if (total === 0 && !isFiltered) {
     return (
       <EmptyState title={t("savedEmptyTitle")} description={t("savedEmptyDescription")} />
     );
@@ -44,6 +69,19 @@ export function SavedListsTab({ initial }: { initial: SavedListsResponse }) {
 
   return (
     <div className="flex flex-col gap-4">
+      <ListsToolbar
+        filters={filters}
+        onChange={setFilters}
+        searchInput={searchInput}
+        onSearchInput={setSearchInput}
+        isFiltered={isFiltered}
+        onClear={clear}
+        searchPlaceholder={t("savedSearchPlaceholder")}
+        counts={counts}
+      />
+      {lists.length === 0 && !isPending ? (
+        <EmptyState title={t("noResultsTitle")} description={t("savedNoResultsDescription")} />
+      ) : null}
       <ListsGrid>
         {lists.map((list) => {
           const shown = presentList(list, locale);

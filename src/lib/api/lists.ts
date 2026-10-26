@@ -2,12 +2,12 @@ import { apiFetch } from "./client";
 import {
   DiscoverListsResponseSchema,
   ListMutationResponseSchema,
-  ListsListResponseSchema,
+  MyListsResponseSchema,
   SavedListMutationResponseSchema,
   SavedListsResponseSchema,
   UserListsResponseSchema,
   type DiscoverListsResponse,
-  type ListsListResponse,
+  type MyListsResponse,
   type ListSort,
   type SavedListSummary,
   type SavedListsResponse,
@@ -40,10 +40,10 @@ export function getMyLists(
   page = 1,
   pageSize = 20,
   filters: ListFiltersParams = {},
-): Promise<ListsListResponse> {
+): Promise<MyListsResponse> {
   return apiFetch(
     `/api/me/lists?page=${page}&pageSize=${pageSize}${listFiltersQuery(filters)}`,
-    ListsListResponseSchema,
+    MyListsResponseSchema,
   );
 }
 
@@ -55,9 +55,13 @@ export function unpinList(listId: string): Promise<null> {
   return apiFetch(`/api/me/lists/${listId}/pin`, z.null(), { method: "DELETE" });
 }
 
-export function getSavedLists(page = 1, pageSize = 20): Promise<SavedListsResponse> {
+export function getSavedLists(
+  page = 1,
+  pageSize = 20,
+  filters: ListFiltersParams = {},
+): Promise<SavedListsResponse> {
   return apiFetch(
-    `/api/me/saved-lists?page=${page}&pageSize=${pageSize}`,
+    `/api/me/saved-lists?page=${page}&pageSize=${pageSize}${listFiltersQuery(filters)}`,
     SavedListsResponseSchema,
   );
 }

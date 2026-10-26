@@ -4,7 +4,7 @@
 // extra: cuando es TRUE, las actualizaciones de metadatos de esa lista entran en
 // el feed de quien la sigue (ver src/services/feed/feed.ts).
 
-import { and, count, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, listSave, userList } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
@@ -16,7 +16,13 @@ import { audiencesForProfile } from "@/services/social/visibility";
 import type { Audience, FollowRelation } from "@/services/social/types";
 import { generatedRefsFor } from "@/services/discovery/collections/generated";
 import type { GeneratedRef } from "@/services/discovery/collections/titles";
-import { enrichLists } from "./lists";
+import {
+  enrichLists,
+  listFilterConditions,
+  normalizeListFilters,
+  toListTypeCounts,
+  type ListFilters,
+} from "./lists";
 import type { ListEntityType } from "./types";
 import { activeUserCondition } from "@/services/auth/account-status";
 import { countsByListId, deriveJourneyState, type JourneyState } from "@/services/journeys/progress";
@@ -398,21 +404,46 @@ async function buildSavedSummaries(
   return mapSavedRows(saverId, rows);
 }
 
-/** Listado paginado de las listas que guardó un usuario. */
-export async function listSavedLists(saverId: string, page = 1, pageSize = 20) {
-  if (page < 1 || pageSize < 1 || pageSize > 50) {
-    throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
-  }
-
+/** Cifras por tipo de las listas guardadas, sin filtros (las mismas que cuenta el listado). */
+export async function countSavedListsByType(saverId: string) {
   const rows = await db
-    .select(SAVED_ROW_COLUMNS)
+    .select({ entityType: userList.entityType, n: count() })
     .from(listSave)
     .innerJoin(userList, eq(listSave.listId, userList.id))
     .innerJoin(appUser, eq(userList.ownerId, appUser.id))
     .where(and(eq(listSave.saverId, saverId), activeUserCondition()))
-    .orderBy(desc(listSave.createdAt))
-    .limit(pageSize + 1)
-    .offset((page - 1) * pageSize);
+    .groupBy(userList.entityType);
+  return toListTypeCounts(rows);
+}
+
+/**
+ * Listado paginado de las listas que guardó un usuario. Acepta los mismos filtros que las listas propias: `q` sobre el
+ * título, `entityType` y `sort` (`recent` = fecha de guardado, `alpha` = título); `counts` cuenta por tipo sin filtros
+ * (openspec: redesign-me-lists-toolbar, D1–D2).
+ */
+export async function listSavedLists(saverId: string, page = 1, pageSize = 20, filters?: ListFilters) {
+  if (page < 1 || pageSize < 1 || pageSize > 50) {
+    throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
+  }
+  const { q, entityType, sort } = normalizeListFilters(filters);
+  const base = and(eq(listSave.saverId, saverId), activeUserCondition());
+
+  const [rows, counts] = await Promise.all([
+    db
+      .select(SAVED_ROW_COLUMNS)
+      .from(listSave)
+      .innerJoin(userList, eq(listSave.listId, userList.id))
+      .innerJoin(appUser, eq(userList.ownerId, appUser.id))
+      .where(and(base, ...listFilterConditions({ q, entityType })))
+      .orderBy(
+        ...(sort === "alpha"
+          ? [asc(sql`lower(${userList.title})`), asc(userList.id)]
+          : [desc(listSave.createdAt), desc(userList.id)]),
+      )
+      .limit(pageSize + 1)
+      .offset((page - 1) * pageSize),
+    countSavedListsByType(saverId),
+  ]);
 
   const pageRows = rows.slice(0, pageSize);
 
@@ -421,6 +452,7 @@ export async function listSavedLists(saverId: string, page = 1, pageSize = 20) {
     page,
     pageSize,
     hasNext: rows.length > pageSize,
+    counts,
   };
 }
 
