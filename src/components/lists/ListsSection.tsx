@@ -36,7 +36,7 @@ export function ListsSection({
   };
 
   return (
-    <div className="flex w-full max-w-3xl flex-col gap-5">
+    <div className="flex w-full flex-col gap-5">
       <div
         role="tablist"
         aria-label={t("tablistLabel")}

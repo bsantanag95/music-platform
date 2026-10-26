@@ -8,8 +8,8 @@ import type { ListItemsRendererProps } from "./list-items-view";
 import { ListItemQuickActions } from "./ListItemQuickActions";
 
 // Modo Índice: filas de texto compactas para escanear y reordenar listas
-// largas. Los controles se revelan al posar el puntero o enfocar (siempre
-// visibles en pantallas angostas, donde no hay hover).
+// largas. Los controles quedan siempre visibles: ocultarlos con opacidad dejaba una franja vacía del mismo ancho en
+// cada fila (openspec: refine-me-lists-page-phase1, D3).
 export function ItemsIndex({ items, entityType, actions, quickActions }: ListItemsRendererProps) {
   const t = useTranslations("lists");
   return (
@@ -17,7 +17,7 @@ export function ItemsIndex({ items, entityType, actions, quickActions }: ListIte
       {items.map((item, index) => (
         <li
           key={item.id}
-          className="group flex items-center gap-3 border-b border-ink-border py-2 last:border-b-0"
+          className="flex items-center gap-3 border-b border-ink-border py-1 last:border-b-0"
         >
           <span className="w-6 shrink-0 text-right font-data text-xs text-paper-muted">
             {index + 1}
@@ -35,7 +35,7 @@ export function ItemsIndex({ items, entityType, actions, quickActions }: ListIte
             ) : null}
           </Link>
           {actions ? (
-            <div className="flex shrink-0 items-center gap-2 opacity-100 transition-opacity focus-within:opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
+            <div className="flex shrink-0 items-center gap-1">
               <ReorderButtons
                 title={item.target.title}
                 index={index}

@@ -45,7 +45,7 @@ export function ItemsDetailed({ items, entityType, actions, quickActions }: List
               <p className="truncate font-data text-xs text-paper-muted">{item.target.artistName}</p>
             ) : null}
             {actions ? (
-              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <ReorderButtons
                   title={item.target.title}
                   index={index}

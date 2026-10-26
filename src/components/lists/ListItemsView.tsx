@@ -12,6 +12,17 @@ import { useListViewMode } from "./use-list-view-mode";
 import type { ListItemsRowActions } from "./list-items-view";
 import type { ListQuickActions } from "./ListItemQuickActions";
 
+// Marcador mientras se lee el modo guardado: filas neutras, sin texto, para no pintar Detallada y saltar después.
+function ItemsPlaceholder({ count }: { count: number }) {
+  return (
+    <div aria-hidden data-testid="list-items-placeholder" className="flex flex-col gap-2">
+      {Array.from({ length: Math.min(Math.max(count, 1), 4) }, (_, index) => (
+        <div key={index} className="h-16 rounded-lg bg-ink-surface motion-safe:animate-pulse" />
+      ))}
+    </div>
+  );
+}
+
 export interface ListItemsManage {
   busy: boolean;
   /** Persiste el orden completo resultante (una sola operación). */
@@ -40,7 +51,7 @@ export function ListItemsView({
   heading?: string;
 }) {
   const t = useTranslations("lists");
-  const [mode, setMode] = useListViewMode();
+  const [mode, setMode, ready] = useListViewMode();
 
   const actions: ListItemsRowActions | null = useMemo(() => {
     if (!manage) return null;
@@ -68,10 +79,16 @@ export function ListItemsView({
           {heading ?? t("items")}{" "}
           <span className="font-data text-sm text-paper-muted">({items.length})</span>
         </h2>
-        <ListModeSwitcher mode={mode} onChange={setMode} />
+        <div className={ready ? undefined : "invisible"}>
+          <ListModeSwitcher mode={mode} onChange={setMode} />
+        </div>
       </div>
 
-      <Renderer items={items} entityType={entityType} actions={actions} quickActions={quickActions} />
+      {ready ? (
+        <Renderer items={items} entityType={entityType} actions={actions} quickActions={quickActions} />
+      ) : (
+        <ItemsPlaceholder count={items.length} />
+      )}
     </section>
   );
 }

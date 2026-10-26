@@ -65,4 +65,10 @@ describe("useListViewMode", () => {
     act(() => result.current[1]("graphic"));
     expect(result.current[0]).toBe("graphic");
   });
+
+  // openspec: refine-me-lists-page-phase1
+  it("avisa cuando ya leyó la preferencia", () => {
+    const { result } = renderHook(() => useListViewMode());
+    expect(result.current[2]).toBe(true);
+  });
 });

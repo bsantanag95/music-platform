@@ -10,6 +10,21 @@ export interface ListFiltersState {
   sort: ListSort;
 }
 
+function writeFiltersToUrl(filters: ListFiltersState) {
+  const params = new URLSearchParams(window.location.search);
+  params.delete("q");
+  params.delete("type");
+  params.delete("sort");
+  if (filters.q.trim()) params.set("q", filters.q.trim());
+  if (filters.entityType) params.set("type", filters.entityType);
+  if (filters.sort !== "recent") params.set("sort", filters.sort);
+  const query = params.toString();
+  const next = `${window.location.pathname}${query ? `?${query}` : ""}`;
+  if (next !== `${window.location.pathname}${window.location.search}`) {
+    window.history.replaceState(window.history.state, "", next);
+  }
+}
+
 export const EMPTY_LIST_FILTERS: ListFiltersState = { q: "", entityType: "", sort: "recent" };
 
 function toParams(filters: ListFiltersState): ListFiltersParams {
@@ -24,9 +39,17 @@ function toParams(filters: ListFiltersState): ListFiltersParams {
 // orden) y su forma como parámetros de API. Lo comparten `/me/lists`
 // (`MyListsTab`) y el listado de un perfil ajeno (`ListsList`) para que el
 // mismo buscador se comporte igual en ambos.
-export function useListFilters() {
-  const [filters, setFilters] = useState<ListFiltersState>(EMPTY_LIST_FILTERS);
-  const [searchInput, setSearchInput] = useState("");
+//
+// Con `syncUrl` (solo `/me/lists`) los filtros se escriben en la URL —`q`, `type`, `sort`, solo lo que difiere del
+// defecto— con `replaceState`, sin crear historial, y conservando el resto (`tab`); la página los lee al abrir
+// (openspec: refine-me-lists-page-phase1, D7).
+export function useListFilters(initial?: Partial<ListFiltersState>, { syncUrl = false }: { syncUrl?: boolean } = {}) {
+  const [filters, setFilters] = useState<ListFiltersState>(() => ({ ...EMPTY_LIST_FILTERS, ...initial }));
+  const [searchInput, setSearchInput] = useState(() => initial?.q ?? "");
+
+  useEffect(() => {
+    if (syncUrl) writeFiltersToUrl(filters);
+  }, [filters, syncUrl]);
 
   // Debounce del buscador: espera a que el usuario deje de tipear.
   useEffect(() => {

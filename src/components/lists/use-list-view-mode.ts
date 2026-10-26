@@ -14,8 +14,13 @@ import {
 // reconciliación con lo guardado ocurre tras el montaje. Toda lectura/escritura
 // va envuelta en try/catch — en modo privado o con el almacenamiento bloqueado
 // el acceso puede lanzar.
-export function useListViewMode(): readonly [ListViewMode, (next: ListViewMode) => void] {
+//
+// El tercer elemento, `ready`, dice si ya se leyó la preferencia: hasta entonces `mode` es el defecto y no la elección
+// del visitante, así que el detalle espera con un marcador en vez de pintar Detallada y saltar al modo guardado
+// (openspec: refine-me-lists-page-phase1, D4).
+export function useListViewMode(): readonly [ListViewMode, (next: ListViewMode) => void, boolean] {
   const [mode, setMode] = useState<ListViewMode>(DEFAULT_LIST_VIEW_MODE);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     try {
@@ -25,6 +30,7 @@ export function useListViewMode(): readonly [ListViewMode, (next: ListViewMode) 
     } catch {
       // almacenamiento no disponible: se mantiene el modo por defecto
     }
+    setReady(true);
     // Solo al montar: la preferencia no cambia por fuera de este hook.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -38,5 +44,5 @@ export function useListViewMode(): readonly [ListViewMode, (next: ListViewMode) 
     }
   }, []);
 
-  return [mode, update] as const;
+  return [mode, update, ready] as const;
 }

@@ -20,32 +20,45 @@ import { ApiError } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/keys";
 import type { ListsListResponse } from "@/lib/api/schemas";
 import { ListForm } from "./ListForm";
+import { DeleteListDialog } from "./DeleteListDialog";
 import { ListCard } from "./ListCard";
 import { ListsGrid, entityTypeKey } from "./lists-shared";
 import { ListsToolbar } from "./ListsToolbar";
-import { useListFilters } from "./use-list-filters";
+import { useListFilters, type ListFiltersState } from "./use-list-filters";
 
 const PAGE_SIZE = 20;
+
+// Acción de texto de una tarjeta: 32 px de alto (44 con puntero grueso) para que se pueda tocar sin apuntar
+// (openspec: refine-me-lists-page-phase1, D2).
+const ACTION =
+  "inline-flex min-h-8 items-center rounded px-1 text-paper-muted underline decoration-dotted transition-colors hover:text-paper disabled:opacity-50 [@media(pointer:coarse)]:min-h-11";
 
 export function MyListsTab({
   initial,
   initialShowForm = false,
+  initialFilters,
 }: {
   initial: ListsListResponse;
   /** Abre el formulario de nueva lista al montar (el enlace "Crear lista" de `/lists`). */
   initialShowForm?: boolean;
+  /** Filtros leídos de la URL (`?q=&type=&sort=`); `initial` ya viene filtrado con ellos. */
+  initialFilters?: Partial<ListFiltersState>;
 }) {
   const t = useTranslations("lists");
   const queryClient = useQueryClient();
 
   const { filters, setFilters, searchInput, setSearchInput, isFiltered, params, clear } =
-    useListFilters();
+    useListFilters(initialFilters, { syncUrl: true });
   const [showForm, setShowForm] = useState(initialShowForm);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<ListsListResponse["lists"][number] | null>(null);
   const [rowBusyId, setRowBusyId] = useState<string | null>(null);
+  // Último fallo de una tarjeta: se muestra bajo ella (D6). Antes un error distinto de "no existe" no decía nada.
+  const [failure, setFailure] = useState<{ id: string; kind: "delete" | "pin" } | null>(null);
   const [announce, setAnnounce] = useState("");
 
   const queryKey = queryKeys.myLists(params);
+  // Clave de los filtros con que se abrió la página: `initial` (leído en el servidor) solo vale para ellos.
+  const [openedKey] = useState(() => JSON.stringify(params));
 
   const { data, hasNextPage, isFetchingNextPage, fetchNextPage, isError, isPending } =
     useInfiniteQuery({
@@ -53,26 +66,28 @@ export function MyListsTab({
       queryFn: ({ pageParam }) => getMyLists(pageParam, PAGE_SIZE, params),
       initialPageParam: 1,
       getNextPageParam: (last) => (last.hasNext ? last.page + 1 : undefined),
-      initialData: isFiltered ? undefined : { pages: [initial], pageParams: [1] },
+      // `initial` corresponde a los filtros con que se abrió la página: sirve mientras sigan siendo esos.
+      initialData: JSON.stringify(params) === openedKey ? { pages: [initial], pageParams: [1] } : undefined,
       staleTime: 15_000,
       placeholderData: keepPreviousData,
     });
 
-  const lists = data?.pages.flatMap((page) => page.lists) ?? (isFiltered ? [] : initial.lists);
+  const lists = data?.pages.flatMap((page) => page.lists) ?? [];
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ["lists", "mine"], exact: false });
 
   const handleDelete = async (id: string) => {
     setRowBusyId(id);
+    setFailure(null);
     try {
       await deleteList(id);
-      setPendingDeleteId(null);
       await invalidate();
     } catch (err) {
       if (err instanceof ApiError && err.code === "LIST_NOT_FOUND") {
-        setPendingDeleteId(null);
         await invalidate();
+      } else {
+        setFailure({ id, kind: "delete" });
       }
     } finally {
       setRowBusyId(null);
@@ -81,11 +96,13 @@ export function MyListsTab({
 
   const handlePin = async (id: string, pinned: boolean) => {
     setRowBusyId(id);
+    setFailure(null);
     try {
       await (pinned ? unpinList(id) : pinList(id));
       await invalidate();
     } catch {
-      // sin cambio de estado local: la lista se re-renderiza en su posición previa
+      // la lista sigue en su posición previa; el aviso va bajo su tarjeta
+      setFailure({ id, kind: "pin" });
     } finally {
       setRowBusyId(null);
     }
@@ -162,57 +179,55 @@ export function MyListsTab({
                 </>
               }
               action={
-                <div className="flex items-center gap-2 font-data text-xs">
-                  {pendingDeleteId === list.id ? (
-                    <>
-                      <span className="text-danger">{t("deleteShort")}</span>
-                      <button
-                        type="button"
-                        disabled={rowBusyId === list.id}
-                        onClick={() => void handleDelete(list.id)}
-                        className="text-danger underline decoration-dotted transition-colors hover:text-paper disabled:opacity-50"
-                      >
-                        {rowBusyId === list.id ? t("deleting") : t("delete")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPendingDeleteId(null)}
-                        className="text-paper-muted transition-colors hover:text-paper"
-                      >
-                        {t("collapse")}
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        type="button"
-                        disabled={rowBusyId === list.id}
-                        onClick={() => void handlePin(list.id, list.pinned)}
-                        className="text-paper-muted underline decoration-dotted transition-colors hover:text-paper disabled:opacity-50"
-                      >
-                        {list.pinned ? t("unpin") : t("pin")}
-                      </button>
-                      <Link
-                        href={`/me/lists/${list.id}`}
-                        className="text-paper-muted underline decoration-dotted transition-colors hover:text-paper"
-                      >
-                        {t("edit")}
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => setPendingDeleteId(list.id)}
-                        className="text-paper-muted underline decoration-dotted transition-colors hover:text-danger"
-                      >
-                        {t("delete")}
-                      </button>
-                    </>
-                  )}
+                <div className="flex flex-col gap-1">
+                  <div className="-ml-1 flex flex-wrap items-center gap-1 font-data text-xs">
+                    <button
+                      type="button"
+                      disabled={rowBusyId === list.id}
+                      onClick={() => void handlePin(list.id, list.pinned)}
+                      aria-label={t(list.pinned ? "unpinNamed" : "pinNamed", { title: list.title })}
+                      className={ACTION}
+                    >
+                      {list.pinned ? t("unpin") : t("pin")}
+                    </button>
+                    <Link
+                      href={`/me/lists/${list.id}`}
+                      aria-label={t("editNamed", { title: list.title })}
+                      className={ACTION}
+                    >
+                      {t("edit")}
+                    </Link>
+                    <button
+                      type="button"
+                      disabled={rowBusyId === list.id}
+                      onClick={() => setPendingDelete(list)}
+                      aria-label={t("deleteNamed", { title: list.title })}
+                      className={`${ACTION} hover:text-danger`}
+                    >
+                      {rowBusyId === list.id && failure === null ? t("deleting") : t("delete")}
+                    </button>
+                  </div>
+                  {failure?.id === list.id ? (
+                    <span role="alert" className="font-data text-xs text-danger">
+                      {t(failure.kind === "delete" ? "deleteError" : "pinError")}
+                    </span>
+                  ) : null}
                 </div>
               }
             />
           ))}
         </ListsGrid>
       )}
+
+      <DeleteListDialog
+        list={pendingDelete}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          const id = pendingDelete?.id;
+          setPendingDelete(null);
+          if (id) void handleDelete(id);
+        }}
+      />
 
       {isError ? (
         <span role="alert" className="text-center font-data text-xs text-danger">

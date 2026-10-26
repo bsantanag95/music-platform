@@ -5,7 +5,12 @@ import { useTranslations } from "next-intl";
 
 // Controles de gestión de un ítem compartidos por los renderers Detallada e
 // Índice (el modo Gráfico usa la barra de selección). Trazo quieto: texto
-// `paper-muted` con subrayado punteado, ámbar solo en foco (heredado).
+// `paper-muted`, ámbar solo en foco (heredado). Miden 32 px (44 con puntero grueso); el control que no aplica en un
+// extremo (subir en el primero, bajar en el último) queda `invisible`: no se ve ni recibe foco, pero conserva su lugar
+// para que las columnas de controles sigan alineadas (openspec: refine-me-lists-page-phase1, D1–D2).
+
+const REORDER_BUTTON =
+  "inline-flex size-8 items-center justify-center rounded font-data text-sm text-paper-muted transition-colors hover:bg-ink-border/60 hover:text-paper disabled:opacity-40 [@media(pointer:coarse)]:size-11";
 
 export interface ItemReorderHandlers {
   busy: boolean;
@@ -26,47 +31,48 @@ export function ReorderButtons({
   handlers: ItemReorderHandlers;
 }) {
   const t = useTranslations("lists");
-  const cls =
-    "font-data text-xs text-paper-muted transition-colors hover:text-paper disabled:opacity-40";
+  const first = index === 0;
+  const last = index === total - 1;
+  const cls = (hidden: boolean) => `${REORDER_BUTTON} ${hidden ? "invisible" : ""}`;
   return (
-    <>
+    <div className="flex items-center">
       <button
         type="button"
-        disabled={handlers.busy || index === 0}
+        disabled={handlers.busy || first}
         aria-label={t("moveToStart", { title })}
         onClick={() => handlers.onMoveToEdge("start")}
-        className={cls}
+        className={cls(first)}
       >
         ⤒
       </button>
       <button
         type="button"
-        disabled={handlers.busy || index === 0}
+        disabled={handlers.busy || first}
         aria-label={t("moveUp", { title })}
         onClick={() => handlers.onMove(-1)}
-        className={cls}
+        className={cls(first)}
       >
         ↑
       </button>
       <button
         type="button"
-        disabled={handlers.busy || index === total - 1}
+        disabled={handlers.busy || last}
         aria-label={t("moveDown", { title })}
         onClick={() => handlers.onMove(1)}
-        className={cls}
+        className={cls(last)}
       >
         ↓
       </button>
       <button
         type="button"
-        disabled={handlers.busy || index === total - 1}
+        disabled={handlers.busy || last}
         aria-label={t("moveToEnd", { title })}
         onClick={() => handlers.onMoveToEdge("end")}
-        className={cls}
+        className={cls(last)}
       >
         ⤓
       </button>
-    </>
+    </div>
   );
 }
 
@@ -105,7 +111,7 @@ export function RemoveItemButton({
         }
       }}
       onBlur={() => setArmed(false)}
-      className={`font-data text-xs underline decoration-dotted transition-colors disabled:opacity-40 ${
+      className={`min-h-8 px-1 font-data text-xs underline decoration-dotted transition-colors disabled:opacity-40 [@media(pointer:coarse)]:min-h-11 ${
         armed ? "text-danger hover:text-paper" : "text-paper-muted hover:text-danger"
       }`}
     >
