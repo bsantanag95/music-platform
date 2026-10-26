@@ -76,7 +76,9 @@ Detallada e Índice mediante controles de mover una posición arriba o abajo, y 
 Gráfico mediante la selección de un ítem y una barra de acciones sobre la selección. El
 sistema SHALL ofrecer además mover un ítem **al principio** o **al final** de la lista.
 Cualquiera de estas afordancias SHALL producir el mismo efecto: una única operación de
-reordenamiento con el orden completo resultante.
+reordenamiento con el orden completo resultante. Cada control de reordenar y Quitar SHALL medir al menos 32 px
+(44 px con puntero grueso), y un control que no aplica (mover al principio en el primer ítem, al final en el último)
+SHALL NOT mostrarse, conservando su lugar para no desalinear las filas.
 
 #### Scenario: Reordenar los ítems
 - **WHEN** el propietario envía el orden deseado de los ítems de su lista
@@ -102,6 +104,11 @@ reordenamiento con el orden completo resultante.
 - **WHEN** el propietario elige mover un ítem al principio o al final de la lista
 - **THEN** el ítem queda en esa posición extrema y el resto conserva su orden relativo
 
+#### Scenario: Extremos que no aplican
+- **WHEN** el propietario ve el primer ítem de su lista
+- **THEN** no aparecen "al principio" ni "subir" para ese ítem, y los demás controles quedan alineados con los de las
+  otras filas
+
 ### Requirement: Edición de la lista
 El sistema SHALL permitir al propietario modificar el título, la descripción y la audiencia de
 una lista propia. El `entityType` SHALL NOT ser modificable después de la creación. La
@@ -123,7 +130,8 @@ modificación de una lista ajena SHALL responder `404` con `LIST_NOT_FOUND`.
 ### Requirement: Borrado de la lista
 El sistema SHALL permitir al propietario borrar una lista propia de forma física e
 irreversible, eliminando también sus ítems. El borrado de una lista ajena SHALL responder
-`404` con `LIST_NOT_FOUND`.
+`404` con `LIST_NOT_FOUND`. La confirmación SHALL nombrar la lista, decir cuántos elementos se pierden
+y avisar que no se puede deshacer; si el borrado falla, el error SHALL mostrarse junto a esa lista.
 
 #### Scenario: Borrar una lista propia
 - **WHEN** el propietario borra una lista propia tras confirmar la acción destructiva
@@ -132,6 +140,11 @@ irreversible, eliminando también sus ítems. El borrado de una lista ajena SHAL
 #### Scenario: Borrar una lista ajena
 - **WHEN** un usuario intenta borrar una lista que no le pertenece
 - **THEN** la API responde `404` con `LIST_NOT_FOUND` y no borra la lista
+
+#### Scenario: Confirmación que nombra la lista
+- **WHEN** el propietario elige eliminar "Best AOR songs", que tiene 4 elementos
+- **THEN** un diálogo pregunta "¿Eliminar «Best AOR songs»?", dice que se pierden sus 4 elementos y que no se puede
+  deshacer, y la lista solo se borra al confirmar
 
 ### Requirement: Lista de listas propias
 El sistema SHALL permitir al usuario autenticado listar sus propias listas con paginación,
@@ -144,7 +157,10 @@ aplicados en el servidor sobre el conjunto completo de listas propias, no solo s
 cargada. Las **listas fijadas** por el propietario SHALL aparecer primero, y dentro de cada
 grupo (fijadas y no fijadas) el orden SHALL respetar el `sort` solicitado. Sin ningún
 parámetro, el comportamiento SHALL ser equivalente al listado paginado por recencia previo,
-ampliado con `itemCount` y `coverThumbs`.
+ampliado con `itemCount` y `coverThumbs`. En `/me/lists`, la búsqueda, el tipo y el orden elegidos SHALL reflejarse
+en la URL (`q`, `type`, `sort`, solo cuando difieren del valor por defecto y sin crear entradas de historial) y la página
+SHALL abrirse con esos filtros; un valor inválido SHALL ignorarse. Cada acción de una tarjeta propia SHALL nombrar la
+lista en su nombre accesible.
 
 #### Scenario: Listar listas propias
 - **WHEN** un usuario autenticado abre su página de listas
@@ -174,6 +190,10 @@ ampliado con `itemCount` y `coverThumbs`.
 - **WHEN** el usuario envía un `entityType` o un `sort` fuera de los valores permitidos, o una
   paginación fuera de rango
 - **THEN** la API responde `400` con código `VALIDATION_ERROR` y no ejecuta la lectura
+
+#### Scenario: Filtros que sobreviven a la recarga
+- **WHEN** el usuario busca "aor", elige Canciones y recarga la página
+- **THEN** la URL lleva `?q=aor&type=recording` y la página abre con esos filtros aplicados
 
 ### Requirement: Listas ajenas visibles
 El sistema SHALL exponer la lectura de las listas de un usuario por `username`, filtrando por
@@ -311,8 +331,8 @@ o canciones:
   título y, cuando corresponda, nombre del artista; los controles de gestión del propietario
   se muestran junto a cada fila.
 - **Índice**: una fila de texto compacta por ítem, con número de posición y título, pensada
-  para escanear y reordenar listas largas; los controles de gestión se revelan al enfocar o
-  posar el puntero sobre la fila y SHALL ser accesibles por teclado.
+  para escanear y reordenar listas largas; los controles de gestión SHALL estar siempre
+  visibles en la misma fila y ser accesibles por teclado.
 - **Gráfico**: una cuadrícula de carátulas (o siluetas de disco) donde predomina lo visual; el
   título de cada ítem SHALL seguir siendo accesible como texto, no sólo como información
   auxiliar.
@@ -321,7 +341,8 @@ El conmutador de modo SHALL tener semántica de grupo de opciones excluyentes y 
 por teclado. El modo elegido SHALL recordarse **por visitante y de forma global** (no por
 lista) en el almacenamiento local del navegador; en ausencia de preferencia guardada el modo
 por defecto SHALL ser **Detallada**. La preferencia guardada SHALL NOT viajar al servidor ni
-afectar a otros visitantes. El servidor SHALL renderizar el modo por defecto y la
+afectar a otros visitantes. Hasta leer la preferencia, el detalle SHALL mostrar un marcador neutro en lugar de los
+ítems, para no pintar el modo por defecto y saltar al guardado. El servidor SHALL renderizar el modo por defecto y la
 reconciliación con la preferencia guardada SHALL ocurrir en el cliente sin pérdida de
 contenido. Con `prefers-reduced-motion` el cambio de modo SHALL NOT animarse.
 
@@ -346,6 +367,10 @@ contenido. Con `prefers-reduced-motion` el cambio de modo SHALL NOT animarse.
 - **WHEN** el visitante recorre la cuadrícula del modo Gráfico con lector de pantalla o
   teclado
 - **THEN** cada ítem expone su título como texto, no sólo como atributo visual
+
+#### Scenario: Sin salto al modo guardado
+- **WHEN** un visitante con el modo Gráfico guardado abre el detalle de una lista
+- **THEN** los ítems aparecen directamente en Gráfico, sin pintarse antes en Detallada
 
 ### Requirement: Carátula representativa para ítems de canción
 El sistema SHALL enriquecer cada ítem de tipo `recording` con la carátula de un álbum
