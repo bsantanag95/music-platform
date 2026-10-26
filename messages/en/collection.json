@@ -46,6 +46,7 @@
   "actionsFor": "Actions for {title}",
   "actionsMenuLabel": "Copy actions",
   "audienceBadgeLabel": "Who sees it: {audience}. Change",
+  "addedOn": "Added {date}",
   "editCopy": "Edit copy…",
   "editCopyTitle": "Edit copy",
   "editWantedTitle": "Edit search",

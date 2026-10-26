@@ -120,8 +120,8 @@ describe("CollectionShelf", () => {
     expect(screen.getByRole("radio", { name: "Todo 3" })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByRole("radio", { name: "Vinilo 2" })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "CD 1" })).toBeInTheDocument();
-    // Un formato sin copias queda deshabilitado.
-    expect(screen.getByRole("radio", { name: "Cassette 0" })).toBeDisabled();
+    // Un formato sin copias no se muestra.
+    expect(screen.queryByRole("radio", { name: "Cassette 0" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Álbum 1" })).toBeInTheDocument();
   });
 
@@ -149,6 +149,8 @@ describe("CollectionShelf", () => {
     expect(row.getByText("Vinilo", { selector: "span" })).toBeInTheDocument();
     expect(row.getByText("Edición limitada", { selector: "span" })).toBeInTheDocument();
     expect(screen.getByText("portada alternativa")).toBeInTheDocument();
+    // La fecha de la derecha es la de alta, no la del lanzamiento.
+    expect(row.getByText(/^Añadida el /)).toBeInTheDocument();
   });
 
   it("edita una entrada llamando a updateCollectionEntry", async () => {

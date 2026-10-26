@@ -26,8 +26,8 @@ interface EntriesDetailedProps {
 }
 
 // Modo "Lista detallada" (openspec: redesign-collection-views, D7): filas compactas separadas por una línea, con
-// carátula de 48 px, título, "artista · año", formato y atributos, nota y, a la derecha, la insignia de audiencia (que
-// abre el mismo menú que el `⋯`), la fecha de alta y el `⋯`. En pantallas angostas la columna derecha baja bajo el
+// carátula de 48 px, título, "artista · año", una línea "formato · atributos" (texto, no etiquetas: no se tocan), nota y,
+// a la derecha, "Añadida el …", la audiencia (que abre el mismo menú que el `⋯`) y el `⋯`. En pantallas angostas la columna derecha baja bajo el
 // texto. Con las secciones por artista, el artista ya está en el encabezado y la fila no lo repite.
 export function EntriesDetailed({
   groups,
@@ -117,16 +117,15 @@ export function EntriesDetailed({
                       ) : null}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-1.5 font-data text-[0.7rem]">
-                      <span className="rounded border border-ink-border px-1.5 py-0.5 text-paper">
-                        {t(`format.${entry.format}`)}
-                      </span>
+                    <p className="font-data text-xs text-paper-muted">
+                      <span className="text-paper">{t(`format.${entry.format}`)}</span>
                       {entry.attributes.map((attribute) => (
-                        <span key={attribute} className="rounded border border-ink-border px-1.5 py-0.5 text-paper-muted">
+                        <span key={attribute}>
+                          <span aria-hidden> · </span>
                           {t(`attribute.${attribute}`)}
                         </span>
                       ))}
-                    </div>
+                    </p>
 
                     {entry.note ? (
                       <p className="font-body text-sm italic text-paper-muted">{entry.note}</p>
@@ -135,9 +134,9 @@ export function EntriesDetailed({
                     {actions?.errorId === entry.id ? <RemoveError /> : null}
                   </div>
 
-                  <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
-                    <time dateTime={entry.createdAt} className="font-data text-[0.7rem] text-paper-muted">
-                      {formatCollectionDate(entry.createdAt, locale)}
+                  <div className="flex w-full shrink-0 items-center gap-1 sm:w-auto">
+                    <time dateTime={entry.createdAt} className="mr-1 font-data text-[0.7rem] text-paper-muted">
+                      {t("addedOn", { date: formatCollectionDate(entry.createdAt, locale) })}
                     </time>
                     {actions && !selecting ? (
                       <EntryMenu

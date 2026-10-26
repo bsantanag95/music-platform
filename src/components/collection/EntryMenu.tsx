@@ -7,18 +7,17 @@ import type { DiaryAudience } from "@/lib/api/schemas";
 
 const AUDIENCES: DiaryAudience[] = ["public", "followers", "private"];
 
-const BADGE_TONE: Record<DiaryAudience, string> = {
-  public: "border-ink-border text-paper-muted hover:text-paper",
-  followers: "border-petrol/50 text-petrol-hover hover:text-paper",
-  private: "border-amber/40 text-amber hover:text-amber-hover",
-};
 
 interface EntryMenuProps {
   /** Título del álbum, para el nombre accesible del disparador. */
   title: string;
   audience: DiaryAudience;
   busy?: boolean;
-  /** Insignia con el nombre de la audiencia además del `⋯` (Lista detallada). */
+  /**
+   * Disparador con la audiencia además del `⋯` (Lista detallada). Pública y Seguidores son solo un ícono discreto (con el
+   * nombre al pasar el cursor): repetida en cada fila, la insignia con texto no informaba nada. Privada conserva el
+   * nombre y el ámbar, como el candado de la Estantería.
+   */
   showBadge?: boolean;
   /** Disparador sobre una carátula: fondo oscuro semitransparente para leerse sobre cualquier imagen. */
   overlay?: boolean;
@@ -109,12 +108,17 @@ export function EntryMenu({
           aria-expanded={open}
           aria-controls={open ? menuId : undefined}
           aria-label={t("audienceBadgeLabel", { audience: audienceName })}
+          title={audienceName}
           onClick={toggle}
-          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-data text-[0.7rem] transition-colors disabled:opacity-50 ${BADGE_TONE[audience]} ${touch}`}
+          className={
+            audience === "private"
+              ? `inline-flex items-center gap-1.5 rounded-full border border-amber/40 px-2.5 py-1 font-data text-[0.7rem] text-amber transition-colors hover:text-amber-hover disabled:opacity-50 ${touch}`
+              : `inline-flex size-8 items-center justify-center rounded-md text-paper-muted/70 transition-colors hover:bg-ink-surface hover:text-paper disabled:opacity-50 [@media(pointer:coarse)]:size-11`
+          }
         >
           <AudienceIcon audience={audience} />
           {/* En pantallas angostas, solo el ícono: el nombre sigue en la etiqueta accesible. */}
-          <span className="max-sm:sr-only">{audienceName}</span>
+          {audience === "private" ? <span className="max-sm:sr-only">{audienceName}</span> : null}
         </button>
       ) : null}
       <button
