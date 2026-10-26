@@ -50,8 +50,7 @@
   "tablistLabel": "Secciones de listas",
   "tabs": {
     "mine": "Mis listas",
-    "saved": "Guardadas",
-    "discover": "Descubrir"
+    "saved": "Guardadas"
   },
   "searchPlaceholder": "Buscar en tus listas",
   "typeFilterLabel": "Filtrar por tipo",
@@ -81,10 +80,7 @@
   "unavailable": "Ya no disponible",
   "unavailableHint": "Su dueño la hizo privada o dejó de compartirla.",
   "savedEmptyTitle": "Todavía no guardaste listas",
-  "savedEmptyDescription": "Cuando encuentres una lista de otra persona que quieras tener a mano, guardala desde su página o desde Descubrir.",
-  "discoverEmptyTitle": "Todavía no hay listas públicas",
-  "discoverEmptyDescription": "Cuando la comunidad publique listas, van a aparecer acá, de la más reciente a la más antigua.",
-  "discoverHint": "Listas públicas de la comunidad, de la más reciente a la más antigua.",
+  "savedEmptyDescription": "Cuando encuentres una lista de otra persona que quieras tener a mano, guárdala desde su página o desde Comunidad.",
   "savesCount": "{count, plural, one {# guardado} other {# guardados}}",
   "community": {
     "pageTitle": "Listas de la comunidad",
@@ -162,5 +158,9 @@
   "cancel": "Cancelar",
   "deleteError": "No pudimos eliminar la lista. Intenta de nuevo.",
   "pinError": "No pudimos cambiar la lista fijada. Intenta de nuevo.",
-  "deleting": "Eliminando…"
+  "deleting": "Eliminando…",
+  "typeSegmentAll": "Todo",
+  "discoverLink": "Descubrir en Comunidad →",
+  "savedSearchPlaceholder": "Buscar en tus guardadas",
+  "savedNoResultsDescription": "Ninguna de tus listas guardadas coincide con esos filtros."
 }

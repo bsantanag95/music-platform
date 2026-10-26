@@ -36,7 +36,19 @@ describe("saved-lists API", () => {
     mocks.listSavedLists.mockResolvedValue({ lists: [], page: 1, pageSize: 20, hasNext: false });
     const response = await GET(new NextRequest("http://localhost/api/me/saved-lists"));
     expect(response.status).toBe(200);
-    expect(mocks.listSavedLists).toHaveBeenCalledWith(user.id, 1, 20);
+    expect(mocks.listSavedLists).toHaveBeenCalledWith(user.id, 1, 20, {});
+  });
+
+  // openspec: redesign-me-lists-toolbar
+  it("GET pasa búsqueda, tipo y orden al servicio", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    mocks.listSavedLists.mockResolvedValue({ lists: [], page: 1, pageSize: 20, hasNext: false });
+    await GET(new NextRequest("http://localhost/api/me/saved-lists?q=aor&entityType=recording&sort=alpha"));
+    expect(mocks.listSavedLists).toHaveBeenCalledWith(user.id, 1, 20, {
+      q: "aor",
+      entityType: "recording",
+      sort: "alpha",
+    });
   });
 
   it("POST guarda una lista con following y responde 201", async () => {

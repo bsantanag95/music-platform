@@ -317,7 +317,7 @@ function withEnrichment(
   };
 }
 
-function normalizeListFilters(filters?: ListFilters): Required<Pick<ListFilters, "sort">> &
+export function normalizeListFilters(filters?: ListFilters): Required<Pick<ListFilters, "sort">> &
   Pick<ListFilters, "q" | "entityType"> {
   const sort = filters?.sort ?? "recent";
   if (!LIST_SORTS.includes(sort)) {
@@ -331,17 +331,39 @@ function normalizeListFilters(filters?: ListFilters): Required<Pick<ListFilters,
 }
 
 /** Condiciones de tipo y búsqueda por título, compartidas por los listados propio y ajeno. */
-function listFilterConditions({ q, entityType }: Pick<ListFilters, "q" | "entityType">): SQL[] {
+export function listFilterConditions({ q, entityType }: Pick<ListFilters, "q" | "entityType">): SQL[] {
   const conditions: SQL[] = [];
   if (entityType) conditions.push(eq(userList.entityType, entityType));
   if (q) conditions.push(ilike(userList.title, `%${q}%`));
   return conditions;
 }
 
+/** Cuántas listas hay de cada tipo de entidad (openspec: redesign-me-lists-toolbar, D1). */
+export type ListTypeCounts = Record<ListEntityType, number>;
+
+export function toListTypeCounts(rows: { entityType: string; n: number }[]): ListTypeCounts {
+  const counts: ListTypeCounts = { artist: 0, "release-group": 0, recording: 0 };
+  for (const row of rows) {
+    if (row.entityType in counts) counts[row.entityType as ListEntityType] = Number(row.n);
+  }
+  return counts;
+}
+
 function listSortOrder(sort: ListSort): SQL[] {
   return sort === "alpha"
     ? [asc(sql`lower(${userList.title})`), asc(userList.id)]
     : [desc(userList.createdAt), desc(userList.id)];
+}
+
+// Cifras por tipo de las listas propias, sin `q` ni `entityType`: no cambian mientras se busca y su suma es el total de
+// la pestaña (openspec: redesign-me-lists-toolbar, D1).
+export async function countMyListsByType(ownerId: string): Promise<ListTypeCounts> {
+  const rows = await db
+    .select({ entityType: userList.entityType, n: count() })
+    .from(userList)
+    .where(and(eq(userList.ownerId, ownerId), eq(userList.kind, "standard")))
+    .groupBy(userList.entityType);
+  return toListTypeCounts(rows);
 }
 
 export async function listMyLists(
@@ -362,7 +384,7 @@ export async function listMyLists(
   ];
   const sortOrder = listSortOrder(sort);
 
-  const rows = await db
+  const rowsQuery = db
     .select({
       list: userList,
       pinnedAt: userListPin.pinnedAt,
@@ -383,6 +405,7 @@ export async function listMyLists(
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);
 
+  const [rows, counts] = await Promise.all([rowsQuery, countMyListsByType(ownerId)]);
   const pageRows = rows.slice(0, pageSize);
   const enrichment = await enrichLists(pageRows.map((row) => row.list.id));
 
@@ -394,6 +417,7 @@ export async function listMyLists(
     page,
     pageSize,
     hasNext: rows.length > pageSize,
+    counts,
   };
 }
 

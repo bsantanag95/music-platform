@@ -28,7 +28,10 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/db", () => ({ db: mocks.db }));
 vi.mock("@/services/social/relations", () => ({ relationsFor: mocks.relationsFor }));
-vi.mock("./lists", () => ({ enrichLists: mocks.enrichLists }));
+vi.mock("./lists", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./lists")>()),
+  enrichLists: mocks.enrichLists,
+}));
 vi.mock("@/services/discovery/collections/generated", () => ({
   generatedRefsFor: (ids: string[]) => mocks.generatedRefsFor(ids),
 }));
@@ -212,23 +215,34 @@ describe("servicio de listas guardadas", () => {
   });
 
   it("listSavedLists marca unavailable cuando la lista dejó de ser visible", async () => {
-    mocks.db.select.mockReturnValueOnce(
-      chain([{ ...savedJoinRow, audience: "followers" }]),
-    );
+    mocks.db.select
+      .mockReturnValueOnce(chain([{ ...savedJoinRow, audience: "followers" }]))
+      .mockReturnValueOnce(chain([{ entityType: "release-group", n: 1 }]));
     mocks.relationsFor.mockResolvedValue(new Map([[owner, "none"]]));
     const result = await listSavedLists(saver);
     expect(result.lists[0]?.unavailable).toBe(true);
+    // openspec: redesign-me-lists-toolbar — cifras por tipo, sin filtros
+    expect(result.counts).toEqual({ artist: 0, "release-group": 1, recording: 0 });
+  });
+
+  it("listSavedLists rechaza un tipo o un orden inválidos", async () => {
+    await expect(listSavedLists(saver, 1, 20, { sort: "popular" as never })).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+    });
+    await expect(listSavedLists(saver, 1, 20, { entityType: "work" as never })).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+    });
   });
 
   it("listSavedLists expone plantilla y período de una colección generada (y null en las demás)", async () => {
-    mocks.db.select.mockReturnValueOnce(chain([savedJoinRow]));
+    mocks.db.select.mockReturnValueOnce(chain([savedJoinRow])).mockReturnValueOnce(chain([]));
     mocks.relationsFor.mockResolvedValue(new Map([[owner, "none"]]));
     mocks.generatedRefsFor.mockResolvedValueOnce(new Map([[savedJoinRow.id, { templateKey: "anniversaries", periodKey: "2026-10" }]]));
 
     const generated = await listSavedLists(saver);
     expect(generated.lists[0]?.generated).toEqual({ templateKey: "anniversaries", periodKey: "2026-10" });
 
-    mocks.db.select.mockReturnValueOnce(chain([savedJoinRow]));
+    mocks.db.select.mockReturnValueOnce(chain([savedJoinRow])).mockReturnValueOnce(chain([]));
     const regular = await listSavedLists(saver);
     expect(regular.lists[0]?.generated).toBeNull();
   });

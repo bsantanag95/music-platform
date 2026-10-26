@@ -1524,9 +1524,11 @@ Lista paginada de las listas propias (cambio `rework-lists-section`). Query para
 `q` (búsqueda parcial por título), `entityType` (`artist`/`release-group`/`recording`), `sort`
 (`recent` por defecto, o `alpha`). Un `entityType` o `sort` fuera de vocabulario responde `400`
 con `VALIDATION_ERROR`. Las listas **fijadas** aparecen primero. Cada lista incluye `itemCount`,
-`coverThumbs` (hasta 4 carátulas de sus ítems) y `pinned`.
+`coverThumbs` (hasta 4 carátulas de sus ítems) y `pinned`. `counts` (cambio `redesign-me-lists-toolbar`) dice cuántas
+listas propias hay de cada tipo, contadas **sin** `q` ni `entityType`: son las cifras de los segmentos de tipo y su suma es
+el total de la pestaña "Mis listas".
 
-**200 OK:** `{ lists: [{ id, entityType, title, description, audience, createdAt, updatedAt, itemCount, coverThumbs, pinned }], page, pageSize, hasNext }`.
+**200 OK:** `{ lists: [{ id, entityType, title, description, audience, createdAt, updatedAt, itemCount, coverThumbs, pinned }], page, pageSize, hasNext, counts: { artist, "release-group", recording } }`.
 
 ### `POST` / `DELETE /api/me/lists/{listId}/pin`
 
@@ -1622,12 +1624,14 @@ Activa o desactiva el tracking de progreso propio sobre una lista ajena de álbu
 **404** con `LIST_NOT_FOUND` si la lista no existe o no es visible.
 **401** con `AUTH_REQUIRED` sin sesión.
 
-### `GET /api/me/saved-lists?page=&pageSize=`
+### `GET /api/me/saved-lists?page=&pageSize=&q=&entityType=&sort=`
 
 Listas guardadas del usuario, orden por fecha de guardado descendente. Una lista que dejó de ser
-visible se marca `unavailable: true` en vez de filtrarse.
+visible se marca `unavailable: true` en vez de filtrarse. Desde `redesign-me-lists-toolbar` acepta los mismos filtros
+opcionales que `GET /api/me/lists`: `q` (título), `entityType` y `sort` (`recent` = fecha de guardado, `alpha` = título);
+un valor fuera de vocabulario responde `400` con `VALIDATION_ERROR`. `counts` cuenta las guardadas por tipo sin filtros.
 
-**200 OK:** `{ lists: [SavedListSummary], page, pageSize, hasNext }`. **401** sin sesión. Cada `SavedListSummary` (y cada
+**200 OK:** `{ lists: [SavedListSummary], page, pageSize, hasNext, counts: { artist, "release-group", recording } }`. **401** sin sesión. Cada `SavedListSummary` (y cada
 `TrackedListSummary` de `/me/caminos`) trae `generated`: `{ templateKey, periodKey }` si la lista es una colección generada
 por plantilla (el cliente deriva su título en el idioma activo y enlaza a `/explore/collections/<slug>-<id>`), o `null`
 (cambio `localize-collection-titles`).
@@ -1636,8 +1640,8 @@ por plantilla (el cliente deriva su título en el idioma activo y enlaza a `/exp
 
 Listas de audiencia `public` de perfiles `public`, excluyendo cualquier bloqueo y —con
 sesión— las propias, en orden cronológico descendente (sin recomendación algorítmica).
-**Público** (cambio `add-community-lists-surface`): alimenta la pestaña "Descubrir" de
-`/me/lists`, la sección "Recientes" de `/lists` y el modo explorar de `/lists`.
+**Público** (cambio `add-community-lists-surface`): alimenta la sección "Recientes" de `/lists` y el modo explorar de
+`/lists` (la pestaña "Descubrir" de `/me/lists` se retiró en `redesign-me-lists-toolbar`: ahora es un enlace a `/lists`).
 
 Parámetros opcionales (cambio `rework-public-lists-surface`):
 

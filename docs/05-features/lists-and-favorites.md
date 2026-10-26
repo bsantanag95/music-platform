@@ -131,7 +131,7 @@ algorítmico).
 ### Alcance de la sección
 
 - **Sub-navegación** (ARIA tablist, patrón `PopularCommentsTabs`): **Mis listas · Guardadas ·
-  Descubrir**. Estado de pestaña en la URL (`?tab=`) para que sea enlazable y sobreviva al
+  Descubrir** (Descubrir pasó a ser un enlace a `/lists` en `redesign-me-lists-toolbar`). Estado de pestaña en la URL (`?tab=`) para que sea enlazable y sobreviva al
   reload. Encabezado y acción "Nueva lista" persisten entre pestañas.
 - **Mis listas:** pared de tarjetas (grid 1-col mobile / 2-col ≥md) con **mosaico de portadas
   apiladas** (estilo pila de vinilos); fallback a la silueta de disco para listas de artistas
@@ -175,8 +175,20 @@ Una auditoría en escritorio y a 375 px corrigió lo que fallaba sin cambiar el 
   invisibles pero conservan su lugar. En Índice los controles están siempre visibles. El modo guardado se lee antes de
   pintar (marcador neutro), sin el salto desde Detallada.
 
-Pendiente para las fases siguientes: «Nueva lista» en la cabecera de las tres pestañas (hoy solo en Mis listas, aunque
-el requisito de la sección lo pide en todas), pestañas con totales, Descubrir como enlace a `/lists`, estantería y menú ⋯.
+### Fase 2 del rediseño (`redesign-me-lists-toolbar`)
+
+- **Cabecera** con título, descripción y «+ Nueva lista», que abre un diálogo con el formulario (el mismo `ListForm`) en
+  las dos pestañas; `?new=1` lo abre al cargar. Creada desde Guardadas, se pasa a Mis listas. Se retiró el formulario en
+  línea.
+- **Dos pestañas con su total** (Mis listas · Guardadas), que se actualiza al crear, borrar o dejar de guardar. Descubrir
+  dejó de ser pestaña: repetía «Recientes» de `/lists` con tarjetas viejas. Queda el enlace «Descubrir en Comunidad →» y
+  `?tab=discover` redirige a `/lists`.
+- **Barra en una fila**: buscador, segmentos de tipo con cifras (un tipo sin listas queda deshabilitado) y el orden con
+  la etiqueta dentro, como en Pendientes. Las cifras salen de `counts`, contadas sin filtros. Sin ninguna lista, solo se
+  ve el estado vacío.
+- **Guardadas** con la misma barra: búsqueda, tipo y orden (fecha de guardado o alfabético) en el servidor, y en la URL.
+
+Pendiente para la Fase 3: estantería, sección «Fijadas», menú ⋯, lista vacía con invitación y «Mover a la posición…».
 
 ### Continuación pendiente: listas seguidas en el feed
 

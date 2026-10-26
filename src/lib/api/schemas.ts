@@ -1806,6 +1806,18 @@ export const ListsListResponseSchema = z.object({
 });
 export type ListsListResponse = z.infer<typeof ListsListResponseSchema>;
 
+// Cuántas listas hay de cada tipo, contadas sin filtros (openspec: redesign-me-lists-toolbar, D1).
+export const ListTypeCountsSchema = z.object({
+  artist: z.number().int(),
+  "release-group": z.number().int(),
+  recording: z.number().int(),
+});
+export type ListTypeCounts = z.infer<typeof ListTypeCountsSchema>;
+
+// Listas propias (`/me/lists`): la página, más las cifras por tipo para los segmentos y el total de la pestaña.
+export const MyListsResponseSchema = ListsListResponseSchema.extend({ counts: ListTypeCountsSchema });
+export type MyListsResponse = z.infer<typeof MyListsResponseSchema>;
+
 // Listado de las listas visibles de un perfil: además de la página trae el
 // total real bajo los mismos filtros (el estante del perfil muestra solo las
 // primeras y necesita saber cuántas quedan).
@@ -1859,6 +1871,7 @@ export const SavedListsResponseSchema = z.object({
   page: z.number().int(),
   pageSize: z.number().int(),
   hasNext: z.boolean(),
+  counts: ListTypeCountsSchema,
 });
 export type SavedListsResponse = z.infer<typeof SavedListsResponseSchema>;
 

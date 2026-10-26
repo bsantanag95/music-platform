@@ -27,7 +27,7 @@ export const queryKeys = {
   // Selector de listas del panel del álbum: serie propia (otro tamaño de página que /lists).
   myListsPicker: (filters: ListFiltersParams) => ["lists", "mine", "picker", filters] as const,
   myCaminos: () => ["caminos", "mine"] as const,
-  savedLists: () => ["lists", "saved"] as const,
+  savedLists: (filters: ListFiltersParams = {}) => ["lists", "saved", filters] as const,
   discoverLists: () => ["lists", "discover"] as const,
   // Modo explorar de /lists: namespace propio para no colisionar con la serie
   // sin filtrar de "Recientes". Los filtros son parte de la key.

@@ -6,7 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -18,12 +18,12 @@ import {
 } from "@/lib/api/lists";
 import { ApiError } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/keys";
-import type { ListsListResponse } from "@/lib/api/schemas";
-import { ListForm } from "./ListForm";
+import type { MyListsResponse } from "@/lib/api/schemas";
 import { DeleteListDialog } from "./DeleteListDialog";
 import { ListCard } from "./ListCard";
 import { ListsGrid, entityTypeKey } from "./lists-shared";
 import { ListsToolbar } from "./ListsToolbar";
+import { useListsSection } from "./ListsSection";
 import { useListFilters, type ListFiltersState } from "./use-list-filters";
 
 const PAGE_SIZE = 20;
@@ -35,12 +35,9 @@ const ACTION =
 
 export function MyListsTab({
   initial,
-  initialShowForm = false,
   initialFilters,
 }: {
-  initial: ListsListResponse;
-  /** Abre el formulario de nueva lista al montar (el enlace "Crear lista" de `/lists`). */
-  initialShowForm?: boolean;
+  initial: MyListsResponse;
   /** Filtros leídos de la URL (`?q=&type=&sort=`); `initial` ya viene filtrado con ellos. */
   initialFilters?: Partial<ListFiltersState>;
 }) {
@@ -49,8 +46,8 @@ export function MyListsTab({
 
   const { filters, setFilters, searchInput, setSearchInput, isFiltered, params, clear } =
     useListFilters(initialFilters, { syncUrl: true });
-  const [showForm, setShowForm] = useState(initialShowForm);
-  const [pendingDelete, setPendingDelete] = useState<ListsListResponse["lists"][number] | null>(null);
+  const { reportTotal, openNewList } = useListsSection();
+  const [pendingDelete, setPendingDelete] = useState<MyListsResponse["lists"][number] | null>(null);
   const [rowBusyId, setRowBusyId] = useState<string | null>(null);
   // Último fallo de una tarjeta: se muestra bajo ella (D6). Antes un error distinto de "no existe" no decía nada.
   const [failure, setFailure] = useState<{ id: string; kind: "delete" | "pin" } | null>(null);
@@ -73,6 +70,12 @@ export function MyListsTab({
     });
 
   const lists = data?.pages.flatMap((page) => page.lists) ?? [];
+  const counts = data?.pages[0]?.counts ?? initial.counts;
+
+  // El total de la pestaña sigue a las cifras de cada respuesta: crear o borrar una lista lo actualiza (D4).
+  useEffect(() => {
+    reportTotal("mine", counts.artist + counts["release-group"] + counts.recording);
+  }, [counts, reportTotal]);
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ["lists", "mine"], exact: false });
@@ -117,28 +120,14 @@ export function MyListsTab({
       isFiltered={isFiltered}
       onClear={clear}
       searchPlaceholder={t("searchPlaceholder")}
+      counts={counts}
     />
   );
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
-        <Button variant="secondary" onClick={() => setShowForm((s) => !s)}>
-          {showForm ? t("collapse") : t("newList")}
-        </Button>
-      </div>
-
-      {showForm ? (
-        <ListForm
-          onCreated={() => {
-            setShowForm(false);
-            void invalidate();
-          }}
-          onCancel={() => setShowForm(false)}
-        />
-      ) : null}
-
-      {toolbar}
+      {/* Sin ninguna lista no hay nada que filtrar: solo el estado vacío con su acción. */}
+      {counts.artist + counts["release-group"] + counts.recording > 0 || isFiltered ? toolbar : null}
 
       <span role="status" aria-live="polite" className="sr-only">
         {announce}
@@ -150,7 +139,7 @@ export function MyListsTab({
           description={isFiltered ? t("noResultsDescription") : t("emptyDescription")}
           action={
             isFiltered ? undefined : (
-              <Button variant="secondary" onClick={() => setShowForm(true)}>
+              <Button variant="secondary" onClick={openNewList}>
                 {t("newList")}
               </Button>
             )

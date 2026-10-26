@@ -2,12 +2,13 @@
 
 import { useTranslations } from "next-intl";
 import { FilterSelect } from "@/components/ui/FilterSelect";
-import type { ListEntityType, ListSort } from "@/lib/api/schemas";
+import type { ListEntityType, ListSort, ListTypeCounts } from "@/lib/api/schemas";
 import { entityTypeKey } from "./lists-shared";
+import { ListSortSelect } from "./ListSortSelect";
+import { ListTypeSegments } from "./ListTypeSegments";
 import type { ListFiltersState } from "./use-list-filters";
 
 const ENTITY_TYPES: ListEntityType[] = ["artist", "release-group", "recording"];
-const SORTS: ListSort[] = ["recent", "alpha"];
 
 interface ListsToolbarProps {
   filters: ListFiltersState;
@@ -18,10 +19,12 @@ interface ListsToolbarProps {
   onClear: () => void;
   /** "Buscar en tus listas" en la gestión propia, "Buscar listas" en un perfil ajeno. */
   searchPlaceholder: string;
+  /** Cifras por tipo (Mis listas, Guardadas): con ellas el tipo es un control segmentado; sin ellas, un selector. */
+  counts?: ListTypeCounts;
 }
 
-// Buscador + filtro de tipo + orden de un listado de listas. Presentacional:
-// el estado vive en `useListFilters`.
+// Buscador + filtro de tipo + orden de un listado de listas, en una sola fila que se parte en pantallas angostas.
+// Presentacional: el estado vive en `useListFilters` (openspec: redesign-me-lists-toolbar, D6).
 export function ListsToolbar({
   filters,
   onChange,
@@ -30,11 +33,13 @@ export function ListsToolbar({
   isFiltered,
   onClear,
   searchPlaceholder,
+  counts,
 }: ListsToolbarProps) {
   const t = useTranslations("lists");
+  const setType = (v: ListEntityType | "") => onChange((c) => ({ ...c, entityType: v }));
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <input
         type="search"
         autoComplete="off"
@@ -42,12 +47,14 @@ export function ListsToolbar({
         onChange={(e) => onSearchInput(e.target.value)}
         placeholder={searchPlaceholder}
         aria-label={searchPlaceholder}
-        className="w-full rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted"
+        className="min-h-9 min-w-0 flex-[1_1_10rem] rounded-md border border-ink-border bg-ink-surface px-3.5 py-1.5 font-data text-sm text-paper placeholder:text-paper-muted [@media(pointer:coarse)]:min-h-12"
       />
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+      {counts ? (
+        <ListTypeSegments value={filters.entityType} onChange={setType} counts={counts} />
+      ) : (
         <FilterSelect
           value={filters.entityType}
-          onChange={(v) => onChange((c) => ({ ...c, entityType: v as ListEntityType | "" }))}
+          onChange={(v) => setType(v as ListEntityType | "")}
           ariaLabel={t("typeFilterLabel")}
           widthClassName="w-[20ch]"
         >
@@ -58,28 +65,17 @@ export function ListsToolbar({
             </option>
           ))}
         </FilterSelect>
-        <FilterSelect
-          value={filters.sort}
-          onChange={(v) => onChange((c) => ({ ...c, sort: v as ListSort }))}
-          ariaLabel={t("sortLabel")}
-          widthClassName="w-[13ch]"
+      )}
+      <ListSortSelect value={filters.sort} onChange={(sort: ListSort) => onChange((c) => ({ ...c, sort }))} />
+      {isFiltered ? (
+        <button
+          type="button"
+          onClick={onClear}
+          className="min-h-8 px-1 font-data text-xs text-paper-muted transition-colors hover:text-paper [@media(pointer:coarse)]:min-h-11"
         >
-          {SORTS.map((sort) => (
-            <option key={sort} value={sort}>
-              {t(`sort.${sort}`)}
-            </option>
-          ))}
-        </FilterSelect>
-        {isFiltered ? (
-          <button
-            type="button"
-            onClick={onClear}
-            className="font-data text-xs text-paper-muted transition-colors hover:text-paper"
-          >
-            {t("clearFilters")}
-          </button>
-        ) : null}
-      </div>
+          {t("clearFilters")}
+        </button>
+      ) : null}
     </div>
   );
 }
