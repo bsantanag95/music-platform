@@ -160,7 +160,8 @@ parámetro, el comportamiento SHALL ser equivalente al listado paginado por rece
 ampliado con `itemCount` y `coverThumbs`. En `/me/lists`, la búsqueda, el tipo y el orden elegidos SHALL reflejarse
 en la URL (`q`, `type`, `sort`, solo cuando difieren del valor por defecto y sin crear entradas de historial) y la página
 SHALL abrirse con esos filtros; un valor inválido SHALL ignorarse. Cada acción de una tarjeta propia SHALL nombrar la
-lista en su nombre accesible.
+lista en su nombre accesible. La respuesta SHALL incluir `counts`, cuántas listas propias hay de cada tipo de entidad
+contadas sin `q` ni `entityType`, que la página usa como cifras de los segmentos de tipo y como total de la pestaña.
 
 #### Scenario: Listar listas propias
 - **WHEN** un usuario autenticado abre su página de listas
@@ -194,6 +195,10 @@ lista en su nombre accesible.
 #### Scenario: Filtros que sobreviven a la recarga
 - **WHEN** el usuario busca "aor", elige Canciones y recarga la página
 - **THEN** la URL lleva `?q=aor&type=recording` y la página abre con esos filtros aplicados
+
+#### Scenario: Cifras por tipo sin filtros
+- **WHEN** el usuario tiene 7 listas de álbumes, 4 de artistas y 3 de canciones y busca "aor"
+- **THEN** la respuesta trae `counts` 7 / 4 / 3 y la pestaña "Mis listas" muestra 14
 
 ### Requirement: Listas ajenas visibles
 El sistema SHALL exponer la lectura de las listas de un usuario por `username`, filtrando por
@@ -250,19 +255,21 @@ de una lista no visible SHALL responder como inexistente sin revelar su existenc
 
 ### Requirement: Sección de listas con sub-navegación
 El sistema SHALL presentar `/<locale>/me/lists` como una sección con navegación interna de
-tres pestañas —**Mis listas**, **Guardadas** y **Descubrir**— accesibles por teclado con
-semántica de `tablist`/`tab`/`tabpanel`. La pestaña activa SHALL reflejarse en la URL mediante
-un parámetro (`?tab=`) para poder enlazarse y para sobrevivir a una recarga; un valor de
-pestaña ausente o inválido SHALL resolver a "Mis listas". El encabezado de la sección y la
-acción "Nueva lista" SHALL permanecer visibles en las tres pestañas. Sin sesión, la ruta SHALL
-comportarse como el resto de `/me/*` (redirección a inicio de sesión).
+dos pestañas —**Mis listas** y **Guardadas**, cada una con su total— accesibles por teclado con
+semántica de `tablist`/`tab`/`tabpanel`, seguidas de un enlace "Descubrir en Comunidad" a `/lists`. La pestaña activa
+SHALL reflejarse en la URL mediante un parámetro (`?tab=`) para poder enlazarse y para sobrevivir a una recarga; un valor
+de pestaña ausente o inválido SHALL resolver a "Mis listas", y `?tab=discover` SHALL redirigir a `/lists`. El encabezado
+de la sección SHALL mostrar título, descripción y la acción "Nueva lista", visible en las dos pestañas, que abre un
+diálogo con el formulario de creación (`?new=1` lo abre al cargar). Los totales SHALL actualizarse al crear, borrar o
+dejar de guardar una lista, sin recargar. Sin sesión, la ruta SHALL comportarse como el resto de `/me/*` (redirección a
+inicio de sesión).
 
 #### Scenario: Abrir la sección sin parámetro de pestaña
 - **WHEN** un usuario autenticado abre `/me/lists` sin `?tab=`
-- **THEN** ve la pestaña "Mis listas" activa y las otras dos disponibles
+- **THEN** ve la pestaña "Mis listas" activa, "Guardadas" disponible y el enlace a Comunidad
 
 #### Scenario: Enlace directo a una pestaña
-- **WHEN** el usuario abre `/me/lists?tab=guardadas`
+- **WHEN** el usuario abre `/me/lists?tab=saved`
 - **THEN** ve la pestaña "Guardadas" activa, y al recargar sigue en esa pestaña
 
 #### Scenario: Valor de pestaña inválido
@@ -272,6 +279,14 @@ comportarse como el resto de `/me/*` (redirección a inicio de sesión).
 #### Scenario: Navegación entre pestañas por teclado
 - **WHEN** el usuario tiene el foco en la lista de pestañas y usa las flechas
 - **THEN** el foco se mueve entre pestañas y activa la enfocada, según el patrón `tablist`
+
+#### Scenario: Descubrir redirige a Comunidad
+- **WHEN** el usuario abre `/me/lists?tab=discover`
+- **THEN** llega a `/lists`
+
+#### Scenario: Nueva lista desde Guardadas
+- **WHEN** el usuario está en "Guardadas", pulsa "Nueva lista" y crea "Discos de 2026"
+- **THEN** el diálogo se cierra, pasa a "Mis listas", ve la lista nueva y el total de la pestaña sube en uno
 
 ### Requirement: Fijar listas propias
 El sistema SHALL permitir al propietario **fijar** y **desfijar** cada una de sus listas. Una
