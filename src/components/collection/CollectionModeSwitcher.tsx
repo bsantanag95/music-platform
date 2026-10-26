@@ -81,7 +81,7 @@ export function CollectionModeSwitcher({
             onClick={() => onChange(value)}
             title={iconsOnly ? t(`viewMode.${value}`) : undefined}
             className={`inline-flex items-center gap-1.5 rounded px-2 py-1 font-data text-xs transition-colors [@media(pointer:coarse)]:min-h-11 ${
-              selected ? "bg-amber/10 text-amber" : "text-paper-muted hover:text-paper"
+              selected ? "bg-ink-surface text-paper" : "text-paper-muted hover:text-paper"
             }`}
           >
             {ICONS[value]}

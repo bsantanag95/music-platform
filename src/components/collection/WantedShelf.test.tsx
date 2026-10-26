@@ -262,7 +262,8 @@ describe("WantedShelf", () => {
     const user = userEvent.setup();
     renderShelf(response([only]));
 
-    expect(screen.getByText(/Seguidores/)).toBeInTheDocument();
+    // Seguidores es solo un ícono: el nombre está en la etiqueta accesible y en el `title`.
+    expect(screen.getByRole("button", { name: /Quién la ve: Seguidores/ })).toHaveAttribute("title", "Seguidores");
     await menuEdit(user);
     await user.click(screen.getByLabelText("Privado"));
     await user.click(screen.getByRole("button", { name: "Guardar cambios" }));

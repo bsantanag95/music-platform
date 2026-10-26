@@ -64,9 +64,10 @@ color» es solo para vinilo. Se quitará al guardar.") y guarda sin el atributo.
     (al guardar, el diálogo avisa y la estantería se recarga). Debajo, las pestañas **Tengo N** /
     **Busco N** con el total sin filtros de cada una; la cifra de la pestaña abierta sigue a lo que
     se quita, se deshace o se agrega (el estante la informa a `CollectionTabs`).
-  - **Retrato por formato que filtra**: segmentos `Todo 13 · Vinilo 3 · CD 10 · Cassette 0 · Otro 0`
+  - **Retrato por formato que filtra**: segmentos `Todo 13 · Vinilo 3 · CD 10`
     con las cifras de `counts` (ignoran el filtro de formato); tocar uno filtra y uno sin copias
-    queda deshabilitado. Reemplaza la línea de texto y el selector de formato. Sin barras de
+    no se muestra, salvo que sea el elegido (`polish-collection-page`). El segmento y el modo de
+    vista elegidos usan un estado neutro: el ámbar queda para la pestaña activa. Reemplaza la línea de texto y el selector de formato. Sin barras de
     progreso ni "pendientes".
   - **Tres modos de visualización a elegir** — Estantería (grilla de carátulas), Lista detallada,
     Índice —, con preferencia local por visitante (`localStorage`), global (misma mecánica que el
@@ -91,7 +92,9 @@ color» es solo para vinilo. Se quitará al guardar.") y guarda sin el atributo.
     ese modo tocar la carátula marca la copia (sin abrir el álbum) y la marcada se resalta.
   - **Vistas** (`redesign-collection-views`): el pie de cada copia dice "artista · año"
     (`album.year`) y "formato · primer atributo +N"; una copia privada lleva un candado en la
-    Estantería. Lista detallada usa filas compactas separadas por una línea; el Índice es una
+    Estantería. Lista detallada usa filas compactas separadas por una línea, con "formato ·
+    atributos" en una línea de texto, "Añadida el …" y la audiencia como ícono discreto salvo la
+    Privada, que conserva nombre y ámbar (`polish-collection-page`; igual en Busco); el Índice es una
     tabla (#, Álbum, Artista, Formato, Edición, Añadida, acciones).
   - **Página** (`refine-collection-page-phase1`): `max-w-4xl` con el título a la izquierda, como
     las demás páginas propias; el modo de vista no salta (marcador neutro hasta leer la
