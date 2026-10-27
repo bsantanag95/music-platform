@@ -4,8 +4,8 @@ import { AppImage } from "@/components/ui/AppImage";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
-import { RelativeDate } from "@/components/feed/feed-row-parts";
 import { ProgressBar } from "@/components/progress/ProgressBar";
+import { ProgressRowMeta } from "@/components/progress/ProgressRowMeta";
 import { ArtistJourneyCardMenu } from "./ArtistJourneyCardMenu";
 import { StateLabel, stateLabel, type ArtistJourneyRendererProps } from "./artist-journey-list-shared";
 
@@ -17,7 +17,8 @@ import { StateLabel, stateLabel, type ArtistJourneyRendererProps } from "./artis
 // segunda fila con progreso discreto (barra sin fracción numérica — §6.4.1,
 // nunca "X de Y" fuera de la página de gestión) y la fecha de última
 // actualización: lo que justifica que Detallada exista como modo aparte.
-// La foto tiene fondo mientras carga (openspec: refine-progress-page-phase1).
+// La foto tiene fondo mientras carga (openspec: refine-progress-page-phase1). Desde redesign-progress-views la segunda
+// fila dice qué disco sigue y cuándo fue la última escucha, y la etiqueta de estado solo aparece si no está en curso.
 export function ArtistJourneysDetailed({ journeys, actions }: ArtistJourneyRendererProps) {
   const t = useTranslations("artistJourney");
 
@@ -39,15 +40,21 @@ export function ArtistJourneysDetailed({ journeys, actions }: ArtistJourneyRende
             >
               {journey.artistName}
             </Link>
-            <StateLabel state={journey.state} label={stateLabel(journey.state, t)} />
+            {journey.state !== "in_progress" && (
+              <StateLabel state={journey.state} label={stateLabel(journey.state, t)} />
+            )}
             <ArtistJourneyCardMenu journey={journey} actions={actions} />
           </div>
 
-          <div className="flex items-center gap-2 pl-[3.25rem]">
+          <div className="flex flex-col items-start gap-1 pl-[3.25rem] sm:flex-row sm:items-center sm:gap-2">
             <ProgressBar listened={journey.progress.listenedCount} selected={journey.progress.selectedCount} />
-            <span className="font-data text-[0.65rem] text-paper-muted">
-              {t("lastUpdatedLabel")} <RelativeDate iso={journey.updatedAt} />
-            </span>
+            <ProgressRowMeta
+              nextUp={journey.nextUp}
+              lastListenedAt={journey.lastListenedAt}
+              selectedCount={journey.progress.selectedCount}
+              complete={journey.state === "complete"}
+              emptyLabel={t("emptySelection")}
+            />
           </div>
         </li>
       ))}

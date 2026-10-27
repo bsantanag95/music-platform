@@ -1967,6 +1967,16 @@ export const SetArtistJourneySelectionRequestSchema = z.object({
 });
 export type SetArtistJourneySelectionRequest = z.infer<typeof SetArtistJourneySelectionRequestSchema>;
 
+// Siguiente disco sin escuchar de una selección y fecha de la última escucha (openspec: redesign-progress-views, D1).
+// Nombra un disco, nunca cuántos faltan (§6.4.1).
+export const NextUpAlbumSchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  artistName: z.string().nullable(),
+  year: z.number().int().nullable(),
+});
+export type NextUpAlbum = z.infer<typeof NextUpAlbumSchema>;
+
 export const ArtistJourneySummarySchema = z.object({
   artistId: z.uuid(),
   artistName: z.string(),
@@ -1980,6 +1990,8 @@ export const ArtistJourneySummarySchema = z.object({
     listenedCount: z.number().int().nonnegative(),
   }),
   updatedAt: z.string(),
+  nextUp: NextUpAlbumSchema.nullable(),
+  lastListenedAt: z.string().nullable(),
 });
 export type ArtistJourneySummary = z.infer<typeof ArtistJourneySummarySchema>;
 
@@ -2041,6 +2053,8 @@ export const CaminoSummarySchema = z.object({
   }),
   coverThumbUrl: z.string().nullable(),
   updatedAt: z.string(),
+  nextUp: NextUpAlbumSchema.nullable(),
+  lastListenedAt: z.string().nullable(),
 });
 export type CaminoSummary = z.infer<typeof CaminoSummarySchema>;
 
@@ -2060,6 +2074,8 @@ export const TrackedListSummarySchema = z.object({
   }),
   updatedAt: z.string(),
   generated: z.object({ templateKey: z.string(), periodKey: z.string() }).nullable().optional(),
+  nextUp: NextUpAlbumSchema.nullable(),
+  lastListenedAt: z.string().nullable(),
 });
 export type TrackedListSummary = z.infer<typeof TrackedListSummarySchema>;
 

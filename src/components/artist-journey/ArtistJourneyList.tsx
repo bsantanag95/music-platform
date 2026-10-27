@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ProgressPlaceholder } from "@/components/progress/ProgressPlaceholder";
+import { ProgressSections } from "@/components/progress/ProgressSections";
 import { useProgressSection } from "@/components/progress/ProgressSection";
 import { ProgressSortSelect } from "@/components/progress/ProgressSortSelect";
 import { ProgressStateSegments } from "@/components/progress/ProgressStateSegments";
@@ -19,7 +20,7 @@ import { ArtistJourneyModeSwitcher } from "./ArtistJourneyModeSwitcher";
 import { ArtistJourneysDetailed } from "./ArtistJourneysDetailed";
 import { ArtistJourneysIndex } from "./ArtistJourneysIndex";
 import { ArtistJourneysGraphic } from "./ArtistJourneysGraphic";
-import { normalizeForSearch } from "./artist-journey-list-shared";
+import { normalizeForSearch, type ArtistJourneyListActions } from "./artist-journey-list-shared";
 import { useArtistJourneyViewMode } from "./use-artist-journey-view-mode";
 
 interface ArtistJourneyListProps {
@@ -27,15 +28,6 @@ interface ArtistJourneyListProps {
   /** Filtros leídos de la URL por la página (ya validados). */
   initialFilters?: Partial<OwnFilters>;
 }
-
-// Orden entre estados al ordenar "Por estado": en curso primero (lo activo),
-// completo después, archivado al final — mismo orden canónico que
-// `ARTIST_JOURNEY_STATES` (ver services/artist-journeys/types.ts).
-const STATE_ORDER: Record<ArtistJourneySummary["state"], number> = {
-  in_progress: 0,
-  complete: 1,
-  archived: 2,
-};
 
 const RENDERERS = {
   detailed: ArtistJourneysDetailed,
@@ -80,18 +72,11 @@ export function ArtistJourneyList({ journeys, initialFilters }: ArtistJourneyLis
   const visible = useMemo(() => {
     const q = normalizeForSearch(filters.q.trim());
     const byState = filters.state === "all" ? items : items.filter((journey) => journey.state === filters.state);
-    const filtered = q
-      ? byState.filter((journey) => normalizeForSearch(journey.artistName).includes(q))
-      : byState;
+    const filtered = q ? byState.filter((journey) => normalizeForSearch(journey.artistName).includes(q)) : byState;
     // `items` ya llega del servidor en orden de agregado descendente
     // (más reciente primero) — "recent" no necesita reordenar.
     if (filters.sort === "recent") return filtered;
     if (filters.sort === "progress") return sortByProgress(filtered);
-    if (filters.sort === "state") {
-      // `sort` es estable: dentro de un mismo estado se conserva el orden de
-      // agregado, sin un segundo criterio explícito.
-      return [...filtered].sort((a, b) => STATE_ORDER[a.state] - STATE_ORDER[b.state]);
-    }
     return [...filtered].sort((a, b) => a.artistName.localeCompare(b.artistName));
   }, [items, filters]);
 
@@ -120,9 +105,7 @@ export function ArtistJourneyList({ journeys, initialFilters }: ArtistJourneyLis
     setActionError(false);
     try {
       const updated =
-        journey.state === "archived"
-          ? await unarchiveArtistJourney(artistId)
-          : await archiveArtistJourney(artistId);
+        journey.state === "archived" ? await unarchiveArtistJourney(artistId) : await archiveArtistJourney(artistId);
       setItems((current) =>
         current.map((item) => (item.artistId === artistId ? { ...item, state: updated.state } : item)),
       );
@@ -152,6 +135,11 @@ export function ArtistJourneyList({ journeys, initialFilters }: ArtistJourneyLis
   }
 
   const Renderer = RENDERERS[mode];
+  const actions: ArtistJourneyListActions = {
+    busyId,
+    requestRemove: (artistId) => setPendingDelete(items.find((item) => item.artistId === artistId) ?? null),
+    archive: (artistId) => void handleArchiveToggle(artistId),
+  };
 
   return (
     <div className="flex w-full flex-col gap-4">
@@ -194,13 +182,10 @@ export function ArtistJourneyList({ journeys, initialFilters }: ArtistJourneyLis
       ) : visible.length === 0 ? (
         <EmptyState title={t("noResultsTitle")} description={t("noResultsDescription")} />
       ) : (
-        <Renderer
-          journeys={visible}
-          actions={{
-            busyId,
-            requestRemove: (artistId) => setPendingDelete(items.find((item) => item.artistId === artistId) ?? null),
-            archive: (artistId) => void handleArchiveToggle(artistId),
-          }}
+        <ProgressSections
+          items={visible}
+          grouped={filters.state === "all"}
+          render={(group) => <Renderer journeys={group} actions={actions} />}
         />
       )}
 

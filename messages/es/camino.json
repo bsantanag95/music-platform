@@ -90,7 +90,6 @@
     "index": "Índice",
     "graphic": "Gráfico"
   },
-  "lastUpdatedLabel": "Actualizado",
   "trackedSearchPlaceholder": "Buscar por título o dueño",
   "hub": {
     "title": "Progreso",
@@ -111,7 +110,6 @@
     "complete": "completo"
   },
   "untrack": "Dejar de seguir",
-  "untrackLabel": "Dejar de seguir «{title}»",
   "untracked": "Dejaste de seguir «{title}»",
   "undo": "Deshacer",
   "undoError": "No pudimos deshacer. Intenta de nuevo.",
@@ -132,10 +130,19 @@
   "sortOption": {
     "recent": "Recientes",
     "alpha": "Alfabético",
-    "state": "Por estado",
     "progress": "Más avanzadas"
   },
   "primaryShort": {
     "lists": "Nueva lista"
+  },
+  "nextUp": "Siguiente:",
+  "lastListened": "Última escucha",
+  "noListensYet": "Sin escuchas todavía",
+  "emptyCamino": "Vacía: añade álbumes con «Añadir a…»",
+  "emptyFollowed": "La lista está vacía",
+  "section": {
+    "in_progress": "En curso",
+    "complete": "Completas",
+    "archived": "Archivadas"
   }
 }

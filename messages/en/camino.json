@@ -90,7 +90,6 @@
     "index": "Index",
     "graphic": "Graphic"
   },
-  "lastUpdatedLabel": "Updated",
   "trackedSearchPlaceholder": "Search by title or owner",
   "hub": {
     "title": "Progress",
@@ -111,7 +110,6 @@
     "complete": "complete"
   },
   "untrack": "Stop following",
-  "untrackLabel": "Stop following “{title}”",
   "untracked": "You stopped following “{title}”",
   "undo": "Undo",
   "undoError": "We couldn't undo that. Try again.",
@@ -132,10 +130,19 @@
   "sortOption": {
     "recent": "Recent",
     "alpha": "Alphabetical",
-    "state": "By state",
     "progress": "Furthest along"
   },
   "primaryShort": {
     "lists": "New list"
+  },
+  "nextUp": "Next:",
+  "lastListened": "Last listen",
+  "noListensYet": "No listens yet",
+  "emptyCamino": "Empty: add albums with “Add to…”",
+  "emptyFollowed": "The list is empty",
+  "section": {
+    "in_progress": "In progress",
+    "complete": "Complete",
+    "archived": "Archived"
   }
 }

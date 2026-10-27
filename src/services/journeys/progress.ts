@@ -9,7 +9,7 @@
 
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { listenEntry, userListItem } from "@/db/schema";
+import { listenEntry, releaseGroup, userListItem } from "@/db/schema";
 
 export type JourneyState = "in_progress" | "complete" | "archived";
 
@@ -86,4 +86,106 @@ export async function listenedReleaseGroupIds(
     )
     .groupBy(listenEntry.releaseGroupId);
   return new Set(rows.map((r) => r.releaseGroupId).filter((id): id is string => id !== null));
+}
+
+/** Siguiente disco sin escuchar de una selección: lo que la fila de /me/progress propone escuchar. */
+export interface NextUpAlbum {
+  id: string;
+  title: string;
+  artistName: string | null;
+  year: number | null;
+}
+
+export interface ProgressDetail {
+  nextUp: NextUpAlbum | null;
+  /** Fecha de la escucha más reciente de un disco de la selección, ISO; `null` si no hay ninguna. */
+  lastListenedAt: string | null;
+}
+
+/**
+ * Para cada lista, el siguiente disco sin escuchar y la última escucha de `trackerId` sobre su selección (openspec:
+ * redesign-progress-views, D1). Dos consultas por lote, no N+1. "Siguiente" respeta el orden propio de cada tipo: en una
+ * discografía (`order: "release"`) el más antiguo por fecha de publicación; en una lista (`order: "position"`) el orden
+ * manual de su dueño. No dice cuántos faltan: solo nombra un disco (§6.4.1).
+ */
+export async function progressDetailsByListId(
+  trackerId: string,
+  lists: { id: string; order: "release" | "position" }[],
+): Promise<Map<string, ProgressDetail>> {
+  const result = new Map<string, ProgressDetail>();
+  if (lists.length === 0) return result;
+  const listIds = lists.map((list) => list.id);
+
+  const [lastRows, pendingRows] = await Promise.all([
+    db
+      .select({
+        listId: userListItem.listId,
+        last: sql<string | null>`max(${listenEntry.createdAt})::text`,
+      })
+      .from(userListItem)
+      .innerJoin(
+        listenEntry,
+        and(eq(listenEntry.releaseGroupId, userListItem.releaseGroupId), eq(listenEntry.userId, trackerId)),
+      )
+      .where(inArray(userListItem.listId, listIds))
+      .groupBy(userListItem.listId),
+    db
+      .select({
+        listId: userListItem.listId,
+        position: userListItem.position,
+        id: releaseGroup.id,
+        title: releaseGroup.title,
+        firstReleaseDate: releaseGroup.firstReleaseDate,
+        year: releaseGroup.firstReleaseYear,
+        artistName: sql<string | null>`(
+          SELECT a.name FROM credit c
+          JOIN artist a ON a.id = c.artist_id
+          WHERE c.release_group_id = ${releaseGroup.id} AND c.role = 'primary'
+          ORDER BY c.position
+          LIMIT 1
+        )`,
+      })
+      .from(userListItem)
+      .innerJoin(releaseGroup, eq(releaseGroup.id, userListItem.releaseGroupId))
+      .where(
+        and(
+          inArray(userListItem.listId, listIds),
+          sql`not exists (
+            select 1 from listen_entry le
+            where le.release_group_id = ${releaseGroup.id} and le.user_id = ${trackerId}
+          )`,
+        ),
+      ),
+  ]);
+
+  const orderOf = new Map(lists.map((list) => [list.id, list.order]));
+  const pendingByList = new Map<string, typeof pendingRows>();
+  for (const row of pendingRows) {
+    const bucket = pendingByList.get(row.listId) ?? [];
+    bucket.push(row);
+    pendingByList.set(row.listId, bucket);
+  }
+  const lastByList = new Map(lastRows.map((row) => [row.listId, row.last]));
+
+  for (const listId of listIds) {
+    const pending = pendingByList.get(listId) ?? [];
+    const order = orderOf.get(listId);
+    pending.sort((a, b) => {
+      if (order === "release") {
+        // Sin fecha va al final; a igual fecha, el año y el título deciden.
+        const da = a.firstReleaseDate ?? (a.year != null ? `${a.year}-12-31` : "9999");
+        const db_ = b.firstReleaseDate ?? (b.year != null ? `${b.year}-12-31` : "9999");
+        if (da !== db_) return da < db_ ? -1 : 1;
+        return a.title.localeCompare(b.title);
+      }
+      return a.position - b.position;
+    });
+    const first = pending[0];
+    const last = lastByList.get(listId) ?? null;
+    result.set(listId, {
+      nextUp: first ? { id: first.id, title: first.title, artistName: first.artistName, year: first.year } : null,
+      lastListenedAt: last ? new Date(last).toISOString() : null,
+    });
+  }
+  return result;
 }

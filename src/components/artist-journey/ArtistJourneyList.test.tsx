@@ -63,6 +63,8 @@ function summary(over: Partial<ArtistJourneySummary> = {}): ArtistJourneySummary
     state: "in_progress",
     progress: { selectedCount: 4, listenedCount: 2 },
     updatedAt: "2026-01-01T00:00:00.000Z",
+    nextUp: null,
+    lastListenedAt: null,
     ...over,
   };
 }
@@ -101,7 +103,8 @@ describe("ArtistJourneyList", () => {
         journeys={[summary({ progress: { selectedCount: 4, listenedCount: 2 } })]}
       />,
     );
-    expect(screen.getByText("Actualizado")).toBeInTheDocument();
+    // openspec: redesign-progress-views — "Actualizado" se reemplazó por la última escucha.
+    expect(screen.getByText("Sin escuchas todavía")).toBeInTheDocument();
     // §6.4.1: nunca "X de Y" fuera de la página de gestión.
     expect(screen.queryByText(/4/)).not.toBeInTheDocument();
     expect(screen.queryByText(/escuchados/)).not.toBeInTheDocument();
@@ -198,7 +201,8 @@ describe("ArtistJourneyList", () => {
     expect(names()).toEqual(["Deep Purple", "Sabrina Carpenter"]);
   });
 
-  it("el orden por estado agrupa en curso, completo y archivado, en ese orden", async () => {
+  // openspec: redesign-progress-views — las secciones reemplazan el orden "Por estado".
+  it("con Todas agrupa en En curso, Completas y Archivadas, esta última plegada", async () => {
     const user = userEvent.setup();
     renderWithIntl(
       <ArtistJourneyList
@@ -209,12 +213,15 @@ describe("ArtistJourneyList", () => {
         ]}
       />,
     );
-    await user.selectOptions(screen.getByRole("combobox", { name: "Ordenar" }), "state");
+    expect(screen.getByRole("region", { name: "En curso" })).toHaveTextContent("Curso Artist");
+    expect(screen.getByRole("region", { name: "Completas" })).toHaveTextContent("Completo Artist");
+    expect(names()).toEqual(["Curso Artist", "Completo Artist"]);
+    await user.click(screen.getByRole("button", { name: /Archivadas · 1/ }));
     expect(names()).toEqual(["Curso Artist", "Completo Artist", "Archivado Artist"]);
+    expect(screen.queryByRole("option", { name: "Por estado" })).not.toBeInTheDocument();
   });
 
-  it("el orden por estado conserva el orden de agregado dentro de un mismo estado", async () => {
-    const user = userEvent.setup();
+  it("dentro de una sección se conserva el orden de agregado", () => {
     renderWithIntl(
       <ArtistJourneyList
         journeys={[
@@ -223,7 +230,6 @@ describe("ArtistJourneyList", () => {
         ]}
       />,
     );
-    await user.selectOptions(screen.getByRole("combobox", { name: "Ordenar" }), "state");
     expect(names()).toEqual(["Sabrina Carpenter", "Deep Purple"]);
   });
 
@@ -242,7 +248,8 @@ describe("ArtistJourneyList", () => {
     expect(names()).toEqual(["Archivado Artist"]);
   });
 
-  it("el filtro de estado en 'Todo' (por defecto) muestra los tres estados", () => {
+  it("el filtro de estado en 'Todas' (por defecto) muestra los tres estados", async () => {
+    const user = userEvent.setup();
     renderWithIntl(
       <ArtistJourneyList
         journeys={[
@@ -252,6 +259,7 @@ describe("ArtistJourneyList", () => {
         ]}
       />,
     );
+    await user.click(screen.getByRole("button", { name: /Archivadas · 1/ }));
     expect(names()).toHaveLength(3);
   });
 
@@ -290,13 +298,15 @@ describe("ArtistJourneyList", () => {
     await openCardMenu(user);
     await user.click(screen.getByRole("menuitem", { name: "Archivar" }));
     expect(mocks.archiveArtistJourney).toHaveBeenCalledWith("artist-1");
-    expect(await screen.findByText("Archivado", { selector: "span" })).toBeInTheDocument();
+    // Pasa a Archivadas, que empieza plegada.
+    await user.click(await screen.findByRole("button", { name: /Archivadas · 1/ }));
+    expect(screen.getByText("Archivado", { selector: "span" })).toBeInTheDocument();
 
     mocks.unarchiveArtistJourney.mockResolvedValueOnce({ state: "in_progress" });
     await openCardMenu(user);
     await user.click(screen.getByRole("menuitem", { name: "Desarchivar" }));
     expect(mocks.unarchiveArtistJourney).toHaveBeenCalledWith("artist-1");
-    expect(await screen.findByText("En curso", { selector: "span" })).toBeInTheDocument();
+    expect(await screen.findByRole("region", { name: "En curso" })).toHaveTextContent("Deep Purple");
   });
 
   it("eliminar desde el menú pide confirmación en la entrada antes de borrar, y la quita de la vista", async () => {

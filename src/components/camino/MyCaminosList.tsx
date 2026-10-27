@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { normalizeForSearch } from "@/components/artist-journey/artist-journey-list-shared";
 import { ProgressPlaceholder } from "@/components/progress/ProgressPlaceholder";
+import { ProgressSections } from "@/components/progress/ProgressSections";
 import { useProgressSection } from "@/components/progress/ProgressSection";
 import { ProgressSortSelect } from "@/components/progress/ProgressSortSelect";
 import { ProgressStateSegments } from "@/components/progress/ProgressStateSegments";
@@ -15,21 +16,13 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ApiError } from "@/lib/api/client";
 import { archiveCamino, deleteCamino, unarchiveCamino } from "@/lib/api/camino";
 import type { CaminoDetail, CaminoSummary } from "@/lib/api/schemas";
+import type { MyCaminosListActions } from "./camino-list-shared";
 import { CaminoDeleteDialog } from "./CaminoDeleteDialog";
 import { CaminoModeSwitcher } from "./CaminoModeSwitcher";
 import { useCaminoViewMode } from "./use-camino-view-mode";
 import { MyCaminosDetailed } from "./MyCaminosDetailed";
 import { MyCaminosIndex } from "./MyCaminosIndex";
 import { MyCaminosGraphic } from "./MyCaminosGraphic";
-
-// Orden entre estados al ordenar "Por estado": en curso primero (lo activo),
-// completo después, archivado al final — mismo criterio que
-// `ARTIST_JOURNEY_STATES` (calcado de `ArtistJourneyList`).
-const STATE_ORDER: Record<CaminoSummary["state"], number> = {
-  in_progress: 0,
-  complete: 1,
-  archived: 2,
-};
 
 const RENDERERS = {
   detailed: MyCaminosDetailed,
@@ -75,16 +68,11 @@ export function MyCaminosList({ caminos: initial, initialFilters }: MyCaminosLis
   const visible = useMemo(() => {
     const q = normalizeForSearch(filters.q.trim());
     const byState = filters.state === "all" ? items : items.filter((camino) => camino.state === filters.state);
-    const filtered = q
-      ? byState.filter((camino) => normalizeForSearch(camino.title).includes(q))
-      : byState;
+    const filtered = q ? byState.filter((camino) => normalizeForSearch(camino.title).includes(q)) : byState;
     // `items` ya llega del servidor en orden de creación descendente (más
     // reciente primero) — "recent" no necesita reordenar.
     if (filters.sort === "recent") return filtered;
     if (filters.sort === "progress") return sortByProgress(filtered);
-    if (filters.sort === "state") {
-      return [...filtered].sort((a, b) => STATE_ORDER[a.state] - STATE_ORDER[b.state]);
-    }
     return [...filtered].sort((a, b) => a.title.localeCompare(b.title));
   }, [items, filters]);
 
@@ -113,9 +101,7 @@ export function MyCaminosList({ caminos: initial, initialFilters }: MyCaminosLis
     try {
       const updated: CaminoDetail =
         camino.state === "archived" ? await unarchiveCamino(caminoId) : await archiveCamino(caminoId);
-      setItems((current) =>
-        current.map((item) => (item.id === caminoId ? { ...item, state: updated.state } : item)),
-      );
+      setItems((current) => current.map((item) => (item.id === caminoId ? { ...item, state: updated.state } : item)));
     } catch (error) {
       if (error instanceof ApiError && error.code === "CAMINO_NOT_FOUND") {
         setItems((current) => current.filter((item) => item.id !== caminoId));
@@ -142,6 +128,11 @@ export function MyCaminosList({ caminos: initial, initialFilters }: MyCaminosLis
   }
 
   const Renderer = RENDERERS[mode];
+  const actions: MyCaminosListActions = {
+    busyId,
+    requestRemove: (caminoId) => setPendingDelete(items.find((item) => item.id === caminoId) ?? null),
+    archive: (caminoId) => void handleArchiveToggle(caminoId),
+  };
 
   return (
     <div className="flex w-full flex-col gap-4">
@@ -184,13 +175,10 @@ export function MyCaminosList({ caminos: initial, initialFilters }: MyCaminosLis
       ) : visible.length === 0 ? (
         <EmptyState title={t("noResultsTitle")} description={t("noResultsDescription")} />
       ) : (
-        <Renderer
-          caminos={visible}
-          actions={{
-            busyId,
-            requestRemove: (caminoId) => setPendingDelete(items.find((item) => item.id === caminoId) ?? null),
-            archive: (caminoId) => void handleArchiveToggle(caminoId),
-          }}
+        <ProgressSections
+          items={visible}
+          grouped={filters.state === "all"}
+          render={(group) => <Renderer caminos={group} actions={actions} />}
         />
       )}
 
