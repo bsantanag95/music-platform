@@ -310,12 +310,15 @@ archivarse, una lista trackeada no) y una acción por fila distinta (archivar/el
 de seguir) para el mismo campo de "Estado" y de acción.
 
 "Listas para completar" SHALL mostrar los Caminos dinámicos propios del usuario con buscador (por título),
-orden (recientes / alfabético / por estado / más avanzadas), segmentos de estado con su cantidad (todas / en curso /
+orden (recientes / alfabético / más avanzadas), segmentos de estado con su cantidad (todas / en curso /
 completas / archivadas) y los mismos tres modos de visualización que la pestaña Discografías (Detallada /
 Índice / Gráfico, con preferencia de modo persistida en el navegador) — esta pestaña es homogénea
 (todo propio, misma acción por entrada), así que admite el mismo mecanismo completo sin las
 asimetrías de una lista mezclada. Progreso discreto sin fracción numérica, mismo criterio que los
-recorridos, anunciado con una etiqueta discreta. La acción "Nueva lista para completar" SHALL vivir en la
+recorridos, anunciado con una etiqueta discreta. Con el segmento "todas", el listado SHALL agruparse en las mismas
+secciones que Discografías (Archivadas plegada), y en Detallada cada entrada SHALL nombrar el siguiente álbum sin escuchar
+según el orden manual de la lista y la fecha de la última escucha, sin decir cuántos faltan; la etiqueta de estado solo
+aparece si no está en curso. La acción "Nueva lista para completar" SHALL vivir en la
 cabecera del panel y abrir el diálogo de acciones rápidas en esa acción; el estado vacío SHALL ofrecer la misma acción.
 Eliminar un Camino desde el menú SHALL abrir un diálogo que nombra la lista, dice cuántos álbumes se pierden y que
 las escuchas siguen en el diario; solo confirmarlo borra. El ⋮ SHALL medir al menos 32 px (44 px con puntero grueso), y
@@ -327,8 +330,9 @@ buscador (por título o por nombre de dueño) y orden (recientes / más avanzada
 estado (no existe "archivado" para una lista ajena) ni modo de visualización (un único
 tratamiento de fila alcanza — no es una curaduría propia). Cada entrada SHALL enlazar al detalle
 de esa lista ajena (la ruta de lectura correcta según su `kind`, ver Requirement "Acceso general
-desde el Header"). Cada entrada SHALL ofrecer "Dejar de seguir" con el título de la lista en su nombre accesible;
-dejar de seguir quita la entrada y muestra un aviso con "Deshacer", que vuelve a activar el seguimiento y repone la
+desde el Header"). Cada entrada SHALL mostrar la misma línea de siguiente álbum y última escucha (calculada sobre el
+diario de quien sigue la lista) y SHALL agrupar sus acciones en un menú ⋯ con el título de la lista en su nombre
+accesible: "Ver lista" y "Dejar de seguir"; dejar de seguir quita la entrada y muestra un aviso con "Deshacer", que vuelve a activar el seguimiento y repone la
 entrada en su lugar. El estado vacío SHALL titularse "Todavía no sigues ninguna lista" y enlazar al descubrimiento de
 listas para completar.
 
@@ -372,6 +376,10 @@ ellos; un valor inválido SHALL ignorarse.
 #### Scenario: Nueva lista para completar desde la cabecera
 - **WHEN** el usuario pulsa "+ Nueva lista para completar", la crea en el diálogo y lo cierra
 - **THEN** la pestaña "Listas para completar" muestra la lista nueva y su total sube en uno
+
+#### Scenario: Siguiente álbum de una lista seguida
+- **WHEN** el usuario sigue una lista de cuatro álbumes y ya escuchó los dos primeros según el orden de su dueño
+- **THEN** la fila dice "Siguiente:" con el tercero y la fecha de su última escucha, sin cifras de álbumes restantes
 
 #### Scenario: Redirección desde la ruta anterior
 - **WHEN** un usuario con sesión abre `/me/caminos?tab=tracked`
