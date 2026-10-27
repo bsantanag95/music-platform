@@ -10,7 +10,7 @@ sigue su progreso de escucha:
 
 - **Discografías**: los recorridos de artista propios (capability `artist-journey`, Requirement
   "Listado propio de recorridos").
-- **Mis listas**: los Caminos propios (capability `camino`, pestaña de Caminos propios).
+- **Listas para completar**: los Caminos propios (capability `camino`, pestaña de Caminos propios).
 - **Listas que sigo**: las listas ajenas con seguimiento de progreso activo (capability `camino`,
   pestaña de listas seguidas).
 
@@ -21,19 +21,23 @@ listado (buscador, orden, filtro de estado, modos de visualización, menú de ta
 y el sistema SHALL NOT mezclar entradas de dos pestañas en un mismo listado ordenable.
 
 El título y su descripción SHALL alinearse a la izquierda, en el mismo ancho que el resto de
-las secciones personales (Pendientes, Favoritos, Colección, Listas). Las pestañas SHALL caber en una
-sola fila a 375 px, y las tres pestañas SHALL ordenar su barra igual: búsqueda, selects y conmutador
-de modo al final.
+las secciones personales (Pendientes, Favoritos, Colección, Listas). Cada pestaña SHALL mostrar su total, contado en
+el servidor para las tres aunque solo se cargue la activa, y la activa SHALL actualizarlo al borrar o dejar de seguir.
+Las pestañas SHALL caber en una sola fila a 375 px (bajo ese ancho "Listas para completar" se abrevia "Para
+completar"), y las tres pestañas SHALL ordenar su barra igual: búsqueda, orden y conmutador de modo, y debajo los
+segmentos de estado cuando existan.
 
 Bajo el título, la página SHALL mostrar una línea localizada que explique qué reúne (cuánto llevas
-escuchado de discografías y listas, según tu diario), y cada pestaña SHALL ofrecer su acción de
-creación cuando exista: Mis listas ofrece "Nueva lista para completar". Discografías explica que se
-empieza desde la página de un artista con "Completar discografía".
+escuchado de discografías y listas, según tu diario), y la cabecera SHALL ofrecer la acción
+principal de la pestaña activa: "Completar discografía" en Discografías y "Nueva lista para completar" en Listas para
+completar, que abren el diálogo de acciones rápidas ya en esa acción; Listas que sigo ofrece en su lugar un enlace al
+descubrimiento de listas para completar. Al cerrar el diálogo tras crear algo, la pestaña SHALL mostrar lo creado sin
+perder sus filtros.
 
 #### Scenario: Pestaña por defecto
 - **WHEN** un usuario con sesión abre `/me/progress` sin `tab`
-- **THEN** ve el título "Progreso" con las pestañas Discografías, Mis listas y Listas que sigo, y
-  la pestaña Discografías seleccionada
+- **THEN** ve el título "Progreso" con las pestañas Discografías, Listas para completar y Listas que
+  sigo, cada una con su total, y la pestaña Discografías seleccionada
 
 #### Scenario: Pestaña enlazable
 - **WHEN** un usuario abre `/me/progress?tab=following` y recarga la página
@@ -51,6 +55,10 @@ empieza desde la página de un artista con "Completar discografía".
 #### Scenario: Pestañas en una fila en un teléfono
 - **WHEN** un usuario abre `/me/progress` en una pantalla de 375 px
 - **THEN** las tres pestañas ocupan una sola fila
+
+#### Scenario: Completar una discografía desde la cabecera
+- **WHEN** el usuario pulsa "+ Completar discografía", elige un artista en el diálogo y lo cierra
+- **THEN** la pestaña Discografías muestra ese artista y su total sube en uno
 
 #### Scenario: Sin sesión
 - **WHEN** una persona sin sesión abre `/me/progress`
@@ -92,7 +100,7 @@ SHALL mostrarse con este vocabulario:
 | Fila del panel del artista | Tu progreso | Your progress |
 | Camino, en singular | lista para completar | list to complete |
 | Crear un Camino | Nueva lista para completar | New list to complete |
-| Caminos propios, como pestaña | Mis listas | My lists |
+| Caminos propios, como pestaña | Listas para completar | Lists to complete |
 | Listas ajenas seguidas, como pestaña | Listas que sigo | Lists I follow |
 | Estante del perfil y su página | Listas para completar | Lists to complete |
 | Descubrimiento público (`/caminos`) | Listas para completar | Lists to complete |

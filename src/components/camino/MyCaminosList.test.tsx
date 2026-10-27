@@ -168,7 +168,7 @@ describe("MyCaminosList", () => {
         ]}
       />,
     );
-    await user.selectOptions(screen.getByRole("combobox", { name: "Estado" }), "archived");
+    await user.click(screen.getByRole("button", { name: "Archivadas 1" }));
     expect(titles()).toEqual(["Archivado"]);
   });
 

@@ -1,27 +1,25 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { ProgressBar } from "@/components/progress/ProgressBar";
+import { useProgressSection } from "@/components/progress/ProgressSection";
+import { ProgressSortSelect } from "@/components/progress/ProgressSortSelect";
+import { sortByProgress } from "@/components/progress/progress-list-shared";
 import {
   DEFAULT_FOLLOWING_FILTERS,
+  FOLLOWING_SORTS,
   type FollowingFilters,
-  type FollowingSort,
 } from "@/components/progress/progress-tabs";
 import { useProgressFilters } from "@/components/progress/use-progress-filters";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FilterSelect } from "@/components/ui/FilterSelect";
 import { UndoToast } from "@/components/ui/UndoToast";
 import { normalizeForSearch } from "@/components/artist-journey/artist-journey-list-shared";
 import { setListTracking } from "@/lib/api/camino";
 import { presentList } from "@/lib/list-presentation";
 import type { TrackedListSummary } from "@/lib/api/schemas";
-
-function progressRatio(progress: { selectedCount: number; listenedCount: number }): number {
-  return progress.selectedCount > 0 ? progress.listenedCount / progress.selectedCount : 0;
-}
 
 interface TrackedCaminosListProps {
   lists: TrackedListSummary[];
@@ -45,15 +43,21 @@ interface Untracked {
 // dentro de la pestaña.
 //
 // Desde refine-progress-page-phase1: los filtros viven en la URL (D5) y "Dejar de seguir" nombra la lista y ofrece
-// deshacer (D3): desactivar el seguimiento conserva el guardado, así que deshacer es volver a activarlo.
+// deshacer (D3): desactivar el seguimiento conserva el guardado, así que deshacer es volver a activarlo. Desde
+// redesign-progress-toolbar el orden usa el mismo selector y nombre ("Más avanzadas") que las otras pestañas y el total
+// se informa a la sección.
 export function TrackedCaminosList({ lists: initial, initialFilters }: TrackedCaminosListProps) {
   const t = useTranslations("camino");
   const locale = useLocale();
+  const { reportTotal } = useProgressSection();
   const [filters, setFilter] = useProgressFilters(DEFAULT_FOLLOWING_FILTERS, initialFilters);
   const [items, setItems] = useState(initial);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [untracked, setUntracked] = useState<Untracked | null>(null);
+
+  useEffect(() => setItems(initial), [initial]);
+  useEffect(() => reportTotal("following", items.length), [items.length, reportTotal]);
 
   const visible = useMemo(() => {
     const q = normalizeForSearch(filters.q.trim());
@@ -65,7 +69,7 @@ export function TrackedCaminosList({ lists: initial, initialFilters }: TrackedCa
         )
       : items;
     if (filters.sort === "recent") return filtered;
-    return [...filtered].sort((a, b) => progressRatio(b.progress) - progressRatio(a.progress));
+    return sortByProgress(filtered);
   }, [items, filters]);
 
   async function handleUntrack(list: TrackedListSummary) {
@@ -144,15 +148,11 @@ export function TrackedCaminosList({ lists: initial, initialFilters }: TrackedCa
           aria-label={t("trackedSearchPlaceholder")}
           className="w-full rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted sm:w-auto sm:min-w-[12rem] sm:flex-1"
         />
-        <FilterSelect
+        <ProgressSortSelect
           value={filters.sort}
-          onChange={(value) => setFilter("sort", value as FollowingSort)}
-          ariaLabel={t("trackedSortLabel")}
-          widthClassName="w-[15ch]"
-        >
-          <option value="recent">{t("trackedSort.recent")}</option>
-          <option value="progress">{t("trackedSort.progress")}</option>
-        </FilterSelect>
+          options={FOLLOWING_SORTS}
+          onChange={(value) => setFilter("sort", value)}
+        />
       </div>
 
       {visible.length === 0 ? (

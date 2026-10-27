@@ -417,6 +417,20 @@ export async function countSavedListsByType(saverId: string) {
 }
 
 /**
+ * Cantidad de listas ajenas con seguimiento de progreso activo, con el mismo filtro que `listTrackedLists` (dueño con
+ * cuenta activa): el total de la pestaña Listas que sigo de /me/progress (openspec: redesign-progress-toolbar, D3).
+ */
+export async function countTrackedLists(trackerId: string): Promise<number> {
+  const [row] = await db
+    .select({ n: count() })
+    .from(listSave)
+    .innerJoin(userList, eq(listSave.listId, userList.id))
+    .innerJoin(appUser, eq(userList.ownerId, appUser.id))
+    .where(and(eq(listSave.saverId, trackerId), eq(listSave.tracking, true), activeUserCondition()));
+  return Number(row?.n ?? 0);
+}
+
+/**
  * Listado paginado de las listas que guardó un usuario. Acepta los mismos filtros que las listas propias: `q` sobre el
  * título, `entityType` y `sort` (`recent` = fecha de guardado, `alpha` = título); `counts` cuenta por tipo sin filtros
  * (openspec: redesign-me-lists-toolbar, D1–D2).

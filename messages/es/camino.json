@@ -1,6 +1,6 @@
 {
   "pageTitle": "Listas para completar",
-  "myCaminosHeading": "Mis listas",
+  "myCaminosHeading": "Todavía no tienes listas para completar",
   "myCaminosEmptyHint": "Arma tu primera lista para completar: una selección propia de álbumes, sin relación con ningún artista en particular.",
   "trackedListsHeading": "Todavía no sigues ninguna lista",
   "trackedEmpty": "Todavía no estás siguiendo el progreso de ninguna lista ajena. Activalo desde el detalle de una lista de álbumes.",
@@ -78,19 +78,12 @@
   "tablistLabel": "Secciones de progreso",
   "tabs": {
     "discographies": "Discografías",
-    "lists": "Mis listas",
+    "lists": "Listas para completar",
     "following": "Listas que sigo"
   },
-  "itemsCountShort": "{count, plural, one {# lista} other {# listas}}",
   "searchPlaceholder": "Buscar por título",
   "sortLabel": "Ordenar",
-  "sort": {
-    "recent": "Recientes",
-    "alpha": "Alfabético",
-    "state": "Por estado"
-  },
   "stateFilterLabel": "Estado",
-  "stateFilterAll": "Todo",
   "viewModeLabel": "Modo de visualización",
   "viewMode": {
     "detailed": "Detallada",
@@ -99,11 +92,6 @@
   },
   "lastUpdatedLabel": "Actualizado",
   "trackedSearchPlaceholder": "Buscar por título o dueño",
-  "trackedSortLabel": "Ordenar",
-  "trackedSort": {
-    "recent": "Recientes",
-    "progress": "Más progreso"
-  },
   "hub": {
     "title": "Progreso",
     "description": "Cuánto llevas escuchado de discografías y listas, según tu diario.",
@@ -127,5 +115,27 @@
   "untracked": "Dejaste de seguir «{title}»",
   "undo": "Deshacer",
   "undoError": "No pudimos deshacer. Intenta de nuevo.",
-  "discoverLists": "Descubrir listas para completar"
+  "discoverLists": "Descubrir listas para completar",
+  "tabsShort": {
+    "lists": "Para completar"
+  },
+  "primary": {
+    "discographies": "Completar discografía",
+    "lists": "Nueva lista para completar"
+  },
+  "stateSegment": {
+    "all": "Todas",
+    "in_progress": "En curso",
+    "complete": "Completas",
+    "archived": "Archivadas"
+  },
+  "sortOption": {
+    "recent": "Recientes",
+    "alpha": "Alfabético",
+    "state": "Por estado",
+    "progress": "Más avanzadas"
+  },
+  "primaryShort": {
+    "lists": "Nueva lista"
+  }
 }

@@ -14,12 +14,16 @@ const mocks = vi.hoisted(() => ({
   listMyArtistJourneys: vi.fn(),
   listMyCaminos: vi.fn(),
   listTrackedLists: vi.fn(),
+  countProgressTabs: vi.fn(),
 }));
 vi.mock("@/services/auth/page-auth", () => ({ requirePageUser: () => mocks.requirePageUser() }));
 vi.mock("@/services/artist-journeys/artist-journeys", () => ({
   listMyArtistJourneys: (...a: unknown[]) => mocks.listMyArtistJourneys(...a),
 }));
 vi.mock("@/services/camino/camino", () => ({ listMyCaminos: (...a: unknown[]) => mocks.listMyCaminos(...a) }));
+vi.mock("@/services/progress/progress-counts", () => ({
+  countProgressTabs: (...a: unknown[]) => mocks.countProgressTabs(...a),
+}));
 vi.mock("@/services/lists/saved-lists", () => ({
   listTrackedLists: (...a: unknown[]) => mocks.listTrackedLists(...a),
 }));
@@ -60,6 +64,7 @@ describe("ProgressPage", () => {
     mocks.listMyArtistJourneys.mockResolvedValue([]);
     mocks.listMyCaminos.mockResolvedValue([]);
     mocks.listTrackedLists.mockResolvedValue([]);
+    mocks.countProgressTabs.mockResolvedValue({ discographies: 3, lists: 2, following: 1 });
   });
 
   it("sin ?tab=, carga solo Discografías", async () => {
@@ -98,5 +103,14 @@ describe("ProgressPage", () => {
   it("en Listas que sigo ignora el estado", async () => {
     const page = await run({ tab: "following", sort: "progress", state: "archived" });
     expect(findInitialFilters(page)).toEqual({ sort: "progress" });
+  });
+
+  // openspec: redesign-progress-toolbar
+  it("pasa a la sección los totales de las tres pestañas", async () => {
+    const page = await run({ tab: "lists" });
+    const section = (page as { props: { children: { props: Record<string, unknown> } } }).props.children;
+    expect(section.props.initialTotals).toEqual({ discographies: 3, lists: 2, following: 1 });
+    expect(section.props.activeTab).toBe("lists");
+    expect(mocks.countProgressTabs).toHaveBeenCalledWith("u1");
   });
 });

@@ -49,7 +49,7 @@
   "genericError": "We couldn't save the change. Please try again.",
   "myJourneysTitle": "Discographies",
   "myJourneysEmpty": "You're not completing any discography yet.",
-  "myJourneysEmptyHint": "Start from any artist's page with “Complete discography”.",
+  "myJourneysEmptyHint": "Pick an artist and mark the records you want to hear; your diary tracks how far you are.",
   "viewArtist": "View artist",
   "searchPlaceholder": "Search by artist",
   "noResultsTitle": "No results",
@@ -60,14 +60,6 @@
     "index": "Index",
     "graphic": "Graphic"
   },
-  "sortLabel": "Sort",
-  "sort": {
-    "recent": "Recent",
-    "alpha": "Alphabetical",
-    "state": "By status"
-  },
-  "stateFilterLabel": "Status",
-  "stateFilterAll": "All",
   "listDeleteItem": "Delete",
   "listDeleteError": "We couldn't delete the discography. Please try again.",
   "listArchiveError": "We couldn't update the discography. Please try again.",
@@ -76,5 +68,5 @@
   "deleteDialogTitle": "Delete your {artist} discography?",
   "deleteDialogMessage": "{count, plural, =0 {Your selection is empty.} one {Your selection of # record is lost.} other {Your selection of # records is lost.}} Your listens stay in your diary, and you can start it again anytime.",
   "deleteDialogConfirm": "Delete discography",
-  "searchArtist": "Search for an artist"
+  "startJourney": "Complete discography"
 }

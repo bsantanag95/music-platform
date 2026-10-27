@@ -194,7 +194,7 @@ pestañas del panel, con nombres que describen su contenido.
 
 #### Scenario: Acceso visible junto al de Recorridos
 - **WHEN** un usuario autenticado abre el menú de usuario del Header y activa "Progreso"
-- **THEN** llega a `/me/progress`, donde Discografías, Mis listas y Listas que sigo son pestañas
+- **THEN** llega a `/me/progress`, donde Discografías, Listas para completar y Listas que sigo son pestañas
   distintas y distinguibles
 - **AND** el menú no tiene un acceso propio a Caminos
 
@@ -224,7 +224,7 @@ propios del usuario y los de otros usuarios — esa comparación solo existe, de
 anónima, en la capability `camino-discovery`.
 
 #### Scenario: Sin comparación en la superficie personal
-- **WHEN** un usuario abre la pestaña "Mis listas" o "Listas que sigo" de `/me/progress`
+- **WHEN** un usuario abre la pestaña "Listas para completar" o "Listas que sigo" de `/me/progress`
 - **THEN** no ve ningún conteo ni ranking que lo compare con otros usuarios
 
 ### Requirement: Estante "Caminos" en el perfil de un usuario
@@ -300,7 +300,7 @@ privada de quien trackea.
 ### Requirement: Listado propio de Caminos en /me/progress, en pestañas
 Los Caminos propios y las listas ajenas con seguimiento de progreso SHALL mostrarse como dos
 pestañas del panel unificado `/me/progress` (capability `progress-hub`), que requiere sesión:
-**"Mis listas"** (`?tab=lists`, los Caminos propios) y **"Listas que sigo"** (`?tab=following`,
+**"Listas para completar"** (`?tab=lists`, los Caminos propios) y **"Listas que sigo"** (`?tab=following`,
 las listas ajenas trackeadas), junto a la pestaña Discografías de los recorridos de artista. La
 pestaña activa vive en `?tab=` (enlazable, sobrevive a la recarga). `/me/caminos` SHALL redirigir
 a la pestaña equivalente de `/me/progress`. El sistema SHALL NOT mezclar Caminos propios y listas
@@ -309,20 +309,21 @@ una lista unificada mezcla dos semánticas de "Estado" distintas (un Camino prop
 archivarse, una lista trackeada no) y una acción por fila distinta (archivar/eliminar vs. dejar
 de seguir) para el mismo campo de "Estado" y de acción.
 
-"Mis listas" SHALL mostrar los Caminos dinámicos propios del usuario con buscador (por título),
-orden (recientes / alfabético / por estado), filtro por estado (todo / en curso / completo /
-archivado) y los mismos tres modos de visualización que la pestaña Discografías (Detallada /
+"Listas para completar" SHALL mostrar los Caminos dinámicos propios del usuario con buscador (por título),
+orden (recientes / alfabético / por estado / más avanzadas), segmentos de estado con su cantidad (todas / en curso /
+completas / archivadas) y los mismos tres modos de visualización que la pestaña Discografías (Detallada /
 Índice / Gráfico, con preferencia de modo persistida en el navegador) — esta pestaña es homogénea
 (todo propio, misma acción por entrada), así que admite el mismo mecanismo completo sin las
 asimetrías de una lista mezclada. Progreso discreto sin fracción numérica, mismo criterio que los
-recorridos, anunciado con una etiqueta discreta. La pestaña SHALL ofrecer la acción "Nueva lista para completar".
+recorridos, anunciado con una etiqueta discreta. La acción "Nueva lista para completar" SHALL vivir en la
+cabecera del panel y abrir el diálogo de acciones rápidas en esa acción; el estado vacío SHALL ofrecer la misma acción.
 Eliminar un Camino desde el menú SHALL abrir un diálogo que nombra la lista, dice cuántos álbumes se pierden y que
 las escuchas siguen en el diario; solo confirmarlo borra. El ⋮ SHALL medir al menos 32 px (44 px con puntero grueso), y
 el modo de visualización SHALL leerse antes de pintar el listado, sin saltar de un modo a otro.
 
 "Listas que sigo" SHALL mostrar las listas ajenas sobre las que el usuario activó tracking de
 progreso (Requirement "Trackear el progreso propio sobre una lista ajena" de `list-saves`), con
-buscador (por título o por nombre de dueño) y orden (recientes / más progreso), sin filtro de
+buscador (por título o por nombre de dueño) y orden (recientes / más avanzadas), sin filtro de
 estado (no existe "archivado" para una lista ajena) ni modo de visualización (un único
 tratamiento de fila alcanza — no es una curaduría propia). Cada entrada SHALL enlazar al detalle
 de esa lista ajena (la ruta de lectura correcta según su `kind`, ver Requirement "Acceso general
@@ -331,18 +332,18 @@ dejar de seguir quita la entrada y muestra un aviso con "Deshacer", que vuelve a
 entrada en su lugar. El estado vacío SHALL titularse "Todavía no sigues ninguna lista" y enlazar al descubrimiento de
 listas para completar.
 
-En las dos pestañas, la búsqueda, el orden y (en "Mis listas") el filtro de estado SHALL reflejarse en la URL (`q`,
+En las dos pestañas, la búsqueda, el orden y (en "Listas para completar") el filtro de estado SHALL reflejarse en la URL (`q`,
 `sort`, `state`, solo cuando difieren del defecto, sin crear historial y conservando `tab`), y la página SHALL abrirse con
 ellos; un valor inválido SHALL ignorarse.
 
 #### Scenario: Pestañas separadas, no una lista mezclada
 - **WHEN** un usuario con Caminos propios y listas ajenas trackeadas abre `/me/progress`
-- **THEN** ve las pestañas "Mis listas" y "Listas que sigo" (además de Discografías), nunca ambos
+- **THEN** ve las pestañas "Listas para completar" y "Listas que sigo" (además de Discografías), nunca ambos
   orígenes en una sola lista ordenable
 
 #### Scenario: Buscador y orden completos en "Mis Caminos"
 - **WHEN** el propietario tiene varios Caminos propios y usa el buscador, el orden o el filtro de
-  estado en la pestaña "Mis listas"
+  estado en la pestaña "Listas para completar"
 - **THEN** ve el subconjunto filtrado/ordenado, sin ida y vuelta al servidor
 
 #### Scenario: "Trackeados" sin filtro de estado ni modo de vista
@@ -351,12 +352,12 @@ ellos; un valor inválido SHALL ignorarse.
   visualización
 
 #### Scenario: Pestaña vacía
-- **WHEN** un usuario sin Caminos propios abre "Mis listas", o sin tracking activo abre
+- **WHEN** un usuario sin Caminos propios abre "Listas para completar", o sin tracking activo abre
   "Listas que sigo"
 - **THEN** ve el estado vacío localizado de esa pestaña, sin error
 
 #### Scenario: Eliminar un Camino desde el listado
-- **WHEN** el propietario elige "Eliminar" en el menú de un Camino de "Mis listas"
+- **WHEN** el propietario elige "Eliminar" en el menú de un Camino de "Listas para completar"
 - **THEN** se abre un diálogo con el título del Camino y cuántos álbumes se pierden, y nada se borra hasta confirmar
 
 #### Scenario: Dejar de seguir y deshacer
@@ -365,8 +366,12 @@ ellos; un valor inválido SHALL ignorarse.
   reaparece en su posición
 
 #### Scenario: Filtros en la URL
-- **WHEN** el usuario busca en "Mis listas" y recarga la página
+- **WHEN** el usuario busca en "Listas para completar" y recarga la página
 - **THEN** la URL lleva `tab=lists&q=…` y el buscador conserva el texto
+
+#### Scenario: Nueva lista para completar desde la cabecera
+- **WHEN** el usuario pulsa "+ Nueva lista para completar", la crea en el diálogo y lo cierra
+- **THEN** la pestaña "Listas para completar" muestra la lista nueva y su total sube en uno
 
 #### Scenario: Redirección desde la ruta anterior
 - **WHEN** un usuario con sesión abre `/me/caminos?tab=tracked`

@@ -1,6 +1,6 @@
 {
   "pageTitle": "Lists to complete",
-  "myCaminosHeading": "My lists",
+  "myCaminosHeading": "You don't have lists to complete yet",
   "myCaminosEmptyHint": "Build your first list to complete: your own selection of albums, unrelated to any single artist.",
   "trackedListsHeading": "You don't follow any list yet",
   "trackedEmpty": "You're not tracking progress on any list yet. Turn it on from an album list's detail page.",
@@ -78,19 +78,12 @@
   "tablistLabel": "Progress sections",
   "tabs": {
     "discographies": "Discographies",
-    "lists": "My lists",
+    "lists": "Lists to complete",
     "following": "Lists I follow"
   },
-  "itemsCountShort": "{count, plural, one {# list} other {# lists}}",
   "searchPlaceholder": "Search by title",
   "sortLabel": "Sort",
-  "sort": {
-    "recent": "Recent",
-    "alpha": "Alphabetical",
-    "state": "By state"
-  },
   "stateFilterLabel": "State",
-  "stateFilterAll": "All",
   "viewModeLabel": "Display mode",
   "viewMode": {
     "detailed": "Detailed",
@@ -99,11 +92,6 @@
   },
   "lastUpdatedLabel": "Updated",
   "trackedSearchPlaceholder": "Search by title or owner",
-  "trackedSortLabel": "Sort",
-  "trackedSort": {
-    "recent": "Recent",
-    "progress": "Most progress"
-  },
   "hub": {
     "title": "Progress",
     "description": "How much you've listened to of discographies and lists, based on your diary.",
@@ -127,5 +115,27 @@
   "untracked": "You stopped following “{title}”",
   "undo": "Undo",
   "undoError": "We couldn't undo that. Try again.",
-  "discoverLists": "Discover lists to complete"
+  "discoverLists": "Discover lists to complete",
+  "tabsShort": {
+    "lists": "To complete"
+  },
+  "primary": {
+    "discographies": "Complete discography",
+    "lists": "New list to complete"
+  },
+  "stateSegment": {
+    "all": "All",
+    "in_progress": "In progress",
+    "complete": "Complete",
+    "archived": "Archived"
+  },
+  "sortOption": {
+    "recent": "Recent",
+    "alpha": "Alphabetical",
+    "state": "By state",
+    "progress": "Furthest along"
+  },
+  "primaryShort": {
+    "lists": "New list"
+  }
 }

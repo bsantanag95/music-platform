@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
+import { ProgressSectionTestProvider } from "@/components/progress/progress-section-test-utils";
 import { ArtistJourneyList } from "./ArtistJourneyList";
 import type { ArtistJourneySummary } from "@/lib/api/schemas";
 
@@ -237,7 +238,7 @@ describe("ArtistJourneyList", () => {
         ]}
       />,
     );
-    await user.selectOptions(screen.getByRole("combobox", { name: "Estado" }), "archived");
+    await user.click(screen.getByRole("button", { name: "Archivadas 1" }));
     expect(names()).toEqual(["Archivado Artist"]);
   });
 
@@ -265,7 +266,7 @@ describe("ArtistJourneyList", () => {
         ]}
       />,
     );
-    await user.selectOptions(screen.getByRole("combobox", { name: "Estado" }), "in_progress");
+    await user.click(screen.getByRole("button", { name: "En curso 2" }));
     await user.selectOptions(screen.getByRole("combobox", { name: "Ordenar" }), "alpha");
     expect(names()).toEqual(["Deep Purple", "Sabrina Carpenter"]);
   });
@@ -376,9 +377,64 @@ describe("ArtistJourneyList", () => {
     expect(screen.getByRole("img", { name: "Avance: a la mitad" })).toBeInTheDocument();
   });
 
-  it("el estado vacío enlaza a la búsqueda de artistas", () => {
-    renderWithIntl(<ArtistJourneyList journeys={[]} />);
-    expect(screen.getByRole("link", { name: "Buscar un artista" })).toHaveAttribute("href", "/search?type=artist");
+  // openspec: redesign-progress-toolbar
+  it("el estado vacío ofrece la acción de la cabecera", async () => {
+    const user = userEvent.setup();
+    const openPrimary = vi.fn();
+    renderWithIntl(
+      <ProgressSectionTestProvider openPrimary={openPrimary}>
+        <ArtistJourneyList journeys={[]} />
+      </ProgressSectionTestProvider>,
+    );
+    await user.click(screen.getByRole("button", { name: "Completar discografía" }));
+    expect(openPrimary).toHaveBeenCalled();
+  });
+
+  it("los segmentos dicen cuántos hay por estado y deshabilitan los vacíos", () => {
+    renderWithIntl(
+      <ArtistJourneyList journeys={[summary(), summary({ artistId: "a2", artistName: "Ratt", state: "complete" })]} />,
+    );
+    const group = screen.getByRole("group", { name: "Estado" });
+    expect(within(group).getAllByRole("button").map((button) => button.textContent)).toEqual([
+      "Todas 2",
+      "En curso 1",
+      "Completas 1",
+      "Archivadas 0",
+    ]);
+    expect(within(group).getByRole("button", { name: "Archivadas 0" })).toBeDisabled();
+    expect(within(group).getByRole("button", { name: "Todas 2" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("'Más avanzadas' ordena por la parte escuchada sin mostrar cifras", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(
+      <ArtistJourneyList
+        journeys={[
+          summary({ artistId: "a1", artistName: "Poco", progress: { selectedCount: 10, listenedCount: 1 } }),
+          summary({ artistId: "a2", artistName: "Vacío", progress: { selectedCount: 0, listenedCount: 0 } }),
+          summary({ artistId: "a3", artistName: "Mucho", progress: { selectedCount: 4, listenedCount: 3 } }),
+        ]}
+      />,
+    );
+    await user.selectOptions(screen.getByRole("combobox", { name: "Ordenar" }), "progress");
+    expect(names()).toEqual(["Mucho", "Poco", "Vacío"]);
+    expect(new URLSearchParams(window.location.search).get("sort")).toBe("progress");
+  });
+
+  it("informa su total a la sección al borrar", async () => {
+    const user = userEvent.setup();
+    const reportTotal = vi.fn();
+    mocks.deleteArtistJourney.mockResolvedValueOnce(null);
+    renderWithIntl(
+      <ProgressSectionTestProvider reportTotal={reportTotal}>
+        <ArtistJourneyList journeys={[summary(), summary({ artistId: "a2", artistName: "Ratt" })]} />
+      </ProgressSectionTestProvider>,
+    );
+    expect(reportTotal).toHaveBeenLastCalledWith("discographies", 2);
+    await openCardMenu(user);
+    await user.click(screen.getByRole("menuitem", { name: "Eliminar" }));
+    await user.click(screen.getByRole("button", { name: "Eliminar discografía" }));
+    await waitFor(() => expect(reportTotal).toHaveBeenLastCalledWith("discographies", 1));
   });
 
   it("abre con los filtros de la URL y escribe los cambios sin perder la pestaña", async () => {
