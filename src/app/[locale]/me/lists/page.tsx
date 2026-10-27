@@ -47,7 +47,7 @@ export default async function ListsPage({
     totals = { mine: sum(mine), saved: sum(initial.counts) };
   } else {
     const [initial, saved] = await Promise.all([listMyLists(user.id, 1, 20, filters), countSavedListsByType(user.id)]);
-    panel = <MyListsTab initial={initial} initialFilters={initialFilters} />;
+    panel = <MyListsTab initial={initial} initialFilters={initialFilters} ownerUsername={user.username} />;
     totals = { mine: sum(initial.counts), saved: sum(saved) };
   }
 

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { ListItemsView } from "./ListItemsView";
@@ -31,6 +31,10 @@ function installStorage() {
 const items: UserListItem[] = [
   { id: "i1", position: 1, target: { id: "t1", title: "Rumours", artistName: "Fleetwood Mac", coverThumbUrl: null } },
   { id: "i2", position: 2, target: { id: "t2", title: "Tusk", artistName: "Fleetwood Mac", coverThumbUrl: null } },
+];
+const three: UserListItem[] = [
+  ...items,
+  { id: "i3", position: 3, target: { id: "t3", title: "Mirage", artistName: "Fleetwood Mac", coverThumbUrl: null } },
 ];
 
 describe("ListItemsView", () => {
@@ -77,26 +81,52 @@ describe("ListItemsView", () => {
   });
 
   // openspec: refine-me-lists-page-phase1
-  it("los controles que no aplican en un extremo no se ven pero conservan su lugar", () => {
+  it("subir y bajar que no aplican en un extremo no se ven pero conservan su lugar", () => {
     const manage = { busy: false, onReorder: vi.fn(), onRemove: vi.fn() };
     renderWithIntl(<ListItemsView items={items} entityType="release-group" manage={manage} />);
-    expect(screen.getByRole("button", { name: "Mover “Rumours” al principio", hidden: true }).className).toContain(
-      "invisible",
-    );
     expect(screen.getByRole("button", { name: "Subir “Rumours”", hidden: true }).className).toContain("invisible");
     expect(screen.getByRole("button", { name: "Bajar “Rumours”" }).className).not.toContain("invisible");
     expect(screen.getByRole("button", { name: "Bajar “Tusk”", hidden: true }).className).toContain("invisible");
   });
 
-  it("los controles de reordenar miden 32 px y crecen a 44 con puntero grueso", () => {
+  it("subir, bajar y el menú miden 32 px y crecen a 44 con puntero grueso", () => {
     const manage = { busy: false, onReorder: vi.fn(), onRemove: vi.fn() };
     renderWithIntl(<ListItemsView items={items} entityType="release-group" manage={manage} />);
-    const down = screen.getByRole("button", { name: "Bajar “Rumours”" });
-    expect(down.className).toContain("size-8");
-    expect(down.className).toContain("[@media(pointer:coarse)]:size-11");
-    expect(screen.getByRole("button", { name: "Quitar “Rumours”" }).className).toContain(
-      "[@media(pointer:coarse)]:min-h-11",
-    );
+    for (const name of ["Bajar “Rumours”", "Más acciones para “Rumours”"]) {
+      const button = screen.getByRole("button", { name });
+      expect(button.className).toContain("size-8");
+      expect(button.className).toContain("[@media(pointer:coarse)]:size-11");
+    }
+  });
+
+  // openspec: redesign-me-lists-views
+  it("el menú de la fila lleva al final y quita", async () => {
+    const manage = { busy: false, onReorder: vi.fn(), onRemove: vi.fn() };
+    renderWithIntl(<ListItemsView items={three} entityType="release-group" manage={manage} />);
+    await userEvent.click(screen.getByRole("button", { name: "Más acciones para “Rumours”" }));
+    const menu = screen.getByRole("menu");
+    expect(within(menu).queryByRole("menuitem", { name: "Al principio" })).not.toBeInTheDocument();
+    await userEvent.click(within(menu).getByRole("menuitem", { name: "Al final" }));
+    expect(manage.onReorder).toHaveBeenCalledWith(["i2", "i3", "i1"]);
+
+    await userEvent.click(screen.getByRole("button", { name: "Más acciones para “Tusk”" }));
+    await userEvent.click(within(screen.getByRole("menu")).getByRole("menuitem", { name: "Quitar" }));
+    expect(manage.onRemove).toHaveBeenCalledWith("i2");
+  });
+
+  it("mover a la posición lleva el ítem al puesto elegido", async () => {
+    const manage = { busy: false, onReorder: vi.fn(), onRemove: vi.fn() };
+    renderWithIntl(<ListItemsView items={three} entityType="release-group" manage={manage} />);
+    await userEvent.click(screen.getByRole("button", { name: "Más acciones para “Mirage”" }));
+    await userEvent.click(within(screen.getByRole("menu")).getByRole("menuitem", { name: "Mover a la posición…" }));
+    const input = screen.getByLabelText("Posición (1 a 3)");
+    expect(input).toHaveValue(3);
+    expect(screen.getByRole("button", { name: "Mover" })).toBeDisabled();
+    await userEvent.clear(input);
+    await userEvent.type(input, "1");
+    await userEvent.click(screen.getByRole("button", { name: "Mover" }));
+    expect(manage.onReorder).toHaveBeenCalledWith(["i3", "i1", "i2"]);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("en Índice los controles quedan siempre visibles", async () => {

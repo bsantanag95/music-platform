@@ -7,7 +7,8 @@ import { ListModeSwitcher } from "./ListModeSwitcher";
 import { ItemsDetailed } from "./ItemsDetailed";
 import { ItemsIndex } from "./ItemsIndex";
 import { ItemsGraphic } from "./ItemsGraphic";
-import { moveByOffset, moveToEdge } from "./list-item-order";
+import { moveByOffset, moveToEdge, moveToPosition } from "./list-item-order";
+import { MoveToPositionDialog } from "./MoveToPositionDialog";
 import { useListViewMode } from "./use-list-view-mode";
 import type { ListItemsRowActions } from "./list-items-view";
 import type { ListQuickActions } from "./ListItemQuickActions";
@@ -53,6 +54,9 @@ export function ListItemsView({
   const t = useTranslations("lists");
   const [mode, setMode, ready] = useListViewMode();
 
+  // Ítem del diálogo "Mover a la posición…" (D6).
+  const [positionFor, setPositionFor] = useState<string | null>(null);
+
   const actions: ListItemsRowActions | null = useMemo(() => {
     if (!manage) return null;
     const order = () => items.map((item) => item.id);
@@ -60,9 +64,11 @@ export function ListItemsView({
       busy: manage.busy,
       move: (id, delta) => manage.onReorder(moveByOffset(order(), id, delta)),
       moveToEdge: (id, edge) => manage.onReorder(moveToEdge(order(), id, edge)),
+      askPosition: (id) => setPositionFor(id),
       remove: (id) => manage.onRemove(id),
     };
   }, [manage, items]);
+  const positionIndex = positionFor ? items.findIndex((item) => item.id === positionFor) : -1;
 
   const [openId, setOpenId] = useState<string | null>(null);
   const quickActions: ListQuickActions | null =
@@ -89,6 +95,19 @@ export function ListItemsView({
       ) : (
         <ItemsPlaceholder count={items.length} />
       )}
+
+      {manage && positionIndex >= 0 ? (
+        <MoveToPositionDialog
+          title={items[positionIndex]!.target.title}
+          current={positionIndex + 1}
+          total={items.length}
+          onCancel={() => setPositionFor(null)}
+          onMove={(position) => {
+            setPositionFor(null);
+            manage.onReorder(moveToPosition(items.map((item) => item.id), items[positionIndex]!.id, position));
+          }}
+        />
+      ) : null}
     </section>
   );
 }

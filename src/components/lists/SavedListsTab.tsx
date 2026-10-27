@@ -82,12 +82,13 @@ export function SavedListsTab({
       {lists.length === 0 && !isPending ? (
         <EmptyState title={t("noResultsTitle")} description={t("savedNoResultsDescription")} />
       ) : null}
-      <ListsGrid>
+      <ListsGrid cols="shelf">
         {lists.map((list) => {
           const shown = presentList(list, locale);
           return (
           <ListCard
             key={list.id}
+            layout="shelf"
             href={shown.href}
             title={shown.title}
             coverThumbs={list.coverThumbs}

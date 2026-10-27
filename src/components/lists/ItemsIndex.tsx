@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { ReorderButtons, RemoveItemButton } from "./ListItemControls";
+import { ItemRowControls } from "./ListItemControls";
 import { listItemHref } from "./lists-shared";
 import type { ListItemsRendererProps } from "./list-items-view";
 import { ListItemQuickActions } from "./ListItemQuickActions";
@@ -36,22 +36,18 @@ export function ItemsIndex({ items, entityType, actions, quickActions }: ListIte
           </Link>
           {actions ? (
             <div className="flex shrink-0 items-center gap-1">
-              <ReorderButtons
-                title={item.target.title}
-                index={index}
-                total={items.length}
-                handlers={{
-                  busy: actions.busy,
-                  onMove: (delta) => actions.move(item.id, delta),
-                  onMoveToEdge: (edge) => actions.moveToEdge(item.id, edge),
-                  onRemove: () => actions.remove(item.id),
-                }}
-              />
-              <RemoveItemButton
-                title={item.target.title}
-                busy={actions.busy}
-                onRemove={() => actions.remove(item.id)}
-              />
+              <ItemRowControls
+                  title={item.target.title}
+                  index={index}
+                  total={items.length}
+                  handlers={{
+                    busy: actions.busy,
+                    onMove: (delta) => actions.move(item.id, delta),
+                    onMoveToEdge: (edge) => actions.moveToEdge(item.id, edge),
+                    onAskPosition: () => actions.askPosition(item.id),
+                    onRemove: () => actions.remove(item.id),
+                  }}
+                />
             </div>
           ) : null}
           {quickActions ? <ListItemQuickActions item={item} quick={quickActions} variant="row" className="shrink-0" /> : null}

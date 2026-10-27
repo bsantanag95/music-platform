@@ -41,6 +41,8 @@ interface ListCardProps {
   layout?: "row" | "shelf";
   /** Primeros nombres de la lista, bajo el título de la tarjeta `large` (portada de una destacada única, D7). */
   previewNames?: string[];
+  /** Estantería: texto del recuadro que reemplaza al mosaico cuando la lista no tiene ítems (redesign-me-lists-views, D5). */
+  emptyHint?: string;
 }
 
 // Tarjeta de una lista: mosaico de portadas + título enlazado + metadatos, con
@@ -67,6 +69,7 @@ export function ListCard({
   entityType,
   layout = "row",
   previewNames,
+  emptyHint,
 }: ListCardProps) {
   if (layout === "shelf") {
     return (
@@ -82,6 +85,7 @@ export function ListCard({
         action={action}
         unavailable={unavailable}
         className={className}
+        emptyHint={emptyHint}
       />
     );
   }
@@ -157,6 +161,7 @@ function ShelfCard({
   action,
   unavailable,
   className,
+  emptyHint,
 }: Pick<
   ListCardProps,
   | "href"
@@ -170,15 +175,22 @@ function ShelfCard({
   | "action"
   | "unavailable"
   | "className"
+  | "emptyHint"
 >) {
   return (
     <article className={`group relative flex min-w-0 flex-col gap-2 ${unavailable ? "opacity-60" : ""} ${className ?? ""}`}>
       <Link href={href} tabIndex={-1} aria-hidden className="block rounded-md transition-opacity group-hover:opacity-90">
-        <ListCoverMosaic coverThumbs={coverThumbs} itemCount={itemCount} entityType={entityType} className="w-full" />
+        {emptyHint && itemCount === 0 ? (
+          <span className="flex aspect-square w-full items-center justify-center rounded-md border border-dashed border-ink-border bg-ink-surface p-3 text-center font-data text-xs text-paper-muted">
+            {emptyHint}
+          </span>
+        ) : (
+          <ListCoverMosaic coverThumbs={coverThumbs} itemCount={itemCount} entityType={entityType} className="w-full" />
+        )}
       </Link>
       {action ? (
         // Fondo propio para leerse sobre cualquier carátula.
-        <div className="absolute right-1.5 top-1.5 [&_button]:bg-ink/85 [&_button]:backdrop-blur-sm">{action}</div>
+        <div className="absolute right-1.5 top-1.5 [&_button:not([role=menuitem])]:bg-ink/85 [&_button:not([role=menuitem])]:backdrop-blur-sm">{action}</div>
       ) : null}
 
       <div className="flex min-w-0 flex-col gap-0.5">

@@ -1,13 +1,14 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 // Primitivo genérico de menú "···" para una fila (openspec: redesign-diary-row).
 // Sin dependencia nueva: botón `aria-haspopup="menu"` + `<ul role="menu">`
 // posicionado `absolute` bajo el trigger, sin portal (a diferencia de
 // `RegisterListenDialog`, que sí lo necesita por ser un modal de pantalla
 // completa — una fila no tiene ese problema de recorte). Cierra con `Escape`,
-// al elegir un ítem, o con un click fuera.
+// al elegir un ítem, o con un click fuera. Si a la izquierda no hay lugar (la primera columna de una estantería en un
+// teléfono), se abre hacia la derecha; Escape devuelve el foco al disparador (openspec: redesign-me-lists-views, D8).
 const RowMenuContext = createContext<{ close: () => void } | null>(null);
 
 function KebabIcon() {
@@ -29,8 +30,19 @@ interface RowMenuProps {
 
 export function RowMenu({ label, children, triggerClassName = "size-6" }: RowMenuProps) {
   const [open, setOpen] = useState(false);
+  const [alignLeft, setAlignLeft] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setAlignLeft(false);
+      return;
+    }
+    const rect = listRef.current?.getBoundingClientRect();
+    if (rect && rect.left < 8) setAlignLeft(true);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -40,7 +52,10 @@ export function RowMenu({ label, children, triggerClassName = "size-6" }: RowMen
       }
     };
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
     };
     document.addEventListener("mousedown", handlePointerDown);
     document.addEventListener("keydown", handleKeyDown);
@@ -71,6 +86,7 @@ export function RowMenu({ label, children, triggerClassName = "size-6" }: RowMen
   return (
     <div ref={containerRef} className="relative inline-block">
       <button
+        ref={triggerRef}
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
@@ -85,7 +101,7 @@ export function RowMenu({ label, children, triggerClassName = "size-6" }: RowMen
           ref={listRef}
           role="menu"
           onKeyDown={handleMenuKeyDown}
-          className="absolute right-0 z-10 mt-1 flex min-w-[11rem] flex-col overflow-hidden rounded-md border border-ink-border bg-ink-surface py-1 font-data text-xs shadow-none"
+          className={`absolute ${alignLeft ? "left-0" : "right-0"} z-10 mt-1 flex min-w-[11rem] flex-col overflow-hidden rounded-md border border-ink-border bg-ink-surface py-1 font-data text-xs shadow-none`}
         >
           <RowMenuContext.Provider value={{ close: () => setOpen(false) }}>{children}</RowMenuContext.Provider>
         </ul>
@@ -111,7 +127,7 @@ export function RowMenuItem({ onSelect, danger = false, children }: RowMenuItemP
           ctx?.close();
           onSelect();
         }}
-        className={`w-full whitespace-nowrap px-3 py-1.5 text-left leading-relaxed transition-colors hover:bg-ink ${
+        className={`w-full whitespace-nowrap px-3 py-1.5 text-left leading-relaxed transition-colors hover:bg-ink [@media(pointer:coarse)]:min-h-11 ${
           danger ? "text-danger" : "text-paper"
         }`}
       >

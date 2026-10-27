@@ -7,6 +7,8 @@ export interface ListItemsRowActions {
   busy: boolean;
   move: (id: string, delta: -1 | 1) => void;
   moveToEdge: (id: string, edge: "start" | "end") => void;
+  /** Abre el diálogo "Mover a la posición…" para ese ítem (openspec: redesign-me-lists-views, D6). */
+  askPosition: (id: string) => void;
   remove: (id: string) => void;
 }
 
