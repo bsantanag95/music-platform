@@ -8,7 +8,7 @@
 > |---|---|---|
 > | Recorrido de artista (`artist_journey`, `artistJourney.*`) | Discografía · «Completar discografía» · «Tu progreso» | Discography · "Complete discography" · "Your progress" |
 > | Camino (`custom_journey`, `camino.*`) | «lista para completar» · «Nueva lista para completar» | "list to complete" · "New list to complete" |
-> | Camino propio (pestaña) | Mis listas | My lists |
+> | Camino propio (pestaña) | Listas para completar (desde `redesign-progress-toolbar`; antes «Mis listas») | Lists to complete |
 > | Lista ajena con seguimiento (`tracked`) | Listas que sigo | Lists I follow |
 > | Descubrimiento `/caminos` y estante del perfil | Listas para completar | Lists to complete |
 > | `/activity` (pública) | Comunidad | Community |
@@ -140,9 +140,28 @@ Hoy esta superficie es `/me/progress`, con las pestañas Discografías, Mis list
 - **Estados vacíos con un camino para empezar:** Discografías enlaza a la búsqueda de artistas y Listas que sigo al
   descubrimiento de listas para completar.
 
-Pendiente para la Fase 2: acción principal en la cabecera, pestañas con totales, nombres de pestaña, segmentos de estado
-y el orden «Más avanzadas». Pendiente para la Fase 3: «Siguiente», «Última escucha», secciones por estado y barra en
-Gráfico.
+### Fase 2 del rediseño (`redesign-progress-toolbar`)
+
+- **Cabecera con la acción de la pestaña.** Discografías tiene «+ Completar discografía» y Listas para completar tiene
+  «+ Nueva lista para completar». Las dos abren el diálogo de acciones rápidas del Header ya en esa acción, con el mismo
+  flujo que «+ Añadir»: la discografía se activa con los discos de estudio y el aviso enlaza a la gestión. En Listas que
+  sigo, el lugar del botón lo ocupa «Descubrir listas para completar →».
+- **Al cerrar el diálogo tras crear algo,** la página se refresca y el listado toma los datos nuevos sin perder los
+  filtros.
+- **Se quitaron de Listas para completar** el formulario en línea y la línea «N listas». Los estados vacíos ofrecen la
+  misma acción que la cabecera.
+- **Pestañas con su total:** Discografías · Listas para completar · Listas que sigo. Lo decidió el usuario el 2026-10-27
+  para no repetir «Mis listas» de `/me/lists`.
+  - `countProgressTabs` cuenta los tres totales en el servidor, aunque solo se cargue la pestaña activa.
+  - La pestaña activa actualiza su total al borrar o al dejar de seguir.
+  - Bajo `sm`, la segunda pestaña se abrevia «Para completar».
+- **Segmentos de estado con cifras** (Todas · En curso · Completas · Archivadas) en lugar del select «Todo». Un estado
+  sin entradas queda deshabilitado. Son cifras de la superficie privada del dueño: no son fracciones ni se muestran a
+  otros (§6.4.1).
+- **Orden con la etiqueta dentro** y una opción nueva en las tres pestañas, «Más avanzadas» (`sort=progress`): primero
+  la mayor parte escuchada de la selección, sin mostrar la proporción.
+
+Pendiente para la Fase 3: «Siguiente», «Última escucha», secciones por estado y barra en Gráfico.
 
 ## Lectura ajena
 

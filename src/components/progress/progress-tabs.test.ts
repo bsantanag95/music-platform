@@ -34,7 +34,8 @@ describe("progress-tabs", () => {
       sort: "alpha",
       state: "archived",
     });
-    expect(parseOwnFilters({ q: "   ", sort: "progress", state: "x" })).toEqual({});
+    expect(parseOwnFilters({ q: "   ", sort: "bogus", state: "x" })).toEqual({});
+    expect(parseOwnFilters({ sort: "progress" })).toEqual({ sort: "progress" });
     expect(parseOwnFilters({ q: ["a", "b"] })).toEqual({});
     expect(parseOwnFilters({ q: "x".repeat(150) }).q).toHaveLength(100);
   });

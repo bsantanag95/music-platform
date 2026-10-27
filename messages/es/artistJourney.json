@@ -49,7 +49,7 @@
   "genericError": "No pudimos guardar el cambio. Intenta de nuevo.",
   "myJourneysTitle": "Discografías",
   "myJourneysEmpty": "Todavía no estás completando ninguna discografía.",
-  "myJourneysEmptyHint": "Empieza desde la página de cualquier artista con «Completar discografía».",
+  "myJourneysEmptyHint": "Elige un artista y marca los discos que quieres escuchar; tu diario dice cuánto llevas.",
   "viewArtist": "Ver artista",
   "searchPlaceholder": "Buscar por artista",
   "noResultsTitle": "Sin resultados",
@@ -60,14 +60,6 @@
     "index": "Índice",
     "graphic": "Gráfico"
   },
-  "sortLabel": "Ordenar",
-  "sort": {
-    "recent": "Recientes",
-    "alpha": "Alfabético",
-    "state": "Por estado"
-  },
-  "stateFilterLabel": "Estado",
-  "stateFilterAll": "Todo",
   "listDeleteItem": "Eliminar",
   "listDeleteError": "No pudimos eliminar la discografía. Intenta de nuevo.",
   "listArchiveError": "No pudimos actualizar la discografía. Intenta de nuevo.",
@@ -76,5 +68,5 @@
   "deleteDialogTitle": "¿Eliminar tu discografía de {artist}?",
   "deleteDialogMessage": "{count, plural, =0 {Tu selección está vacía.} one {Se pierde tu selección de # disco.} other {Se pierde tu selección de # discos.}} Tus escuchas siguen en el diario y puedes volver a empezarla cuando quieras.",
   "deleteDialogConfirm": "Eliminar discografía",
-  "searchArtist": "Buscar un artista"
+  "startJourney": "Completar discografía"
 }

@@ -1,17 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FilterSelect } from "@/components/ui/FilterSelect";
 import { ProgressPlaceholder } from "@/components/progress/ProgressPlaceholder";
-import {
-  DEFAULT_OWN_FILTERS,
-  type OwnFilters,
-  type OwnSort,
-  type OwnStateFilter,
-} from "@/components/progress/progress-tabs";
+import { useProgressSection } from "@/components/progress/ProgressSection";
+import { ProgressSortSelect } from "@/components/progress/ProgressSortSelect";
+import { ProgressStateSegments } from "@/components/progress/ProgressStateSegments";
+import { countByState, sortByProgress } from "@/components/progress/progress-list-shared";
+import { DEFAULT_OWN_FILTERS, OWN_SORTS, type OwnFilters } from "@/components/progress/progress-tabs";
 import { useProgressFilters } from "@/components/progress/use-progress-filters";
 import { ApiError } from "@/lib/api/client";
 import { archiveArtistJourney, deleteArtistJourney, unarchiveArtistJourney } from "@/lib/api/artist-journeys";
@@ -59,9 +57,12 @@ const RENDERERS = {
 // (Detallada/Índice/Gráfico).
 //
 // Desde refine-progress-page-phase1: los filtros viven en la URL (D5), eliminar abre un diálogo que nombra al artista
-// (D2) y, hasta leer el modo guardado, se muestra un marcador en vez de pintar Detallada y saltar (D1).
+// (D2) y, hasta leer el modo guardado, se muestra un marcador en vez de pintar Detallada y saltar (D1). Desde
+// redesign-progress-toolbar: segmentos de estado con cifras, orden "Más avanzadas", el total de la pestaña se informa a
+// la sección y, tras crear desde el diálogo de la cabecera, el listado toma los datos nuevos sin perder los filtros.
 export function ArtistJourneyList({ journeys, initialFilters }: ArtistJourneyListProps) {
   const t = useTranslations("artistJourney");
+  const { reportTotal, openPrimary } = useProgressSection();
   const [mode, setMode, modeReady] = useArtistJourneyViewMode();
   const [filters, setFilter] = useProgressFilters(DEFAULT_OWN_FILTERS, initialFilters);
   const [items, setItems] = useState(journeys);
@@ -69,6 +70,12 @@ export function ArtistJourneyList({ journeys, initialFilters }: ArtistJourneyLis
   const [pendingDelete, setPendingDelete] = useState<ArtistJourneySummary | null>(null);
   const [deleteError, setDeleteError] = useState(false);
   const [actionError, setActionError] = useState(false);
+
+  // `router.refresh()` (al cerrar el diálogo de la cabecera tras crear algo) trae un arreglo nuevo.
+  useEffect(() => setItems(journeys), [journeys]);
+  useEffect(() => reportTotal("discographies", items.length), [items.length, reportTotal]);
+
+  const stateCounts = useMemo(() => countByState(items), [items]);
 
   const visible = useMemo(() => {
     const q = normalizeForSearch(filters.q.trim());
@@ -79,6 +86,7 @@ export function ArtistJourneyList({ journeys, initialFilters }: ArtistJourneyLis
     // `items` ya llega del servidor en orden de agregado descendente
     // (más reciente primero) — "recent" no necesita reordenar.
     if (filters.sort === "recent") return filtered;
+    if (filters.sort === "progress") return sortByProgress(filtered);
     if (filters.sort === "state") {
       // `sort` es estable: dentro de un mismo estado se conserva el orden de
       // agregado, sin un segundo criterio explícito.
@@ -135,9 +143,9 @@ export function ArtistJourneyList({ journeys, initialFilters }: ArtistJourneyLis
         title={t("myJourneysEmpty")}
         description={t("myJourneysEmptyHint")}
         action={
-          <Link href="/search?type=artist" className="font-data text-xs text-amber underline decoration-dotted hover:text-amber-hover">
-            {t("searchArtist")}
-          </Link>
+          <Button variant="secondary" onClick={openPrimary}>
+            {t("startJourney")}
+          </Button>
         }
       />
     );
@@ -147,40 +155,27 @@ export function ArtistJourneyList({ journeys, initialFilters }: ArtistJourneyLis
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <input
-          type="search"
-          autoComplete="off"
-          value={filters.q}
-          onChange={(event) => setFilter("q", event.target.value)}
-          placeholder={t("searchPlaceholder")}
-          aria-label={t("searchPlaceholder")}
-          className="w-full rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted sm:w-auto sm:min-w-[12rem] sm:flex-1"
-        />
-        <FilterSelect
-          value={filters.sort}
-          onChange={(value) => setFilter("sort", value as OwnSort)}
-          ariaLabel={t("sortLabel")}
-          widthClassName="w-[13ch]"
-        >
-          <option value="recent">{t("sort.recent")}</option>
-          <option value="alpha">{t("sort.alpha")}</option>
-          <option value="state">{t("sort.state")}</option>
-        </FilterSelect>
-        <FilterSelect
-          value={filters.state}
-          onChange={(value) => setFilter("state", value as OwnStateFilter)}
-          ariaLabel={t("stateFilterLabel")}
-          widthClassName="w-[13ch]"
-        >
-          <option value="all">{t("stateFilterAll")}</option>
-          <option value="in_progress">{t("stateInProgress")}</option>
-          <option value="complete">{t("stateComplete")}</option>
-          <option value="archived">{t("stateArchived")}</option>
-        </FilterSelect>
-        <div className={`ml-auto ${modeReady ? "" : "invisible"}`}>
-          <ArtistJourneyModeSwitcher mode={mode} onChange={setMode} />
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="search"
+            autoComplete="off"
+            value={filters.q}
+            onChange={(event) => setFilter("q", event.target.value)}
+            placeholder={t("searchPlaceholder")}
+            aria-label={t("searchPlaceholder")}
+            className="w-full rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted sm:w-auto sm:min-w-[12rem] sm:flex-1"
+          />
+          <ProgressSortSelect value={filters.sort} options={OWN_SORTS} onChange={(value) => setFilter("sort", value)} />
+          <div className={`ml-auto ${modeReady ? "" : "invisible"}`}>
+            <ArtistJourneyModeSwitcher mode={mode} onChange={setMode} />
+          </div>
         </div>
+        <ProgressStateSegments
+          value={filters.state}
+          onChange={(value) => setFilter("state", value)}
+          counts={stateCounts}
+        />
       </div>
 
       {deleteError && (

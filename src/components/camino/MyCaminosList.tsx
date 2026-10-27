@@ -1,24 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { normalizeForSearch } from "@/components/artist-journey/artist-journey-list-shared";
 import { ProgressPlaceholder } from "@/components/progress/ProgressPlaceholder";
-import {
-  DEFAULT_OWN_FILTERS,
-  type OwnFilters,
-  type OwnSort,
-  type OwnStateFilter,
-} from "@/components/progress/progress-tabs";
+import { useProgressSection } from "@/components/progress/ProgressSection";
+import { ProgressSortSelect } from "@/components/progress/ProgressSortSelect";
+import { ProgressStateSegments } from "@/components/progress/ProgressStateSegments";
+import { countByState, sortByProgress } from "@/components/progress/progress-list-shared";
+import { DEFAULT_OWN_FILTERS, OWN_SORTS, type OwnFilters } from "@/components/progress/progress-tabs";
 import { useProgressFilters } from "@/components/progress/use-progress-filters";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FilterSelect } from "@/components/ui/FilterSelect";
 import { ApiError } from "@/lib/api/client";
 import { archiveCamino, deleteCamino, unarchiveCamino } from "@/lib/api/camino";
 import type { CaminoDetail, CaminoSummary } from "@/lib/api/schemas";
 import { CaminoDeleteDialog } from "./CaminoDeleteDialog";
-import { CaminoForm } from "./CaminoForm";
 import { CaminoModeSwitcher } from "./CaminoModeSwitcher";
 import { useCaminoViewMode } from "./use-camino-view-mode";
 import { MyCaminosDetailed } from "./MyCaminosDetailed";
@@ -55,17 +52,25 @@ interface MyCaminosListProps {
 // pestañas separadas en vez de una lista unificada).
 //
 // Desde refine-progress-page-phase1: filtros en la URL, diálogo de borrado y marcador hasta leer el modo, igual que
-// `ArtistJourneyList`.
+// `ArtistJourneyList`. Desde redesign-progress-toolbar: "Nueva lista para completar" vive en la cabecera (diálogo de
+// acciones rápidas) y desaparecen el formulario en línea y la línea de total; segmentos, "Más avanzadas" y total
+// informado a la sección, como en Discografías.
 export function MyCaminosList({ caminos: initial, initialFilters }: MyCaminosListProps) {
   const t = useTranslations("camino");
+  const { reportTotal, openPrimary } = useProgressSection();
   const [mode, setMode, modeReady] = useCaminoViewMode();
   const [filters, setFilter] = useProgressFilters(DEFAULT_OWN_FILTERS, initialFilters);
   const [items, setItems] = useState(initial);
-  const [showForm, setShowForm] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<CaminoSummary | null>(null);
   const [deleteError, setDeleteError] = useState(false);
   const [actionError, setActionError] = useState(false);
+
+  // `router.refresh()` (al cerrar el diálogo de la cabecera tras crear una lista) trae un arreglo nuevo.
+  useEffect(() => setItems(initial), [initial]);
+  useEffect(() => reportTotal("lists", items.length), [items.length, reportTotal]);
+
+  const stateCounts = useMemo(() => countByState(items), [items]);
 
   const visible = useMemo(() => {
     const q = normalizeForSearch(filters.q.trim());
@@ -76,6 +81,7 @@ export function MyCaminosList({ caminos: initial, initialFilters }: MyCaminosLis
     // `items` ya llega del servidor en orden de creación descendente (más
     // reciente primero) — "recent" no necesita reordenar.
     if (filters.sort === "recent") return filtered;
+    if (filters.sort === "progress") return sortByProgress(filtered);
     if (filters.sort === "state") {
       return [...filtered].sort((a, b) => STATE_ORDER[a.state] - STATE_ORDER[b.state]);
     }
@@ -121,28 +127,13 @@ export function MyCaminosList({ caminos: initial, initialFilters }: MyCaminosLis
     }
   }
 
-  const handleCreated = (created: CaminoDetail) => {
-    setShowForm(false);
-    setItems((current) => [
-      {
-        id: created.id,
-        title: created.title,
-        state: created.state,
-        progress: created.progress,
-        coverThumbUrl: null,
-        updatedAt: created.updatedAt,
-      },
-      ...current,
-    ]);
-  };
-
-  if (items.length === 0 && !showForm) {
+  if (items.length === 0) {
     return (
       <EmptyState
         title={t("myCaminosHeading")}
         description={t("myCaminosEmptyHint")}
         action={
-          <Button variant="secondary" onClick={() => setShowForm(true)}>
+          <Button variant="secondary" onClick={openPrimary}>
             {t("newCamino")}
           </Button>
         }
@@ -154,51 +145,27 @@ export function MyCaminosList({ caminos: initial, initialFilters }: MyCaminosLis
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
-        <span className="font-data text-xs text-paper-muted">{t("itemsCountShort", { count: items.length })}</span>
-        {!showForm && (
-          <Button variant="secondary" onClick={() => setShowForm(true)}>
-            {t("newCamino")}
-          </Button>
-        )}
-      </div>
-
-      {showForm && <CaminoForm onCancel={() => setShowForm(false)} onCreated={handleCreated} />}
-
-      <div className="flex flex-wrap items-center gap-2">
-        <input
-          type="search"
-          autoComplete="off"
-          value={filters.q}
-          onChange={(event) => setFilter("q", event.target.value)}
-          placeholder={t("searchPlaceholder")}
-          aria-label={t("searchPlaceholder")}
-          className="w-full rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted sm:w-auto sm:min-w-[12rem] sm:flex-1"
-        />
-        <FilterSelect
-          value={filters.sort}
-          onChange={(value) => setFilter("sort", value as OwnSort)}
-          ariaLabel={t("sortLabel")}
-          widthClassName="w-[13ch]"
-        >
-          <option value="recent">{t("sort.recent")}</option>
-          <option value="alpha">{t("sort.alpha")}</option>
-          <option value="state">{t("sort.state")}</option>
-        </FilterSelect>
-        <FilterSelect
-          value={filters.state}
-          onChange={(value) => setFilter("state", value as OwnStateFilter)}
-          ariaLabel={t("stateFilterLabel")}
-          widthClassName="w-[13ch]"
-        >
-          <option value="all">{t("stateFilterAll")}</option>
-          <option value="in_progress">{t("stateInProgress")}</option>
-          <option value="complete">{t("stateComplete")}</option>
-          <option value="archived">{t("stateArchived")}</option>
-        </FilterSelect>
-        <div className={`ml-auto ${modeReady ? "" : "invisible"}`}>
-          <CaminoModeSwitcher mode={mode} onChange={setMode} />
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="search"
+            autoComplete="off"
+            value={filters.q}
+            onChange={(event) => setFilter("q", event.target.value)}
+            placeholder={t("searchPlaceholder")}
+            aria-label={t("searchPlaceholder")}
+            className="w-full rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted sm:w-auto sm:min-w-[12rem] sm:flex-1"
+          />
+          <ProgressSortSelect value={filters.sort} options={OWN_SORTS} onChange={(value) => setFilter("sort", value)} />
+          <div className={`ml-auto ${modeReady ? "" : "invisible"}`}>
+            <CaminoModeSwitcher mode={mode} onChange={setMode} />
+          </div>
         </div>
+        <ProgressStateSegments
+          value={filters.state}
+          onChange={(value) => setFilter("state", value)}
+          counts={stateCounts}
+        />
       </div>
 
       {deleteError && (
