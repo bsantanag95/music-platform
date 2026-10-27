@@ -13,7 +13,13 @@ import { releaseGroup, userList, userListItem } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { resolveNewContentAudience } from "@/services/social/default-audience";
 import { enrichLists, normalizeDescription, normalizeTitle, resolveListTarget } from "@/services/lists/lists";
-import { countsByListId, deriveJourneyState, listenedReleaseGroupIds } from "@/services/journeys/progress";
+import {
+  countsByListId,
+  deriveJourneyState,
+  listenedReleaseGroupIds,
+  progressDetailsByListId,
+  type NextUpAlbum,
+} from "@/services/journeys/progress";
 import { audiencesForProfile } from "@/services/social/visibility";
 import type { Audience } from "@/services/social/types";
 import type { JourneyState } from "@/services/journeys/progress";
@@ -59,6 +65,9 @@ export interface CaminoSummary {
   progress: { selectedCount: number; listenedCount: number };
   coverThumbUrl: string | null;
   updatedAt: string;
+  /** Siguiente disco sin escuchar y última escucha (openspec: redesign-progress-views, D1). */
+  nextUp: NextUpAlbum | null;
+  lastListenedAt: string | null;
 }
 
 export interface CaminoProfileSummary {
@@ -294,9 +303,13 @@ export async function listMyCaminos(ownerId: string): Promise<CaminoSummary[]> {
   if (rows.length === 0) return [];
 
   const listIds = rows.map((r) => r.id);
-  const [countsByList, enrichment] = await Promise.all([
+  const [countsByList, enrichment, details] = await Promise.all([
     countsByListId(ownerId, listIds),
     enrichLists(listIds),
+    progressDetailsByListId(
+      ownerId,
+      listIds.map((id) => ({ id, order: "position" as const })),
+    ),
   ]);
 
   return rows.map((row) => {
@@ -310,6 +323,8 @@ export async function listMyCaminos(ownerId: string): Promise<CaminoSummary[]> {
       progress: { selectedCount, listenedCount },
       coverThumbUrl: enrichment.get(row.id)?.coverThumbs[0] ?? null,
       updatedAt: row.updatedAt.toISOString(),
+      nextUp: details.get(row.id)?.nextUp ?? null,
+      lastListenedAt: details.get(row.id)?.lastListenedAt ?? null,
     };
   });
 }

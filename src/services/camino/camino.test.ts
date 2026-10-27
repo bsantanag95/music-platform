@@ -41,6 +41,8 @@ vi.mock("@/services/journeys/progress", () => ({
   countsByListId: mocks.countsByListId,
   deriveJourneyState: mocks.deriveJourneyState,
   listenedReleaseGroupIds: mocks.listenedReleaseGroupIds,
+
+  progressDetailsByListId: async () => new Map(),
 }));
 vi.mock("@/services/social/visibility", () => ({
   audiencesForProfile: mocks.audiencesForProfile,

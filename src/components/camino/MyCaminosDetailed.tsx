@@ -3,8 +3,8 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
-import { RelativeDate } from "@/components/feed/feed-row-parts";
 import { ProgressBar } from "@/components/progress/ProgressBar";
+import { ProgressRowMeta } from "@/components/progress/ProgressRowMeta";
 import { CaminoCardMenu } from "./CaminoCardMenu";
 import { CaminoStateLabel, caminoStateLabel, type MyCaminosRendererProps } from "./camino-list-shared";
 
@@ -12,7 +12,8 @@ import { CaminoStateLabel, caminoStateLabel, type MyCaminosRendererProps } from 
 // placeholder, título (enlaza a la gestión), el estado y el menú "⋮" —
 // calcado de `ArtistJourneysDetailed`. Segunda fila con progreso discreto
 // (barra sin fracción numérica, mismo criterio que Recorridos) y la fecha de
-// última actualización.
+// última actualización; desde redesign-progress-views, el disco que sigue y la última escucha. La etiqueta de estado
+// solo aparece si no está en curso.
 export function MyCaminosDetailed({ caminos, actions }: MyCaminosRendererProps) {
   const t = useTranslations("camino");
 
@@ -28,15 +29,21 @@ export function MyCaminosDetailed({ caminos, actions }: MyCaminosRendererProps) 
             >
               {camino.title}
             </Link>
-            <CaminoStateLabel state={camino.state} label={caminoStateLabel(camino.state, t)} />
+            {camino.state !== "in_progress" && (
+              <CaminoStateLabel state={camino.state} label={caminoStateLabel(camino.state, t)} />
+            )}
             <CaminoCardMenu camino={camino} actions={actions} />
           </div>
 
-          <div className="flex items-center gap-2 pl-[3.25rem]">
+          <div className="flex flex-col items-start gap-1 pl-[3.25rem] sm:flex-row sm:items-center sm:gap-2">
             <ProgressBar listened={camino.progress.listenedCount} selected={camino.progress.selectedCount} />
-            <span className="font-data text-[0.65rem] text-paper-muted">
-              {t("lastUpdatedLabel")} <RelativeDate iso={camino.updatedAt} />
-            </span>
+            <ProgressRowMeta
+              nextUp={camino.nextUp}
+              lastListenedAt={camino.lastListenedAt}
+              selectedCount={camino.progress.selectedCount}
+              complete={camino.state === "complete"}
+              emptyLabel={t("emptyCamino")}
+            />
           </div>
         </li>
       ))}

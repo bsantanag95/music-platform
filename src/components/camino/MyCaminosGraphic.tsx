@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { ProgressBar } from "@/components/progress/ProgressBar";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { CaminoCardMenu } from "./CaminoCardMenu";
 import { caminoStateLabel, type MyCaminosRendererProps } from "./camino-list-shared";
@@ -9,7 +10,7 @@ import { caminoStateLabel, type MyCaminosRendererProps } from "./camino-list-sha
 // Modo Gráfico: pared de mosaicos/placeholders del Camino — calcado de
 // `ArtistJourneysGraphic`. El estado va como punto de color + texto en su
 // propia fila (menos ancho disponible por tarjeta); el menú "⋮" vive junto
-// al título.
+// al título. Desde redesign-progress-views lleva la barra discreta bajo la carátula y el estado solo si no está en curso.
 export function MyCaminosGraphic({ caminos, actions }: MyCaminosRendererProps) {
   const t = useTranslations("camino");
 
@@ -34,7 +35,12 @@ export function MyCaminosGraphic({ caminos, actions }: MyCaminosRendererProps) {
             <CaminoCardMenu camino={camino} actions={actions} />
           </div>
 
-          <div className="border-t border-ink-border pt-1">
+          <ProgressBar
+            listened={camino.progress.listenedCount}
+            selected={camino.progress.selectedCount}
+            className="w-full"
+          />
+          {camino.state !== "in_progress" && (
             <span className="flex items-center gap-1.5 font-data text-[0.65rem] text-paper-muted">
               <span
                 aria-hidden="true"
@@ -42,7 +48,7 @@ export function MyCaminosGraphic({ caminos, actions }: MyCaminosRendererProps) {
               />
               {caminoStateLabel(camino.state, t)}
             </span>
-          </div>
+          )}
         </li>
       ))}
     </ul>

@@ -26,7 +26,8 @@ export function progressHref(tab: ProgressTab): string {
 
 // Filtros de cada listado en la URL (openspec: refine-progress-page-phase1, D5). Discografías y Mis listas comparten
 // orden y estado; Listas que sigo solo tiene búsqueda y orden.
-export const OWN_SORTS = ["recent", "alpha", "state", "progress"] as const;
+// "Por estado" se quitó en redesign-progress-views: con las secciones por estado ya no ordenaba nada (D4).
+export const OWN_SORTS = ["recent", "alpha", "progress"] as const;
 export const OWN_STATES = ["all", "in_progress", "complete", "archived"] as const;
 export const FOLLOWING_SORTS = ["recent", "progress"] as const;
 

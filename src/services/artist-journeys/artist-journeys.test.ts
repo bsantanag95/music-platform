@@ -8,6 +8,24 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
+// Siguiente disco y última escucha (openspec: redesign-progress-views): se prueban aparte; aquí basta con ver que el
+// listado los pide por lote, en orden de publicación, y los copia a cada fila.
+const progressDetails = vi.hoisted(() => ({ calls: [] as unknown[] }));
+vi.mock("@/services/journeys/progress", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/services/journeys/progress")>()),
+  progressDetailsByListId: async (_trackerId: string, lists: { id: string; order: string }[]) => {
+    progressDetails.calls.push(lists);
+    return new Map(
+      lists.map((list, index) => [
+        list.id,
+        {
+          nextUp: index === 1 ? { id: list.id, title: "Killers", artistName: "Iron Maiden", year: 1981 } : null,
+          lastListenedAt: index === 0 ? "2026-01-02T00:00:00.000Z" : null,
+        },
+      ]),
+    );
+  },
+}));
 vi.mock("@/services/catalog/ingest-artist", () => ({ getArtistById: mocks.getArtistById }));
 vi.mock("@/services/catalog/ingest-discography", () => ({
   findOrIngestDiscography: mocks.findOrIngestDiscography,
@@ -382,6 +400,8 @@ describe("servicio de artist-journeys", () => {
         state: "complete",
         progress: { selectedCount: 2, listenedCount: 2 },
         updatedAt: "2026-01-03T00:00:00.000Z",
+        nextUp: null,
+        lastListenedAt: "2026-01-02T00:00:00.000Z",
       },
       {
         artistId: "00000000-0000-4000-8000-000000000098",
@@ -390,7 +410,18 @@ describe("servicio de artist-journeys", () => {
         state: "archived",
         progress: { selectedCount: 3, listenedCount: 1 },
         updatedAt: "2026-02-01T00:00:00.000Z",
+        nextUp: {
+          id: "00000000-0000-4000-8000-000000000099",
+          title: "Killers",
+          artistName: "Iron Maiden",
+          year: 1981,
+        },
+        lastListenedAt: null,
       },
+    ]);
+    expect(progressDetails.calls.at(-1)).toEqual([
+      { id: listId, order: "release" },
+      { id: "00000000-0000-4000-8000-000000000099", order: "release" },
     ]);
   });
 });

@@ -20,7 +20,9 @@ export function MyCaminosIndex({ caminos, actions }: MyCaminosRendererProps) {
           >
             {camino.title}
           </Link>
-          <CaminoStateLabel state={camino.state} label={caminoStateLabel(camino.state, t)} />
+          {camino.state !== "in_progress" && (
+            <CaminoStateLabel state={camino.state} label={caminoStateLabel(camino.state, t)} />
+          )}
           <CaminoCardMenu camino={camino} actions={actions} />
         </li>
       ))}

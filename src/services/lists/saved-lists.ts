@@ -25,7 +25,13 @@ import {
 } from "./lists";
 import type { ListEntityType } from "./types";
 import { activeUserCondition } from "@/services/auth/account-status";
-import { countsByListId, deriveJourneyState, type JourneyState } from "@/services/journeys/progress";
+import {
+  countsByListId,
+  deriveJourneyState,
+  progressDetailsByListId,
+  type JourneyState,
+  type NextUpAlbum,
+} from "@/services/journeys/progress";
 
 export interface SavedListSummary {
   id: string;
@@ -67,6 +73,9 @@ export interface TrackedListSummary {
   state: JourneyState;
   progress: { selectedCount: number; listenedCount: number };
   updatedAt: string;
+  /** Siguiente disco sin escuchar y última escucha (openspec: redesign-progress-views, D1). */
+  nextUp: NextUpAlbum | null;
+  lastListenedAt: string | null;
   /** Plantilla y período si la lista es una colección generada. */
   generated: GeneratedRef | null;
 }
@@ -286,10 +295,14 @@ export async function listTrackedLists(trackerId: string): Promise<TrackedListSu
   if (rows.length === 0) return [];
 
   const listIds = rows.map((r) => r.listId);
-  const [counts, enrichment, generated] = await Promise.all([
+  const [counts, enrichment, generated, details] = await Promise.all([
     countsByListId(trackerId, listIds),
     enrichLists(listIds),
     generatedRefsFor(listIds),
+    progressDetailsByListId(
+      trackerId,
+      listIds.map((id) => ({ id, order: "position" as const })),
+    ),
   ]);
 
   return rows.map((row) => {
@@ -306,6 +319,8 @@ export async function listTrackedLists(trackerId: string): Promise<TrackedListSu
       progress: { selectedCount, listenedCount },
       updatedAt: row.updatedAt.toISOString(),
       generated: generated.get(row.listId) ?? null,
+      nextUp: details.get(row.listId)?.nextUp ?? null,
+      lastListenedAt: details.get(row.listId)?.lastListenedAt ?? null,
     };
   });
 }

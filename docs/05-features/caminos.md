@@ -161,7 +161,22 @@ Hoy esta superficie es `/me/progress`, con las pestañas Discografías, Mis list
 - **Orden con la etiqueta dentro** y una opción nueva en las tres pestañas, «Más avanzadas» (`sort=progress`): primero
   la mayor parte escuchada de la selección, sin mostrar la proporción.
 
-Pendiente para la Fase 3: «Siguiente», «Última escucha», secciones por estado y barra en Gráfico.
+### Fase 3 del rediseño (`redesign-progress-views`)
+
+- **«Siguiente» en cada fila en curso.** Muestra «Siguiente: Hysteria (1987)», con enlace al álbum: el primer disco sin
+  escuchar de la selección.
+  - En una discografía es el más antiguo por fecha de publicación. En una lista sigue el orden de su dueño.
+  - No dice cuántos faltan (§6.4.1).
+- **«Última escucha hace 3 días»** reemplaza a «Actualizado», que no cambiaba al escuchar. Sin escuchas dice «Sin
+  escuchas todavía».
+  - Los dos datos salen de `progressDetailsByListId`, en dos consultas por pestaña.
+  - Viajan como `nextUp` y `lastListenedAt` en los tres listados y en `GET /api/me/caminos`.
+- **Secciones por estado** con el segmento «Todas»: En curso, Completas y Archivadas, esta última plegada.
+  - El orden «Por estado» se quitó, porque las secciones lo reemplazan.
+  - La etiqueta de estado solo aparece en completas y archivadas.
+- **Gráfico** muestra la barra discreta bajo la foto o la carátula.
+- **Listas que sigo** tiene la misma línea de detalle. «Dejar de seguir» pasa a un menú ⋯ con «Ver lista» y conserva el
+  aviso con Deshacer.
 
 ## Lectura ajena
 

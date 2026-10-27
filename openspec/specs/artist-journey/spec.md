@@ -330,14 +330,15 @@ Cuando el usuario tiene al menos un recorrido, el sistema SHALL ofrecer un busca
 las entradas por nombre de artista (localmente, sin ida y vuelta al servidor), sin distinguir
 mayúsculas de minúsculas ni diacríticos (una búsqueda sin tilde SHALL encontrar un nombre con
 tilde, y viceversa), un control de
-orden con cuatro opciones — por orden de agregado (activación más reciente primero, el orden en que
-ya llega el listado del servidor), alfabético por nombre de artista, por estado (en curso,
-luego completo, luego archivado — mismo orden canónico que el resto de la aplicación) o "Más
+orden con tres opciones — por orden de agregado (activación más reciente primero, el orden en que
+ya llega el listado del servidor), alfabético por nombre de artista o "Más
 avanzadas" (mayor proporción escuchada de la selección primero, sin mostrar la proporción) —, un
 control segmentado de estado con cuatro opciones excluyentes — todas (por defecto), en curso,
 completas, archivadas —, cada una con la cantidad de recorridos en ese estado (sin contar la búsqueda), que acota las
 entradas visibles al estado elegido sin alterar el buscador ni el orden; una opción sin recorridos SHALL quedar
-deshabilitada salvo que esté activa, y un conmutador de modo de visualización con las mismas tres opciones excluyentes que el
+deshabilitada salvo que esté activa; con "todas", el listado SHALL agruparse en secciones En curso, Completas y
+Archivadas (en ese orden canónico, cada una con su cantidad y el orden elegido dentro de ella), con Archivadas plegada
+hasta que el propietario la abra, y un conmutador de modo de visualización con las mismas tres opciones excluyentes que el
 resto de la aplicación (Detallada/Índice/Gráfico — ver `/me/lists/[id]` y Want to Listen), aplicado
 por igual a todo el listado. La preferencia de modo SHALL persistir entre visitas para el mismo
 navegador; hasta leerla, el listado SHALL mostrar un marcador neutro en lugar de pintar un modo y
@@ -396,13 +397,14 @@ principal, menú de tarjeta con el resto, estado) — solo su densidad visual y 
 - **THEN** ve sus recorridos ordenados por nombre de artista, sin distinguir mayúsculas
 
 #### Scenario: Orden por estado
-- **WHEN** el propietario elige el orden por estado
-- **THEN** ve primero los recorridos en curso, luego los completos, y por último los archivados;
-  dentro de un mismo estado, conserva el orden de agregado
+- **WHEN** el propietario abre el listado con el segmento "Todas"
+- **THEN** ve primero la sección de recorridos en curso, luego la de completos y por último la de archivados, plegada;
+  dentro de una sección se conserva el orden elegido (por defecto, el de agregado), y no existe una opción de orden
+  "Por estado"
 
 #### Scenario: El orden y la búsqueda se combinan
-- **WHEN** el propietario tiene un filtro de búsqueda activo y cambia el orden a alfabético o por
-  estado
+- **WHEN** el propietario tiene un filtro de búsqueda activo y cambia el orden a alfabético o a "Más
+  avanzadas"
 - **THEN** ve el mismo subconjunto filtrado, reordenado según el criterio elegido
 
 #### Scenario: Cambiar el modo de visualización conserva el listado filtrado
@@ -540,8 +542,12 @@ El modo Detallada SHALL mostrar, por cada entrada, una señal adicional que lo d
 Índice (deliberadamente compacto, sin esta información): una barra de progreso discreta de la
 selección propia ya escuchada, sin fracción numérica visible en ningún punto de esa barra ni a
 su lado (mismo criterio que el Requirement "Progreso informativo acotado a la página de
-gestión" — §6.4.1: nunca "X de Y" fuera de la página de gestión), y la fecha de última
-actualización del recorrido, en formato relativo. La barra SHALL omitirse por completo — sin
+gestión" — §6.4.1: nunca "X de Y" fuera de la página de gestión), el siguiente disco
+de la selección sin escuchar —el más antiguo por fecha de publicación, enlazado a su álbum, con su año— y la fecha de la
+última escucha de un disco de la selección, en formato relativo ("Sin escuchas todavía" si no hay ninguna). Un
+recorrido completo no propone siguiente, y una selección vacía lo dice en lugar de ambos datos. La fila SHALL NOT decir
+cuántos discos faltan. La etiqueta de estado SHALL mostrarse solo para recorridos completos o archivados. En Gráfico,
+cada entrada SHALL llevar la misma barra discreta bajo la foto. La barra SHALL omitirse por completo — sin
 espacio vacío que la reemplace — cuando la selección está vacía. Para un lector de pantalla, la
 barra SHALL anunciarse con una etiqueta discreta sin números (sin empezar, recién empezado, a la
 mitad, casi terminado, completo). La foto del artista SHALL tener un fondo neutro mientras carga. El modo Índice SHALL NOT mostrar
@@ -561,12 +567,18 @@ esta información: existe precisamente para ser la vista compacta.
 - **THEN** no se muestra ninguna barra de progreso para esa entrada
 
 #### Scenario: Última actualización visible en Detallada
-- **WHEN** el propietario ve una entrada en modo Detallada
-- **THEN** ve la fecha de última actualización de ese recorrido, en formato relativo
+- **WHEN** el propietario ve en modo Detallada un recorrido de Def Leppard en curso cuya última escucha fue hace tres
+  días y cuyo primer disco sin escuchar es *Hysteria*
+- **THEN** ve "Siguiente: Hysteria (1987)" enlazado al álbum y "Última escucha hace 3 días", sin ninguna cifra de discos
+  restantes
+
+#### Scenario: Recorrido completo sin siguiente
+- **WHEN** el propietario ve en modo Detallada un recorrido completo
+- **THEN** no ve "Siguiente" y ve la etiqueta Completo
 
 #### Scenario: Índice se mantiene compacto
 - **WHEN** el propietario ve el listado en modo Índice
-- **THEN** ninguna entrada muestra barra de progreso ni fecha de última actualización
+- **THEN** ninguna entrada muestra barra de progreso, siguiente disco ni fecha de última escucha
 
 ### Requirement: Modal de inicio: crear un recorrido con una selección elegida
 El sistema SHALL crear un recorrido únicamente a través de un modal de inicio, abierto desde el

@@ -1697,9 +1697,14 @@ cada lectura, nunca se persiste.
 Listado combinado: Caminos dinámicos propios + listas ajenas trackeadas.
 
 **200 OK:** `{ caminos: [CaminoSummary], trackedLists: [TrackedListSummary] }`, donde
-`CaminoSummary = { id, title, state, progress, coverThumbUrl, updatedAt }` y
-`TrackedListSummary = { id, title, kind, owner, state, progress, updatedAt }` (`kind` distingue
+`CaminoSummary = { id, title, state, progress, coverThumbUrl, updatedAt, nextUp, lastListenedAt }` y
+`TrackedListSummary = { id, title, kind, owner, state, progress, updatedAt, nextUp, lastListenedAt }` (`kind` distingue
 `standard` de `custom_journey` para resolver la ruta de lectura correcta). **401** sin sesión.
+
+Desde `redesign-progress-views`: `nextUp` es `{ id, title, artistName, year } | null`, el primer álbum de la lista sin
+escuchar según su orden manual (`null` si no queda ninguno o la lista está vacía). `lastListenedAt` es la fecha ISO de la
+escucha más reciente de un álbum de la lista (`null` si no hay ninguna). Los dos se calculan sobre el diario de quien
+sigue el progreso, por lote, y nunca dicen cuántos álbumes faltan.
 
 ### `POST /api/me/caminos`
 

@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { ProgressBar } from "@/components/progress/ProgressBar";
+import { ProgressRowMeta } from "@/components/progress/ProgressRowMeta";
 import { useProgressSection } from "@/components/progress/ProgressSection";
 import { ProgressSortSelect } from "@/components/progress/ProgressSortSelect";
 import { sortByProgress } from "@/components/progress/progress-list-shared";
@@ -15,10 +16,12 @@ import {
 } from "@/components/progress/progress-tabs";
 import { useProgressFilters } from "@/components/progress/use-progress-filters";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { RowMenu, RowMenuItem } from "@/components/ui/RowMenu";
 import { UndoToast } from "@/components/ui/UndoToast";
 import { normalizeForSearch } from "@/components/artist-journey/artist-journey-list-shared";
 import { setListTracking } from "@/lib/api/camino";
 import { presentList } from "@/lib/list-presentation";
+import { CaminoStateLabel, caminoStateLabel } from "./camino-list-shared";
 import type { TrackedListSummary } from "@/lib/api/schemas";
 
 interface TrackedCaminosListProps {
@@ -45,10 +48,12 @@ interface Untracked {
 // Desde refine-progress-page-phase1: los filtros viven en la URL (D5) y "Dejar de seguir" nombra la lista y ofrece
 // deshacer (D3): desactivar el seguimiento conserva el guardado, así que deshacer es volver a activarlo. Desde
 // redesign-progress-toolbar el orden usa el mismo selector y nombre ("Más avanzadas") que las otras pestañas y el total
-// se informa a la sección.
+// se informa a la sección. Desde redesign-progress-views cada fila dice qué disco sigue y cuándo fue la última escucha,
+// y "Dejar de seguir" pasa a un menú ⋯ junto a "Ver lista", como en las otras pestañas (D5).
 export function TrackedCaminosList({ lists: initial, initialFilters }: TrackedCaminosListProps) {
   const t = useTranslations("camino");
   const locale = useLocale();
+  const router = useRouter();
   const { reportTotal } = useProgressSection();
   const [filters, setFilter] = useProgressFilters(DEFAULT_FOLLOWING_FILTERS, initialFilters);
   const [items, setItems] = useState(initial);
@@ -174,26 +179,32 @@ export function TrackedCaminosList({ lists: initial, initialFilters }: TrackedCa
                     >
                       {shown.title}
                     </Link>
-                    <div className="flex items-center gap-2">
-                      <span className="font-data text-[0.65rem] text-paper-muted">
-                        {t("ownedBy", { username: list.owner.username })}
-                      </span>
-                      <ProgressBar
-                        listened={list.progress.listenedCount}
-                        selected={list.progress.selectedCount}
-                        className="w-16"
-                      />
-                    </div>
+                    <span className="font-data text-[0.65rem] text-paper-muted">
+                      {t("ownedBy", { username: list.owner.username })}
+                    </span>
                   </div>
-                  <button
-                    type="button"
-                    disabled={busyId === list.id}
-                    onClick={() => void handleUntrack(list)}
-                    aria-label={t("untrackLabel", { title: shown.title })}
-                    className="min-h-8 shrink-0 rounded px-2 font-data text-xs text-paper-muted underline decoration-dotted transition-colors hover:text-paper disabled:opacity-50 [@media(pointer:coarse)]:min-h-11"
+                  {list.state === "complete" && (
+                    <CaminoStateLabel state={list.state} label={caminoStateLabel(list.state, t)} />
+                  )}
+                  <RowMenu
+                    label={t("cardMenuLabel", { title: shown.title })}
+                    triggerClassName="size-8 [@media(pointer:coarse)]:size-11"
                   >
-                    {t("untrack")}
-                  </button>
+                    <RowMenuItem onSelect={() => router.push(href)}>{t("viewList")}</RowMenuItem>
+                    <RowMenuItem danger onSelect={() => busyId !== list.id && void handleUntrack(list)}>
+                      {t("untrack")}
+                    </RowMenuItem>
+                  </RowMenu>
+                </div>
+                <div className="flex flex-col items-start gap-1 pl-[3.25rem] sm:flex-row sm:items-center sm:gap-2">
+                  <ProgressBar listened={list.progress.listenedCount} selected={list.progress.selectedCount} />
+                  <ProgressRowMeta
+                    nextUp={list.nextUp}
+                    lastListenedAt={list.lastListenedAt}
+                    selectedCount={list.progress.selectedCount}
+                    complete={list.state === "complete"}
+                    emptyLabel={t("emptyFollowed")}
+                  />
                 </div>
                 {error === list.id && (
                   <span role="alert" className="pl-[3.25rem] font-data text-xs text-danger">

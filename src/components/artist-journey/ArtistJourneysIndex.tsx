@@ -26,7 +26,7 @@ export function ArtistJourneysIndex({ journeys, actions }: ArtistJourneyRenderer
           >
             {journey.artistName}
           </Link>
-          <StateLabel state={journey.state} label={stateLabel(journey.state, t)} />
+          {journey.state !== "in_progress" && <StateLabel state={journey.state} label={stateLabel(journey.state, t)} />}
           <ArtistJourneyCardMenu journey={journey} actions={actions} />
         </li>
       ))}

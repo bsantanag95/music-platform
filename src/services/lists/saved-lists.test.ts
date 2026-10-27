@@ -38,6 +38,8 @@ vi.mock("@/services/discovery/collections/generated", () => ({
 vi.mock("@/services/journeys/progress", () => ({
   countsByListId: mocks.countsByListId,
   deriveJourneyState: mocks.deriveJourneyState,
+
+  progressDetailsByListId: async () => new Map(),
 }));
 vi.mock("@/services/notifications/emit", () => ({
   emitMilestoneNotification: mocks.emitMilestoneNotification,

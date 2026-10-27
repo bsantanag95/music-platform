@@ -3,6 +3,7 @@
 import { AppImage } from "@/components/ui/AppImage";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { ProgressBar } from "@/components/progress/ProgressBar";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import { ArtistJourneyCardMenu } from "./ArtistJourneyCardMenu";
 import { stateLabel, type ArtistJourneyRendererProps } from "./artist-journey-list-shared";
@@ -12,7 +13,8 @@ import { stateLabel, type ArtistJourneyRendererProps } from "./artist-journey-li
 // Want to Listen. A diferencia de Detallada/Índice, el estado se muestra
 // como punto de color + texto en su propia fila (menos ancho disponible por
 // tarjeta) — el menú "⋮" (`ArtistJourneyCardMenu`, compartido con los otros
-// dos modos) vive junto al nombre.
+// dos modos) vive junto al nombre. Desde redesign-progress-views lleva la barra discreta bajo la foto y el estado solo
+// si no está en curso.
 export function ArtistJourneysGraphic({ journeys, actions }: ArtistJourneyRendererProps) {
   const t = useTranslations("artistJourney");
 
@@ -43,7 +45,12 @@ export function ArtistJourneysGraphic({ journeys, actions }: ArtistJourneyRender
             <ArtistJourneyCardMenu journey={journey} actions={actions} />
           </div>
 
-          <div className="border-t border-ink-border pt-1">
+          <ProgressBar
+            listened={journey.progress.listenedCount}
+            selected={journey.progress.selectedCount}
+            className="w-full"
+          />
+          {journey.state !== "in_progress" && (
             <span className="flex items-center gap-1.5 font-data text-[0.65rem] text-paper-muted">
               <span
                 aria-hidden="true"
@@ -51,7 +58,7 @@ export function ArtistJourneysGraphic({ journeys, actions }: ArtistJourneyRender
               />
               {stateLabel(journey.state, t)}
             </span>
-          </div>
+          )}
         </li>
       ))}
     </ul>

@@ -6,7 +6,7 @@ import { renderWithIntl } from "@/test/i18n-test-utils";
 import { TrackedCaminosList } from "./TrackedCaminosList";
 import type { TrackedListSummary } from "@/lib/api/schemas";
 
-const mocks = vi.hoisted(() => ({ setListTracking: vi.fn() }));
+const mocks = vi.hoisted(() => ({ setListTracking: vi.fn(), push: vi.fn() }));
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, ...rest }: { href: string; children: ReactNode }) => (
@@ -14,6 +14,7 @@ vi.mock("@/i18n/navigation", () => ({
       {children}
     </a>
   ),
+  useRouter: () => ({ push: mocks.push }),
 }));
 vi.mock("@/lib/api/camino", () => ({ setListTracking: mocks.setListTracking }));
 
@@ -27,8 +28,16 @@ function summary(over: Partial<TrackedListSummary> = {}): TrackedListSummary {
     state: "in_progress",
     progress: { selectedCount: 4, listenedCount: 2 },
     updatedAt: "2026-01-01T00:00:00.000Z",
+    nextUp: null,
+    lastListenedAt: null,
     ...over,
   };
+}
+
+// openspec: redesign-progress-views — "Dejar de seguir" vive en el menú ⋯ de la fila.
+async function untrack(user: ReturnType<typeof userEvent.setup>, title: string) {
+  await user.click(screen.getByRole("button", { name: `Más acciones para ${title}` }));
+  await user.click(screen.getByRole("menuitem", { name: "Dejar de seguir" }));
 }
 
 describe("TrackedCaminosList", () => {
@@ -98,7 +107,7 @@ describe("TrackedCaminosList", () => {
     const user = userEvent.setup();
     mocks.setListTracking.mockResolvedValue({ tracking: false });
     renderWithIntl(<TrackedCaminosList lists={[summary()]} />);
-    await user.click(screen.getByRole("button", { name: "Dejar de seguir «Discos que me cambiaron»" }));
+    await untrack(user, "Discos que me cambiaron");
     expect(mocks.setListTracking).toHaveBeenCalledWith("l1", false);
     await screen.findByText(
       "Todavía no estás siguiendo el progreso de ninguna lista ajena. Activalo desde el detalle de una lista de álbumes.",
@@ -112,7 +121,7 @@ describe("TrackedCaminosList", () => {
     renderWithIntl(
       <TrackedCaminosList lists={[summary(), summary({ id: "l2", title: "Para el invierno" })]} />,
     );
-    await user.click(screen.getByRole("button", { name: "Dejar de seguir «Discos que me cambiaron»" }));
+    await untrack(user, "Discos que me cambiaron");
     expect(screen.getByRole("status")).toHaveTextContent("Dejaste de seguir «Discos que me cambiaron»");
     expect(screen.queryByRole("link", { name: "Discos que me cambiaron" })).not.toBeInTheDocument();
 
@@ -127,7 +136,7 @@ describe("TrackedCaminosList", () => {
     const user = userEvent.setup();
     mocks.setListTracking.mockResolvedValueOnce({}).mockRejectedValueOnce(new Error("x"));
     renderWithIntl(<TrackedCaminosList lists={[summary()]} />);
-    await user.click(screen.getByRole("button", { name: "Dejar de seguir «Discos que me cambiaron»" }));
+    await untrack(user, "Discos que me cambiaron");
     await user.click(screen.getByRole("button", { name: "Deshacer" }));
     expect(await screen.findByText("No pudimos deshacer. Intenta de nuevo.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Deshacer" })).not.toBeInTheDocument();
@@ -142,5 +151,29 @@ describe("TrackedCaminosList", () => {
   it("la barra se anuncia con un tramo discreto", () => {
     renderWithIntl(<TrackedCaminosList lists={[summary({ progress: { selectedCount: 4, listenedCount: 3 } })]} />);
     expect(screen.getByRole("img", { name: "Avance: casi terminado" })).toBeInTheDocument();
+  });
+
+  it("cada fila dice qué disco sigue y cuándo fue la última escucha", () => {
+    renderWithIntl(
+      <TrackedCaminosList
+        lists={[
+          summary({
+            nextUp: { id: "00000000-0000-4000-8000-000000000001", title: "Hysteria", artistName: "Def Leppard", year: 1987 },
+            lastListenedAt: "2026-01-01T00:00:00.000Z",
+          }),
+        ]}
+      />,
+    );
+    expect(screen.getByRole("link", { name: "Hysteria" })).toHaveAttribute("href", expect.stringContaining("/album/"));
+    expect(screen.getByText(/\(1987\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Última escucha/)).toBeInTheDocument();
+  });
+
+  it("Ver lista navega al detalle", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<TrackedCaminosList lists={[summary()]} />);
+    await user.click(screen.getByRole("button", { name: "Más acciones para Discos que me cambiaron" }));
+    await user.click(screen.getByRole("menuitem", { name: "Ver lista" }));
+    expect(mocks.push).toHaveBeenCalledWith(expect.stringContaining("/users/otra/lists/"));
   });
 });

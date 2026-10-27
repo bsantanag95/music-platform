@@ -60,6 +60,8 @@ function summary(over: Partial<CaminoSummary> = {}): CaminoSummary {
     progress: { selectedCount: 4, listenedCount: 2 },
     coverThumbUrl: null,
     updatedAt: "2026-01-01T00:00:00.000Z",
+    nextUp: null,
+    lastListenedAt: null,
     ...over,
   };
 }
@@ -143,7 +145,8 @@ describe("MyCaminosList", () => {
     expect(titles()).toEqual(["Deep Purple", "Sabrina"]);
   });
 
-  it("el orden por estado agrupa en curso, completo y archivado, en ese orden", async () => {
+  // openspec: redesign-progress-views
+  it("con Todas agrupa por estado y pliega las archivadas", async () => {
     const user = userEvent.setup();
     renderWithIntl(
       <MyCaminosList
@@ -154,7 +157,8 @@ describe("MyCaminosList", () => {
         ]}
       />,
     );
-    await user.selectOptions(screen.getByRole("combobox", { name: "Ordenar" }), "state");
+    expect(titles()).toEqual(["En curso", "Completo"]);
+    await user.click(screen.getByRole("button", { name: /Archivadas · 1/ }));
     expect(titles()).toEqual(["En curso", "Completo", "Archivado"]);
   });
 
@@ -199,8 +203,9 @@ describe("MyCaminosList", () => {
     renderWithIntl(<MyCaminosList caminos={[summary()]} />);
     await user.click(screen.getByRole("button", { name: "Más acciones para Shoegaze esencial" }));
     await user.click(screen.getByRole("menuitem", { name: "Archivar" }));
-    const row = (await screen.findByRole("link", { name: "Shoegaze esencial" })).closest("li")!;
-    expect(await within(row).findByText("Archivado")).toBeInTheDocument();
+    await user.click(await screen.findByRole("button", { name: /Archivadas · 1/ }));
+    const row = screen.getByRole("link", { name: "Shoegaze esencial" }).closest("li")!;
+    expect(within(row).getByText("Archivado")).toBeInTheDocument();
   });
 
   it("eliminar requiere confirmación de dos pasos", async () => {

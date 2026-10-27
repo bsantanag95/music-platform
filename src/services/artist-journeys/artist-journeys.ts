@@ -8,6 +8,8 @@ import {
   countsByListId,
   deriveJourneyState,
   listenedReleaseGroupIds,
+  progressDetailsByListId,
+  type NextUpAlbum,
 } from "@/services/journeys/progress";
 import type { ReleaseGroupCategory } from "@/lib/api/schemas";
 import type { ArtistJourneyState } from "./types";
@@ -362,6 +364,9 @@ export interface ArtistJourneySummary {
   // tratamiento sigue reservado a la página de gestión (§6.4.1).
   progress: { selectedCount: number; listenedCount: number };
   updatedAt: string;
+  /** Siguiente disco sin escuchar y última escucha (openspec: redesign-progress-views, D1). */
+  nextUp: NextUpAlbum | null;
+  lastListenedAt: string | null;
 }
 
 /**
@@ -387,10 +392,14 @@ export async function listMyArtistJourneys(ownerId: string): Promise<ArtistJourn
     .where(and(eq(userList.ownerId, ownerId), eq(userList.kind, "artist_journey")))
     .orderBy(desc(userList.createdAt), desc(userList.id));
 
-  const countsByList = await countsByListId(
-    ownerId,
-    rows.map((r) => r.listId),
-  );
+  const listIds = rows.map((r) => r.listId);
+  const [countsByList, details] = await Promise.all([
+    countsByListId(ownerId, listIds),
+    progressDetailsByListId(
+      ownerId,
+      listIds.map((id) => ({ id, order: "release" as const })),
+    ),
+  ]);
 
   return rows.map((row) => {
     const count = countsByList.get(row.listId);
@@ -404,6 +413,8 @@ export async function listMyArtistJourneys(ownerId: string): Promise<ArtistJourn
       state,
       progress: { selectedCount, listenedCount },
       updatedAt: row.updatedAt.toISOString(),
+      nextUp: details.get(row.listId)?.nextUp ?? null,
+      lastListenedAt: details.get(row.listId)?.lastListenedAt ?? null,
     };
   });
 }

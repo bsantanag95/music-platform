@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { countsByListId, deriveJourneyState } from "./progress";
+import { countsByListId, deriveJourneyState, progressDetailsByListId } from "./progress";
 
 const mocks = vi.hoisted(() => ({
   db: { select: vi.fn() },
@@ -11,6 +11,7 @@ function chain(result: unknown) {
   const obj: Record<string, unknown> = {
     from: () => obj,
     leftJoin: () => obj,
+    innerJoin: () => obj,
     where: () => obj,
     groupBy: () => obj,
     then: (resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown) =>
@@ -62,5 +63,59 @@ describe("countsByListId", () => {
     const result = await countsByListId("tracker-1", ["list-1"]);
 
     expect(result.has("list-1")).toBe(false);
+  });
+});
+
+// openspec: redesign-progress-views, D1
+describe("progressDetailsByListId", () => {
+  const pending = (
+    listId: string,
+    title: string,
+    position: number,
+    firstReleaseDate: string | null,
+    year: number | null,
+  ) => ({
+    listId,
+    position,
+    id: `${title}-id`,
+    title,
+    firstReleaseDate,
+    year,
+    artistName: "Artista",
+  });
+
+  it("sin listas no consulta la base", async () => {
+    mocks.db.select.mockClear();
+    expect((await progressDetailsByListId("t", [])).size).toBe(0);
+    expect(mocks.db.select).not.toHaveBeenCalled();
+  });
+
+  it("discografía: el siguiente es el más antiguo; lista: el primero por posición; última escucha en ISO", async () => {
+    mocks.db.select
+      .mockReturnValueOnce(chain([{ listId: "disc", last: "2026-03-01 10:00:00+00" }]))
+      .mockReturnValueOnce(
+        chain([
+          pending("disc", "Hysteria", 1, "1987-08-03", 1987),
+          pending("disc", "Sin fecha", 2, null, null),
+          pending("disc", "Pyromania", 3, null, 1983),
+          pending("list", "Tercero", 3, "1970-01-01", 1970),
+          pending("list", "Segundo", 2, "2020-01-01", 2020),
+        ]),
+      );
+
+    const result = await progressDetailsByListId("t", [
+      { id: "disc", order: "release" },
+      { id: "list", order: "position" },
+      { id: "done", order: "position" },
+    ]);
+
+    expect(result.get("disc")).toEqual({
+      nextUp: { id: "Pyromania-id", title: "Pyromania", artistName: "Artista", year: 1983 },
+      lastListenedAt: "2026-03-01T10:00:00.000Z",
+    });
+    expect(result.get("list")?.nextUp?.title).toBe("Segundo");
+    expect(result.get("list")?.lastListenedAt).toBeNull();
+    // Todo escuchado (o vacía): sin siguiente.
+    expect(result.get("done")).toEqual({ nextUp: null, lastListenedAt: null });
   });
 });

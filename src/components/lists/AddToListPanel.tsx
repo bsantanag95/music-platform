@@ -126,6 +126,8 @@ export function AddToListPanel({ target, onClose, onAdded }: AddToListPanelProps
         progress: created.progress,
         coverThumbUrl: null,
         updatedAt: created.updatedAt,
+        nextUp: null,
+        lastListenedAt: null,
       },
       ...(current ?? []),
     ]);
