@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactElement } from "react";
@@ -12,9 +12,12 @@ const mocks = vi.hoisted(() => ({
   deleteList: vi.fn(),
   pinList: vi.fn(),
   unpinList: vi.fn(),
+  updateList: vi.fn(),
+  push: vi.fn(),
 }));
 
 vi.mock("@/i18n/navigation", () => ({
+  useRouter: () => ({ push: mocks.push }),
   Link: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
     <a href={href} {...rest}>
       {children}
@@ -29,7 +32,13 @@ vi.mock("@/lib/api/lists", () => ({
   deleteList: mocks.deleteList,
   pinList: mocks.pinList,
   unpinList: mocks.unpinList,
+  updateList: mocks.updateList,
 }));
+
+const openMenu = async (title = "Discos esenciales") => {
+  await userEvent.click(screen.getByRole("button", { name: `Acciones para ${title}` }));
+  return screen.getByRole("menu");
+};
 
 function list(overrides: Partial<UserListSummary> = {}): UserListSummary {
   return {
@@ -57,7 +66,7 @@ function renderTab(initial: MyListsResponse, props: Partial<Parameters<typeof My
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return renderWithIntl(
     <QueryClientProvider client={client}>
-      <MyListsTab initial={initial} {...props} />
+      <MyListsTab initial={initial} ownerUsername="yo" {...props} />
     </QueryClientProvider>,
   ) as unknown as ReactElement;
 }
@@ -92,18 +101,58 @@ describe("MyListsTab", () => {
     mocks.getMyLists.mockResolvedValue(response([list({ pinned: true })]));
     renderTab(response([list()]));
 
-    await userEvent.click(screen.getByRole("button", { name: "Fijar Discos esenciales" }));
+    await userEvent.click(within(await openMenu()).getByRole("menuitem", { name: "Fijar arriba" }));
     expect(mocks.pinList).toHaveBeenCalledWith("a1b2c3d4-0000-4000-8000-000000000001");
   });
 
-  // openspec: refine-me-lists-page-phase1
-  it("cada acción de la tarjeta nombra la lista", () => {
-    renderTab(response([list({ pinned: true })]));
-    expect(screen.getByRole("button", { name: "Desfijar Discos esenciales" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Editar Discos esenciales" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Eliminar Discos esenciales" }).className).toContain(
-      "[@media(pointer:coarse)]:min-h-11",
+  // openspec: redesign-me-lists-views
+  it("el menú de la lista ofrece fijar, editar, ver pública y eliminar", async () => {
+    renderTab(response([list({ pinned: true, audience: "public" })]));
+    const menu = await openMenu();
+    expect(within(menu).getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
+      "Desfijar",
+      "Editar datos…",
+      "Ver como la ven otros",
+      "Eliminar lista…",
+    ]);
+    await userEvent.click(within(menu).getByRole("menuitem", { name: "Ver como la ven otros" }));
+    expect(mocks.push).toHaveBeenCalledWith(expect.stringContaining("/users/yo/lists/"));
+  });
+
+  it("una lista privada no ofrece verla como los demás", async () => {
+    renderTab(response([list({ audience: "private" })]));
+    expect(within(await openMenu()).queryByRole("menuitem", { name: "Ver como la ven otros" })).not.toBeInTheDocument();
+  });
+
+  it("separa las fijadas en su sección", () => {
+    renderTab(
+      response([
+        list({ pinned: true, title: "Fijada uno" }),
+        list({ id: "a1b2c3d4-0000-4000-8000-000000000002", title: "Suelta" }),
+      ]),
     );
+    expect(within(screen.getByRole("region", { name: "Fijadas" })).getByText("Fijada uno")).toBeInTheDocument();
+    expect(within(screen.getByRole("region", { name: "Todas" })).getByText("Suelta")).toBeInTheDocument();
+  });
+
+  it("una lista vacía dice qué agregar en lugar del mosaico", () => {
+    renderTab(response([list({ itemCount: 0 })]));
+    expect(screen.getByText("Añade el primer álbum")).toBeInTheDocument();
+  });
+
+  it("editar datos abre un diálogo y guarda sin salir de la página", async () => {
+    mocks.updateList.mockResolvedValue({});
+    mocks.getMyLists.mockResolvedValue(response([list({ audience: "public" })]));
+    renderTab(response([list()]));
+    await userEvent.click(within(await openMenu()).getByRole("menuitem", { name: "Editar datos…" }));
+    expect(screen.getByRole("dialog", { name: "Editar lista" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("radio", { name: "Público" }));
+    await userEvent.click(screen.getByRole("button", { name: "Guardar" }));
+    expect(mocks.updateList).toHaveBeenCalledWith(
+      "a1b2c3d4-0000-4000-8000-000000000001",
+      expect.objectContaining({ audience: "public" }),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
   it("eliminar abre un diálogo con el nombre y los elementos, y solo borra al confirmar", async () => {
@@ -111,7 +160,7 @@ describe("MyListsTab", () => {
     mocks.getMyLists.mockResolvedValue(response([]));
     renderTab(response([list()]));
 
-    await userEvent.click(screen.getByRole("button", { name: "Eliminar Discos esenciales" }));
+    await userEvent.click(within(await openMenu()).getByRole("menuitem", { name: "Eliminar lista…" }));
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveTextContent("¿Eliminar «Discos esenciales»?");
     expect(dialog).toHaveTextContent("Se pierden sus 3 elementos y su orden. No se puede deshacer.");
@@ -119,7 +168,7 @@ describe("MyListsTab", () => {
     await userEvent.click(screen.getByRole("button", { name: "Cancelar" }));
     expect(mocks.deleteList).not.toHaveBeenCalled();
 
-    await userEvent.click(screen.getByRole("button", { name: "Eliminar Discos esenciales" }));
+    await userEvent.click(within(await openMenu()).getByRole("menuitem", { name: "Eliminar lista…" }));
     await userEvent.click(screen.getByRole("button", { name: "Eliminar lista" }));
     expect(mocks.deleteList).toHaveBeenCalledWith("a1b2c3d4-0000-4000-8000-000000000001");
   });
@@ -127,7 +176,7 @@ describe("MyListsTab", () => {
   it("si borrar falla, el aviso va bajo esa tarjeta", async () => {
     mocks.deleteList.mockRejectedValue(new Error("x"));
     renderTab(response([list()]));
-    await userEvent.click(screen.getByRole("button", { name: "Eliminar Discos esenciales" }));
+    await userEvent.click(within(await openMenu()).getByRole("menuitem", { name: "Eliminar lista…" }));
     await userEvent.click(screen.getByRole("button", { name: "Eliminar lista" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("No pudimos eliminar la lista. Intenta de nuevo.");
   });
@@ -135,7 +184,7 @@ describe("MyListsTab", () => {
   it("si fijar falla, lo dice bajo la tarjeta", async () => {
     mocks.pinList.mockRejectedValue(new Error("x"));
     renderTab(response([list()]));
-    await userEvent.click(screen.getByRole("button", { name: "Fijar Discos esenciales" }));
+    await userEvent.click(within(await openMenu()).getByRole("menuitem", { name: "Fijar arriba" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("No pudimos cambiar la lista fijada.");
   });
 

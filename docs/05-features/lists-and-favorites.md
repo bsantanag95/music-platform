@@ -146,7 +146,7 @@ algorítmico).
   cualquier bloqueo, en orden cronológico descendente (no "para vos"). Muestra dueño (→
   perfil), tipo, conteo de ítems y tiempo relativo.
 - **Gestión en Mis listas:** por tarjeta, Fijar/Desfijar · Editar (→ detalle) · Eliminar con
-  confirmación. **"Fijar"** sube las listas propias favoritas arriba (tabla aparte
+  confirmación (desde `redesign-me-lists-views`, en un menú ⋯ con edición en diálogo). **"Fijar"** sube las listas propias favoritas arriba (tabla aparte
   `user_list_pin`, para no tocar `user_list.updated_at`); no es un orden manual total en v1.
 - **Detalle `/me/lists/[listId]`:** en `rework-lists-section` recibió un pase visual (mosaico
   en cabecera, filas con carátula, número de posición, ↑/↓ por teclado). Reelaborado a fondo
@@ -188,7 +188,20 @@ Una auditoría en escritorio y a 375 px corrigió lo que fallaba sin cambiar el 
   ve el estado vacío.
 - **Guardadas** con la misma barra: búsqueda, tipo y orden (fecha de guardado o alfabético) en el servidor, y en la URL.
 
-Pendiente para la Fase 3: estantería, sección «Fijadas», menú ⋯, lista vacía con invitación y «Mover a la posición…».
+### Fase 3 del rediseño (`redesign-me-lists-views`)
+
+- **Estantería** en Mis listas y Guardadas (la variante `shelf` de `/lists`): mosaico a todo el ancho de su columna,
+  título y metadatos debajo; dos columnas en móvil, cuatro desde `md`. La descripción se lee en el detalle.
+- **«Fijadas»** es una sección arriba de «Todas», no una marca en los metadatos.
+- **Menú ⋯** sobre la carátula de cada lista propia: Fijar arriba / Desfijar, Editar datos… (título, descripción y
+  audiencia en un diálogo; el mismo formulario `ListMetaForm` que el detalle), Ver como la ven otros (si no es privada) y
+  Eliminar lista…. Desaparecieron los enlaces de texto.
+- **Lista vacía:** un recuadro punteado dice qué agregar («Añade el primer álbum») en lugar del disco genérico.
+- **Detalle:** cada fila lleva subir, bajar y un ⋯ con Al principio, Al final, Mover a la posición… (diálogo con un número
+  de 1 a N) y Quitar. Quitar es inmediato y un aviso ofrece Deshacer durante 6 s: vuelve a agregar el objetivo y repone el
+  orden anterior. El modo Gráfico conserva su barra.
+- `RowMenu` se abre hacia la derecha si a la izquierda no hay lugar, sus opciones miden 44 px con puntero grueso y Escape
+  devuelve el foco al disparador (afecta a todos sus usos).
 
 ### Continuación pendiente: listas seguidas en el feed
 

@@ -16,6 +16,19 @@ export function moveByOffset(order: string[], id: string, delta: -1 | 1): string
   return next;
 }
 
+/** Lleva el ítem `id` a la posición `position` (1 a N); fuera de rango, la más cercana. */
+export function moveToPosition(order: string[], id: string, position: number): string[] {
+  const index = order.indexOf(id);
+  if (index < 0) return order;
+  const target = Math.min(Math.max(Math.round(position), 1), order.length) - 1;
+  if (target === index) return order;
+  const next = [...order];
+  const [moved] = next.splice(index, 1);
+  if (moved === undefined) return order;
+  next.splice(target, 0, moved);
+  return next;
+}
+
 /** Lleva el ítem `id` al principio o al final de la lista. */
 export function moveToEdge(order: string[], id: string, edge: "start" | "end"): string[] {
   const index = order.indexOf(id);

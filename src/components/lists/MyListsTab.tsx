@@ -7,7 +7,6 @@ import {
 } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
@@ -19,7 +18,10 @@ import {
 import { ApiError } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/keys";
 import type { MyListsResponse } from "@/lib/api/schemas";
+import { Dialog } from "@/components/ui/Dialog";
 import { DeleteListDialog } from "./DeleteListDialog";
+import { ListMetaForm } from "./ListMetaForm";
+import { MyListCardMenu } from "./MyListCardMenu";
 import { ListCard } from "./ListCard";
 import { ListsGrid, entityTypeKey } from "./lists-shared";
 import { ListsToolbar } from "./ListsToolbar";
@@ -28,16 +30,23 @@ import { useListFilters, type ListFiltersState } from "./use-list-filters";
 
 const PAGE_SIZE = 20;
 
-// Acción de texto de una tarjeta: 32 px de alto (44 con puntero grueso) para que se pueda tocar sin apuntar
-// (openspec: refine-me-lists-page-phase1, D2).
-const ACTION =
-  "inline-flex min-h-8 items-center rounded px-1 text-paper-muted underline decoration-dotted transition-colors hover:text-paper disabled:opacity-50 [@media(pointer:coarse)]:min-h-11";
+const SECTION_LABEL = "font-data text-xs uppercase tracking-wider text-paper-muted";
+
+// Lo que se puede agregar a una lista vacía, según su tipo (openspec: redesign-me-lists-views, D5).
+const EMPTY_HINT = {
+  "release-group": "emptyHintAlbum",
+  artist: "emptyHintArtist",
+  recording: "emptyHintSong",
+} as const;
 
 export function MyListsTab({
   initial,
   initialFilters,
+  ownerUsername,
 }: {
   initial: MyListsResponse;
+  /** Usuario del dueño, para "Ver como la ven otros". */
+  ownerUsername: string;
   /** Filtros leídos de la URL (`?q=&type=&sort=`); `initial` ya viene filtrado con ellos. */
   initialFilters?: Partial<ListFiltersState>;
 }) {
@@ -47,6 +56,7 @@ export function MyListsTab({
   const { filters, setFilters, searchInput, setSearchInput, isFiltered, params, clear } =
     useListFilters(initialFilters, { syncUrl: true });
   const { reportTotal, openNewList } = useListsSection();
+  const [editing, setEditing] = useState<MyListsResponse["lists"][number] | null>(null);
   const [pendingDelete, setPendingDelete] = useState<MyListsResponse["lists"][number] | null>(null);
   const [rowBusyId, setRowBusyId] = useState<string | null>(null);
   // Último fallo de una tarjeta: se muestra bajo ella (D6). Antes un error distinto de "no existe" no decía nada.
@@ -111,6 +121,50 @@ export function MyListsTab({
     }
   };
 
+  // Fijadas arriba, como sección y no como marca (D2): la API ya las devuelve primero.
+  const pinned = lists.filter((list) => list.pinned);
+  const rest = lists.filter((list) => !list.pinned);
+
+  const card = (list: MyListsResponse["lists"][number]) => (
+    <ListCard
+      key={list.id}
+      layout="shelf"
+      href={`/me/lists/${list.id}`}
+      title={list.title}
+      coverThumbs={list.coverThumbs}
+      itemCount={list.itemCount}
+      entityType={list.entityType}
+      emptyHint={t(EMPTY_HINT[list.entityType])}
+      meta={
+        <>
+          <span>{t(entityTypeKey(list.entityType))}</span>
+          <span aria-hidden>·</span>
+          <span>{t("itemsCount", { count: list.itemCount })}</span>
+          <span aria-hidden>·</span>
+          <span>{t(`audience.${list.audience}`)}</span>
+        </>
+      }
+      subMeta={
+        rowBusyId === list.id && failure === null ? (
+          <span>{t("saving")}</span>
+        ) : failure?.id === list.id ? (
+          <span role="alert" className="text-danger">
+            {t(failure.kind === "delete" ? "deleteError" : "pinError")}
+          </span>
+        ) : undefined
+      }
+      action={
+        <MyListCardMenu
+          list={list}
+          ownerUsername={ownerUsername}
+          onTogglePin={() => void handlePin(list.id, list.pinned)}
+          onEdit={() => setEditing(list)}
+          onDelete={() => setPendingDelete(list)}
+        />
+      }
+    />
+  );
+
   const toolbar = (
     <ListsToolbar
       filters={filters}
@@ -146,67 +200,41 @@ export function MyListsTab({
           }
         />
       ) : (
-        <ListsGrid>
-          {lists.map((list) => (
-            <ListCard
-              key={list.id}
-              href={`/me/lists/${list.id}`}
-              title={list.title}
-              coverThumbs={list.coverThumbs}
-      itemCount={list.itemCount}
-      entityType={list.entityType}
-              description={list.description}
-              pinned={list.pinned}
-              pinnedLabel={t("pinnedBadge")}
-              meta={
-                <>
-                  <span>{t(entityTypeKey(list.entityType))}</span>
-                  <span aria-hidden>·</span>
-                  <span>{t("itemsCount", { count: list.itemCount })}</span>
-                  <span aria-hidden>·</span>
-                  <span>{t(`audience.${list.audience}`)}</span>
-                </>
-              }
-              action={
-                <div className="flex flex-col gap-1">
-                  <div className="-ml-1 flex flex-wrap items-center gap-1 font-data text-xs">
-                    <button
-                      type="button"
-                      disabled={rowBusyId === list.id}
-                      onClick={() => void handlePin(list.id, list.pinned)}
-                      aria-label={t(list.pinned ? "unpinNamed" : "pinNamed", { title: list.title })}
-                      className={ACTION}
-                    >
-                      {list.pinned ? t("unpin") : t("pin")}
-                    </button>
-                    <Link
-                      href={`/me/lists/${list.id}`}
-                      aria-label={t("editNamed", { title: list.title })}
-                      className={ACTION}
-                    >
-                      {t("edit")}
-                    </Link>
-                    <button
-                      type="button"
-                      disabled={rowBusyId === list.id}
-                      onClick={() => setPendingDelete(list)}
-                      aria-label={t("deleteNamed", { title: list.title })}
-                      className={`${ACTION} hover:text-danger`}
-                    >
-                      {rowBusyId === list.id && failure === null ? t("deleting") : t("delete")}
-                    </button>
-                  </div>
-                  {failure?.id === list.id ? (
-                    <span role="alert" className="font-data text-xs text-danger">
-                      {t(failure.kind === "delete" ? "deleteError" : "pinError")}
-                    </span>
-                  ) : null}
-                </div>
-              }
-            />
-          ))}
-        </ListsGrid>
+        <div className="flex flex-col gap-6">
+          {pinned.length > 0 ? (
+            <section aria-labelledby="my-lists-pinned" className="flex flex-col gap-3">
+              <h2 id="my-lists-pinned" className={SECTION_LABEL}>
+                {t("pinnedSection")}
+              </h2>
+              <ListsGrid cols="shelf">{pinned.map(card)}</ListsGrid>
+            </section>
+          ) : null}
+          {rest.length > 0 ? (
+            <section aria-labelledby={pinned.length > 0 ? "my-lists-all" : undefined} className="flex flex-col gap-3">
+              {pinned.length > 0 ? (
+                <h2 id="my-lists-all" className={SECTION_LABEL}>
+                  {t("allSection")}
+                </h2>
+              ) : null}
+              <ListsGrid cols="shelf">{rest.map(card)}</ListsGrid>
+            </section>
+          ) : null}
+        </div>
       )}
+
+      <Dialog open={editing !== null} title={t("editDetailsTitle")} onClose={() => setEditing(null)}>
+        {editing ? (
+          <ListMetaForm
+            bare
+            list={editing}
+            onSaved={() => {
+              setEditing(null);
+              void invalidate();
+            }}
+            onCancel={() => setEditing(null)}
+          />
+        ) : null}
+      </Dialog>
 
       <DeleteListDialog
         list={pendingDelete}
