@@ -20,6 +20,11 @@ abrirse la pestaña Discografías. Cada pestaña SHALL conservar íntegro el com
 listado (buscador, orden, filtro de estado, modos de visualización, menú de tarjeta y estado vacío),
 y el sistema SHALL NOT mezclar entradas de dos pestañas en un mismo listado ordenable.
 
+El título y su descripción SHALL alinearse a la izquierda, en el mismo ancho que el resto de
+las secciones personales (Pendientes, Favoritos, Colección, Listas). Las pestañas SHALL caber en una
+sola fila a 375 px, y las tres pestañas SHALL ordenar su barra igual: búsqueda, selects y conmutador
+de modo al final.
+
 Bajo el título, la página SHALL mostrar una línea localizada que explique qué reúne (cuánto llevas
 escuchado de discografías y listas, según tu diario), y cada pestaña SHALL ofrecer su acción de
 creación cuando exista: Mis listas ofrece "Nueva lista para completar". Discografías explica que se
@@ -42,6 +47,10 @@ empieza desde la página de un artista con "Completar discografía".
 - **WHEN** el usuario abre la pestaña Discografías
 - **THEN** encuentra el mismo buscador, orden, filtro de estado y modos de visualización que tenía
   el listado de recorridos, aplicados solo a sus discografías
+
+#### Scenario: Pestañas en una fila en un teléfono
+- **WHEN** un usuario abre `/me/progress` en una pantalla de 375 px
+- **THEN** las tres pestañas ocupan una sola fila
 
 #### Scenario: Sin sesión
 - **WHEN** una persona sin sesión abre `/me/progress`
