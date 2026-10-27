@@ -324,7 +324,7 @@ acciones para ver la página del artista correspondiente, archivar/desarchivar, 
 recorrido sin salir del listado (Requirement "Eliminar un recorrido desde el listado propio").
 La ruta SHALL requerir sesión. `/me/artist-journeys` SHALL redirigir a esta pestaña. El estado
 vacío SHALL explicar que una discografía se empieza a completar desde la página de un artista
-con "Completar discografía".
+con "Completar discografía" y SHALL ofrecer un enlace a la búsqueda de artistas.
 
 Cuando el usuario tiene al menos un recorrido, el sistema SHALL ofrecer un buscador que filtre
 las entradas por nombre de artista (localmente, sin ida y vuelta al servidor), sin distinguir
@@ -338,8 +338,11 @@ completo, archivado — que acota las entradas visibles al estado elegido sin al
 el orden, y un conmutador de modo de visualización con las mismas tres opciones excluyentes que el
 resto de la aplicación (Detallada/Índice/Gráfico — ver `/me/lists/[id]` y Want to Listen), aplicado
 por igual a todo el listado. La preferencia de modo SHALL persistir entre visitas para el mismo
-navegador; el orden, la búsqueda y el filtro de estado no persisten, y vuelven a su valor por
-defecto en cada visita, igual que los filtros de `/me/lists`. Ninguna de las opciones de orden, de
+navegador; hasta leerla, el listado SHALL mostrar un marcador neutro en lugar de pintar un modo y
+saltar a otro. La búsqueda, el orden y el filtro de estado SHALL reflejarse en la URL (`q`, `sort`,
+`state`, solo cuando difieren del valor por defecto, sin crear entradas de historial y conservando
+`tab`), y la página SHALL abrirse con ellos; un valor inválido SHALL ignorarse. Abrir el panel sin
+esos parámetros (desde el menú o cambiando de pestaña) SHALL empezar con los valores por defecto. Ninguna de las opciones de orden, de
 filtro de estado ni de modo SHALL alterar qué acción ofrece cada entrada (gestión como enlace
 principal, menú de tarjeta con el resto, estado) — solo su densidad visual y su secuencia.
 
@@ -426,9 +429,18 @@ principal, menú de tarjeta con el resto, estado) — solo su densidad visual y 
 - **THEN** ve el subconjunto que cumple el estado elegido y la búsqueda, en el orden seleccionado
 
 #### Scenario: El filtro de estado no persiste entre visitas
-- **WHEN** el propietario elige un estado en el filtro y vuelve a abrir `/me/progress?tab=discographies` más
-  tarde
+- **WHEN** el propietario elige un estado en el filtro y más tarde vuelve a abrir `/me/progress?tab=discographies`
+  desde el menú, sin parámetros
 - **THEN** el filtro de estado vuelve a "Todo", igual que el buscador y el orden
+
+#### Scenario: Los filtros sobreviven a la recarga
+- **WHEN** el propietario busca "def", elige el orden alfabético y el estado "En curso", y recarga la página o vuelve
+  desde la gestión de un recorrido
+- **THEN** la URL lleva `q=def&sort=alpha&state=in_progress` y el listado se abre con esos mismos filtros
+
+#### Scenario: Sin salto de modo
+- **WHEN** el propietario tiene guardado el modo Índice y abre la pestaña
+- **THEN** el listado no pinta Detallada antes de Índice
 
 ### Requirement: Acceso desde el menú de usuario
 El sistema SHALL alcanzar los recorridos propios desde el único acceso "Progreso"
@@ -452,8 +464,10 @@ mismo tratamiento visual que el resto de los accesos de esas superficies (ver sp
 El sistema SHALL permitir al propietario eliminar un recorrido propio directamente desde
 `/me/artist-journeys`, sin pasar por la página de gestión, en los tres modos de visualización.
 La eliminación SHALL requerir una confirmación de dos pasos por entrada: elegir "Eliminar" en el
-menú de tarjeta de esa entrada (Requirement "Menú de tarjeta del listado") arma la confirmación
-sin eliminar nada, y un segundo paso explícito ("Confirmar eliminación") la ejecuta. La
+menú de tarjeta de esa entrada (Requirement "Menú de tarjeta del listado") abre un diálogo sin
+eliminar nada, y un segundo paso explícito ("Eliminar discografía") la ejecuta. El diálogo SHALL
+nombrar al artista, decir que se pierde la selección de discos y que las escuchas siguen en el
+diario; Cancelar o Escape lo cierran sin cambios. La
 eliminación SHALL usar el mismo endpoint y la misma semántica de borrado físico e irreversible
 que el Requirement "Borrado del recorrido". Al eliminar exitosamente, la entrada SHALL
 desaparecer del listado sin recargar la página; si el listado queda vacío, SHALL mostrarse el
@@ -461,8 +475,8 @@ estado vacío de "todavía no armaste ningún recorrido".
 
 #### Scenario: Eliminar requiere confirmación de dos pasos
 - **WHEN** el propietario activa la acción de eliminar sobre una entrada del listado
-- **THEN** el sistema arma una confirmación sin eliminar nada todavía; solo un segundo clic sobre
-  la confirmación ejecuta el borrado
+- **THEN** el sistema abre un diálogo que nombra al artista sin eliminar nada todavía; solo
+  confirmar en el diálogo ejecuta el borrado
 
 #### Scenario: Eliminar quita la entrada sin recargar la página
 - **WHEN** el propietario confirma la eliminación de una entrada
@@ -482,9 +496,9 @@ Cada entrada del listado propio, en los tres modos de visualización (Detallada,
 Gráfico), SHALL agrupar sus acciones secundarias — ver la página del artista, archivar o
 desarchivar, y eliminar — en un único menú desplegable activado por un control "⋮", ubicado
 junto al estado de la entrada, en vez de enlaces de texto sueltos. El control "⋮" SHALL tener
-contraste suficiente para percibirse en reposo, sin depender del hover o foco para ser visible.
-Elegir "Eliminar" en el menú SHALL armar, en el lugar de esa misma entrada (reemplazando
-temporalmente su estado y su menú), la confirmación de dos pasos del Requirement "Eliminar un
+contraste suficiente para percibirse en reposo, sin depender del hover o foco para ser visible, y
+SHALL medir al menos 32 px (44 px con puntero grueso).
+Elegir "Eliminar" en el menú SHALL abrir el diálogo de confirmación del Requirement "Eliminar un
 recorrido desde el listado propio", en vez de eliminar de inmediato.
 
 #### Scenario: El menú agrupa las tres acciones secundarias
@@ -503,7 +517,7 @@ recorrido desde el listado propio", en vez de eliminar de inmediato.
 
 #### Scenario: Eliminar desde el menú pide confirmación en la propia entrada
 - **WHEN** el propietario elige "Eliminar" en el menú de una entrada
-- **THEN** el menú se cierra y esa misma entrada muestra una confirmación sin haber eliminado
+- **THEN** el menú se cierra y se abre un diálogo que nombra al artista, sin haber eliminado
   nada todavía; solo confirmar ese segundo paso ejecuta el borrado
 
 #### Scenario: El menú es el mismo en los tres modos
@@ -518,13 +532,19 @@ selección propia ya escuchada, sin fracción numérica visible en ningún punto
 su lado (mismo criterio que el Requirement "Progreso informativo acotado a la página de
 gestión" — §6.4.1: nunca "X de Y" fuera de la página de gestión), y la fecha de última
 actualización del recorrido, en formato relativo. La barra SHALL omitirse por completo — sin
-espacio vacío que la reemplace — cuando la selección está vacía. El modo Índice SHALL NOT mostrar
+espacio vacío que la reemplace — cuando la selección está vacía. Para un lector de pantalla, la
+barra SHALL anunciarse con una etiqueta discreta sin números (sin empezar, recién empezado, a la
+mitad, casi terminado, completo). La foto del artista SHALL tener un fondo neutro mientras carga. El modo Índice SHALL NOT mostrar
 esta información: existe precisamente para ser la vista compacta.
 
 #### Scenario: Progreso discreto sin fracción numérica en Detallada
 - **WHEN** el propietario ve una entrada en modo Detallada con álbumes seleccionados
 - **THEN** ve una barra de progreso proporcional a lo escuchado, sin ningún número de álbumes
   visible junto a ella
+
+#### Scenario: La barra se anuncia sin números
+- **WHEN** un lector de pantalla llega a la barra de un recorrido con la mitad de su selección escuchada
+- **THEN** anuncia "Avance: a la mitad", sin fracción ni porcentaje
 
 #### Scenario: Sin barra cuando la selección está vacía
 - **WHEN** una entrada en modo Detallada no tiene ningún álbum seleccionado

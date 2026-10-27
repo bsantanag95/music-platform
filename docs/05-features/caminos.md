@@ -119,6 +119,31 @@ acción por fila para el mismo campo):
 Acceso desde el menú de usuario del Header y el panel de gestión del perfil propio, junto al
 acceso ya existente a Recorrido.
 
+### Fase 1 del rediseño de `/me/progress` (`refine-progress-page-phase1`)
+
+Hoy esta superficie es `/me/progress`, con las pestañas Discografías, Mis listas y Listas que sigo.
+
+- **Cabecera y ancho:** título a la izquierda en `max-w-4xl`, como Pendientes, Favoritos, Colección y Listas. Las tres
+  pestañas caben en una fila a 375 px.
+- **Una sola barra en las tres pestañas:** búsqueda flexible, los selects y el conmutador de modo al final.
+- **Filtros en la URL:** la búsqueda, el orden y el estado se guardan en `q`, `sort` y `state`. Se escriben con
+  `replaceState`, solo cuando difieren del defecto, y conservan `tab`. Sobreviven a la recarga y a volver desde un
+  detalle. Cambiar de pestaña o entrar desde el menú vuelve a los valores por defecto. Listas que sigo no tiene `state`.
+- **Sin salto de modo:** hasta leer el modo guardado se ven filas neutras.
+- **Eliminar** una discografía o una lista abre un diálogo. Nombra el artista o la lista y dice qué se pierde (la
+  selección o los álbumes). También avisa que las escuchas siguen en el diario. Ya no hay confirmación en la fila.
+- **Dejar de seguir** dice qué lista deja de seguir y ofrece Deshacer durante 6 s. Deshacer vuelve a activar el
+  seguimiento: el guardado nunca se quitó.
+- **⋮ de 32 px**, 44 con puntero grueso.
+- **La barra de progreso se anuncia por tramos, sin números:** sin empezar, recién empezado, a la mitad, casi terminado
+  y completo (§6.4.1).
+- **Estados vacíos con un camino para empezar:** Discografías enlaza a la búsqueda de artistas y Listas que sigo al
+  descubrimiento de listas para completar.
+
+Pendiente para la Fase 2: acción principal en la cabecera, pestañas con totales, nombres de pestaña, segmentos de estado
+y el orden «Más avanzadas». Pendiente para la Fase 3: «Siguiente», «Última escucha», secciones por estado y barra en
+Gráfico.
+
 ## Lectura ajena
 
 Un Camino público es visible para otros usuarios en `/users/[username]/caminos/[caminoId]` — ruta

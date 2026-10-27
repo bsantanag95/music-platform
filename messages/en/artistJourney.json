@@ -69,10 +69,12 @@
   "stateFilterLabel": "Status",
   "stateFilterAll": "All",
   "listDeleteItem": "Delete",
-  "listDeleteItemShort": "Delete?",
-  "listDeleteItemConfirm": "Confirm deletion",
   "listDeleteError": "We couldn't delete the discography. Please try again.",
   "listArchiveError": "We couldn't update the discography. Please try again.",
   "cardMenuLabel": "More actions for {artist}",
-  "lastUpdatedLabel": "Updated"
+  "lastUpdatedLabel": "Updated",
+  "deleteDialogTitle": "Delete your {artist} discography?",
+  "deleteDialogMessage": "{count, plural, =0 {Your selection is empty.} one {Your selection of # record is lost.} other {Your selection of # records is lost.}} Your listens stay in your diary, and you can start it again anytime.",
+  "deleteDialogConfirm": "Delete discography",
+  "searchArtist": "Search for an artist"
 }

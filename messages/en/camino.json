@@ -2,7 +2,7 @@
   "pageTitle": "Lists to complete",
   "myCaminosHeading": "My lists",
   "myCaminosEmptyHint": "Build your first list to complete: your own selection of albums, unrelated to any single artist.",
-  "trackedListsHeading": "Lists I'm tracking",
+  "trackedListsHeading": "You don't follow any list yet",
   "trackedEmpty": "You're not tracking progress on any list yet. Turn it on from an album list's detail page.",
   "newCamino": "New list to complete",
   "titleLabel": "Title",
@@ -110,5 +110,22 @@
     "toComplete": "To complete",
     "toCompleteDescription": "Lists other people follow to complete.",
     "seeAll": "See all"
-  }
+  },
+  "deleteDialogTitle": "Delete “{title}”?",
+  "deleteDialogMessage": "{count, plural, =0 {The list is empty.} one {Its album is lost.} other {Its # albums and their order are lost.}} Your listens stay in your diary. This can’t be undone.",
+  "deleteDialogConfirm": "Delete list",
+  "progressLabel": "Progress: {step}",
+  "progressStep": {
+    "notStarted": "not started",
+    "justStarted": "just started",
+    "halfway": "halfway",
+    "almostDone": "almost done",
+    "complete": "complete"
+  },
+  "untrack": "Stop following",
+  "untrackLabel": "Stop following “{title}”",
+  "untracked": "You stopped following “{title}”",
+  "undo": "Undo",
+  "undoError": "We couldn't undo that. Try again.",
+  "discoverLists": "Discover lists to complete"
 }

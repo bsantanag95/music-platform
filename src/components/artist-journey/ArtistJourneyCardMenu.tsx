@@ -10,28 +10,30 @@ import type { ArtistJourneyListActions } from "./artist-journey-list-shared";
 interface ArtistJourneyCardMenuProps {
   journey: ArtistJourneySummary;
   actions: ArtistJourneyListActions;
-  onRequestDelete: () => void;
 }
 
 // Menú "⋮" con las tres acciones secundarias de una entrada del listado
 // propio — ver artista, archivar/desarchivar, eliminar — compartido por los
 // tres modos de visualización (Detallada, Índice, Gráfico): mismo primitivo
-// `RowMenu` que el menú de fila del Diario. "Eliminar" no borra directo:
-// arma la confirmación de dos pasos del renderer que lo usa vía
-// `onRequestDelete`, en vez de ejecutar el borrado desde el propio menú.
-export function ArtistJourneyCardMenu({ journey, actions, onRequestDelete }: ArtistJourneyCardMenuProps) {
+// `RowMenu` que el menú de fila del Diario. "Eliminar" no borra directo: pide
+// al listado que abra el diálogo de confirmación (openspec: refine-progress-page-phase1, D2).
+// El disparador mide 32 px, 44 con puntero grueso (D8).
+export function ArtistJourneyCardMenu({ journey, actions }: ArtistJourneyCardMenuProps) {
   const t = useTranslations("artistJourney");
   const router = useRouter();
 
   return (
-    <RowMenu label={t("cardMenuLabel", { artist: journey.artistName })}>
+    <RowMenu
+      label={t("cardMenuLabel", { artist: journey.artistName })}
+      triggerClassName="size-8 [@media(pointer:coarse)]:size-11"
+    >
       <RowMenuItem onSelect={() => router.push(artistHref(journey.artistName, journey.artistId))}>
         {t("viewArtist")}
       </RowMenuItem>
       <RowMenuItem onSelect={() => actions.archive(journey.artistId)}>
         {journey.state === "archived" ? t("unarchive") : t("archive")}
       </RowMenuItem>
-      <RowMenuItem danger onSelect={onRequestDelete}>
+      <RowMenuItem danger onSelect={() => actions.requestRemove(journey.artistId)}>
         {t("listDeleteItem")}
       </RowMenuItem>
     </RowMenu>

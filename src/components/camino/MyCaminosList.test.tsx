@@ -209,10 +209,12 @@ describe("MyCaminosList", () => {
     renderWithIntl(<MyCaminosList caminos={[summary()]} />);
     await user.click(screen.getByRole("button", { name: "Más acciones para Shoegaze esencial" }));
     await user.click(screen.getByRole("menuitem", { name: "Eliminar" }));
-    expect(screen.getByText("Confirmar eliminación")).toBeInTheDocument();
+    // openspec: refine-progress-page-phase1 — el segundo paso es un diálogo que nombra la lista.
+    const dialog = screen.getByRole("dialog", { name: "¿Eliminar «Shoegaze esencial»?" });
+    expect(dialog).toHaveTextContent("Se pierden sus 4 álbumes y su orden. Tus escuchas siguen en el diario.");
     expect(mocks.deleteCamino).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole("button", { name: "Eliminar" }));
+    await user.click(screen.getByRole("button", { name: "Eliminar lista" }));
     expect(mocks.deleteCamino).toHaveBeenCalledWith("c1");
   });
 
@@ -222,7 +224,7 @@ describe("MyCaminosList", () => {
     renderWithIntl(<MyCaminosList caminos={[summary()]} />);
     await user.click(screen.getByRole("button", { name: "Más acciones para Shoegaze esencial" }));
     await user.click(screen.getByRole("menuitem", { name: "Eliminar" }));
-    await user.click(screen.getByRole("button", { name: "Eliminar" }));
+    await user.click(screen.getByRole("button", { name: "Eliminar lista" }));
     expect(
       await screen.findByText("No pudimos eliminar la lista. Intenta de nuevo."),
     ).toBeInTheDocument();
