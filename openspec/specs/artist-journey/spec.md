@@ -323,19 +323,21 @@ ofrecer además, agrupadas en su menú de tarjeta (Requirement "Menú de tarjeta
 acciones para ver la página del artista correspondiente, archivar/desarchivar, y eliminar ese
 recorrido sin salir del listado (Requirement "Eliminar un recorrido desde el listado propio").
 La ruta SHALL requerir sesión. `/me/artist-journeys` SHALL redirigir a esta pestaña. El estado
-vacío SHALL explicar que una discografía se empieza a completar desde la página de un artista
-con "Completar discografía" y SHALL ofrecer un enlace a la búsqueda de artistas.
+vacío SHALL explicar cómo se empieza una discografía y SHALL ofrecer "Completar discografía", la misma acción de la
+cabecera.
 
 Cuando el usuario tiene al menos un recorrido, el sistema SHALL ofrecer un buscador que filtre
 las entradas por nombre de artista (localmente, sin ida y vuelta al servidor), sin distinguir
 mayúsculas de minúsculas ni diacríticos (una búsqueda sin tilde SHALL encontrar un nombre con
 tilde, y viceversa), un control de
-orden con tres opciones — por orden de agregado (activación más reciente primero, el orden en que
-ya llega el listado del servidor), alfabético por nombre de artista, o por estado (en curso,
-luego completo, luego archivado — mismo orden canónico que el resto de la aplicación) —, un
-control de filtro por estado con cuatro opciones excluyentes — todo (por defecto), en curso,
-completo, archivado — que acota las entradas visibles al estado elegido sin alterar el buscador ni
-el orden, y un conmutador de modo de visualización con las mismas tres opciones excluyentes que el
+orden con cuatro opciones — por orden de agregado (activación más reciente primero, el orden en que
+ya llega el listado del servidor), alfabético por nombre de artista, por estado (en curso,
+luego completo, luego archivado — mismo orden canónico que el resto de la aplicación) o "Más
+avanzadas" (mayor proporción escuchada de la selección primero, sin mostrar la proporción) —, un
+control segmentado de estado con cuatro opciones excluyentes — todas (por defecto), en curso,
+completas, archivadas —, cada una con la cantidad de recorridos en ese estado (sin contar la búsqueda), que acota las
+entradas visibles al estado elegido sin alterar el buscador ni el orden; una opción sin recorridos SHALL quedar
+deshabilitada salvo que esté activa, y un conmutador de modo de visualización con las mismas tres opciones excluyentes que el
 resto de la aplicación (Detallada/Índice/Gráfico — ver `/me/lists/[id]` y Want to Listen), aplicado
 por igual a todo el listado. La preferencia de modo SHALL persistir entre visitas para el mismo
 navegador; hasta leerla, el listado SHALL mostrar un marcador neutro en lugar de pintar un modo y
@@ -427,6 +429,14 @@ principal, menú de tarjeta con el resto, estado) — solo su densidad visual y 
 - **WHEN** el propietario tiene un filtro de estado activo y además busca por nombre o cambia el
   orden
 - **THEN** ve el subconjunto que cumple el estado elegido y la búsqueda, en el orden seleccionado
+
+#### Scenario: Orden "Más avanzadas"
+- **WHEN** el propietario elige "Más avanzadas"
+- **THEN** ve primero los recorridos con mayor parte de su selección escuchada, sin ninguna cifra de progreso visible
+
+#### Scenario: Segmentos con la cantidad por estado
+- **WHEN** el propietario tiene diez recorridos en curso, dos completos y ninguno archivado
+- **THEN** los segmentos dicen "Todas 12", "En curso 10", "Completas 2" y "Archivadas 0", este último deshabilitado
 
 #### Scenario: El filtro de estado no persiste entre visitas
 - **WHEN** el propietario elige un estado en el filtro y más tarde vuelve a abrir `/me/progress?tab=discographies`
