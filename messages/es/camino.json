@@ -2,7 +2,7 @@
   "pageTitle": "Listas para completar",
   "myCaminosHeading": "Mis listas",
   "myCaminosEmptyHint": "Arma tu primera lista para completar: una selección propia de álbumes, sin relación con ningún artista en particular.",
-  "trackedListsHeading": "Listas que estoy siguiendo",
+  "trackedListsHeading": "Todavía no sigues ninguna lista",
   "trackedEmpty": "Todavía no estás siguiendo el progreso de ninguna lista ajena. Activalo desde el detalle de una lista de álbumes.",
   "newCamino": "Nueva lista para completar",
   "titleLabel": "Título",
@@ -110,5 +110,22 @@
     "toComplete": "Para completar",
     "toCompleteDescription": "Listas que otras personas siguen para completar.",
     "seeAll": "Ver todas"
-  }
+  },
+  "deleteDialogTitle": "¿Eliminar «{title}»?",
+  "deleteDialogMessage": "{count, plural, =0 {La lista está vacía.} one {Se pierde su álbum.} other {Se pierden sus # álbumes y su orden.}} Tus escuchas siguen en el diario. No se puede deshacer.",
+  "deleteDialogConfirm": "Eliminar lista",
+  "progressLabel": "Avance: {step}",
+  "progressStep": {
+    "notStarted": "sin empezar",
+    "justStarted": "recién empezado",
+    "halfway": "a la mitad",
+    "almostDone": "casi terminado",
+    "complete": "completo"
+  },
+  "untrack": "Dejar de seguir",
+  "untrackLabel": "Dejar de seguir «{title}»",
+  "untracked": "Dejaste de seguir «{title}»",
+  "undo": "Deshacer",
+  "undoError": "No pudimos deshacer. Intenta de nuevo.",
+  "discoverLists": "Descubrir listas para completar"
 }

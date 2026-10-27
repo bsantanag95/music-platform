@@ -312,8 +312,10 @@ describe("ArtistJourneyList", () => {
     await openCardMenu(user, "Deep Purple");
     await user.click(screen.getByRole("menuitem", { name: "Eliminar" }));
     expect(mocks.deleteArtistJourney).not.toHaveBeenCalled();
-    expect(screen.getByText("¿Eliminar?")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Confirmar eliminación" }));
+    // openspec: refine-progress-page-phase1 — el segundo paso es un diálogo que nombra al artista.
+    const dialog = screen.getByRole("dialog", { name: "¿Eliminar tu discografía de Deep Purple?" });
+    expect(dialog).toHaveTextContent("Se pierde tu selección de 4 discos. Tus escuchas siguen en el diario");
+    await user.click(screen.getByRole("button", { name: "Eliminar discografía" }));
     expect(mocks.deleteArtistJourney).toHaveBeenCalledWith("a1");
     expect(await screen.findByRole("link", { name: "Sabrina Carpenter" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Deep Purple" })).not.toBeInTheDocument();
@@ -325,7 +327,7 @@ describe("ArtistJourneyList", () => {
     renderWithIntl(<ArtistJourneyList journeys={[summary()]} />);
     await openCardMenu(user);
     await user.click(screen.getByRole("menuitem", { name: "Eliminar" }));
-    await user.click(screen.getByRole("button", { name: "Confirmar eliminación" }));
+    await user.click(screen.getByRole("button", { name: "Eliminar discografía" }));
     expect(await screen.findByText("Todavía no estás completando ninguna discografía.")).toBeInTheDocument();
   });
 
@@ -335,7 +337,7 @@ describe("ArtistJourneyList", () => {
     renderWithIntl(<ArtistJourneyList journeys={[summary()]} />);
     await openCardMenu(user);
     await user.click(screen.getByRole("menuitem", { name: "Eliminar" }));
-    await user.click(screen.getByRole("button", { name: "Confirmar eliminación" }));
+    await user.click(screen.getByRole("button", { name: "Eliminar discografía" }));
     expect(await screen.findByText("No pudimos eliminar la discografía. Intenta de nuevo.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Deep Purple" })).toBeInTheDocument();
   });
@@ -348,5 +350,54 @@ describe("ArtistJourneyList", () => {
     expect(screen.getByRole("menuitem", { name: "Ver artista" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Archivar" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Eliminar" })).toBeInTheDocument();
+  });
+
+  // openspec: refine-progress-page-phase1
+  it("cancelar el diálogo de eliminar no borra nada", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<ArtistJourneyList journeys={[summary()]} />);
+    await openCardMenu(user);
+    await user.click(screen.getByRole("menuitem", { name: "Eliminar" }));
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(mocks.deleteArtistJourney).not.toHaveBeenCalled();
+    expect(screen.getByRole("link", { name: "Deep Purple" })).toBeInTheDocument();
+  });
+
+  it("el ⋮ mide 32 px y crece a 44 con puntero grueso", () => {
+    renderWithIntl(<ArtistJourneyList journeys={[summary()]} />);
+    const trigger = screen.getByRole("button", { name: "Más acciones para Deep Purple" });
+    expect(trigger.className).toContain("size-8");
+    expect(trigger.className).toContain("[@media(pointer:coarse)]:size-11");
+  });
+
+  it("la barra se anuncia con un tramo discreto, sin números", () => {
+    renderWithIntl(<ArtistJourneyList journeys={[summary({ progress: { selectedCount: 4, listenedCount: 2 } })]} />);
+    expect(screen.getByRole("img", { name: "Avance: a la mitad" })).toBeInTheDocument();
+  });
+
+  it("el estado vacío enlaza a la búsqueda de artistas", () => {
+    renderWithIntl(<ArtistJourneyList journeys={[]} />);
+    expect(screen.getByRole("link", { name: "Buscar un artista" })).toHaveAttribute("href", "/search?type=artist");
+  });
+
+  it("abre con los filtros de la URL y escribe los cambios sin perder la pestaña", async () => {
+    const user = userEvent.setup();
+    window.history.replaceState(null, "", "/me/progress?tab=discographies&q=deep");
+    renderWithIntl(
+      <ArtistJourneyList
+        journeys={[summary(), summary({ artistId: "a2", artistName: "Sabrina Carpenter" })]}
+        initialFilters={{ q: "deep" }}
+      />,
+    );
+    expect(screen.getByRole("searchbox")).toHaveValue("deep");
+    expect(screen.queryByRole("link", { name: "Sabrina Carpenter" })).not.toBeInTheDocument();
+
+    await user.selectOptions(screen.getByRole("combobox", { name: "Ordenar" }), "alpha");
+    expect(new URLSearchParams(window.location.search).get("sort")).toBe("alpha");
+    expect(new URLSearchParams(window.location.search).get("tab")).toBe("discographies");
+
+    await user.clear(screen.getByRole("searchbox"));
+    expect(new URLSearchParams(window.location.search).has("q")).toBe(false);
   });
 });

@@ -33,7 +33,23 @@ vi.mock("@/components/camino/TrackedCaminosList", () => ({
 
 const user = { id: "u1" };
 
-function run(searchParams: { tab?: string } = {}) {
+// Busca en el árbol devuelto por la página el listado que recibe `initialFilters`.
+function findInitialFilters(node: unknown): unknown {
+  if (!node || typeof node !== "object") return undefined;
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      const found = findInitialFilters(child);
+      if (found !== undefined) return found;
+    }
+    return undefined;
+  }
+  const props = (node as { props?: Record<string, unknown> }).props;
+  if (!props) return undefined;
+  if ("initialFilters" in props) return props.initialFilters;
+  return findInitialFilters(props.children);
+}
+
+function run(searchParams: Record<string, string> = {}) {
   return ProgressPage({ searchParams: Promise.resolve(searchParams) });
 }
 
@@ -71,5 +87,16 @@ describe("ProgressPage", () => {
     expect(mocks.listTrackedLists).toHaveBeenCalledWith("u1");
     expect(mocks.listMyArtistJourneys).not.toHaveBeenCalled();
     expect(mocks.listMyCaminos).not.toHaveBeenCalled();
+  });
+
+  // openspec: refine-progress-page-phase1
+  it("pasa al listado los filtros válidos de la URL", async () => {
+    const page = await run({ q: "deep", sort: "alpha", state: "bogus" });
+    expect(findInitialFilters(page)).toEqual({ q: "deep", sort: "alpha" });
+  });
+
+  it("en Listas que sigo ignora el estado", async () => {
+    const page = await run({ tab: "following", sort: "progress", state: "archived" });
+    expect(findInitialFilters(page)).toEqual({ sort: "progress" });
   });
 });

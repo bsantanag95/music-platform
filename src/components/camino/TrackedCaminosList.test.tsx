@@ -98,10 +98,49 @@ describe("TrackedCaminosList", () => {
     const user = userEvent.setup();
     mocks.setListTracking.mockResolvedValue({ tracking: false });
     renderWithIntl(<TrackedCaminosList lists={[summary()]} />);
-    await user.click(screen.getByRole("button", { name: "Siguiendo mi progreso" }));
+    await user.click(screen.getByRole("button", { name: "Dejar de seguir «Discos que me cambiaron»" }));
     expect(mocks.setListTracking).toHaveBeenCalledWith("l1", false);
     await screen.findByText(
       "Todavía no estás siguiendo el progreso de ninguna lista ajena. Activalo desde el detalle de una lista de álbumes.",
     );
+  });
+
+  // openspec: refine-progress-page-phase1
+  it("deshacer vuelve a seguir la lista y la repone en su lugar", async () => {
+    const user = userEvent.setup();
+    mocks.setListTracking.mockResolvedValue({});
+    renderWithIntl(
+      <TrackedCaminosList lists={[summary(), summary({ id: "l2", title: "Para el invierno" })]} />,
+    );
+    await user.click(screen.getByRole("button", { name: "Dejar de seguir «Discos que me cambiaron»" }));
+    expect(screen.getByRole("status")).toHaveTextContent("Dejaste de seguir «Discos que me cambiaron»");
+    expect(screen.queryByRole("link", { name: "Discos que me cambiaron" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Deshacer" }));
+    expect(mocks.setListTracking).toHaveBeenLastCalledWith("l1", true);
+    const links = await screen.findAllByRole("link");
+    expect(links.map((link) => link.textContent)).toEqual(["Discos que me cambiaron", "Para el invierno"]);
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("si deshacer falla lo dice y ya no ofrece Deshacer", async () => {
+    const user = userEvent.setup();
+    mocks.setListTracking.mockResolvedValueOnce({}).mockRejectedValueOnce(new Error("x"));
+    renderWithIntl(<TrackedCaminosList lists={[summary()]} />);
+    await user.click(screen.getByRole("button", { name: "Dejar de seguir «Discos que me cambiaron»" }));
+    await user.click(screen.getByRole("button", { name: "Deshacer" }));
+    expect(await screen.findByText("No pudimos deshacer. Intenta de nuevo.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Deshacer" })).not.toBeInTheDocument();
+  });
+
+  it("el estado vacío lleva a descubrir listas para completar", () => {
+    renderWithIntl(<TrackedCaminosList lists={[]} />);
+    expect(screen.getByText("Todavía no sigues ninguna lista")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Descubrir listas para completar" })).toHaveAttribute("href", "/caminos");
+  });
+
+  it("la barra se anuncia con un tramo discreto", () => {
+    renderWithIntl(<TrackedCaminosList lists={[summary({ progress: { selectedCount: 4, listenedCount: 3 } })]} />);
+    expect(screen.getByRole("img", { name: "Avance: casi terminado" })).toBeInTheDocument();
   });
 });

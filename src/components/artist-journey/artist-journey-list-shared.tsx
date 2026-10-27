@@ -3,7 +3,8 @@ import type { ArtistJourneySummary } from "@/lib/api/schemas";
 
 export interface ArtistJourneyListActions {
   busyId: string | null;
-  remove: (artistId: string) => void;
+  /** Pide confirmar el borrado; el listado abre el diálogo. */
+  requestRemove: (artistId: string) => void;
   archive: (artistId: string) => void;
 }
 

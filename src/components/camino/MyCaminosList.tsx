@@ -3,21 +3,27 @@
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { normalizeForSearch } from "@/components/artist-journey/artist-journey-list-shared";
+import { ProgressPlaceholder } from "@/components/progress/ProgressPlaceholder";
+import {
+  DEFAULT_OWN_FILTERS,
+  type OwnFilters,
+  type OwnSort,
+  type OwnStateFilter,
+} from "@/components/progress/progress-tabs";
+import { useProgressFilters } from "@/components/progress/use-progress-filters";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterSelect } from "@/components/ui/FilterSelect";
 import { ApiError } from "@/lib/api/client";
 import { archiveCamino, deleteCamino, unarchiveCamino } from "@/lib/api/camino";
 import type { CaminoDetail, CaminoSummary } from "@/lib/api/schemas";
+import { CaminoDeleteDialog } from "./CaminoDeleteDialog";
 import { CaminoForm } from "./CaminoForm";
 import { CaminoModeSwitcher } from "./CaminoModeSwitcher";
 import { useCaminoViewMode } from "./use-camino-view-mode";
 import { MyCaminosDetailed } from "./MyCaminosDetailed";
 import { MyCaminosIndex } from "./MyCaminosIndex";
 import { MyCaminosGraphic } from "./MyCaminosGraphic";
-
-type CaminoSort = "recent" | "alpha" | "state";
-type CaminoStateFilter = "all" | CaminoSummary["state"];
 
 // Orden entre estados al ordenar "Por estado": en curso primero (lo activo),
 // completo después, archivado al final — mismo criterio que
@@ -36,6 +42,8 @@ const RENDERERS = {
 
 interface MyCaminosListProps {
   caminos: CaminoSummary[];
+  /** Filtros leídos de la URL por la página (ya validados). */
+  initialFilters?: Partial<OwnFilters>;
 }
 
 // Pestaña "Mis Caminos" de `/me/caminos` (openspec: add-camino): buscador,
@@ -45,32 +53,34 @@ interface MyCaminosListProps {
 // mismo mecanismo completo sin las asimetrías que tendría una lista
 // mezclada con Trackeados (ver mockups de diseño, decisión del usuario:
 // pestañas separadas en vez de una lista unificada).
-export function MyCaminosList({ caminos: initial }: MyCaminosListProps) {
+//
+// Desde refine-progress-page-phase1: filtros en la URL, diálogo de borrado y marcador hasta leer el modo, igual que
+// `ArtistJourneyList`.
+export function MyCaminosList({ caminos: initial, initialFilters }: MyCaminosListProps) {
   const t = useTranslations("camino");
-  const [mode, setMode] = useCaminoViewMode();
-  const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<CaminoSort>("recent");
-  const [stateFilter, setStateFilter] = useState<CaminoStateFilter>("all");
+  const [mode, setMode, modeReady] = useCaminoViewMode();
+  const [filters, setFilter] = useProgressFilters(DEFAULT_OWN_FILTERS, initialFilters);
   const [items, setItems] = useState(initial);
   const [showForm, setShowForm] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<CaminoSummary | null>(null);
   const [deleteError, setDeleteError] = useState(false);
   const [actionError, setActionError] = useState(false);
 
   const visible = useMemo(() => {
-    const q = normalizeForSearch(query.trim());
-    const byState = stateFilter === "all" ? items : items.filter((camino) => camino.state === stateFilter);
+    const q = normalizeForSearch(filters.q.trim());
+    const byState = filters.state === "all" ? items : items.filter((camino) => camino.state === filters.state);
     const filtered = q
       ? byState.filter((camino) => normalizeForSearch(camino.title).includes(q))
       : byState;
     // `items` ya llega del servidor en orden de creación descendente (más
     // reciente primero) — "recent" no necesita reordenar.
-    if (sort === "recent") return filtered;
-    if (sort === "state") {
+    if (filters.sort === "recent") return filtered;
+    if (filters.sort === "state") {
       return [...filtered].sort((a, b) => STATE_ORDER[a.state] - STATE_ORDER[b.state]);
     }
     return [...filtered].sort((a, b) => a.title.localeCompare(b.title));
-  }, [items, query, sort, stateFilter]);
+  }, [items, filters]);
 
   async function handleDelete(caminoId: string) {
     setBusyId(caminoId);
@@ -155,40 +165,40 @@ export function MyCaminosList({ caminos: initial }: MyCaminosListProps) {
 
       {showForm && <CaminoForm onCancel={() => setShowForm(false)} onCreated={handleCreated} />}
 
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <input
-            type="search"
-            autoComplete="off"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t("searchPlaceholder")}
-            aria-label={t("searchPlaceholder")}
-            className="w-full min-w-[11rem] rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted sm:max-w-xs"
-          />
-          <FilterSelect
-            value={sort}
-            onChange={(value) => setSort(value as CaminoSort)}
-            ariaLabel={t("sortLabel")}
-            widthClassName="w-[13ch]"
-          >
-            <option value="recent">{t("sort.recent")}</option>
-            <option value="alpha">{t("sort.alpha")}</option>
-            <option value="state">{t("sort.state")}</option>
-          </FilterSelect>
-          <FilterSelect
-            value={stateFilter}
-            onChange={(value) => setStateFilter(value as CaminoStateFilter)}
-            ariaLabel={t("stateFilterLabel")}
-            widthClassName="w-[13ch]"
-          >
-            <option value="all">{t("stateFilterAll")}</option>
-            <option value="in_progress">{t("stateInProgress")}</option>
-            <option value="complete">{t("stateComplete")}</option>
-            <option value="archived">{t("stateArchived")}</option>
-          </FilterSelect>
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          type="search"
+          autoComplete="off"
+          value={filters.q}
+          onChange={(event) => setFilter("q", event.target.value)}
+          placeholder={t("searchPlaceholder")}
+          aria-label={t("searchPlaceholder")}
+          className="w-full rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted sm:w-auto sm:min-w-[12rem] sm:flex-1"
+        />
+        <FilterSelect
+          value={filters.sort}
+          onChange={(value) => setFilter("sort", value as OwnSort)}
+          ariaLabel={t("sortLabel")}
+          widthClassName="w-[13ch]"
+        >
+          <option value="recent">{t("sort.recent")}</option>
+          <option value="alpha">{t("sort.alpha")}</option>
+          <option value="state">{t("sort.state")}</option>
+        </FilterSelect>
+        <FilterSelect
+          value={filters.state}
+          onChange={(value) => setFilter("state", value as OwnStateFilter)}
+          ariaLabel={t("stateFilterLabel")}
+          widthClassName="w-[13ch]"
+        >
+          <option value="all">{t("stateFilterAll")}</option>
+          <option value="in_progress">{t("stateInProgress")}</option>
+          <option value="complete">{t("stateComplete")}</option>
+          <option value="archived">{t("stateArchived")}</option>
+        </FilterSelect>
+        <div className={`ml-auto ${modeReady ? "" : "invisible"}`}>
+          <CaminoModeSwitcher mode={mode} onChange={setMode} />
         </div>
-        <CaminoModeSwitcher mode={mode} onChange={setMode} />
       </div>
 
       {deleteError && (
@@ -202,18 +212,30 @@ export function MyCaminosList({ caminos: initial }: MyCaminosListProps) {
         </span>
       )}
 
-      {visible.length === 0 ? (
+      {!modeReady ? (
+        <ProgressPlaceholder count={visible.length} />
+      ) : visible.length === 0 ? (
         <EmptyState title={t("noResultsTitle")} description={t("noResultsDescription")} />
       ) : (
         <Renderer
           caminos={visible}
           actions={{
             busyId,
-            remove: (caminoId) => void handleDelete(caminoId),
+            requestRemove: (caminoId) => setPendingDelete(items.find((item) => item.id === caminoId) ?? null),
             archive: (caminoId) => void handleArchiveToggle(caminoId),
           }}
         />
       )}
+
+      <CaminoDeleteDialog
+        camino={pendingDelete}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          const target = pendingDelete;
+          setPendingDelete(null);
+          if (target) void handleDelete(target.id);
+        }}
+      />
     </div>
   );
 }

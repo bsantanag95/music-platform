@@ -3,7 +3,8 @@ import type { CaminoSummary } from "@/lib/api/schemas";
 
 export interface MyCaminosListActions {
   busyId: string | null;
-  remove: (caminoId: string) => void;
+  /** Pide confirmar el borrado; el listado abre el diálogo. */
+  requestRemove: (caminoId: string) => void;
   archive: (caminoId: string) => void;
 }
 

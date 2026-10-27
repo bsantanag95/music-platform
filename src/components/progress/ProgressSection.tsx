@@ -9,7 +9,8 @@ import { DEFAULT_PROGRESS_TAB, PROGRESS_TABS, type ProgressTab } from "./progres
 // (contenido propio vs. ajeno) resuelto en `/me/lists` con "Mis listas ·
 // Guardadas · Descubrir": pestañas en vez de una lista unificada. La pestaña activa vive en `?tab=`
 // para ser enlazable y sobrevivir a la recarga; cada cambio de pestaña es una
-// navegación (el panel se resuelve en el servidor).
+// navegación (el panel se resuelve en el servidor) y vuelve a los filtros por defecto. En un teléfono las tres
+// pestañas caben en una fila (openspec: refine-progress-page-phase1, D7).
 export function ProgressSection({
   activeTab,
   children,
@@ -34,12 +35,12 @@ export function ProgressSection({
   };
 
   return (
-    <div className="flex w-full max-w-2xl flex-col gap-5">
+    <div className="flex w-full flex-col gap-5">
       <div
         role="tablist"
         aria-label={t("tablistLabel")}
         onKeyDown={onKeyDown}
-        className="flex flex-wrap gap-2 border-b border-ink-border pb-3"
+        className="-mx-1 flex gap-1.5 overflow-x-auto border-b border-ink-border px-1 pb-3 [scrollbar-width:none] sm:gap-2"
       >
         {PROGRESS_TABS.map((tab) => {
           const selected = tab === activeTab;
@@ -51,7 +52,7 @@ export function ProgressSection({
               aria-selected={selected}
               tabIndex={selected ? 0 : -1}
               href={{ pathname, query: tab === DEFAULT_PROGRESS_TAB ? {} : { tab } }}
-              className={`rounded border px-3 py-1.5 font-data text-xs transition-colors ${
+              className={`shrink-0 whitespace-nowrap rounded border px-2.5 py-1.5 font-data text-xs transition-colors sm:px-3 ${
                 selected
                   ? "border-amber text-paper"
                   : "border-ink-border text-paper-muted hover:text-paper"

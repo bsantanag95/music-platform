@@ -9,25 +9,24 @@ import type { MyCaminosListActions } from "./camino-list-shared";
 interface CaminoCardMenuProps {
   camino: CaminoSummary;
   actions: MyCaminosListActions;
-  onRequestDelete: () => void;
 }
 
 // Menú "⋮" con las acciones secundarias de un Camino propio — gestionar,
 // archivar/desarchivar, eliminar — compartido por los tres modos de
 // visualización, calcado de `ArtistJourneyCardMenu`. "Eliminar" no borra
-// directo: arma la confirmación de dos pasos del renderer que lo usa vía
-// `onRequestDelete`.
-export function CaminoCardMenu({ camino, actions, onRequestDelete }: CaminoCardMenuProps) {
+// directo: pide al listado que abra el diálogo de confirmación (openspec:
+// refine-progress-page-phase1, D2).
+export function CaminoCardMenu({ camino, actions }: CaminoCardMenuProps) {
   const t = useTranslations("camino");
   const router = useRouter();
 
   return (
-    <RowMenu label={t("cardMenuLabel", { title: camino.title })}>
+    <RowMenu label={t("cardMenuLabel", { title: camino.title })} triggerClassName="size-8 [@media(pointer:coarse)]:size-11">
       <RowMenuItem onSelect={() => router.push(`/me/caminos/${camino.id}`)}>{t("manage")}</RowMenuItem>
       <RowMenuItem onSelect={() => actions.archive(camino.id)}>
         {camino.state === "archived" ? t("unarchive") : t("archive")}
       </RowMenuItem>
-      <RowMenuItem danger onSelect={onRequestDelete}>
+      <RowMenuItem danger onSelect={() => actions.requestRemove(camino.id)}>
         {t("delete")}
       </RowMenuItem>
     </RowMenu>
