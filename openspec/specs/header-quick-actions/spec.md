@@ -9,7 +9,8 @@ El Header SHALL ofrecer, solo con sesión, un control **"Añadir"** en la zona d
 usuario, no en la barra general de navegación de contenido— que abre un diálogo de acciones rápidas sin navegar
 a otra ruta. El diálogo SHALL presentar sus acciones como una fila de chips con
 semántica de grupo de opciones (`radiogroup`, navegables con flechas), en este orden: **Escucha**, **Valorar**,
-**Favorito**, **Pendiente**, **Colección**, **Recorrido**, **A lista**, **Nueva lista** y **Nuevo Camino**. El
+**Favorito**, **Pendiente**, **Colección**, **Recorrido**, **Seguir artista**, **A lista**, **Nueva lista** y
+**Nuevo Camino**. El
 diálogo SHALL abrirse siempre con **Escucha** seleccionada y el
 foco en el buscador, sin recordar la acción usada la última vez. El diálogo SHALL ser accesible: renderizarse en
 un portal, atrapar el foco, cerrarse con `Escape` devolviendo el foco al control, bloquear el desplazamiento de la
@@ -329,4 +330,20 @@ la persona. Al crearlo SHALL ofrecer **Ver lista** y **Agregar álbumes**; esta 
 
 - **WHEN** una persona crea una lista para completar y activa "Agregar álbumes"
 - **THEN** el diálogo pasa al chip "A lista" con la búsqueda fijada en álbumes
+
+### Requirement: Acción Seguir artista
+
+El chip **Seguir artista** ("Follow artist" en inglés) SHALL buscar solo artistas y, tras elegir uno, seguirlo de forma
+idempotente (si ya lo seguía, no cambia nada) y confirmar "Sigues a X" con un enlace a `/me/artists`. Seguir desde el
+diálogo SHALL avisar del cambio como el resto de las acciones, para que las páginas abiertas se actualicen.
+
+#### Scenario: Seguir a un artista
+
+- **WHEN** una persona elige el chip "Seguir artista" y luego a Europe
+- **THEN** pasa a seguir a Europe y el diálogo confirma "Sigues a Europe" con un enlace a sus artistas
+
+#### Scenario: Ya lo seguía
+
+- **WHEN** una persona elige un artista que ya sigue
+- **THEN** el diálogo confirma que lo sigue y no duplica el seguimiento
 
