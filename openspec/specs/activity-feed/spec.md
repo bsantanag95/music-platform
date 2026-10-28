@@ -1063,7 +1063,19 @@ SHALL moverse al abrir la página en el navegador, nunca al renderizarla en el s
 haber bloque ni puntos.
 
 El listado SHALL agrupar las filas en bloques de fecha (Hoy, Esta semana, Este mes, Antes) y SHALL presentar la reseña
-como tarjeta de lectura con "Leer reseña", igual que `/activity`.
+como tarjeta de lectura con "Leer reseña", igual que `/activity`. Cuando hay bloque "Nuevo desde tu última visita", la
+primera sección que lo sigue SHALL abrir con "Estás al día".
+
+En el feed de seguidos, las entradas estrictamente contiguas de la misma persona sobre el mismo álbum el mismo día
+calendario (escucha, favorito, valoración, reseña, comentario, colección o búsqueda, a lo sumo una de cada tipo) SHALL
+fundirse en una sola fila cuando son al menos dos y al menos una no es de opinión: la celda y el título del álbum, el
+autor y la fecha más reciente, chips de acción (valoración, favorito, escucha con su contexto, colección con su formato,
+búsqueda) y, debajo, la reseña, el comentario y la nota de escucha. Solo valoración, reseña y comentario siguen como
+fila de opinión. El rastro propio no se funde así.
+
+Desde `lg`, la página SHALL mostrar un riel lateral con la convergencia de la red y "Quiénes más se movieron": hasta
+cinco personas seguidas con más actividad visible en los últimos 7 días, de más a menos, cada una enlazada al feed
+filtrado por ella y sin cifras. Un módulo sin contenido no se muestra, y sin ninguno no hay riel.
 
 Una fila de actividad de otra persona SHALL NOT mostrar la audiencia que esa persona eligió, en ninguna superficie; la
 audiencia SHALL mostrarse solo en el rastro propio.
@@ -1103,6 +1115,25 @@ del que sigue a personas que todavía no publicaron nada (con una salida a la ac
 #### Scenario: Recargar mueve la marca
 - **WHEN** el lector abre el feed y lo recarga
 - **THEN** en la segunda carga lo que antes era nuevo ya no está bajo "Nuevo desde tu última visita"
+
+#### Scenario: Un disco, una fila
+- **WHEN** Fran valora *Short n' Sweet*, lo marca como favorito, lo escucha por primera vez y lo reseña el mismo día, en
+  entradas seguidas
+- **THEN** el feed muestra una sola fila del disco con los chips de valoración, favorito y primera escucha, y la reseña
+  debajo
+
+#### Scenario: Otro día, otra fila
+- **WHEN** Fran escucha un disco un día y lo valora al día siguiente
+- **THEN** el feed muestra dos filas
+
+#### Scenario: Estás al día
+- **WHEN** el lector tiene dos entradas nuevas desde su última visita y más entradas anteriores
+- **THEN** tras las dos nuevas ve "Estás al día" antes del bloque de fecha siguiente
+
+#### Scenario: Quiénes más se movieron
+- **WHEN** en los últimos 7 días Ana tiene cuatro entradas visibles y Fran una, y el lector abre `/me/feed` en una
+  pantalla ancha
+- **THEN** el riel muestra a Ana antes que a Fran, sin cifras, y elegir a Ana filtra el feed por ella
 
 #### Scenario: Sin audiencia en filas ajenas
 - **WHEN** una persona seguida suma un disco a su colección con audiencia `followers`

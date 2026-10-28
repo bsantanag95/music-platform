@@ -6,7 +6,6 @@ La capa "relevante" del feed: detectar y presentar las **obras** con las que var
 personas distintas de la red del lector se relacionaron en una ventana corta ("en qué
 coincide mi red ahora"), como una síntesis social única en la cabecera de `/me/feed`,
 distinta del listado cronológico y del pico de rotación personal.
-
 ## Requirements
 ### Requirement: Detección de convergencia de la red
 
@@ -98,8 +97,10 @@ esta especificación.
 
 ### Requirement: Presentación de la convergencia en el feed
 
-`/me/feed` SHALL mostrar la convergencia de la red como un **panel en la cabecera**, encima
-del listado cronológico de actividad y visualmente separado de él. El panel SHALL
+`/me/feed` SHALL mostrar la convergencia de la red como un **panel** visualmente separado del listado cronológico: en
+el riel lateral desde `lg` y encima del listado por debajo. Si la ventana de 7 días no tiene ninguna obra convergente,
+el panel SHALL mirar 30 días con el mismo umbral, y su título SHALL decir qué ventana muestra ("esta semana" o "este
+mes"). El panel SHALL
 representar la capa "relevante" (en qué coincide la red), distinta de la capa "social" (qué
 hizo cada persona, en orden) y del pico de rotación (el propio comportamiento del lector).
 
@@ -114,7 +115,7 @@ El tono SHALL ser cultural: el panel NO SHALL mostrar la palabra "tendencia", un
 de tipo racha, emojis de fuego, una insignia de número destacado ni ningún ranking de
 popularidad global. La única cifra SHALL ser el número de personas de la red del lector.
 
-Cuando no hay ninguna obra convergente, el panel NO SHALL renderizarse (sin encabezado
+Cuando no hay ninguna obra convergente en ninguna de las dos ventanas, el panel NO SHALL renderizarse (sin encabezado
 vacío ni hueco). El listado cronológico del feed SHALL permanecer sin cambios: las entradas
 individuales que alimentan una convergencia SHALL seguir apareciendo en él.
 
@@ -122,8 +123,12 @@ individuales que alimentan una convergencia SHALL seguir apareciendo en él.
 
 - **WHEN** el lector abre `/me/feed` y hay un álbum con el que 4 personas que sigue
   interactuaron en la ventana
-- **THEN** ve, encima del listado cronológico, una fila con la carátula y el título
+- **THEN** ve, en el riel (o encima del listado en una pantalla angosta), una fila con la carátula y el título
   enlazado del álbum, el artista, hasta 3 nombres y la cifra "4 personas que seguís"
+
+#### Scenario: Respaldo de 30 días
+- **WHEN** ninguna obra alcanza el umbral en 7 días pero una lo alcanza en los últimos 30
+- **THEN** el panel se titula "En tu red este mes" y muestra esa obra
 
 #### Scenario: Síntesis única, no filas por persona
 
