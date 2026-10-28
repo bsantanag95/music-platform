@@ -85,6 +85,11 @@ export function getFeed(page = 1, pageSize = 20, filters?: FeedFiltersParams): P
   return apiFetch(`/api/me/feed?${params.toString()}`, FeedResponseSchema);
 }
 
+// Registra la visita a `/me/feed` (redesign-feed-people, D2): lo posterior será "nuevo" en la próxima visita.
+export function markFeedSeen(): Promise<{ ok: boolean }> {
+  return apiFetch("/api/me/feed/seen", z.object({ ok: z.boolean() }), { method: "PUT" });
+}
+
 // Sección "Recientes" de `/activity` (cambio add-community-activity-surface):
 // ratings + comentarios + reseñas públicos, sin requerir seguimiento. Mismo
 // shape de respuesta que `getFeed`, así que reusa `FeedResponseSchema`.

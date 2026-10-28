@@ -4,11 +4,13 @@ import type { FeedRow } from "./feed-grouping";
 // conserva su fecha relativa. "Hoy" es el mismo día calendario en la zona horaria de la app; "Esta semana" y "Este
 // mes" son ventanas móviles de 7 y 30 días hacia atrás desde `now`, no la semana o el mes calendario.
 export type DateBucket = "today" | "week" | "month" | "earlier";
+// "new": posterior a la última visita a `/me/feed` (redesign-feed-people, D7). Va antes de los bloques de fecha.
+export type SectionBucket = DateBucket | "new";
 
 export interface DateSectionRow {
   kind: "date-section";
   id: string;
-  bucket: DateBucket;
+  bucket: SectionBucket;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -28,12 +30,22 @@ export function dateBucket(iso: string, now: Date, timeZone?: string): DateBucke
 }
 
 // Intercala un encabezado antes de la primera fila de cada bloque. Se calcula sobre la lista completa (todas las
-// páginas cargadas), así que al sumar una página que continúa el último bloque el encabezado no se repite.
-export function withDateSections(rows: FeedRow[], now: Date, timeZone?: string): (FeedRow | DateSectionRow)[] {
+// páginas cargadas), así que al sumar una página que continúa el último bloque el encabezado no se repite. Con
+// `newSince`, las filas posteriores a esa marca van bajo "new" en lugar de su bloque de fecha.
+export function withDateSections(
+  rows: FeedRow[],
+  now: Date,
+  timeZone?: string,
+  newSince?: string | null,
+): (FeedRow | DateSectionRow)[] {
   const result: (FeedRow | DateSectionRow)[] = [];
-  let previous: DateBucket | null = null;
+  const newSinceMs = newSince ? new Date(newSince).getTime() : null;
+  let previous: SectionBucket | null = null;
   for (const row of rows) {
-    const bucket = dateBucket(row.createdAt, now, timeZone);
+    const bucket: SectionBucket =
+      newSinceMs !== null && new Date(row.createdAt).getTime() > newSinceMs
+        ? "new"
+        : dateBucket(row.createdAt, now, timeZone);
     if (bucket !== previous) {
       // La posición en la key: si el orden no fuera estrictamente cronológico, un bloque podría repetirse.
       result.push({ kind: "date-section", id: `date-section-${bucket}-${result.length}`, bucket });

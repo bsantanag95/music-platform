@@ -48,6 +48,9 @@ interface FeedActivityListProps {
   // La reseña como tarjeta de lectura —estrellas, titular, extracto a 4 líneas y "Leer reseña"— en vez de la cita
   // con borde petróleo (redesign-activity-page, D8). Opt-in: solo `/activity`.
   reviewCard?: boolean;
+  // Última visita a `/me/feed`: con `dateSections`, lo posterior va bajo "Nuevo desde tu última visita"
+  // (redesign-feed-people, D7).
+  newSince?: string | null;
 }
 
 // Presentación del feed por peso de contenido: las entradas con prosa
@@ -61,6 +64,7 @@ export function FeedActivityList({
   clamp = false,
   dateSections = false,
   reviewCard = false,
+  newSince = null,
 }: FeedActivityListProps) {
   const t = useTranslations("feed");
   const locale = useLocale();
@@ -82,13 +86,15 @@ export function FeedActivityList({
           : "divide-y divide-ink-border"
       }
     >
-      {(dateSections ? withDateSections(rows, now, timeZone) : rows).map((row) => {
+      {(dateSections ? withDateSections(rows, now, timeZone, newSince) : rows).map((row) => {
         if (row.kind === "date-section") {
           // Encabezado de bloque: `role="presentation"` para no contarse como un elemento más de la lista; sin el
           // borde inferior de `divide-y`, así se lee pegado a las filas que agrupa.
           return (
             <li key={row.id} role="presentation" className="border-b-0 pb-1 pt-6 first:pt-0">
-              <h3 className="font-data text-[11px] uppercase tracking-wider text-paper-muted">
+              <h3
+                className={`font-data text-[11px] uppercase tracking-wider ${row.bucket === "new" ? "text-amber" : "text-paper-muted"}`}
+              >
                 {t(`community.dateSection.${row.bucket}`)}
               </h3>
             </li>
@@ -862,22 +868,25 @@ function initialFor(author: FeedEntry["author"]): string {
 
 // Decorativo: el nombre ya lo dice `AuthorLink` al lado — repetirlo acá
 // duplicaría el anuncio para lector de pantalla sin agregar información.
-function AuthorAvatar({ author }: { author: FeedEntry["author"] }) {
+// `size="lg"` es el de la franja de personas de `/me/feed` (redesign-feed-people, D5).
+export function AuthorAvatar({ author, size = "sm" }: { author: FeedEntry["author"]; size?: "sm" | "lg" }) {
+  const box = size === "lg" ? "size-10" : "size-5";
   if (author.avatarUrl) {
+    const px = size === "lg" ? 40 : 20;
     return (
       <AppImage
         src={author.avatarUrl}
         alt=""
-        width={20}
-        height={20}
-        className="size-5 shrink-0 rounded-full object-cover"
+        width={px}
+        height={px}
+        className={`${box} shrink-0 rounded-full object-cover`}
       />
     );
   }
   return (
     <span
       aria-hidden="true"
-      className={`inline-flex size-5 shrink-0 items-center justify-center rounded-full font-data text-[10px] font-medium leading-none ${avatarVariant(author.id)}`}
+      className={`inline-flex ${box} shrink-0 items-center justify-center rounded-full font-data ${size === "lg" ? "text-sm" : "text-[10px]"} font-medium leading-none ${avatarVariant(author.id)}`}
     >
       {initialFor(author)}
     </span>

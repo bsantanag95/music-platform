@@ -62,6 +62,10 @@ usuario declaran `ON DELETE CASCADE`; solo las de auditoría (`moderation_action
 `editorial_action` como actor y `user_list.editorial_*`) usan `RESTRICT`, y por eso una cuenta con
 historial no se puede eliminar (Postgres responde `23001`).
 
+**Última visita al feed (migración `0078`, `redesign-feed-people`):** `feed_seen_at` (TIMESTAMPTZ nullable; nulo =
+nunca abrió `/me/feed` desde esa versión). La mueve `PUT /api/me/feed/seen` al abrir la página; las entradas posteriores
+a la marca anterior se muestran bajo "Nuevo desde tu última visita". Mismo patrón que `notifications_seen_at`.
+
 ## `user_profile_prompt`
 
 **Propósito:** las preguntas del perfil de una persona (capability `profile-music-identity`): hasta 3,

@@ -626,19 +626,58 @@ export function caminoFeedEntries(created: CaminoSourceRow[], completed: CaminoS
 }
 
 /**
- * Personas seguidas (relación aceptada) para poblar el `<select>` de autor del
- * filtro de feed: sin paginar (a diferencia de `listFollowing`, que topea en
- * 50 — un `<select>` nativo necesita la lista completa de antemano), orden
- * alfabético por username.
+ * Personas seguidas (relación aceptada) para la franja de personas del feed: sin paginar (a diferencia de
+ * `listFollowing`, que topea en 50 — la franja muestra a todos), orden alfabético por username y con la foto de perfil
+ * resuelta por lote (openspec: redesign-feed-people, D5).
  */
 export async function listFeedAuthors(viewerId: string): Promise<FeedAuthor[]> {
   const rows = await db
-    .select({ id: appUser.id, username: appUser.username, displayName: appUser.displayName })
+    .select({
+      id: appUser.id,
+      username: appUser.username,
+      displayName: appUser.displayName,
+      avatarImageId: appUser.avatarImageId,
+    })
     .from(userFollow)
     .innerJoin(appUser, eq(userFollow.followedId, appUser.id))
     .where(and(eq(userFollow.followerId, viewerId), eq(userFollow.status, "accepted"), activeUserCondition()))
     .orderBy(appUser.username);
-  return rows.map((row) => ({ id: row.id, username: row.username ?? "", displayName: row.displayName }));
+  const urls = await resolveImageUrls(rows.map((row) => row.avatarImageId));
+  return rows.map((row) => ({
+    id: row.id,
+    username: row.username ?? "",
+    displayName: row.displayName,
+    avatarUrl: row.avatarImageId ? (urls.get(row.avatarImageId) ?? null) : null,
+  }));
+}
+
+/** Última visita al feed (`app_user.feed_seen_at`, migración 0078) como ISO; `null` = nunca lo abrió. */
+export async function getFeedSeenAt(viewerId: string): Promise<string | null> {
+  const [row] = await db.select({ feedSeenAt: appUser.feedSeenAt }).from(appUser).where(eq(appUser.id, viewerId));
+  return row?.feedSeenAt ? row.feedSeenAt.toISOString() : null;
+}
+
+/** Registra que la persona abrió el feed: lo posterior a esta marca será "nuevo" en la próxima visita (D2). */
+export async function markFeedSeen(viewerId: string): Promise<void> {
+  await db.update(appUser).set({ feedSeenAt: new Date() }).where(eq(appUser.id, viewerId));
+}
+
+// Cuántas entradas recientes se miran para decidir quién tiene novedades (D4).
+const NEW_ACTIVITY_WINDOW = 50;
+
+/**
+ * Ids de las personas seguidas con actividad visible posterior a `since`. Reusa la composición de `listFeed` (mismas
+ * reglas de audiencia, perfil y bloqueo) sobre sus 50 entradas más recientes: quien solo tiene novedades más atrás no
+ * aparece (openspec: redesign-feed-people, D4).
+ */
+export async function listAuthorsWithNewActivity(viewerId: string, since: string): Promise<string[]> {
+  const sinceMs = new Date(since).getTime();
+  const { entries } = await listFeed(viewerId, 1, NEW_ACTIVITY_WINDOW);
+  const ids = new Set<string>();
+  for (const entry of entries) {
+    if (new Date(entry.createdAt).getTime() > sinceMs) ids.add(entry.author.id);
+  }
+  return [...ids];
 }
 
 /**

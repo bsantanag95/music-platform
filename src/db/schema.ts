@@ -166,6 +166,9 @@ export const appUser = pgTable(
     // ventana del último resumen enviado (nulo = nunca se envió).
     notificationDigestEnabled: boolean("notification_digest_enabled").notNull().default(false),
     notificationDigestSentAt: timestamp("notification_digest_sent_at", { withTimezone: true }),
+    // Última vez que abrió el feed de seguidos (migración 0078, openspec:
+    // redesign-feed-people, D1); marca lo nuevo desde entonces. Nulo = nunca.
+    feedSeenAt: timestamp("feed_seen_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
