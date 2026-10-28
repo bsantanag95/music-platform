@@ -1,7 +1,6 @@
 {
-  "title": "Activity from people you follow",
-  "emptyTitle": "Nothing to see yet",
-  "emptyDescription": "Follow people to see their listens, favorites, lists, ratings, comments, lists to complete and collection records here.",
+  "title": "Activity",
+  "subtitle": "What the people you follow are listening to, rating and collecting.",
   "community": {
     "pageTitle": "Community",
     "heading": "Community",
@@ -94,9 +93,9 @@
   "loadedAnnouncement": "{count, plural, one {Loaded # new entry} other {Loaded # new entries}}",
   "searchPlaceholder": "Search by artist, album or song",
   "kindLabel": "Type",
-  "filterAllKind": "Type",
-  "authorLabel": "Author",
-  "filterAllAuthor": "Author",
+  "filterAllKind": "All types",
+  "authorLabel": "Person",
+  "filterAllAuthor": "Everyone",
   "clearFilters": "Clear filters",
   "noResultsTitle": "No results for these filters",
   "noResultsDescription": "Try a different search or remove one of the applied filters.",
@@ -145,5 +144,10 @@
     "rating_review_comment": "Rated, reviewed and commented"
   },
   "groupCollection": "{count, plural, one {added # record to their collection} other {added # records to their collection}}",
-  "groupWanted": "{count, plural, one {is looking for # record} other {is looking for # records}}"
+  "groupWanted": "{count, plural, one {is looking for # record} other {is looking for # records}}",
+  "emptyNoFollowsTitle": "You don't follow anyone yet",
+  "emptyNoFollowsDescription": "Follow people to see their listens, ratings, reviews, lists and collection here.",
+  "emptyQuietTitle": "The people you follow haven't posted anything yet",
+  "emptyQuietDescription": "When they listen to, rate or review something you can see, it will show up here.",
+  "communityCta": "See the community"
 }

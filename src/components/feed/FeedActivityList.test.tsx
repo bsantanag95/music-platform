@@ -755,7 +755,7 @@ describe("FeedActivityList", () => {
       coverThumbUrl: "https://cover/9.jpg",
     };
 
-    it("un alta de colección abre con la carátula y muestra el formato y la audiencia, sin nota", () => {
+    it("un alta de colección abre con la carátula y muestra el formato, sin nota ni la audiencia ajena", () => {
       renderWithIntl(
         <FeedActivityList
           entries={[{ kind: "collection", id: "co1", format: "vinyl", audience: "followers", createdAt: "2026-08-05T00:00:00Z", target: album, author }]}
@@ -765,8 +765,10 @@ describe("FeedActivityList", () => {
       // La línea de metadato se arma con unidades indivisibles (MetaUnit), así que el texto queda repartido en varios
       // elementos: se compara el texto del contenedor de la línea.
       expect(
-        screen.getByText((_, element) => element?.tagName === "SPAN" && element.className.includes("min-w-0") && (element.textContent ?? "").includes("Sumó a su colección · Vinilo · Seguidores")),
+        screen.getByText((_, element) => element?.tagName === "SPAN" && element.className.includes("min-w-0") && (element.textContent ?? "").includes("Sumó a su colección · Vinilo")),
       ).toBeInTheDocument();
+      // La audiencia que eligió otra persona no se muestra (refine-feed-page-phase1, D4).
+      expect(screen.queryByText(/Seguidores/)).not.toBeInTheDocument();
       expect(screen.getByRole("link", { name: "Wish You Were Here" })).toBeInTheDocument();
       expect(screen.getByRole("link", { name: "Pink Floyd" })).toBeInTheDocument();
       expect(screen.getByTestId("cover-thumb")).toHaveAttribute("data-cover", "https://cover/9.jpg");
@@ -782,7 +784,21 @@ describe("FeedActivityList", () => {
       // La línea de metadato se arma con unidades indivisibles (MetaUnit), así que el texto queda repartido en varios
       // elementos: se compara el texto del contenedor de la línea.
       expect(
-        screen.getByText((_, element) => element?.tagName === "SPAN" && element.className.includes("min-w-0") && (element.textContent ?? "").includes("Lo busca · cualquier formato · Público")),
+        screen.getByText((_, element) => element?.tagName === "SPAN" && element.className.includes("min-w-0") && (element.textContent ?? "").includes("Lo busca · cualquier formato")),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/Público/)).not.toBeInTheDocument();
+    });
+
+    it("el rastro propio sí muestra la audiencia", () => {
+      renderWithIntl(
+        <FeedActivityList
+          variant="own"
+          entries={[{ kind: "collection", id: "co2", format: "vinyl", audience: "followers", createdAt: "2026-08-05T00:00:00Z", target: album, author }]}
+        />,
+      );
+
+      expect(
+        screen.getByText((_, element) => element?.tagName === "SPAN" && element.className.includes("min-w-0") && (element.textContent ?? "").includes("Sumó a su colección · Vinilo · Seguidores")),
       ).toBeInTheDocument();
     });
 

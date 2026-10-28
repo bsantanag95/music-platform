@@ -67,7 +67,10 @@ const authors: AuthorSummary[] = [author, otherAuthor];
 const initial: FeedResponse = { entries: [favorite(), comment()], page: 1, pageSize: 20, hasNext: false };
 
 describe("FeedList", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    window.history.replaceState(null, "", "/es/me/feed");
+  });
 
   it("lista las entradas iniciales sin pedir datos al servidor", () => {
     renderWithQuery(<FeedList initial={initial} authors={authors} />);
@@ -77,23 +80,59 @@ describe("FeedList", () => {
     expect(mocks.getFeed).not.toHaveBeenCalled();
   });
 
-  it("estado vacío real: muestra el CTA para buscar personas", () => {
-    renderWithQuery(
-      <FeedList
-        initial={{ entries: [], page: 1, pageSize: 20, hasNext: false }}
-        authors={[]}
-        empty={{ title: "Nada para ver todavía", description: "Seguí a alguien." }}
-      />,
-    );
+  it("sin seguidos: dice que no sigue a nadie y ofrece buscar personas, sin barra de filtros", () => {
+    renderWithQuery(<FeedList initial={{ entries: [], page: 1, pageSize: 20, hasNext: false }} authors={[]} />);
 
-    expect(screen.getByText("Nada para ver todavía")).toBeInTheDocument();
-    const cta = screen.getByRole("link", { name: "Buscar personas" });
-    expect(cta).toHaveAttribute("href", "/users");
+    expect(screen.getByText("Todavía no sigues a nadie")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Buscar personas" })).toHaveAttribute("href", "/users");
+    expect(screen.queryByLabelText("Tipo")).not.toBeInTheDocument();
   });
 
-  it("el <select> de autor no aparece si no hay seguidos", () => {
+  it("con seguidos sin actividad: lo dice y ofrece ver la comunidad", () => {
+    renderWithQuery(<FeedList initial={{ entries: [], page: 1, pageSize: 20, hasNext: false }} authors={authors} />);
+
+    expect(screen.getByText("La gente que sigues todavía no publicó nada")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Ver la comunidad" })).toHaveAttribute("href", "/activity");
+    expect(screen.queryByRole("link", { name: "Buscar personas" })).not.toBeInTheDocument();
+  });
+
+  it("el <select> de persona no aparece si no hay seguidos", () => {
     renderWithQuery(<FeedList initial={initial} authors={[]} />);
-    expect(screen.queryByLabelText("Autor")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Persona")).not.toBeInTheDocument();
+  });
+
+  it("los selectores nombran su valor vacío", () => {
+    renderWithQuery(<FeedList initial={initial} authors={authors} />);
+    expect(screen.getByRole("option", { name: "Todos los tipos", selected: true })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Todas las personas", selected: true })).toBeInTheDocument();
+  });
+
+  it("arranca con los filtros de la URL y no vuelve a pedir la página que trajo el servidor", () => {
+    renderWithQuery(
+      <FeedList initial={initial} authors={authors} initialFilters={{ kind: "comment", author: "ana", q: "kid" }} />,
+    );
+
+    expect(screen.getByLabelText("Tipo")).toHaveValue("comment");
+    expect(screen.getByLabelText("Persona")).toHaveValue("ana");
+    expect(screen.getByPlaceholderText("Buscar por artista, álbum o canción")).toHaveValue("kid");
+    expect(screen.getByText("Currents")).toBeInTheDocument();
+    expect(mocks.getFeed).not.toHaveBeenCalled();
+  });
+
+  it("escribe los filtros activos en la URL sin crear historial", async () => {
+    const user = userEvent.setup();
+    const historyLength = window.history.length;
+    mocks.getFeed.mockResolvedValue({ entries: [comment()], page: 1, pageSize: 20, hasNext: false });
+    renderWithQuery(<FeedList initial={initial} authors={authors} />);
+
+    await user.selectOptions(screen.getByLabelText("Tipo"), "review");
+    await user.selectOptions(screen.getByLabelText("Persona"), "fran");
+
+    await waitFor(() => expect(window.location.search).toBe("?kind=review&author=fran"));
+    expect(window.history.length).toBe(historyLength);
+
+    await user.click(screen.getByText("Limpiar filtros"));
+    await waitFor(() => expect(window.location.search).toBe(""));
   });
 
   it("buscar texto dispara una nueva query con `q`, tras el debounce", async () => {
@@ -127,7 +166,7 @@ describe("FeedList", () => {
     renderWithQuery(<FeedList initial={initial} authors={authors} />);
 
     await user.selectOptions(screen.getByLabelText("Tipo"), "favorite");
-    await user.selectOptions(screen.getByLabelText("Autor"), otherAuthor.id);
+    await user.selectOptions(screen.getByLabelText("Persona"), otherAuthor.username);
 
     await waitFor(() =>
       expect(mocks.getFeed).toHaveBeenLastCalledWith(1, 20, {
