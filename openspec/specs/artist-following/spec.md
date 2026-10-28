@@ -95,6 +95,16 @@ La lista SHALL acotarse con segmentos, cada uno con su cuenta sobre la lista com
 **Último lanzamiento**: la fecha de su novedad o, si no tiene, la de su último disco publicado en la discografía
 guardada, de la más reciente a la más antigua, con los artistas sin dato al final.
 
+Cada artista SHALL mostrar, cuando se conocen, su país, su tipo (solista, grupo, orquesta o coro), su último disco
+publicado con el año y enlace al álbum, y desde cuándo lo sigue. Un artista con novedad SHALL mostrarla destacada: "Sale
+el <fecha>" si es futura o "Salió <fecha relativa>" si ya salió, con el título y enlace al álbum si está en el catálogo.
+En la vista Gráfico, la foto de un artista con novedad SHALL llevar una insignia con la fecha o "Nuevo". La fila SHALL
+NOT mostrar cifras de discos escuchados ni cuántos faltan.
+
+Con el segmento Todos y al menos una novedad, la lista SHALL dividirse en "Con novedades" y "El resto", conservando el
+orden elegido dentro de cada sección. En una pantalla ancha, la página SHALL mostrar al costado "Próximos lanzamientos":
+hasta seis novedades, primero las que salen y luego las recientes; sin novedades, no hay riel.
+
 La búsqueda, el orden y el segmento SHALL reflejarse en la URL (`q`, `sort`, `segment`) sin crear historial y
 restaurarse al abrir el enlace. La
 cabecera SHALL alinearse a la izquierda con migas, el título y cuántos artistas sigue. El modo de vista guardado SHALL
@@ -143,6 +153,24 @@ aplicarse sin mostrar antes el otro modo.
 - **WHEN** el usuario elige "Último lanzamiento"
 - **THEN** primero va el artista con un disco anunciado, luego los demás por la fecha de su último disco, y al final
   los que no tienen ninguno en el catálogo
+
+#### Scenario: Detalle de la fila
+
+- **WHEN** el usuario ve a Europe, un grupo sueco que sigue desde septiembre de 2026 y cuyo último disco es *Walk the
+  Earth* (2017)
+- **THEN** la fila dice "Suecia · Grupo · Último: Walk the Earth (2017) · Lo sigues desde sep 2026", con el disco
+  enlazado
+
+#### Scenario: Novedad destacada
+
+- **WHEN** el calendario tiene un disco de Sabrina Carpenter que sale el 14 de noviembre
+- **THEN** su fila dice "Sale el 14 nov" con el título del disco, va en la sección "Con novedades" y, en Gráfico, su
+  foto lleva la insignia "14 nov"
+
+#### Scenario: Próximos lanzamientos
+
+- **WHEN** dos artistas que sigue tienen novedades y el usuario abre `/me/artists` en una pantalla ancha
+- **THEN** ve al costado "Próximos lanzamientos" con las dos, primero la que sale antes
 
 #### Scenario: Búsqueda y orden en la URL
 
