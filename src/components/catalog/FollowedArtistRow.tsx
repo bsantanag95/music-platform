@@ -10,6 +10,7 @@ import { RowMenu, RowMenuItem } from "@/components/ui/RowMenu";
 import { AddToListPanel } from "@/components/lists/AddToListPanel";
 import { toggleFavorite } from "@/lib/api/favorites";
 import type { FollowedArtistDto } from "@/lib/api/schemas";
+import { FollowedArtistMeta, useUpcomingShortDate } from "./FollowedArtistMeta";
 
 type QuickStatusKind = "favoriteAdded" | "favoriteRemoved" | "favoriteError";
 
@@ -33,6 +34,9 @@ export function FollowedArtistRow({ artist, mode, onUnfollow, busy = false }: Fo
   const [status, setStatus] = useState<QuickStatusKind | null>(null);
 
   const target = { type: "artist" as const, id: artist.id };
+  // Insignia de Gráfico (redesign-artists-rows, D4): la fecha si sale, "Nuevo" si ya salió.
+  const upcomingDate = useUpcomingShortDate(artist.news);
+  const badge = artist.news ? (upcomingDate ?? tUsers("newBadge")) : null;
   const href = artistHref(artist.name, artist.id);
 
   const handleToggleFavorite = async () => {
@@ -104,6 +108,11 @@ export function FollowedArtistRow({ artist, mode, onUnfollow, busy = false }: Fo
             )}
           </Link>
           <div className="absolute right-1.5 top-1.5 rounded-full bg-ink/80 backdrop-blur-sm">{menu}</div>
+          {badge ? (
+            <span className="pointer-events-none absolute bottom-1.5 left-1.5 rounded bg-amber px-1.5 py-0.5 font-data text-[10px] text-ink">
+              {badge}
+            </span>
+          ) : null}
         </div>
         <Link href={href} className="truncate font-data text-xs text-paper transition-colors hover:text-amber">
           {artist.name}
@@ -125,12 +134,15 @@ export function FollowedArtistRow({ artist, mode, onUnfollow, busy = false }: Fo
             <DiscPlaceholder alt="" className="size-10 shrink-0 rounded-full" />
           )}
         </Link>
-        <Link
-          href={href}
-          className="min-w-0 flex-1 truncate font-display text-sm text-paper transition-colors hover:text-amber"
-        >
-          {artist.name}
-        </Link>
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <Link
+            href={href}
+            className="truncate font-display text-sm text-paper transition-colors hover:text-amber"
+          >
+            {artist.name}
+          </Link>
+          <FollowedArtistMeta artist={artist} />
+        </div>
         {menu}
       </div>
       {extras}

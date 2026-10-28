@@ -78,6 +78,20 @@ export function FollowedArtistList({ initial, initialFilters }: FollowedArtistLi
     return list;
   }, [items, filters]);
 
+  // Con el segmento Todos y alguna novedad, "Con novedades" arriba y "El resto" debajo, con el orden elegido dentro de
+  // cada una (redesign-artists-rows, D3). En los demás segmentos, una sola lista sin título.
+  const sections = useMemo(() => {
+    const withNews = filtered.filter((artist) => artist.news);
+    if (filters.segment !== "all" || withNews.length === 0) {
+      return [{ key: "all", title: null as string | null, artists: filtered }];
+    }
+    const rest = filtered.filter((artist) => !artist.news);
+    return [
+      { key: "news", title: t("sectionNews") as string | null, artists: withNews },
+      ...(rest.length > 0 ? [{ key: "rest", title: t("sectionRest") as string | null, artists: rest }] : []),
+    ];
+  }, [filtered, filters.segment, t]);
+
   async function handleUnfollow(artist: FollowedArtistDto) {
     setBusyId(artist.id);
     setError(false);
@@ -178,30 +192,36 @@ export function FollowedArtistList({ initial, initialFilters }: FollowedArtistLi
         </div>
       ) : filtered.length === 0 ? (
         <EmptyState title={t("noResultsTitle")} description={t("noResultsDescription")} />
-      ) : mode === "graphic" ? (
-        <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
-          {filtered.map((artist) => (
-            <FollowedArtistRow
-              key={artist.id}
-              artist={artist}
-              mode="graphic"
-              onUnfollow={(target) => void handleUnfollow(target)}
-              busy={busyId === artist.id}
-            />
-          ))}
-        </ul>
       ) : (
-        <ul className="flex flex-col divide-y divide-ink-border rounded-lg border border-ink-border">
-          {filtered.map((artist) => (
-            <FollowedArtistRow
-              key={artist.id}
-              artist={artist}
-              mode="index"
-              onUnfollow={(target) => void handleUnfollow(target)}
-              busy={busyId === artist.id}
-            />
-          ))}
-        </ul>
+        sections.map((section) => (
+          <section key={section.key} aria-labelledby={section.title ? `followed-section-${section.key}` : undefined}>
+            {section.title ? (
+              <h2
+                id={`followed-section-${section.key}`}
+                className={`mb-2 font-data text-[11px] uppercase tracking-wider ${section.key === "news" ? "text-amber" : "text-paper-muted"}`}
+              >
+                {section.title} <span className="text-paper-muted/70">{section.artists.length}</span>
+              </h2>
+            ) : null}
+            <ul
+              className={
+                mode === "graphic"
+                  ? "grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5"
+                  : "flex flex-col divide-y divide-ink-border rounded-lg border border-ink-border"
+              }
+            >
+              {section.artists.map((artist) => (
+                <FollowedArtistRow
+                  key={artist.id}
+                  artist={artist}
+                  mode={mode}
+                  onUnfollow={(target) => void handleUnfollow(target)}
+                  busy={busyId === artist.id}
+                />
+              ))}
+            </ul>
+          </section>
+        ))
       )}
       {toast}
     </div>

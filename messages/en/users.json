@@ -87,7 +87,22 @@
       "solo": "Solo artists"
     },
     "followAction": "+ Follow artist",
-    "followActionShort": "+ Follow"
+    "followActionShort": "+ Follow",
+    "typeLabel": {
+      "person": "Solo artist",
+      "group": "Group",
+      "orchestra": "Orchestra",
+      "choir": "Choir"
+    },
+    "latest": "Latest:",
+    "followedSince": "Following since {date}",
+    "newsUpcoming": "Out {date}",
+    "newsReleased": "Released {when}",
+    "newBadge": "New",
+    "sectionNews": "With news",
+    "sectionRest": "Everyone else",
+    "railLabel": "Releases from your artists",
+    "railTitle": "Upcoming releases"
   },
   "explorationHeading": "Exploration",
   "explorationMutualBadge": "You too",

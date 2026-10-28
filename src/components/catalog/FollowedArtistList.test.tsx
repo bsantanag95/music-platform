@@ -199,4 +199,21 @@ describe("FollowedArtistList", () => {
     window.dispatchEvent(new Event("quick-actions:own-data-changed"));
     expect(mocks.refresh).toHaveBeenCalledTimes(1);
   });
+
+  it("con novedades, separa «Con novedades» y «El resto» en Todos, y no en otro segmento", async () => {
+    const user = userEvent.setup();
+    const soon = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const withNews: FollowedArtistDto[] = [
+      artists[0]!,
+      { ...artists[1]!, news: { title: "Power Up II", date: soon, year: 2026, releaseGroupId: null } },
+    ];
+    renderWithIntl(<FollowedArtistList initial={withNews} />);
+
+    const newsSection = await screen.findByRole("region", { name: "Con novedades 1" });
+    expect(within(newsSection).getByText("AC/DC")).toBeInTheDocument();
+    expect(within(screen.getByRole("region", { name: "El resto 1" })).getByText("Zebra Katz")).toBeInTheDocument();
+
+    await user.click(within(screen.getByRole("group", { name: "Mostrar" })).getByRole("button", { name: "Grupos 1" }));
+    expect(screen.queryByRole("region", { name: "Con novedades 1" })).not.toBeInTheDocument();
+  });
 });
