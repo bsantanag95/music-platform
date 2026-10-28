@@ -58,6 +58,14 @@ const PATHS: Record<QuickAction, ReactNode> = {
       <circle cx="12" cy="12" r="1" />
     </>
   ),
+  // Persona con un "+": seguir a un artista (redesign-artists-toolbar)
+  follow: (
+    <>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5" />
+      <path d="M19 8v6M16 11h6" />
+    </>
+  ),
   // Lista con un "+": agregar a una lista existente
   addToList: (
     <>

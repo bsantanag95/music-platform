@@ -641,6 +641,15 @@ autorizado y dueño; no aparece si el dueño no sigue a ningún artista.
   seguir", que quita la fila y ofrece Deshacer (vuelve a seguir y la repone en su índice). `q` y `sort` van en la URL
   con `replaceState`; el modo de vista no parpadea (`ready`); cabecera a la izquierda con migas y cuántos sigue; el
   vacío lleva a `/search?type=artist`.
+  Desde `redesign-artists-toolbar`: **"+ Seguir artista"** en la cabecera abre el diálogo de "+ Añadir" en la acción
+  nueva **Seguir artista** (solo artistas, `FollowPanel`, idempotente); al seguir, el diálogo emite
+  `OWN_DATA_CHANGED_EVENT` y la lista hace `router.refresh()`. **Segmentos con cuenta** (`segment` en la URL): Todos,
+  Con novedades, Grupos (`group`/`orchestra`/`choir`) y Solistas (`person`). **Novedad = solo el calendario de
+  lanzamientos** (decisión del usuario): entrada de `release_calendar_entry` con el MBID del artista, sin exclusión,
+  de los últimos 30 días o anunciada; la próxima por salir y, si no, la más reciente. Orden **Último lanzamiento**: la
+  novedad o, si no hay, el último Álbum/EP publicado de su discografía guardada (sin tipos secundarios ni marca de
+  fuera de la discografía); sin dato, al final. `listAllFollowedArtists` devuelve además `followedAt`, `news` y
+  `latestRelease` con tres consultas en total.
 - **Tope de 8 celdas (2×4), con "+N" como link a la lista completa** (2026-09-17, elegida
   entre 4 mockups — antes no había tope visual: se pedían hasta 12 y se mostraban todos sin
   aviso de que hubiera más). Si el dueño sigue más de 8 artistas, la 8ª celda deja de ser un

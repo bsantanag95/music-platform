@@ -58,7 +58,8 @@
     "sortLabel": "Ordenar",
     "sort": {
       "recent": "Recientes",
-      "alpha": "Alfabético"
+      "alpha": "Alfabético",
+      "release": "Último lanzamiento"
     },
     "viewModeLabel": "Modo de visualización",
     "viewMode": {
@@ -77,7 +78,16 @@
     "unfollowed": "Dejaste de seguir a {name}",
     "undo": "Deshacer",
     "undoError": "No pudimos volver a seguirlo. Inténtalo desde su página.",
-    "unfollowError": "No pudimos dejar de seguirlo. Inténtalo de nuevo."
+    "unfollowError": "No pudimos dejar de seguirlo. Inténtalo de nuevo.",
+    "segmentLabel": "Mostrar",
+    "segment": {
+      "all": "Todos",
+      "news": "Con novedades",
+      "groups": "Grupos",
+      "solo": "Solistas"
+    },
+    "followAction": "+ Seguir artista",
+    "followActionShort": "+ Seguir"
   },
   "explorationHeading": "Exploración",
   "explorationMutualBadge": "Tú también",

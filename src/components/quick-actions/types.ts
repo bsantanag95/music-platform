@@ -10,6 +10,7 @@ export const QUICK_ACTIONS = [
   "pending",
   "collection",
   "journey",
+  "follow",
   "addToList",
   "newList",
   "newCamino",
@@ -34,6 +35,7 @@ export const ACTION_PICKER_TYPES: Record<TargetAction, readonly PickerType[]> = 
   pending: ["album", "artist"],
   collection: ["album"],
   journey: ["artist"],
+  follow: ["artist"],
   addToList: PICKER_TYPES,
 };
 

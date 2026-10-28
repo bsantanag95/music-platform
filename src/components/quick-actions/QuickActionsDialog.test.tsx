@@ -126,7 +126,7 @@ describe("QuickActionsDialog", () => {
     expect(screen.getByRole("searchbox")).toHaveAttribute("placeholder", "Busca un álbum o un artista");
   });
 
-  it("ofrece las nueve acciones como chips", async () => {
+  it("ofrece las diez acciones como chips", async () => {
     renderWithIntl(<QuickActionsDialog onClose={() => {}} />);
     const group = await screen.findByRole("radiogroup", { name: "Qué quieres hacer" });
     const names = within(group)
@@ -139,6 +139,7 @@ describe("QuickActionsDialog", () => {
       "Pendiente",
       "Colección",
       "Completar discografía",
+      "Seguir artista",
       "A lista",
       "Nueva lista",
       "Nueva lista para completar",

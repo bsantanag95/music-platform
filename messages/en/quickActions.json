@@ -13,6 +13,7 @@
     "newList": "New list",
     "collection": "Collection",
     "journey": "Complete discography",
+    "follow": "Follow artist",
     "newCamino": "New list to complete"
   },
   "prompt": {
@@ -22,7 +23,8 @@
     "pending": "What do you want to leave pending?",
     "addToList": "What do you want to add to a list?",
     "collection": "Which album do you want to add to your collection?",
-    "journey": "Which artist's discography do you want to complete?"
+    "journey": "Which artist's discography do you want to complete?",
+    "follow": "Which artist do you want to follow?"
   },
   "picker": {
     "typeLabel": "What to search",
@@ -100,6 +102,11 @@
     "activated": "Discography started",
     "already": "You're already completing this discography",
     "open": "View progress"
+  },
+  "follow": {
+    "following": "Following...",
+    "done": "You follow this artist",
+    "open": "See artists you follow"
   },
   "newCamino": {
     "titleLabel": "List name",

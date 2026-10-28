@@ -10,6 +10,7 @@ import { TargetPicker } from "./TargetPicker";
 import { AddToListStep } from "./panels/AddToListStep";
 import { CollectionPanel } from "./panels/CollectionPanel";
 import { JourneyPanel } from "./panels/JourneyPanel";
+import { FollowPanel } from "./panels/FollowPanel";
 import { ListenPanel } from "./panels/ListenPanel";
 import { MarkPanel } from "./panels/MarkPanel";
 import { NewCaminoPanel } from "./panels/NewCaminoPanel";
@@ -158,6 +159,8 @@ export function QuickActionsDialog({ onClose, initialAction = "listen" }: QuickA
         return <CollectionPanel key={panelKey} target={picked} onReset={() => reset(false)} />;
       case "journey":
         return <JourneyPanel key={panelKey} target={picked} onReset={() => reset(false)} onNavigate={onClose} />;
+      case "follow":
+        return <FollowPanel key={panelKey} target={picked} onReset={() => reset(false)} onNavigate={onClose} />;
       case "addToList":
         return <AddToListStep key={panelKey} target={picked} onReset={() => reset(false)} />;
     }
