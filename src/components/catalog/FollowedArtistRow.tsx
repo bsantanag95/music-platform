@@ -5,11 +5,9 @@ import { useTranslations } from "next-intl";
 import { AppImage } from "@/components/ui/AppImage";
 import { Link } from "@/i18n/navigation";
 import { artistHref } from "@/lib/catalog-links";
-import { Button } from "@/components/ui/Button";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import { RowMenu, RowMenuItem } from "@/components/ui/RowMenu";
 import { AddToListPanel } from "@/components/lists/AddToListPanel";
-import { followArtist, unfollowArtist } from "@/lib/api/catalog";
 import { toggleFavorite } from "@/lib/api/favorites";
 import type { FollowedArtistDto } from "@/lib/api/schemas";
 
@@ -18,48 +16,33 @@ type QuickStatusKind = "favoriteAdded" | "favoriteRemoved" | "favoriteError";
 interface FollowedArtistRowProps {
   artist: FollowedArtistDto;
   mode: "index" | "graphic";
+  // Deja de seguir; la lista quita la fila y ofrece Deshacer (refine-artists-page-phase1, D2).
+  onUnfollow: (artist: FollowedArtistDto) => void;
+  // Mientras se deja de seguir: el menú no admite otra acción sobre el mismo artista.
+  busy?: boolean;
 }
 
-// Fila/tarjeta de un artista seguido, en los dos modos de visualización. El
-// botón "Siguiendo"/"Seguir" es un toggle optimista de verdad (no un botón de
-// quitar disfrazado): un clic accidental se deshace con otro clic, y la fila
-// solo desaparece de la lista al salir de la sección o recargar (ver
-// `FollowedArtistList`, que no filtra el array local — el próximo fetch del
-// servidor ya no va a traer a quien se dejó de seguir).
-export function FollowedArtistRow({ artist, mode }: FollowedArtistRowProps) {
-  const tUsers = useTranslations("users");
-  const tLists = useTranslations("lists");
+// Fila/tarjeta de un artista seguido, en los dos modos de visualización. Sin botón de seguimiento: el estado ya lo dice
+// la página, y "Dejar de seguir" vive en el menú ⋯ con Deshacer (refine-artists-page-phase1, D2–D3).
+export function FollowedArtistRow({ artist, mode, onUnfollow, busy = false }: FollowedArtistRowProps) {
+  const tUsers = useTranslations("users.artistsFollowed");
   const tFavorites = useTranslations("favorites");
-  const [following, setFollowing] = useState(true);
-  const [followBusy, setFollowBusy] = useState(false);
   const [addingToList, setAddingToList] = useState(false);
+  const [favorite, setFavorite] = useState(Boolean(artist.favorite));
   const [favoriteBusy, setFavoriteBusy] = useState(false);
   const [status, setStatus] = useState<QuickStatusKind | null>(null);
 
   const target = { type: "artist" as const, id: artist.id };
   const href = artistHref(artist.name, artist.id);
 
-  const toggleFollow = async () => {
-    if (followBusy) return;
-    setFollowBusy(true);
-    const next = !following;
-    setFollowing(next);
-    try {
-      if (next) await followArtist(artist.id);
-      else await unfollowArtist(artist.id);
-    } catch {
-      setFollowing(!next);
-    } finally {
-      setFollowBusy(false);
-    }
-  };
-
   const handleToggleFavorite = async () => {
     if (favoriteBusy) return;
     setFavoriteBusy(true);
     try {
       const result = await toggleFavorite(target);
-      setStatus(result !== null ? "favoriteAdded" : "favoriteRemoved");
+      const added = result !== null;
+      setFavorite(added);
+      setStatus(added ? "favoriteAdded" : "favoriteRemoved");
     } catch {
       setStatus("favoriteError");
     } finally {
@@ -79,23 +62,16 @@ export function FollowedArtistRow({ artist, mode }: FollowedArtistRowProps) {
   };
 
   const menu = (
-    <RowMenu label={tLists("itemMenuLabel")}>
-      <RowMenuItem onSelect={() => setAddingToList((current) => !current)}>
-        {tLists("addItem")}
-      </RowMenuItem>
-      <RowMenuItem onSelect={() => void handleToggleFavorite()}>{tFavorites("addFavorite")}</RowMenuItem>
-    </RowMenu>
-  );
-
-  const followButton = (
-    <Button
-      type="button"
-      variant={following ? "primary" : "secondary"}
-      disabled={followBusy}
-      onClick={() => void toggleFollow()}
+    <RowMenu
+      label={tUsers("menuLabel", { name: artist.name })}
+      triggerClassName="size-8 [@media(pointer:coarse)]:size-11"
     >
-      {following ? tUsers("following") : tUsers("follow")}
-    </Button>
+      <RowMenuItem onSelect={() => setAddingToList((current) => !current)}>{tUsers("addToList")}</RowMenuItem>
+      <RowMenuItem onSelect={() => void handleToggleFavorite()}>
+        {favorite ? tFavorites("removeFavorite") : tFavorites("addFavorite")}
+      </RowMenuItem>
+      <RowMenuItem onSelect={() => (busy ? undefined : onUnfollow(artist))}>{tUsers("unfollow")}</RowMenuItem>
+    </RowMenu>
   );
 
   const extras = (
@@ -111,10 +87,12 @@ export function FollowedArtistRow({ artist, mode }: FollowedArtistRowProps) {
 
   if (mode === "graphic") {
     return (
-      <li className="flex flex-col gap-1.5">
+      <li className="flex min-w-0 flex-col gap-1.5">
         <div className="relative">
           <Link
             href={href}
+            tabIndex={-1}
+            aria-hidden
             className="block overflow-hidden rounded-md border border-ink-border transition-colors hover:border-amber"
           >
             {artist.photoUrl ? (
@@ -127,13 +105,9 @@ export function FollowedArtistRow({ artist, mode }: FollowedArtistRowProps) {
           </Link>
           <div className="absolute right-1.5 top-1.5 rounded-full bg-ink/80 backdrop-blur-sm">{menu}</div>
         </div>
-        <Link
-          href={href}
-          className="truncate font-data text-xs text-paper-muted transition-colors hover:text-amber"
-        >
+        <Link href={href} className="truncate font-data text-xs text-paper transition-colors hover:text-amber">
           {artist.name}
         </Link>
-        {followButton}
         {extras}
       </li>
     );
@@ -157,7 +131,6 @@ export function FollowedArtistRow({ artist, mode }: FollowedArtistRowProps) {
         >
           {artist.name}
         </Link>
-        {followButton}
         {menu}
       </div>
       {extras}
