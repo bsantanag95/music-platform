@@ -40,11 +40,12 @@ export function FollowedArtistToolbar({
         value={sort}
         onChange={(value) => onSortChange(value as FollowedArtistSort)}
         ariaLabel={t("sortLabel")}
-        widthClassName="w-[17ch]"
+        widthClassName="w-[24ch]"
         variant="boxed"
       >
         <option value="recent">{t("sort.recent")}</option>
         <option value="alpha">{t("sort.alpha")}</option>
+        <option value="release">{t("sort.release")}</option>
       </FilterSelect>
     </div>
   );

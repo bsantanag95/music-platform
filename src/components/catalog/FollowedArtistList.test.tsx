@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { FollowedArtistList } from "./FollowedArtistList";
@@ -9,10 +9,15 @@ const mocks = vi.hoisted(() => ({
   followArtist: vi.fn(),
   unfollowArtist: vi.fn(),
   toggleFavorite: vi.fn(),
+  refresh: vi.fn(),
 }));
 
 vi.mock("next/image", () => ({
   default: (props: Record<string, unknown>) => <img {...props} alt={props.alt as string} />,
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: mocks.refresh }),
 }));
 
 vi.mock("@/i18n/navigation", () => ({
@@ -171,5 +176,27 @@ describe("FollowedArtistList", () => {
     await user.click(screen.getByRole("menuitem", { name: "Añadir a una lista" }));
 
     expect(screen.getByTestId("mock-add-to-list-panel")).toBeInTheDocument();
+  });
+
+  it("segmenta con cuentas y escribe el segmento en la URL", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<FollowedArtistList initial={artists} />);
+
+    const segments = await screen.findByRole("group", { name: "Mostrar" });
+    expect(within(segments).getByRole("button", { name: "Grupos 1" })).toBeInTheDocument();
+    expect(within(segments).getByRole("button", { name: "Con novedades 0" })).toBeDisabled();
+
+    await user.click(within(segments).getByRole("button", { name: "Solistas 1" }));
+
+    expect(screen.queryByText("AC/DC")).not.toBeInTheDocument();
+    expect(screen.getByText("Zebra Katz")).toBeInTheDocument();
+    expect(window.location.search).toBe("?segment=solo");
+  });
+
+  it("al seguir desde el diálogo de acciones rápidas, vuelve a pedir la página", async () => {
+    renderWithIntl(<FollowedArtistList initial={artists} />);
+    await screen.findByText("AC/DC");
+    window.dispatchEvent(new Event("quick-actions:own-data-changed"));
+    expect(mocks.refresh).toHaveBeenCalledTimes(1);
   });
 });

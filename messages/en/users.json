@@ -58,7 +58,8 @@
     "sortLabel": "Sort",
     "sort": {
       "recent": "Recent",
-      "alpha": "Alphabetical"
+      "alpha": "Alphabetical",
+      "release": "Latest release"
     },
     "viewModeLabel": "View mode",
     "viewMode": {
@@ -77,7 +78,16 @@
     "unfollowed": "You unfollowed {name}",
     "undo": "Undo",
     "undoError": "We couldn't follow them again. Try from their page.",
-    "unfollowError": "We couldn't unfollow them. Try again."
+    "unfollowError": "We couldn't unfollow them. Try again.",
+    "segmentLabel": "Show",
+    "segment": {
+      "all": "All",
+      "news": "With news",
+      "groups": "Groups",
+      "solo": "Solo artists"
+    },
+    "followAction": "+ Follow artist",
+    "followActionShort": "+ Follow"
   },
   "explorationHeading": "Exploration",
   "explorationMutualBadge": "You too",

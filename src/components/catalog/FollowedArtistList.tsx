@@ -1,12 +1,22 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { UndoToast } from "@/components/ui/UndoToast";
 import { useProgressFilters } from "@/components/progress/use-progress-filters";
-import { FollowedArtistToolbar, type FollowedArtistSort } from "./FollowedArtistToolbar";
+import { FollowedArtistToolbar } from "./FollowedArtistToolbar";
+import { FollowedArtistSegments } from "./FollowedArtistSegments";
+import {
+  countBySegment,
+  inSegment,
+  sortByLatestRelease,
+  type FollowedArtistSegment,
+  type FollowedArtistSort,
+} from "./followed-artist-filters";
+import { OWN_DATA_CHANGED_EVENT } from "@/components/quick-actions/quick-actions-changes";
 import { FollowedArtistModeSwitcher } from "./FollowedArtistModeSwitcher";
 import { useFollowedArtistViewMode } from "./use-followed-artist-view-mode";
 import { FollowedArtistRow } from "./FollowedArtistRow";
@@ -16,10 +26,14 @@ import type { FollowedArtistDto } from "@/lib/api/schemas";
 interface FollowedArtistListProps {
   initial: FollowedArtistDto[];
   // Filtros leídos de la URL por la página, ya validados (refine-artists-page-phase1, D4).
-  initialFilters?: { q?: string; sort?: FollowedArtistSort };
+  initialFilters?: { q?: string; sort?: FollowedArtistSort; segment?: FollowedArtistSegment };
 }
 
-const FILTER_DEFAULTS: { q: string; sort: FollowedArtistSort } = { q: "", sort: "recent" };
+const FILTER_DEFAULTS: { q: string; sort: FollowedArtistSort; segment: FollowedArtistSegment } = {
+  q: "",
+  sort: "recent",
+  segment: "all",
+};
 
 interface Unfollowed {
   artist: FollowedArtistDto;
@@ -40,12 +54,28 @@ export function FollowedArtistList({ initial, initialFilters }: FollowedArtistLi
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState(false);
   const [unfollowed, setUnfollowed] = useState<Unfollowed | null>(null);
+  const router = useRouter();
+
+  // Lo que se sigue desde "+ Seguir artista" (o cualquier acción rápida) llega como evento: se vuelve a pedir la página
+  // y la lista se sincroniza con lo que trae el servidor (redesign-artists-toolbar, D1).
+  useEffect(() => setItems(initial), [initial]);
+  useEffect(() => {
+    const onChanged = () => router.refresh();
+    window.addEventListener(OWN_DATA_CHANGED_EVENT, onChanged);
+    return () => window.removeEventListener(OWN_DATA_CHANGED_EVENT, onChanged);
+  }, [router]);
+
+  const counts = useMemo(() => countBySegment(items), [items]);
 
   const filtered = useMemo(() => {
     const q = filters.q.trim().toLowerCase();
-    const list = q ? items.filter((artist) => artist.name.toLowerCase().includes(q)) : items;
+    const list = items.filter(
+      (artist) => inSegment(artist, filters.segment) && (!q || artist.name.toLowerCase().includes(q)),
+    );
     // "recent": el servicio ya entrega desc(createdAt) — no hay que reordenar.
-    return filters.sort === "alpha" ? [...list].sort((a, b) => a.name.localeCompare(b.name)) : list;
+    if (filters.sort === "alpha") return [...list].sort((a, b) => a.name.localeCompare(b.name));
+    if (filters.sort === "release") return sortByLatestRelease(list);
+    return list;
   }, [items, filters]);
 
   async function handleUnfollow(artist: FollowedArtistDto) {
@@ -126,6 +156,12 @@ export function FollowedArtistList({ initial, initialFilters }: FollowedArtistLi
           <FollowedArtistModeSwitcher mode={mode} onChange={setMode} />
         </div>
       </div>
+
+      <FollowedArtistSegments
+        value={filters.segment}
+        onChange={(value) => setFilter("segment", value)}
+        counts={counts}
+      />
 
       {error ? (
         <p role="alert" className="font-data text-xs text-danger">

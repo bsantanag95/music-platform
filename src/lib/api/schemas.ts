@@ -1047,7 +1047,19 @@ export const FollowedArtistSchema = z.object({
   photoUrl: z.string().nullable(),
   // Solo en `/me/artists` (refine-artists-page-phase1): el menú ofrece marcar o quitar el favorito según el estado.
   favorite: z.boolean().optional(),
+  // Solo en `/me/artists` (redesign-artists-toolbar): segmentos, orden por último lanzamiento y, en la Fase 3, la fila.
+  followedAt: z.string().optional(),
+  news: z.lazy(() => FollowedArtistReleaseSchema).nullable().optional(),
+  latestRelease: z.lazy(() => FollowedArtistReleaseSchema).nullable().optional(),
 });
+
+export const FollowedArtistReleaseSchema = z.object({
+  title: z.string(),
+  date: z.string().nullable(),
+  year: z.number().int().nullable(),
+  releaseGroupId: z.uuid().nullable(),
+});
+export type FollowedArtistRelease = z.infer<typeof FollowedArtistReleaseSchema>;
 export type FollowedArtistDto = z.infer<typeof FollowedArtistSchema>;
 
 export const FollowedArtistsResponseSchema = z.object({
