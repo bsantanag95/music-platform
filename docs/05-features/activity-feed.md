@@ -339,6 +339,24 @@ patrón que `PRIMARY_ARTIST_SQL`) — lo pueblan las fuentes `listen`, `rating` 
   punto ámbar y ", tiene actividad nueva" para lectores de pantalla. Quien solo tiene novedades más allá de esas 50 no
   lleva punto.
 
+### Filas por disco y día, riel y cierre (`redesign-feed-entries`)
+
+- **Una fila por persona, disco y día** (`FeedAlbumDayRow`, opción `albumDays` de `groupFeedRuns`, solo con
+  `variant="feed"`): entradas estrictamente contiguas de la misma persona sobre el mismo álbum (objetivo
+  `release-group`) el mismo día calendario de la zona horaria de la app, a lo sumo una de cada tipo (escucha, favorito,
+  valoración, reseña, comentario, colección, búsqueda). Hacen falta dos o más y al menos una que no sea de opinión; si
+  no, sigue la fila de opinión. Se evalúa antes que la opinión, el barrido y las corridas. Render: celda y título del
+  álbum, autor y fecha sin verbo, chips (valoración, favorito, escucha con contexto y reacción, colección, búsqueda) y
+  debajo reseña, comentario y nota de escucha. Aplica también a Inicio y a `/activity` → Siguiendo; nunca al rastro
+  propio.
+- **Riel lateral desde `lg`** (`FeedContextRail`): la convergencia (`getNetworkConvergenceWithFallback`: 7 días y, sin
+  obras, 30 con el mismo umbral; el título dice "esta semana" o "este mes") y "Quiénes más se movieron"
+  (`listMostActiveAuthors`: hasta cinco seguidos con más entradas en 7 días entre las 50 más recientes de `listFeed`, sin
+  cifras, enlazados a `/me/feed?author=…`; `FeedList` lleva `key` con los filtros para reiniciarse). Por debajo de
+  `lg`, la convergencia va encima del listado y el riel no se muestra.
+- **"Estás al día":** la primera sección de fecha después del bloque "Nuevo" lleva `afterNew` y el listado dibuja la
+  línea encima.
+
 ## Convergencia de la red (`add-network-convergence`)
 
 Un **panel "En tu red esta semana"** en la cabecera de `/me/feed`, encima del listado

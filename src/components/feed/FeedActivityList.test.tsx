@@ -1,5 +1,5 @@
 import { afterEach, describe, it, expect, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import type { AnchorHTMLAttributes, ReactNode } from "react";
 import { FeedActivityList } from "./FeedActivityList";
 import { renderWithIntl } from "@/test/i18n-test-utils";
@@ -1028,3 +1028,27 @@ function ratingTarget() {
     coverThumbUrl: null,
   };
 }
+
+describe("fila por persona, disco y día (redesign-feed-entries)", () => {
+  const disc = { type: "release-group" as const, id: "rg-day", title: "Short n' Sweet", artistName: "Sabrina Carpenter", coverThumbUrl: null };
+  const sameDay = [
+    rating({ id: "d-ra", target: disc, createdAt: "2026-08-03T20:00:00Z" }),
+    { kind: "favorite", id: "d-fa", targetType: "release-group", audience: "public", createdAt: "2026-08-03T19:00:00Z", target: { id: disc.id, title: disc.title, artistName: disc.artistName, coverThumbUrl: null }, author } as FeedEntry,
+    listen({ id: "d-li", target: { ...disc, subtitle: null }, createdAt: "2026-08-03T18:00:00Z" }),
+    review({ id: "d-rv", target: disc, title: "Discazo", createdAt: "2026-08-03T17:00:00Z" }),
+  ];
+
+  it("muestra una fila con chips de acción y la reseña debajo", () => {
+    renderWithIntl(<FeedActivityList entries={sameDay} />);
+    expect(screen.getAllByRole("link", { name: "Short n' Sweet" })).toHaveLength(1);
+    const chips = within(screen.getByRole("list", { name: "Lo que hizo con el disco" })).getAllByRole("listitem");
+    expect(chips.map((chip) => chip.textContent)).toEqual(["★ 87/100", "Favorito", "Primera escucha"]);
+    expect(chips[0]).toHaveAccessibleName(/87 de 100/);
+    expect(screen.getByText("Discazo")).toBeInTheDocument();
+  });
+
+  it("el rastro propio no se funde por disco y día", () => {
+    renderWithIntl(<FeedActivityList entries={sameDay} variant="own" />);
+    expect(screen.queryByRole("list", { name: "Lo que hizo con el disco" })).not.toBeInTheDocument();
+  });
+});

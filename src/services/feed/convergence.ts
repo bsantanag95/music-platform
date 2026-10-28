@@ -13,6 +13,8 @@ import { userBlock, userFollow } from "@/db/schema";
 
 /** Ventana hacia atrás desde el momento de lectura. */
 export const CONVERGENCE_WINDOW_DAYS = 7;
+/** Ventana de respaldo cuando la semana no tiene obras convergentes (openspec: redesign-feed-entries, D3). */
+export const CONVERGENCE_FALLBACK_WINDOW_DAYS = 30;
 /** Personas distintas de la red que deben converger sobre la obra. */
 export const CONVERGENCE_MIN_PEOPLE = 3;
 /** Máximo de obras mostradas en el panel. */
@@ -21,6 +23,9 @@ export const CONVERGENCE_MAX_ITEMS = 5;
 export const CONVERGENCE_NAME_SAMPLE = 3;
 
 const DAY_MS = 86_400_000;
+
+/** Ventana que muestra el panel: la semana o el respaldo de 30 días. */
+export type ConvergencePeriod = "week" | "month";
 
 export interface ConvergencePerson {
   username: string;
@@ -56,14 +61,14 @@ interface ConvergenceRow {
 /**
  * Obras con las que ≥ `CONVERGENCE_MIN_PEOPLE` personas distintas de la red del
  * lector (seguidos con relación aceptada, sin bloqueo en ninguna dirección) se
- * relacionaron en los últimos `CONVERGENCE_WINDOW_DAYS` días. Interacción =
+ * relacionaron en los últimos `windowDays` días (por defecto `CONVERGENCE_WINDOW_DAYS`). Interacción =
  * entrada de diario, valoración, reseña o favorito, contadas por igual. Solo
  * cuenta lo que el lector tiene permitido ver (audiencia de escucha/favorito;
  * rating y reseña son públicos implícitos). La actividad del propio lector no
  * cuenta. Devuelve `{ items: [] }` cuando no hay convergencia.
  */
 export const getNetworkConvergence = cache(
-  async (viewerId: string): Promise<{ items: ConvergenceItem[] }> => {
+  async (viewerId: string, windowDays: number = CONVERGENCE_WINDOW_DAYS): Promise<{ items: ConvergenceItem[] }> => {
     const followRows = await db
       .select({ id: userFollow.followedId })
       .from(userFollow)
@@ -87,7 +92,7 @@ export const getNetworkConvergence = cache(
     // ISO string, no `Date`: el driver `postgres` serializa mal un `Date`
     // pasado como parámetro de una sentencia `execute` cruda ("Received an
     // instance of Date"). El cast explícito deja que Postgres lo parsee.
-    const cutoff = new Date(Date.now() - CONVERGENCE_WINDOW_DAYS * DAY_MS).toISOString();
+    const cutoff = new Date(Date.now() - windowDays * DAY_MS).toISOString();
     const followeeValues = sql.join(
       followeeIds.map((id) => sql`(${id}::uuid)`),
       sql`, `,
@@ -199,3 +204,16 @@ export const getNetworkConvergence = cache(
     return { items };
   },
 );
+
+/**
+ * Convergencia de la semana y, si no hay ninguna obra, la de los últimos 30 días, con el mismo umbral
+ * (openspec: redesign-feed-entries, D3). `period` dice cuál se devolvió, para el título del panel.
+ */
+export async function getNetworkConvergenceWithFallback(
+  viewerId: string,
+): Promise<{ items: ConvergenceItem[]; period: ConvergencePeriod }> {
+  const week = await getNetworkConvergence(viewerId);
+  if (week.items.length > 0) return { items: week.items, period: "week" };
+  const month = await getNetworkConvergence(viewerId, CONVERGENCE_FALLBACK_WINDOW_DAYS);
+  return { items: month.items, period: "month" };
+}

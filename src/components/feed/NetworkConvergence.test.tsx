@@ -98,4 +98,9 @@ describe("NetworkConvergence", () => {
       screen.getByRole("link", { name: "The Less I Know the Better" }),
     ).toHaveAttribute("href", "/song/rec9");
   });
+
+  it("con el respaldo de 30 días, el título dice «este mes» (redesign-feed-entries, D3)", async () => {
+    renderWithIntl(await NetworkConvergence({ items: [item()], period: "month" }));
+    expect(screen.getByRole("heading", { name: "convergence.titleMonth" })).toBeInTheDocument();
+  });
 });

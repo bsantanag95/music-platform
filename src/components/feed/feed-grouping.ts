@@ -66,7 +66,47 @@ export interface FeedOpinionRow {
   comment: CommentEntry | null;
 }
 
-export type FeedRow = FeedEntry | FeedEntryGroup | FeedRotationPeak | FeedOpinionRow;
+// Fila por persona, disco y día (openspec: redesign-feed-entries, D1): entradas estrictamente contiguas de la misma
+// persona sobre el mismo álbum el mismo día calendario, a lo sumo una de cada tipo. Al menos una no es de opinión (si
+// no, es una `FeedOpinionRow`). Tier 1 cuando trae prosa; nunca se pliega y corta corridas.
+type ListenAlbumEntry = Extract<FeedEntry, { kind: "listen" }>;
+type FavoriteEntry = Extract<FeedEntry, { kind: "favorite" }>;
+type CollectionEntry = Extract<FeedEntry, { kind: "collection" }>;
+type WantedEntry = Extract<FeedEntry, { kind: "wanted" }>;
+type AlbumDayEntry =
+  | ListenAlbumEntry
+  | FavoriteEntry
+  | RatingEntry
+  | ReviewEntry
+  | CommentEntry
+  | CollectionEntry
+  | WantedEntry;
+
+export interface FeedAlbumDayRow {
+  kind: "album-day";
+  id: string;
+  author: FeedEntry["author"];
+  // La más reciente de las fundidas (la lista viene ordenada desc).
+  createdAt: string;
+  // La primera entrada, para la celda y el título del álbum.
+  primary: AlbumDayEntry;
+  rating: RatingEntry | null;
+  favorite: FavoriteEntry | null;
+  listen: ListenAlbumEntry | null;
+  collection: CollectionEntry | null;
+  wanted: WantedEntry | null;
+  review: ReviewEntry | null;
+  comment: CommentEntry | null;
+}
+
+export type FeedRow = FeedEntry | FeedEntryGroup | FeedRotationPeak | FeedOpinionRow | FeedAlbumDayRow;
+
+export interface GroupFeedOptions {
+  // Activa `FeedAlbumDayRow` (solo el feed de seguidos, D1).
+  albumDays?: boolean;
+  // Zona horaria del día calendario de `albumDays`; sin ella, la del entorno.
+  timeZone?: string;
+}
 
 const GROUP_MIN = 3;
 
@@ -114,6 +154,81 @@ function opinionRowAt(entries: FeedEntry[], start: number): { row: FeedOpinionRo
       createdAt: first.createdAt,
       target: first.target,
       rating: (picked.rating as RatingEntry | undefined) ?? null,
+      review: (picked.review as ReviewEntry | undefined) ?? null,
+      comment: (picked.comment as CommentEntry | undefined) ?? null,
+    },
+    end,
+  };
+}
+
+// Id del álbum cuando el objetivo de la entrada ES un álbum (no una canción de él).
+function albumTargetId(entry: FeedEntry): string | null {
+  switch (entry.kind) {
+    case "favorite":
+      return entry.targetType === "release-group" ? entry.target.id : null;
+    case "listen":
+    case "rating":
+    case "review":
+    case "comment":
+    case "collection":
+    case "wanted":
+      return entry.target.type === "release-group" ? entry.target.id : null;
+    default:
+      return null;
+  }
+}
+
+function calendarDay(iso: string, timeZone: string | undefined): string {
+  // `en-CA` da AAAA-MM-DD, comparable como texto.
+  return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(
+    new Date(iso),
+  );
+}
+
+// Fila por persona, disco y día a partir de `entries[start]` (D1). Devuelve `null` si no hay al menos dos entradas o si
+// todas son de opinión (eso lo resuelve `opinionRowAt`).
+function albumDayRowAt(
+  entries: FeedEntry[],
+  start: number,
+  timeZone: string | undefined,
+): { row: FeedAlbumDayRow; end: number } | null {
+  const first = entries[start]!;
+  const albumId = albumTargetId(first);
+  if (!albumId) return null;
+  const day = calendarDay(first.createdAt, timeZone);
+
+  const picked: Partial<Record<AlbumDayEntry["kind"], AlbumDayEntry>> = { [first.kind]: first as AlbumDayEntry };
+  let end = start + 1;
+  while (end < entries.length) {
+    const next = entries[end]!;
+    if (
+      albumTargetId(next) !== albumId ||
+      picked[next.kind as AlbumDayEntry["kind"]] ||
+      next.author.id !== first.author.id ||
+      calendarDay(next.createdAt, timeZone) !== day
+    ) {
+      break;
+    }
+    picked[next.kind as AlbumDayEntry["kind"]] = next as AlbumDayEntry;
+    end++;
+  }
+  const kinds = Object.keys(picked) as AlbumDayEntry["kind"][];
+  if (kinds.length < 2 || kinds.every((kind) => kind === "rating" || kind === "review" || kind === "comment")) {
+    return null;
+  }
+
+  return {
+    row: {
+      kind: "album-day",
+      id: `album-day-${first.kind}-${first.id}`,
+      author: first.author,
+      createdAt: first.createdAt,
+      primary: first as AlbumDayEntry,
+      rating: (picked.rating as RatingEntry | undefined) ?? null,
+      favorite: (picked.favorite as FavoriteEntry | undefined) ?? null,
+      listen: (picked.listen as ListenAlbumEntry | undefined) ?? null,
+      collection: (picked.collection as CollectionEntry | undefined) ?? null,
+      wanted: (picked.wanted as WantedEntry | undefined) ?? null,
       review: (picked.review as ReviewEntry | undefined) ?? null,
       comment: (picked.comment as CommentEntry | undefined) ?? null,
     },
@@ -318,15 +433,27 @@ function albumWindowRows(window: SweepCandidate[], now: Date): FeedRow[] {
  * otra(s) del mismo autor sobre el mismo objetivo se fusionan en una
  * `FeedOpinionRow` (openspec: expand-feed-coverage, D6).
  *
+ * Con `options.albumDays` (solo el feed de seguidos), antes que todo se funden las entradas contiguas de la misma
+ * persona sobre el mismo álbum el mismo día en una `FeedAlbumDayRow` (openspec: redesign-feed-entries, D1).
+ *
  * `now` es inyectable para test; en producción es el `useNow()` estable del
  * componente.
  */
-export function groupFeedRuns(entries: FeedEntry[], now: Date = new Date()): FeedRow[] {
+export function groupFeedRuns(entries: FeedEntry[], now: Date = new Date(), options: GroupFeedOptions = {}): FeedRow[] {
   const out: FeedRow[] = [];
   let i = 0;
 
   while (i < entries.length) {
     const entry = entries[i]!;
+
+    // Antes que la opinión: una fila por persona, disco y día absorbe la valoración, reseña y comentario del mismo
+    // disco junto con el resto de lo que hizo ese día (D1).
+    const albumDay = options.albumDays ? albumDayRowAt(entries, i, options.timeZone) : null;
+    if (albumDay) {
+      out.push(albumDay.row);
+      i = albumDay.end;
+      continue;
+    }
 
     const opinion = opinionRowAt(entries, i);
     if (opinion) {
