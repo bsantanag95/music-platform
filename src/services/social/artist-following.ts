@@ -38,6 +38,8 @@ export interface FollowedArtistRelease {
 
 /** Artista seguido con lo que necesita la superficie de gestión (openspec: redesign-artists-toolbar). */
 export interface ManagedFollowedArtist extends FollowedArtist {
+  /** Código ISO del país en MusicBrainz, para la línea de detalle (redesign-artists-rows, D1). */
+  country: string | null;
   favorite: boolean;
   followedAt: string;
   /** Novedad del calendario de lanzamientos: anunciado o de los últimos 30 días (D2). */
@@ -135,6 +137,7 @@ export async function listAllFollowedArtists(
     .select({
       ...FOLLOWED_SELECT,
       mbid: artist.mbid,
+      country: artist.country,
       followedAt: artistFollow.createdAt,
       favorite: sql<boolean>`exists (
         select 1 from ${favorite}
@@ -155,11 +158,12 @@ export async function listAllFollowedArtists(
     ),
   ]);
 
-  return rows.map(({ id, name, type, photoUrl, favorite, followedAt }) => ({
+  return rows.map(({ id, name, type, photoUrl, country, favorite, followedAt }) => ({
     id,
     name,
     type,
     photoUrl,
+    country,
     favorite,
     followedAt: followedAt.toISOString(),
     news: news.get(id) ?? null,

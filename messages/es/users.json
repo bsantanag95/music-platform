@@ -87,7 +87,22 @@
       "solo": "Solistas"
     },
     "followAction": "+ Seguir artista",
-    "followActionShort": "+ Seguir"
+    "followActionShort": "+ Seguir",
+    "typeLabel": {
+      "person": "Solista",
+      "group": "Grupo",
+      "orchestra": "Orquesta",
+      "choir": "Coro"
+    },
+    "latest": "Último:",
+    "followedSince": "Lo sigues desde {date}",
+    "newsUpcoming": "Sale el {date}",
+    "newsReleased": "Salió {when}",
+    "newBadge": "Nuevo",
+    "sectionNews": "Con novedades",
+    "sectionRest": "El resto",
+    "railLabel": "Lanzamientos de tus artistas",
+    "railTitle": "Próximos lanzamientos"
   },
   "explorationHeading": "Exploración",
   "explorationMutualBadge": "Tú también",

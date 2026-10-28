@@ -1049,6 +1049,8 @@ export const FollowedArtistSchema = z.object({
   favorite: z.boolean().optional(),
   // Solo en `/me/artists` (redesign-artists-toolbar): segmentos, orden por último lanzamiento y, en la Fase 3, la fila.
   followedAt: z.string().optional(),
+  // Fila de `/me/artists` (redesign-artists-rows): país ISO para la línea de detalle.
+  country: z.string().nullable().optional(),
   news: z.lazy(() => FollowedArtistReleaseSchema).nullable().optional(),
   latestRelease: z.lazy(() => FollowedArtistReleaseSchema).nullable().optional(),
 });

@@ -650,6 +650,13 @@ autorizado y dueño; no aparece si el dueño no sigue a ningún artista.
   novedad o, si no hay, el último Álbum/EP publicado de su discografía guardada (sin tipos secundarios ni marca de
   fuera de la discografía); sin dato, al final. `listAllFollowedArtists` devuelve además `followedAt`, `news` y
   `latestRelease` con tres consultas en total.
+  Desde `redesign-artists-rows`: la fila de Índice lleva una línea de detalle (`FollowedArtistMeta`: país por
+  `Intl.DisplayNames`, tipo —solista, grupo, orquesta o coro—, "Último: <disco> (año)" enlazado y "Lo sigues desde <mes
+  año>") y, en ámbar, la novedad ("Sale el 14 nov: «X»" o "Salió hace 5 días: «X»", enlazada si está vinculada; "Último"
+  no repite el mismo disco). En Gráfico, insignia con la fecha o "Nuevo". Con el segmento Todos y alguna novedad, la
+  lista se divide en "Con novedades" y "El resto" (orden elegido dentro de cada una). Desde `lg`, riel "Próximos
+  lanzamientos" (`FollowedArtistReleasesRail`: hasta seis, primero lo que sale y luego lo reciente); sin novedades no
+  hay riel y la página queda en `max-w-4xl`. Sin cifras de discos escuchados (§6.4.1).
 - **Tope de 8 celdas (2×4), con "+N" como link a la lista completa** (2026-09-17, elegida
   entre 4 mockups — antes no había tope visual: se pedían hasta 12 y se mostraban todos sin
   aviso de que hubiera más). Si el dueño sigue más de 8 artistas, la 8ª celda deja de ser un
