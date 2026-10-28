@@ -11,6 +11,9 @@ export interface DateSectionRow {
   kind: "date-section";
   id: string;
   bucket: SectionBucket;
+  // Primera sección de fecha después del bloque "new": el listado dibuja "Estás al día" encima
+  // (redesign-feed-entries, D6).
+  afterNew?: boolean;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -48,7 +51,12 @@ export function withDateSections(
         : dateBucket(row.createdAt, now, timeZone);
     if (bucket !== previous) {
       // La posición en la key: si el orden no fuera estrictamente cronológico, un bloque podría repetirse.
-      result.push({ kind: "date-section", id: `date-section-${bucket}-${result.length}`, bucket });
+      result.push({
+        kind: "date-section",
+        id: `date-section-${bucket}-${result.length}`,
+        bucket,
+        ...(previous === "new" ? { afterNew: true } : {}),
+      });
       previous = bucket;
     }
     result.push(row);

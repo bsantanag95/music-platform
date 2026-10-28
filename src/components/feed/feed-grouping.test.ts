@@ -593,3 +593,64 @@ describe("groupFeedRuns", () => {
     });
   });
 });
+
+describe("fila por persona, disco y día (redesign-feed-entries, D1)", () => {
+  const disc = { type: "release-group" as const, id: "rg-day", title: "Short n' Sweet", artistName: "Sabrina Carpenter", coverThumbUrl: null };
+  const at = (hour: number, day = 22) => `2026-09-${day}T${String(hour).padStart(2, "0")}:00:00Z`;
+  const onDisc = {
+    rating: (createdAt: string, author = ana): FeedEntry => ({ kind: "rating", id: `d-ra-${createdAt}`, stars: "4.5", detailedScore: null, createdAt, target: disc, author }),
+    favorite: (createdAt: string, author = ana): FeedEntry => ({ kind: "favorite", id: `d-fa-${createdAt}`, targetType: "release-group", audience: "public", createdAt, target: { id: disc.id, title: disc.title, artistName: disc.artistName, coverThumbUrl: null }, author }),
+    listen: (createdAt: string, author = ana): FeedEntry => ({ kind: "listen", id: `d-li-${createdAt}`, listenContext: "first_listen", body: null, reaction: null, audience: "public", createdAt, target: { ...disc, subtitle: null }, author }),
+    review: (createdAt: string, author = ana): FeedEntry => ({ kind: "review", id: `d-rv-${createdAt}`, title: "Discazo", body: "Reseña", createdAt, target: disc, author }),
+    comment: (createdAt: string, author = ana): FeedEntry => ({ kind: "comment", id: `d-co-${createdAt}`, body: "Un comentario", createdAt, target: disc, author }),
+  };
+  const opts = { albumDays: true, timeZone: "UTC" };
+
+  it("funde lo que una persona hizo con el mismo disco el mismo día", () => {
+    const rows = groupFeedRuns(
+      [onDisc.rating(at(20)), onDisc.favorite(at(19)), onDisc.listen(at(18)), onDisc.review(at(17))],
+      NOW,
+      opts,
+    );
+    expect(rows).toHaveLength(1);
+    const row = rows[0] as Extract<(typeof rows)[number], { kind: "album-day" }>;
+    expect(row.kind).toBe("album-day");
+    expect(row.createdAt).toBe(at(20));
+    expect([row.rating, row.favorite, row.listen, row.review].every(Boolean)).toBe(true);
+    expect(row.comment).toBeNull();
+  });
+
+  it("otro día es otra fila", () => {
+    const rows = groupFeedRuns([onDisc.rating(at(10, 23)), onDisc.listen(at(10, 22))], NOW, opts);
+    expect(rows.map((r) => r.kind)).toEqual(["rating", "listen"]);
+  });
+
+  it("otra persona o un tipo repetido cortan la fila", () => {
+    const rows = groupFeedRuns(
+      [onDisc.favorite(at(20)), onDisc.listen(at(19)), onDisc.listen(at(18)), onDisc.rating(at(17), beto)],
+      NOW,
+      opts,
+    );
+    expect(rows.map((r) => r.kind)).toEqual(["album-day", "listen", "rating"]);
+  });
+
+  it("solo valoración, reseña y comentario siguen siendo una fila de opinión", () => {
+    const rows = groupFeedRuns([onDisc.rating(at(20)), onDisc.review(at(19)), onDisc.comment(at(18))], NOW, opts);
+    expect(rows.map((r) => r.kind)).toEqual(["opinion"]);
+  });
+
+  it("sin la opción no hay filas por disco y día", () => {
+    const rows = groupFeedRuns([onDisc.favorite(at(20)), onDisc.listen(at(19))], NOW);
+    expect(rows.map((r) => r.kind)).toEqual(["favorite", "listen"]);
+  });
+
+  it("el día es el calendario de la zona horaria", () => {
+    // 02:00 UTC del 23 y 22:00 UTC del 22 son el mismo día (22) en Santiago (UTC-3).
+    const entries = [onDisc.favorite("2026-09-23T02:00:00Z"), onDisc.listen("2026-09-22T22:00:00Z")];
+    expect(groupFeedRuns(entries, NOW, { albumDays: true, timeZone: "America/Santiago" })[0]!.kind).toBe("album-day");
+    expect(groupFeedRuns(entries, NOW, { albumDays: true, timeZone: "UTC" }).map((r) => r.kind)).toEqual([
+      "favorite",
+      "listen",
+    ]);
+  });
+});

@@ -92,7 +92,8 @@
   "convergence": {
     "title": "En tu red esta semana",
     "people": "{count, plural, one {# persona que sigues} other {# personas que sigues}}",
-    "andMore": "y {count} más"
+    "andMore": "y {count} más",
+    "titleMonth": "En tu red este mes"
   },
   "groupMore": "y {count} más",
   "loadMore": "Cargar más",
@@ -156,5 +157,14 @@
   "emptyNoFollowsDescription": "Sigue a personas para ver aquí sus escuchas, valoraciones, reseñas, listas y discos de su colección.",
   "emptyQuietTitle": "La gente que sigues todavía no publicó nada",
   "emptyQuietDescription": "Cuando escuchen, valoren o reseñen algo con una audiencia que puedas ver, aparecerá aquí.",
-  "communityCta": "Ver la comunidad"
+  "communityCta": "Ver la comunidad",
+  "albumDay": {
+    "favorite": "Favorito",
+    "actions": "Lo que hizo con el disco"
+  },
+  "rail": {
+    "label": "Contexto de tu red",
+    "mostActive": "Quiénes más se movieron",
+    "mostActiveHint": "Esta semana, entre la gente que sigues."
+  }
 }

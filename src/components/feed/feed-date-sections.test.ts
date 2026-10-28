@@ -60,3 +60,17 @@ describe("withDateSections con última visita (redesign-feed-people, D7)", () =>
     expect(shape(null)).toEqual(["#today", "a", "#week", "b", "c"]);
   });
 });
+
+describe("cierre del bloque de novedades (redesign-feed-entries, D6)", () => {
+  it("marca la primera sección después de «new»", () => {
+    const rows = [row("a", "2026-10-20T10:00:00Z"), row("b", "2026-10-17T10:00:00Z"), row("c", "2026-07-01T10:00:00Z")];
+    const sections = withDateSections(rows, now, "UTC", "2026-10-19T00:00:00Z").filter(
+      (item) => item.kind === "date-section",
+    ) as { bucket: string; afterNew?: boolean }[];
+    expect(sections.map((s) => [s.bucket, Boolean(s.afterNew)])).toEqual([
+      ["new", false],
+      ["week", true],
+      ["earlier", false],
+    ]);
+  });
+});

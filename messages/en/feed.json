@@ -92,7 +92,8 @@
   "convergence": {
     "title": "In your network this week",
     "people": "{count, plural, one {# person you follow} other {# people you follow}}",
-    "andMore": "and {count} more"
+    "andMore": "and {count} more",
+    "titleMonth": "In your network this month"
   },
   "groupMore": "and {count} more",
   "loadMore": "Load more",
@@ -156,5 +157,14 @@
   "emptyNoFollowsDescription": "Follow people to see their listens, ratings, reviews, lists and collection here.",
   "emptyQuietTitle": "The people you follow haven't posted anything yet",
   "emptyQuietDescription": "When they listen to, rate or review something you can see, it will show up here.",
-  "communityCta": "See the community"
+  "communityCta": "See the community",
+  "albumDay": {
+    "favorite": "Favorite",
+    "actions": "What they did with the album"
+  },
+  "rail": {
+    "label": "Your network",
+    "mostActive": "Most active this week",
+    "mostActiveHint": "Among the people you follow."
+  }
 }

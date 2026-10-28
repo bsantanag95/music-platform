@@ -2,10 +2,14 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { targetHref } from "./feed-target";
-import type { ConvergenceItem } from "@/services/feed/convergence";
+import type { ConvergenceItem, ConvergencePeriod } from "@/services/feed/convergence";
 
 interface NetworkConvergenceProps {
   items: ConvergenceItem[];
+  // Ventana que se mostró: 7 días ("esta semana") o el respaldo de 30 ("este mes") (redesign-feed-entries, D3).
+  period?: ConvergencePeriod;
+  // Versión del riel lateral: menos relleno y título más chico.
+  compact?: boolean;
 }
 
 // Panel "En tu red esta semana" en la cabecera de `/me/feed` (openspec:
@@ -13,14 +17,22 @@ interface NetworkConvergenceProps {
 // del lector— separada del listado cronológico "social" de abajo. Cada obra es
 // una única síntesis con los nombres, nunca una fila por persona ni un desglose
 // de quién escuchó / valoró / reseñó. Colapsa entero si no hay convergencia.
-export async function NetworkConvergence({ items }: NetworkConvergenceProps) {
+export async function NetworkConvergence({
+  items,
+  period = "week",
+  compact = false,
+}: NetworkConvergenceProps) {
   if (items.length === 0) return null;
 
   const t = await getTranslations("feed");
 
   return (
-    <section className="flex w-full flex-col gap-3 rounded-lg border border-ink-border bg-ink-surface p-5">
-      <h2 className="font-display text-lg text-paper">{t("convergence.title")}</h2>
+    <section
+      className={`flex w-full flex-col gap-3 rounded-lg border border-ink-border bg-ink-surface ${compact ? "p-4" : "p-5"}`}
+    >
+      <h2 className={`font-display text-paper ${compact ? "text-base" : "text-lg"}`}>
+        {period === "week" ? t("convergence.title") : t("convergence.titleMonth")}
+      </h2>
 
       <ul className="divide-y divide-ink-border">
         {items.map((item) => (

@@ -662,7 +662,8 @@ export async function markFeedSeen(viewerId: string): Promise<void> {
   await db.update(appUser).set({ feedSeenAt: new Date() }).where(eq(appUser.id, viewerId));
 }
 
-// Cuántas entradas recientes se miran para decidir quién tiene novedades (D4).
+// Cuántas entradas recientes se miran para decidir quién tiene novedades (D4) y quiénes más se movieron
+// (redesign-feed-entries, D4).
 const NEW_ACTIVITY_WINDOW = 50;
 
 /**
@@ -678,6 +679,30 @@ export async function listAuthorsWithNewActivity(viewerId: string, since: string
     if (new Date(entry.createdAt).getTime() > sinceMs) ids.add(entry.author.id);
   }
   return [...ids];
+}
+
+const MOST_ACTIVE_WINDOW_DAYS = 7;
+const MOST_ACTIVE_MAX = 5;
+
+/**
+ * Hasta cinco personas seguidas con más entradas visibles en los últimos 7 días, de más a menos (empate: la actividad
+ * más reciente primero). Reusa `listFeed` sobre sus 50 entradas más recientes, igual que `listAuthorsWithNewActivity`;
+ * por eso el riel no muestra cifras (openspec: redesign-feed-entries, D4).
+ */
+export async function listMostActiveAuthors(viewerId: string, now: Date = new Date()): Promise<FeedAuthor[]> {
+  const cutoff = now.getTime() - MOST_ACTIVE_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+  const { entries } = await listFeed(viewerId, 1, NEW_ACTIVITY_WINDOW);
+  const byAuthor = new Map<string, { author: FeedAuthor; count: number; order: number }>();
+  entries.forEach((entry, index) => {
+    if (new Date(entry.createdAt).getTime() < cutoff) return;
+    const current = byAuthor.get(entry.author.id);
+    if (current) current.count++;
+    else byAuthor.set(entry.author.id, { author: entry.author, count: 1, order: index });
+  });
+  return [...byAuthor.values()]
+    .sort((a, b) => b.count - a.count || a.order - b.order)
+    .slice(0, MOST_ACTIVE_MAX)
+    .map((item) => item.author);
 }
 
 /**

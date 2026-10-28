@@ -15,6 +15,7 @@ import { isFeedEntryQuote } from "./feed-entry-tier";
 import { withDateSections } from "./feed-date-sections";
 import {
   groupFeedRuns,
+  type FeedAlbumDayRow,
   type FeedEntryGroup,
   type FeedOpinionRow,
   type FeedRotationPeak,
@@ -74,7 +75,8 @@ export function FeedActivityList({
   // `groupFeedRuns` lo usa para la ventana de 7 días del pico de rotación.
   const now = useNow();
   const timeZone = useTimeZone();
-  const rows = groupFeedRuns(uniqueEntries(entries), now);
+  // Una fila por persona, disco y día solo en el feed de seguidos (redesign-feed-entries, D1).
+  const rows = groupFeedRuns(uniqueEntries(entries), now, { albumDays: variant === "feed", timeZone });
 
   return (
     <ul
@@ -92,6 +94,12 @@ export function FeedActivityList({
           // borde inferior de `divide-y`, así se lee pegado a las filas que agrupa.
           return (
             <li key={row.id} role="presentation" className="border-b-0 pb-1 pt-6 first:pt-0">
+              {row.afterNew ? (
+                // Cierre del bloque "Nuevo desde tu última visita" (redesign-feed-entries, D6).
+                <p className="mb-5 flex items-center gap-3 font-data text-xs text-paper-muted before:h-px before:flex-1 before:bg-ink-border after:h-px after:flex-1 after:bg-ink-border">
+                  {t("caughtUpMessage")}
+                </p>
+              ) : null}
               <h3
                 className={`font-data text-[11px] uppercase tracking-wider ${row.bucket === "new" ? "text-amber" : "text-paper-muted"}`}
               >
@@ -131,6 +139,14 @@ export function FeedActivityList({
             <li key={row.id} className={`${self ? "relative py-3 pl-4" : "py-4"} first:pt-0 last:pb-0`}>
               {self ? <TimelineDot filled top="top-4" /> : null}
               <OpinionRow row={row} t={t} self={self} hideAuthor={hideAuthor} clamp={clamp} reviewCard={reviewCard} />
+            </li>
+          );
+        }
+
+        if (row.kind === "album-day") {
+          return (
+            <li key={row.id} className="py-4 first:pt-0 last:pb-0">
+              <AlbumDayRow row={row} t={t} clamp={clamp} reviewCard={reviewCard} />
             </li>
           );
         }
@@ -818,6 +834,100 @@ function OpinionRow({
     <div className="flex gap-3 sm:gap-4">
       <FeedCell entry={primary} />
       <div className="min-w-0 flex-1">{content}</div>
+    </div>
+  );
+}
+
+// Fila por persona, disco y día (redesign-feed-entries, D2): celda y título del álbum, autor y fecha sin verbo (lo
+// dicen los chips), chips de acción y, debajo, reseña, comentario y nota de escucha. Solo en el feed de seguidos.
+function AlbumDayRow({
+  row,
+  t,
+  clamp,
+  reviewCard,
+}: {
+  row: FeedAlbumDayRow;
+  t: FeedT;
+  clamp: boolean;
+  reviewCard: boolean;
+}) {
+  const locale = useLocale();
+  const chips: { key: string; kind: FeedEntry["kind"]; label: ReactNode; ariaLabel?: string }[] = [];
+  if (row.rating) {
+    chips.push({
+      key: "rating",
+      kind: "rating",
+      label: <span className="text-amber">★ {ratingGroupValue(row.rating, locale)}</span>,
+      ariaLabel: ratingLabel(row.rating.stars, row.rating.detailedScore, t, locale),
+    });
+  }
+  if (row.favorite) chips.push({ key: "favorite", kind: "favorite", label: t("albumDay.favorite") });
+  if (row.listen) {
+    chips.push({
+      key: "listen",
+      kind: "listen",
+      label: (
+        <>
+          {t(`context.${row.listen.listenContext}`)}
+          {row.listen.reaction ? (
+            <>
+              {" · "}
+              <ReactionBadge reaction={row.listen.reaction} />
+            </>
+          ) : null}
+        </>
+      ),
+    });
+  }
+  if (row.collection) chips.push({ key: "collection", kind: "collection", label: actionLabel(row.collection, t) });
+  if (row.wanted) chips.push({ key: "wanted", kind: "wanted", label: actionLabel(row.wanted, t) });
+
+  return (
+    <div className="flex gap-3 sm:gap-4">
+      <FeedCell entry={row.primary} />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="min-w-0 font-data text-xs text-paper-muted">
+            <AuthorIdentity author={row.author} />
+            <InlineDate iso={row.createdAt} />
+          </span>
+          <ColumnDate iso={row.createdAt} />
+        </div>
+        <TargetTitle {...targetLink(row.primary)} />
+        {chips.length > 0 ? (
+          <ul aria-label={t("albumDay.actions")} className="mt-2 flex flex-wrap gap-1.5">
+            {chips.map((chip) => {
+              const icon = FEED_KIND_ICONS[chip.kind];
+              return (
+                <li
+                  key={chip.key}
+                  aria-label={chip.ariaLabel}
+                  className="inline-flex items-center gap-1 rounded-md border border-ink-border bg-ink-surface px-2 py-0.5 font-data text-[11px] text-paper"
+                >
+                  {icon ? (
+                    <span aria-hidden="true" className="inline-flex text-paper-muted">
+                      {icon}
+                    </span>
+                  ) : null}
+                  {chip.label}
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
+        {row.review ? (
+          reviewCard ? (
+            <ReviewCard review={row.review} t={t} />
+          ) : (
+            <>
+              <ReviewKicker title={row.review.title} />
+              <ProsePanel body={row.review.body} variant="comment" clamp={clamp} accent="review" />
+            </>
+          )
+        ) : null}
+        {row.comment ? <ProsePanel body={row.comment.body} variant="comment" clamp={clamp} /> : null}
+        {row.listen?.body ? <ProsePanel body={row.listen.body} variant="impression" clamp={clamp} /> : null}
+      </div>
     </div>
   );
 }
