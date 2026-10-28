@@ -19,7 +19,7 @@ export async function NetworkConvergence({ items }: NetworkConvergenceProps) {
   const t = await getTranslations("feed");
 
   return (
-    <section className="flex w-full max-w-2xl flex-col gap-3 rounded-lg border border-ink-border bg-ink-surface p-5">
+    <section className="flex w-full flex-col gap-3 rounded-lg border border-ink-border bg-ink-surface p-5">
       <h2 className="font-display text-lg text-paper">{t("convergence.title")}</h2>
 
       <ul className="divide-y divide-ink-border">

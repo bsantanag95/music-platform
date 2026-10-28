@@ -308,6 +308,21 @@ El álbum de una canción se resuelve vía su edición ingerida (`track` → `re
 patrón que `PRIMARY_ARTIST_SQL`) — lo pueblan las fuentes `listen`, `rating` y `favorite` de
 `listFeed`; comentarios y reseñas no alimentan el tramo.
 
+## Página `/me/feed` (`refine-feed-page-phase1`)
+
+`/me/feed` es la versión completa del feed de seguidos; `/activity` → Siguiendo es la vista corta. Se llama
+"Actividad" (migas Inicio / Actividad, título y subtítulo a la izquierda, `max-w-3xl`).
+
+- **Filtros en la URL:** `q`, `kind` y `author` (nombre de usuario de un seguido aceptado) con `replaceState`. La
+  página valida los tres —un `kind` fuera de `FEED_KINDS` o un `author` que no se sigue se ignoran— y sirve la primera
+  página ya filtrada; `FeedList` la siembra solo para esa combinación. Selects en caja con "Todos los tipos" / "Todas
+  las personas", 44 px con puntero grueso (`FilterSelect`, en todos sus usos).
+- **Bloques de fecha y tarjeta de reseña:** los mismos opt-in de `FeedActivityList` que usa `/activity`.
+- **Audiencia:** solo en el rastro propio (`variant` "self"/"own"). En una fila ajena no se muestra en ninguna
+  superficie: si el lector la ve, ya puede verla.
+- **Vacíos:** sin seguidos, "Todavía no sigues a nadie" con "Buscar personas" (y sin barra de filtros); con seguidos
+  sin actividad visible, "La gente que sigues todavía no publicó nada" con "Ver la comunidad".
+
 ## Convergencia de la red (`add-network-convergence`)
 
 Un **panel "En tu red esta semana"** en la cabecera de `/me/feed`, encima del listado

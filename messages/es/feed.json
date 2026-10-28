@@ -1,7 +1,6 @@
 {
-  "title": "Actividad de quienes sigues",
-  "emptyTitle": "Nada para ver todavía",
-  "emptyDescription": "Sigue a personas para que sus escuchas, favoritos, listas, valoraciones, comentarios, listas para completar y discos de su colección aparezcan acá.",
+  "title": "Actividad",
+  "subtitle": "Lo que escuchan, valoran y guardan las personas que sigues.",
   "community": {
     "pageTitle": "Comunidad",
     "heading": "Comunidad",
@@ -94,9 +93,9 @@
   "loadedAnnouncement": "{count, plural, one {Se cargó # entrada nueva} other {Se cargaron # entradas nuevas}}",
   "searchPlaceholder": "Buscar por artista, álbum o canción",
   "kindLabel": "Tipo",
-  "filterAllKind": "Tipo",
-  "authorLabel": "Autor",
-  "filterAllAuthor": "Autor",
+  "filterAllKind": "Todos los tipos",
+  "authorLabel": "Persona",
+  "filterAllAuthor": "Todas las personas",
   "clearFilters": "Limpiar filtros",
   "noResultsTitle": "Sin resultados para estos filtros",
   "noResultsDescription": "Prueba con otra búsqueda o quita alguno de los filtros aplicados.",
@@ -145,5 +144,10 @@
     "rating_review_comment": "Valoró, reseñó y comentó"
   },
   "groupCollection": "{count, plural, one {sumó # disco a su colección} other {sumó # discos a su colección}}",
-  "groupWanted": "{count, plural, one {busca # disco} other {busca # discos}}"
+  "groupWanted": "{count, plural, one {busca # disco} other {busca # discos}}",
+  "emptyNoFollowsTitle": "Todavía no sigues a nadie",
+  "emptyNoFollowsDescription": "Sigue a personas para ver aquí sus escuchas, valoraciones, reseñas, listas y discos de su colección.",
+  "emptyQuietTitle": "La gente que sigues todavía no publicó nada",
+  "emptyQuietDescription": "Cuando escuchen, valoren o reseñen algo con una audiencia que puedas ver, aparecerá aquí.",
+  "communityCta": "Ver la comunidad"
 }

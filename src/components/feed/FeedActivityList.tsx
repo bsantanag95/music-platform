@@ -668,7 +668,7 @@ function FeedCell({ entry }: { entry: FeedEntry }) {
   );
 }
 
-// Línea de metadato: [autor ·] verbo · audiencia, con la fecha relativa a la
+// Línea de metadato: [autor ·] verbo [· audiencia en el rastro propio], con la fecha relativa a la
 // derecha. IBM Plex Mono `text-xs` muted, secundaria al título. En el rastro
 // propio se omite el autor.
 function MetaLine({
@@ -689,7 +689,9 @@ function MetaLine({
   // no es la entrada primaria, así que el tema llega aparte.
   topic?: FeedComment["topic"];
 }) {
-  const audience = audienceLabel(entry, t);
+  // La audiencia que eligió otra persona no le dice nada al lector (si la ve, puede verla): solo en el rastro propio
+  // (refine-feed-page-phase1, D4).
+  const audience = hideAuthor ? audienceLabel(entry, t) : null;
   const commentTopic = topic ?? (entry.kind === "comment" ? entry.topic : null);
   const icon = FEED_KIND_ICONS[iconKind ?? entry.kind];
   return (

@@ -47,7 +47,7 @@ export function FilterSelect({
         onChange={(event) => onChange(event.target.value)}
         aria-label={ariaLabel}
         disabled={disabled}
-        className={`filter-select appearance-none overflow-hidden text-ellipsis whitespace-nowrap font-data text-sm text-paper-muted transition-colors hover:text-paper disabled:opacity-50 ${
+        className={`filter-select appearance-none overflow-hidden text-ellipsis whitespace-nowrap font-data text-sm text-paper-muted transition-colors hover:text-paper disabled:opacity-50 [@media(pointer:coarse)]:min-h-11 ${
           boxed
             ? "rounded-md border border-ink-border bg-ink-surface py-2 pl-3 pr-8 hover:border-paper-muted/40"
             : "rounded border-b border-ink-border bg-transparent py-1.5 pl-0.5 pr-4"
