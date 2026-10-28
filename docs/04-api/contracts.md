@@ -1120,6 +1120,12 @@ el artista acreditado; para listas y Caminos, sobre su título).
 sesión. **400** con `VALIDATION_ERROR` si la paginación es inválida, `kind` no pertenece al enum o
 `authorId` no es un seguido aceptado.
 
+### `PUT /api/me/feed/seen`
+
+Registra la visita al feed (`app_user.feed_seen_at = now()`, `redesign-feed-people`): en la próxima visita, lo
+posterior se muestra bajo "Nuevo desde tu última visita". Lo llama `/me/feed` al montarse en el navegador, nunca el
+render del servidor. Sin cuerpo. **200 OK:** `{ ok: true }`. **401** con `AUTH_REQUIRED` sin sesión.
+
 ### Forma de `FeedEntry`
 
 Unión discriminada por `kind`. Todas las variantes incluyen `id`, `createdAt` (ISO 8601) y

@@ -1,6 +1,12 @@
 {
   "title": "Activity",
   "subtitle": "What the people you follow are listening to, rating and collecting.",
+  "communityLink": "All of the community →",
+  "people": {
+    "label": "People",
+    "all": "Everyone",
+    "hasNews": "has new activity"
+  },
   "community": {
     "pageTitle": "Community",
     "heading": "Community",
@@ -30,7 +36,11 @@
       "comment": "Comments",
       "rating": "Ratings",
       "listen": "Listens",
-      "list": "Lists"
+      "list": "Lists",
+      "favorite": "Favorites",
+      "collection": "Collection",
+      "wanted": "Wanted",
+      "camino": "To complete"
     },
     "emptyFiltered": {
       "title": "Nothing of this type yet",
@@ -41,7 +51,8 @@
       "today": "Today",
       "week": "This week",
       "month": "This month",
-      "earlier": "Earlier"
+      "earlier": "Earlier",
+      "new": "New since your last visit"
     },
     "readReview": "Read review",
     "rail": {
@@ -92,10 +103,6 @@
   "findPeopleCta": "Find people",
   "loadedAnnouncement": "{count, plural, one {Loaded # new entry} other {Loaded # new entries}}",
   "searchPlaceholder": "Search by artist, album or song",
-  "kindLabel": "Type",
-  "filterAllKind": "All types",
-  "authorLabel": "Person",
-  "filterAllAuthor": "Everyone",
   "clearFilters": "Clear filters",
   "noResultsTitle": "No results for these filters",
   "noResultsDescription": "Try a different search or remove one of the applied filters.",

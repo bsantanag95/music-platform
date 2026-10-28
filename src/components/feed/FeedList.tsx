@@ -6,20 +6,38 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FilterSelect } from "@/components/ui/FilterSelect";
 import { FeedActivityList } from "./FeedActivityList";
-import { getFeed, type FeedFiltersParams } from "@/lib/api/diary";
+import { FeedKindChips } from "./FeedKindChips";
+import { FeedPeopleStrip } from "./FeedPeopleStrip";
+import { getFeed, markFeedSeen, type FeedFiltersParams } from "@/lib/api/diary";
 import { queryKeys } from "@/lib/query/keys";
-import { FEED_KINDS, type AuthorSummary, type FeedEntry, type FeedResponse } from "@/lib/api/schemas";
+import type { AuthorSummary, FeedKind, FeedResponse } from "@/lib/api/schemas";
 
 const PAGE_SIZE = 20;
+
+// Los nueve tipos del feed en orden de uso (redesign-feed-people, D6).
+const CHIP_KINDS: readonly FeedKind[] = [
+  "listen",
+  "rating",
+  "review",
+  "comment",
+  "favorite",
+  "collection",
+  "wanted",
+  "list",
+  "camino",
+];
 
 interface FeedListProps {
   initial: FeedResponse;
   authors: AuthorSummary[];
   // Filtros con los que el servidor resolvió `initial`, leídos de la URL (refine-feed-page-phase1, D2). `author` es el
   // nombre de usuario de un seguido aceptado; la página ya descartó los inválidos.
-  initialFilters?: { kind: FeedEntry["kind"] | ""; author: string; q: string };
+  initialFilters?: { kind: FeedKind | ""; author: string; q: string };
+  // Última visita anterior a esta (redesign-feed-people, D2–D4): lo posterior va bajo "Nuevo desde tu última visita";
+  // `null` en la primera visita. `authorsWithNews` son los ids con actividad posterior.
+  lastVisitAt?: string | null;
+  authorsWithNews?: string[];
 }
 
 // Estado de filtros de la UI: `""` es "sin filtrar" para los dos `<select>`
@@ -28,7 +46,7 @@ interface FeedListProps {
 // `useEffect` de abajo es quien lo recorta a la versión que viaja al
 // servidor. Mismo patrón que `DiaryActivityList` (add-diary-filters).
 interface FeedFiltersState {
-  kind: FeedEntry["kind"] | "";
+  kind: FeedKind | "";
   author: string;
   q: string;
 }
@@ -76,8 +94,15 @@ function writeFiltersToUrl(filters: FeedFiltersState) {
 // por texto, y filtro por tipo de actividad y por persona seguida,
 // combinables — mismo patrón que `/me/diary` (ver
 // openspec/changes/add-feed-filters).
-export function FeedList({ initial, authors, initialFilters }: FeedListProps) {
+export function FeedList({ initial, authors, initialFilters, lastVisitAt = null, authorsWithNews = [] }: FeedListProps) {
   const t = useTranslations("feed");
+  const withNews = useMemo(() => new Set(authorsWithNews), [authorsWithNews]);
+
+  // La visita se registra al montarse en el navegador, nunca en el render del servidor: un prefetch no debe mover la
+  // marca (D2). Un fallo no rompe la página: la próxima visita volverá a mostrar lo mismo como nuevo.
+  useEffect(() => {
+    markFeedSeen().catch(() => {});
+  }, []);
 
   // Fijo durante la vida del componente: es la combinación que resolvió el servidor.
   const [seedFilters] = useState<FeedFiltersState>(() => ({ ...EMPTY_FILTERS, ...initialFilters }));
@@ -138,7 +163,15 @@ export function FeedList({ initial, authors, initialFilters }: FeedListProps) {
   };
 
   const filterBar = (
-    <div className="flex w-full flex-col gap-2">
+    <div className="flex w-full flex-col gap-3">
+      {authors.length > 0 ? (
+        <FeedPeopleStrip
+          authors={authors}
+          active={filters.author}
+          withNews={withNews}
+          onChange={(author) => setFilters((current) => ({ ...current, author }))}
+        />
+      ) : null}
       <input
         type="search"
         autoComplete="off"
@@ -148,42 +181,17 @@ export function FeedList({ initial, authors, initialFilters }: FeedListProps) {
         aria-label={t("searchPlaceholder")}
         className="w-full rounded-md border border-ink-border bg-ink-surface px-3.5 py-2 font-data text-sm text-paper placeholder:text-paper-muted [@media(pointer:coarse)]:min-h-11"
       />
-      <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-center">
-        <FilterSelect
-          value={filters.kind}
-          onChange={(value) => setFilters((current) => ({ ...current, kind: value as FeedEntry["kind"] | "" }))}
-          ariaLabel={t("kindLabel")}
-          widthClassName="w-full sm:w-[24ch]"
-          variant="boxed"
-        >
-          <option value="">{t("filterAllKind")}</option>
-          {FEED_KINDS.map((kind) => (
-            <option key={kind} value={kind}>
-              {t(`kind.${kind}`)}
-            </option>
-          ))}
-        </FilterSelect>
-        {authors.length > 0 && (
-          <FilterSelect
-            value={filters.author}
-            onChange={(value) => setFilters((current) => ({ ...current, author: value }))}
-            ariaLabel={t("authorLabel")}
-            widthClassName="w-full sm:w-[24ch]"
-            variant="boxed"
-          >
-            <option value="">{t("filterAllAuthor")}</option>
-            {authors.map((author) => (
-              <option key={author.id} value={author.username}>
-                {author.displayName ?? `@${author.username}`}
-              </option>
-            ))}
-          </FilterSelect>
-        )}
+      <div className="flex flex-col gap-2">
+        <FeedKindChips
+          kinds={CHIP_KINDS}
+          active={filters.kind || undefined}
+          onChange={(kind) => setFilters((current) => ({ ...current, kind: kind ?? "" }))}
+        />
         {isFiltered && (
           <button
             type="button"
             onClick={clearFilters}
-            className="justify-self-start px-1 font-data text-xs text-paper-muted transition-colors hover:text-paper [@media(pointer:coarse)]:min-h-11"
+            className="self-start px-1 font-data text-xs text-paper-muted transition-colors hover:text-paper [@media(pointer:coarse)]:min-h-11"
           >
             {t("clearFilters")}
           </button>
@@ -223,7 +231,7 @@ export function FeedList({ initial, authors, initialFilters }: FeedListProps) {
         {announcement}
       </span>
       {/* Bloques de fecha y reseña como tarjeta, igual que `/activity` (refine-feed-page-phase1, D3). */}
-      <FeedActivityList entries={entries} clamp dateSections reviewCard />
+      <FeedActivityList entries={entries} clamp dateSections reviewCard newSince={lastVisitAt} />
       {isError && (
         <span role="alert" className="text-center font-data text-xs text-danger">
           {t("loadError")}

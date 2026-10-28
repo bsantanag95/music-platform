@@ -11,6 +11,7 @@ import { getRecentActivity } from "@/lib/api/home";
 import { queryKeys } from "@/lib/query/keys";
 import type { CommunityActivityKind, FeedKind, FeedResponse } from "@/lib/api/schemas";
 import { FeedActivityList } from "@/components/feed/FeedActivityList";
+import { FeedKindChips } from "@/components/feed/FeedKindChips";
 import { ACTIVITY_FILTER_KINDS, kindFromParam, type ActivitySource } from "./activity-tab-param";
 
 export const ACTIVITY_PAGE_SIZE = 10;
@@ -115,7 +116,7 @@ export function CommunityActivitySection({
   return (
     <section className="flex w-full flex-col gap-3">
       {headingKey ? <h2 className="font-display text-xl text-paper">{t(headingKey)}</h2> : null}
-      {kinds.length > 0 ? <KindChips kinds={kinds} active={kind} onChange={setKind} /> : null}
+      {kinds.length > 0 ? <FeedKindChips kinds={kinds} active={kind} onChange={setKind} /> : null}
 
       {isPending ? (
         <ActivitySkeleton label={t("loadingMore")} />
@@ -177,50 +178,6 @@ export function CommunityActivitySection({
         </Button>
       ) : null}
     </section>
-  );
-}
-
-// Chips de filtro por tipo: forma de chip (no subrayado) para que se lean como filtro y no como otra fila de pestañas.
-// Una sola fila; en móvil se desplaza en horizontal sin desbordar la página.
-function KindChips({
-  kinds,
-  active,
-  onChange,
-}: {
-  kinds: readonly FeedKind[];
-  active: FeedKind | undefined;
-  onChange: (kind: FeedKind | undefined) => void;
-}) {
-  const t = useTranslations("feed");
-  const options: { kind: FeedKind | undefined; label: string }[] = [
-    { kind: undefined, label: t("community.chips.all") },
-    ...kinds.map((kind) => ({ kind, label: t(`community.chips.${kind}`) })),
-  ];
-  return (
-    <div
-      role="group"
-      aria-label={t("community.filterLabel")}
-      className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden"
-    >
-      {options.map((option) => {
-        const selected = option.kind === active;
-        return (
-          <button
-            key={option.kind ?? "all"}
-            type="button"
-            aria-pressed={selected}
-            onClick={() => onChange(option.kind)}
-            className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1 font-data text-xs transition-colors ${
-              selected
-                ? "border-amber/60 bg-amber/10 text-amber"
-                : "border-ink-border text-paper-muted hover:border-paper-muted hover:text-paper"
-            }`}
-          >
-            {option.label}
-          </button>
-        );
-      })}
-    </div>
   );
 }
 

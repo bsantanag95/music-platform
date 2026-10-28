@@ -323,6 +323,22 @@ patrón que `PRIMARY_ARTIST_SQL`) — lo pueblan las fuentes `listen`, `rating` 
 - **Vacíos:** sin seguidos, "Todavía no sigues a nadie" con "Buscar personas" (y sin barra de filtros); con seguidos
   sin actividad visible, "La gente que sigues todavía no publicó nada" con "Ver la comunidad".
 
+### Personas, chips y novedades (`redesign-feed-people`)
+
+- **Franja de personas** (`FeedPeopleStrip`): "Todas" y cada seguido con su avatar (`listFeedAuthors` resuelve la foto
+  por lote), botones con `aria-pressed` en una fila desplazable. Reemplaza el select de persona; elegir otra vez a la
+  persona activa vuelve a "Todas". `author` en la URL sigue siendo el nombre de usuario.
+- **Chips de tipo** (`FeedKindChips`, compartido con `/activity`): los nueve tipos en orden de uso. Reemplaza el select.
+- **"Toda la comunidad →"** en la cabecera, hacia `/activity`.
+- **Última visita:** `app_user.feed_seen_at` (`0078`). La página lee la marca anterior en el servidor y el listado la
+  mueve al montarse con `PUT /api/me/feed/seen` (nunca en el render del servidor: un prefetch no debe moverla). Lo
+  posterior va bajo "Nuevo desde tu última visita" antes de los bloques de fecha (`withDateSections` con `newSince`).
+  La primera visita no marca nada; recargar mueve la marca.
+- **Punto de novedades:** `listAuthorsWithNewActivity` reusa `listFeed` (mismas reglas de visibilidad) sobre las 50
+  entradas más recientes y devuelve los autores posteriores a la marca; esas personas van primero en la franja, con un
+  punto ámbar y ", tiene actividad nueva" para lectores de pantalla. Quien solo tiene novedades más allá de esas 50 no
+  lleva punto.
+
 ## Convergencia de la red (`add-network-convergence`)
 
 Un **panel "En tu red esta semana"** en la cabecera de `/me/feed`, encima del listado

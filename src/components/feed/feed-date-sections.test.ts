@@ -44,3 +44,19 @@ describe("withDateSections", () => {
     expect(headers).toHaveLength(1);
   });
 });
+
+describe("withDateSections con última visita (redesign-feed-people, D7)", () => {
+  const rows = [row("a", "2026-10-20T10:00:00Z"), row("b", "2026-10-19T10:00:00Z"), row("c", "2026-10-17T10:00:00Z")];
+  const shape = (since: string | null) =>
+    withDateSections(rows, now, "UTC", since).map((item) =>
+      item.kind === "date-section" ? `#${item.bucket}` : (item as { id: string }).id,
+    );
+
+  it("lo posterior a la marca va bajo «new» y el resto sigue con sus bloques", () => {
+    expect(shape("2026-10-18T00:00:00Z")).toEqual(["#new", "a", "b", "#week", "c"]);
+  });
+
+  it("sin marca no hay bloque «new»", () => {
+    expect(shape(null)).toEqual(["#today", "a", "#week", "b", "c"]);
+  });
+});
