@@ -1,6 +1,6 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { artist, artistFollow } from "@/db/schema";
+import { artist, artistFollow, favorite } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 
 // Seguir artista — relación unilateral usuario → artista
@@ -22,6 +22,8 @@ export interface FollowedArtist {
    * (docs/00-product/product_philosophy.md §6.4.1).
    */
   journeyState?: "in_progress" | "complete";
+  /** Si el usuario lo marcó como favorito; solo en `listAllFollowedArtists` (menú de `/me/artists`). */
+  favorite?: boolean;
 }
 
 async function assertArtistExists(artistId: string): Promise<void> {
@@ -97,6 +99,26 @@ export async function listFollowedArtists(
     pageSize,
     hasNext: rows.length > pageSize,
   };
+}
+
+/**
+ * Todos los artistas que sigue `userId`, del más reciente al más antiguo, con su estado de favorito: la superficie de
+ * gestión `/me/artists` filtra y ordena en memoria, así que necesita la lista completa (openspec:
+ * refine-artists-page-phase1, D1).
+ */
+export async function listAllFollowedArtists(userId: string): Promise<FollowedArtist[]> {
+  return db
+    .select({
+      ...FOLLOWED_SELECT,
+      favorite: sql<boolean>`exists (
+        select 1 from ${favorite}
+        where ${favorite.userId} = ${userId} and ${favorite.artistId} = ${artist.id}
+      )`,
+    })
+    .from(artistFollow)
+    .innerJoin(artist, eq(artist.id, artistFollow.artistId))
+    .where(eq(artistFollow.userId, userId))
+    .orderBy(desc(artistFollow.createdAt), desc(artistFollow.id));
 }
 
 export async function countFollowedArtists(userId: string): Promise<number> {

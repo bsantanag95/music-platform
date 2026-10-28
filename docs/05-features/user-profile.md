@@ -635,6 +635,12 @@ autorizado y dueño; no aparece si el dueño no sigue a ningún artista.
   `getProfileAffinity`. Ausente para el propio dueño o sin sesión.
 - El dueño gestiona sus artistas seguidos en `/me/artists` (buscador + orden + modo de
   vista, `FollowedArtistList`) — autogestión, no sirve para ver la lista de un tercero.
+  Desde `refine-artists-page-phase1` la página carga **todos** los seguidos (`listAllFollowedArtists`, con el estado de
+  favorito de cada uno; antes se cortaba en 50 sin aviso), la fila no lleva botón de seguimiento y el menú ⋯
+  ("Acciones para «X»", 32/44 px) ofrece "Añadir a una lista", marcar o quitar el favorito según su estado y "Dejar de
+  seguir", que quita la fila y ofrece Deshacer (vuelve a seguir y la repone en su índice). `q` y `sort` van en la URL
+  con `replaceState`; el modo de vista no parpadea (`ready`); cabecera a la izquierda con migas y cuántos sigue; el
+  vacío lleva a `/search?type=artist`.
 - **Tope de 8 celdas (2×4), con "+N" como link a la lista completa** (2026-09-17, elegida
   entre 4 mockups — antes no había tope visual: se pedían hasta 12 y se mostraban todos sin
   aviso de que hubiera más). Si el dueño sigue más de 8 artistas, la 8ª celda deja de ser un

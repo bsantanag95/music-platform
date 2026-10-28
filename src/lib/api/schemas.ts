@@ -1045,6 +1045,8 @@ export const FollowedArtistSchema = z.object({
   name: z.string(),
   type: z.string(),
   photoUrl: z.string().nullable(),
+  // Solo en `/me/artists` (refine-artists-page-phase1): el menú ofrece marcar o quitar el favorito según el estado.
+  favorite: z.boolean().optional(),
 });
 export type FollowedArtistDto = z.infer<typeof FollowedArtistSchema>;
 
