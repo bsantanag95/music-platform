@@ -871,6 +871,27 @@
     "emptyPublicDescription": "With a public profile anyone can follow you without asking, so no requests will arrive here.",
     "emptyPublicCta": "Change privacy",
     "emptyPrivateDescription": "When someone asks to follow you, it will show up here.",
-    "emptyPrivateCta": "See your followers"
+    "emptyPrivateCta": "See your followers",
+    "tabsLabel": "Requests",
+    "tab": {
+      "received": "Received",
+      "sent": "Sent"
+    },
+    "sentCount": "{count, plural, =0 {No sent requests} one {# sent request awaiting a reply} other {# sent requests awaiting a reply}}",
+    "sentAgo": "requested {when}",
+    "cancelled": "You cancelled your request to {name}.",
+    "cancelError": "We couldn't cancel your request to {name}. Please try again.",
+    "emptySentTitle": "You have no sent requests",
+    "emptySentDescription": "When you ask to follow a private profile, the request shows up here until they reply.",
+    "approveAll": "Approve all {count}",
+    "approveAllConfirmTitle": "Approve {count} requests?",
+    "approveAllConfirmMessage": "All of them will follow you and see what you share with followers. Each one gets a notification.",
+    "approveAllConfirm": "Approve all",
+    "viewProfile": "View profile",
+    "block": "Block…",
+    "blockConfirmTitle": "Block {name}?",
+    "blockConfirmMessage": "Their request will be deleted and they won't be able to ask to follow you or see your profile. You can unblock them from Blocked.",
+    "blockConfirm": "Block",
+    "blocked": "You blocked {name}."
   }
 }

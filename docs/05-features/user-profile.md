@@ -358,6 +358,17 @@ Seguidos y Seguidores comparten `ProfileConnectionsView`.
 - **Vacío según la privacidad:** con perfil público, "Tu perfil es público" + por qué no llegan solicitudes + "Cambiar
   la privacidad" (`/me/settings/privacy`); con perfil privado, enlace a tus Seguidores.
 
+**Fase 2** (`add-follow-requests-sent-and-bulk`, 2026-10-29):
+- **Pestañas Recibidas · Enviadas** (`?tab=sent`) con cifras (`countPendingFollowRequests`, `countSentRequests`); solo
+  se carga la lista de la pestaña activa.
+- **Enviadas** (`SentRequestList`, `listSentRequestsPage`, `GET /api/me/follow-requests/sent`): "la pediste hace X" y
+  "Cancelar solicitud" con Deshacer diferido (`DELETE /api/users/{u}/follow` al vencer): deshacer no vuelve a notificar.
+  El Deshacer diferido de recibidas y enviadas vive en el hook `useDeferredRemoval`.
+- **"Aprobar las N"** desde 3 pendientes, con confirmación (`approveAllRequests`, `POST …/approve-all`, una
+  transacción, sin bloqueados ni cuentas desactivadas); antes envía un rechazo pendiente. Sin "Rechazar todas".
+- **Menú ⋯** por solicitud: "Ver perfil" y "Bloquear…" (confirmación, `PUT /api/users/{u}/block`, que borra la
+  solicitud); sin Deshacer: desbloquear vive en `/me/blocks`.
+
 ## Tarjeta de Identidad
 
 Primer bloque del Nivel 1, justo bajo la Placa (`IdentityCard.tsx`): hasta **3 elementos

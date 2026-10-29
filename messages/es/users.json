@@ -871,6 +871,27 @@
     "emptyPublicDescription": "Con un perfil público cualquiera te sigue sin pedirlo, así que aquí no llegarán solicitudes.",
     "emptyPublicCta": "Cambiar la privacidad",
     "emptyPrivateDescription": "Cuando alguien pida seguirte, aparecerá aquí.",
-    "emptyPrivateCta": "Ver tus seguidores"
+    "emptyPrivateCta": "Ver tus seguidores",
+    "tabsLabel": "Solicitudes",
+    "tab": {
+      "received": "Recibidas",
+      "sent": "Enviadas"
+    },
+    "sentCount": "{count, plural, =0 {Sin solicitudes enviadas} one {# solicitud enviada sin respuesta} other {# solicitudes enviadas sin respuesta}}",
+    "sentAgo": "la pediste {when}",
+    "cancelled": "Cancelaste la solicitud a {name}.",
+    "cancelError": "No pudimos cancelar la solicitud a {name}. Inténtalo de nuevo.",
+    "emptySentTitle": "No tienes solicitudes enviadas",
+    "emptySentDescription": "Cuando pidas seguir un perfil privado, la solicitud aparecerá aquí hasta que te respondan.",
+    "approveAll": "Aprobar las {count}",
+    "approveAllConfirmTitle": "¿Aprobar las {count} solicitudes?",
+    "approveAllConfirmMessage": "Todas esas personas pasarán a seguirte y verán lo que compartes con tus seguidores. Cada una recibirá un aviso.",
+    "approveAllConfirm": "Aprobar todas",
+    "viewProfile": "Ver perfil",
+    "block": "Bloquear…",
+    "blockConfirmTitle": "¿Bloquear a {name}?",
+    "blockConfirmMessage": "Se borrará su solicitud y no podrá volver a pedir seguirte ni ver tu perfil. Puedes desbloquearla desde Bloqueados.",
+    "blockConfirm": "Bloquear",
+    "blocked": "Bloqueaste a {name}."
   }
 }
