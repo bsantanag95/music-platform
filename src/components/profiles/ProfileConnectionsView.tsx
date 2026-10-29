@@ -112,7 +112,7 @@ export async function ProfileConnectionsView({
     followersOf(viewerId, ids),
     countSharedAlbums(viewerId, ids),
     isOwn && profile.accessible ? countConnectionSegments(profile.id, kind) : Promise.resolve(undefined),
-    isOwn && kind === "followers" ? countPendingFollowRequests(profile.id) : Promise.resolve(0),
+    isOwn ? countPendingFollowRequests(profile.id) : Promise.resolve(0),
   ]);
 
   const emptyTitle = t(`connections.empty.${kind}`, { own: isOwn ? "yes" : "no" });
@@ -147,6 +147,7 @@ export async function ProfileConnectionsView({
         isOwn={isOwn}
         showMutualTab={viewerId !== null && !isOwn}
         counts={summary ? { followers: summary.followerCount, following: summary.followingCount } : null}
+        requestsCount={pendingRequests}
       />
       <div className={rail ? "grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_280px]" : "contents"}>
         <div className="flex min-w-0 flex-col gap-6">
@@ -154,7 +155,7 @@ export async function ProfileConnectionsView({
             await PrivateConnectionsNotice({ profile, authenticated: Boolean(session) })
           ) : (
             <>
-              {pendingRequests > 0 ? (
+              {kind === "followers" && pendingRequests > 0 ? (
                 <p className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-amber/40 bg-amber/10 px-4 py-2.5 font-body text-sm text-paper">
                   {t("connections.pendingRequests", { count: pendingRequests })}
                   <Link href="/me/follow-requests" className="font-data text-xs text-amber hover:text-amber-hover">

@@ -197,6 +197,18 @@ export function FollowRequestList({ initial, empty }: FollowRequestListProps) {
                     </span>
                     <span className="font-data text-xs text-paper-muted [overflow-wrap:anywhere]">
                       @{user.username} · {format.relativeTime(new Date(user.requestedAt), now)}
+                      {/* Contexto para decidir (enrich-follow-requests-context, D3). */}
+                      {user.followedByYourFollows > 0
+                        ? ` · ${t("followedByYourFollows", { count: user.followedByYourFollows })}`
+                        : null}
+                      {user.sharedAlbums ? (
+                        <>
+                          {" · "}
+                          <span className="text-amber">
+                            {tUsers("connections.sharedAlbums", { count: user.sharedAlbums })}
+                          </span>
+                        </>
+                      ) : null}
                     </span>
                   </span>
                 </Link>

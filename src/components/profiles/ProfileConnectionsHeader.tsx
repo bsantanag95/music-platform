@@ -16,6 +16,11 @@ interface ProfileConnectionsHeaderProps {
   showMutualTab: boolean;
   /** Cifras de las pestañas; `null` sin acceso al perfil (no se muestran). */
   counts: { followers: number; following: number } | null;
+  /**
+   * Solicitudes pendientes del dueño: con al menos una, una pestaña más lleva a su bandeja
+   * (openspec: enrich-follow-requests-context, D4).
+   */
+  requestsCount?: number;
 }
 
 // Encabezado compartido de las 3 vistas de conexiones (openspec: refine-connections-page-phase1, D1): migas hacia el
@@ -30,6 +35,7 @@ export async function ProfileConnectionsHeader({
   isOwn,
   showMutualTab,
   counts,
+  requestsCount = 0,
 }: ProfileConnectionsHeaderProps) {
   const t = await getTranslations("users");
   const name = displayName ?? username;
@@ -83,6 +89,15 @@ export async function ProfileConnectionsHeader({
             ) : null}
           </Link>
         ))}
+        {isOwn && requestsCount > 0 ? (
+          <Link
+            href="/me/follow-requests"
+            className="flex min-h-11 shrink-0 items-center gap-1.5 border-b-2 border-transparent px-3 font-display text-sm text-paper-muted transition-colors hover:text-paper"
+          >
+            {t("requests.tabShort")}
+            <span className="rounded bg-amber/15 px-1.5 font-data text-xs text-amber">{requestsCount}</span>
+          </Link>
+        ) : null}
       </nav>
     </div>
   );

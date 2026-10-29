@@ -30,6 +30,9 @@ vi.mock("@/services/social/following", () => ({
   countPendingFollowRequests: (...a: unknown[]) => mocks.countPendingFollowRequests(...a),
   countSentRequests: (...a: unknown[]) => mocks.countSentRequests(...a),
 }));
+vi.mock("@/services/social/follow-request-context", () => ({
+  withFollowRequestContext: (_owner: string, page: unknown) => Promise.resolve(page),
+}));
 vi.mock("@/components/social/SentRequestList", () => ({
   SentRequestList: ({ initial, empty }: { initial: { users: unknown[] }; empty: ReactNode }) => (
     <div data-testid="sent" data-count={initial.users.length}>

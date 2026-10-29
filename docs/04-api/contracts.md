@@ -994,8 +994,11 @@ Solicitudes pendientes recibidas por el usuario autenticado (solo de cuentas act
   seguidores/seguidos.
 - **Con `cursor`** (vacío = primera página; cambio `refine-follow-requests-phase1`): la bandeja, de la más reciente a la
   más antigua, 50 por página. **200 OK:** `{ users: [{ id, username, displayName, profileVisibility, avatarUrl,
-  requestedAt, youFollow }], hasNext, nextCursor, total }`; `requestedAt` (ISO) es cuándo llegó, `youFollow` si el
-  usuario ya sigue a esa persona (`accepted`), se lo pidió (`pending`) o no (`null`), y `total` cuántas hay pendientes.
+  requestedAt, youFollow, followedByYourFollows, sharedAlbums }], hasNext, nextCursor, total }`; `requestedAt` (ISO)
+  es cuándo llegó, `youFollow` si el usuario ya sigue a esa persona (`accepted`), se lo pidió (`pending`) o no
+  (`null`), `followedByYourFollows` cuántas cuentas activas que el usuario sigue la siguen (solo la cifra),
+  `sharedAlbums` los discos en común desde 3 o `null` (cambio `enrich-follow-requests-context`), y `total` cuántas hay
+  pendientes.
   `nextCursor` es opaco; uno ilegible → **400** `VALIDATION_ERROR`.
 
 **401** con `AUTH_REQUIRED` sin sesión.

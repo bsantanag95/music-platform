@@ -369,6 +369,14 @@ Seguidos y Seguidores comparten `ProfileConnectionsView`.
 - **Menú ⋯** por solicitud: "Ver perfil" y "Bloquear…" (confirmación, `PUT /api/users/{u}/block`, que borra la
   solicitud); sin Deshacer: desbloquear vive en `/me/blocks`.
 
+**Fase 3** (`enrich-follow-requests-context`, 2026-10-29): contexto para decidir.
+- Cada solicitud recibida suma a su línea "lo siguen N personas que sigues" (`countFollowedFollowersOf` en
+  `affinity.ts`: solo la cifra, como `mutualFollowersHint`, en una consulta por página) y "N discos en común"
+  (`countSharedAlbums`, umbral 3). `withFollowRequestContext` enriquece la página en la bandeja y en el modo cursor del
+  endpoint. Las enviadas no llevan contexto.
+- La cabecera de tus Seguidos y Seguidores suma la pestaña "Solicitudes N" (cifra en ámbar) hacia la bandeja cuando hay
+  pendientes; el aviso de Seguidores se mantiene.
+
 ## Tarjeta de Identidad
 
 Primer bloque del Nivel 1, justo bajo la Placa (`IdentityCard.tsx`): hasta **3 elementos

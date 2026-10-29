@@ -13,6 +13,7 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FollowRequestList } from "@/components/social/FollowRequestList";
 import { SentRequestList } from "@/components/social/SentRequestList";
+import { withFollowRequestContext } from "@/services/social/follow-request-context";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("users");
@@ -108,7 +109,11 @@ export default async function FollowRequestsPage({ searchParams }: PageProps) {
           }
         />
       ) : (
-        <FollowRequestList key="received" initial={await listFollowRequestsPage(user.id)} empty={empty} />
+        <FollowRequestList
+          key="received"
+          initial={await withFollowRequestContext(user.id, await listFollowRequestsPage(user.id))}
+          empty={empty}
+        />
       )}
     </main>
   );

@@ -52,6 +52,10 @@ vi.mock("@/services/social/following", () => ({
   approveAllRequests: mocks.approveAllRequests,
   removeFollower: mocks.removeFollower,
 }));
+vi.mock("@/services/social/follow-request-context", () => ({
+  withFollowRequestContext: (_owner: string, page: Record<string, unknown>) =>
+    Promise.resolve({ ...page, withContext: true }),
+}));
 vi.mock("@/services/social/blocking", () => ({
   blockUser: mocks.blockUser,
   unblockUser: mocks.unblockUser,
@@ -207,7 +211,7 @@ describe("seguimiento", () => {
     mocks.listFollowRequestsPage.mockResolvedValue(page);
 
     const first = await requestsGet(url("/api/me/follow-requests?cursor="));
-    expect(await first.json()).toEqual(page);
+    expect(await first.json()).toEqual({ ...page, withContext: true });
     expect(mocks.listFollowRequestsPage).toHaveBeenLastCalledWith("u1", { cursor: null });
 
     await requestsGet(url("/api/me/follow-requests?cursor=abc"));
