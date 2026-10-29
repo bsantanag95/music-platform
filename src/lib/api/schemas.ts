@@ -942,6 +942,9 @@ export const FollowRequestsPageResponseSchema = z.object({
     UserSummarySchema.extend({
       requestedAt: z.string(),
       youFollow: z.enum(["accepted", "pending"]).nullable(),
+      // Contexto para decidir (enrich-follow-requests-context, D1–D2).
+      followedByYourFollows: z.number().int(),
+      sharedAlbums: z.number().int().nullable(),
     }),
   ),
   hasNext: z.boolean(),

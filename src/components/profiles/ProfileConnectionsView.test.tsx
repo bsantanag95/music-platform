@@ -49,8 +49,13 @@ vi.mock("@/components/social/FollowButton", () => ({
   FollowButton: ({ relation }: { relation: string }) => <button type="button">follow:{relation}</button>,
 }));
 vi.mock("./ProfileConnectionsHeader", () => ({
-  ProfileConnectionsHeader: ({ counts, isOwn }: { counts: unknown; isOwn: boolean }) => (
-    <div data-testid="header" data-counts={JSON.stringify(counts)} data-own={String(isOwn)} />
+  ProfileConnectionsHeader: ({ counts, isOwn, requestsCount }: { counts: unknown; isOwn: boolean; requestsCount?: number }) => (
+    <div
+      data-testid="header"
+      data-counts={JSON.stringify(counts)}
+      data-own={String(isOwn)}
+      data-requests={String(requestsCount ?? 0)}
+    />
   ),
 }));
 vi.mock("./ConnectionsUserList", () => ({
@@ -189,10 +194,12 @@ describe("ProfileConnectionsView", () => {
     expect(getByTestId("header")).toHaveAttribute("data-own", "true");
   });
 
-  it("dueño en Seguidos: dejar de seguir quita la fila", async () => {
+  it("dueño en Seguidos: dejar de seguir quita la fila y la cabecera lleva sus solicitudes", async () => {
     mocks.getProfileByUsername.mockResolvedValue({ ...profile, relation: "self" });
+    mocks.countPendingFollowRequests.mockResolvedValue(2);
     const { getByTestId } = render(await ProfileConnectionsView({ username: "ana", kind: "following" }));
     expect(getByTestId("list")).toHaveAttribute("data-own-following", "true");
+    expect(getByTestId("header")).toHaveAttribute("data-requests", "2");
     expect(getByTestId("list")).toHaveAttribute("data-remove", "false");
   });
 

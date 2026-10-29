@@ -424,3 +424,29 @@ export async function countSharedAlbums(
   `);
   return new Map(rows.map((row) => [row.user_id, Number(row.shared)]));
 }
+
+// --- Seguidores en común en la bandeja de solicitudes (openspec: enrich-follow-requests-context, D1) ---
+
+// Para cada persona de `ids`, cuántas cuentas activas que el visitante sigue (aceptadas) la siguen a ella (aceptadas).
+// Solo la cifra, nunca identidades: es la misma señal que `mutualFollowersHint`, en lote. Omite a quien no tiene ninguna.
+export async function countFollowedFollowersOf(viewerId: string, ids: string[]): Promise<Map<string, number>> {
+  const others = [...new Set(ids)].filter((id) => id !== viewerId);
+  if (others.length === 0) return new Map();
+  const idList = sql.join(
+    others.map((id) => sql`${id}::uuid`),
+    sql`, `,
+  );
+  const rows = await db.execute<{ user_id: string; n: number }>(sql`
+    SELECT theirs.followed_id AS user_id, count(*)::int AS n
+      FROM user_follow mine
+      JOIN app_user middle ON middle.id = mine.followed_id
+      JOIN user_follow theirs ON theirs.follower_id = mine.followed_id
+     WHERE mine.follower_id = ${viewerId}
+       AND mine.status = 'accepted'
+       AND middle.deactivated_at IS NULL
+       AND theirs.status = 'accepted'
+       AND theirs.followed_id IN (${idList})
+     GROUP BY theirs.followed_id
+  `);
+  return new Map(rows.map((row) => [row.user_id, Number(row.n)]));
+}

@@ -892,6 +892,8 @@
     "blockConfirmTitle": "Block {name}?",
     "blockConfirmMessage": "Their request will be deleted and they won't be able to ask to follow you or see your profile. You can unblock them from Blocked.",
     "blockConfirm": "Block",
-    "blocked": "You blocked {name}."
+    "blocked": "You blocked {name}.",
+    "followedByYourFollows": "{count, plural, one {followed by # person you follow} other {followed by # people you follow}}",
+    "tabShort": "Requests"
   }
 }

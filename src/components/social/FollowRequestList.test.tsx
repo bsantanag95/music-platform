@@ -29,7 +29,12 @@ const mocks = vi.hoisted(() => {
 });
 vi.mock("@/lib/api/client", () => ({ apiFetch: mocks.apiFetch, ApiError: mocks.ApiError }));
 
-const request = (id: string, username: string, youFollow: "accepted" | "pending" | null = null) => ({
+const request = (
+  id: string,
+  username: string,
+  youFollow: "accepted" | "pending" | null = null,
+  context: { followedByYourFollows?: number; sharedAlbums?: number | null } = {},
+) => ({
   id,
   username,
   displayName: null,
@@ -37,6 +42,8 @@ const request = (id: string, username: string, youFollow: "accepted" | "pending"
   avatarUrl: null,
   requestedAt: "2026-10-27T12:00:00.000Z",
   youFollow,
+  followedByYourFollows: context.followedByYourFollows ?? 0,
+  sharedAlbums: context.sharedAlbums ?? null,
 });
 
 const page = {
@@ -219,6 +226,24 @@ describe("FollowRequestList", () => {
     await user.click(screen.getByRole("button", { name: "Acciones para «leo»" }));
     await user.click(screen.getByRole("menuitem", { name: "Ver perfil" }));
     expect(router.push).toHaveBeenCalledWith("/users/leo");
+  });
+  it("contexto: seguidores en común (solo la cifra) y discos en común", () => {
+    renderWithIntl(
+      <FollowRequestList
+        initial={{
+          ...page,
+          users: [
+            request("u1", "leo", null, { followedByYourFollows: 3, sharedAlbums: 8 }),
+            request("u2", "mia", null, { followedByYourFollows: 1 }),
+          ],
+        }}
+        empty={null}
+      />,
+    );
+    expect(rowOf("leo").textContent).toContain("lo siguen 3 personas que sigues");
+    expect(rowOf("leo").textContent).toContain("8 discos en común");
+    expect(rowOf("mia").textContent).toContain("lo sigue 1 persona que sigues");
+    expect(rowOf("mia").textContent).not.toContain("discos en común");
   });
 });
 

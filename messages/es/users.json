@@ -892,6 +892,8 @@
     "blockConfirmTitle": "¿Bloquear a {name}?",
     "blockConfirmMessage": "Se borrará su solicitud y no podrá volver a pedir seguirte ni ver tu perfil. Puedes desbloquearla desde Bloqueados.",
     "blockConfirm": "Bloquear",
-    "blocked": "Bloqueaste a {name}."
+    "blocked": "Bloqueaste a {name}.",
+    "followedByYourFollows": "{count, plural, one {lo sigue # persona que sigues} other {lo siguen # personas que sigues}}",
+    "tabShort": "Solicitudes"
   }
 }
