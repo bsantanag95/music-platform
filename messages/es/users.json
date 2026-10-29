@@ -247,7 +247,6 @@
       "followers": "{own, select, yes {Las personas que te siguen.} other {Las personas que siguen a {name}.}}",
       "mutual": "{own, select, yes {Tu red.} other {Lo que tu red tiene en común con {name}.}}"
     },
-    "you": "Tú",
     "menuLabel": "Acciones para «{name}»",
     "removeFollower": "Eliminar seguidor…",
     "removeConfirmTitle": "¿Eliminar a {name} de tus seguidores?",
@@ -271,7 +270,37 @@
     "emptyFindPeopleDescription": "Sigue a otras personas para ver su actividad en tu feed.",
     "privateTitle": "Este perfil es privado",
     "privateRequestHint": "Solo sus seguidores aprobados ven sus conexiones.",
-    "mutualTabShort": "En común"
+    "mutualTabShort": "En común",
+    "followBack": "Seguir de vuelta",
+    "badge": {
+      "mutual": "Mutuo",
+      "youFollow": "Lo sigues",
+      "followsYou": "Te sigue",
+      "you": "Tú"
+    },
+    "searchPlaceholder": "Buscar por nombre o @usuario",
+    "sortLabel": "Ordenar",
+    "sort": {
+      "recent": "Recientes",
+      "name": "Nombre"
+    },
+    "segmentLabel": "Mostrar",
+    "segment": {
+      "followers": {
+        "all": "Todos",
+        "mutual": "Mutuos",
+        "notBack": "No sigues de vuelta"
+      },
+      "following": {
+        "all": "Todos",
+        "mutual": "Mutuos",
+        "notBack": "No te siguen"
+      }
+    },
+    "noMatch": "Nadie coincide con «{q}».",
+    "noMatchSegment": "Nadie en este grupo.",
+    "pendingRequests": "{count, plural, one {Tienes # solicitud de seguimiento pendiente.} other {Tienes # solicitudes de seguimiento pendientes.}}",
+    "pendingRequestsLink": "Revisar →"
   },
   "ratingHighlights": {
     "heading": "Valoraciones destacadas"

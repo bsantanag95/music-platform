@@ -247,7 +247,6 @@
       "followers": "{own, select, yes {The people who follow you.} other {The people who follow {name}.}}",
       "mutual": "{own, select, yes {Your network.} other {What your network has in common with {name}.}}"
     },
-    "you": "You",
     "menuLabel": "Actions for “{name}”",
     "removeFollower": "Remove follower…",
     "removeConfirmTitle": "Remove {name} from your followers?",
@@ -271,7 +270,37 @@
     "emptyFindPeopleDescription": "Follow other people to see their activity in your feed.",
     "privateTitle": "This profile is private",
     "privateRequestHint": "Only approved followers can see its connections.",
-    "mutualTabShort": "In common"
+    "mutualTabShort": "In common",
+    "followBack": "Follow back",
+    "badge": {
+      "mutual": "Mutual",
+      "youFollow": "You follow",
+      "followsYou": "Follows you",
+      "you": "You"
+    },
+    "searchPlaceholder": "Search by name or @username",
+    "sortLabel": "Sort",
+    "sort": {
+      "recent": "Recent",
+      "name": "Name"
+    },
+    "segmentLabel": "Show",
+    "segment": {
+      "followers": {
+        "all": "All",
+        "mutual": "Mutual",
+        "notBack": "Not followed back"
+      },
+      "following": {
+        "all": "All",
+        "mutual": "Mutual",
+        "notBack": "Don't follow you"
+      }
+    },
+    "noMatch": "No one matches “{q}”.",
+    "noMatchSegment": "No one in this group.",
+    "pendingRequests": "{count, plural, one {You have # pending follow request.} other {You have # pending follow requests.}}",
+    "pendingRequestsLink": "Review →"
   },
   "ratingHighlights": {
     "heading": "Featured ratings"

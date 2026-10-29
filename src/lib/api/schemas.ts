@@ -919,10 +919,13 @@ export const UserSearchResultSchema = UserSummarySchema.extend({
 export type UserSearchResult = z.infer<typeof UserSearchResultSchema>;
 
 // Página siguiente de Seguidores / Seguidos de un perfil, con la relación del visitante hacia cada persona
-// (openspec: refine-connections-page-phase1, D2).
+// (openspec: refine-connections-page-phase1, D2), con si la persona sigue al visitante y el total del corte
+// (redesign-connections-toolbar, D1, D3).
 export const ConnectionsPageResponseSchema = z.object({
-  users: z.array(UserSearchResultSchema),
+  users: z.array(UserSearchResultSchema.extend({ followsYou: z.boolean() })),
   hasNext: z.boolean(),
+  nextCursor: z.string().nullable(),
+  total: z.number().int(),
 });
 export type ConnectionsPageResponse = z.infer<typeof ConnectionsPageResponseSchema>;
 

@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, userFollow } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
@@ -7,6 +7,8 @@ import { isBlockedBetween } from "./relations";
 import { activeUserCondition } from "@/services/auth/account-status";
 import { resolveImageUrl, resolveImageUrls } from "@/services/storage/avatar-urls";
 import { countFollows } from "@/services/profiles/identity";
+import { escapeLike } from "@/services/catalog/search/normalize";
+import type { ConnectionSegment, ConnectionSegmentCounts, ConnectionSort } from "./connection-filters";
 import { emitNotifications, retractFollowRequestNotifications } from "@/services/notifications/emit";
 
 function isUniqueViolation(error: unknown): error is { code: "23505" } {
@@ -218,37 +220,172 @@ export type ConnectionsKind = "followers" | "following";
 
 export const CONNECTIONS_PAGE_SIZE = 50;
 
+export interface ConnectionsPageOptions {
+  q?: string;
+  sort?: ConnectionSort;
+  segment?: ConnectionSegment;
+  cursor?: string | null;
+  limit?: number;
+}
+
+// Clave de orden de la última fila, como cursor opaco (redesign-connections-toolbar, D1): `[orden, valor, desempate]`
+// en JSON base64url. `created_at` viaja como texto de Postgres para no perder los microsegundos.
+function encodeCursor(sort: ConnectionSort, key: [string, string]): string {
+  return Buffer.from(JSON.stringify([sort, ...key])).toString("base64url");
+}
+
+function decodeCursor(cursor: string, sort: ConnectionSort): [string, string] {
+  try {
+    const parsed: unknown = JSON.parse(Buffer.from(cursor, "base64url").toString("utf8"));
+    if (
+      Array.isArray(parsed) &&
+      parsed.length === 3 &&
+      parsed[0] === sort &&
+      typeof parsed[1] === "string" &&
+      typeof parsed[2] === "string"
+    ) {
+      return [parsed[1], parsed[2]];
+    }
+  } catch {
+    // cae al error de abajo
+  }
+  throw new ApiError("VALIDATION_ERROR", 400, "El cursor no es válido");
+}
+
+// Columnas de la relación según la vista: en Seguidores el dueño es el seguido; en Seguidos, el que sigue.
+function connectionColumns(kind: ConnectionsKind) {
+  return kind === "followers"
+    ? { owner: userFollow.followedId, person: userFollow.followerId }
+    : { owner: userFollow.followerId, person: userFollow.followedId };
+}
+
+// La relación inversa (dueño ↔ persona) aceptada: en Seguidores, el dueño sigue de vuelta; en Seguidos, la persona
+// sigue al dueño (D4).
+function reciprocalExists(kind: ConnectionsKind, ownerId: string): SQL {
+  return kind === "followers"
+    ? sql`EXISTS (SELECT 1 FROM user_follow r WHERE r.follower_id = ${ownerId} AND r.followed_id = ${appUser.id} AND r.status = 'accepted')`
+    : sql`EXISTS (SELECT 1 FROM user_follow r WHERE r.follower_id = ${appUser.id} AND r.followed_id = ${ownerId} AND r.status = 'accepted')`;
+}
+
+function connectionFilters(userId: string, kind: ConnectionsKind, q: string, segment: ConnectionSegment): SQL[] {
+  const columns = connectionColumns(kind);
+  const filters: SQL[] = [eq(columns.owner, userId), eq(userFollow.status, "accepted"), activeUserCondition()];
+  const term = q.trim();
+  if (term) {
+    const pattern = `%${escapeLike(term)}%`;
+    filters.push(
+      sql`(search_normalize(${appUser.username}) LIKE search_normalize(${pattern}) OR search_normalize(coalesce(${appUser.displayName}, '')) LIKE search_normalize(${pattern}))`,
+    );
+  }
+  if (segment === "mutual") filters.push(reciprocalExists(kind, userId));
+  if (segment === "notBack") filters.push(sql`NOT ${reciprocalExists(kind, userId)}`);
+  return filters;
+}
+
+const nameKey = sql<string>`lower(coalesce(${appUser.displayName}, ${appUser.username}))`;
+
 // Una página de Seguidores o Seguidos para las vistas de conexiones de un perfil (openspec:
-// refine-connections-page-phase1, D2). Orden por `username` (único) con cursor `username > after`: quitar una fila no
-// corre la página siguiente, como sí pasaría con un desplazamiento.
+// refine-connections-page-phase1, D2; redesign-connections-toolbar, D1): búsqueda, orden (Recientes por fecha del
+// seguimiento, Nombre por el nombre que se ve) y segmento en el servidor, con cursor por clave de orden para que quitar
+// una fila no corra la página siguiente. `total` cuenta el corte completo (búsqueda + segmento).
 export async function listConnectionsPage(
   userId: string,
   kind: ConnectionsKind,
-  { after = null, limit = CONNECTIONS_PAGE_SIZE }: { after?: string | null; limit?: number } = {},
-): Promise<{ users: UserSummary[]; hasNext: boolean }> {
+  { q = "", sort = "recent", segment = "all", cursor = null, limit = CONNECTIONS_PAGE_SIZE }: ConnectionsPageOptions = {},
+): Promise<{ users: UserSummary[]; hasNext: boolean; nextCursor: string | null; total: number }> {
   if (limit < 1 || limit > CONNECTIONS_PAGE_SIZE) {
     throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
   }
-  const ownerColumn = kind === "followers" ? userFollow.followedId : userFollow.followerId;
-  const userColumn = kind === "followers" ? userFollow.followerId : userFollow.followedId;
-  const rows = await db
-    .select({ id: appUser.id, username: appUser.username, displayName: appUser.displayName, profileVisibility: appUser.profileVisibility, avatarImageId: appUser.avatarImageId })
-    .from(userFollow)
-    .innerJoin(appUser, eq(userColumn, appUser.id))
-    .where(
-      and(
-        eq(ownerColumn, userId),
-        eq(userFollow.status, "accepted"),
-        activeUserCondition(),
-        after ? gt(appUser.username, after) : undefined,
-      ),
-    )
-    .orderBy(asc(appUser.username))
-    .limit(limit + 1);
+  const columns = connectionColumns(kind);
+  const filters = connectionFilters(userId, kind, q, segment);
+  const pageFilters = [...filters];
+  if (cursor) {
+    const [value, tiebreak] = decodeCursor(cursor, sort);
+    pageFilters.push(
+      sort === "recent"
+        ? sql`(${userFollow.createdAt}, ${userFollow.id}) < (${value}::timestamptz, ${tiebreak}::uuid)`
+        : sql`(${nameKey}, ${appUser.username}) > (${value}, ${tiebreak})`,
+    );
+  }
+
+  const [rows, [counted]] = await Promise.all([
+    db
+      .select({
+        id: appUser.id,
+        username: appUser.username,
+        displayName: appUser.displayName,
+        profileVisibility: appUser.profileVisibility,
+        avatarImageId: appUser.avatarImageId,
+        followId: userFollow.id,
+        followedAt: sql<string>`${userFollow.createdAt}::text`,
+        nameKey,
+      })
+      .from(userFollow)
+      .innerJoin(appUser, eq(columns.person, appUser.id))
+      .where(and(...pageFilters))
+      .orderBy(
+        ...(sort === "recent"
+          ? [desc(userFollow.createdAt), desc(userFollow.id)]
+          : [asc(nameKey), asc(appUser.username)]),
+      )
+      .limit(limit + 1),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(userFollow)
+      .innerJoin(appUser, eq(columns.person, appUser.id))
+      .where(and(...filters)),
+  ]);
 
   const page = rows.slice(0, limit);
+  const last = page.at(-1);
+  const hasNext = rows.length > limit;
   const avatarUrls = await resolveImageUrls(page.map((row) => row.avatarImageId));
-  return { users: page.map((row) => serializeSummary(row, avatarUrls)), hasNext: rows.length > limit };
+  return {
+    users: page.map((row) => serializeSummary(row, avatarUrls)),
+    hasNext,
+    nextCursor:
+      hasNext && last
+        ? encodeCursor(sort, sort === "recent" ? [last.followedAt, last.followId] : [last.nameKey, last.username])
+        : null,
+    total: counted?.count ?? 0,
+  };
+}
+
+// Cifras de los segmentos de las vistas propias (D4), sin la búsqueda: "No sigues de vuelta" / "No te siguen" es el
+// resto de Todos menos Mutuos.
+export async function countConnectionSegments(
+  userId: string,
+  kind: ConnectionsKind,
+): Promise<ConnectionSegmentCounts> {
+  const columns = connectionColumns(kind);
+  const [row] = await db
+    .select({
+      all: sql<number>`count(*)::int`,
+      mutual: sql<number>`(count(*) FILTER (WHERE ${reciprocalExists(kind, userId)}))::int`,
+    })
+    .from(userFollow)
+    .innerJoin(appUser, eq(columns.person, appUser.id))
+    .where(and(eq(columns.owner, userId), eq(userFollow.status, "accepted"), activeUserCondition()));
+  const all = row?.all ?? 0;
+  const mutual = row?.mutual ?? 0;
+  return { all, mutual, notBack: all - mutual };
+}
+
+// De `ids`, quiénes siguen al visitante con relación aceptada: la mitad de la insignia que `relationsFor` no da
+// ("Te sigue" / "Mutuo", D3).
+export async function followersOf(viewerId: string | null, ids: string[]): Promise<Set<string>> {
+  if (!viewerId || ids.length === 0) return new Set();
+  const rows = await db
+    .select({ id: userFollow.followerId })
+    .from(userFollow)
+    .where(
+      and(
+        eq(userFollow.followedId, viewerId),
+        eq(userFollow.status, "accepted"),
+        inArray(userFollow.followerId, [...new Set(ids)]),
+      ),
+    );
+  return new Set(rows.map((row) => row.id));
 }
 
 // Avatar y cifras de la cabecera de las vistas de conexiones (D1): una lectura aparte para no ensanchar

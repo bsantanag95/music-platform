@@ -320,6 +320,19 @@ Seguidos y Seguidores comparten `ProfileConnectionsView`.
 - **Vacíos y privado:** los Seguidos propios vacíos enlazan a `/users`; un perfil privado sin acceso lo dice y ofrece
   "Solicitar seguir" con sesión y sin bloqueo. "Seguidos en común" hereda la cabecera.
 
+**Fase 2** (`redesign-connections-toolbar`, 2026-10-29): herramientas de gestión.
+- **Búsqueda y orden en el servidor** (la lista es paginada): `listConnectionsPage` con `q` (`search_normalize` sobre
+  nombre y `username`), `sort` Recientes (`user_follow.created_at`) o Nombre (nombre que se ve) y cursor opaco por clave
+  de orden; devuelve `total` del corte. Orden por defecto (decisión del usuario): Recientes, salvo en los Seguidos de
+  un perfil ajeno (Nombre). `q`, `sort` y `segment` van en la URL (`useProgressFilters`); cambiar un filtro pide la
+  primera página al endpoint (la búsqueda espera 250 ms) y envía antes un Deshacer pendiente.
+- **Insignias** (`connectionBadge`): Mutuo, Lo sigues, Te sigue, Tú, con `followsYou` de `followersOf`; no repiten lo
+  que la vista dice (en tus Seguidores no hay "Te sigue"; en tus Seguidos no hay "Lo sigues"). Reemplazan al texto
+  "Siguiendo". **"Seguir de vuelta"** es la acción cuando la persona te sigue y tú no (`FollowButton.followLabel`).
+- **Segmentos propios:** Todos · Mutuos · No sigues de vuelta (Seguidores) / No te siguen (Seguidos), con cifras de
+  `countConnectionSegments` al cargar (sin la búsqueda).
+- **Aviso de solicitudes** en tus Seguidores con `countPendingFollowRequests` > 0, enlazado a `/me/follow-requests`.
+
 ## Tarjeta de Identidad
 
 Primer bloque del Nivel 1, justo bajo la Placa (`IdentityCard.tsx`): hasta **3 elementos

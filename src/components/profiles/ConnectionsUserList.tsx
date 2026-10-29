@@ -7,14 +7,33 @@ import { ConnectionsPageResponseSchema, FollowResponseSchema, type FollowRelatio
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { UndoToast } from "@/components/ui/UndoToast";
+import { useProgressFilters } from "@/components/progress/use-progress-filters";
+import type {
+  ConnectionSegment,
+  ConnectionSegmentCounts,
+  ConnectionSort,
+} from "@/services/social/connection-filters";
 import { ConnectionRow, type ConnectionUser } from "./ConnectionRow";
+import { ConnectionsToolbar } from "./ConnectionsToolbar";
+
+const SEARCH_DEBOUNCE_MS = 250;
 
 interface ConnectionsPaging {
   username: string;
   kind: "followers" | "following";
-  /** Cifra de la pestaña: "Mostrar más" dice cuántas faltan. */
+  /** Personas del corte (búsqueda + segmento): "Mostrar más" dice cuántas faltan. */
   total: number;
   hasNext: boolean;
+  nextCursor: string | null;
+}
+
+type ConnectionFilterValues = { q: string; sort: ConnectionSort; segment: ConnectionSegment };
+
+interface ConnectionsFilters {
+  initial: ConnectionFilterValues;
+  defaultSort: ConnectionSort;
+  /** Solo en las vistas propias. */
+  segmentCounts?: ConnectionSegmentCounts;
 }
 
 interface ConnectionsUserListProps {
@@ -28,6 +47,8 @@ interface ConnectionsUserListProps {
   ownFollowing?: boolean;
   /** "Mostrar más" por cursor; sin `paging` (Seguidos en común) la lista es la que llega. */
   paging?: ConnectionsPaging;
+  /** Búsqueda, orden y segmentos (redesign-connections-toolbar); exige `paging`. */
+  filters?: ConnectionsFilters;
 }
 
 // Acción que quita algo y espera a que venza el aviso para enviarse (openspec: refine-connections-page-phase1, D4).
@@ -60,6 +81,7 @@ export function ConnectionsUserList({
   ownRemovableFollowers = false,
   ownFollowing = false,
   paging,
+  filters,
 }: ConnectionsUserListProps) {
   const t = useTranslations("users");
   const tErrors = useTranslations("errors");
@@ -70,7 +92,15 @@ export function ConnectionsUserList({
   const [confirming, setConfirming] = useState<ConnectionUser | null>(null);
   const [hasNext, setHasNext] = useState(paging?.hasNext ?? false);
   const [fetched, setFetched] = useState(users.length);
-  const [cursor, setCursor] = useState(users.at(-1)?.username ?? null);
+  const [total, setTotal] = useState(paging?.total ?? 0);
+  const [cursor, setCursor] = useState(paging?.nextCursor ?? null);
+  const [values, setFilter] = useProgressFilters<ConnectionFilterValues>(
+    { q: "", sort: filters?.defaultSort ?? "recent", segment: "all" },
+    filters?.initial,
+  );
+  const [searchInput, setSearchInput] = useState(values.q);
+  const [reloading, setReloading] = useState(false);
+  const requestRef = useRef(0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
@@ -163,21 +193,33 @@ export function ConnectionsUserList({
     }
   }
 
+  function pageUrl(nextCursor: string | null) {
+    if (!paging) return "";
+    const params = new URLSearchParams();
+    if (filters) {
+      if (values.q.trim()) params.set("q", values.q.trim());
+      params.set("sort", values.sort);
+      if (values.segment !== "all") params.set("segment", values.segment);
+    }
+    if (nextCursor) params.set("cursor", nextCursor);
+    const query = params.toString();
+    return `/api/users/${encodeURIComponent(paging.username)}/connections/${paging.kind}${query ? `?${query}` : ""}`;
+  }
+
   async function loadMore() {
     if (!paging || !cursor) return;
+    const request = requestRef.current;
     setLoadingMore(true);
     setLoadError(false);
     try {
-      const page = await apiFetch(
-        `/api/users/${encodeURIComponent(paging.username)}/connections/${paging.kind}?after=${encodeURIComponent(cursor)}`,
-        ConnectionsPageResponseSchema,
-      );
+      const page = await apiFetch(pageUrl(cursor), ConnectionsPageResponseSchema);
+      if (request !== requestRef.current) return;
       setItems((current) => {
         const seen = new Set(current.map((item) => item.id));
         return [...current, ...page.users.filter((user) => !seen.has(user.id))];
       });
       setFetched((count) => count + page.users.length);
-      setCursor(page.users.at(-1)?.username ?? cursor);
+      setCursor(page.nextCursor);
       setHasNext(page.hasNext);
     } catch {
       setLoadError(true);
@@ -185,6 +227,48 @@ export function ConnectionsUserList({
       setLoadingMore(false);
     }
   }
+
+  // La búsqueda espera a que se deje de escribir; orden y segmento recargan al instante (D6).
+  useEffect(() => {
+    if (searchInput === values.q) return;
+    const id = window.setTimeout(() => setFilter("q", searchInput), SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(id);
+  }, [searchInput, values.q, setFilter]);
+
+  // Un filtro nuevo pide la primera página y reemplaza la lista; un Deshacer pendiente se envía antes, y una respuesta
+  // de un filtro anterior se descarta.
+  const filterKey = `${values.q}\u0000${values.sort}\u0000${values.segment}`;
+  const loadedKey = useRef(filterKey);
+  useEffect(() => {
+    if (loadedKey.current === filterKey) return;
+    loadedKey.current = filterKey;
+    if (!filters || !paging) return;
+    const pending = deferredRef.current;
+    if (pending) {
+      commit(pending);
+      setDeferred(null);
+    }
+    const request = ++requestRef.current;
+    setReloading(true);
+    setLoadError(false);
+    apiFetch(pageUrl(null), ConnectionsPageResponseSchema)
+      .then((page) => {
+        if (request !== requestRef.current) return;
+        setItems(page.users);
+        setFetched(page.users.length);
+        setTotal(page.total);
+        setCursor(page.nextCursor);
+        setHasNext(page.hasNext);
+      })
+      .catch(() => {
+        if (request === requestRef.current) setLoadError(true);
+      })
+      .finally(() => {
+        if (request === requestRef.current) setReloading(false);
+      });
+    // Solo el cambio de filtros dispara la recarga.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterKey]);
 
   const toast = deferred ? (
     <UndoToast
@@ -216,20 +300,44 @@ export function ConnectionsUserList({
     />
   );
 
-  const remaining = paging ? Math.max(0, paging.total - fetched) : 0;
+  const remaining = paging ? Math.max(0, total - fetched) : 0;
+  const filtered = Boolean(filters) && (values.q.trim() !== "" || values.segment !== "all");
+  const context = ownRemovableFollowers ? "ownFollowers" : ownFollowing ? "ownFollowing" : "other";
 
   return (
     <div className="flex flex-col gap-3">
+      {filters ? (
+        <ConnectionsToolbar
+          kind={paging?.kind ?? "followers"}
+          searchInput={searchInput}
+          onSearchInput={setSearchInput}
+          sort={values.sort}
+          onSortChange={(sort) => setFilter("sort", sort)}
+          segment={values.segment}
+          onSegmentChange={(segment) => setFilter("segment", segment)}
+          segmentCounts={filters.segmentCounts}
+        />
+      ) : null}
       {items.length === 0 ? (
-        empty
+        filtered ? (
+          <p className="font-body text-sm text-paper-muted">
+            {values.q.trim() ? t("connections.noMatch", { q: values.q.trim() }) : t("connections.noMatchSegment")}
+          </p>
+        ) : (
+          empty
+        )
       ) : (
-        <ul className="flex flex-col border-t border-ink-border">
+        <ul
+          aria-busy={reloading}
+          className={`flex flex-col border-t border-ink-border transition-opacity ${reloading ? "opacity-60" : ""}`}
+        >
           {items.map((user) => (
             <ConnectionRow
               key={user.id}
               user={user}
               authenticated={authenticated}
               removable={ownRemovableFollowers}
+              context={context}
               busy={busyId === user.id}
               pendingUnfollow={deferred !== null && !deferred.failed && deferred.user.id === user.id}
               onUndoPending={undo}

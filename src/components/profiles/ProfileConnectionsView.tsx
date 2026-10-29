@@ -3,7 +3,19 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { resolveSession } from "@/services/auth/sessions";
 import { getProfileByUsername, type PublicProfile } from "@/services/social/profiles";
-import { getConnectionsSummary, listConnectionsPage, type ConnectionsKind } from "@/services/social/following";
+import {
+  countConnectionSegments,
+  countPendingFollowRequests,
+  followersOf,
+  getConnectionsSummary,
+  listConnectionsPage,
+  type ConnectionsKind,
+} from "@/services/social/following";
+import {
+  defaultConnectionSort,
+  parseConnectionSegment,
+  parseConnectionSort,
+} from "@/services/social/connection-filters";
 import { relationsFor } from "@/services/social/relations";
 import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -62,17 +74,41 @@ export async function PrivateConnectionsNotice({ profile, authenticated }: { pro
   );
 }
 
-// Seguidos o Seguidores de un perfil (openspec: refine-connections-page-phase1): cabecera con cifras, las primeras 50
+type SearchParams = Record<string, string | string[] | undefined>;
+
+// Seguidos o Seguidores de un perfil (openspec: refine-connections-page-phase1, redesign-connections-toolbar): cabecera
+// con cifras, búsqueda y orden (más los segmentos y el aviso de solicitudes en las vistas propias), las primeras 50
 // personas con "Mostrar más", y la gestión propia desde cada fila cuando el visitante es el dueño.
-export async function ProfileConnectionsView({ username, kind }: { username: string; kind: ConnectionsKind }) {
+export async function ProfileConnectionsView({
+  username,
+  kind,
+  searchParams = {},
+}: {
+  username: string;
+  kind: ConnectionsKind;
+  searchParams?: SearchParams;
+}) {
   const t = await getTranslations("users");
   const { session, viewerId, profile } = await loadConnectionsProfile(username, `/connections/${kind}`);
   const isOwn = profile.relation === "self";
 
+  // Filtros de la URL (D1, D2): un orden o segmento desconocido se ignora; el segmento solo existe para el dueño.
+  const defaultSort = defaultConnectionSort(kind, isOwn);
+  const q = typeof searchParams.q === "string" ? searchParams.q : "";
+  const sort = parseConnectionSort(searchParams.sort) ?? defaultSort;
+  const segment = isOwn ? (parseConnectionSegment(searchParams.segment) ?? "all") : "all";
+
   const summary = profile.accessible ? await getConnectionsSummary(profile.id) : null;
-  const page = profile.accessible ? await listConnectionsPage(profile.id, kind) : { users: [], hasNext: false };
-  const relations = await relationsFor(viewerId, page.users.map((user) => user.id));
-  const total = kind === "followers" ? (summary?.followerCount ?? 0) : (summary?.followingCount ?? 0);
+  const page = profile.accessible
+    ? await listConnectionsPage(profile.id, kind, { q, sort, segment })
+    : { users: [], hasNext: false, nextCursor: null, total: 0 };
+  const ids = page.users.map((user) => user.id);
+  const [relations, followsViewer, segmentCounts, pendingRequests] = await Promise.all([
+    relationsFor(viewerId, ids),
+    followersOf(viewerId, ids),
+    isOwn && profile.accessible ? countConnectionSegments(profile.id, kind) : Promise.resolve(undefined),
+    isOwn && kind === "followers" ? countPendingFollowRequests(profile.id) : Promise.resolve(0),
+  ]);
 
   const emptyTitle = t(`connections.empty.${kind}`, { own: isOwn ? "yes" : "no" });
   const empty =
@@ -108,14 +144,35 @@ export async function ProfileConnectionsView({ username, kind }: { username: str
       {!profile.accessible ? (
         await PrivateConnectionsNotice({ profile, authenticated: Boolean(session) })
       ) : (
-        <ConnectionsUserList
-          users={page.users.map((user) => ({ ...user, relation: relations.get(user.id) }))}
-          authenticated={Boolean(session)}
-          empty={empty}
-          ownRemovableFollowers={isOwn && kind === "followers"}
-          ownFollowing={isOwn && kind === "following"}
-          paging={{ username: profile.username, kind, total, hasNext: page.hasNext }}
-        />
+        <>
+          {pendingRequests > 0 ? (
+            <p className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-amber/40 bg-amber/10 px-4 py-2.5 font-body text-sm text-paper">
+              {t("connections.pendingRequests", { count: pendingRequests })}
+              <Link href="/me/follow-requests" className="font-data text-xs text-amber hover:text-amber-hover">
+                {t("connections.pendingRequestsLink")}
+              </Link>
+            </p>
+          ) : null}
+          <ConnectionsUserList
+            users={page.users.map((user) => ({
+              ...user,
+              relation: relations.get(user.id),
+              followsYou: followsViewer.has(user.id),
+            }))}
+            authenticated={Boolean(session)}
+            empty={empty}
+            ownRemovableFollowers={isOwn && kind === "followers"}
+            ownFollowing={isOwn && kind === "following"}
+            paging={{
+              username: profile.username,
+              kind,
+              total: page.total,
+              hasNext: page.hasNext,
+              nextCursor: page.nextCursor,
+            }}
+            filters={{ initial: { q, sort, segment }, defaultSort, segmentCounts }}
+          />
+        </>
       )}
     </main>
   );

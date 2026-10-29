@@ -29,7 +29,7 @@ vi.mock("@/lib/api/client", () => ({ apiFetch: mocks.apiFetch, ApiError: mocks.A
 
 const users = [
   { id: "u1", username: "leo", displayName: "Leo", profileVisibility: "public" as const, avatarUrl: null, relation: "none" as const },
-  { id: "u2", username: "mia", displayName: null, profileVisibility: "public" as const, avatarUrl: null, relation: "following" as const },
+  { id: "u2", username: "mia", displayName: null, profileVisibility: "public" as const, avatarUrl: null, relation: "following" as const, followsYou: true },
   { id: "u3", username: "noa", displayName: "Noa", profileVisibility: "private" as const, avatarUrl: null, relation: "requested" as const },
 ];
 
@@ -63,7 +63,7 @@ describe("ConnectionsUserList", () => {
   it("una acción visible por fila según la relación; quitar va al menú", () => {
     renderWithIntl(<ConnectionsUserList users={users} authenticated empty={null} />);
     expect(screen.getByRole("button", { name: "Seguir" })).toBeInTheDocument();
-    expect(screen.getByText("Siguiendo")).toBeInTheDocument();
+    expect(screen.getByText("Mutuo")).toBeInTheDocument();
     expect(screen.getByText("Solicitud enviada")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Dejar de seguir" })).toBeNull();
     expect(screen.getByRole("button", { name: "Acciones para «mia»" })).toBeInTheDocument();
@@ -136,9 +136,9 @@ describe("ConnectionsUserList", () => {
 
     expect(screen.getByText("mia")).toBeInTheDocument();
     expect(screen.getByText("Dejaste de seguir a mia.")).toBeInTheDocument();
-    const follows = screen.getAllByRole("button", { name: "Seguir" });
-    await user.click(follows[1]!);
-    expect(screen.getByText("Siguiendo")).toBeInTheDocument();
+    // mia te sigue: mientras espera el Deshacer, "Seguir de vuelta" deshace.
+    await user.click(screen.getByRole("button", { name: "Seguir de vuelta" }));
+    expect(screen.getByText("Mutuo")).toBeInTheDocument();
     act(() => vi.advanceTimersByTime(UNDO_TOAST_MS + 100));
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -200,10 +200,12 @@ describe("ConnectionsUserList", () => {
   it("Mostrar más: dice cuántas faltan y trae la página siguiente por cursor", async () => {
     mocks.apiFetch.mockResolvedValue({
       users: [
-        { id: "u4", username: "pia", displayName: null, profileVisibility: "public", avatarUrl: null, relation: "none" },
+        { id: "u4", username: "pia", displayName: null, profileVisibility: "public", avatarUrl: null, relation: "none", followsYou: false },
         users[0],
       ],
       hasNext: false,
+      nextCursor: null,
+      total: 5,
     });
     const user = setup();
     renderWithIntl(
@@ -211,13 +213,61 @@ describe("ConnectionsUserList", () => {
         users={users}
         authenticated
         empty={null}
-        paging={{ username: "ana", kind: "followers", total: 5, hasNext: true }}
+        paging={{ username: "ana", kind: "followers", total: 5, hasNext: true, nextCursor: "c1" }}
       />,
     );
     await user.click(screen.getByRole("button", { name: "Mostrar 2 más" }));
     await waitFor(() => expect(screen.getByText("pia")).toBeInTheDocument());
-    expect(mocks.apiFetch).toHaveBeenCalledWith("/api/users/ana/connections/followers?after=noa", expect.anything());
+    expect(mocks.apiFetch).toHaveBeenCalledWith("/api/users/ana/connections/followers?cursor=c1", expect.anything());
     expect(screen.getAllByText("Leo")).toHaveLength(1);
     expect(screen.queryByRole("button", { name: /Mostrar/ })).toBeNull();
+  });
+  it("buscar recarga la primera página con el filtro y lo escribe en la URL", async () => {
+    mocks.apiFetch.mockResolvedValue({ users: [users[1]], hasNext: false, nextCursor: null, total: 1 });
+    const user = setup();
+    renderWithIntl(
+      <ConnectionsUserList
+        users={users}
+        authenticated
+        empty={null}
+        paging={{ username: "ana", kind: "followers", total: 3, hasNext: false, nextCursor: null }}
+        filters={{ initial: { q: "", sort: "recent", segment: "all" }, defaultSort: "recent" }}
+      />,
+    );
+    await user.type(screen.getByRole("searchbox", { name: "Buscar por nombre o @usuario" }), "mi");
+    act(() => vi.advanceTimersByTime(300));
+    await waitFor(() =>
+      expect(mocks.apiFetch).toHaveBeenCalledWith(
+        "/api/users/ana/connections/followers?q=mi&sort=recent",
+        expect.anything(),
+      ),
+    );
+    await waitFor(() => expect(screen.queryByText("Leo")).toBeNull());
+    expect(window.location.search).toContain("q=mi");
+  });
+
+  it("sin coincidencias: lo dice en lugar del vacío", async () => {
+    mocks.apiFetch.mockResolvedValue({ users: [], hasNext: false, nextCursor: null, total: 0 });
+    const user = setup();
+    renderWithIntl(
+      <ConnectionsUserList
+        users={users}
+        authenticated
+        empty={<p>Vacío</p>}
+        paging={{ username: "ana", kind: "following", total: 3, hasNext: false, nextCursor: null }}
+        filters={{
+          initial: { q: "", sort: "recent", segment: "all" },
+          defaultSort: "recent",
+          segmentCounts: { all: 3, mutual: 1, notBack: 2 },
+        }}
+        ownFollowing
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /No te siguen/ }));
+    expect(await screen.findByText("Nadie en este grupo.")).toBeInTheDocument();
+    expect(mocks.apiFetch).toHaveBeenCalledWith(
+      "/api/users/ana/connections/following?sort=recent&segment=notBack",
+      expect.anything(),
+    );
   });
 });

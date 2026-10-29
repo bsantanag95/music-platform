@@ -40,6 +40,8 @@ interface FollowButtonProps {
    * aprobarlo, así que la acción se rotula "Solicitar seguir" en vez de "Seguir".
    */
   requestApproval?: boolean;
+  /** Rótulo de la acción de seguir en lugar de "Seguir" (p. ej. "Seguir de vuelta" en las vistas de conexiones). */
+  followLabel?: string;
   onChange?: (relation: FollowRelation) => void;
 }
 
@@ -55,6 +57,7 @@ export function FollowButton({
   refreshProfileOnFollow,
   refreshOnAnyChange,
   requestApproval,
+  followLabel: followLabelOverride,
   onChange,
 }: FollowButtonProps) {
   const t = useTranslations("users");
@@ -64,7 +67,7 @@ export function FollowButton({
   const [busy, setBusy] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
 
-  const followLabel = requestApproval ? t("requestFollow") : t("follow");
+  const followLabel = requestApproval ? t("requestFollow") : (followLabelOverride ?? t("follow"));
 
   if (preview) {
     return (
