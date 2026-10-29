@@ -2,15 +2,21 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { ApiError } from "@/lib/api/errors";
 
-const mocks = vi.hoisted(() => ({ requireSession: vi.fn(), listMySessions: vi.fn(), revokeSession: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  requireSession: vi.fn(),
+  listMySessions: vi.fn(),
+  revokeSession: vi.fn(),
+  deleteOtherSessions: vi.fn(),
+}));
 
 vi.mock("@/services/auth/authorization", () => ({ requireSession: mocks.requireSession }));
+vi.mock("@/services/auth/sessions", () => ({ deleteOtherSessions: mocks.deleteOtherSessions }));
 vi.mock("@/services/auth/session-list", () => ({
   listMySessions: mocks.listMySessions,
   revokeSession: mocks.revokeSession,
 }));
 
-import { GET } from "./route";
+import { GET, DELETE as deleteOthers } from "./route";
 import { DELETE } from "./[id]/route";
 
 const current = { sessionId: "11111111-1111-4111-8111-111111111111", user: { id: "user-1" } };
@@ -76,5 +82,21 @@ describe("DELETE /api/me/sessions/[id]", () => {
   it("propaga el rechazo de cerrar la sesión actual", async () => {
     mocks.revokeSession.mockRejectedValue(new ApiError("VALIDATION_ERROR", 400, "x"));
     expect((await call(current.sessionId)).status).toBe(400);
+  });
+});
+
+describe("DELETE /api/me/sessions", () => {
+  it("cierra las demás sesiones y conserva la actual", async () => {
+    mocks.deleteOtherSessions.mockResolvedValue(undefined);
+    const res = await deleteOthers();
+    expect(res.status).toBe(204);
+    expect(mocks.deleteOtherSessions).toHaveBeenCalledWith("user-1", current.sessionId);
+  });
+
+  it("sin sesión responde AUTH_REQUIRED", async () => {
+    mocks.requireSession.mockRejectedValue(new ApiError("AUTH_REQUIRED", 401, "Sin sesión"));
+    const res = await deleteOthers();
+    expect(res.status).toBe(401);
+    expect(mocks.deleteOtherSessions).not.toHaveBeenCalled();
   });
 });

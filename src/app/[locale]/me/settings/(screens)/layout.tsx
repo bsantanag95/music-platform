@@ -6,6 +6,7 @@ import { countPendingFollowRequests } from "@/services/social/following";
 import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
 import { SettingsNav } from "@/components/settings/SettingsNav";
 import { SETTINGS_SCREENS } from "@/components/settings/settings-screens";
+import { UnsavedChangesGuard } from "@/components/settings/UnsavedChangesGuard";
 
 // Diseño compartido del área de ajustes (spec owner-settings): título, aviso de
 // email sin verificar —visible en todas las pantallas, no solo en Cuenta, porque
@@ -22,10 +23,13 @@ export default async function SettingsLayout({ children }: { children: ReactNode
       <div className="flex w-full max-w-5xl flex-col gap-6">
         <h1 className="font-display text-2xl text-paper">{t("settings.title")}</h1>
         <EmailVerificationNotice verified={isEmailVerified(user)} />
-        <div className="grid gap-6 md:grid-cols-[14rem_minmax(0,1fr)] md:gap-10">
-          <SettingsNav screens={SETTINGS_SCREENS} badges={{ network: pendingRequests }} />
-          <div className="min-w-0">{children}</div>
-        </div>
+        {/* Cambios sin guardar en cualquier pantalla: aviso antes de salir (refine-settings-editing, D3). */}
+        <UnsavedChangesGuard>
+          <div className="grid gap-6 md:grid-cols-[14rem_minmax(0,1fr)] md:gap-10">
+            <SettingsNav screens={SETTINGS_SCREENS} badges={{ network: pendingRequests }} />
+            <div className="min-w-0">{children}</div>
+          </div>
+        </UnsavedChangesGuard>
       </div>
     </main>
   );
