@@ -333,6 +333,17 @@ Seguidos y Seguidores comparten `ProfileConnectionsView`.
   `countConnectionSegments` al cargar (sin la búsqueda).
 - **Aviso de solicitudes** en tus Seguidores con `countPendingFollowRequests` > 0, enlazado a `/me/follow-requests`.
 
+**Fase 3** (`enrich-connections-rows`, 2026-10-29): contexto de cada persona.
+- **Línea de detalle** de la fila: `@usuario · <desde cuándo> · N discos en común`, cada unidad sin partirse. "Te sigue
+  desde" / "La sigues desde" en las vistas propias, "Desde" en un perfil ajeno (`followedAt` de `listConnectionsPage`).
+- **Discos en común** (`countSharedAlbums` en `affinity.ts`, una consulta por página): `release_group` en favoritos o
+  con 4★+ de ambos, contando de la otra persona solo lo que deja ver (favoritos `public`, o `followers` si la sigues, y
+  con perfil público o seguido; valoraciones solo si la sigues, como `getProfileAffinity`). Se muestra desde 3
+  (`SHARED_ALBUMS_MIN`, decisión del usuario), nunca para uno mismo, sin sesión ni con bloqueo.
+- **Panel lateral** (`ConnectionsRail`, desde `lg`, solo con contenido; la página pasa a `max-w-6xl` con él): en tus
+  Seguidores, "Para seguir de vuelta" (hasta 5 del segmento `notBack`, con "Seguir" y "Ver las N"); en un
+  perfil ajeno con sesión, "En común con <nombre>" (`getMutualFollowersPreview`) con enlace a "Seguidos en común".
+
 ## Tarjeta de Identidad
 
 Primer bloque del Nivel 1, justo bajo la Placa (`IdentityCard.tsx`): hasta **3 elementos

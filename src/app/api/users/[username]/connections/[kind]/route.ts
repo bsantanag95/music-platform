@@ -5,6 +5,7 @@ import { resolveSession } from "@/services/auth/sessions";
 import { getProfileByUsername } from "@/services/social/profiles";
 import { followersOf, listConnectionsPage, type ConnectionsKind } from "@/services/social/following";
 import { relationsFor } from "@/services/social/relations";
+import { countSharedAlbums } from "@/services/profiles/affinity";
 import {
   defaultConnectionSort,
   parseConnectionSegment,
@@ -41,13 +42,19 @@ export const GET = withErrorHandling(
       cursor: searchParams.get("cursor") || null,
     });
     const ids = page.users.map((user) => user.id);
-    const [relations, followsViewer] = await Promise.all([relationsFor(viewerId, ids), followersOf(viewerId, ids)]);
+    const [relations, followsViewer, shared] = await Promise.all([
+      relationsFor(viewerId, ids),
+      followersOf(viewerId, ids),
+      countSharedAlbums(viewerId, ids),
+    ]);
     return NextResponse.json({
       ...page,
       users: page.users.map((user) => ({
         ...user,
         relation: relations.get(user.id) ?? "none",
         followsYou: followsViewer.has(user.id),
+        // Bajo el umbral, o con bloqueo, no hay cifra (enrich-connections-rows, D2).
+        sharedAlbums: relations.get(user.id) === "blocked" ? null : (shared.get(user.id) ?? null),
       })),
     });
   },

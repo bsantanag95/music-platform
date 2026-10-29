@@ -368,3 +368,59 @@ export const getProfileAffinity = cache(async function getProfileAffinity(
 
   return { sharedFavorites, sharedHighRatings, sharedFollowedArtists, mutualFollowers: mutual };
 });
+
+// --- Discos en común en las vistas de conexiones (openspec: enrich-connections-rows, D2) ---
+
+/** Por debajo de esta cifra la fila no dice nada: "1 disco en común" no aporta. */
+export const SHARED_ALBUMS_MIN = 3;
+
+// Cuántos álbumes tiene en común el visitante con cada persona de `ids`, en una consulta para toda la página: los
+// del visitante (favoritos o 4★ o más) contra lo que cada persona le deja ver — favoritos `public`, o `followers` si
+// la sigue, y solo con perfil público o seguido; valoraciones de 4★ o más solo si la sigue (mismo criterio que
+// `getProfileAffinity`). Solo devuelve a quienes llegan al umbral; nunca al propio visitante.
+export async function countSharedAlbums(
+  viewerId: string | null,
+  ids: string[],
+  min = SHARED_ALBUMS_MIN,
+): Promise<Map<string, number>> {
+  const others = [...new Set(ids)].filter((id) => id !== viewerId);
+  if (!viewerId || others.length === 0) return new Map();
+  const idList = sql.join(
+    others.map((id) => sql`${id}::uuid`),
+    sql`, `,
+  );
+  const follows = (userColumn: SQL) =>
+    sql`EXISTS (SELECT 1 FROM user_follow uf WHERE uf.follower_id = ${viewerId} AND uf.followed_id = ${userColumn} AND uf.status = 'accepted')`;
+
+  const rows = await db.execute<{ user_id: string; shared: number }>(sql`
+    WITH mine AS (
+      SELECT release_group_id AS rg FROM favorite
+        WHERE user_id = ${viewerId} AND release_group_id IS NOT NULL
+      UNION
+      SELECT release_group_id FROM rating
+        WHERE user_id = ${viewerId} AND release_group_id IS NOT NULL AND stars >= 4
+    ),
+    theirs AS (
+      SELECT f.user_id, f.release_group_id AS rg
+        FROM favorite f
+        JOIN app_user u ON u.id = f.user_id
+        WHERE f.user_id IN (${idList})
+          AND f.release_group_id IS NOT NULL
+          AND (f.audience = 'public' OR (f.audience = 'followers' AND ${follows(sql`f.user_id`)}))
+          AND (u.profile_visibility = 'public' OR ${follows(sql`f.user_id`)})
+      UNION
+      SELECT r.user_id, r.release_group_id
+        FROM rating r
+        WHERE r.user_id IN (${idList})
+          AND r.release_group_id IS NOT NULL
+          AND r.stars >= 4
+          AND ${follows(sql`r.user_id`)}
+    )
+    SELECT theirs.user_id, count(DISTINCT theirs.rg)::int AS shared
+      FROM theirs
+      JOIN mine ON mine.rg = theirs.rg
+      GROUP BY theirs.user_id
+      HAVING count(DISTINCT theirs.rg) >= ${min}
+  `);
+  return new Map(rows.map((row) => [row.user_id, Number(row.shared)]));
+}

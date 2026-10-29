@@ -300,7 +300,19 @@
     "noMatch": "Nadie coincide con «{q}».",
     "noMatchSegment": "Nadie en este grupo.",
     "pendingRequests": "{count, plural, one {Tienes # solicitud de seguimiento pendiente.} other {Tienes # solicitudes de seguimiento pendientes.}}",
-    "pendingRequestsLink": "Revisar →"
+    "pendingRequestsLink": "Revisar →",
+    "since": {
+      "ownFollowers": "Te sigue desde {date}",
+      "ownFollowing": "La sigues desde {date}",
+      "other": "Desde {date}"
+    },
+    "sharedAlbums": "{count, plural, one {# disco en común} other {# discos en común}}",
+    "railLabel": "Más sobre tu red",
+    "railFollowBackTitle": "Para seguir de vuelta",
+    "railSeeAll": "Ver las {count}",
+    "railInCommonTitle": "En común con {name}",
+    "railInCommonCount": "{count, plural, one {# persona que sigues también sigue a {name}.} other {# personas que sigues también siguen a {name}.}}",
+    "railInCommonLink": "Ver seguidos en común →"
   },
   "ratingHighlights": {
     "heading": "Valoraciones destacadas"

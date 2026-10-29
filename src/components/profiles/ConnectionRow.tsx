@@ -1,7 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { useTranslations } from "next-intl";
+import { Fragment, type ReactNode } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { FollowRelation, UserSummary } from "@/lib/api/schemas";
 import { FollowButton } from "@/components/social/FollowButton";
@@ -10,7 +10,16 @@ import { Button } from "@/components/ui/Button";
 import { RowMenu, RowMenuItem, RowMenuSeparator } from "@/components/ui/RowMenu";
 
 /** `followsYou`: la persona sigue al visitante con relación aceptada (redesign-connections-toolbar, D3). */
-export type ConnectionUser = UserSummary & { relation?: FollowRelation; followsYou?: boolean };
+/**
+ * `followedAt`: desde cuándo existe la relación listada; `sharedAlbums`: discos en común con el visitante, ya con el
+ * umbral aplicado (enrich-connections-rows, D1–D2).
+ */
+export type ConnectionUser = UserSummary & {
+  relation?: FollowRelation;
+  followsYou?: boolean;
+  followedAt?: string;
+  sharedAlbums?: number | null;
+};
 
 /** Qué dice ya la vista: en los Seguidores propios todos siguen al visitante; en los Seguidos propios, él a todos. */
 export type ConnectionContext = "ownFollowers" | "ownFollowing" | "other";
@@ -69,7 +78,19 @@ export function ConnectionRow({
   onRemove,
 }: ConnectionRowProps) {
   const t = useTranslations("users");
+  const format = useFormatter();
   const name = user.displayName ?? user.username;
+  // Línea de detalle: @usuario · desde cuándo · discos en común; parte entre unidades y, si hace falta, dentro (D1).
+  const details: ReactNode[] = [`@${user.username}`];
+  if (user.followedAt) {
+    const date = format.dateTime(new Date(user.followedAt), { month: "short", year: "numeric" });
+    details.push(t(`connections.since.${context}`, { date }));
+  }
+  if (authenticated && user.sharedAlbums) {
+    details.push(
+      <span className="text-amber">{t("connections.sharedAlbums", { count: user.sharedAlbums })}</span>,
+    );
+  }
   const relation = authenticated ? (user.relation ?? "none") : null;
   const followsYou = Boolean(user.followsYou);
   const badge = connectionBadge(relation, followsYou, context);
@@ -125,10 +146,10 @@ export function ConnectionRow({
   }
 
   return (
-    <li className="group flex items-center gap-3 border-b border-ink-border py-3">
+    <li className="group flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-ink-border py-3">
       <Link
         href={`/users/${encodeURIComponent(user.username)}`}
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2"
+        className="flex min-w-0 flex-1 basis-48 items-center gap-3 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2"
       >
         <UserAvatar avatarUrl={user.avatarUrl} username={user.username} name={name} size="sm" />
         <span className="flex min-w-0 flex-col">
@@ -146,11 +167,22 @@ export function ConnectionRow({
               </span>
             ) : null}
           </span>
-          <span className="truncate font-data text-xs text-paper-muted">@{user.username}</span>
+          <span className="font-data text-xs text-paper-muted [overflow-wrap:anywhere]">
+            {details.map((detail, index) => (
+              <Fragment key={index}>
+                {index > 0 ? " " : null}
+                <span>
+                  {index > 0 ? "· " : null}
+                  {detail}
+                </span>
+              </Fragment>
+            ))}
+          </span>
         </span>
       </Link>
       {visible || items.length > 0 ? (
-        <div className="flex shrink-0 items-center gap-2">
+        // Si la fila no cabe (un teléfono con "Seguir de vuelta"), la acción baja a otra línea a la derecha.
+        <div className="ml-auto flex shrink-0 items-center gap-2">
           {visible}
           {items.length > 0 ? (
             <RowMenu

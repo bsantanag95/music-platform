@@ -300,7 +300,19 @@
     "noMatch": "No one matches “{q}”.",
     "noMatchSegment": "No one in this group.",
     "pendingRequests": "{count, plural, one {You have # pending follow request.} other {You have # pending follow requests.}}",
-    "pendingRequestsLink": "Review →"
+    "pendingRequestsLink": "Review →",
+    "since": {
+      "ownFollowers": "Follows you since {date}",
+      "ownFollowing": "You follow since {date}",
+      "other": "Since {date}"
+    },
+    "sharedAlbums": "{count, plural, one {# album in common} other {# albums in common}}",
+    "railLabel": "More about your network",
+    "railFollowBackTitle": "To follow back",
+    "railSeeAll": "See all {count}",
+    "railInCommonTitle": "In common with {name}",
+    "railInCommonCount": "{count, plural, one {# person you follow also follows {name}.} other {# people you follow also follow {name}.}}",
+    "railInCommonLink": "See followed in common →"
   },
   "ratingHighlights": {
     "heading": "Featured ratings"

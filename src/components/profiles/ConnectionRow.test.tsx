@@ -72,4 +72,48 @@ describe("ConnectionRow", () => {
     expect(screen.queryByRole("button")).toBeNull();
     expect(screen.queryByText("Te sigue")).toBeNull();
   });
+  it("línea de detalle: @usuario, desde cuándo según la vista y discos en común", () => {
+    const user = {
+      id: "u1",
+      username: "leo",
+      displayName: "Leo",
+      profileVisibility: "public" as const,
+      avatarUrl: null,
+      relation: "following" as const,
+      followsYou: true,
+      followedAt: "2026-10-15T12:00:00.000Z",
+      sharedAlbums: 8,
+    };
+    const first = renderWithIntl(
+      <ul>
+        <ConnectionRow user={user} authenticated removable context="ownFollowers" busy={false} {...handlers} />
+      </ul>,
+    );
+    expect(screen.getByText(/Te sigue desde oct 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/8 discos en común/)).toBeInTheDocument();
+    expect(screen.getByText(/@leo/)).toBeInTheDocument();
+
+    first.unmount();
+    renderWithIntl(
+      <ul>
+        <ConnectionRow user={user} authenticated removable={false} context="other" busy={false} {...handlers} />
+      </ul>,
+    );
+    expect(screen.getByText(/Desde oct 2026/)).toBeInTheDocument();
+  });
+
+  it("sin sesión no hay discos en común", () => {
+    renderWithIntl(
+      <ul>
+        <ConnectionRow
+          user={{ id: "u1", username: "leo", displayName: "Leo", profileVisibility: "public", avatarUrl: null, sharedAlbums: 8 }}
+          authenticated={false}
+          removable={false}
+          busy={false}
+          {...handlers}
+        />
+      </ul>,
+    );
+    expect(screen.queryByText(/discos en común/)).toBeNull();
+  });
 });
