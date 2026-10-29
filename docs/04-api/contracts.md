@@ -963,17 +963,25 @@ Lista paginada de seguidores aceptados y de cuentas seguidas por el usuario aute
 
 **200 OK:** `{ users: [{ id, username, displayName, profileVisibility }], page, pageSize, hasNext }`.
 
-### `GET /api/users/[username]/connections/{followers|following}?after=`
+### `GET /api/users/[username]/connections/{followers|following}?q=&sort=&segment=&cursor=`
 
-Página siguiente de Seguidores o Seguidos de un perfil para "Mostrar más" en sus vistas de conexiones (cambio
-`refine-connections-page-phase1`). Pública: sin sesión funciona igual, con la relación `none`. Orden por `username`
-ascendente, 50 por página; `after` es el último `username` ya cargado (cursor: quitar una fila no corre la página
-siguiente). Solo relaciones aceptadas y cuentas activas.
+Página de Seguidores o Seguidos de un perfil para sus vistas de conexiones: la primera de un filtro nuevo o la
+siguiente de "Mostrar más" (cambios `refine-connections-page-phase1` y `redesign-connections-toolbar`). Pública: sin
+sesión funciona igual, con la relación `none`. 50 por página; solo relaciones aceptadas y cuentas activas.
 
-**200 OK:** `{ users: [{ id, username, displayName, profileVisibility, avatarUrl, relation }], hasNext }`, donde
-`relation` es la del visitante hacia cada persona. Sin acceso al perfil (privado y el visitante no es dueño ni
-seguidor aprobado): `{ users: [], hasNext: false }`. **400** con `VALIDATION_ERROR` si el listado no es `followers` ni
-`following`. **404** con `USER_NOT_FOUND` si el perfil no existe o está desactivado.
+| Parámetro | Defecto | Descripción |
+|---|---|---|
+| `q` | — | Contiene, en nombre o `username`, sin distinguir acentos ni mayúsculas (`search_normalize`). |
+| `sort` | `recent`; `name` en los Seguidos de un perfil ajeno | `recent`: fecha del seguimiento, más nuevo primero. `name`: nombre que se muestra (o `username`), A→Z. Otro valor → 400. |
+| `segment` | `all` | Solo para el dueño (si no, se ignora): `mutual` (relación aceptada en ambos sentidos) o `notBack` (Seguidores: el dueño no sigue de vuelta; Seguidos: la persona no sigue al dueño). Otro valor se ignora. |
+| `cursor` | — | `nextCursor` de la página anterior (opaco; ligado al orden). Ilegible o de otro orden → 400. |
+
+**200 OK:** `{ users: [{ id, username, displayName, profileVisibility, avatarUrl, relation, followsYou }], hasNext,
+nextCursor, total }`. `relation` es la del visitante hacia cada persona; `followsYou`, si la persona sigue al visitante
+(relación aceptada); `total`, cuántas personas hay en el corte (búsqueda + segmento). Sin acceso al perfil (privado y
+el visitante no es dueño ni seguidor aprobado): `{ users: [], hasNext: false, nextCursor: null, total: 0 }`. **400**
+con `VALIDATION_ERROR` si el listado no es `followers` ni `following`, el orden no existe o el cursor no es válido.
+**404** con `USER_NOT_FOUND` si el perfil no existe o está desactivado.
 
 ### `GET /api/me/follow-requests`
 

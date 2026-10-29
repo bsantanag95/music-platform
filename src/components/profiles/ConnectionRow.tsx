@@ -9,13 +9,36 @@ import { UserAvatar } from "@/components/social/UserAvatar";
 import { Button } from "@/components/ui/Button";
 import { RowMenu, RowMenuItem, RowMenuSeparator } from "@/components/ui/RowMenu";
 
-export type ConnectionUser = UserSummary & { relation?: FollowRelation };
+/** `followsYou`: la persona sigue al visitante con relación aceptada (redesign-connections-toolbar, D3). */
+export type ConnectionUser = UserSummary & { relation?: FollowRelation; followsYou?: boolean };
+
+/** Qué dice ya la vista: en los Seguidores propios todos siguen al visitante; en los Seguidos propios, él a todos. */
+export type ConnectionContext = "ownFollowers" | "ownFollowing" | "other";
+
+type Badge = "mutual" | "youFollow" | "followsYou" | "you";
+
+// Insignia de la relación entre la persona y el visitante, sin repetir lo que la vista ya dice (D3).
+export function connectionBadge(
+  relation: FollowRelation | null,
+  followsYou: boolean,
+  context: ConnectionContext,
+): Badge | null {
+  if (relation === null) return null;
+  if (relation === "self") return "you";
+  if (relation === "following") {
+    if (followsYou) return "mutual";
+    return context === "ownFollowing" ? null : "youFollow";
+  }
+  if (followsYou && relation !== "blocked" && context !== "ownFollowers") return "followsYou";
+  return null;
+}
 
 interface ConnectionRowProps {
   user: ConnectionUser;
   authenticated: boolean;
   /** Seguidores propios: el menú suma "Eliminar seguidor…". */
   removable: boolean;
+  context?: ConnectionContext;
   busy: boolean;
   /**
    * Dejar de seguir está pendiente (el aviso con Deshacer sigue abierto): "Seguir" deshace en vez de volver a seguir,
@@ -36,6 +59,7 @@ export function ConnectionRow({
   user,
   authenticated,
   removable,
+  context = "other",
   busy,
   pendingUnfollow = false,
   onUndoPending,
@@ -47,12 +71,16 @@ export function ConnectionRow({
   const t = useTranslations("users");
   const name = user.displayName ?? user.username;
   const relation = authenticated ? (user.relation ?? "none") : null;
+  const followsYou = Boolean(user.followsYou);
+  const badge = connectionBadge(relation, followsYou, context);
+  // Te sigue y tú no a ella: la acción principal es seguir de vuelta (D3).
+  const followLabel = followsYou ? t("connections.followBack") : t("follow");
 
   let visible: ReactNode = null;
   if (pendingUnfollow) {
     visible = (
       <Button variant="primary" onClick={onUndoPending}>
-        {user.profileVisibility === "private" ? t("requestFollow") : t("follow")}
+        {user.profileVisibility === "private" ? t("requestFollow") : followLabel}
       </Button>
     );
   } else if (relation === "none" || relation === "incoming") {
@@ -64,17 +92,12 @@ export function ConnectionRow({
         authenticated
         requestId={user.id}
         requestApproval={user.profileVisibility === "private"}
+        followLabel={followLabel}
         onChange={(next) => onRelationChange(user, next)}
       />
     );
-  } else if (relation) {
-    const status = {
-      following: t("following"),
-      requested: t("requested"),
-      self: t("connections.you"),
-      blocked: t("blocked"),
-    }[relation];
-    visible = <span className="font-data text-xs text-paper-muted">{status}</span>;
+  } else if (relation === "requested" || relation === "blocked") {
+    visible = <span className="font-data text-xs text-paper-muted">{t(relation)}</span>;
   }
 
   const items: ReactNode[] = [];
@@ -109,8 +132,19 @@ export function ConnectionRow({
       >
         <UserAvatar avatarUrl={user.avatarUrl} username={user.username} name={name} size="sm" />
         <span className="flex min-w-0 flex-col">
-          <span className="truncate font-display text-base text-paper transition-colors group-hover:text-amber">
-            {name}
+          <span className="flex min-w-0 items-baseline gap-2">
+            <span className="truncate font-display text-base text-paper transition-colors group-hover:text-amber">
+              {name}
+            </span>
+            {badge ? (
+              <span
+                className={`shrink-0 rounded px-1.5 py-0.5 font-data text-[10px] leading-none tracking-wide ${
+                  badge === "mutual" ? "bg-amber/15 text-amber" : "bg-ink-border/60 text-paper-muted"
+                }`}
+              >
+                {t(`connections.badge.${badge}`)}
+              </span>
+            ) : null}
           </span>
           <span className="truncate font-data text-xs text-paper-muted">@{user.username}</span>
         </span>
