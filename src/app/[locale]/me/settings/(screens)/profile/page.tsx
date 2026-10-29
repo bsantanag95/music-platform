@@ -11,6 +11,12 @@ import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
 import { OwnerMusicIdentityEditor } from "@/components/profiles/OwnerMusicIdentityEditor";
 import { OwnerPromptsEditor } from "@/components/profiles/OwnerPromptsEditor";
 import { SettingsCard, SettingsSection } from "@/components/settings/SettingsSection";
+import type { Metadata } from "next";
+import { settingsMetadata } from "@/components/settings/settings-metadata";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return settingsMetadata("profile");
+}
 
 // Pantalla Perfil (spec owner-settings): la identidad pública del dueño — la
 // Tarjeta de Identidad, bio, pronombres, ubicación, zona horaria y hora local,

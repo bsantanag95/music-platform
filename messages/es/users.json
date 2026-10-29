@@ -578,7 +578,7 @@
       "displayName": {
         "title": "Nombre visible",
         "label": "Nombre visible",
-        "help": "Cómo aparecés junto a tu @{username}. Si lo dejas vacío se muestra tu usuario."
+        "help": "Cómo apareces junto a tu @{username}. Si lo dejas vacío se muestra tu usuario."
       },
       "access": {
         "title": "Método de acceso",
@@ -738,7 +738,7 @@
         },
         "delete": {
           "title": "Eliminar cuenta",
-          "hint": "Borra para siempre tu perfil y todo lo que creaste. No se puede deshacer. Si solo quieres una pausa, usá «Desactivar».",
+          "hint": "Borra para siempre tu perfil y todo lo que creaste. No se puede deshacer. Si solo quieres una pausa, usa «Desactivar».",
           "button": "Eliminar mi cuenta…",
           "dialogTitle": "Eliminar cuenta",
           "warning": "Esto no se puede deshacer.",
@@ -753,7 +753,8 @@
           "saving": "Eliminando…"
         }
       }
-    }
+    },
+    "loading": "Cargando ajustes…"
   },
   "linkAria": "{site}: {detail}",
   "musicIdentity": {

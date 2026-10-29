@@ -12,6 +12,8 @@ import { LifecycleCards } from "@/components/settings/account/LifecycleCards";
 import { SessionsCard } from "@/components/settings/account/SessionsCard";
 import { SignInCard, type GoogleFlash } from "@/components/settings/account/SignInCard";
 import { SettingsSection } from "@/components/settings/SettingsSection";
+import type { Metadata } from "next";
+import { settingsMetadata } from "@/components/settings/settings-metadata";
 
 // Códigos de error del flujo de Google que Ajustes sabe mostrar (conjunto
 // cerrado: el query lo puede escribir cualquiera, así que nunca se usa tal cual).
@@ -26,6 +28,10 @@ function parseGoogleFlash(google: string | undefined, code: string | undefined, 
     return { kind: "error", code: code && GOOGLE_FLASH_ERRORS.has(code) ? code : "INTERNAL_ERROR" };
   }
   return null;
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  return settingsMetadata("account");
 }
 
 // Pantalla Cuenta y seguridad (specs owner-settings, account-username,

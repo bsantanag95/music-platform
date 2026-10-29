@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ReactNode } from "react";
-import { screen } from "@testing-library/react";
+import { useState, type ReactNode } from "react";
+import { act, screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { SettingsNav } from "./SettingsNav";
 import { SETTINGS_DEFAULT_HREF, SETTINGS_SCREENS } from "./settings-screens";
@@ -80,5 +80,57 @@ describe("SettingsNav", () => {
 
     renderWithIntl(<SettingsNav screens={SETTINGS_SCREENS} badges={{ network: 0 }} />);
     expect(screen.getByRole("link", { name: "Red" })).toBeInTheDocument();
+  });
+  it("en una fila con scroll lleva la pantalla activa a la vista, y otra vez al cambiar de pantalla", () => {
+    const scrollIntoView = vi.fn();
+    const original = HTMLElement.prototype.scrollIntoView;
+    HTMLElement.prototype.scrollIntoView = scrollIntoView;
+    const widths = vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockReturnValue(600);
+    const client = vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(340);
+    try {
+      // Un contenedor que vuelve a renderizar el menú tras cambiar la ruta simulada (con `rerender` se perdería el
+      // proveedor de traducciones).
+      function Harness() {
+        const [, setTick] = useState(0);
+        return (
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                nav.pathname = "/me/settings/privacy";
+                setTick((tick) => tick + 1);
+              }}
+            >
+              ir
+            </button>
+            <SettingsNav screens={SETTINGS_SCREENS} />
+          </>
+        );
+      }
+      nav.pathname = "/me/settings/account";
+      renderWithIntl(<Harness />);
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: "nearest", inline: "nearest" });
+      expect(scrollIntoView.mock.contexts[0]).toHaveAttribute("href", "/me/settings/account");
+
+      act(() => screen.getByRole("button", { name: "ir" }).click());
+      expect(scrollIntoView).toHaveBeenCalledTimes(2);
+      expect(scrollIntoView.mock.contexts[1]).toHaveAttribute("href", "/me/settings/privacy");
+    } finally {
+      HTMLElement.prototype.scrollIntoView = original;
+      widths.mockRestore();
+      client.mockRestore();
+    }
+  });
+
+  it("como columna (sin scroll) no desplaza nada", () => {
+    const scrollIntoView = vi.fn();
+    const original = HTMLElement.prototype.scrollIntoView;
+    HTMLElement.prototype.scrollIntoView = scrollIntoView;
+    try {
+      renderWithIntl(<SettingsNav screens={SETTINGS_SCREENS} />);
+      expect(scrollIntoView).not.toHaveBeenCalled();
+    } finally {
+      HTMLElement.prototype.scrollIntoView = original;
+    }
   });
 });

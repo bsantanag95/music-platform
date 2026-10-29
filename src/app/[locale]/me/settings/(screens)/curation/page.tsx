@@ -10,6 +10,8 @@ import { OwnerEditProvider } from "@/components/profiles/OwnerEditProvider";
 import { OwnerShowcaseEditor } from "@/components/profiles/OwnerShowcaseEditor";
 import { OpenEditorButton } from "@/components/settings/OpenEditorButton";
 import { SettingsSection } from "@/components/settings/SettingsSection";
+import type { Metadata } from "next";
+import { settingsMetadata } from "@/components/settings/settings-metadata";
 
 interface RowProps {
   title: string;
@@ -35,6 +37,10 @@ function Row({ title, hint, status, action }: RowProps) {
 
 const linkClass =
   "rounded border border-ink-border px-3 py-1.5 font-display text-sm text-paper transition-colors hover:border-amber";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return settingsMetadata("curation");
+}
 
 // Pantalla Curaduría (spec owner-settings): lo que el dueño elige mostrar.
 // "Empieza por aquí" abre su editor en el panel lateral; listas fijadas,

@@ -4,6 +4,12 @@ import { requirePageUser } from "@/services/auth/page-auth";
 import { countPendingFollowRequests } from "@/services/social/following";
 import { buildUserMenuItems } from "@/components/layout/user-menu-items";
 import { SettingsSection } from "@/components/settings/SettingsSection";
+import type { Metadata } from "next";
+import { settingsMetadata } from "@/components/settings/settings-metadata";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return settingsMetadata("network");
+}
 
 // Pantalla Red (spec owner-settings): enlaza las superficies existentes —
 // solicitudes, seguidores, seguidos y cuentas bloqueadas— sin reimplementar

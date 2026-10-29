@@ -82,7 +82,7 @@ describe("Footer", () => {
     ).toHaveAttribute("href", "/users/ana%20blur");
     expect(
       within(account).getByRole("link", { name: "Ajustes" }),
-    ).toHaveAttribute("href", "/me/settings");
+    ).toHaveAttribute("href", "/me/settings/profile");
     expect(
       within(account).queryByRole("link", { name: "Iniciar sesión" }),
     ).not.toBeInTheDocument();

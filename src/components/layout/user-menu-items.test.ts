@@ -143,4 +143,8 @@ describe("user-menu-items", () => {
     const settings = buildUserMenuItems({ surface: "settings", permissions: ["editorial.author"] }).map((i) => i.id);
     expect(settings).not.toContain("administration");
   });
+  it("Ajustes enlaza directo a la pantalla Perfil, sin pasar por la redirección de /me/settings", () => {
+    const settings = buildUserMenuItems({ username: "ana", surface: "header" }).find((item) => item.id === "settings");
+    expect(settings?.href).toBe("/me/settings/profile");
+  });
 });

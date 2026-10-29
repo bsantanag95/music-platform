@@ -753,7 +753,8 @@
           "saving": "Deleting…"
         }
       }
-    }
+    },
+    "loading": "Loading settings…"
   },
   "linkAria": "{site}: {detail}",
   "musicIdentity": {
