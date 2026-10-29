@@ -27,6 +27,12 @@ vi.mock("@/services/profiles/affinity", () => ({
   listMutualFollowers: (...a: unknown[]) => mocks.listMutualFollowers(...a),
   listMutualFollowing: (...a: unknown[]) => mocks.listMutualFollowing(...a),
 }));
+vi.mock("@/services/social/following", () => ({
+  getConnectionsSummary: vi.fn().mockResolvedValue({ avatarUrl: null, followerCount: 2, followingCount: 3 }),
+  listConnectionsPage: vi.fn(),
+}));
+vi.mock("@/components/social/FollowButton", () => ({ FollowButton: () => <button type="button">follow</button> }));
+vi.mock("@/i18n/navigation", () => ({ Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a> }));
 vi.mock("@/services/social/relations", () => ({
   relationsFor: (...a: unknown[]) => mocks.relationsFor(...a),
 }));

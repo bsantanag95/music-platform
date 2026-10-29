@@ -286,9 +286,8 @@ Sin sesión, o viendo el propio perfil, la pestaña no aparece en la navegación
 (`ProfileConnectionsHeader`) y la página muestra un aviso en vez de listar nada — no hay
 concepto de "en común" sin dos personas distintas y un visitante identificado.
 
-Solo se pagina hasta 50 resultados (página 1), sin controles de paginación en la UI —
-mismo límite que ya tenían `/me/followers`/`/me/following`; no se construyó "cargar más"
-para esta primera versión.
+~~Solo se pagina hasta 50 resultados (página 1), sin controles de paginación en la UI.~~
+Reemplazado por `refine-connections-page-phase1` (2026-10-28), ver más abajo.
 
 **Unificado con la autogestión** (2026-09-17, segunda iteración): `/me/followers` y
 `/me/following` se eliminaron — el menú de usuario (`user-menu-items.ts`, ambas superficies,
@@ -299,6 +298,27 @@ seguir" en Seguidos no necesita caso especial: la relación del dueño hacia cad
 su propia lista de seguidos ya es "following" por definición, así que el `FollowButton`
 existente la resuelve sola. `UserList.tsx` (con sus acciones de mutación) se redujo a
 "requests"/"blocks", únicas variantes sin equivalente de solo-lectura.
+
+
+**Rediseño de Seguidores y Seguidos, Fase 1** (`refine-connections-page-phase1`, 2026-10-28): las páginas de
+Seguidos y Seguidores comparten `ProfileConnectionsView`.
+- **Cabecera:** migas (perfil / Conexiones), avatar y nombre, `h1` con la pestaña, subtítulo en segunda persona para
+  el dueño y cifras en las pestañas (`getConnectionsSummary`: avatar + `countFollows`, solo con acceso). La pestaña
+  del navegador dice "<Pestaña> · <nombre>".
+- **Lista completa:** 50 al cargar (`listConnectionsPage`, orden por `username`, cursor `username > after`) y "Mostrar
+  N más" contra `GET /api/users/{username}/connections/{kind}?after=`.
+- **Fila compacta** (`ConnectionRow`, reemplaza a `UserCard` en estas vistas): a lo sumo una acción visible (Seguir /
+  Solicitar seguir, Aprobar · Rechazar) o un estado en texto (Siguiendo, Solicitud enviada, Tú, Bloqueado); sin sesión,
+  ninguna. "Dejar de seguir", "Cancelar solicitud" y, en los Seguidores propios, "Eliminar seguidor…" van al menú ⋯
+  "Acciones para «X»".
+- **Confirmar y Deshacer diferido:** "Eliminar seguidor…" pide confirmación. Quitar un seguidor y dejar de seguir
+  sacan la fila (o, en una lista ajena, cambian la relación) y ofrecen Deshacer; el `DELETE` se envía al vencer el
+  aviso, con la siguiente acción igual o al salir de la vista (desmontaje y `pagehide` con `keepalive`). Deshacer no
+  vuelve a seguir: no repite la notificación `new_follower`, no convierte la relación en solicitud en un perfil privado
+  y conserva `created_at`. Mientras el aviso está abierto, "Seguir" en esa fila también deshace. "Cancelar solicitud"
+  es inmediato.
+- **Vacíos y privado:** los Seguidos propios vacíos enlazan a `/users`; un perfil privado sin acceso lo dice y ofrece
+  "Solicitar seguir" con sesión y sin bloqueo. "Seguidos en común" hereda la cabecera.
 
 ## Tarjeta de Identidad
 

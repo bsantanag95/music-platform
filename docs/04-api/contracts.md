@@ -963,6 +963,18 @@ Lista paginada de seguidores aceptados y de cuentas seguidas por el usuario aute
 
 **200 OK:** `{ users: [{ id, username, displayName, profileVisibility }], page, pageSize, hasNext }`.
 
+### `GET /api/users/[username]/connections/{followers|following}?after=`
+
+Página siguiente de Seguidores o Seguidos de un perfil para "Mostrar más" en sus vistas de conexiones (cambio
+`refine-connections-page-phase1`). Pública: sin sesión funciona igual, con la relación `none`. Orden por `username`
+ascendente, 50 por página; `after` es el último `username` ya cargado (cursor: quitar una fila no corre la página
+siguiente). Solo relaciones aceptadas y cuentas activas.
+
+**200 OK:** `{ users: [{ id, username, displayName, profileVisibility, avatarUrl, relation }], hasNext }`, donde
+`relation` es la del visitante hacia cada persona. Sin acceso al perfil (privado y el visitante no es dueño ni
+seguidor aprobado): `{ users: [], hasNext: false }`. **400** con `VALIDATION_ERROR` si el listado no es `followers` ni
+`following`. **404** con `USER_NOT_FOUND` si el perfil no existe o está desactivado.
+
 ### `GET /api/me/follow-requests`
 
 Lista paginada de solicitudes pendientes recibidas por el usuario autenticado. Misma forma de

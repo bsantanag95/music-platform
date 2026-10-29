@@ -1,11 +1,12 @@
-import { and, eq, sql, type SQL } from "drizzle-orm";
+import { and, asc, eq, gt, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, userFollow } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import type { ProfileVisibility, UserSummary } from "./types";
 import { isBlockedBetween } from "./relations";
 import { activeUserCondition } from "@/services/auth/account-status";
-import { resolveImageUrls } from "@/services/storage/avatar-urls";
+import { resolveImageUrl, resolveImageUrls } from "@/services/storage/avatar-urls";
+import { countFollows } from "@/services/profiles/identity";
 import { emitNotifications, retractFollowRequestNotifications } from "@/services/notifications/emit";
 
 function isUniqueViolation(error: unknown): error is { code: "23505" } {
@@ -211,6 +212,56 @@ export async function listFollowing(userId: string, page = 1, pageSize = 20) {
     pageSize,
     userFollow.followedId,
   );
+}
+
+export type ConnectionsKind = "followers" | "following";
+
+export const CONNECTIONS_PAGE_SIZE = 50;
+
+// Una página de Seguidores o Seguidos para las vistas de conexiones de un perfil (openspec:
+// refine-connections-page-phase1, D2). Orden por `username` (único) con cursor `username > after`: quitar una fila no
+// corre la página siguiente, como sí pasaría con un desplazamiento.
+export async function listConnectionsPage(
+  userId: string,
+  kind: ConnectionsKind,
+  { after = null, limit = CONNECTIONS_PAGE_SIZE }: { after?: string | null; limit?: number } = {},
+): Promise<{ users: UserSummary[]; hasNext: boolean }> {
+  if (limit < 1 || limit > CONNECTIONS_PAGE_SIZE) {
+    throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
+  }
+  const ownerColumn = kind === "followers" ? userFollow.followedId : userFollow.followerId;
+  const userColumn = kind === "followers" ? userFollow.followerId : userFollow.followedId;
+  const rows = await db
+    .select({ id: appUser.id, username: appUser.username, displayName: appUser.displayName, profileVisibility: appUser.profileVisibility, avatarImageId: appUser.avatarImageId })
+    .from(userFollow)
+    .innerJoin(appUser, eq(userColumn, appUser.id))
+    .where(
+      and(
+        eq(ownerColumn, userId),
+        eq(userFollow.status, "accepted"),
+        activeUserCondition(),
+        after ? gt(appUser.username, after) : undefined,
+      ),
+    )
+    .orderBy(asc(appUser.username))
+    .limit(limit + 1);
+
+  const page = rows.slice(0, limit);
+  const avatarUrls = await resolveImageUrls(page.map((row) => row.avatarImageId));
+  return { users: page.map((row) => serializeSummary(row, avatarUrls)), hasNext: rows.length > limit };
+}
+
+// Avatar y cifras de la cabecera de las vistas de conexiones (D1): una lectura aparte para no ensanchar
+// `PublicProfile`, que usan muchas superficies.
+export async function getConnectionsSummary(
+  userId: string,
+): Promise<{ avatarUrl: string | null; followerCount: number; followingCount: number }> {
+  const [[user], counts] = await Promise.all([
+    db.select({ avatarImageId: appUser.avatarImageId }).from(appUser).where(eq(appUser.id, userId)).limit(1),
+    countFollows(userId),
+  ]);
+  const avatarUrl = user?.avatarImageId ? await resolveImageUrl(user.avatarImageId) : null;
+  return { avatarUrl, ...counts };
 }
 
 export async function listFollowRequests(userId: string, page = 1, pageSize = 20) {

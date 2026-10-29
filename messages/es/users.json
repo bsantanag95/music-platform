@@ -240,9 +240,38 @@
     "mutualFollowersHeading": "Seguidores en común",
     "mutualEmpty": "Sin coincidencias todavía.",
     "mutualSignInHint": "Inicia sesión para ver las coincidencias con esta cuenta.",
-    "emptyFollowing": "No sigue a nadie todavía.",
-    "emptyFollowers": "Sin seguidores todavía.",
-    "privateNotice": "Este perfil es privado."
+    "privateNotice": "Este perfil es privado.",
+    "title": "Conexiones",
+    "subtitle": {
+      "following": "{own, select, yes {Las cuentas que sigues.} other {Las cuentas que sigue {name}.}}",
+      "followers": "{own, select, yes {Las personas que te siguen.} other {Las personas que siguen a {name}.}}",
+      "mutual": "{own, select, yes {Tu red.} other {Lo que tu red tiene en común con {name}.}}"
+    },
+    "you": "Tú",
+    "menuLabel": "Acciones para «{name}»",
+    "removeFollower": "Eliminar seguidor…",
+    "removeConfirmTitle": "¿Eliminar a {name} de tus seguidores?",
+    "removeConfirmMessage": "Dejará de ver lo que compartes solo con tus seguidores. No se le avisa; si tu perfil es privado, tendrá que volver a pedirte seguirte.",
+    "removeConfirm": "Eliminar",
+    "removeCancel": "Cancelar",
+    "removeDone": "Eliminaste a {name} de tus seguidores.",
+    "removeError": "No pudimos eliminar a {name}. Inténtalo de nuevo.",
+    "unfollowDone": "Dejaste de seguir a {name}.",
+    "unfollowError": "No pudimos dejar de seguir a {name}. Inténtalo de nuevo.",
+    "undo": "Deshacer",
+    "showMore": "Mostrar más",
+    "showMoreCount": "Mostrar {count, plural, one {# más} other {# más}}",
+    "loadingMore": "Cargando…",
+    "loadMoreError": "No se pudo cargar más. Inténtalo de nuevo.",
+    "empty": {
+      "following": "{own, select, yes {Todavía no sigues a nadie.} other {No sigue a nadie todavía.}}",
+      "followers": "{own, select, yes {Todavía no tienes seguidores.} other {Sin seguidores todavía.}}"
+    },
+    "emptyFindPeople": "Buscar personas",
+    "emptyFindPeopleDescription": "Sigue a otras personas para ver su actividad en tu feed.",
+    "privateTitle": "Este perfil es privado",
+    "privateRequestHint": "Solo sus seguidores aprobados ven sus conexiones.",
+    "mutualTabShort": "En común"
   },
   "ratingHighlights": {
     "heading": "Valoraciones destacadas"

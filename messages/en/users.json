@@ -240,9 +240,38 @@
     "mutualFollowersHeading": "Mutual followers",
     "mutualEmpty": "No matches yet.",
     "mutualSignInHint": "Sign in to see what you have in common with this account.",
-    "emptyFollowing": "Not following anyone yet.",
-    "emptyFollowers": "No followers yet.",
-    "privateNotice": "This profile is private."
+    "privateNotice": "This profile is private.",
+    "title": "Connections",
+    "subtitle": {
+      "following": "{own, select, yes {The accounts you follow.} other {The accounts {name} follows.}}",
+      "followers": "{own, select, yes {The people who follow you.} other {The people who follow {name}.}}",
+      "mutual": "{own, select, yes {Your network.} other {What your network has in common with {name}.}}"
+    },
+    "you": "You",
+    "menuLabel": "Actions for “{name}”",
+    "removeFollower": "Remove follower…",
+    "removeConfirmTitle": "Remove {name} from your followers?",
+    "removeConfirmMessage": "They will stop seeing what you share with followers only. They are not notified; if your profile is private, they will have to request to follow you again.",
+    "removeConfirm": "Remove",
+    "removeCancel": "Cancel",
+    "removeDone": "You removed {name} from your followers.",
+    "removeError": "We couldn't remove {name}. Please try again.",
+    "unfollowDone": "You unfollowed {name}.",
+    "unfollowError": "We couldn't unfollow {name}. Please try again.",
+    "undo": "Undo",
+    "showMore": "Show more",
+    "showMoreCount": "Show {count} more",
+    "loadingMore": "Loading…",
+    "loadMoreError": "Couldn't load more. Please try again.",
+    "empty": {
+      "following": "{own, select, yes {You don't follow anyone yet.} other {Not following anyone yet.}}",
+      "followers": "{own, select, yes {You don't have followers yet.} other {No followers yet.}}"
+    },
+    "emptyFindPeople": "Find people",
+    "emptyFindPeopleDescription": "Follow other people to see their activity in your feed.",
+    "privateTitle": "This profile is private",
+    "privateRequestHint": "Only approved followers can see its connections.",
+    "mutualTabShort": "In common"
   },
   "ratingHighlights": {
     "heading": "Featured ratings"
