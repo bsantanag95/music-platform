@@ -3,6 +3,12 @@ import { requirePageUser } from "@/services/auth/page-auth";
 import { getNotificationSettings } from "@/services/notifications/preferences";
 import { NotificationPreferencesForm } from "@/components/notifications/NotificationPreferencesForm";
 import { SettingsCard, SettingsSection } from "@/components/settings/SettingsSection";
+import type { Metadata } from "next";
+import { settingsMetadata } from "@/components/settings/settings-metadata";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return settingsMetadata("notifications");
+}
 
 // Pantalla Notificaciones del área de ajustes (openspec: add-notifications-core,
 // D9; add-notification-digest-and-awards, D8): un interruptor por tipo

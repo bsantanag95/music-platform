@@ -9,6 +9,7 @@ import {
   SOCIAL_LINKS,
 } from "@/lib/site-links";
 import { Logo } from "./Logo";
+import { SETTINGS_DEFAULT_HREF } from "@/components/settings/settings-screens";
 
 interface FooterProps {
   user?: Pick<AuthUser, "id" | "username" | "displayName"> | null;
@@ -72,7 +73,7 @@ export async function Footer({ user = null, exploreEnabled = false, variant = "f
                   {t("account.profile")}
                 </FooterLink>
                 <FooterLink href="/me/diary">{t("account.diary")}</FooterLink>
-                <FooterLink href="/me/settings">{t("account.settings")}</FooterLink>
+                <FooterLink href={SETTINGS_DEFAULT_HREF}>{t("account.settings")}</FooterLink>
               </>
             ) : (
               <>

@@ -344,6 +344,22 @@ Seguidos y Seguidores comparten `ProfileConnectionsView`.
   Seguidores, "Para seguir de vuelta" (hasta 5 del segmento `notBack`, con "Seguir" y "Ver las N"); en un
   perfil ajeno con sesión, "En común con <nombre>" (`getMutualFollowersPreview`) con enlace a "Seguidos en común".
 
+**Ajustes `/me/settings`, Fase 1** (`refine-settings-phase1`, 2026-10-29): rendimiento y base.
+- **El hueco en blanco:** `/me/settings` solo redirigía a `/me/settings/profile`, pero dentro del layout del área; en
+  una navegación del cliente el servidor devolvía el layout completo (~190 KB) y un `NEXT_REDIRECT`, y el navegador
+  pintaba el menú sin pantalla marcada y sin contenido hasta una segunda petición (2,3 s observados en desarrollo; en
+  producción ~40 ms por respuesta, pero igual dos viajes con un estado vacío). Las pantallas y su layout viven ahora en
+  el grupo de rutas `settings/(screens)/` (mismas URLs) y `settings/page.tsx` redirige fuera del layout.
+- El menú de usuario, el pie y `OwnerSettingsCard` enlazan a `SETTINGS_DEFAULT_HREF` (`/me/settings/profile`).
+- `(screens)/loading.tsx`: el menú se mantiene con la pantalla de destino marcada y el contenido muestra un esqueleto
+  (`aria-busy`, bloques en tono de borde porque el `Skeleton` común usa el fondo de las tarjetas).
+- Título por pantalla "<Pantalla> · Ajustes" (`settingsMetadata`).
+- Menú en el móvil: la pestaña activa se lleva a la vista (`scrollIntoView` solo si la fila tiene scroll), 44 px con
+  puntero grueso, sin barra de scroll.
+- Voseo corregido en tres textos ("Cómo apareces…", "usa «Desactivar»", "usa este enlace").
+- Pendiente aparte (decisión del usuario): el layout raíz manda al cliente todos los textos (~165 KB de ~195 KB por
+  respuesta); conviene enviar solo los namespaces de cada página, en un cambio propio.
+
 **Bandeja de solicitudes `/me/follow-requests`, Fase 1** (`refine-follow-requests-phase1`, 2026-10-29): capacidad
 `follow-requests-inbox`.
 - Metadata, migas (perfil / Solicitudes de seguimiento), título y subtítulo con qué implica aprobar; la cifra de

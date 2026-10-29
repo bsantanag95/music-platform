@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { SETTINGS_DEFAULT_HREF } from "@/components/settings/settings-screens";
 
 interface OwnerSettingsCardProps {
   /** Solicitudes de seguimiento pendientes recibidas (bandeja de entrada). */
@@ -8,7 +9,7 @@ interface OwnerSettingsCardProps {
 
 // Tarjeta de acceso al área de ajustes en la barra lateral del dueño. Sustituye
 // al panel de 11 atajos: la biblioteca queda en el menú de usuario y la red y
-// la cuenta viven en `/me/settings`. El indicador de solicitudes es una
+// la cuenta viven en `/me/settings` (enlace directo a Perfil, refine-settings-phase1). El indicador de solicitudes es una
 // bandeja de entrada, no una métrica de logro (spec social-profiles, "Panel
 // del dueño").
 export async function OwnerSettingsCard({ pendingRequests }: OwnerSettingsCardProps) {
@@ -17,7 +18,7 @@ export async function OwnerSettingsCard({ pendingRequests }: OwnerSettingsCardPr
 
   return (
     <Link
-      href="/me/settings"
+      href={SETTINGS_DEFAULT_HREF}
       className="flex items-center justify-between gap-3 rounded-lg border border-ink-border bg-ink-surface px-4 py-3 transition-colors hover:border-amber"
     >
       <span className="min-w-0">

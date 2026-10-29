@@ -4,6 +4,12 @@ import { getOwnProfile } from "@/services/social/profiles";
 import { PrivacySettings } from "@/components/social/PrivacySettings";
 import { DefaultAudienceSettings } from "@/components/settings/DefaultAudienceSettings";
 import { SettingsCard, SettingsSection } from "@/components/settings/SettingsSection";
+import type { Metadata } from "next";
+import { settingsMetadata } from "@/components/settings/settings-metadata";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return settingsMetadata("privacy");
+}
 
 // Pantalla Privacidad y audiencia (spec owner-settings): la visibilidad del
 // perfil y la audiencia por defecto del contenido nuevo (spec default-audience).

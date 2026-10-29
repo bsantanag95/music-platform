@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import type { SettingsScreen, SettingsScreenId } from "./settings-screens";
@@ -17,11 +18,22 @@ export function SettingsNav({ screens, badges = {} }: SettingsNavProps) {
   const t = useTranslations("users");
   const tCommon = useTranslations("common");
   const pathname = usePathname();
+  const navRef = useRef<HTMLElement>(null);
+
+  // Por debajo de `md` el menú es una fila con scroll: la pantalla activa se lleva a la vista al entrar y al cambiar de
+  // pantalla (openspec: refine-settings-phase1, D5). Desde `md` es una columna y no hay nada que desplazar.
+  useEffect(() => {
+    const active = navRef.current?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (active && navRef.current && navRef.current.scrollWidth > navRef.current.clientWidth) {
+      active.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }
+  }, [pathname]);
 
   return (
     <nav
+      ref={navRef}
       aria-label={t("settings.nav.label")}
-      className="flex gap-1 overflow-x-auto pb-1 md:sticky md:top-20 md:flex-col md:self-start md:overflow-visible md:pb-0"
+      className="flex gap-1 overflow-x-auto pb-1 [scrollbar-width:none] md:sticky md:top-20 md:flex-col md:self-start md:overflow-visible md:pb-0"
     >
       {screens.map((screen) => {
         const active = pathname === screen.href || pathname.startsWith(`${screen.href}/`);
@@ -31,7 +43,7 @@ export function SettingsNav({ screens, badges = {} }: SettingsNavProps) {
             key={screen.id}
             href={screen.href}
             aria-current={active ? "page" : undefined}
-            className={`flex shrink-0 items-center justify-between gap-3 rounded-md border-b-2 px-3 py-2 font-display text-sm transition-colors md:border-b-0 md:border-l-2 md:rounded-l-none ${
+            className={`flex shrink-0 items-center justify-between gap-3 rounded-md border-b-2 px-3 py-2 font-display text-sm transition-colors [@media(pointer:coarse)]:min-h-11 md:border-b-0 md:border-l-2 md:rounded-l-none ${
               active
                 ? "border-amber bg-ink-surface text-paper"
                 : "border-transparent text-paper-muted hover:bg-ink-surface hover:text-paper"

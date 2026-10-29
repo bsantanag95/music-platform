@@ -8,6 +8,7 @@
 // Sin JSX ni dependencias de React: son datos. Cada consumidor aporta su marcado.
 
 import type { Permission } from "@/services/auth/authorization";
+import { SETTINGS_DEFAULT_HREF } from "@/components/settings/settings-screens";
 
 /**
  * Superficie donde aparece un destino: `header` (desplegable de escritorio),
@@ -115,7 +116,8 @@ export const USER_MENU_ITEMS: readonly UserMenuItemDef[] = [
     group: "account",
     surfaces: ["panel", "settings"],
   },
-  { id: "settings", href: "/me/settings", labelKey: "settings", group: "account", surfaces: BOTH },
+  // Directo a la primera pantalla: `/me/settings` solo redirige (openspec: refine-settings-phase1, D2).
+  { id: "settings", href: SETTINGS_DEFAULT_HREF, labelKey: "settings", group: "account", surfaces: BOTH },
 ] as const;
 
 /** Un destino ya resuelto para una superficie concreta. */

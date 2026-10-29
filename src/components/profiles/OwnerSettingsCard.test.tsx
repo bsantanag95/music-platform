@@ -22,7 +22,7 @@ describe("OwnerSettingsCard", () => {
     renderWithIntl(await OwnerSettingsCard({ pendingRequests: 0 }));
     const links = screen.getAllByRole("link");
     expect(links).toHaveLength(1);
-    expect(links[0]).toHaveAttribute("href", "/me/settings");
+    expect(links[0]).toHaveAttribute("href", "/me/settings/profile");
     expect(links[0]).toHaveTextContent("settings");
   });
 
