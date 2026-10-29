@@ -856,5 +856,21 @@
     "removed": "Foto quitada.",
     "errorGeneric": "No se pudo completar la operación. Intenta de nuevo.",
     "helpText": "JPEG, PNG, WebP o AVIF. Máximo 10 MB."
+  },
+  "requests": {
+    "subtitle": "Personas que quieren seguir tu perfil privado. Al aprobar, ven lo que compartes con tus seguidores.",
+    "pendingCount": "{count, plural, =0 {Sin solicitudes pendientes} one {# solicitud pendiente} other {# solicitudes pendientes}}",
+    "approved": "Aprobada · ahora te sigue",
+    "alreadyFollowing": "Ya la sigues",
+    "alreadyRequested": "Tu solicitud está enviada",
+    "rejected": "Rechazaste la solicitud de {name}.",
+    "rejectError": "No pudimos rechazar la solicitud de {name}. Inténtalo de nuevo.",
+    "gone": "{name} retiró su solicitud.",
+    "allDone": "Respondiste todas las solicitudes.",
+    "emptyPublicTitle": "Tu perfil es público",
+    "emptyPublicDescription": "Con un perfil público cualquiera te sigue sin pedirlo, así que aquí no llegarán solicitudes.",
+    "emptyPublicCta": "Cambiar la privacidad",
+    "emptyPrivateDescription": "Cuando alguien pida seguirte, aparecerá aquí.",
+    "emptyPrivateCta": "Ver tus seguidores"
   }
 }

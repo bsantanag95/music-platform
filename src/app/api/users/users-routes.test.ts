@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   listFollowers: vi.fn(),
   listFollowing: vi.fn(),
   listFollowRequests: vi.fn(),
+  listFollowRequestsPage: vi.fn(),
   removeFollower: vi.fn(),
   blockUser: vi.fn(),
   unblockUser: vi.fn(),
@@ -44,6 +45,7 @@ vi.mock("@/services/social/following", () => ({
   listFollowers: mocks.listFollowers,
   listFollowing: mocks.listFollowing,
   listFollowRequests: mocks.listFollowRequests,
+  listFollowRequestsPage: mocks.listFollowRequestsPage,
   removeFollower: mocks.removeFollower,
 }));
 vi.mock("@/services/social/blocking", () => ({
@@ -191,6 +193,20 @@ describe("seguimiento", () => {
     expect((await followersGet(url("/api/me/followers"))).status).toBe(200);
     expect((await followingGet(url("/api/me/following"))).status).toBe(200);
     expect(mocks.listFollowRequests).toHaveBeenCalledWith("u1", 1, 20);
+    expect(mocks.listFollowRequestsPage).not.toHaveBeenCalled();
+  });
+
+  it("solicitudes en modo cursor: la bandeja por fecha (cursor vacío = primera página)", async () => {
+    const page = { users: [], hasNext: false, nextCursor: null, total: 0 };
+    mocks.listFollowRequestsPage.mockResolvedValue(page);
+
+    const first = await requestsGet(url("/api/me/follow-requests?cursor="));
+    expect(await first.json()).toEqual(page);
+    expect(mocks.listFollowRequestsPage).toHaveBeenLastCalledWith("u1", { cursor: null });
+
+    await requestsGet(url("/api/me/follow-requests?cursor=abc"));
+    expect(mocks.listFollowRequestsPage).toHaveBeenLastCalledWith("u1", { cursor: "abc" });
+    expect(mocks.listFollowRequests).not.toHaveBeenCalled();
   });
 
   it("elimina un seguidor propio", async () => {

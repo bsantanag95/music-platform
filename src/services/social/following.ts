@@ -230,11 +230,11 @@ export interface ConnectionsPageOptions {
 
 // Clave de orden de la última fila, como cursor opaco (redesign-connections-toolbar, D1): `[orden, valor, desempate]`
 // en JSON base64url. `created_at` viaja como texto de Postgres para no perder los microsegundos.
-function encodeCursor(sort: ConnectionSort, key: [string, string]): string {
+function encodeCursor(sort: ConnectionSort | "requests", key: [string, string]): string {
   return Buffer.from(JSON.stringify([sort, ...key])).toString("base64url");
 }
 
-function decodeCursor(cursor: string, sort: ConnectionSort): [string, string] {
+function decodeCursor(cursor: string, sort: ConnectionSort | "requests"): [string, string] {
   try {
     const parsed: unknown = JSON.parse(Buffer.from(cursor, "base64url").toString("utf8"));
     if (
@@ -416,6 +416,66 @@ export async function listFollowRequests(userId: string, page = 1, pageSize = 20
     pageSize,
     userFollow.followerId,
   );
+}
+
+export type YouFollowState = "accepted" | "pending" | null;
+
+// Una página de la bandeja de solicitudes recibidas (openspec: refine-follow-requests-phase1, D1): pendientes dirigidas
+// al usuario, de cuentas activas, de la más reciente a la más antigua, con cursor opaco por `[created_at, id]` como las
+// conexiones. Cada fila trae cuándo llegó y si el usuario ya sigue a esa persona o se lo pidió (`youFollow`), para el
+// estado tras aprobar.
+export async function listFollowRequestsPage(
+  userId: string,
+  { cursor = null, limit = CONNECTIONS_PAGE_SIZE }: { cursor?: string | null; limit?: number } = {},
+): Promise<{
+  users: (UserSummary & { requestedAt: string; youFollow: YouFollowState })[];
+  hasNext: boolean;
+  nextCursor: string | null;
+  total: number;
+}> {
+  if (limit < 1 || limit > CONNECTIONS_PAGE_SIZE) {
+    throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
+  }
+  const filters: SQL[] = [eq(userFollow.followedId, userId), eq(userFollow.status, "pending"), activeUserCondition()];
+  if (cursor) {
+    const [value, tiebreak] = decodeCursor(cursor, "requests");
+    filters.push(sql`(${userFollow.createdAt}, ${userFollow.id}) < (${value}::timestamptz, ${tiebreak}::uuid)`);
+  }
+  const [rows, total] = await Promise.all([
+    db
+      .select({
+        id: appUser.id,
+        username: appUser.username,
+        displayName: appUser.displayName,
+        profileVisibility: appUser.profileVisibility,
+        avatarImageId: appUser.avatarImageId,
+        followId: userFollow.id,
+        requestedAt: userFollow.createdAt,
+        requestedAtKey: sql<string>`${userFollow.createdAt}::text`,
+        youFollow: sql<YouFollowState>`(SELECT r.status FROM user_follow r WHERE r.follower_id = ${userId} AND r.followed_id = ${appUser.id})`,
+      })
+      .from(userFollow)
+      .innerJoin(appUser, eq(userFollow.followerId, appUser.id))
+      .where(and(...filters))
+      .orderBy(desc(userFollow.createdAt), desc(userFollow.id))
+      .limit(limit + 1),
+    countPendingFollowRequests(userId),
+  ]);
+
+  const page = rows.slice(0, limit);
+  const last = page.at(-1);
+  const hasNext = rows.length > limit;
+  const avatarUrls = await resolveImageUrls(page.map((row) => row.avatarImageId));
+  return {
+    users: page.map((row) => ({
+      ...serializeSummary(row, avatarUrls),
+      requestedAt: row.requestedAt.toISOString(),
+      youFollow: row.youFollow === "accepted" || row.youFollow === "pending" ? row.youFollow : null,
+    })),
+    hasNext,
+    nextCursor: hasNext && last ? encodeCursor("requests", [last.requestedAtKey, last.followId]) : null,
+    total,
+  };
 }
 
 // Número de solicitudes de seguimiento pendientes dirigidas al usuario, para
