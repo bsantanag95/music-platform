@@ -477,7 +477,16 @@
     },
     "profile": {
       "title": "Perfil",
-      "intro": "Lo que cualquiera ve como “quién eres”: tu tarjeta de identidad, tu bio y tus enlaces."
+      "intro": "Lo que cualquiera ve como “quién eres”: tu tarjeta de identidad, tu bio y tus enlaces.",
+      "indexLabel": "Secciones del perfil",
+      "index": {
+        "photo": "Foto",
+        "card": "Tarjeta",
+        "identity": "Tu identidad",
+        "music": "Música",
+        "prompts": "Preguntas",
+        "links": "Enlaces"
+      }
     },
     "curation": {
       "title": "Curaduría",
@@ -601,7 +610,10 @@
         "lastSeen": "Activa {when}",
         "close": "Cerrar",
         "closeLabel": "Cerrar la sesión de {device}",
-        "closedError": "No se pudo cerrar la sesión."
+        "closedError": "No se pudo cerrar la sesión.",
+        "showMore": "{count, plural, one {Ver # más} other {Ver las # más}}",
+        "showLess": "Mostrar menos",
+        "closeOthers": "{count, plural, one {Cerrar la otra sesión} other {Cerrar las demás (#)}}"
       },
       "data": {
         "title": "Datos de la cuenta"
@@ -754,7 +766,14 @@
         }
       }
     },
-    "loading": "Cargando ajustes…"
+    "loading": "Cargando ajustes…",
+    "unsaved": {
+      "badge": "Cambios sin guardar",
+      "title": "¿Salir sin guardar?",
+      "message": "Tienes cambios sin guardar en: {sections}. Si sales, se pierden.",
+      "leave": "Salir sin guardar",
+      "stay": "Seguir editando"
+    }
   },
   "linkAria": "{site}: {detail}",
   "musicIdentity": {

@@ -83,4 +83,41 @@ describe("SessionsCard", () => {
     expect(screen.queryByText(/Activa/)).not.toBeInTheDocument();
     expect(screen.getByText(/Iniciada el/)).toBeInTheDocument();
   });
+  it("plegada: la actual y las 2 más recientes, con Ver las N más y Mostrar menos", async () => {
+    const user = userEvent.setup();
+    const many = [
+      ...sessions,
+      ...[4, 5, 6, 7].map((n) => ({
+        id: id(n),
+        deviceLabel: `Equipo ${n}`,
+        createdAt: new Date(now - n * 86400000).toISOString(),
+        lastSeenAt: new Date(now - n * 86400000).toISOString(),
+        current: false,
+      })),
+    ];
+    renderWithIntl(<SessionsCard sessions={many} />);
+    expect(screen.queryByText("Equipo 4")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Ver las 4 más" }));
+    expect(screen.getByText("Equipo 7")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Mostrar menos" }));
+    expect(screen.queryByText("Equipo 7")).toBeNull();
+  });
+
+  it("Cerrar las demás conserva solo la actual", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<SessionsCard sessions={sessions} />);
+    await user.click(screen.getByRole("button", { name: "Cerrar las demás (2)" }));
+    await waitFor(() =>
+      expect(mocks.apiFetch).toHaveBeenCalledWith("/api/me/sessions", expect.anything(), { method: "DELETE" }),
+    );
+    expect(screen.queryByText("Safari · iPhone")).toBeNull();
+    expect(screen.getByText("Chrome · Windows")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Cerrar las demás/ })).toBeNull();
+  });
+
+  it("solo con la actual no ofrece Cerrar las demás ni Ver más", () => {
+    renderWithIntl(<SessionsCard sessions={sessions.slice(0, 1)} />);
+    expect(screen.queryByRole("button", { name: /Cerrar la/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Ver/ })).toBeNull();
+  });
 });

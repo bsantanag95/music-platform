@@ -10,7 +10,9 @@ import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
 import { OwnerMusicIdentityEditor } from "@/components/profiles/OwnerMusicIdentityEditor";
 import { OwnerPromptsEditor } from "@/components/profiles/OwnerPromptsEditor";
-import { SettingsCard, SettingsSection } from "@/components/settings/SettingsSection";
+import { SettingsSection } from "@/components/settings/SettingsSection";
+import { SettingsEditorCard } from "@/components/settings/SettingsEditorCard";
+import { SettingsSectionIndex } from "@/components/settings/SettingsSectionIndex";
 import type { Metadata } from "next";
 import { settingsMetadata } from "@/components/settings/settings-metadata";
 
@@ -30,20 +32,30 @@ export default async function ProfileSettingsPage() {
   if (!identity) return null;
   // Los géneros que ya no son un estilo visible no figuran en las etiquetas y se ignoran al mostrar.
   const genreLabels = await identityGenreLabels(identity.genres, locale);
+  // Índice de la pantalla: una entrada por tarjeta, en el orden de la página (refine-settings-editing, D2).
+  const sections = {
+    photo: t("settings.profile.index.photo"),
+    card: t("settings.profile.index.card"),
+    identity: t("settings.profile.index.identity"),
+    music: t("settings.profile.index.music"),
+    prompts: t("settings.profile.index.prompts"),
+    links: t("settings.profile.index.links"),
+  };
 
   return (
     <SettingsSection title={t("settings.profile.title")} intro={t("settings.profile.intro")}>
-      <SettingsCard>
+      <SettingsSectionIndex sections={Object.entries(sections).map(([id, label]) => ({ id, label }))} />
+      <SettingsEditorCard id="photo" label={sections.photo}>
         <OwnerAvatarEditor
           username={identity.username}
           name={identity.displayName ?? identity.username}
           initialAvatarUrl={identity.avatarUrl}
         />
-      </SettingsCard>
-      <SettingsCard>
+      </SettingsEditorCard>
+      <SettingsEditorCard id="card" label={sections.card}>
         <OwnerIdentityCardEditor initial={showcase.identityCard} />
-      </SettingsCard>
-      <SettingsCard>
+      </SettingsEditorCard>
+      <SettingsEditorCard id="identity" label={sections.identity}>
         <OwnerIdentityEditor
           name={identity.displayName ?? identity.username}
           initial={{
@@ -56,8 +68,8 @@ export default async function ProfileSettingsPage() {
             showLocalTime: identity.showLocalTime,
           }}
         />
-      </SettingsCard>
-      <SettingsCard>
+      </SettingsEditorCard>
+      <SettingsEditorCard id="music" label={sections.music}>
         <OwnerMusicIdentityEditor
           initial={{
             selfRoles: identity.selfRoles,
@@ -66,13 +78,13 @@ export default async function ProfileSettingsPage() {
           }}
           genreLabels={genreLabels}
         />
-      </SettingsCard>
-      <SettingsCard>
+      </SettingsEditorCard>
+      <SettingsEditorCard id="prompts" label={sections.prompts}>
         <OwnerPromptsEditor initial={identity.prompts} />
-      </SettingsCard>
-      <SettingsCard>
+      </SettingsEditorCard>
+      <SettingsEditorCard id="links" label={sections.links}>
         <OwnerLinksEditor initialLinks={identity.links} />
-      </SettingsCard>
+      </SettingsEditorCard>
     </SettingsSection>
   );
 }

@@ -16,9 +16,13 @@ interface SessionsCardProps {
 // Una sesión cuenta como "activa ahora" si se vio en los últimos 5 minutos.
 const ACTIVE_NOW_MS = 5 * 60 * 1000;
 
+/** Sesiones a la vista sin desplegar: la actual y las 2 más recientes (refine-settings-editing, D4). */
+export const SESSIONS_VISIBLE = 3;
+
 // Tarjeta "Sesiones activas" (spec session-management y owner-settings): cada
-// dispositivo con sesión abierta, "Cerrar" en los que no son este y el cierre de
-// todas las sesiones existente debajo. Nunca hay controles sobre la sesión
+// dispositivo con sesión abierta, "Cerrar" en los que no son este, "Cerrar las
+// demás" (conserva esta) y el cierre de todas las sesiones existente debajo. Plegada
+// a la actual y las 2 más recientes (openspec: refine-settings-editing, D4). Nunca hay controles sobre la sesión
 // actual: para salir de ella está cerrar sesión.
 export function SessionsCard({ sessions: initial }: SessionsCardProps) {
   const t = useTranslations("users");
@@ -30,6 +34,27 @@ export function SessionsCard({ sessions: initial }: SessionsCardProps) {
   const [sessions, setSessions] = useState(initial);
   const [closingId, setClosingId] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [closingOthers, setClosingOthers] = useState(false);
+
+  // El servicio las entrega con la actual primero y luego por última actividad: las primeras son las más recientes.
+  const visible = expanded ? sessions : sessions.slice(0, SESSIONS_VISIBLE);
+  const hidden = sessions.length - SESSIONS_VISIBLE;
+  const others = sessions.filter((item) => !item.current).length;
+
+  async function closeOthers() {
+    setClosingOthers(true);
+    setErrorCode(null);
+    try {
+      await apiFetch("/api/me/sessions", NoContentSchema, { method: "DELETE" });
+      setSessions((list) => list.filter((item) => item.current));
+      setExpanded(false);
+    } catch (error) {
+      setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
+    } finally {
+      setClosingOthers(false);
+    }
+  }
 
   async function close(id: string) {
     setClosingId(id);
@@ -50,7 +75,7 @@ export function SessionsCard({ sessions: initial }: SessionsCardProps) {
       <p className="mb-3 font-body text-xs text-paper-muted">{t("settings.account.sessions.hint")}</p>
 
       <ul className="flex flex-col">
-        {sessions.map((item) => {
+        {visible.map((item) => {
           const device = item.deviceLabel ?? t("settings.account.sessions.unknownDevice");
           const lastSeen = item.lastSeenAt ? new Date(item.lastSeenAt) : null;
           const activeNow = item.current || (lastSeen !== null && Date.now() - lastSeen.getTime() < ACTIVE_NOW_MS);
@@ -98,7 +123,22 @@ export function SessionsCard({ sessions: initial }: SessionsCardProps) {
           {tErrors(`${knownErrorCode(errorCode)}.description`)}
         </p>
       )}
-      <div className="mt-4">
+      {hidden > 0 ? (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          onClick={() => setExpanded((value) => !value)}
+          className="mt-1 font-data text-xs text-amber underline decoration-dotted transition-colors hover:text-amber-hover [@media(pointer:coarse)]:min-h-11"
+        >
+          {expanded ? t("settings.account.sessions.showLess") : t("settings.account.sessions.showMore", { count: hidden })}
+        </button>
+      ) : null}
+      <div className="mt-4 flex flex-wrap gap-2">
+        {others > 0 ? (
+          <Button type="button" variant="secondary" disabled={closingOthers} onClick={() => void closeOthers()}>
+            {t("settings.account.sessions.closeOthers", { count: others })}
+          </Button>
+        ) : null}
         <RevokeSessionsButton />
       </div>
     </SettingsCard>

@@ -477,7 +477,16 @@
     },
     "profile": {
       "title": "Profile",
-      "intro": "What anyone sees as “who you are”: your identity card, your bio and your links."
+      "intro": "What anyone sees as “who you are”: your identity card, your bio and your links.",
+      "indexLabel": "Profile sections",
+      "index": {
+        "photo": "Photo",
+        "card": "Card",
+        "identity": "Your identity",
+        "music": "Music",
+        "prompts": "Prompts",
+        "links": "Links"
+      }
     },
     "curation": {
       "title": "Curation",
@@ -601,7 +610,10 @@
         "lastSeen": "Active {when}",
         "close": "Close",
         "closeLabel": "Close the session on {device}",
-        "closedError": "The session could not be closed."
+        "closedError": "The session could not be closed.",
+        "showMore": "{count, plural, one {Show # more} other {Show # more}}",
+        "showLess": "Show less",
+        "closeOthers": "{count, plural, one {Sign out the other session} other {Sign out the others (#)}}"
       },
       "data": {
         "title": "Account details"
@@ -754,7 +766,14 @@
         }
       }
     },
-    "loading": "Loading settings…"
+    "loading": "Loading settings…",
+    "unsaved": {
+      "badge": "Unsaved changes",
+      "title": "Leave without saving?",
+      "message": "You have unsaved changes in: {sections}. If you leave, they'll be lost.",
+      "leave": "Leave without saving",
+      "stay": "Keep editing"
+    }
   },
   "linkAria": "{site}: {detail}",
   "musicIdentity": {

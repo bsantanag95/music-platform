@@ -360,6 +360,18 @@ Seguidos y Seguidores comparten `ProfileConnectionsView`.
 - Pendiente aparte (decisión del usuario): el layout raíz manda al cliente todos los textos (~165 KB de ~195 KB por
   respuesta); conviene enviar solo los namespaces de cada página, en un cambio propio.
 
+**Fase 2** (`refine-settings-editing`, 2026-10-29): Perfil y Cuenta.
+- **Índice de Perfil** (`SettingsSectionIndex`): fila pegajosa bajo la cabecera con Foto, Tarjeta, Tu identidad,
+  Música, Preguntas y Enlaces; marca la sección visible (`IntersectionObserver`) y un punto en las que tienen cambios.
+- **Estado por tarjeta** (`SettingsEditorCard`): cada tarjeta de Perfil es anfitriona de sus editores por
+  `EditorHostContext` (el contrato del panel del modo edición) y dice "● Cambios sin guardar"; el "Guardar" de cada
+  editor se mantiene (decisión del usuario).
+- **Aviso al salir** (`UnsavedChangesGuard`, en el layout del área): con cambios, `beforeunload` y los clics en enlaces
+  internos (en captura, salvo anclas de la misma página) abren "¿Salir sin guardar?" nombrando las secciones. El botón
+  atrás del navegador no se intercepta.
+- **Sesiones plegadas**: la actual y las 2 más recientes, "Ver las N más" / "Mostrar menos", y "Cerrar las demás (N)"
+  (`DELETE /api/me/sessions`, `deleteOtherSessions`), además de "Cerrar todas las sesiones".
+
 **Bandeja de solicitudes `/me/follow-requests`, Fase 1** (`refine-follow-requests-phase1`, 2026-10-29): capacidad
 `follow-requests-inbox`.
 - Metadata, migas (perfil / Solicitudes de seguimiento), título y subtítulo con qué implica aprobar; la cifra de
