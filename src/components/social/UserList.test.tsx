@@ -57,20 +57,4 @@ describe("UserList", () => {
     );
     expect(screen.queryByText("@ana")).not.toBeInTheDocument();
   });
-
-  it("aprueba una solicitud desde la lista de solicitudes", async () => {
-    const user = userEvent.setup();
-    mocks.apiFetch.mockResolvedValue(null);
-    renderWithIntl(<UserList users={users} variant="requests" />);
-
-    await user.click(screen.getByRole("button", { name: "Aprobar" }));
-    await waitFor(() =>
-      expect(mocks.apiFetch).toHaveBeenCalledWith(
-        "/api/me/follow-requests/00000000-0000-4000-8000-000000000001/approve",
-        expect.anything(),
-        { method: "POST" },
-      ),
-    );
-    expect(screen.queryByText("@ana")).not.toBeInTheDocument();
-  });
 });

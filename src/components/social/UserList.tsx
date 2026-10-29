@@ -6,16 +6,16 @@ import { Link } from "@/i18n/navigation";
 import { apiFetch, ApiError } from "@/lib/api/client";
 import { BlockedResponseSchema, type UserSummary } from "@/lib/api/schemas";
 import { Button } from "@/components/ui/Button";
-import { FollowButton } from "./FollowButton";
 
-type ListVariant = "requests" | "blocks";
+type ListVariant = "blocks";
 
 interface UserListProps {
   users: UserSummary[];
   variant: ListVariant;
 }
 
-// Listado propio con acciones: aprobar o rechazar solicitud, y desbloquear.
+// Listado propio con acciones: desbloquear. Las solicitudes de seguimiento tienen su bandeja propia
+// (`FollowRequestList`, openspec: refine-follow-requests-phase1).
 // "Seguidos"/"Seguidores" se unificaron con la vista de conexiones de
 // cualquier perfil (`/users/:username/connections/{following,followers}`,
 // `ConnectionsUserList.tsx`) — ver memoria profile-redesign. Recibe los datos
@@ -45,8 +45,6 @@ export function UserList({ users, variant }: UserListProps) {
     switch (variant) {
       case "blocks":
         return apiFetch(`/api/users/${encodeURIComponent(user.username)}/block`, BlockedResponseSchema, { method: "DELETE" });
-      case "requests":
-        return null;
     }
   }
 
@@ -70,26 +68,16 @@ export function UserList({ users, variant }: UserListProps) {
               <span className="block truncate font-display">{user.displayName ?? user.username}</span>
               <span className="block truncate text-paper-muted">@{user.username}</span>
             </Link>
-            {variant === "requests" ? (
-              <FollowButton
-                username={user.username}
-                relation="incoming"
-                authenticated
-                requestId={user.id}
-                onChange={() => setItems((current) => current.filter((item) => item.id !== user.id))}
-              />
-            ) : (
-              <Button
-                variant="secondary"
-                disabled={busyId === user.id}
-                onClick={() => {
-                  const request = requestFor(user);
-                  if (request) void run(user, request);
-                }}
-              >
-                {busyId === user.id ? t("searching") : t(actionLabel(variant))}
-              </Button>
-            )}
+            <Button
+              variant="secondary"
+              disabled={busyId === user.id}
+              onClick={() => {
+                const request = requestFor(user);
+                if (request) void run(user, request);
+              }}
+            >
+              {busyId === user.id ? t("searching") : t(actionLabel(variant))}
+            </Button>
           </li>
         ))}
       </ul>
@@ -110,7 +98,5 @@ function actionLabel(variant: ListVariant): string {
   switch (variant) {
     case "blocks":
       return "unblock";
-    case "requests":
-      return "";
   }
 }

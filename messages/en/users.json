@@ -856,5 +856,21 @@
     "removed": "Photo removed.",
     "errorGeneric": "Could not complete the operation. Please try again.",
     "helpText": "JPEG, PNG, WebP or AVIF. Max 10 MB."
+  },
+  "requests": {
+    "subtitle": "People who want to follow your private profile. Once approved, they see what you share with followers.",
+    "pendingCount": "{count, plural, =0 {No pending requests} one {# pending request} other {# pending requests}}",
+    "approved": "Approved · now follows you",
+    "alreadyFollowing": "You follow them",
+    "alreadyRequested": "Your request is sent",
+    "rejected": "You rejected {name}'s request.",
+    "rejectError": "We couldn't reject {name}'s request. Please try again.",
+    "gone": "{name} withdrew their request.",
+    "allDone": "You answered every request.",
+    "emptyPublicTitle": "Your profile is public",
+    "emptyPublicDescription": "With a public profile anyone can follow you without asking, so no requests will arrive here.",
+    "emptyPublicCta": "Change privacy",
+    "emptyPrivateDescription": "When someone asks to follow you, it will show up here.",
+    "emptyPrivateCta": "See your followers"
   }
 }

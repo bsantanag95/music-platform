@@ -935,6 +935,22 @@ export const ConnectionsPageResponseSchema = z.object({
 });
 export type ConnectionsPageResponse = z.infer<typeof ConnectionsPageResponseSchema>;
 
+// Página de la bandeja de solicitudes recibidas, por fecha y con cursor (openspec: refine-follow-requests-phase1, D1).
+// `youFollow`: si el dueño ya sigue a esa persona (`accepted`) o se lo pidió (`pending`).
+export const FollowRequestsPageResponseSchema = z.object({
+  users: z.array(
+    UserSummarySchema.extend({
+      requestedAt: z.string(),
+      youFollow: z.enum(["accepted", "pending"]).nullable(),
+    }),
+  ),
+  hasNext: z.boolean(),
+  nextCursor: z.string().nullable(),
+  total: z.number().int(),
+});
+export type FollowRequestsPageResponse = z.infer<typeof FollowRequestsPageResponseSchema>;
+export type FollowRequestItem = FollowRequestsPageResponse["users"][number];
+
 export const UserListResponseSchema = z.object({
   users: z.array(UserSummarySchema),
   page: z.number().int(),

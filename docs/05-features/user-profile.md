@@ -344,6 +344,20 @@ Seguidos y Seguidores comparten `ProfileConnectionsView`.
   Seguidores, "Para seguir de vuelta" (hasta 5 del segmento `notBack`, con "Seguir" y "Ver las N"); en un
   perfil ajeno con sesión, "En común con <nombre>" (`getMutualFollowersPreview`) con enlace a "Seguidos en común".
 
+**Bandeja de solicitudes `/me/follow-requests`, Fase 1** (`refine-follow-requests-phase1`, 2026-10-29): capacidad
+`follow-requests-inbox`.
+- Metadata, migas (perfil / Solicitudes de seguimiento), título y subtítulo con qué implica aprobar; la cifra de
+  pendientes va sobre la lista y baja al responder.
+- **Orden por fecha** (más recientes primero) y "Mostrar más" por cursor (`listFollowRequestsPage`, modo `cursor` de
+  `GET /api/me/follow-requests`); filas (`FollowRequestList`, reemplaza a `UserList` variante `requests`) con avatar,
+  @usuario y "hace X".
+- **Rechazar con Deshacer diferido** (mismo patrón que quitar un seguidor; `POST …/reject` al vencer el aviso, con otro
+  rechazo o al salir con `keepalive`; un 404 cuenta como hecho). **Aprobar** es inmediato y deja la fila: "Aprobada ·
+  ahora te sigue" + "Seguir de vuelta" (o "Ya la sigues" / "Tu solicitud está enviada" según `youFollow`). Si la otra
+  persona retiró la solicitud, la fila sale con un aviso.
+- **Vacío según la privacidad:** con perfil público, "Tu perfil es público" + por qué no llegan solicitudes + "Cambiar
+  la privacidad" (`/me/settings/privacy`); con perfil privado, enlace a tus Seguidores.
+
 ## Tarjeta de Identidad
 
 Primer bloque del Nivel 1, justo bajo la Placa (`IdentityCard.tsx`): hasta **3 elementos
