@@ -292,7 +292,12 @@ export async function listConnectionsPage(
   userId: string,
   kind: ConnectionsKind,
   { q = "", sort = "recent", segment = "all", cursor = null, limit = CONNECTIONS_PAGE_SIZE }: ConnectionsPageOptions = {},
-): Promise<{ users: UserSummary[]; hasNext: boolean; nextCursor: string | null; total: number }> {
+): Promise<{
+  users: (UserSummary & { followedAt: string })[];
+  hasNext: boolean;
+  nextCursor: string | null;
+  total: number;
+}> {
   if (limit < 1 || limit > CONNECTIONS_PAGE_SIZE) {
     throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
   }
@@ -317,7 +322,8 @@ export async function listConnectionsPage(
         profileVisibility: appUser.profileVisibility,
         avatarImageId: appUser.avatarImageId,
         followId: userFollow.id,
-        followedAt: sql<string>`${userFollow.createdAt}::text`,
+        followedAt: userFollow.createdAt,
+        followedAtKey: sql<string>`${userFollow.createdAt}::text`,
         nameKey,
       })
       .from(userFollow)
@@ -341,11 +347,12 @@ export async function listConnectionsPage(
   const hasNext = rows.length > limit;
   const avatarUrls = await resolveImageUrls(page.map((row) => row.avatarImageId));
   return {
-    users: page.map((row) => serializeSummary(row, avatarUrls)),
+    // Desde cuándo existe la relación listada (enrich-connections-rows, D1).
+    users: page.map((row) => ({ ...serializeSummary(row, avatarUrls), followedAt: row.followedAt.toISOString() })),
     hasNext,
     nextCursor:
       hasNext && last
-        ? encodeCursor(sort, sort === "recent" ? [last.followedAt, last.followId] : [last.nameKey, last.username])
+        ? encodeCursor(sort, sort === "recent" ? [last.followedAtKey, last.followId] : [last.nameKey, last.username])
         : null,
     total: counted?.count ?? 0,
   };

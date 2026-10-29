@@ -24,6 +24,8 @@ const mocks = vi.hoisted(() => ({
   countPendingFollowRequests: vi.fn(),
   followersOf: vi.fn(),
   relationsFor: vi.fn(),
+  countSharedAlbums: vi.fn(),
+  rail: vi.fn(),
 }));
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: () => mocks.resolveSession() }));
 vi.mock("@/services/social/profiles", () => ({
@@ -36,6 +38,10 @@ vi.mock("@/services/social/following", () => ({
   countPendingFollowRequests: (...a: unknown[]) => mocks.countPendingFollowRequests(...a),
   followersOf: (...a: unknown[]) => mocks.followersOf(...a),
 }));
+vi.mock("@/services/profiles/affinity", () => ({
+  countSharedAlbums: (...a: unknown[]) => mocks.countSharedAlbums(...a),
+}));
+vi.mock("./ConnectionsRail", () => ({ ConnectionsRail: (...a: unknown[]) => mocks.rail(...a) }));
 vi.mock("@/services/social/relations", () => ({
   relationsFor: (...a: unknown[]) => mocks.relationsFor(...a),
 }));
@@ -92,6 +98,8 @@ describe("ProfileConnectionsView", () => {
     mocks.followersOf.mockResolvedValue(new Set(["u1"]));
     mocks.countConnectionSegments.mockResolvedValue({ all: 80, mutual: 30, notBack: 50 });
     mocks.countPendingFollowRequests.mockResolvedValue(0);
+    mocks.countSharedAlbums.mockResolvedValue(new Map([["u1", 5]]));
+    mocks.rail.mockResolvedValue(null);
   });
 
   it("perfil inexistente → notFound", async () => {
@@ -193,5 +201,18 @@ describe("ProfileConnectionsView", () => {
     await expect(connectionsMetadata("ana", "followersTab")).resolves.toEqual({
       title: "connections.followersTab · Ana",
     });
+  });
+  it("discos en común en la fila y panel lateral solo con contenido", async () => {
+    mocks.getProfileByUsername.mockResolvedValue(profile);
+    const first = render(await ProfileConnectionsView({ username: "ana", kind: "followers" }));
+    expect(first.container.querySelector("main")?.className).toContain("max-w-3xl");
+    expect(mocks.countSharedAlbums).toHaveBeenCalledWith("viewer", ["u1"]);
+    first.unmount();
+
+    mocks.rail.mockResolvedValue(<aside data-testid="rail" />);
+    const { getByTestId, container } = render(await ProfileConnectionsView({ username: "ana", kind: "followers" }));
+    expect(getByTestId("rail")).toBeInTheDocument();
+    expect(container.querySelector("main")?.className).toContain("max-w-6xl");
+    expect(mocks.rail).toHaveBeenLastCalledWith({ profile, kind: "followers", viewerId: "viewer" });
   });
 });

@@ -922,7 +922,13 @@ export type UserSearchResult = z.infer<typeof UserSearchResultSchema>;
 // (openspec: refine-connections-page-phase1, D2), con si la persona sigue al visitante y el total del corte
 // (redesign-connections-toolbar, D1, D3).
 export const ConnectionsPageResponseSchema = z.object({
-  users: z.array(UserSearchResultSchema.extend({ followsYou: z.boolean() })),
+  users: z.array(
+    UserSearchResultSchema.extend({
+      followsYou: z.boolean(),
+      followedAt: z.string(),
+      sharedAlbums: z.number().int().nullable(),
+    }),
+  ),
   hasNext: z.boolean(),
   nextCursor: z.string().nullable(),
   total: z.number().int(),

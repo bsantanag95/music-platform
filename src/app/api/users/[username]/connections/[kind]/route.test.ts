@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   listConnectionsPage: vi.fn(),
   followersOf: vi.fn(),
   relationsFor: vi.fn(),
+  countSharedAlbums: vi.fn(),
 }));
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: () => mocks.resolveSession() }));
 vi.mock("@/services/social/profiles", () => ({ getProfileByUsername: mocks.getProfileByUsername }));
@@ -16,9 +17,17 @@ vi.mock("@/services/social/following", () => ({
   followersOf: mocks.followersOf,
 }));
 vi.mock("@/services/social/relations", () => ({ relationsFor: mocks.relationsFor }));
+vi.mock("@/services/profiles/affinity", () => ({ countSharedAlbums: mocks.countSharedAlbums }));
 
 const profile = { id: "owner", username: "ana", accessible: true, relation: "none" };
-const leo = { id: "u1", username: "leo", displayName: null, profileVisibility: "public", avatarUrl: null };
+const leo = {
+  id: "u1",
+  username: "leo",
+  displayName: null,
+  profileVisibility: "public",
+  avatarUrl: null,
+  followedAt: "2026-10-01T00:00:00.000Z",
+};
 
 function call(kind: string, query = "") {
   return GET(new NextRequest(`http://localhost/api/users/ana/connections/${kind}${query}`), {
@@ -34,13 +43,14 @@ describe("GET /api/users/{username}/connections/{kind}", () => {
     mocks.listConnectionsPage.mockResolvedValue({ users: [leo], hasNext: true, nextCursor: "abc", total: 7 });
     mocks.relationsFor.mockResolvedValue(new Map([["u1", "following"]]));
     mocks.followersOf.mockResolvedValue(new Set(["u1"]));
+    mocks.countSharedAlbums.mockResolvedValue(new Map([["u1", 8]]));
   });
 
   it("pasa filtros y cursor, y devuelve relación, si te sigue y el total", async () => {
     const response = await call("followers", "?q=jo&sort=name&cursor=xyz");
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
-      users: [{ ...leo, relation: "following", followsYou: true }],
+      users: [{ ...leo, relation: "following", followsYou: true, sharedAlbums: 8 }],
       hasNext: true,
       nextCursor: "abc",
       total: 7,
@@ -52,6 +62,15 @@ describe("GET /api/users/{username}/connections/{kind}", () => {
       cursor: "xyz",
     });
     expect(mocks.followersOf).toHaveBeenCalledWith("viewer", ["u1"]);
+    expect(mocks.countSharedAlbums).toHaveBeenCalledWith("viewer", ["u1"]);
+  });
+
+  it("bajo el umbral o con bloqueo no hay discos en común", async () => {
+    mocks.countSharedAlbums.mockResolvedValue(new Map());
+    expect((await (await call("followers")).json()).users[0].sharedAlbums).toBeNull();
+    mocks.countSharedAlbums.mockResolvedValue(new Map([["u1", 8]]));
+    mocks.relationsFor.mockResolvedValue(new Map([["u1", "blocked"]]));
+    expect((await (await call("followers")).json()).users[0].sharedAlbums).toBeNull();
   });
 
   it("orden por defecto: Nombre en los Seguidos de un perfil ajeno, Recientes en Seguidores", async () => {

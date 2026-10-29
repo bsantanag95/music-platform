@@ -17,11 +17,13 @@ import {
   parseConnectionSort,
 } from "@/services/social/connection-filters";
 import { relationsFor } from "@/services/social/relations";
+import { countSharedAlbums } from "@/services/profiles/affinity";
 import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FollowButton } from "@/components/social/FollowButton";
 import { ProfileConnectionsHeader } from "./ProfileConnectionsHeader";
 import { ConnectionsUserList } from "./ConnectionsUserList";
+import { ConnectionsRail } from "./ConnectionsRail";
 
 // Perfil de una vista de conexiones, o 404 (con redirección si el usuario cambió de nombre).
 export async function loadConnectionsProfile(username: string, path: string) {
@@ -103,9 +105,12 @@ export async function ProfileConnectionsView({
     ? await listConnectionsPage(profile.id, kind, { q, sort, segment })
     : { users: [], hasNext: false, nextCursor: null, total: 0 };
   const ids = page.users.map((user) => user.id);
-  const [relations, followsViewer, segmentCounts, pendingRequests] = await Promise.all([
+  // Panel lateral desde `lg`; sin contenido, la página conserva su ancho (enrich-connections-rows, D3).
+  const rail = profile.accessible ? await ConnectionsRail({ profile, kind, viewerId }) : null;
+  const [relations, followsViewer, shared, segmentCounts, pendingRequests] = await Promise.all([
     relationsFor(viewerId, ids),
     followersOf(viewerId, ids),
+    countSharedAlbums(viewerId, ids),
     isOwn && profile.accessible ? countConnectionSegments(profile.id, kind) : Promise.resolve(undefined),
     isOwn && kind === "followers" ? countPendingFollowRequests(profile.id) : Promise.resolve(0),
   ]);
@@ -131,7 +136,9 @@ export async function ProfileConnectionsView({
     );
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:py-12">
+    <main
+      className={`mx-auto flex min-h-screen w-full ${rail ? "max-w-6xl" : "max-w-3xl"} flex-col gap-6 px-4 py-8 sm:py-12`}
+    >
       <ProfileConnectionsHeader
         username={profile.username}
         displayName={profile.displayName}
@@ -141,39 +148,45 @@ export async function ProfileConnectionsView({
         showMutualTab={viewerId !== null && !isOwn}
         counts={summary ? { followers: summary.followerCount, following: summary.followingCount } : null}
       />
-      {!profile.accessible ? (
-        await PrivateConnectionsNotice({ profile, authenticated: Boolean(session) })
-      ) : (
-        <>
-          {pendingRequests > 0 ? (
-            <p className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-amber/40 bg-amber/10 px-4 py-2.5 font-body text-sm text-paper">
-              {t("connections.pendingRequests", { count: pendingRequests })}
-              <Link href="/me/follow-requests" className="font-data text-xs text-amber hover:text-amber-hover">
-                {t("connections.pendingRequestsLink")}
-              </Link>
-            </p>
-          ) : null}
-          <ConnectionsUserList
-            users={page.users.map((user) => ({
-              ...user,
-              relation: relations.get(user.id),
-              followsYou: followsViewer.has(user.id),
-            }))}
-            authenticated={Boolean(session)}
-            empty={empty}
-            ownRemovableFollowers={isOwn && kind === "followers"}
-            ownFollowing={isOwn && kind === "following"}
-            paging={{
-              username: profile.username,
-              kind,
-              total: page.total,
-              hasNext: page.hasNext,
-              nextCursor: page.nextCursor,
-            }}
-            filters={{ initial: { q, sort, segment }, defaultSort, segmentCounts }}
-          />
-        </>
-      )}
+      <div className={rail ? "grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_280px]" : "contents"}>
+        <div className="flex min-w-0 flex-col gap-6">
+          {!profile.accessible ? (
+            await PrivateConnectionsNotice({ profile, authenticated: Boolean(session) })
+          ) : (
+            <>
+              {pendingRequests > 0 ? (
+                <p className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-amber/40 bg-amber/10 px-4 py-2.5 font-body text-sm text-paper">
+                  {t("connections.pendingRequests", { count: pendingRequests })}
+                  <Link href="/me/follow-requests" className="font-data text-xs text-amber hover:text-amber-hover">
+                    {t("connections.pendingRequestsLink")}
+                  </Link>
+                </p>
+              ) : null}
+              <ConnectionsUserList
+                users={page.users.map((user) => ({
+                  ...user,
+                  relation: relations.get(user.id),
+                  followsYou: followsViewer.has(user.id),
+                  sharedAlbums: relations.get(user.id) === "blocked" ? null : (shared.get(user.id) ?? null),
+                }))}
+                authenticated={Boolean(session)}
+                empty={empty}
+                ownRemovableFollowers={isOwn && kind === "followers"}
+                ownFollowing={isOwn && kind === "following"}
+                paging={{
+                  username: profile.username,
+                  kind,
+                  total: page.total,
+                  hasNext: page.hasNext,
+                  nextCursor: page.nextCursor,
+                }}
+                filters={{ initial: { q, sort, segment }, defaultSort, segmentCounts }}
+              />
+            </>
+          )}
+        </div>
+        {rail}
+      </div>
     </main>
   );
 }
