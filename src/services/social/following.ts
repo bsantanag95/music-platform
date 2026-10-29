@@ -230,11 +230,11 @@ export interface ConnectionsPageOptions {
 
 // Clave de orden de la última fila, como cursor opaco (redesign-connections-toolbar, D1): `[orden, valor, desempate]`
 // en JSON base64url. `created_at` viaja como texto de Postgres para no perder los microsegundos.
-function encodeCursor(sort: ConnectionSort | "requests", key: [string, string]): string {
+function encodeCursor(sort: ConnectionSort | "requests" | "sent", key: [string, string]): string {
   return Buffer.from(JSON.stringify([sort, ...key])).toString("base64url");
 }
 
-function decodeCursor(cursor: string, sort: ConnectionSort | "requests"): [string, string] {
+function decodeCursor(cursor: string, sort: ConnectionSort | "requests" | "sent"): [string, string] {
   try {
     const parsed: unknown = JSON.parse(Buffer.from(cursor, "base64url").toString("utf8"));
     if (
@@ -476,6 +476,101 @@ export async function listFollowRequestsPage(
     nextCursor: hasNext && last ? encodeCursor("requests", [last.requestedAtKey, last.followId]) : null,
     total,
   };
+}
+
+// Solicitudes que el usuario envió y siguen pendientes, hacia cuentas activas, de la más reciente a la más antigua
+// (openspec: add-follow-requests-sent-and-bulk, D2). Mismo cursor opaco que la bandeja de recibidas.
+export async function listSentRequestsPage(
+  userId: string,
+  { cursor = null, limit = CONNECTIONS_PAGE_SIZE }: { cursor?: string | null; limit?: number } = {},
+): Promise<{
+  users: (UserSummary & { requestedAt: string })[];
+  hasNext: boolean;
+  nextCursor: string | null;
+  total: number;
+}> {
+  if (limit < 1 || limit > CONNECTIONS_PAGE_SIZE) {
+    throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
+  }
+  const filters: SQL[] = [eq(userFollow.followerId, userId), eq(userFollow.status, "pending"), activeUserCondition()];
+  if (cursor) {
+    const [value, tiebreak] = decodeCursor(cursor, "sent");
+    filters.push(sql`(${userFollow.createdAt}, ${userFollow.id}) < (${value}::timestamptz, ${tiebreak}::uuid)`);
+  }
+  const [rows, total] = await Promise.all([
+    db
+      .select({
+        id: appUser.id,
+        username: appUser.username,
+        displayName: appUser.displayName,
+        profileVisibility: appUser.profileVisibility,
+        avatarImageId: appUser.avatarImageId,
+        followId: userFollow.id,
+        requestedAt: userFollow.createdAt,
+        requestedAtKey: sql<string>`${userFollow.createdAt}::text`,
+      })
+      .from(userFollow)
+      .innerJoin(appUser, eq(userFollow.followedId, appUser.id))
+      .where(and(...filters))
+      .orderBy(desc(userFollow.createdAt), desc(userFollow.id))
+      .limit(limit + 1),
+    countSentRequests(userId),
+  ]);
+
+  const page = rows.slice(0, limit);
+  const last = page.at(-1);
+  const hasNext = rows.length > limit;
+  const avatarUrls = await resolveImageUrls(page.map((row) => row.avatarImageId));
+  return {
+    users: page.map((row) => ({ ...serializeSummary(row, avatarUrls), requestedAt: row.requestedAt.toISOString() })),
+    hasNext,
+    nextCursor: hasNext && last ? encodeCursor("sent", [last.requestedAtKey, last.followId]) : null,
+    total,
+  };
+}
+
+// Cuántas solicitudes envió el usuario que siguen pendientes, hacia cuentas activas (cifra de la pestaña Enviadas).
+export async function countSentRequests(userId: string): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(userFollow)
+    .innerJoin(appUser, eq(userFollow.followedId, appUser.id))
+    .where(and(eq(userFollow.followerId, userId), eq(userFollow.status, "pending"), activeUserCondition()));
+  return row?.count ?? 0;
+}
+
+// Aprueba de una vez todas las solicitudes pendientes dirigidas al usuario, de cuentas activas y sin bloqueo en ningún
+// sentido (openspec: add-follow-requests-sent-and-bulk, D3). Lo mismo que `approveRequest` en lote y en una sola
+// transacción: pasan a `accepted`, se retiran sus avisos de solicitud y cada persona recibe `follow_accepted`.
+export async function approveAllRequests(ownerId: string): Promise<{ approved: number }> {
+  return db.transaction(async (tx) => {
+    const pending = await tx
+      .select({ id: userFollow.id, requesterId: userFollow.followerId })
+      .from(userFollow)
+      .innerJoin(appUser, eq(userFollow.followerId, appUser.id))
+      .where(
+        and(
+          eq(userFollow.followedId, ownerId),
+          eq(userFollow.status, "pending"),
+          activeUserCondition(),
+          sql`NOT EXISTS (SELECT 1 FROM user_block b WHERE (b.blocker_id = ${ownerId} AND b.blocked_id = ${userFollow.followerId}) OR (b.blocker_id = ${userFollow.followerId} AND b.blocked_id = ${ownerId}))`,
+        ),
+      );
+    if (pending.length === 0) return { approved: 0 };
+    const ids = pending.map((row) => row.id);
+    await tx.update(userFollow).set({ status: "accepted" }).where(inArray(userFollow.id, ids));
+    await retractFollowRequestNotifications(tx, ids);
+    await emitNotifications(
+      tx,
+      pending.map((row) => ({
+        kind: "follow_accepted" as const,
+        recipientId: row.requesterId,
+        actorId: ownerId,
+        followId: row.id,
+      })),
+    );
+    return { approved: pending.length };
+  });
 }
 
 // Número de solicitudes de seguimiento pendientes dirigidas al usuario, para

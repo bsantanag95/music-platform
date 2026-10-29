@@ -951,6 +951,17 @@ export const FollowRequestsPageResponseSchema = z.object({
 export type FollowRequestsPageResponse = z.infer<typeof FollowRequestsPageResponseSchema>;
 export type FollowRequestItem = FollowRequestsPageResponse["users"][number];
 
+// Solicitudes enviadas y pendientes (openspec: add-follow-requests-sent-and-bulk, D2).
+export const SentRequestsPageResponseSchema = z.object({
+  users: z.array(UserSummarySchema.extend({ requestedAt: z.string() })),
+  hasNext: z.boolean(),
+  nextCursor: z.string().nullable(),
+  total: z.number().int(),
+});
+export type SentRequestsPageResponse = z.infer<typeof SentRequestsPageResponseSchema>;
+
+export const ApproveAllResponseSchema = z.object({ approved: z.number().int() });
+
 export const UserListResponseSchema = z.object({
   users: z.array(UserSummarySchema),
   page: z.number().int(),

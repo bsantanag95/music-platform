@@ -18,6 +18,8 @@ const mocks = vi.hoisted(() => ({
   listFollowing: vi.fn(),
   listFollowRequests: vi.fn(),
   listFollowRequestsPage: vi.fn(),
+  listSentRequestsPage: vi.fn(),
+  approveAllRequests: vi.fn(),
   removeFollower: vi.fn(),
   blockUser: vi.fn(),
   unblockUser: vi.fn(),
@@ -46,6 +48,8 @@ vi.mock("@/services/social/following", () => ({
   listFollowing: mocks.listFollowing,
   listFollowRequests: mocks.listFollowRequests,
   listFollowRequestsPage: mocks.listFollowRequestsPage,
+  listSentRequestsPage: mocks.listSentRequestsPage,
+  approveAllRequests: mocks.approveAllRequests,
   removeFollower: mocks.removeFollower,
 }));
 vi.mock("@/services/social/blocking", () => ({
@@ -61,6 +65,8 @@ import { PUT as followPut, DELETE as followDelete } from "@/app/api/users/[usern
 import { POST as approvePost } from "@/app/api/me/follow-requests/[userId]/approve/route";
 import { POST as rejectPost } from "@/app/api/me/follow-requests/[userId]/reject/route";
 import { GET as requestsGet } from "@/app/api/me/follow-requests/route";
+import { GET as sentRequestsGet } from "@/app/api/me/follow-requests/sent/route";
+import { POST as approveAllPost } from "@/app/api/me/follow-requests/approve-all/route";
 import { GET as followersGet } from "@/app/api/me/followers/route";
 import { GET as followingGet } from "@/app/api/me/following/route";
 import { DELETE as followerDelete } from "@/app/api/me/followers/[userId]/route";
@@ -207,6 +213,18 @@ describe("seguimiento", () => {
     await requestsGet(url("/api/me/follow-requests?cursor=abc"));
     expect(mocks.listFollowRequestsPage).toHaveBeenLastCalledWith("u1", { cursor: "abc" });
     expect(mocks.listFollowRequests).not.toHaveBeenCalled();
+  });
+
+  it("solicitudes enviadas por cursor y aprobar todas", async () => {
+    const page = { users: [], hasNext: false, nextCursor: null, total: 0 };
+    mocks.listSentRequestsPage.mockResolvedValue(page);
+    expect(await (await sentRequestsGet(url("/api/me/follow-requests/sent?cursor=xy"))).json()).toEqual(page);
+    expect(mocks.listSentRequestsPage).toHaveBeenCalledWith("u1", { cursor: "xy" });
+
+    mocks.approveAllRequests.mockResolvedValue({ approved: 4 });
+    const approved = await approveAllPost();
+    expect(await approved.json()).toEqual({ approved: 4 });
+    expect(mocks.approveAllRequests).toHaveBeenCalledWith("u1");
   });
 
   it("elimina un seguidor propio", async () => {

@@ -12,8 +12,10 @@ vi.mock("@/i18n/navigation", () => ({
       {children}
     </a>
   ),
-  useRouter: () => ({ refresh: vi.fn() }),
+  useRouter: () => router,
 }));
+
+const router = { refresh: vi.fn(), push: vi.fn() };
 
 const mocks = vi.hoisted(() => {
   class ApiError extends Error {
@@ -160,6 +162,63 @@ describe("FollowRequestList", () => {
     await user.click(screen.getByRole("button", { name: "Mostrar 1 más" }));
     expect(await screen.findByText("@pia", { exact: false })).toBeInTheDocument();
     expect(mocks.apiFetch).toHaveBeenCalledWith("/api/me/follow-requests?cursor=c1", expect.anything());
+  });
+  it("Aprobar todas: desde 3, con confirmación, marca todas como aprobadas", async () => {
+    mocks.apiFetch.mockResolvedValue({ approved: 3 });
+    const user = setup();
+    renderWithIntl(<FollowRequestList initial={page} empty={null} />);
+    await user.click(screen.getByRole("button", { name: "Aprobar las 3" }));
+    expect(screen.getByText("¿Aprobar las 3 solicitudes?")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Aprobar todas" }));
+    await waitFor(() =>
+      expect(mocks.apiFetch).toHaveBeenCalledWith("/api/me/follow-requests/approve-all", expect.anything(), {
+        method: "POST",
+      }),
+    );
+    expect(await screen.findAllByText("Aprobada · ahora te sigue")).toHaveLength(3);
+    expect(router.refresh).toHaveBeenCalled();
+  });
+
+  it("con menos de 3 no ofrece Aprobar todas", () => {
+    renderWithIntl(
+      <FollowRequestList initial={{ ...page, users: page.users.slice(0, 2), total: 2 }} empty={null} />,
+    );
+    expect(screen.queryByRole("button", { name: /Aprobar las/ })).toBeNull();
+  });
+
+  it("Aprobar todas envía antes el rechazo pendiente", async () => {
+    mocks.apiFetch.mockResolvedValue({ approved: 2 });
+    const user = setup();
+    renderWithIntl(<FollowRequestList initial={{ ...page, total: 4 }} empty={null} />);
+    await user.click(within(rowOf("leo")).getByRole("button", { name: "Rechazar" }));
+    await user.click(screen.getByRole("button", { name: "Aprobar las 3" }));
+    await user.click(screen.getByRole("button", { name: "Aprobar todas" }));
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith("/api/me/follow-requests/u1/reject", expect.anything()),
+    );
+  });
+
+  it("menú ⋯: bloquear con confirmación quita la solicitud", async () => {
+    mocks.apiFetch.mockResolvedValue({ blocked: true });
+    const user = setup();
+    renderWithIntl(<FollowRequestList initial={page} empty={null} />);
+    await user.click(screen.getByRole("button", { name: "Acciones para «leo»" }));
+    await user.click(screen.getByRole("menuitem", { name: "Bloquear…" }));
+    expect(screen.getByText("¿Bloquear a leo?")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Bloquear" }));
+    await waitFor(() =>
+      expect(mocks.apiFetch).toHaveBeenCalledWith("/api/users/leo/block", expect.anything(), { method: "PUT" }),
+    );
+    expect(await screen.findByText("Bloqueaste a leo.")).toBeInTheDocument();
+    expect(screen.queryByText("@leo", { exact: false })).toBeNull();
+  });
+
+  it("menú ⋯: ver perfil", async () => {
+    const user = setup();
+    renderWithIntl(<FollowRequestList initial={page} empty={null} />);
+    await user.click(screen.getByRole("button", { name: "Acciones para «leo»" }));
+    await user.click(screen.getByRole("menuitem", { name: "Ver perfil" }));
+    expect(router.push).toHaveBeenCalledWith("/users/leo");
   });
 });
 

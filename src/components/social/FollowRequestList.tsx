@@ -1,17 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { apiFetch, ApiError } from "@/lib/api/client";
 import {
+  ApproveAllResponseSchema,
+  BlockedResponseSchema,
   FollowRequestsPageResponseSchema,
   NoContentSchema,
   type FollowRequestItem,
   type FollowRequestsPageResponse,
 } from "@/lib/api/schemas";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { RowMenu, RowMenuItem, RowMenuSeparator } from "@/components/ui/RowMenu";
 import { UndoToast } from "@/components/ui/UndoToast";
+import { useDeferredRemoval } from "./use-deferred-removal";
 import { FollowButton } from "./FollowButton";
 import { UserAvatar } from "./UserAvatar";
 
@@ -23,12 +28,8 @@ interface FollowRequestListProps {
 
 type Row = FollowRequestItem & { approved?: boolean };
 
-// Rechazo a la espera de que venza el aviso (openspec: refine-follow-requests-phase1, D2).
-interface PendingReject {
-  user: Row;
-  index: number;
-  failed: boolean;
-}
+/** Desde cuántas pendientes se ofrece "Aprobar todas" (add-follow-requests-sent-and-bulk, D3). */
+export const APPROVE_ALL_MIN = 3;
 
 function sendReject(user: Row, keepalive = false): Promise<unknown> {
   return fetch(`/api/me/follow-requests/${encodeURIComponent(user.id)}/reject`, { method: "POST", keepalive }).then(
@@ -40,9 +41,10 @@ function sendReject(user: Row, keepalive = false): Promise<unknown> {
   );
 }
 
-// Bandeja de solicitudes recibidas (openspec: refine-follow-requests-phase1): de la más reciente a la más antigua, con
-// "Mostrar más" por cursor. Rechazar quita la fila y ofrece Deshacer; el rechazo se envía al vencer el aviso, con otro
-// rechazo o al salir de la vista. Aprobar deja la fila con "ahora te sigue" y, si no la sigues, "Seguir de vuelta".
+// Bandeja de solicitudes recibidas (openspec: refine-follow-requests-phase1, add-follow-requests-sent-and-bulk): de la
+// más reciente a la más antigua, con "Mostrar más" por cursor. Rechazar quita la fila y ofrece Deshacer; el rechazo se
+// envía al vencer el aviso, con otro rechazo o al salir de la vista. Aprobar deja la fila con "ahora te sigue" y, si no
+// la sigues, "Seguir de vuelta". Desde 3 pendientes, "Aprobar todas" (con confirmación); el menú ⋯ ofrece Bloquear.
 export function FollowRequestList({ initial, empty }: FollowRequestListProps) {
   const t = useTranslations("users.requests");
   const tUsers = useTranslations("users");
@@ -58,68 +60,55 @@ export function FollowRequestList({ initial, empty }: FollowRequestListProps) {
   const [loadError, setLoadError] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [rejected, setRejected] = useState<PendingReject | null>(null);
+  const [confirmingAll, setConfirmingAll] = useState(false);
+  const [approvingAll, setApprovingAll] = useState(false);
+  const [blocking, setBlocking] = useState<Row | null>(null);
+  const router = useRouter();
 
-  // El rechazo pendiente vive también en un ref: lo envían el desmontaje y `pagehide`.
-  const rejectRef = useRef<PendingReject | null>(null);
-  useEffect(() => {
-    const flush = () => {
-      const pending = rejectRef.current;
-      rejectRef.current = null;
-      if (pending) void sendReject(pending.user, true).catch(() => undefined);
-    };
-    window.addEventListener("pagehide", flush);
-    return () => {
-      window.removeEventListener("pagehide", flush);
-      flush();
-    };
-  }, []);
+  const changeTotal = useCallback((delta: number) => setTotal((count) => Math.max(0, count + delta)), []);
+  const {
+    pending: rejected,
+    remove: reject,
+    undo,
+    expire,
+    flushNow,
+    dismiss,
+  } = useDeferredRemoval<Row>({ items, setItems, send: sendReject, onCountChange: changeTotal });
 
-  const restore = useCallback((pending: PendingReject) => {
-    setItems((current) => {
-      if (current.some((item) => item.id === pending.user.id)) return current;
-      const next = [...current];
-      next.splice(Math.min(pending.index, next.length), 0, pending.user);
-      return next;
-    });
-    setTotal((count) => count + 1);
-  }, []);
-
-  const commit = useCallback(
-    (pending: PendingReject) => {
-      if (rejectRef.current?.user.id === pending.user.id) rejectRef.current = null;
-      sendReject(pending.user).catch(() => {
-        restore(pending);
-        setRejected({ ...pending, failed: true });
-      });
-    },
-    [restore],
-  );
-
-  function reject(user: Row) {
-    const previous = rejectRef.current;
-    if (previous) commit(previous);
+  async function approveAll() {
+    setConfirmingAll(false);
+    flushNow();
+    setApprovingAll(true);
     setNotice(null);
-    const index = items.findIndex((item) => item.id === user.id);
-    setItems((current) => current.filter((item) => item.id !== user.id));
-    setTotal((count) => Math.max(0, count - 1));
-    const next = { user, index, failed: false };
-    rejectRef.current = next;
-    setRejected(next);
+    try {
+      await apiFetch("/api/me/follow-requests/approve-all", ApproveAllResponseSchema, { method: "POST" });
+      setItems((current) => current.map((item) => ({ ...item, approved: true })));
+      setTotal(0);
+      setHasNext(false);
+      // Las cifras de las pestañas vienen del servidor.
+      router.refresh();
+    } catch (error) {
+      setNotice(tErrors(`${error instanceof ApiError ? error.code : "INTERNAL_ERROR"}.description`));
+    } finally {
+      setApprovingAll(false);
+    }
   }
 
-  function undo() {
-    if (!rejected) return;
-    rejectRef.current = null;
-    restore(rejected);
-    setRejected(null);
+  async function block(user: Row) {
+    setBlocking(null);
+    setBusyId(user.id);
+    setNotice(null);
+    try {
+      await apiFetch(`/api/users/${encodeURIComponent(user.username)}/block`, BlockedResponseSchema, { method: "PUT" });
+      setItems((current) => current.filter((item) => item.id !== user.id));
+      setTotal((count) => Math.max(0, count - 1));
+      setNotice(t("blocked", { name: user.displayName ?? user.username }));
+    } catch (error) {
+      setNotice(tErrors(`${error instanceof ApiError ? error.code : "INTERNAL_ERROR"}.description`));
+    } finally {
+      setBusyId(null);
+    }
   }
-
-  const expire = useCallback(() => {
-    const pending = rejectRef.current;
-    if (pending) commit(pending);
-    setRejected(null);
-  }, [commit]);
 
   async function approve(user: Row) {
     setBusyId(user.id);
@@ -174,9 +163,16 @@ export function FollowRequestList({ initial, empty }: FollowRequestListProps) {
   return (
     <div className="flex flex-col gap-3">
       {items.length > 0 ? (
-        <p className="font-data text-xs text-paper-muted" role="status">
-          {t("pendingCount", { count: total })}
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="font-data text-xs text-paper-muted" role="status">
+            {t("pendingCount", { count: total })}
+          </p>
+          {total >= APPROVE_ALL_MIN ? (
+            <Button variant="secondary" disabled={approvingAll} onClick={() => setConfirmingAll(true)}>
+              {t("approveAll", { count: total })}
+            </Button>
+          ) : null}
+        </div>
       ) : null}
       {items.length === 0 ? (
         empty
@@ -230,6 +226,18 @@ export function FollowRequestList({ initial, empty }: FollowRequestListProps) {
                       <Button variant="secondary" disabled={busy} onClick={() => reject(user)}>
                         {tUsers("reject")}
                       </Button>
+                      <RowMenu
+                        label={tUsers("connections.menuLabel", { name })}
+                        triggerClassName="size-8 [@media(pointer:coarse)]:size-11"
+                      >
+                        <RowMenuItem onSelect={() => router.push(`/users/${encodeURIComponent(user.username)}`)}>
+                          {t("viewProfile")}
+                        </RowMenuItem>
+                        <RowMenuSeparator />
+                        <RowMenuItem danger onSelect={() => (busy ? undefined : setBlocking(user))}>
+                          {t("block")}
+                        </RowMenuItem>
+                      </RowMenu>
                     </>
                   )}
                 </div>
@@ -255,7 +263,7 @@ export function FollowRequestList({ initial, empty }: FollowRequestListProps) {
         </div>
       ) : null}
       {notice ? (
-        <p role="alert" className="font-data text-xs text-danger">
+        <p role="alert" className="font-data text-xs text-paper-muted">
           {notice}
         </p>
       ) : null}
@@ -264,17 +272,38 @@ export function FollowRequestList({ initial, empty }: FollowRequestListProps) {
       ) : null}
       {rejected ? (
         <UndoToast
-          key={`${rejected.user.id}-${rejected.failed}`}
+          key={`${rejected.item.id}-${rejected.failed}`}
           message={
             rejected.failed
-              ? t("rejectError", { name: rejected.user.displayName ?? rejected.user.username })
-              : t("rejected", { name: rejected.user.displayName ?? rejected.user.username })
+              ? t("rejectError", { name: rejected.item.displayName ?? rejected.item.username })
+              : t("rejected", { name: rejected.item.displayName ?? rejected.item.username })
           }
           undoLabel={tUsers("connections.undo")}
           onUndo={rejected.failed ? undefined : undo}
-          onExpire={rejected.failed ? () => setRejected(null) : expire}
+          onExpire={rejected.failed ? dismiss : expire}
         />
       ) : null}
+      <ConfirmDialog
+        open={confirmingAll}
+        title={t("approveAllConfirmTitle", { count: total })}
+        message={t("approveAllConfirmMessage")}
+        confirmLabel={t("approveAllConfirm")}
+        cancelLabel={tUsers("connections.removeCancel")}
+        onConfirm={() => void approveAll()}
+        onCancel={() => setConfirmingAll(false)}
+      />
+      <ConfirmDialog
+        open={blocking !== null}
+        title={t("blockConfirmTitle", { name: blocking?.displayName ?? blocking?.username ?? "" })}
+        message={t("blockConfirmMessage")}
+        confirmLabel={t("blockConfirm")}
+        cancelLabel={tUsers("connections.removeCancel")}
+        danger
+        onConfirm={() => {
+          if (blocking) void block(blocking);
+        }}
+        onCancel={() => setBlocking(null)}
+      />
     </div>
   );
 }

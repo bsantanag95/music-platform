@@ -1000,6 +1000,21 @@ Solicitudes pendientes recibidas por el usuario autenticado (solo de cuentas act
 
 **401** con `AUTH_REQUIRED` sin sesión.
 
+### `GET /api/me/follow-requests/sent?cursor=`
+
+Solicitudes que el usuario autenticado envió y siguen pendientes, hacia cuentas activas, de la más reciente a la más
+antigua, 50 por página (cambio `add-follow-requests-sent-and-bulk`). `cursor` vacío o ausente = primera página.
+**200 OK:** `{ users: [{ id, username, displayName, profileVisibility, avatarUrl, requestedAt }], hasNext, nextCursor,
+total }`. Cursor ilegible → **400** `VALIDATION_ERROR`. **401** sin sesión. Cancelar una es
+`DELETE /api/users/[username]/follow`.
+
+### `POST /api/me/follow-requests/approve-all`
+
+Aprueba en una transacción todas las solicitudes pendientes recibidas por el usuario autenticado, de cuentas activas y
+sin bloqueo en ningún sentido: pasan a `accepted`, se retiran sus avisos `follow_request` y cada persona recibe
+`follow_accepted` (cambio `add-follow-requests-sent-and-bulk`). **200 OK:** `{ approved }` (cuántas). **401** sin
+sesión.
+
 ### `POST /api/me/follow-requests/[userId]/approve`
 
 Aprueba la solicitud pendiente recibida de `[userId]`. **204**. **404** con `REQUEST_NOT_FOUND` si
