@@ -6,7 +6,7 @@ import { renderWithIntl } from "@/test/i18n-test-utils";
 import type { NotificationPreferencesResponse } from "@/lib/api/schemas";
 import { NotificationPreferencesForm } from "./NotificationPreferencesForm";
 
-const mocks = vi.hoisted(() => ({ apiFetch: vi.fn() }));
+const mocks = vi.hoisted(() => ({ apiFetch: vi.fn(), refresh: vi.fn() }));
 
 vi.mock("@/lib/api/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api/client")>()),
@@ -16,6 +16,7 @@ vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children }: { href: string; children: ReactNode }) => (
     <a href={href}>{children}</a>
   ),
+  useRouter: () => ({ refresh: mocks.refresh }),
 }));
 
 const ALL_ON = {
@@ -171,6 +172,8 @@ describe("NotificationPreferencesForm", () => {
         "true",
       ),
     );
+    // El menú de Ajustes resume el resumen semanal desde el layout: se vuelve a pedir.
+    expect(mocks.refresh).toHaveBeenCalled();
   });
 
   it("sin email verificado el resumen está deshabilitado y se ofrece verificarlo", async () => {

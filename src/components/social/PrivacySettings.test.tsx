@@ -14,8 +14,10 @@ const mocks = vi.hoisted(() => {
       this.status = status;
     }
   }
-  return { apiFetch: vi.fn(), ApiError };
+  return { apiFetch: vi.fn(), ApiError, refresh: vi.fn() };
 });
+
+vi.mock("@/i18n/navigation", () => ({ useRouter: () => ({ refresh: mocks.refresh }) }));
 
 vi.mock("@/lib/api/client", () => ({
   apiFetch: mocks.apiFetch,
@@ -60,5 +62,21 @@ describe("PrivacySettings", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Inicia sesión para realizar esta acción.",
     );
+  });
+  it("tras guardar refresca la página para que el menú de Ajustes muestre la visibilidad nueva", async () => {
+    const user = userEvent.setup();
+    mocks.apiFetch.mockResolvedValue({
+      user: {
+        id: "00000000-0000-4000-8000-000000000001",
+        username: "ana",
+        displayName: null,
+        email: "ana@example.test",
+        profileVisibility: "private",
+        defaultAudience: null,
+      },
+    });
+    renderWithIntl(<PrivacySettings initialVisibility="public" />);
+    await user.click(screen.getByRole("radio", { name: /Privado/ }));
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalled());
   });
 });

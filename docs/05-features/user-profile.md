@@ -372,6 +372,16 @@ Seguidos y Seguidores comparten `ProfileConnectionsView`.
 - **Sesiones plegadas**: la actual y las 2 más recientes, "Ver las N más" / "Mostrar menos", y "Cerrar las demás (N)"
   (`DELETE /api/me/sessions`, `deleteOtherSessions`), además de "Cerrar todas las sesiones".
 
+**Fase 3** (`polish-settings-overview`, 2026-10-29): Red y menú.
+- **Red con cifras:** seguidores y seguidos (`countFollows`) y cuentas bloqueadas (`countBlocks`, solo cuentas activas)
+  en texto apagado; las solicitudes siguen como bandeja ámbar.
+- **Estado en el menú lateral** (solo desde `md`): "Perfil público/privado" bajo Privacidad, "Resumen semanal activo"
+  bajo Notificaciones, "Email sin verificar" (ámbar) bajo Cuenta, desde la fila de la sesión (sin consultas nuevas).
+  `PrivacySettings` y el interruptor del resumen llaman a `router.refresh()` tras guardar para que el layout lo
+  actualice.
+- **Foco al cambiar de pantalla** (`SettingsFocus`): tras navegar dentro del área, el foco va al `h2` de la pantalla
+  (`SETTINGS_TITLE_ID`, `tabIndex=-1`); en la carga inicial no se mueve.
+
 **Bandeja de solicitudes `/me/follow-requests`, Fase 1** (`refine-follow-requests-phase1`, 2026-10-29): capacidad
 `follow-requests-inbox`.
 - Metadata, migas (perfil / Solicitudes de seguimiento), título y subtítulo con qué implica aprobar; la cifra de

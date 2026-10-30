@@ -1,4 +1,4 @@
-import { and, eq, or } from "drizzle-orm";
+import { and, eq, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, userBlock, userFollow } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
@@ -54,6 +54,17 @@ export async function unblockUser(blockerId: string, targetUsername: string): Pr
   await db
     .delete(userBlock)
     .where(and(eq(userBlock.blockerId, blockerId), eq(userBlock.blockedId, blockedId)));
+}
+
+// Cuántas cuentas activas bloqueó el usuario: la cifra de "Cuentas bloqueadas" en Ajustes → Red (openspec:
+// polish-settings-overview, D1).
+export async function countBlocks(userId: string): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(userBlock)
+    .innerJoin(appUser, eq(userBlock.blockedId, appUser.id))
+    .where(and(eq(userBlock.blockerId, userId), activeUserCondition()));
+  return row?.count ?? 0;
 }
 
 export async function listBlocks(userId: string, page = 1, pageSize = 20) {

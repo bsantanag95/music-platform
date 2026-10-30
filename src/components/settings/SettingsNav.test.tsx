@@ -133,4 +133,18 @@ describe("SettingsNav", () => {
       HTMLElement.prototype.scrollIntoView = original;
     }
   });
+  it("muestra el estado bajo cada entrada, con el aviso en tono de alerta", () => {
+    renderWithIntl(
+      <SettingsNav
+        screens={SETTINGS_SCREENS}
+        statuses={{
+          privacy: { text: "Perfil privado", tone: "muted" },
+          account: { text: "Email sin verificar", tone: "warn" },
+        }}
+      />,
+    );
+    expect(screen.getByRole("link", { name: /Privacidad y audiencia\s*Perfil privado/ })).toBeInTheDocument();
+    expect(screen.getByText("Email sin verificar")).toHaveClass("text-amber");
+    expect(screen.getByText("Perfil privado")).toHaveClass("hidden", "md:block");
+  });
 });

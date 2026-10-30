@@ -773,6 +773,12 @@
       "message": "You have unsaved changes in: {sections}. If you leave, they'll be lost.",
       "leave": "Leave without saving",
       "stay": "Keep editing"
+    },
+    "status": {
+      "public": "Public profile",
+      "private": "Private profile",
+      "digest": "Weekly digest on",
+      "unverified": "Email not verified"
     }
   },
   "linkAria": "{site}: {detail}",

@@ -6,6 +6,8 @@ import { buildUserMenuItems } from "@/components/layout/user-menu-items";
 import { SettingsSection } from "@/components/settings/SettingsSection";
 import type { Metadata } from "next";
 import { settingsMetadata } from "@/components/settings/settings-metadata";
+import { countFollows } from "@/services/profiles/identity";
+import { countBlocks } from "@/services/social/blocking";
 
 export async function generateMetadata(): Promise<Metadata> {
   return settingsMetadata("network");
@@ -19,7 +21,17 @@ export default async function NetworkSettingsPage() {
   const t = await getTranslations("users");
   const tCommon = await getTranslations("common");
   const user = await requirePageUser();
-  const pendingRequests = await countPendingFollowRequests(user.id);
+  const [pendingRequests, follows, blocks] = await Promise.all([
+    countPendingFollowRequests(user.id),
+    countFollows(user.id),
+    countBlocks(user.id),
+  ]);
+  // Cifras de cada destino (polish-settings-overview, D1); las solicitudes van como bandeja, no como cifra.
+  const counts: Partial<Record<string, number>> = {
+    followers: follows.followerCount,
+    following: follows.followingCount,
+    blocks,
+  };
   const items = buildUserMenuItems({
     username: user.username,
     pendingFollowRequests: pendingRequests,
@@ -41,11 +53,13 @@ export default async function NetworkSettingsPage() {
                   {t(`settings.network.hint.${item.id}`)}
                 </span>
               </span>
-              {item.badgeCount != null && (
+              {item.badgeCount != null ? (
                 <span className="shrink-0 rounded-sm bg-amber/15 px-1.5 py-0.5 font-data text-xs text-amber">
                   {tCommon("pendingFollowRequests", { count: item.badgeCount })}
                 </span>
-              )}
+              ) : counts[item.id] !== undefined ? (
+                <span className="shrink-0 font-data text-sm text-paper-muted">{counts[item.id]}</span>
+              ) : null}
             </Link>
           </li>
         ))}
