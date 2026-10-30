@@ -7,6 +7,7 @@ import { resolveCatalogRoute } from "@/lib/catalog-route";
 import { parseCatalogSegment } from "@/lib/slug";
 import { DISCOGRAPHY_SECTIONS, type DiscographySection } from "@/services/catalog/discography-sections";
 import { loadArtist, loadDiscography, loadDiscographyMarks, loadSession } from "../artist-data";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // Pestaña Discografía, la activa por defecto (openspec: redesign-artist-page, capability
 // `artist-discography-view`). La sección vive en `?section=`: un valor desconocido o una
@@ -24,7 +25,7 @@ function isSection(value: unknown): value is DiscographySection {
   return typeof value === "string" && (DISCOGRAPHY_SECTIONS as readonly string[]).includes(value);
 }
 
-export default async function ArtistDiscographyPage({ params, searchParams }: ArtistDiscographyPageProps) {
+async function ArtistDiscographyPage({ params, searchParams }: ArtistDiscographyPageProps) {
   const { id: segment } = await params;
   const parsed = parseCatalogSegment(segment);
   if (!parsed) notFound();
@@ -65,3 +66,5 @@ export default async function ArtistDiscographyPage({ params, searchParams }: Ar
     </div>
   );
 }
+
+export default withClientMessages("(catalog)/artist/[id]/(tabs)/page", ArtistDiscographyPage);

@@ -5,8 +5,9 @@ import { saveCountsFor } from "@/services/lists/saved-lists";
 import { ListDetail } from "@/components/lists/ListDetail";
 import { notFound } from "next/navigation";
 import { z } from "zod";
+import { withClientMessages } from "@/i18n/client-messages";
 
-export default async function ListDetailPage({ params }: { params: Promise<{ listId: string }> }) {
+async function ListDetailPage({ params }: { params: Promise<{ listId: string }> }) {
   const t = await getTranslations("lists");
   const { listId } = await params;
   if (!z.uuid().safeParse(listId).success) notFound();
@@ -28,3 +29,5 @@ export default async function ListDetailPage({ params }: { params: Promise<{ lis
     </main>
   );
 }
+
+export default withClientMessages("me/lists/[listId]/page", ListDetailPage);

@@ -155,7 +155,7 @@ export function formatReleaseDate(iso: string, locale: string): string | null {
 function moderationKey(
   action: ModerationTarget["action"],
   contentType: ModerationTarget["contentType"],
-): string {
+) {
   if (action === "suspend_social") return "moderation.suspendSocial";
   if (action === "revoke_social") return "moderation.revokeSocial";
   if (action === "restore") {

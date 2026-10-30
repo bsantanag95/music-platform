@@ -3,6 +3,7 @@ import { requirePageUser } from "@/services/auth/page-auth";
 import { listMyFavorites } from "@/services/favorites/favorites";
 import { FavoritesFiltersSchema, type FavoritesFilters } from "@/lib/api/schemas";
 import { FavoritesWall } from "@/components/favorites/FavoritesWall";
+import { withClientMessages } from "@/i18n/client-messages";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -20,7 +21,7 @@ function parseFavoritesFilters(searchParams: SearchParams): FavoritesFilters {
   return parsed.success ? parsed.data : {};
 }
 
-export default async function FavoritesPage({
+async function FavoritesPage({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
@@ -39,3 +40,5 @@ export default async function FavoritesPage({
     </main>
   );
 }
+
+export default withClientMessages("me/favorites/page", FavoritesPage);

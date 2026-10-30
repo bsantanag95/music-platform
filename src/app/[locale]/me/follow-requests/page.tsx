@@ -14,6 +14,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { FollowRequestList } from "@/components/social/FollowRequestList";
 import { SentRequestList } from "@/components/social/SentRequestList";
 import { withFollowRequestContext } from "@/services/social/follow-request-context";
+import { withClientMessages } from "@/i18n/client-messages";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("users");
@@ -30,7 +31,7 @@ interface PageProps {
 // Bandeja de solicitudes de seguimiento (openspec: refine-follow-requests-phase1, add-follow-requests-sent-and-bulk):
 // migas, cabecera con qué implica aprobar, pestañas Recibidas · Enviadas con sus cifras (`?tab=sent`) y la lista de la
 // pestaña activa; sin solicitudes recibidas, un vacío según la privacidad del perfil (D4).
-export default async function FollowRequestsPage({ searchParams }: PageProps) {
+async function FollowRequestsPage({ searchParams }: PageProps) {
   const t = await getTranslations("users");
   const user = await requirePageUser();
   const tab = (await searchParams)?.tab === "sent" ? "sent" : "received";
@@ -118,3 +119,5 @@ export default async function FollowRequestsPage({ searchParams }: PageProps) {
     </main>
   );
 }
+
+export default withClientMessages("me/follow-requests/page", FollowRequestsPage);

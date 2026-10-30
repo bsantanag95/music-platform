@@ -10,6 +10,7 @@ import { ItemListsSection } from "@/components/lists/ItemListsSection";
 import { artistHref, songHref, songSegment } from "@/lib/catalog-links";
 import { resolveCatalogRoute } from "@/lib/catalog-route";
 import { parseCatalogSegment } from "@/lib/slug";
+import { withClientMessages } from "@/i18n/client-messages";
 
 interface SongListsPageProps {
   params: Promise<{ id: string }>;
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }: SongListsPageProps): Promise<
 // de la canción envía con su enlace "Ver más". Mínima a propósito — solo lo
 // necesario para el breadcrumb y el título, igual que el resto de sub-páginas
 // del catálogo.
-export default async function SongListsPage({ params }: SongListsPageProps) {
+async function SongListsPage({ params }: SongListsPageProps) {
   const { id: segment } = await params;
   const common = await getTranslations("common");
   const t = await getTranslations("lists");
@@ -79,3 +80,5 @@ export default async function SongListsPage({ params }: SongListsPageProps) {
     </main>
   );
 }
+
+export default withClientMessages("(catalog)/song/[id]/lists/page", SongListsPage);

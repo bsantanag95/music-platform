@@ -80,7 +80,9 @@ a endpoints REST (ver `conventions.md`).
 
 - **`[locale]/layout.tsx`** / **`[locale]/page.tsx`** — el placeholder mínimo de la Fase 1 (ya
   actualizado en Etapa 3.1 con el buscador), movido bajo el segmento de locale y envuelto en
-  `NextIntlClientProvider`.
+  `NextIntlClientProvider` (desde `trim-client-messages`, `<ClientMessages scope="layout">`: solo
+  los textos de la cabecera, el menú, el pie y las páginas de error; cada página suma los suyos con
+  `withClientMessages`, ver `docs/02-architecture/i18n.md` §9).
 - **`api/catalog/search/route.ts`** — `GET ?type=artist|album|song&q=texto`: valida con
   `parseCatalogSearchParams` y delega en `searchCatalogByType` (un tipo por solicitud, CERO
   ingesta de discografía/tracklist/carátula — ver `docs/04-api/contracts.md`). La ingesta pesada
@@ -105,6 +107,10 @@ a endpoints REST (ver `conventions.md`).
 - **`request.ts`** — resuelve, para el locale de la request actual, qué archivos de `messages/`
   cargar. Permite que Server Components consuman traducciones sin convertirse en Client
   Components.
+- **`client-messages.tsx`** / **`client-messages.json`** — `ClientMessages` y `withClientMessages`:
+  qué textos recibe el cliente en cada ruta. El JSON lo genera `scripts/generate-client-messages.ts`
+  con el análisis de `client-messages-analysis.ts`; `NestedMessages.tsx` fusiona los de una página
+  sobre los del layout raíz (ADR 0048).
 - **`navigation.ts`** — reexporta `Link`, `useRouter`, `redirect` de forma locale-aware. Todo
   componente que navega programáticamente importa desde acá, nunca de `next/navigation` directo
   — de lo contrario la navegación pierde el prefijo de locale (bug real detectado durante el

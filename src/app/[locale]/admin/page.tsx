@@ -9,8 +9,9 @@ import {
   FeaturedAdminResponseSchema,
   TemplatesAdminResponseSchema,
 } from "@/lib/api/schemas";
+import { withClientMessages } from "@/i18n/client-messages";
 
-export default async function AdminPage() {
+async function AdminPage() {
   const t = await getTranslations("common.adminConsole");
   const user = await requirePagePermission("editorial.author");
   const permissions = await getUserPermissions(user.id);
@@ -36,3 +37,5 @@ export default async function AdminPage() {
     </main>
   );
 }
+
+export default withClientMessages("admin/page", AdminPage);

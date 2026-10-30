@@ -22,6 +22,7 @@ import {
   listMostAwardedArtists,
   listRecentHeadlineWinners,
 } from "@/services/awards/read";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // Hub de premios (openspec: add-music-awards, design D5; redesign-awards-pages; add-four-music-awards, design D7;
 // enrich-awards-hub). Con un solo premio no hay nada que elegir —la ceremonia ya trae la navegación por años—: redirige a su
@@ -48,7 +49,7 @@ export async function generateMetadata({ params }: AwardsIndexProps): Promise<Me
   return { title: t("pageTitle") };
 }
 
-export default async function AwardsIndexPage({ params, searchParams }: AwardsIndexProps) {
+async function AwardsIndexPage({ params, searchParams }: AwardsIndexProps) {
   const { locale } = await params;
   const query = (await searchParams) ?? {};
   const [ceremonies, halls] = await Promise.all([listLatestCeremoniesByAward(), listHallOfFameClasses()]);
@@ -132,3 +133,5 @@ export default async function AwardsIndexPage({ params, searchParams }: AwardsIn
     </main>
   );
 }
+
+export default withClientMessages("(catalog)/awards/page", AwardsIndexPage);

@@ -14,6 +14,7 @@ import { SignInCard, type GoogleFlash } from "@/components/settings/account/Sign
 import { SettingsSection } from "@/components/settings/SettingsSection";
 import type { Metadata } from "next";
 import { settingsMetadata } from "@/components/settings/settings-metadata";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // Códigos de error del flujo de Google que Ajustes sabe mostrar (conjunto
 // cerrado: el query lo puede escribir cualquiera, así que nunca se usa tal cual).
@@ -39,7 +40,7 @@ export async function generateMetadata(): Promise<Metadata> {
 // cuenta, cómo se inicia sesión, sesiones por dispositivo y preferencias. Nada de
 // esto se muestra a otras personas. Cierra con "Pausar o salir" (desactivar y
 // exportar) y la zona de peligro "Eliminar cuenta" (spec account-lifecycle).
-export default async function AccountSettingsPage({
+async function AccountSettingsPage({
   searchParams,
 }: {
   searchParams: Promise<{ google?: string; code?: string }>;
@@ -87,3 +88,5 @@ export default async function AccountSettingsPage({
     </SettingsSection>
   );
 }
+
+export default withClientMessages("me/settings/(screens)/account/page", AccountSettingsPage);

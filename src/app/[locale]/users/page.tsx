@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { UserSearch } from "@/components/social/UserSearch";
 import { resolveSession } from "@/services/auth/sessions";
+import { withClientMessages } from "@/i18n/client-messages";
 
 interface UsersPageProps {
   // `q` llega por URL (`/users?q=...`) para que una búsqueda sea compartible y
@@ -9,7 +10,7 @@ interface UsersPageProps {
   searchParams: Promise<{ q?: string }>;
 }
 
-export default async function UsersPage({ searchParams }: UsersPageProps) {
+async function UsersPage({ searchParams }: UsersPageProps) {
   const t = await getTranslations("users");
   const session = await resolveSession();
   const { q } = await searchParams;
@@ -33,3 +34,5 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
     </main>
   );
 }
+
+export default withClientMessages("users/page", UsersPage);

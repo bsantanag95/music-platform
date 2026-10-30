@@ -9,6 +9,7 @@ import { ItemListsSection } from "@/components/lists/ItemListsSection";
 import { artistHref, artistSegment } from "@/lib/catalog-links";
 import { resolveCatalogRoute } from "@/lib/catalog-route";
 import { parseCatalogSegment } from "@/lib/slug";
+import { withClientMessages } from "@/i18n/client-messages";
 
 interface ArtistListsPageProps {
   params: Promise<{ id: string }>;
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }: ArtistListsPageProps): Promis
 // Página dedicada "Mostrar en listas" de un artista (openspec:
 // show-item-in-lists): a la que el panel acotado a 4 resultados en el perfil
 // del artista envía con su enlace "Ver más".
-export default async function ArtistListsPage({ params }: ArtistListsPageProps) {
+async function ArtistListsPage({ params }: ArtistListsPageProps) {
   const { id: segment } = await params;
   const common = await getTranslations("common");
   const t = await getTranslations("lists");
@@ -65,3 +66,5 @@ export default async function ArtistListsPage({ params }: ArtistListsPageProps) 
     </main>
   );
 }
+
+export default withClientMessages("(catalog)/artist/[id]/lists/page", ArtistListsPage);

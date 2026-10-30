@@ -11,6 +11,9 @@ empezar por `/docs/README.md` antes de tocar código. Código y comentarios en e
   archivo tocado: valida contra `.next/types/` y es lo único que detecta firmas
   viejas de rutas dinámicas de Next 15.
 - `pnpm run lint`, `pnpm run build`.
+- `pnpm run i18n:client-messages` — regenera `src/i18n/client-messages.json` (qué textos recibe el
+  cliente en cada ruta, ADR 0048). Correrlo tras tocar un componente cliente que use
+  `useTranslations` o al crear una página; `src/i18n/client-messages.test.ts` falla si quedó viejo.
 - CI corre, en este orden: `pnpm install --frozen-lockfile && typecheck && lint && test && build`
   (`.github/workflows/ci.yml`). No corre migraciones.
 - La verificación de integración manual son los smoke tests en `scripts/`

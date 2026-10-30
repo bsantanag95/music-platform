@@ -3,12 +3,13 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";
 import { findValidResetToken } from "@/services/auth/password-reset";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // El token viaja en el query string: evitar que se filtre por `Referer` a
 // terceros al abrir el link desde el correo.
 export const metadata: Metadata = { referrer: "no-referrer" };
 
-export default async function ResetPasswordPage({
+async function ResetPasswordPage({
   searchParams,
 }: {
   searchParams: Promise<{ token?: string }>;
@@ -44,3 +45,5 @@ export default async function ResetPasswordPage({
     </main>
   );
 }
+
+export default withClientMessages("auth/reset-password/page", ResetPasswordPage);

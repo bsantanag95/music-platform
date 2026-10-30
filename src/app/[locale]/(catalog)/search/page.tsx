@@ -5,6 +5,7 @@ import { RecentSearches } from "@/components/catalog/RecentSearches";
 import { parseSearchType } from "@/components/catalog/search-types";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { AlbumSection, ArtistSection, SongSection, UserSection } from "./sections";
+import { withClientMessages } from "@/i18n/client-messages";
 
 type Param = string | string[] | undefined;
 
@@ -24,7 +25,7 @@ function first(value: Param): string | undefined {
 //     MusicBrainz por streaming (Suspense), ya fusionado en el orden final;
 //   - Usuarios no sale a MusicBrainz y redirige con un username exacto.
 // La página no ingiere discografías: eso ocurre al abrir un resultado.
-export default async function SearchPage({ searchParams }: SearchPageProps) {
+async function SearchPage({ searchParams }: SearchPageProps) {
   const t = await getTranslations("catalog");
   const tCommon = await getTranslations("common");
   const params = await searchParams;
@@ -63,3 +64,5 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     </main>
   );
 }
+
+export default withClientMessages("(catalog)/search/page", SearchPage);

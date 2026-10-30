@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { UnsubscribeConfirm, UnsubscribeNotice } from "@/components/notifications/UnsubscribeConfirm";
 import { isValidUnsubscribeToken } from "@/services/notifications/unsubscribe";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // Baja del resumen semanal desde el correo (openspec:
 // add-notification-digest-and-awards, D5 y D8). Sin sesión: el enlace tiene que
@@ -10,7 +11,7 @@ import { isValidUnsubscribeToken } from "@/services/notifications/unsubscribe";
 // viaja en el query string: evitar que se filtre por `Referer`.
 export const metadata: Metadata = { referrer: "no-referrer" };
 
-export default async function UnsubscribePage({
+async function UnsubscribePage({
   searchParams,
 }: {
   searchParams: Promise<{ token?: string }>;
@@ -45,3 +46,5 @@ export default async function UnsubscribePage({
     </main>
   );
 }
+
+export default withClientMessages("notifications/unsubscribe/page", UnsubscribePage);

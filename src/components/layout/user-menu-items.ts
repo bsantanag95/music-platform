@@ -24,10 +24,33 @@ export type UserMenuGroup = "identity" | "music" | "social" | "tools" | "account
  * Título (clave del namespace `common`) de los grupos que lo llevan. Hace de posesivo para todo
  * el bloque, así que ningún acceso lleva "Mi"/"Mis" (openspec: clarify-user-menu-names).
  */
-export const USER_MENU_GROUP_LABELS: Partial<Record<UserMenuGroup, string>> = {
+export const USER_MENU_GROUP_LABELS: Partial<Record<UserMenuGroup, "menuGroups.music" | "menuGroups.social">> = {
   music: "menuGroups.music",
   social: "menuGroups.social",
 };
+
+/**
+ * Claves de `common` con las etiquetas del menú. Unión cerrada para que el análisis de
+ * textos del cliente sepa cuáles entregar (openspec: trim-client-messages).
+ */
+export type UserMenuLabelKey =
+  | "administration"
+  | "artists"
+  | "blocks"
+  | "collection"
+  | "diary"
+  | "favorites"
+  | "feed"
+  | "followRequests"
+  | "followers"
+  | "following"
+  | "lists"
+  | "moderation"
+  | "profile"
+  | "progress"
+  | "ratings"
+  | "settings"
+  | "wantToListen";
 
 export interface UserMenuItemDef {
   /** Identificador estable del ítem (para `key` de React y tests). */
@@ -39,7 +62,7 @@ export interface UserMenuItemDef {
    */
   href: string;
   /** Clave del namespace `common` de i18n con la etiqueta corta del ítem. */
-  labelKey: string;
+  labelKey: UserMenuLabelKey;
   group: UserMenuGroup;
   /** Superficies donde se muestra. */
   surfaces: readonly UserMenuSurface[];
@@ -124,7 +147,7 @@ export const USER_MENU_ITEMS: readonly UserMenuItemDef[] = [
 export interface ResolvedUserMenuItem {
   id: string;
   href: string;
-  labelKey: string;
+  labelKey: UserMenuLabelKey;
   group: UserMenuGroup;
   /** Número de pendientes cuando el ítem tiene badge y el conteo es > 0. */
   badgeCount?: number;

@@ -15,6 +15,7 @@ import { SettingsEditorCard } from "@/components/settings/SettingsEditorCard";
 import { SettingsSectionIndex } from "@/components/settings/SettingsSectionIndex";
 import type { Metadata } from "next";
 import { settingsMetadata } from "@/components/settings/settings-metadata";
+import { withClientMessages } from "@/i18n/client-messages";
 
 export async function generateMetadata(): Promise<Metadata> {
   return settingsMetadata("profile");
@@ -24,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
 // Tarjeta de Identidad, bio, pronombres, ubicación, zona horaria y hora local,
 // identidad musical, preguntas y enlaces — con los mismos editores que abre el
 // modo edición sobre el perfil.
-export default async function ProfileSettingsPage() {
+async function ProfileSettingsPage() {
   const t = await getTranslations("users");
   const user = await requirePageUser();
   const locale = genreLocaleOf(await getLocale());
@@ -88,3 +89,5 @@ export default async function ProfileSettingsPage() {
     </SettingsSection>
   );
 }
+
+export default withClientMessages("me/settings/(screens)/profile/page", ProfileSettingsPage);

@@ -12,6 +12,7 @@ import { ActivityContextRail } from "@/components/activity/ActivityContextRail";
 import { listTrendingConversations } from "@/services/activity/trending-conversations";
 import { kindFromParam, tabFromParam, type ActivitySource } from "@/components/activity/activity-tab-param";
 import type { CommunityActivityKind } from "@/lib/api/schemas";
+import { withClientMessages } from "@/i18n/client-messages";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("feed");
@@ -27,7 +28,7 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 // reseñas públicos) y se renderiza directo, sin pestañas — con una sola fuente, una barra de pestañas no aporta nada.
 // Con sesión se suman "Siguiendo" (mismo feed que `/me/feed`) y "Tú" (mismo rastro que "Tu rastro reciente" de
 // Inicio) como pestañas, y la pestaña activa llega en `?tab=`.
-export default async function CommunityActivityPage({ searchParams }: { searchParams: SearchParams }) {
+async function CommunityActivityPage({ searchParams }: { searchParams: SearchParams }) {
   const t = await getTranslations("feed");
   const tCommon = await getTranslations("common");
   const session = await resolveSession();
@@ -143,3 +144,5 @@ export default async function CommunityActivityPage({ searchParams }: { searchPa
     </main>
   );
 }
+
+export default withClientMessages("activity/page", CommunityActivityPage);

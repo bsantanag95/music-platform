@@ -8,6 +8,7 @@ import { awardHref, awardsIndexHref, categoryHistoryHref, ceremonyHref } from "@
 import { categoryLeaders, historyYearAnchor } from "@/components/awards/category-leaders";
 import { CategoryWinnersTimeline } from "@/components/awards/CategoryWinnersTimeline";
 import { getCategoryHistory } from "@/services/awards/read";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // Historial de una categoría a través de las ceremonias (openspec: add-music-awards, design D5; redesign-category-history), con
 // enlaces a la categoría anterior y a la siguiente cuando se renombró, fusionó o dividió.
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }: CategoryHistoryProps): Promis
   return { title: categoryName(page.name, locale) };
 }
 
-export default async function CategoryHistoryPage({ params }: CategoryHistoryProps) {
+async function CategoryHistoryPage({ params }: CategoryHistoryProps) {
   const { locale, award, key } = await params;
   const page = await getCategoryHistory(award, key);
   if (!page) notFound();
@@ -157,3 +158,5 @@ export default async function CategoryHistoryPage({ params }: CategoryHistoryPro
     </main>
   );
 }
+
+export default withClientMessages("(catalog)/awards/[award]/categories/[key]/page", CategoryHistoryPage);

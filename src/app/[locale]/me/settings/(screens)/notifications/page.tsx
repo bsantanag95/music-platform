@@ -5,6 +5,7 @@ import { NotificationPreferencesForm } from "@/components/notifications/Notifica
 import { SettingsCard, SettingsSection } from "@/components/settings/SettingsSection";
 import type { Metadata } from "next";
 import { settingsMetadata } from "@/components/settings/settings-metadata";
+import { withClientMessages } from "@/i18n/client-messages";
 
 export async function generateMetadata(): Promise<Metadata> {
   return settingsMetadata("notifications");
@@ -14,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
 // D9; add-notification-digest-and-awards, D8): un interruptor por tipo
 // desactivable, los tipos fijos con su explicación y el opt-in del resumen
 // semanal por email.
-export default async function NotificationSettingsPage() {
+async function NotificationSettingsPage() {
   const t = await getTranslations("notifications");
   const user = await requirePageUser();
   const settings = await getNotificationSettings(user.id);
@@ -27,3 +28,5 @@ export default async function NotificationSettingsPage() {
     </SettingsSection>
   );
 }
+
+export default withClientMessages("me/settings/(screens)/notifications/page", NotificationSettingsPage);

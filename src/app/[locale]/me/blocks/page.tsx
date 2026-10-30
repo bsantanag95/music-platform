@@ -2,8 +2,9 @@ import { getTranslations } from "next-intl/server";
 import { requirePageUser } from "@/services/auth/page-auth";
 import { listBlocks } from "@/services/social/blocking";
 import { UserList } from "@/components/social/UserList";
+import { withClientMessages } from "@/i18n/client-messages";
 
-export default async function BlocksPage() {
+async function BlocksPage() {
   const t = await getTranslations("users");
   const user = await requirePageUser();
   const { users } = await listBlocks(user.id, 1, 50);
@@ -15,3 +16,5 @@ export default async function BlocksPage() {
     </main>
   );
 }
+
+export default withClientMessages("me/blocks/page", BlocksPage);

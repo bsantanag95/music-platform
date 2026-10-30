@@ -6,6 +6,7 @@ import { DefaultAudienceSettings } from "@/components/settings/DefaultAudienceSe
 import { SettingsCard, SettingsSection } from "@/components/settings/SettingsSection";
 import type { Metadata } from "next";
 import { settingsMetadata } from "@/components/settings/settings-metadata";
+import { withClientMessages } from "@/i18n/client-messages";
 
 export async function generateMetadata(): Promise<Metadata> {
   return settingsMetadata("privacy");
@@ -13,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 // Pantalla Privacidad y audiencia (spec owner-settings): la visibilidad del
 // perfil y la audiencia por defecto del contenido nuevo (spec default-audience).
-export default async function PrivacySettingsPage() {
+async function PrivacySettingsPage() {
   const t = await getTranslations("users");
   const user = await requirePageUser();
   const profile = await getOwnProfile(user.id);
@@ -29,3 +30,5 @@ export default async function PrivacySettingsPage() {
     </SettingsSection>
   );
 }
+
+export default withClientMessages("me/settings/(screens)/privacy/page", PrivacySettingsPage);

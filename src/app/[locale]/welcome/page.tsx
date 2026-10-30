@@ -7,6 +7,7 @@ import { WelcomeFlow } from "@/components/onboarding/WelcomeFlow";
 import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
 import { isExploreEnabled } from "@/lib/config/discovery";
 import { resolveNewContentAudience } from "@/services/social/default-audience";
+import { withClientMessages } from "@/i18n/client-messages";
 
 interface WelcomePageProps {
   params: Promise<{ locale: string }>;
@@ -21,7 +22,7 @@ export async function generateMetadata({ params }: WelcomePageProps): Promise<Me
 // Onboarding guiado en tres pasos (openspec: add-two-door-onboarding, redesign-welcome-flow). Guard:
 // sin sesión → login; ya onboardeado → Inicio. Solo un usuario con
 // `onboarded_at` nulo ve el flujo, y una sola vez.
-export default async function WelcomePage({ params }: WelcomePageProps) {
+async function WelcomePage({ params }: WelcomePageProps) {
   const { locale } = await params;
 
   const sessionData = await resolveSession();
@@ -53,3 +54,5 @@ export default async function WelcomePage({ params }: WelcomePageProps) {
     </main>
   );
 }
+
+export default withClientMessages("welcome/page", WelcomePage);

@@ -13,6 +13,7 @@ import {
   parseProgressTab,
   type ProgressTab,
 } from "@/components/progress/progress-tabs";
+import { withClientMessages } from "@/i18n/client-messages";
 
 type RawParams = Record<string, string | string[] | undefined>;
 
@@ -35,7 +36,7 @@ async function loadPanel(tab: ProgressTab, userId: string, params: RawParams) {
 // (openspec: refine-progress-page-phase1, D5). La cabecera con la acción de la pestaña
 // vive en `ProgressSection`, y los totales de las tres pestañas se cuentan aparte
 // (openspec: redesign-progress-toolbar, D3).
-export default async function ProgressPage({ searchParams }: { searchParams: Promise<RawParams> }) {
+async function ProgressPage({ searchParams }: { searchParams: Promise<RawParams> }) {
   const user = await requirePageUser();
   const params = await searchParams;
   const tab = parseProgressTab(params.tab);
@@ -49,3 +50,5 @@ export default async function ProgressPage({ searchParams }: { searchParams: Pro
     </main>
   );
 }
+
+export default withClientMessages("me/progress/page", ProgressPage);

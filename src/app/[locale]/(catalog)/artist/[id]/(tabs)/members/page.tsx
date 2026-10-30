@@ -8,6 +8,7 @@ import { resolveCatalogRoute } from "@/lib/catalog-route";
 import { parseCatalogSegment } from "@/lib/slug";
 import { scheduleLineupMembersSync } from "@/services/catalog/artist-lineup-sync";
 import { loadArtist, loadLineup } from "../../artist-data";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // Pestaña Integrantes de un grupo o Bandas de una persona (openspec: add-artist-members-tab,
 // capability `artist-lineup-view`). Sin nada que listar la pestaña no existe: la URL directa
@@ -33,7 +34,7 @@ export async function generateMetadata({ params }: ArtistMembersPageProps): Prom
   return { title: `${t(tab)} · ${artist.name}` };
 }
 
-export default async function ArtistMembersPage({ params, searchParams }: ArtistMembersPageProps) {
+async function ArtistMembersPage({ params, searchParams }: ArtistMembersPageProps) {
   const { id: segment } = await params;
   const parsed = parseCatalogSegment(segment);
   if (!parsed) notFound();
@@ -65,3 +66,5 @@ export default async function ArtistMembersPage({ params, searchParams }: Artist
   if (lineup.supportersCurrent.length + lineup.supportersPast.length > 0) scheduleLineupMembersSync(parsed.id);
   return <PersonLineupView lineup={lineup} />;
 }
+
+export default withClientMessages("(catalog)/artist/[id]/(tabs)/members/page", ArtistMembersPage);

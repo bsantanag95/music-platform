@@ -30,6 +30,7 @@ import {
   SettingsCardSection,
 } from "./sections";
 import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
+import { withClientMessages } from "@/i18n/client-messages";
 
 interface UserProfilePageProps {
   params: Promise<{ username: string }>;
@@ -59,7 +60,7 @@ export async function generateMetadata({ params }: UserProfilePageProps): Promis
   }
 }
 
-export default async function UserProfilePage({ params, searchParams }: UserProfilePageProps) {
+async function UserProfilePage({ params, searchParams }: UserProfilePageProps) {
   const { username } = await params;
   const { preview } = await searchParams;
   const session = await resolveSession();
@@ -232,3 +233,5 @@ export default async function UserProfilePage({ params, searchParams }: UserProf
     </main>
   );
 }
+
+export default withClientMessages("users/[username]/page", UserProfilePage);

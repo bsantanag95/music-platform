@@ -14,6 +14,7 @@ import { splitFeatured } from "@/components/awards/featured-categories";
 import { groupByField } from "@/components/awards/group-by-field";
 import { AWARD_CATEGORY_TIERS } from "@/db/schema";
 import { getCeremonyPage } from "@/services/awards/read";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // Página de una ceremonia cerrada (openspec: add-music-awards, design D5; redesign-awards-pages): campo general primero, luego
 // por álbum y por género. Las cuatro categorías grandes van destacadas (ganador grande y todos los nominados); el resto, como
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: CeremonyPageProps): Promise<M
   return { title: t(page.kind === "hall_of_fame" ? "hall.classFull" : "ceremonyTitle", { award, year: page.ceremony.year }) };
 }
 
-export default async function CeremonyPage({ params }: CeremonyPageProps) {
+async function CeremonyPage({ params }: CeremonyPageProps) {
   const { locale, page } = await load(params);
   if (!page) notFound();
   // Un salón de la fama vive en `/hall-of-fame` (openspec: add-hall-of-fame-page, design D2): redirección permanente.
@@ -223,3 +224,5 @@ export default async function CeremonyPage({ params }: CeremonyPageProps) {
     </main>
   );
 }
+
+export default withClientMessages("(catalog)/awards/[award]/[year]/page", CeremonyPage);

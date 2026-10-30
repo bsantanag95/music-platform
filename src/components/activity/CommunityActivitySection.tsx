@@ -74,7 +74,7 @@ interface CommunityActivitySectionProps {
   // Encabezado propio: solo lo usa el caso sin sesión (una sola sección,
   // "Recientes", sin pestañas — ver page.tsx). Dentro de ActivityTabs el botón
   // de la pestaña ya cumple ese rol y se omite.
-  headingKey?: string;
+  headingKey?: "community.recentHeading";
   // Estado vacío del panel. Solo lo pasa ActivityTabs: con pestañas, un panel vacío sin nada sería confuso al lado de
   // las otras dos con contenido; sin pestañas (headingKey) nunca hace falta porque page.tsx ya omite la sección entera
   // si "Recientes" viene vacío.

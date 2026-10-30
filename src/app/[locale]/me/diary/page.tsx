@@ -7,10 +7,11 @@ import { DiaryContextRail } from "@/components/diary/DiaryContextRail";
 import { LogListenButton } from "@/components/diary/LogListenButton";
 import { listMyWantToListen } from "@/services/want-to-listen/want-to-listen";
 import { filtersFromSearchParams, toApiFilters } from "@/components/diary/diary-filters";
+import { withClientMessages } from "@/i18n/client-messages";
 
 const RAIL_TO_LOG = 4;
 
-export default async function DiaryPage({
+async function DiaryPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -58,3 +59,5 @@ export default async function DiaryPage({
     </main>
   );
 }
+
+export default withClientMessages("me/diary/page", DiaryPage);

@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { HallOfFameLatestRail } from "@/components/awards/HallOfFameLatestRail";
 import { listHallOfFameClasses } from "@/services/awards/read";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // Índice de los salones de la fama (openspec: add-hall-of-fame-page, design D3; polish-hall-of-fame-page): un bloque por salón, con
 // sus datos, sus clases y las incorporaciones de la última. Antes, además, la tarjeta de cada salón repetía la última clase arriba. Sin salones, un mensaje de vacío (no redirige).
@@ -17,7 +18,7 @@ export async function generateMetadata({ params }: HallOfFameIndexProps): Promis
   return { title: t("hall.hubHeading") };
 }
 
-export default async function HallOfFameIndexPage({ params }: HallOfFameIndexProps) {
+async function HallOfFameIndexPage({ params }: HallOfFameIndexProps) {
   await params;
   const halls = await listHallOfFameClasses();
   const t = await getTranslations("awards");
@@ -41,3 +42,5 @@ export default async function HallOfFameIndexPage({ params }: HallOfFameIndexPro
     </main>
   );
 }
+
+export default withClientMessages("(catalog)/hall-of-fame/page", HallOfFameIndexPage);

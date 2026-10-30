@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { HallOfFameClassView } from "@/components/awards/HallOfFameClassView";
 import { getCeremonyPage } from "@/services/awards/read";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // Clase de un salón de la fama (openspec: add-hall-of-fame-page; ADR 0044): la vista `HallOfFameClassView`, que antes se servía desde la
 // ruta de ceremonias de premios. Un premio competitivo en esta ruta, o un año sin clase cargada, es una página no encontrada.
@@ -25,10 +26,12 @@ export async function generateMetadata({ params }: HallClassPageProps): Promise<
   return { title: t("hall.classFull", { award, year: page.ceremony.year }) };
 }
 
-export default async function HallClassPage({ params }: HallClassPageProps) {
+async function HallClassPage({ params }: HallClassPageProps) {
   const page = await load(params);
   if (!page) notFound();
   const t = await getTranslations("awards");
   const award = t.has(`names.${page.awardSlug}`) ? t(`names.${page.awardSlug}`) : page.awardSlug;
   return <HallOfFameClassView page={page} awardName={award} />;
 }
+
+export default withClientMessages("(catalog)/hall-of-fame/[hall]/[year]/page", HallClassPage);

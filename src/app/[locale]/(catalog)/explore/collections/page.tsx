@@ -13,6 +13,7 @@ import { isCollectionFamily, type CollectionFamily } from "@/services/discovery/
 import { listCollectionSummaries } from "@/services/discovery/collections/summaries";
 import { CURATOR_USERNAME } from "@/services/discovery/constants";
 import { listCollectionArchive, listCollectionFamilies, listCollectionsHub } from "@/services/discovery/discovery";
+import { withClientMessages } from "@/i18n/client-messages";
 
 interface CollectionsPageProps {
   params: Promise<{ locale: string }>;
@@ -40,7 +41,7 @@ function viewHref(family: CollectionFamily | undefined, page = 1, anchor = ""): 
 // Página de colecciones (openspec: redesign-collections-hub, ADR 0040): una colección destacada, una sola rejilla con
 // el resto de las vigentes y el archivo de las que ya salieron del riel. El tipo es un filtro que se aplica a vigentes
 // y archivo, no la estructura de la página. Sin personalización: la misma composición para todas las personas.
-export default async function CollectionsPage({ params, searchParams }: CollectionsPageProps) {
+async function CollectionsPage({ params, searchParams }: CollectionsPageProps) {
   const { locale } = await params;
   if (!isExploreEnabled()) redirect({ href: "/", locale });
 
@@ -175,3 +176,5 @@ export default async function CollectionsPage({ params, searchParams }: Collecti
     </main>
   );
 }
+
+export default withClientMessages("(catalog)/explore/collections/page", CollectionsPage);

@@ -26,9 +26,9 @@ const SOURCES = {
 interface CommunityListSectionProps {
   source: CommunitySource;
   /** Clave i18n (namespace `lists`) del encabezado de la sección. */
-  headingKey: string;
+  headingKey: `community.${"following" | "popular" | "recent"}Heading`;
   /** Clave i18n de la línea bajo el título: qué reúne la sección y con qué criterio. */
-  descriptionKey?: string;
+  descriptionKey?: `community.${"following" | "popular" | "recent"}Description`;
   initial: DiscoverListsResponse;
   canSave: boolean;
   /** Columnas de la grilla: 1 para un rail compacto, 3 para densidad de navegación, `shelf` para la estantería

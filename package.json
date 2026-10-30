@@ -11,6 +11,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "i18n:client-messages": "tsx scripts/generate-client-messages.ts",
     "db:migrate": "tsx --env-file=.env src/db/migrate.ts",
     "test": "vitest run",
     "test:watch": "vitest"

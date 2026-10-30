@@ -12,6 +12,7 @@ import {
 import { FollowArtistButton } from "@/components/catalog/FollowArtistButton";
 import { FollowedArtistReleasesRail } from "@/components/catalog/FollowedArtistReleasesRail";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { withClientMessages } from "@/i18n/client-messages";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -20,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("artistsFollowedTitle") };
 }
 
-export default async function FollowedArtistsPage({ searchParams }: { searchParams: SearchParams }) {
+async function FollowedArtistsPage({ searchParams }: { searchParams: SearchParams }) {
   const t = await getTranslations("users");
   const tCommon = await getTranslations("common");
   const user = await requirePageUser();
@@ -71,3 +72,5 @@ export default async function FollowedArtistsPage({ searchParams }: { searchPara
     </main>
   );
 }
+
+export default withClientMessages("me/artists/page", FollowedArtistsPage);

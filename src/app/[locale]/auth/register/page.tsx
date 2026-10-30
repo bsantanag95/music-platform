@@ -4,8 +4,9 @@ import { redirect } from "@/i18n/navigation";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { SocialSignIn } from "@/components/auth/SocialSignIn";
 import { resolveSession } from "@/services/auth/sessions";
+import { withClientMessages } from "@/i18n/client-messages";
 
-export default async function RegisterPage({ params }: { params: Promise<{ locale: string }> }) {
+async function RegisterPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (await resolveSession()) redirect({ href: "/", locale });
   const t = await getTranslations("auth");
@@ -35,3 +36,5 @@ export default async function RegisterPage({ params }: { params: Promise<{ local
     </main>
   );
 }
+
+export default withClientMessages("auth/register/page", RegisterPage);

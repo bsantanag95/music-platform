@@ -29,6 +29,7 @@ import {
   loadProfile,
   loadSession,
 } from "../artist-data";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // Layout común de la página de artista (openspec: redesign-artist-page, design D1): la
 // cabecera (foto, identidad, ficha, resumen, comunidad y panel "Tu relación"), la barra de
@@ -51,7 +52,7 @@ export async function generateMetadata({ params }: ArtistLayoutProps): Promise<M
   return artist ? { title: artist.name } : {};
 }
 
-export default async function ArtistLayout({ children, params }: ArtistLayoutProps) {
+async function ArtistLayout({ children, params }: ArtistLayoutProps) {
   const { id } = await params;
   const parsed = parseCatalogSegment(id);
   if (!parsed) notFound();
@@ -169,3 +170,5 @@ export default async function ArtistLayout({ children, params }: ArtistLayoutPro
     </main>
   );
 }
+
+export default withClientMessages("(catalog)/artist/[id]/(tabs)/layout", ArtistLayout);

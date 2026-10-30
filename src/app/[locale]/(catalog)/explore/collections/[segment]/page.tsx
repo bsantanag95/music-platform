@@ -20,6 +20,7 @@ import { CURATOR_USERNAME } from "@/services/discovery/constants";
 import { countsByListId } from "@/services/journeys/progress";
 import { getUserListDetail } from "@/services/lists/lists";
 import { saveCountsFor, savedStateFor } from "@/services/lists/saved-lists";
+import { withClientMessages } from "@/i18n/client-messages";
 
 interface CollectionDetailPageProps {
   params: Promise<{ locale: string; segment: string }>;
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: CollectionDetailPageProps): P
 // cuenta curadora: la URL lleva el slug del título del idioma activo y el dueño se muestra como la plataforma. Las
 // listas de personas y las colecciones curadas siguen en `/users/<usuario>/lists/<lista>`. La cabecera es propia
 // (`CollectionDetailHeader`, ADR 0038): no se parece al detalle de una lista.
-export default async function CollectionDetailPage({ params }: CollectionDetailPageProps) {
+async function CollectionDetailPage({ params }: CollectionDetailPageProps) {
   const { locale, segment } = await params;
   if (!isExploreEnabled()) redirect({ href: "/", locale });
 
@@ -131,3 +132,5 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
     </main>
   );
 }
+
+export default withClientMessages("(catalog)/explore/collections/[segment]/page", CollectionDetailPage);

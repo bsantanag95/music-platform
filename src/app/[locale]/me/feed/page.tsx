@@ -15,6 +15,7 @@ import { FeedContextRail } from "@/components/feed/FeedContextRail";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Link } from "@/i18n/navigation";
 import { FEED_KINDS, type FeedKind } from "@/lib/api/schemas";
+import { withClientMessages } from "@/i18n/client-messages";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -27,7 +28,7 @@ function param(value: string | string[] | undefined): string {
   return typeof value === "string" ? value : "";
 }
 
-export default async function FeedPage({ searchParams }: { searchParams: SearchParams }) {
+async function FeedPage({ searchParams }: { searchParams: SearchParams }) {
   const t = await getTranslations("feed");
   const tCommon = await getTranslations("common");
   const user = await requirePageUser();
@@ -95,3 +96,5 @@ export default async function FeedPage({ searchParams }: { searchParams: SearchP
     </main>
   );
 }
+
+export default withClientMessages("me/feed/page", FeedPage);

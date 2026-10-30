@@ -94,7 +94,7 @@ function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-function actionLabel(variant: ListVariant): string {
+function actionLabel(variant: ListVariant): "unblock" {
   switch (variant) {
     case "blocks":
       return "unblock";

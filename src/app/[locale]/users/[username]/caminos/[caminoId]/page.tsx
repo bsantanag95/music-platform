@@ -10,6 +10,7 @@ import { isValidUuid } from "@/lib/validation";
 import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
 import { CaminoReadView } from "@/components/camino/CaminoReadView";
 import { ApiError } from "@/lib/api/errors";
+import { withClientMessages } from "@/i18n/client-messages";
 
 interface PageProps {
   params: Promise<{ username: string; caminoId: string }>;
@@ -19,7 +20,7 @@ interface PageProps {
 // separada de `/users/[username]/lists/[listId]`: un Camino no vive detrás
 // de los endpoints de `lists` (Requirement "Exclusión de toda superficie
 // que lea listas genéricamente" de la capability `camino`).
-export default async function UserCaminoDetailPage({ params }: PageProps) {
+async function UserCaminoDetailPage({ params }: PageProps) {
   const { username, caminoId } = await params;
   if (!isValidUuid(caminoId)) notFound();
 
@@ -67,3 +68,5 @@ export default async function UserCaminoDetailPage({ params }: PageProps) {
     </main>
   );
 }
+
+export default withClientMessages("users/[username]/caminos/[caminoId]/page", UserCaminoDetailPage);

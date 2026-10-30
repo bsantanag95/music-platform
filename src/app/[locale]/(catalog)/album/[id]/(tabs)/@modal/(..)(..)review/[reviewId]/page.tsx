@@ -7,6 +7,7 @@ import { localeHref, reviewHref } from "@/lib/catalog-links";
 import { parseCatalogSegment } from "@/lib/slug";
 import { getReviewDetail, listReviewNeighbors, resolveSocialTarget } from "@/services/reviews";
 import { loadCanModerate, loadSession } from "../../../../album-data";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // Reseña abierta desde el índice del álbum (openspec: redesign-album-page, capability
 // `review-detail`): ruta interceptada que muestra `/review/{slug-id}` como modal sobre la
@@ -18,7 +19,7 @@ interface InterceptedReviewPageProps {
   searchParams: Promise<{ sort?: string }>;
 }
 
-export default async function InterceptedReviewPage({ params, searchParams }: InterceptedReviewPageProps) {
+async function InterceptedReviewPage({ params, searchParams }: InterceptedReviewPageProps) {
   const { reviewId: segment } = await params;
   const parsed = parseCatalogSegment(segment);
   if (!parsed) return null;
@@ -50,3 +51,5 @@ export default async function InterceptedReviewPage({ params, searchParams }: In
     </ReviewModal>
   );
 }
+
+export default withClientMessages("(catalog)/album/[id]/(tabs)/@modal/(..)(..)review/[reviewId]/page", InterceptedReviewPage);

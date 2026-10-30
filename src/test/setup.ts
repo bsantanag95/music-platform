@@ -28,3 +28,13 @@ if (typeof globalThis.IntersectionObserver === "undefined") {
 if (typeof Element !== "undefined" && typeof Element.prototype.scrollIntoView !== "function") {
   Element.prototype.scrollIntoView = function scrollIntoView() {};
 }
+
+// `withClientMessages` envuelve páginas y layouts en `ClientMessages`, un
+// componente de servidor asíncrono que jsdom no puede renderizar. Las pruebas
+// llaman a la ruta directamente y ya proveen los textos con `renderWithIntl`, así
+// que aquí la ruta queda sin envolver (openspec: trim-client-messages). Las
+// pruebas del propio módulo usan `vi.importActual`.
+vi.mock("@/i18n/client-messages", () => ({
+  withClientMessages: <Route,>(_scope: string, route: Route): Route => route,
+  ClientMessages: ({ children }: { children: React.ReactNode }) => children,
+}));

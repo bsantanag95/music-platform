@@ -8,6 +8,7 @@ import { listProfileCollection } from "@/services/collection/collection";
 import type { CollectionFilters } from "@/services/collection/types";
 import { CollectionShelf } from "@/components/collection/CollectionShelf";
 import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
+import { withClientMessages } from "@/i18n/client-messages";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -40,7 +41,7 @@ function readFilters(searchParams: SearchParams): CollectionFilters {
 // filtros pero sin ninguna acción de gestión. Mismo criterio de acceso que el
 // resto del perfil (`profile.accessible` + la matriz de audiencia de
 // `listProfileCollection`).
-export default async function ProfileCollectionPage({ params, searchParams }: PageProps) {
+async function ProfileCollectionPage({ params, searchParams }: PageProps) {
   const { username } = await params;
   const t = await getTranslations("collection");
   const tUsers = await getTranslations("users");
@@ -77,3 +78,5 @@ export default async function ProfileCollectionPage({ params, searchParams }: Pa
     </main>
   );
 }
+
+export default withClientMessages("users/[username]/collection/page", ProfileCollectionPage);

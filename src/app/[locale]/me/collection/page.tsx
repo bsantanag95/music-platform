@@ -8,6 +8,7 @@ import { CollectionShelf } from "@/components/collection/CollectionShelf";
 import { WantedShelf } from "@/components/collection/WantedShelf";
 import { CollectionTabs } from "@/components/collection/CollectionTabs";
 import { AddCopyButton } from "@/components/collection/AddCopyButton";
+import { withClientMessages } from "@/i18n/client-messages";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -19,7 +20,7 @@ function toURLSearchParams(searchParams: SearchParams): URLSearchParams {
   return params;
 }
 
-export default async function CollectionPage({
+async function CollectionPage({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
@@ -64,3 +65,5 @@ export default async function CollectionPage({
     </main>
   );
 }
+
+export default withClientMessages("me/collection/page", CollectionPage);

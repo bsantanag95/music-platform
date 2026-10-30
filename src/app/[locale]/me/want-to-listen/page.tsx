@@ -4,6 +4,7 @@ import { listMyWantToListen } from "@/services/want-to-listen/want-to-listen";
 import { WantToListenFiltersSchema, type WantToListenFilters } from "@/lib/api/schemas";
 import { AddPendingButton } from "@/components/want-to-listen/AddPendingButton";
 import { WantToListenList } from "@/components/want-to-listen/WantToListenList";
+import { withClientMessages } from "@/i18n/client-messages";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -21,7 +22,7 @@ function parseWantToListenFilters(searchParams: SearchParams): WantToListenFilte
   };
 }
 
-export default async function WantToListenPage({
+async function WantToListenPage({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
@@ -46,3 +47,5 @@ export default async function WantToListenPage({
     </main>
   );
 }
+
+export default withClientMessages("me/want-to-listen/page", WantToListenPage);

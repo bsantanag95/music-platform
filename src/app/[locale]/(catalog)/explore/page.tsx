@@ -48,6 +48,7 @@ import { exploreListHref, parseExploreListParams } from "@/services/discovery/ex
 import { genreDisplayName, genreLocaleOf } from "@/services/genres/names";
 import type { GenreRow } from "@/db/schema";
 import type { ReleaseGroupCategory } from "@/lib/api/schemas";
+import { withClientMessages } from "@/i18n/client-messages";
 
 interface ExplorePageProps {
   params: Promise<{ locale: string }>;
@@ -60,7 +61,7 @@ export async function generateMetadata({ params }: ExplorePageProps): Promise<Me
   return { title: t("pageTitle") };
 }
 
-export default async function ExplorePage({ params, searchParams }: ExplorePageProps) {
+async function ExplorePage({ params, searchParams }: ExplorePageProps) {
   const { locale } = await params;
   if (!isExploreEnabled()) redirect({ href: "/", locale });
 
@@ -514,3 +515,5 @@ export default async function ExplorePage({ params, searchParams }: ExplorePageP
     </main>
   );
 }
+
+export default withClientMessages("(catalog)/explore/page", ExplorePage);
