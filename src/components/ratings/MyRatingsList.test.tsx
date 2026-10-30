@@ -314,8 +314,10 @@ describe("MyRatingsList", () => {
       () => expect(mocks.getMyRatings).toHaveBeenCalledWith(1, 30, expect.objectContaining({ group: "none" })),
       SLOW,
     );
-    await waitFor(() => expect(screen.queryAllByRole("heading", { level: 2 })).toHaveLength(0), SLOW);
-    expect(titles()).toEqual(["Barracuda", "Safe and Sound"]);
+    // Los encabezados desaparecen apenas cambia la agrupación, con las filas anteriores aún en pantalla:
+    // lo que prueba que llegó la respuesta es el orden nuevo, así que se espera eso y no los encabezados.
+    await waitFor(() => expect(titles()).toEqual(["Barracuda", "Safe and Sound"]), SLOW);
+    expect(screen.queryAllByRole("heading", { level: 2 })).toHaveLength(0);
     expect(window.location.search).toBe("?group=none");
   });
 
