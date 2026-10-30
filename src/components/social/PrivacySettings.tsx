@@ -7,6 +7,7 @@ import {
   OwnProfileResponseSchema,
   type ProfileVisibility,
 } from "@/lib/api/schemas";
+import { useRouter } from "@/i18n/navigation";
 
 interface PrivacySettingsProps {
   initialVisibility: ProfileVisibility;
@@ -17,6 +18,7 @@ interface PrivacySettingsProps {
 export function PrivacySettings({ initialVisibility }: PrivacySettingsProps) {
   const t = useTranslations("users");
   const tErrors = useTranslations("errors");
+  const router = useRouter();
   const [visibility, setVisibility] = useState<ProfileVisibility>(initialVisibility);
   const [saving, setSaving] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -32,6 +34,8 @@ export function PrivacySettings({ initialVisibility }: PrivacySettingsProps) {
         body: JSON.stringify({ profileVisibility: next }),
       });
       setVisibility(data.user.profileVisibility);
+      // El menú de Ajustes resume la visibilidad desde el layout: se vuelve a pedir (polish-settings-overview, D2).
+      router.refresh();
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
     } finally {

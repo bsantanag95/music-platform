@@ -7,6 +7,7 @@ import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNoti
 import { SettingsNav } from "@/components/settings/SettingsNav";
 import { SETTINGS_SCREENS } from "@/components/settings/settings-screens";
 import { UnsavedChangesGuard } from "@/components/settings/UnsavedChangesGuard";
+import { SettingsFocus } from "@/components/settings/SettingsFocus";
 
 // Diseño compartido del área de ajustes (spec owner-settings): título, aviso de
 // email sin verificar —visible en todas las pantallas, no solo en Cuenta, porque
@@ -17,6 +18,18 @@ export default async function SettingsLayout({ children }: { children: ReactNode
   const t = await getTranslations("users");
   const user = await requirePageUser();
   const pendingRequests = await countPendingFollowRequests(user.id);
+  // Estado de la cuenta bajo cada entrada del menú, desde la fila de la sesión: sin consultas nuevas
+  // (polish-settings-overview, D2).
+  const statuses = {
+    privacy: {
+      text: t(user.profileVisibility === "private" ? "settings.status.private" : "settings.status.public"),
+      tone: "muted" as const,
+    },
+    ...(user.notificationDigestEnabled
+      ? { notifications: { text: t("settings.status.digest"), tone: "muted" as const } }
+      : {}),
+    ...(!isEmailVerified(user) ? { account: { text: t("settings.status.unverified"), tone: "warn" as const } } : {}),
+  };
 
   return (
     <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-12">
@@ -26,10 +39,11 @@ export default async function SettingsLayout({ children }: { children: ReactNode
         {/* Cambios sin guardar en cualquier pantalla: aviso antes de salir (refine-settings-editing, D3). */}
         <UnsavedChangesGuard>
           <div className="grid gap-6 md:grid-cols-[14rem_minmax(0,1fr)] md:gap-10">
-            <SettingsNav screens={SETTINGS_SCREENS} badges={{ network: pendingRequests }} />
+            <SettingsNav screens={SETTINGS_SCREENS} badges={{ network: pendingRequests }} statuses={statuses} />
             <div className="min-w-0">{children}</div>
           </div>
         </UnsavedChangesGuard>
+        <SettingsFocus />
       </div>
     </main>
   );

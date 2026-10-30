@@ -10,6 +10,7 @@ import {
   type NotificationPreferencesResponse,
   type OptionalNotificationKindValue,
 } from "@/lib/api/schemas";
+import { useRouter } from "@/i18n/navigation";
 
 // Tipos que la persona puede apagar y tipos fijos (openspec: add-notifications-core,
 // D9; add-notification-milestones-and-releases, D1 y D8;
@@ -85,6 +86,7 @@ function Switch({ checked, disabled = false, labelledBy, describedBy, onToggle }
 // resumen no se puede activar (409 EMAIL_NOT_VERIFIED); el interruptor queda
 // deshabilitado y se ofrece verificarlo.
 export function NotificationPreferencesForm({ initial }: NotificationPreferencesFormProps) {
+  const router = useRouter();
   const t = useTranslations("notifications");
   const tErrors = useTranslations("errors");
   const [preferences, setPreferences] = useState(initial.preferences);
@@ -135,6 +137,8 @@ export function NotificationPreferencesForm({ initial }: NotificationPreferences
         },
       );
       adopt(result);
+      // El menú de Ajustes dice si el resumen está activo, desde el layout (polish-settings-overview, D2).
+      router.refresh();
     } catch (error) {
       setEmailDigest(!next);
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");

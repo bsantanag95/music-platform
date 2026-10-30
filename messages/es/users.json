@@ -773,6 +773,12 @@
       "message": "Tienes cambios sin guardar en: {sections}. Si sales, se pierden.",
       "leave": "Salir sin guardar",
       "stay": "Seguir editando"
+    },
+    "status": {
+      "public": "Perfil público",
+      "private": "Perfil privado",
+      "digest": "Resumen semanal activo",
+      "unverified": "Email sin verificar"
     }
   },
   "linkAria": "{site}: {detail}",

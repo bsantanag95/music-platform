@@ -76,7 +76,11 @@ vi.mock("@/services/auth/email-change", () => ({ getPendingEmailChange: m.getPen
 vi.mock("@/services/auth/email-verification", () => ({ isEmailVerified: m.isEmailVerified }));
 vi.mock("@/services/social/following", () => ({ countPendingFollowRequests: m.countPendingFollowRequests }));
 vi.mock("@/services/social/profiles", () => ({ getOwnProfile: m.getOwnProfile }));
-vi.mock("@/services/profiles/identity", () => ({ getExtendedIdentity: m.getExtendedIdentity }));
+vi.mock("@/services/profiles/identity", () => ({
+  getExtendedIdentity: m.getExtendedIdentity,
+  countFollows: vi.fn().mockResolvedValue({ followerCount: 12, followingCount: 3 }),
+}));
+vi.mock("@/services/social/blocking", () => ({ countBlocks: vi.fn().mockResolvedValue(1) }));
 vi.mock("@/services/profiles/showcase", () => ({ getShowcase: m.getShowcase }));
 vi.mock("@/services/profiles/curation", () => ({ getCurationSummary: m.getCurationSummary }));
 vi.mock("@/services/profiles/account-settings", () => ({ getAccessMethod: m.getAccessMethod }));
@@ -177,6 +181,13 @@ describe("layout de ajustes", () => {
 
     expect(m.countPendingFollowRequests).toHaveBeenCalledWith("u1");
     expect(findElement(tree, SettingsNav)?.props?.badges).toEqual({ network: 4 });
+  });
+
+  it("le pasa al menú el estado de la cuenta: visibilidad, resumen y email sin verificar", async () => {
+    const tree = await SettingsLayout({ children: null });
+    const statuses = findElement(tree, SettingsNav)?.props?.statuses as Record<string, { tone: string }>;
+    expect(Object.keys(statuses)).toContain("privacy");
+    expect(statuses.privacy?.tone).toBe("muted");
   });
 });
 
@@ -414,6 +425,14 @@ describe("pantalla Red", () => {
   it("sin pendientes no hay ningún indicador numérico", async () => {
     renderWithIntl(await NetworkSettingsPage());
     expect(screen.queryByText(/pendingFollowRequests/)).not.toBeInTheDocument();
+  });
+
+  it("cada destino muestra su cifra: seguidores, seguidos y bloqueadas", async () => {
+    renderWithIntl(await NetworkSettingsPage());
+    const links = screen.getAllByRole("link");
+    expect(links[0]).toHaveTextContent(/12$/);
+    expect(links[1]).toHaveTextContent(/3$/);
+    expect(links[3]).toHaveTextContent(/1$/);
   });
 });
 

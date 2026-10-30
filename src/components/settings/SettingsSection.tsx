@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+export const SETTINGS_TITLE_ID = "settings-screen-title";
+
 interface SettingsSectionProps {
   title: string;
   intro?: string;
@@ -13,7 +15,10 @@ export function SettingsSection({ title, intro, children }: SettingsSectionProps
   return (
     <section className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
-        <h2 className="font-display text-xl text-paper">{title}</h2>
+        {/* Destino del foco al cambiar de pantalla (`SettingsFocus`, polish-settings-overview, D3). */}
+        <h2 id={SETTINGS_TITLE_ID} tabIndex={-1} className="font-display text-xl text-paper outline-none">
+          {title}
+        </h2>
         {intro && <p className="font-body text-sm text-paper-muted">{intro}</p>}
       </header>
       {children}
