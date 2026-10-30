@@ -79,20 +79,24 @@ de biblioteca y biografía, con la misma estructura que el álbum):
   el crédito que exige su licencia (autor y licencia enlazados, ADR 0021) o el placeholder;
   antetítulo de tipo ("Banda", "Solista"), nombre y la descripción corta de Wikidata en el
   idioma de la interfaz; **ficha** (grupo: Origen y Actividad con estado "Activa" /
-  "Separada"; persona: Nacimiento con fecha y lugar, Fallecimiento y Actividad desde su
-  primer disco; **Integrantes** —o **Última alineación** si la banda se separó— con hasta 5
+  "Separada"; persona: Nacimiento con fecha y lugar, Fallecimiento y **Primer disco** con el año de su
+  primer disco principal; **Integrantes** —o **Última alineación** si la banda se separó— con hasta 5
   nombres y "Ver alineación", o **Bandas** en una persona con "Ver todas"; Enlaces en orden
   fijo: sitio oficial, Bandcamp, Wikipedia y una plataforma de streaming); y un **resumen** de Wikipedia de tres líneas con "Seguir leyendo" y la
   atribución CC BY-SA 4.0. Sin géneros por ahora (los de MusicBrainz son etiquetas no
   comerciales) y sin la desambiguación de MusicBrainz ni el nombre legal. Cada dato que falta
-  se omite sin dejar huecos.
+  se omite sin dejar huecos. Los enlaces externos van en texto claro con subrayado punteado y
+  `↗`, y el crédito de la foto en letra chica y tenue (`polish-artist-header`).
 - **Panel "Tu relación"** (columna lateral en escritorio): Siguiendo, Favorito y Pendiente
   como conmutadores; Escuchas y Colección calculadas desde los discos de la discografía propia
   (nunca el total de la discografía, que la regla de recorridos prohíbe fuera de su gestión);
   Listas con el mismo selector de casillas que el álbum; y Recorrido (barra sin cifras y
-  enlace a la gestión, o "Armar recorrido"). **Sin estrellas ni reseña del artista.**
-- **Bloque de comunidad**: Oyentes (personas con escuchas del artista o de sus discos), Lo
-  siguen (con "favorito de N") y En listas, con el umbral de 5 del álbum. Sin promedio de
+  enlace a la gestión, o "Armar recorrido"). **Sin estrellas ni reseña del artista.** Sus
+  acciones de texto van en gris: el ámbar queda para los conmutadores activos. En escritorio
+  el panel se estira hasta el final de la cabecera.
+- **Bloque de comunidad**: Oyentes (personas con escuchas del artista o de sus discos),
+  Seguidores (con "N lo tienen de favorito", también "<5") y En listas, con el umbral de 5 del
+  álbum; cada celda pone la cifra primero y la etiqueta debajo. Sin promedio de
   estrellas ni agregado de recorridos.
 - **Pestañas** enlazables: **Discografía** (por defecto), **Integrantes** (grupos) o **Bandas**
   (personas), solo si hay algo que listar, y **Biografía** (la introducción completa del artículo

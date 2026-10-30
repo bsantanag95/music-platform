@@ -297,6 +297,7 @@
       "heading": "Ficha",
       "origin": "Origen",
       "activity": "Actividad",
+      "firstRecord": "Primer disco",
       "born": "Nacimiento",
       "died": "Fallecimiento",
       "links": "Enlaces",
@@ -368,8 +369,8 @@
     "community": {
       "heading": "Comunidad",
       "listeners": "Oyentes",
-      "followers": "Lo siguen",
-      "favorites": "favorito de {value}",
+      "followers": "Seguidores",
+      "favorites": "<count></count> lo tienen de favorito",
       "lists": "En listas"
     },
     "discography": {

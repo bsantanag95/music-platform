@@ -100,7 +100,7 @@ describe("ArtistFacts", () => {
     expect(dd(artistEs.facts.origin)).toHaveTextContent("Chile");
   });
 
-  it("solista: nacimiento con fecha completa y lugar, y actividad desde su primer disco", () => {
+  it("solista: nacimiento con fecha completa y lugar, y el año de su primer disco", () => {
     renderWithIntl(
       <ArtistFacts
         type="person"
@@ -112,7 +112,8 @@ describe("ArtistFacts", () => {
       />,
     );
     expect(dd(artistEs.facts.born)).toHaveTextContent("2 de mayo de 1983 · Viña del Mar, Chile");
-    expect(dd(artistEs.facts.activity)).toHaveTextContent("desde 2003");
+    expect(dd(artistEs.facts.firstRecord)).toHaveTextContent("2003");
+    expect(screen.queryByText(artistEs.facts.activity)).not.toBeInTheDocument();
     expect(screen.queryByText(artistEs.facts.died)).not.toBeInTheDocument();
   });
 
@@ -138,7 +139,7 @@ describe("ArtistFacts", () => {
         })}
       />,
     );
-    expect(dd(artistEs.facts.links).textContent).toBe("Sitio oficial · Wikipedia · Spotify");
+    expect(dd(artistEs.facts.links).textContent).toBe("Sitio oficial ↗ · Wikipedia ↗ · Spotify ↗");
   });
 
   it("sin ningún dato, la ficha no se renderiza", () => {
