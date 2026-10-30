@@ -1,8 +1,8 @@
 import { resolveImageUrl } from "@/services/storage/avatar-urls";
 import type { Metadata } from "next";
 import { Space_Grotesk, Source_Serif_4, IBM_Plex_Mono } from "next/font/google";
-import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTimeZone } from "next-intl/server";
+import { ClientMessages } from "@/i18n/client-messages";
 import { Providers } from "./providers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -57,7 +57,6 @@ export default async function RootLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const messages = await getMessages();
   const session = await resolveSession();
   const exploreEnabled = isExploreEnabled();
   const publicUser = session?.user
@@ -88,7 +87,10 @@ export default async function RootLayout({
       className={`${display.variable} ${body.variable} ${data.variable}`}
     >
       <body>
-        <NextIntlClientProvider messages={messages}>
+        {/* Solo los textos de la cabecera, el menú, el pie y las páginas de error;
+            cada página suma los suyos con `withClientMessages` (openspec:
+            trim-client-messages). */}
+        <ClientMessages scope="layout">
           {/* `Providers` envuelve también al Header: la campana es una consulta
               de TanStack Query y necesita el mismo cliente que las páginas. */}
           <Providers>
@@ -107,7 +109,7 @@ export default async function RootLayout({
               minimal={<Footer variant="minimal" />}
             />
           </Providers>
-        </NextIntlClientProvider>
+        </ClientMessages>
       </body>
     </html>
   );

@@ -3,11 +3,12 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { VerifyEmailForm } from "@/components/auth/VerifyEmailForm";
 import { findValidVerificationToken } from "@/services/auth/email-verification";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // El token viaja en el query string: evitar que se filtre por `Referer`.
 export const metadata: Metadata = { referrer: "no-referrer" };
 
-export default async function VerifyEmailPage({
+async function VerifyEmailPage({
   searchParams,
 }: {
   searchParams: Promise<{ token?: string }>;
@@ -43,3 +44,5 @@ export default async function VerifyEmailPage({
     </main>
   );
 }
+
+export default withClientMessages("auth/verify-email/page", VerifyEmailPage);

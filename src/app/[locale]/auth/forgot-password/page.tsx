@@ -1,8 +1,9 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
+import { withClientMessages } from "@/i18n/client-messages";
 
-export default async function ForgotPasswordPage() {
+async function ForgotPasswordPage() {
   const t = await getTranslations("auth");
   return (
     <main className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center gap-8 px-4 py-12">
@@ -23,3 +24,5 @@ export default async function ForgotPasswordPage() {
     </main>
   );
 }
+
+export default withClientMessages("auth/forgot-password/page", ForgotPasswordPage);

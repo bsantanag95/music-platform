@@ -6,6 +6,7 @@ import { resolveCatalogRoute } from "@/lib/catalog-route";
 import { parseCatalogSegment } from "@/lib/slug";
 import { variantKeyOf } from "@/services/catalog/edition-variants";
 import { loadAlbumDetail, loadAlbumEditions, loadAlbumSegment } from "../../album-data";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // Pestaña Ediciones (openspec: redesign-album-page): todas las ediciones del álbum. Sin
 // ediciones además de la representativa, la pestaña no existe: la URL directa responde 404.
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }: AlbumEditionsPageProps): Prom
   return { title: `${t("editions")} · ${result.detail.releaseGroup.title}` };
 }
 
-export default async function AlbumEditionsPage({ params }: AlbumEditionsPageProps) {
+async function AlbumEditionsPage({ params }: AlbumEditionsPageProps) {
   const { id: segment } = await params;
   const parsed = parseCatalogSegment(segment);
   if (!parsed) notFound();
@@ -77,3 +78,5 @@ export default async function AlbumEditionsPage({ params }: AlbumEditionsPagePro
     />
   );
 }
+
+export default withClientMessages("(catalog)/album/[id]/(tabs)/editions/page", AlbumEditionsPage);

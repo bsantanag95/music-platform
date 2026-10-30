@@ -7,6 +7,7 @@ import { listVisibleCaminos } from "@/services/camino/camino";
 import { CaminoProfileCard } from "@/components/camino/CaminoProfileCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
+import { withClientMessages } from "@/i18n/client-messages";
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -19,7 +20,7 @@ const PAGE_SIZE = 20;
 // Caminos" del estante del Nivel 2 (`CaminosRail`). Sin buscador/filtros por
 // ahora (mismo punto de partida que `/users/[username]/diary`): agregar si
 // hay un pedido concreto. Distinta de `/me/caminos` (gestión propia).
-export default async function ProfileCaminosPage({ params, searchParams }: PageProps) {
+async function ProfileCaminosPage({ params, searchParams }: PageProps) {
   const { username } = await params;
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
@@ -85,3 +86,5 @@ export default async function ProfileCaminosPage({ params, searchParams }: PageP
     </main>
   );
 }
+
+export default withClientMessages("users/[username]/caminos/page", ProfileCaminosPage);

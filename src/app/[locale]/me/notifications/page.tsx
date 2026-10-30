@@ -3,12 +3,13 @@ import { Link } from "@/i18n/navigation";
 import { requirePageUser } from "@/services/auth/page-auth";
 import { hasNewReleases, listNotificationGroups } from "@/services/notifications/read";
 import { NotificationsView } from "@/components/notifications/NotificationsView";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // Bandeja completa (openspec: add-notifications-core, D8;
 // add-notification-milestones-and-releases, D8). La primera página de "Para ti"
 // se resuelve aquí, en la zona horaria del usuario; "Novedades" se pide al
 // abrir su pestaña. `requirePageUser` manda a iniciar sesión sin sesión.
-export default async function NotificationsPage() {
+async function NotificationsPage() {
   const t = await getTranslations("notifications");
   const user = await requirePageUser();
   const timeZone = await getTimeZone();
@@ -36,3 +37,5 @@ export default async function NotificationsPage() {
     </main>
   );
 }
+
+export default withClientMessages("me/notifications/page", NotificationsPage);

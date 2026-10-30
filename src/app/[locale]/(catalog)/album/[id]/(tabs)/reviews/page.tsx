@@ -8,6 +8,7 @@ import { resolveCatalogRoute } from "@/lib/catalog-route";
 import { parseCatalogSegment } from "@/lib/slug";
 import { getReviewDetail, listReviews, resolveSocialTarget } from "@/services/reviews";
 import { loadAlbumDetail, loadAlbumSegment, loadPersonalState, loadSession } from "../../album-data";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // Pestaña Reseñas (openspec: redesign-album-page): el editor de la reseña propia y el
 // índice de la comunidad, ordenado según `?sort=`.
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }: AlbumReviewsPageProps): Promi
   return { title: `${t("reviews")} · ${result.detail.releaseGroup.title}` };
 }
 
-export default async function AlbumReviewsPage({ params, searchParams }: AlbumReviewsPageProps) {
+async function AlbumReviewsPage({ params, searchParams }: AlbumReviewsPageProps) {
   const { id: segment } = await params;
   const parsed = parseCatalogSegment(segment);
   if (!parsed) notFound();
@@ -76,3 +77,5 @@ export default async function AlbumReviewsPage({ params, searchParams }: AlbumRe
     </div>
   );
 }
+
+export default withClientMessages("(catalog)/album/[id]/(tabs)/reviews/page", AlbumReviewsPage);

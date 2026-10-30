@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { connectionsMetadata, ProfileConnectionsView } from "@/components/profiles/ProfileConnectionsView";
+import { withClientMessages } from "@/i18n/client-messages";
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -14,7 +15,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 // Vista de conexiones de un perfil (openspec: refine-connections-page-phase1): mismo acceso que el resto del perfil
 // (`profile.accessible`). Cuando el visitante es el dueño, es también su página de gestión (unifica lo que antes era
 // `/me/followers`, ver docs/05-features/user-profile.md, "Listados de conexiones").
-export default async function ProfileFollowersPage({ params, searchParams }: PageProps) {
+async function ProfileFollowersPage({ params, searchParams }: PageProps) {
   const { username } = await params;
   return <ProfileConnectionsView username={username} kind="followers" searchParams={(await searchParams) ?? {}} />;
 }
+
+export default withClientMessages("users/[username]/connections/followers/page", ProfileFollowersPage);

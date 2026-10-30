@@ -10,6 +10,7 @@ import { parseCatalogSegment } from "@/lib/slug";
 import { getReviewDetail } from "@/services/reviews";
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // Página propia de una reseña de álbum (openspec: redesign-album-page, capability
 // `review-detail`): la dirección que se comparte y a la que llegan feed, perfil y
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }: ReviewPageProps): Promise<Met
   return { title: `${reviewHeadline(detail.review)} · ${t("reviewOf", { album: detail.album.title })}` };
 }
 
-export default async function ReviewPage({ params }: ReviewPageProps) {
+async function ReviewPage({ params }: ReviewPageProps) {
   const { reviewId: segment } = await params;
   const parsed = parseCatalogSegment(segment);
   if (!parsed) notFound();
@@ -66,3 +67,5 @@ export default async function ReviewPage({ params }: ReviewPageProps) {
     </main>
   );
 }
+
+export default withClientMessages("review/[reviewId]/page", ReviewPage);

@@ -4,6 +4,7 @@ import { listMyRatings } from "@/services/ratings/my-ratings";
 import { MyRatingsFiltersSchema, type MyRatingsFilters } from "@/lib/api/schemas";
 import { MyRatingsList } from "@/components/ratings/MyRatingsList";
 import { RATINGS_PAGE_SIZE } from "@/components/ratings/ratings-shared";
+import { withClientMessages } from "@/i18n/client-messages";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -25,7 +26,7 @@ function parseRatingsFilters(searchParams: SearchParams): MyRatingsFilters {
   return parsed.success ? parsed.data : {};
 }
 
-export default async function RatingsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+async function RatingsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const t = await getTranslations("ratings");
   const user = await requirePageUser();
   const filters = parseRatingsFilters(await searchParams);
@@ -39,3 +40,5 @@ export default async function RatingsPage({ searchParams }: { searchParams: Prom
     </main>
   );
 }
+
+export default withClientMessages("me/ratings/page", RatingsPage);

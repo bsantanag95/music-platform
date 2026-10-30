@@ -4,8 +4,9 @@ import { getOwnedCamino } from "@/services/camino/camino";
 import { ApiError } from "@/lib/api/errors";
 import { isValidUuid } from "@/lib/validation";
 import { CaminoManager } from "@/components/camino/CaminoManager";
+import { withClientMessages } from "@/i18n/client-messages";
 
-export default async function CaminoDetailPage({
+async function CaminoDetailPage({
   params,
 }: {
   params: Promise<{ caminoId: string }>;
@@ -27,3 +28,5 @@ export default async function CaminoDetailPage({
     throw error;
   }
 }
+
+export default withClientMessages("me/caminos/[caminoId]/page", CaminoDetailPage);

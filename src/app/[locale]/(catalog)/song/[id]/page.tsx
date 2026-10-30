@@ -32,6 +32,7 @@ import {
   loadVersionLine,
   loadVersions,
 } from "./song-data";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // Página de canción como ficha compacta de biblioteca (openspec: redesign-song-page): sin
 // pestañas; cabecera con carátula del disco principal, identidad, ficha técnica y comunidad
@@ -51,7 +52,7 @@ export async function generateMetadata({ params }: SongPageProps): Promise<Metad
   return result.kind === "ok" ? { title: result.detail.recording.title } : {};
 }
 
-export default async function SongPage({ params }: SongPageProps) {
+async function SongPage({ params }: SongPageProps) {
   const { id: segment } = await params;
   const parsed = parseCatalogSegment(segment);
   if (!parsed) notFound();
@@ -203,3 +204,5 @@ export default async function SongPage({ params }: SongPageProps) {
     </main>
   );
 }
+
+export default withClientMessages("(catalog)/song/[id]/page", SongPage);

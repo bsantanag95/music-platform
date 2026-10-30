@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { ChangeEmailForm } from "@/components/auth/ChangeEmailForm";
 import { findValidEmailChangeToken } from "@/services/auth/email-change";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // El token viaja en el query string: evitar que se filtre por `Referer`.
 export const metadata: Metadata = { referrer: "no-referrer" };
@@ -10,7 +11,7 @@ export const metadata: Metadata = { referrer: "no-referrer" };
 // Confirmación del cambio de email desde el enlace del correo (spec
 // account-credentials). Como verify-email: pre-valida el token sin consumirlo y
 // deja que la persona confirme con un clic (un GET nunca debe cambiar el email).
-export default async function ChangeEmailPage({
+async function ChangeEmailPage({
   searchParams,
 }: {
   searchParams: Promise<{ token?: string }>;
@@ -47,3 +48,5 @@ export default async function ChangeEmailPage({
     </main>
   );
 }
+
+export default withClientMessages("auth/change-email/page", ChangeEmailPage);

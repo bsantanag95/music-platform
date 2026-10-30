@@ -17,6 +17,7 @@ import { CommunityExploreGrid } from "@/components/lists/CommunityExploreGrid";
 import { ListsContextRail } from "@/components/lists/ListsContextRail";
 import { getMostRecentEditedList } from "@/services/home/home";
 import { parseCommunityFilters, toDiscoverFilters } from "@/components/lists/community-filters";
+import { withClientMessages } from "@/i18n/client-messages";
 
 /** "Para completar" en el riel: hasta 4 (antes 8 como sección de la vitrina). */
 const RAIL_TO_COMPLETE = 4;
@@ -33,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
 // sola vez, en la primera sección que le toca; las listas sociales van juntas y "Para completar" cierra), y
 // "explorar" (con q/type/sort), que reemplaza la composición por una única
 // grilla filtrada y paginada. El toolbar está siempre visible.
-export default async function CommunityListsPage({
+async function CommunityListsPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -196,3 +197,5 @@ export default async function CommunityListsPage({
     </main>
   );
 }
+
+export default withClientMessages("lists/page", CommunityListsPage);

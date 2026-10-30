@@ -7,6 +7,7 @@ import { isValidUuid } from "@/lib/validation";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ArtistJourneyManager } from "@/components/artist-journey/ArtistJourneyManager";
 import type { ReleaseGroupCategory } from "@/lib/api/schemas";
+import { withClientMessages } from "@/i18n/client-messages";
 
 interface ArtistJourneyManagePageProps {
   params: Promise<{ artistId: string }>;
@@ -17,7 +18,7 @@ interface ArtistJourneyManagePageProps {
 // página del artista) y donde viven archivar/desarchivar/borrar. Requiere un
 // recorrido ya activo — 404 si el usuario nunca activó uno sobre este
 // artista (activar sigue ocurriendo desde la página del artista).
-export default async function ArtistJourneyManagePage({ params }: ArtistJourneyManagePageProps) {
+async function ArtistJourneyManagePage({ params }: ArtistJourneyManagePageProps) {
   const { artistId } = await params;
   if (!isValidUuid(artistId)) notFound();
 
@@ -59,3 +60,5 @@ export default async function ArtistJourneyManagePage({ params }: ArtistJourneyM
     </main>
   );
 }
+
+export default withClientMessages("me/artist-journeys/[artistId]/page", ArtistJourneyManagePage);

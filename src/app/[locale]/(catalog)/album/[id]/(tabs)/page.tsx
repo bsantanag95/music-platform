@@ -14,6 +14,7 @@ import {
   loadPersonalState,
   loadSession,
 } from "../album-data";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // Pestaña Canciones, la pestaña por defecto de la página de álbum (openspec:
 // redesign-album-page). El detalle y la sesión vienen de las mismas cargas cacheadas que
@@ -23,7 +24,7 @@ interface AlbumSongsPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function AlbumSongsPage({ params }: AlbumSongsPageProps) {
+async function AlbumSongsPage({ params }: AlbumSongsPageProps) {
   const { id: segment } = await params;
   const parsed = parseCatalogSegment(segment);
   if (!parsed) notFound();
@@ -76,3 +77,5 @@ export default async function AlbumSongsPage({ params }: AlbumSongsPageProps) {
     </div>
   );
 }
+
+export default withClientMessages("(catalog)/album/[id]/(tabs)/page", AlbumSongsPage);

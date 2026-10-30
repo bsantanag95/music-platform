@@ -6,6 +6,7 @@ import { getProfileByUsername } from "@/services/social/profiles";
 import { listUserFavorites } from "@/services/favorites/favorites";
 import { FavoritesWall } from "@/components/favorites/FavoritesWall";
 import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
+import { withClientMessages } from "@/i18n/client-messages";
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -19,7 +20,7 @@ interface PageProps {
 // (buscador, selección múltiple, cambiar audiencia en lote); esta es de solo
 // lectura para cualquier perfil accesible, dueño incluido — mismo `readOnly`
 // que ya soportaba `FavoritesWall`, sin cambios en el componente.
-export default async function ProfileFavoritesPage({ params }: PageProps) {
+async function ProfileFavoritesPage({ params }: PageProps) {
   const { username } = await params;
   const t = await getTranslations("favorites");
   const tUsers = await getTranslations("users");
@@ -55,3 +56,5 @@ export default async function ProfileFavoritesPage({ params }: PageProps) {
     </main>
   );
 }
+
+export default withClientMessages("users/[username]/favorites/page", ProfileFavoritesPage);

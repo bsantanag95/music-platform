@@ -11,6 +11,7 @@ import {
   loadConnectionsProfile,
   PrivateConnectionsNotice,
 } from "@/components/profiles/ProfileConnectionsView";
+import { withClientMessages } from "@/i18n/client-messages";
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return connectionsMetadata(username, "mutualTab");
 }
 
-export default async function ProfileMutualConnectionsPage({ params }: PageProps) {
+async function ProfileMutualConnectionsPage({ params }: PageProps) {
   const { username } = await params;
   const t = await getTranslations("users");
   const { session, viewerId, profile } = await loadConnectionsProfile(username, "/connections/mutual");
@@ -74,3 +75,5 @@ export default async function ProfileMutualConnectionsPage({ params }: PageProps
     </main>
   );
 }
+
+export default withClientMessages("users/[username]/connections/mutual/page", ProfileMutualConnectionsPage);

@@ -4,8 +4,9 @@ import { listModerationReports } from "@/services/moderation-queries";
 import { listSocialRestrictions } from "@/services/moderation-queries";
 import { ModerationConsole } from "@/components/moderation/ModerationConsole";
 import { ModerationReportsResponseSchema, SocialRestrictionsResponseSchema } from "@/lib/api/schemas";
+import { withClientMessages } from "@/i18n/client-messages";
 
-export default async function ModerationPage() {
+async function ModerationPage() {
   const t = await getTranslations("common.moderationConsole");
   await requirePagePermission("moderation.review_content");
   const initial = ModerationReportsResponseSchema.parse(
@@ -22,3 +23,5 @@ export default async function ModerationPage() {
     </main>
   );
 }
+
+export default withClientMessages("moderation/page", ModerationPage);

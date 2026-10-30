@@ -27,6 +27,7 @@ import {
   loadPersonalState,
   loadSession,
 } from "../album-data";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // Layout común de la página de álbum (openspec: redesign-album-page, D2 y D15): la cabecera
 // (carátula, identidad, ficha, comunidad y panel "Tu relación"), la barra de pestañas, la
@@ -50,7 +51,7 @@ export async function generateMetadata({ params }: AlbumLayoutProps): Promise<Me
   return { title: result.detail.releaseGroup.title };
 }
 
-export default async function AlbumLayout({ children, modal, params }: AlbumLayoutProps) {
+async function AlbumLayout({ children, modal, params }: AlbumLayoutProps) {
   const { id } = await params;
   const parsed = parseCatalogSegment(id);
   if (!parsed) notFound();
@@ -200,3 +201,5 @@ export default async function AlbumLayout({ children, modal, params }: AlbumLayo
     </main>
   );
 }
+
+export default withClientMessages("(catalog)/album/[id]/(tabs)/layout", AlbumLayout);

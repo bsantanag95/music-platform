@@ -10,6 +10,7 @@ import { ItemListsSection } from "@/components/lists/ItemListsSection";
 import { albumHref, albumSegment, artistHref } from "@/lib/catalog-links";
 import { resolveCatalogRoute } from "@/lib/catalog-route";
 import { parseCatalogSegment } from "@/lib/slug";
+import { withClientMessages } from "@/i18n/client-messages";
 
 interface AlbumListsPageProps {
   params: Promise<{ id: string }>;
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }: AlbumListsPageProps): Promise
 // Página dedicada "Mostrar en listas" de un álbum (openspec:
 // show-item-in-lists): a la que el panel acotado a 4 resultados en la página
 // del álbum envía con su enlace "Ver más".
-export default async function AlbumListsPage({ params }: AlbumListsPageProps) {
+async function AlbumListsPage({ params }: AlbumListsPageProps) {
   const { id: segment } = await params;
   const common = await getTranslations("common");
   const t = await getTranslations("lists");
@@ -77,3 +78,5 @@ export default async function AlbumListsPage({ params }: AlbumListsPageProps) {
     </main>
   );
 }
+
+export default withClientMessages("(catalog)/album/[id]/lists/page", AlbumListsPage);

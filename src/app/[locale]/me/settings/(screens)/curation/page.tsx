@@ -12,6 +12,7 @@ import { OpenEditorButton } from "@/components/settings/OpenEditorButton";
 import { SettingsSection } from "@/components/settings/SettingsSection";
 import type { Metadata } from "next";
 import { settingsMetadata } from "@/components/settings/settings-metadata";
+import { withClientMessages } from "@/i18n/client-messages";
 
 interface RowProps {
   title: string;
@@ -49,7 +50,7 @@ export async function generateMetadata(): Promise<Metadata> {
 // acá: se elige desde la Tarjeta de Identidad (pantalla Perfil).
 // Las valoraciones se destacan desde la valoración de cada álbum o canción, sin
 // una superficie única a la que enlazar: solo llevan conteo y una pista.
-export default async function CurationSettingsPage() {
+async function CurationSettingsPage() {
   const t = await getTranslations("users");
   const user = await requirePageUser();
   const [showcase, summary] = await Promise.all([getShowcase(user.id), getCurationSummary(user.id)]);
@@ -98,3 +99,5 @@ export default async function CurationSettingsPage() {
     </SettingsSection>
   );
 }
+
+export default withClientMessages("me/settings/(screens)/curation/page", CurationSettingsPage);

@@ -6,6 +6,7 @@ import { getProfileByUsername } from "@/services/social/profiles";
 import { listUserLists } from "@/services/lists/lists";
 import { ListsList } from "@/components/lists/ListsList";
 import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
+import { withClientMessages } from "@/i18n/client-messages";
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -19,7 +20,7 @@ interface PageProps {
 // incluido, con buscador, tipo y orden pero sin ninguna acción de gestión.
 // Mismo criterio de acceso que el resto del perfil (`profile.accessible` + la
 // matriz de audiencia de `listUserLists`).
-export default async function ProfileListsPage({ params }: PageProps) {
+async function ProfileListsPage({ params }: PageProps) {
   const { username } = await params;
   const t = await getTranslations("lists");
   const tUsers = await getTranslations("users");
@@ -53,3 +54,5 @@ export default async function ProfileListsPage({ params }: PageProps) {
     </main>
   );
 }
+
+export default withClientMessages("users/[username]/lists/page", ProfileListsPage);

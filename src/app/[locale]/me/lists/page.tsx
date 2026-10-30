@@ -8,6 +8,7 @@ import { parseListsTab } from "@/components/lists/lists-tabs";
 import { MyListsTab } from "@/components/lists/MyListsTab";
 import { SavedListsTab } from "@/components/lists/SavedListsTab";
 import { ListEntityTypeSchema, ListSortSchema } from "@/lib/api/schemas";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // Filtros de la pestaña leídos de la URL (los escribe `useListFilters`); un valor inválido se ignora.
 function parseListFiltersParams(raw: { q?: string | string[]; type?: string | string[]; sort?: string | string[] }) {
@@ -20,7 +21,7 @@ function parseListFiltersParams(raw: { q?: string | string[]; type?: string | st
 
 const sum = (counts: ListTypeCounts) => counts.artist + counts["release-group"] + counts.recording;
 
-export default async function ListsPage({
+async function ListsPage({
   searchParams,
 }: {
   searchParams: Promise<{
@@ -60,3 +61,5 @@ export default async function ListsPage({
     </main>
   );
 }
+
+export default withClientMessages("me/lists/page", ListsPage);

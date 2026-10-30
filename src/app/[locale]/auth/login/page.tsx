@@ -3,8 +3,9 @@ import { Link } from "@/i18n/navigation";
 import { redirect } from "@/i18n/navigation";
 import { LoginPanel } from "@/components/auth/LoginPanel";
 import { resolveSession } from "@/services/auth/sessions";
+import { withClientMessages } from "@/i18n/client-messages";
 
-export default async function LoginPage({
+async function LoginPage({
   params,
   searchParams,
 }: {
@@ -53,3 +54,5 @@ export default async function LoginPage({
     </main>
   );
 }
+
+export default withClientMessages("auth/login/page", LoginPage);

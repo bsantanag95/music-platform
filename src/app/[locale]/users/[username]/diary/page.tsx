@@ -6,6 +6,7 @@ import { getProfileByUsername } from "@/services/social/profiles";
 import { listUserDiary } from "@/services/diary/diary";
 import { DiaryReadList } from "@/components/diary/DiaryReadList";
 import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
+import { withClientMessages } from "@/i18n/client-messages";
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -19,7 +20,7 @@ interface PageProps {
 // estante pero fluyendo con la página. Mismo criterio de acceso que el resto
 // del perfil (`profile.accessible` + la matriz de audiencia de
 // `listUserDiary`).
-export default async function ProfileDiaryPage({ params }: PageProps) {
+async function ProfileDiaryPage({ params }: PageProps) {
   const { username } = await params;
   const t = await getTranslations("diary");
   const tUsers = await getTranslations("users");
@@ -53,3 +54,5 @@ export default async function ProfileDiaryPage({ params }: PageProps) {
     </main>
   );
 }
+
+export default withClientMessages("users/[username]/diary/page", ProfileDiaryPage);

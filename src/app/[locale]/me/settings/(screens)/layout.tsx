@@ -8,13 +8,14 @@ import { SettingsNav } from "@/components/settings/SettingsNav";
 import { SETTINGS_SCREENS } from "@/components/settings/settings-screens";
 import { UnsavedChangesGuard } from "@/components/settings/UnsavedChangesGuard";
 import { SettingsFocus } from "@/components/settings/SettingsFocus";
+import { withClientMessages } from "@/i18n/client-messages";
 
 // Diseño compartido del área de ajustes (spec owner-settings): título, aviso de
 // email sin verificar —visible en todas las pantallas, no solo en Cuenta, porque
 // la de aterrizaje es Perfil (ver design.md, Decisión 2)— y el menú lateral.
 // Cada pantalla vuelve a exigir sesión: un layout no se re-ejecuta al navegar
 // entre sus páginas hijas, así que no basta como única guarda.
-export default async function SettingsLayout({ children }: { children: ReactNode }) {
+async function SettingsLayout({ children }: { children: ReactNode }) {
   const t = await getTranslations("users");
   const user = await requirePageUser();
   const pendingRequests = await countPendingFollowRequests(user.id);
@@ -48,3 +49,5 @@ export default async function SettingsLayout({ children }: { children: ReactNode
     </main>
   );
 }
+
+export default withClientMessages("me/settings/(screens)/layout", SettingsLayout);

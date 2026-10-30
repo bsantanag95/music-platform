@@ -33,6 +33,7 @@ import { getMovedByCount, isGenreInIdentity } from "@/services/genres/personal";
 import { parseGenreParams, type RawSearchParams } from "@/services/genres/page-params";
 import { findStyleGenreBySlug } from "@/services/genres/read";
 import { getGenreStats } from "@/services/genres/stats";
+import { withClientMessages } from "@/i18n/client-messages";
 
 interface GenrePageProps {
   params: Promise<{ locale: string; slug: string }>;
@@ -56,7 +57,7 @@ function RailFallback({ label }: { label: string }) {
 // Álbumes, Artistas, Listas). El slug es el guardado en la taxonomía (ADR 0023): sin id; un slug con
 // mayúsculas redirige (308) al canónico y uno desconocido o que no es un estilo visible da 404. Los
 // parámetros inválidos nunca rompen la página: caen al predeterminado.
-export default async function GenrePage({ params, searchParams }: GenrePageProps) {
+async function GenrePage({ params, searchParams }: GenrePageProps) {
   const { locale, slug } = await params;
   const decoded = decodeURIComponent(slug);
   if (decoded !== decoded.toLowerCase()) {
@@ -173,3 +174,5 @@ export default async function GenrePage({ params, searchParams }: GenrePageProps
     </main>
   );
 }
+
+export default withClientMessages("(catalog)/genre/[slug]/page", GenrePage);

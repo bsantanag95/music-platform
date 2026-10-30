@@ -14,6 +14,7 @@ import { parseCatalogSegment } from "@/lib/slug";
 import { generatedRefsFor } from "@/services/discovery/collections/generated";
 import { collectionTitle } from "@/services/discovery/collections/titles";
 import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
+import { withClientMessages } from "@/i18n/client-messages";
 
 interface PageProps {
   params: Promise<{ username: string; listId: string }>;
@@ -22,7 +23,7 @@ interface PageProps {
 // Detalle en modo lectura de una lista ajena visible. Mismo cuerpo de tres
 // modos que el detalle propio, sin controles de gestión. Cierra los enlaces
 // que Descubrir, Guardadas, el feed, los perfiles e Inicio ya apuntaban acá.
-export default async function UserListDetailPage({ params }: PageProps) {
+async function UserListDetailPage({ params }: PageProps) {
   const { username, listId: segment } = await params;
   const t = await getTranslations("lists");
   const parsed = parseCatalogSegment(segment);
@@ -112,3 +113,5 @@ export default async function UserListDetailPage({ params }: PageProps) {
     </main>
   );
 }
+
+export default withClientMessages("users/[username]/lists/[listId]/page", UserListDetailPage);
