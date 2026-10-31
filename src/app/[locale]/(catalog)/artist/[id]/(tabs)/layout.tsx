@@ -126,7 +126,11 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
         </div>
       </header>
 
-      <div id={ARTIST_TABS_ANCHOR} className="flex scroll-mt-6 flex-col gap-6">
+      {/* Alturas de las barras fijas: el encabezado del sitio y las pestañas (openspec: refine-artist-page-phase2, D4). */}
+      <div
+        id={ARTIST_TABS_ANCHOR}
+        className="flex scroll-mt-[var(--site-header-h)] flex-col gap-6 [--artist-sticky-top:calc(var(--site-header-h)+var(--artist-tabs-h))] [--artist-tabs-h:2.375rem] [--site-header-h:3.625rem]"
+      >
         <ArtistTabs
           artistId={artist.id}
           artistName={artist.name}

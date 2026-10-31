@@ -398,6 +398,11 @@
         "searchCatalog": "Search the whole catalog",
         "incomplete": "The discography is still being completed: some releases may be missing."
       },
+      "blocks": {
+        "albums": "Albums",
+        "eps": "EPs"
+      },
+      "noYear": "No year",
       "ep": "EP",
       "bestRated": "Top rated",
       "listened": "Listened",
