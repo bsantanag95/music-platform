@@ -158,4 +158,32 @@ describe("ArtistRelationPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: relation.chooseLists }));
     expect(screen.getByText("selector de listas")).toBeInTheDocument();
   });
+
+  describe("Valoraciones (refine-artist-page-phase3)", () => {
+    it("muestra cuántos discos valoraste y tu media, sin el total de la discografía", () => {
+      renderPanel(makeState({ rated: { count: 5, average: 4.3 } }));
+      expect(screen.getByText("5 discos · media 4,3")).toBeInTheDocument();
+      expect(screen.queryByText(/ de \d+/)).not.toBeInTheDocument();
+    });
+
+    it("sin valoraciones lo dice y no ofrece 'Ver sin valorar'", () => {
+      renderPanel(makeState({ rated: { count: 0, average: null } }));
+      expect(screen.getByText(relation.ratedNone)).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: new RegExp(relation.showUnrated) })).not.toBeInTheDocument();
+    });
+
+    it("'Ver sin valorar' activa el filtro de la discografía en la misma página", () => {
+      const anchor = document.createElement("section");
+      anchor.id = "discography";
+      anchor.scrollIntoView = vi.fn();
+      document.body.appendChild(anchor);
+      const heard = vi.fn();
+      window.addEventListener("artist-discography-filter", (event) => heard((event as CustomEvent).detail));
+      renderPanel(makeState({ rated: { count: 2, average: 4 } }));
+      fireEvent.click(screen.getByRole("button", { name: new RegExp(relation.showUnrated) }));
+      expect(heard).toHaveBeenCalledWith("unrated");
+      expect(anchor.scrollIntoView).toHaveBeenCalled();
+      anchor.remove();
+    });
+  });
 });

@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { GenreChips } from "@/components/genres/GenreChips";
 import { getArtistGenres } from "@/services/genres/display";
+import { getArtistAwards } from "@/services/awards/artist-awards";
+import { artistHref } from "@/lib/catalog-links";
 import { ArtistCommunity } from "@/components/artist/ArtistCommunity";
 import { ArtistFacts, ArtistIdentity, ArtistPhoto, ArtistPhotoCreditMobile, ArtistSummary } from "@/components/artist/ArtistHeader";
 import { ArtistRelationPanel } from "@/components/artist/ArtistRelationPanel";
@@ -68,7 +70,7 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
   const userId = session?.user.id ?? null;
   const socialTarget = await resolveSocialTarget("artist", artist.id);
 
-  const [discography, profile, stats, personal, lineup, comments, canModerate, artistGenres] = await Promise.all([
+  const [discography, profile, stats, personal, lineup, comments, canModerate, artistGenres, awards] = await Promise.all([
     loadDiscography(artist.id),
     loadProfile(artist.id, locale),
     loadCommunityStats(artist.id),
@@ -77,10 +79,20 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
     listComments(socialTarget, 1, 20, userId),
     userId ? loadCanModerate(userId) : Promise.resolve(false),
     getArtistGenres(artist.id),
+    getArtistAwards(artist.id),
   ]);
   if (!profile) notFound();
 
   const fact = lineupFact(lineup, artist.id, artist.name);
+  const awardsFact =
+    awards.ceremonies.length > 0
+      ? {
+          wins: awards.wins,
+          nominations: awards.nominations,
+          inductions: awards.inductions,
+          href: `${artistHref(artist.name, artist.id)}/awards`,
+        }
+      : null;
   const categoryLabels = {
     studio: t("categories.studio"),
     single_ep: t("categories.single_ep"),
@@ -100,13 +112,25 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
               <ArtistIdentity type={type} name={artist.name} description={profile.description} />
               <GenreChips genres={artistGenres.genres} />
               <div className="hidden sm:block">
-                <ArtistFacts type={type} profile={profile} firstMainYear={discography?.firstMainYear ?? null} lineup={fact} />
+                <ArtistFacts
+                  type={type}
+                  profile={profile}
+                  firstMainYear={discography?.firstMainYear ?? null}
+                  lineup={fact}
+                  awards={awardsFact}
+                />
               </div>
             </div>
           </div>
           <ArtistPhotoCreditMobile photo={profile.photo} />
           <div className="sm:hidden">
-            <ArtistFacts type={type} profile={profile} firstMainYear={discography?.firstMainYear ?? null} lineup={fact} />
+            <ArtistFacts
+              type={type}
+              profile={profile}
+              firstMainYear={discography?.firstMainYear ?? null}
+              lineup={fact}
+              awards={awardsFact}
+            />
           </div>
           <HiddenOnTab tab="biography">
             <ArtistSummary artistId={artist.id} artistName={artist.name} summary={profile.summary} />
@@ -135,6 +159,7 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
           artistId={artist.id}
           artistName={artist.name}
           hasBiography={profile.summary !== null}
+          hasAwards={awards.ceremonies.length > 0}
           lineupTab={lineupTabOf(lineup)}
         />
         {children}

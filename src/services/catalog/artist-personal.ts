@@ -1,6 +1,6 @@
 import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { collectionEntry, listenEntry, releaseGroup, userList, userListItem, wantedEntry } from "@/db/schema";
+import { collectionEntry, listenEntry, rating, releaseGroup, userList, userListItem, wantedEntry } from "@/db/schema";
 import { isFavorited } from "@/services/favorites/favorites";
 import { isFollowingArtist } from "@/services/social/artist-following";
 import { isWantToListen } from "@/services/want-to-listen/want-to-listen";
@@ -25,6 +25,11 @@ export interface ArtistPersonalState {
   pending: boolean;
   listens: ArtistListenSummary;
   collection: { have: number; seeking: number };
+  /**
+   * Discos de la discografía propia que el usuario valoró y la media de sus estrellas (openspec:
+   * refine-artist-page-phase3). Sin el total de la discografía: nunca "N de M".
+   */
+  rated: { count: number; average: number | null };
   /** Listas propias (estándar) que contienen al artista, con su ítem para quitarlo. */
   ownListMemberships: AlbumListMembership[];
   /** Recorrido propio: estado y proporción escuchada (para una barra, nunca como cifra). */
@@ -44,7 +49,7 @@ export async function getArtistPersonalState(
       : eq(listenEntry.artistId, artistId),
   );
 
-  const [following, favorited, pending, albumRows, lastRows, haveRows, seekingRows, listRows, journey] = await Promise.all([
+  const [following, favorited, pending, albumRows, lastRows, haveRows, seekingRows, listRows, journey, ratedRows] = await Promise.all([
     isFollowingArtist(userId, artistId),
     isFavorited({ type: "artist", id: artistId }, userId),
     isWantToListen({ type: "artist", id: artistId }, userId),
@@ -80,6 +85,12 @@ export async function getArtistPersonalState(
       .where(and(eq(userList.ownerId, userId), eq(userListItem.artistId, artistId), eq(userList.kind, "standard")))
       .orderBy(desc(userList.createdAt), desc(userList.id)),
     getArtistJourneyDetail(userId, artistId),
+    hasAlbums
+      ? db
+          .select({ n: sql<number>`count(*)::int`, average: sql<string | null>`avg(${rating.stars})` })
+          .from(rating)
+          .where(and(eq(rating.userId, userId), inArray(rating.releaseGroupId, ownReleaseGroupIds)))
+      : Promise.resolve([{ n: 0, average: null }]),
   ]);
 
   const last = lastRows[0];
@@ -93,6 +104,10 @@ export async function getArtistPersonalState(
       last: last ? { title: last.title ?? null, at: new Date(last.at).toISOString() } : null,
     },
     collection: { have: haveRows[0]?.n ?? 0, seeking: seekingRows[0]?.n ?? 0 },
+    rated: {
+      count: ratedRows[0]?.n ?? 0,
+      average: ratedRows[0]?.average != null ? Math.round(Number(ratedRows[0].average) * 10) / 10 : null,
+    },
     ownListMemberships: listRows.map((row) => ({ ...row, kind: "standard" as const })),
     journey: journey ? { state: journey.state, progress: selectedCount > 0 ? listenedCount / selectedCount : 0 } : null,
   };

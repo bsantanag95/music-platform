@@ -87,6 +87,8 @@ interface ArtistFactsProps {
   firstMainYear: number | null;
   /** Alineación actual o grupos de una persona (openspec: add-artist-members-tab). */
   lineup?: LineupFact | null;
+  /** Cifras de premios con el enlace a la pestaña Premios (openspec: refine-artist-page-phase3). */
+  awards?: { wins: number; nominations: number; inductions: number; href: string } | null;
 }
 
 /**
@@ -94,7 +96,7 @@ interface ArtistFactsProps {
  * integrantes o bandas, enlaces.
  */
 export function artistFactRows(
-  { type, profile, firstMainYear, lineup }: ArtistFactsProps,
+  { type, profile, firstMainYear, lineup, awards }: ArtistFactsProps,
   locale: string,
   t: (key: string, values?: Record<string, string | number>) => string,
 ): { key: string; label: string; value: React.ReactNode }[] {
@@ -148,6 +150,27 @@ export function artistFactRows(
           {" · "}
           <Link href={lineup.href} className={`whitespace-nowrap ${internalMore}`}>
             {t(`facts.${lineup.more}`)} →
+          </Link>
+        </span>
+      ),
+    });
+  }
+
+  if (awards && awards.nominations + awards.inductions > 0) {
+    const counts = [
+      awards.wins > 0 ? t("awards.wins", { count: awards.wins }) : null,
+      awards.nominations > 0 ? t("awards.nominations", { count: awards.nominations }) : null,
+      awards.inductions > 0 ? t("awards.inductions", { count: awards.inductions }) : null,
+    ].filter(Boolean);
+    rows.push({
+      key: "awards",
+      label: t("facts.awards"),
+      value: (
+        <span>
+          {counts.join(" · ")}
+          {" · "}
+          <Link href={awards.href} className={`whitespace-nowrap ${internalMore}`}>
+            {t("facts.seeAwards")} →
           </Link>
         </span>
       ),

@@ -543,4 +543,41 @@ describe("buscador de la discografía (add-discography-search)", () => {
     type("home");
     expect(screen.getByText(s.incomplete)).toBeInTheDocument();
   });
+
+describe("filtro personal (refine-artist-page-phase3)", () => {
+  const discs = [item("a", { year: 1970 }), item("b", { year: 1971 }), item("c", { year: 1972 })];
+  const card = (title: string) => screen.getByText(title).closest("li")!;
+
+  it("sin sesión o sin marcas no se ofrece", () => {
+    const { unmount } = renderDiscography({ sections: [{ key: "main", items: discs }] });
+    expect(screen.queryByRole("group", { name: d.filter.label })).not.toBeInTheDocument();
+    unmount();
+    renderDiscography({ sections: [{ key: "main", items: discs }], marks: EMPTY_DISCOGRAPHY_MARKS });
+    expect(screen.queryByRole("group", { name: d.filter.label })).not.toBeInTheDocument();
+  });
+
+  it("'Sin valorar' atenúa los valorados y 'Tuyos' los que no tienen marcas, sin esconder ninguno", () => {
+    renderDiscography({
+      sections: [{ key: "main", items: discs }],
+      marks: { ...EMPTY_DISCOGRAPHY_MARKS, stars: { a: 4 }, pending: ["b"] },
+    });
+    const group = screen.getByRole("group", { name: d.filter.label });
+    expect(within(group).getByRole("button", { name: new RegExp(`^${d.filter.unrated}\\s*2$`) })).toBeInTheDocument();
+    fireEvent.click(within(group).getByRole("button", { name: new RegExp(`^${d.filter.unrated}\\s*2$`) }));
+    expect(card("Disco a")).toHaveClass("opacity-35");
+    expect(card("Disco b")).not.toHaveClass("opacity-35");
+    fireEvent.click(within(group).getByRole("button", { name: new RegExp(`^${d.filter.yours}\\s*2$`) }));
+    expect(card("Disco c")).toHaveClass("opacity-35");
+    expect(card("Disco a")).not.toHaveClass("opacity-35");
+    for (const title of ["Disco a", "Disco b", "Disco c"]) expect(screen.getByText(title)).toBeVisible();
+  });
+
+  it("se activa con el evento del panel", () => {
+    renderDiscography({ sections: [{ key: "main", items: discs }], marks: { ...EMPTY_DISCOGRAPHY_MARKS, stars: { a: 4 } } });
+    act(() => {
+      window.dispatchEvent(new CustomEvent("artist-discography-filter", { detail: "unrated" }));
+    });
+    expect(screen.getByRole("button", { name: new RegExp(`^${d.filter.unrated}\\s*2$`) })).toHaveAttribute("aria-pressed", "true");
+  });
+});
 });
