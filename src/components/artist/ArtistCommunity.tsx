@@ -13,7 +13,7 @@ import type { ArtistCommunityStats } from "@/services/catalog/artist-community";
 
 function Stat({ label, value, detail }: { label: string; value: React.ReactNode; detail?: React.ReactNode }) {
   return (
-    <div className="flex min-w-0 flex-col gap-0.5 px-4 py-2.5">
+    <div className="flex min-w-0 flex-col gap-0.5 px-3 py-2.5 sm:px-4">
       {/* La cifra va primero a la vista; en el DOM el `dt` sigue antes del `dd`, como pide `<dl>`. */}
       <dt className="order-2 font-data text-xs text-paper-muted">{label}</dt>
       <dd className="order-1 font-display text-xl leading-tight text-paper tabular-nums">{value}</dd>
@@ -29,7 +29,7 @@ export function ArtistCommunity({ stats, listsHref }: { stats: ArtistCommunitySt
 
   return (
     <section aria-label={t("heading")}>
-      <dl className="grid grid-cols-1 divide-y divide-ink-border rounded border border-ink-border bg-ink-surface sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+      <dl className="grid grid-cols-3 divide-x divide-ink-border rounded border border-ink-border bg-ink-surface">
         <Stat label={t("listeners")} value={<ThresholdedTileValue count={stats.listeners} />} />
         <Stat
           label={t("followers")}

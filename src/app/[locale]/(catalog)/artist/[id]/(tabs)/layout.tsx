@@ -7,15 +7,13 @@ import { getArtistGenres } from "@/services/genres/display";
 import { ArtistCommunity } from "@/components/artist/ArtistCommunity";
 import { ArtistFacts, ArtistIdentity, ArtistPhoto, ArtistPhotoCreditMobile, ArtistSummary } from "@/components/artist/ArtistHeader";
 import { ArtistRelationPanel } from "@/components/artist/ArtistRelationPanel";
-import { ArtistTabs } from "@/components/artist/ArtistTabs";
+import { ArtistTabs, HiddenOnTab } from "@/components/artist/ArtistTabs";
 import { ARTIST_TABS_ANCHOR, lineupFact, lineupTabOf } from "@/components/artist/lineup-fact";
 import { itemListsHref } from "@/components/lists/lists-shared";
 import { Comments } from "@/components/social/Comments";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { parseCatalogSegment } from "@/lib/slug";
-import type { ReleaseGroup, ReleaseGroupCategory } from "@/lib/api/schemas";
-import { readArtistDiscography } from "@/services/catalog/ingest-discography";
-import { isCoverResolved } from "@/services/catalog/cover-resolution";
+import type { ReleaseGroupCategory } from "@/lib/api/schemas";
 import { scheduleArtistProfileRefresh } from "@/services/catalog/artist-profile-sync";
 import type { ProfileLocale } from "@/services/catalog/artist-profile-read";
 import { listComments, resolveSocialTarget } from "@/services/social";
@@ -82,24 +80,6 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
   ]);
   if (!profile) notFound();
 
-  // Discografía propia en el formato del modal de inicio del recorrido (solo con sesión y sin
-  // recorrido: es lo único que la usa).
-  const journeyAlbums: ReleaseGroup[] =
-    personal && !personal.journey
-      ? (await readArtistDiscography(artist.id))
-          .filter((row) => row.creditRole === "primary")
-          .map((row) => ({
-            id: row.id,
-            mbid: row.mbid,
-            title: row.title,
-            category: row.category as ReleaseGroupCategory,
-            firstReleaseDate: row.firstReleaseDate,
-            firstReleaseYear: row.firstReleaseYear,
-            createdAt: row.createdAt.toISOString(),
-            coverThumbUrl: row.coverThumbUrl,
-            coverResolved: isCoverResolved(row),
-          }))
-      : [];
   const fact = lineupFact(lineup, artist.id, artist.name);
   const categoryLabels = {
     studio: t("categories.studio"),
@@ -128,7 +108,9 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
           <div className="sm:hidden">
             <ArtistFacts type={type} profile={profile} firstMainYear={discography?.firstMainYear ?? null} lineup={fact} />
           </div>
-          <ArtistSummary artistId={artist.id} artistName={artist.name} summary={profile.summary} />
+          <HiddenOnTab tab="biography">
+            <ArtistSummary artistId={artist.id} artistName={artist.name} summary={profile.summary} />
+          </HiddenOnTab>
           <div className="hidden lg:block">
             <ArtistCommunity stats={stats} listsHref={itemListsHref({ type: "artist", id: artist.id })} />
           </div>
@@ -137,7 +119,6 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
           artistId={artist.id}
           artistName={artist.name}
           state={personal}
-          journeyAlbums={journeyAlbums}
           categoryLabels={categoryLabels}
         />
         <div className="lg:hidden">

@@ -120,6 +120,8 @@ function marksByDisc(marks: DiscographyMarks): Record<string, DiscMarks> {
 
 /** Marcas y menú compartidos por la grilla y la tabla: un solo menú abierto a la vez. */
 interface DiscActions {
+  /** Hay sesión: la tabla muestra la columna "Tú". */
+  signedIn: boolean;
   marksOf: (id: string) => DiscMarks | null;
   openId: string | null;
   setOpenId: (id: string | null) => void;
@@ -131,16 +133,53 @@ function sectionHref(artistName: string, artistId: string, section: DiscographyS
   return section === defaultSection ? base : `${base}?section=${section}`;
 }
 
+/** Sección pedida en una dirección (`?section=`): una desconocida o vacía cae en la por defecto. */
+export function sectionFromSearch(
+  search: string,
+  sections: { key: DiscographySection; items: unknown[] }[],
+): DiscographySection {
+  const requested = new URLSearchParams(search).get("section");
+  const found = sections.find((section) => section.key === requested);
+  return found ? found.key : (sections[0]?.key ?? "main");
+}
+
+/**
+ * Sección activa sin ida al servidor (openspec: refine-artist-page-phase1, design D1): todas las secciones ya
+ * llegaron al cliente, así que el cambio solo actualiza la URL con `history.pushState` (Next la sincroniza con su
+ * router) y "atrás" la recupera desde `popstate`.
+ */
+function useActiveSection(
+  initial: DiscographySection,
+  sections: { key: DiscographySection; items: unknown[] }[],
+): [DiscographySection, (section: DiscographySection, href: string) => void] {
+  const [section, setSection] = useState(initial);
+  useEffect(() => setSection(initial), [initial]);
+  useEffect(() => {
+    const onPop = () => setSection(sectionFromSearch(window.location.search, sections));
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [sections]);
+  return [
+    section,
+    (next, href) => {
+      setSection(next);
+      window.history.pushState(null, "", href);
+    },
+  ];
+}
+
 export function ArtistDiscography({
   artistId,
   artistName = "",
   sections,
-  activeSection,
+  activeSection: initialSection,
   bestRatedId,
   marks,
   discographyComplete = true,
 }: ArtistDiscographyProps) {
   const t = useTranslations("catalog.artist.discography");
+  const locale = useLocale();
+  const [activeSection, selectSection] = useActiveSection(initialSection, sections);
   const [view, setView] = useSectionView(activeSection);
   const active = sections.find((s) => s.key === activeSection);
   const defaultSection = sections[0]?.key ?? "main";
@@ -164,6 +203,7 @@ export function ArtistDiscography({
   }
 
   const actions: DiscActions = {
+    signedIn: marks !== null,
     marksOf: (id) => (marks ? (discMarks[id] ?? NO_MARKS) : null),
     openId,
     setOpenId,
@@ -174,7 +214,7 @@ export function ArtistDiscography({
     searchInput.current?.focus();
   };
   const pillClass = (current: boolean) =>
-    `inline-flex items-baseline gap-1.5 rounded border px-2.5 py-1 font-body text-sm transition-colors ${
+    `inline-flex items-baseline gap-1.5 whitespace-nowrap rounded border px-2.5 py-1 font-body text-sm transition-colors ${
       current ? "border-amber text-paper" : "border-ink-border text-paper-muted hover:text-paper"
     }`;
 
@@ -184,8 +224,12 @@ export function ArtistDiscography({
         {t("heading")}
       </h2>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <nav aria-label={t("sectionsLabel")}>
-          <ul className="flex flex-wrap gap-1.5">
+        {/* En móvil las secciones van en una sola línea con desplazamiento (openspec: refine-artist-page-phase1). */}
+        <nav
+          aria-label={t("sectionsLabel")}
+          className="-mx-4 min-w-0 flex-[1_0_calc(100%+2rem)] overflow-x-auto px-4 sm:mx-0 sm:flex-initial sm:overflow-visible sm:px-0"
+        >
+          <ul className="flex min-w-max gap-1.5 sm:min-w-0 sm:flex-wrap">
             {sections.map((section) => {
               const label = t(`sections.${section.key}`);
               if (result) {
@@ -213,8 +257,16 @@ export function ArtistDiscography({
                   <Link
                     href={sectionHref(artistName, artistId, section.key, defaultSection)}
                     scroll={false}
+                    prefetch={false}
                     aria-current={current ? "page" : undefined}
                     className={pillClass(current)}
+                    onClick={(event) => {
+                      // Clic con modificador: que el navegador abra la pestaña nueva como siempre.
+                      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+                      event.preventDefault();
+                      if (current) return;
+                      selectSection(section.key, `/${locale}${sectionHref(artistName, artistId, section.key, defaultSection)}`);
+                    }}
                   >
                     {label}
                     <span className="font-data text-xs text-paper-muted">{section.items.length}</span>
@@ -635,6 +687,11 @@ function DiscographyTable({
         <span className="sr-only">{t("fewRatingsLabel")}</span>
       </span>
     );
+  // Columnas que solo aparecen con algo que mostrar (openspec: refine-artist-page-phase1, design D4): "Tú" con
+  // sesión y "Media" cuando algún disco de la tabla llega al umbral de valoraciones.
+  const showYou = actions.signedIn;
+  const showAverage = groups.some((group) => group.items.some((item) => item.community.average !== null));
+  const columnCount = 4 + (showYou ? 1 : 0) + (showAverage ? 1 : 0);
   const kindChip = (item: ArtistDiscographyItem) =>
     showsKind(item.kinds) ? (
       <span className="shrink-0 rounded border border-ink-border px-1.5 py-0.5 font-data text-xs text-paper-muted">
@@ -651,8 +708,10 @@ function DiscographyTable({
             <span className="sr-only">{t("columns.cover")}</span>
           </th>
           <th scope="col" className="py-2 pr-2 font-normal" {...sortHeader("title", t("columns.title"))} />
-          <th scope="col" className="hidden w-32 py-2 pr-2 font-normal sm:table-cell" {...sortHeader("average", t("columns.average"))} />
-          <th scope="col" className="w-20 py-2 pr-2 font-normal sm:w-24" {...sortHeader("you", t("columns.you"))} />
+          {showAverage && (
+            <th scope="col" className="hidden w-32 py-2 pr-2 font-normal sm:table-cell" {...sortHeader("average", t("columns.average"))} />
+          )}
+          {showYou && <th scope="col" className="w-20 py-2 pr-2 font-normal sm:w-24" {...sortHeader("you", t("columns.you"))} />}
           <th scope="col" className="w-10 py-2 font-normal">
             <span className="sr-only">{t("actionsColumn")}</span>
           </th>
@@ -664,7 +723,7 @@ function DiscographyTable({
             <tr>
               <th
                 scope="rowgroup"
-                colSpan={6}
+                colSpan={columnCount}
                 id={group.heading.id}
                 className="scroll-mt-6 pb-1.5 pt-5 text-left font-data text-xs font-normal uppercase tracking-wide text-paper-muted"
               >
@@ -696,13 +755,17 @@ function DiscographyTable({
                     </span>
                   )}
                   {/* En móvil, el tipo (si no es álbum) y la media pasan a una segunda línea. */}
-                  <span className="mt-0.5 flex min-w-0 items-center gap-2 font-data text-xs text-paper-muted sm:hidden">
-                    {kindChip(item)}
-                    <span className="truncate">{average(item)}</span>
-                  </span>
+                  {(showAverage || showsKind(item.kinds)) && (
+                    <span className="mt-0.5 flex min-w-0 items-center gap-2 font-data text-xs text-paper-muted sm:hidden">
+                      {kindChip(item)}
+                      {showAverage && <span className="truncate">{average(item)}</span>}
+                    </span>
+                  )}
                 </td>
-                <td className="hidden py-2 pr-2 font-data text-xs text-paper-muted sm:table-cell">{average(item)}</td>
-                <td className="py-2 pr-2">{hasMarks(marks) && <DiscMarksView marks={marks} />}</td>
+                {showAverage && (
+                  <td className="hidden py-2 pr-2 font-data text-xs text-paper-muted sm:table-cell">{average(item)}</td>
+                )}
+                {showYou && <td className="py-2 pr-2">{hasMarks(marks) && <DiscMarksView marks={marks} />}</td>}
                 <td className="py-2">
                   <AlbumQuickActions
                     item={item}

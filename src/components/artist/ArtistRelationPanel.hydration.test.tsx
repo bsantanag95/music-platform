@@ -41,7 +41,6 @@ function panel() {
         artistId="a1"
         artistName="Mötley Crüe"
         state={state}
-        journeyAlbums={[]}
         categoryLabels={{ studio: "Estudio", single_ep: "Sencillos", compilation: "Recopilatorios", live_other: "En vivo" }}
       />
     </NextIntlClientProvider>

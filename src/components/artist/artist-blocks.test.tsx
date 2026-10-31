@@ -4,7 +4,7 @@ import { renderWithIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../messages/es/catalog.json";
 import { ArtistCommunity } from "./ArtistCommunity";
 import { ArtistBiography } from "./ArtistBiography";
-import { ArtistTabs } from "./ArtistTabs";
+import { ArtistTabs, HiddenOnTab } from "./ArtistTabs";
 
 const mocks = vi.hoisted(() => ({ segment: null as string | null }));
 
@@ -115,5 +115,18 @@ describe("ArtistTabs", () => {
     mocks.segment = null;
     renderWithIntl(<ArtistTabs artistId="a1" hasBiography={false} lineupTab={null} />);
     expect(screen.queryByRole("link", { name: artistEs.tabs.biography })).not.toBeInTheDocument();
+  });
+});
+
+describe("HiddenOnTab (refine-artist-page-phase1)", () => {
+  it("oculta el resumen en Biografía y lo muestra en las demás pestañas", () => {
+    mocks.segment = "biography";
+    const { unmount } = renderWithIntl(<HiddenOnTab tab="biography">resumen</HiddenOnTab>);
+    expect(screen.queryByText("resumen")).not.toBeInTheDocument();
+    unmount();
+    mocks.segment = "members";
+    renderWithIntl(<HiddenOnTab tab="biography">resumen</HiddenOnTab>);
+    expect(screen.getByText("resumen")).toBeInTheDocument();
+    mocks.segment = null;
   });
 });
