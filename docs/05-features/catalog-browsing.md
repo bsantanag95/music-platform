@@ -117,7 +117,17 @@ de biblioteca y biografía, con la misma estructura que el álbum):
   bloque. En la grilla, un disco sin carátula muestra su título y año en el cuadro en lugar del vinilo, y un bloque de 12
   discos o más se separa por décadas ("Años 80", "Años 2000"; "Sin año" al final). Las pestañas y la barra de la
   discografía quedan fijas al bajar (en móvil la barra va en una fila) y, con la barra pegada, cambiar de sección lleva
-  la sección nueva justo debajo. En la columna "Tú", el tooltip y el texto
+  la sección nueva justo debajo.
+- **Tu relación con la discografía** (cambio `refine-artist-page-phase3`): con sesión y alguna marca propia, la barra
+  ofrece **Todo · Sin valorar N · Tuyos N**; el filtro atenúa (no esconde) los demás discos en grilla y tabla, y
+  `?filter=unrated` lo abre activo. El panel "Tu relación" suma la fila **Valoraciones** ("5 discos · media 4,3", nunca
+  contra el total de la discografía) con "Ver sin valorar →", que activa ese filtro.
+- **Premios** (mismo cambio): pestaña `/artist/[id]/awards` cuando el artista tiene alguna nominación como intérprete
+  (a él, a un disco o a una grabación con crédito principal; las categorías de compositores no cuentan), con una tarjeta
+  por ceremonia de la más reciente a la más antigua, lo ganado primero, y "Incorporado" en los salones de la fama; la
+  ficha de la cabecera suma "Premios: N ganados · N nominaciones · Ver →".
+- **Biografía**: junto al texto, una tarjeta con primer y último álbum, cuántos álbumes y la alineación (integrantes
+  actuales y antiguos, o bandas de una persona), con las mismas lecturas de la cabecera. En la columna "Tú", el tooltip y el texto
    accesible de la nota propia incluyen el puntaje detallado (`Tu nota: 4,5 · 86/100`) cuando
    existe (cambio `add-my-ratings-library`); lo visible sigue siendo `★ 4,5`.
 - **Menú "…" por disco** (cambio `add-discography-quick-actions`): en la esquina de la carátula

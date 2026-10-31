@@ -280,12 +280,23 @@
       "various": "Varios artistas",
       "unknown": "Artista"
     },
+    "awards": {
+      "heading": "Premios",
+      "wins": "{count, plural, one {# ganado} other {# ganados}}",
+      "nominations": "{count, plural, one {# nominación} other {# nominaciones}}",
+      "inductions": "{count, plural, one {# incorporación} other {# incorporaciones}} a salones de la fama",
+      "ceremonyWins": "{won, plural, one {# ganado} other {# ganados}} de {count}",
+      "won": "Ganó",
+      "nominated": "Nominado",
+      "inducted": "Incorporado"
+    },
     "tabs": {
       "label": "Secciones del artista",
       "discography": "Discografía",
       "members": "Integrantes",
       "bands": "Bandas",
-      "biography": "Biografía"
+      "biography": "Biografía",
+      "awards": "Premios"
     },
     "photo": {
       "alt": "Foto de {name}",
@@ -313,7 +324,9 @@
       "lastLineup": "Última alineación",
       "bands": "Bandas",
       "seeLineup": "Ver alineación",
-      "seeAll": "Ver todas"
+      "seeAll": "Ver todas",
+      "awards": "Premios",
+      "seeAwards": "Ver"
     },
     "summary": {
       "readMore": "Seguir leyendo",
@@ -326,6 +339,18 @@
       }
     },
     "biography": {
+      "facts": {
+        "heading": "Datos de la discografía",
+        "firstAlbum": "Primer álbum",
+        "latestAlbum": "Último álbum",
+        "albums": "Álbumes",
+        "albumCount": "{count, plural, one {# álbum} other {# álbumes}}",
+        "members": "Integrantes",
+        "current": "{count, plural, one {# actual} other {# actuales}}",
+        "past": "{count, plural, one {# antiguo} other {# antiguos}}",
+        "bands": "Bandas",
+        "bandCount": "{count, plural, one {# banda} other {# bandas}}"
+      },
       "heading": "Biografía",
       "readFull": "Leer el artículo completo en Wikipedia",
       "languageNote": "Texto en {language}"
@@ -350,6 +375,10 @@
       "collectionNone": "Ningún disco suyo",
       "collectionHave": "{count, plural, one {# disco} other {# discos}}",
       "collectionSeeking": "buscas {count}",
+      "rated": "Valoraciones",
+      "ratedNone": "Ningún disco valorado",
+      "ratedSummary": "{count, plural, one {# disco} other {# discos}} · media {average}",
+      "showUnrated": "Ver sin valorar",
       "lists": "{count, plural, =0 {En ninguna de tus listas} one {En # de tus listas} other {En # de tus listas}}",
       "chooseLists": "Elegir listas",
       "listsLabel": "Listas",
@@ -403,6 +432,12 @@
         "eps": "EP"
       },
       "noYear": "Sin año",
+      "filter": {
+        "label": "Filtrar por tus discos",
+        "all": "Todo",
+        "unrated": "Sin valorar",
+        "yours": "Tuyos"
+      },
       "ep": "EP",
       "bestRated": "Mejor valorado",
       "listened": "Escuchado",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { useFormatter, useNow, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useNow, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { ListenEntryForm } from "@/components/diary/ListenEntryForm";
 import { AlbumListPicker, type PickerMembership } from "@/components/album/AlbumListPicker";
@@ -12,6 +12,9 @@ import { createListenEntry } from "@/lib/api/diary";
 import { toggleFavorite } from "@/lib/api/favorites";
 import { toggleWantToListen } from "@/lib/api/want-to-listen";
 import type { ListenEntry, ReleaseGroup, ReleaseGroupCategory } from "@/lib/api/schemas";
+import { formatStars } from "@/components/album/album-format";
+import { artistHref } from "@/lib/catalog-links";
+import { DISCOGRAPHY_ANCHOR, DISCOGRAPHY_FILTER_EVENT } from "./discography-filter";
 
 // Panel "Tu relación" de la página de artista (openspec: redesign-artist-page, capability
 // `artist-personal-panel`). Mismo lenguaje que el panel del álbum, con las filas que aplican
@@ -26,6 +29,8 @@ export interface ArtistRelationState {
   pending: boolean;
   listens: { albumCount: number; last: { title: string | null; at: string } | null };
   collection: { have: number; seeking: number };
+  /** Discos suyos que valoraste y tu media (openspec: refine-artist-page-phase3); sin el total de la discografía. */
+  rated?: { count: number; average: number | null };
   ownListMemberships: PickerMembership[];
   journey: { state: "in_progress" | "complete" | "archived"; progress: number } | null;
 }
@@ -90,6 +95,7 @@ function AuthenticatedPanel({
 }: ArtistRelationPanelProps & { state: ArtistRelationState }) {
   const t = useTranslations("catalog.artist.relation");
   const format = useFormatter();
+  const locale = useLocale();
   const router = useRouter();
   const target = { type: "artist" as const, id: artistId };
 
@@ -255,6 +261,27 @@ function AuthenticatedPanel({
         <Field label={t("collection")}>
           <Value empty={noCollection}>{collectionSummary}</Value>
         </Field>
+        {state.rated && (
+          <Field
+            label={t("rated")}
+            action={
+              state.rated.count > 0 ? (
+                <button type="button" className={linkButton} onClick={() => showUnrated(artistName, artistId, router)}>
+                  {t("showUnrated")} →
+                </button>
+              ) : undefined
+            }
+          >
+            <Value empty={state.rated.count === 0}>
+              {state.rated.count > 0
+                ? t("ratedSummary", {
+                    count: state.rated.count,
+                    average: formatStars(state.rated.average ?? 0, locale),
+                  })
+                : t("ratedNone")}
+            </Value>
+          </Field>
+        )}
       </div>
 
       <div className={`flex flex-col gap-3 pt-3 ${divider}`}>
@@ -357,6 +384,20 @@ function AuthenticatedPanel({
       )}
     </aside>
   );
+}
+
+/**
+ * "Ver sin valorar": activa el filtro de la discografía (openspec: refine-artist-page-phase3, design D3). En la pestaña
+ * Discografía avisa con un evento y lleva la vista a la discografía; desde otra pestaña navega con `?filter=unrated`.
+ */
+function showUnrated(artistName: string, artistId: string, router: ReturnType<typeof useRouter>) {
+  const discography = document.getElementById(DISCOGRAPHY_ANCHOR);
+  if (discography) {
+    window.dispatchEvent(new CustomEvent(DISCOGRAPHY_FILTER_EVENT, { detail: "unrated" }));
+    discography.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+  router.push(`${artistHref(artistName, artistId)}?filter=unrated`);
 }
 
 function FollowIcon({ active }: { active: boolean }) {

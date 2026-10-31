@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { ArtistBiography } from "@/components/artist/ArtistBiography";
+import { biographyFacts } from "@/components/artist/biography-facts";
 import { artistSegment } from "@/lib/catalog-links";
 import { resolveCatalogRoute } from "@/lib/catalog-route";
 import { parseCatalogSegment } from "@/lib/slug";
 import type { ProfileLocale } from "@/services/catalog/artist-profile-read";
-import { loadArtist, loadProfile } from "../../artist-data";
+import { loadArtist, loadDiscography, loadLineup, loadProfile } from "../../artist-data";
 
 // Pestaña Biografía (openspec: redesign-artist-page, capability `artist-biography`). Sin
 // resumen de Wikipedia en ningún idioma la pestaña no existe: la URL directa responde 404.
@@ -40,5 +41,9 @@ export default async function ArtistBiographyPage({ params }: ArtistBiographyPag
     subpath: "/biography",
   });
   if (!profile?.summary) notFound();
-  return <ArtistBiography summary={profile.summary} />;
+  // Mismas lecturas que el layout (`cache()` por request): la ficha lateral no consulta nada nuevo.
+  const [discography, lineup] = await Promise.all([loadDiscography(artist.id), loadLineup(artist.id)]);
+  const albums = (discography?.sections.find((s) => s.key === "main")?.items ?? []).filter((item) => !item.isEp);
+  return <ArtistBiography summary={profile.summary} facts={biographyFacts(artist.name, albums, lineup)} />;
 }
+

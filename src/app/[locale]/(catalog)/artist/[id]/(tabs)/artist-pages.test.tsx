@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { artistHref, artistSegment } from "@/lib/catalog-links";
 import catalogEs from "../../../../../../../messages/es/catalog.json";
@@ -27,7 +27,34 @@ const mocks = vi.hoisted(() => ({
   scheduleLineupMembersSync: vi.fn(),
   segment: null as string | null,
   locale: "es",
+  getArtistAwards: vi.fn(),
 }));
+
+const NO_AWARDS = { ceremonies: [], wins: 0, nominations: 0, inductions: 0 };
+const SOME_AWARDS = {
+  ceremonies: [
+    {
+      awardSlug: "grammy",
+      kind: "competition",
+      year: 1980,
+      nominations: [
+        { id: "n1", category: { es: "Álbum del año", en: "Album of the Year" }, won: true, nomineeText: "The Wall", album: { id: "rg-wall", title: "The Wall" } },
+        { id: "n2", category: { es: "Mejor interpretación de rock", en: "Best Rock Performance" }, won: false, nomineeText: "Pink Floyd", album: null },
+      ],
+    },
+    {
+      awardSlug: "grammy-hall-of-fame",
+      kind: "hall_of_fame",
+      year: 2024,
+      nominations: [{ id: "n3", category: { es: "Grabaciones", en: "Recordings" }, won: true, nomineeText: "The Wall", album: { id: "rg-wall", title: "The Wall" } }],
+    },
+  ],
+  wins: 1,
+  nominations: 2,
+  inductions: 1,
+};
+
+vi.mock("@/services/awards/artist-awards", () => ({ getArtistAwards: mocks.getArtistAwards }));
 
 // Géneros de la cabecera (openspec: show-genres): sin base en este test; los chips tienen sus propios tests.
 vi.mock("@/services/genres/display", () => ({
@@ -222,7 +249,25 @@ function isBefore(a: HTMLElement, b: HTMLElement) {
   return Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
 }
 
+beforeEach(() => {
+  mocks.getArtistAwards.mockResolvedValue(NO_AWARDS);
+});
+
 describe("layout de la página de artista", () => {
+  it("con premios suma la pestaña Premios y la fila de la ficha (refine-artist-page-phase3)", async () => {
+    mocks.getArtistAwards.mockResolvedValue(SOME_AWARDS);
+    await renderLayout();
+    const tabs = screen.getByRole("navigation", { name: artistEs.tabs.label });
+    expect(within(tabs).getByRole("link", { name: artistEs.tabs.awards })).toHaveAttribute("href", expect.stringMatching(/\/awards$/));
+    expect(screen.getAllByText(/1 ganado · 2 nominaciones · 1 incorporación a salones de la fama/).length).toBeGreaterThan(0);
+  });
+
+  it("sin premios no hay pestaña Premios", async () => {
+    await renderLayout();
+    const tabs = screen.getByRole("navigation", { name: artistEs.tabs.label });
+    expect(within(tabs).queryByRole("link", { name: artistEs.tabs.awards })).not.toBeInTheDocument();
+  });
+
   it("zonas en orden: cabecera, pestañas, contenido y notas al final", async () => {
     await renderLayout();
     const title = screen.getByRole("heading", { level: 1, name: "Pink Floyd" });
@@ -363,6 +408,35 @@ describe("pestaña Biografía", () => {
     renderWithIntl(await Page({ params: Promise.resolve({ id: SEGMENT }) }));
     expect(screen.getByText("Pink Floyd fue una banda de rock británica.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: artistEs.summary.source })).toBeInTheDocument();
+  });
+
+  it("muestra al lado los datos de la discografía (refine-artist-page-phase3)", async () => {
+    const { default: Page } = await import("./biography/page");
+    renderWithIntl(await Page({ params: Promise.resolve({ id: SEGMENT }) }));
+    const facts = screen.getByRole("complementary", { name: artistEs.biography.facts.heading });
+    expect(within(facts).getByText(artistEs.biography.facts.firstAlbum)).toBeInTheDocument();
+  });
+});
+
+describe("pestaña Premios (refine-artist-page-phase3)", () => {
+  it("una tarjeta por ceremonia con lo ganado, lo nominado y la incorporación", async () => {
+    mocks.getArtistAwards.mockResolvedValue(SOME_AWARDS);
+    const { default: Page } = await import("./awards/page");
+    renderWithIntl(await Page({ params: Promise.resolve({ id: SEGMENT }) }));
+    expect(screen.getByRole("link", { name: "Premios Grammy 1980" })).toHaveAttribute("href", "/awards/grammy/1980");
+    expect(screen.getByRole("link", { name: "Salón de la Fama de los Grammy 2024" })).toHaveAttribute(
+      "href",
+      "/hall-of-fame/grammy-hall-of-fame/2024",
+    );
+    expect(screen.getByText(artistEs.awards.won)).toBeInTheDocument();
+    expect(screen.getByText(artistEs.awards.nominated)).toBeInTheDocument();
+    expect(screen.getByText(artistEs.awards.inducted)).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "The Wall" })[0]).toHaveAttribute("href", expect.stringContaining("rg-wall"));
+  });
+
+  it("sin nominaciones responde 404", async () => {
+    const { default: Page } = await import("./awards/page");
+    await expect(Page({ params: Promise.resolve({ id: SEGMENT }) })).rejects.toThrow("NEXT_NOT_FOUND");
   });
 
   it("sin resumen responde 404", async () => {

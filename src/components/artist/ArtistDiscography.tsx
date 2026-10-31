@@ -14,6 +14,13 @@ import { kindKey } from "./artist-format";
 import { DISCOGRAPHY_SEARCH_MIN_DISCS, normalizeForSearch, searchDiscography } from "./discography-search";
 import { SearchIcon } from "@/components/home/QuickLinkIcons";
 import { decadeLabel } from "@/services/discovery/decade-label";
+import {
+  DISCOGRAPHY_ANCHOR,
+  DISCOGRAPHY_FILTER_EVENT,
+  filterFromSearch,
+  isDiscographyFilter,
+  type DiscographyFilter,
+} from "./discography-filter";
 import { AlbumQuickActions, type DiscMarks } from "@/components/catalog/AlbumQuickActions";
 
 // Discografía de la página de artista (openspec: redesign-artist-page, capability
@@ -146,6 +153,8 @@ function marksByDisc(marks: DiscographyMarks): Record<string, DiscMarks> {
 interface DiscActions {
   /** Hay sesión: la tabla muestra la columna "Tú". */
   signedIn: boolean;
+  /** El filtro personal atenúa el disco (openspec: refine-artist-page-phase3). */
+  isDimmed: (id: string) => boolean;
   marksOf: (id: string) => DiscMarks | null;
   openId: string | null;
   setOpenId: (id: string | null) => void;
@@ -197,7 +206,6 @@ function useActiveSection(
   ];
 }
 
-const DISCOGRAPHY_ANCHOR = "discography";
 
 export function ArtistDiscography({
   artistId,
@@ -220,6 +228,17 @@ export function ArtistDiscography({
   const [query, setQuery] = useState("");
   const [searchExpanded, setSearchExpanded] = useState(false);
   const searchInput = useRef<HTMLInputElement>(null);
+  const [filter, setFilter] = useState<DiscographyFilter>("all");
+  // El panel "Tu relación" pide "Sin valorar" con un evento o, desde otra pestaña, con `?filter=` (design D3).
+  useEffect(() => {
+    if (marks) setFilter(filterFromSearch(window.location.search));
+    const onFilter = (event: Event) => {
+      const detail = (event as CustomEvent<unknown>).detail;
+      if (isDiscographyFilter(detail)) setFilter(detail);
+    };
+    window.addEventListener(DISCOGRAPHY_FILTER_EVENT, onFilter);
+    return () => window.removeEventListener(DISCOGRAPHY_FILTER_EVENT, onFilter);
+  }, [marks]);
   const totalDiscs = sections.reduce((sum, section) => sum + section.items.length, 0);
   const searchable = totalDiscs >= DISCOGRAPHY_SEARCH_MIN_DISCS;
   const searching = searchable && normalizeForSearch(query) !== "";
@@ -234,8 +253,15 @@ export function ArtistDiscography({
   }
 
   const blocks = discographyBlocks(activeSection, active.items);
+  const markOf = (id: string) => discMarks[id] ?? NO_MARKS;
+  const isRated = (id: string) => markOf(id).stars !== null;
+  const isYours = (id: string) => hasMarks(markOf(id));
+  // El filtro solo se ofrece con sesión y alguna marca en la discografía: sin datos propios no filtra nada.
+  const filterable = marks !== null && sections.some((section) => section.items.some((item) => isYours(item.id)));
+  const activeFilter: DiscographyFilter = filterable ? filter : "all";
   const actions: DiscActions = {
     signedIn: marks !== null,
+    isDimmed: (id) => (activeFilter === "unrated" ? isRated(id) : activeFilter === "yours" ? !isYours(id) : false),
     marksOf: (id) => (marks ? (discMarks[id] ?? NO_MARKS) : null),
     openId,
     setOpenId,
@@ -352,6 +378,30 @@ export function ArtistDiscography({
                   <span aria-hidden="true">×</span>
                 </button>
               )}
+            </div>
+          )}
+          {!result && filterable && (
+            <div role="group" aria-label={t("filter.label")} className="flex overflow-hidden rounded border border-ink-border">
+              {(["all", "unrated", "yours"] as const).map((option) => {
+                const count =
+                  option === "unrated"
+                    ? active.items.filter((item) => !isRated(item.id)).length
+                    : option === "yours"
+                      ? active.items.filter((item) => isYours(item.id)).length
+                      : null;
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    aria-pressed={activeFilter === option}
+                    onClick={() => setFilter(option)}
+                    className="whitespace-nowrap px-2.5 py-1 font-data text-xs text-paper-muted transition-colors aria-pressed:bg-ink-surface aria-pressed:text-paper"
+                  >
+                    {t(`filter.${option}`)}
+                    {count !== null && <span className="ml-1 text-paper-muted">{count}</span>}
+                  </button>
+                );
+              })}
             </div>
           )}
           {!result && (
@@ -586,7 +636,10 @@ function DiscographyGrid({
               </li>
             ) : null;
           const card = (
-            <li key={item.id} className="group/card relative">
+            <li
+              key={item.id}
+              className={`group/card relative transition-opacity ${actions.isDimmed(item.id) ? "opacity-35 hover:opacity-100 focus-within:opacity-100" : ""}`}
+            >
               <Link
                 href={albumHref(item.primaryArtist?.name ?? (artistName || null), item.title, item.id)}
                 className="group flex flex-col gap-1.5"
@@ -854,7 +907,12 @@ function DiscographyTable({
           {group.rows.map((item) => {
             const marks = actions.marksOf(item.id);
             return (
-              <tr key={item.id} className="border-b border-ink-border align-middle">
+              <tr
+                key={item.id}
+                className={`border-b border-ink-border align-middle transition-opacity ${
+                  actions.isDimmed(item.id) ? "opacity-35 hover:opacity-100 focus-within:opacity-100" : ""
+                }`}
+              >
                 <td className="py-2 pr-2 font-data text-xs text-paper-muted">{item.year ?? "—"}</td>
                 <td className="hidden py-2 pr-2 sm:table-cell">
                   <Cover item={item} className="aspect-square w-9" />

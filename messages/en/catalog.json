@@ -280,12 +280,23 @@
       "various": "Various artists",
       "unknown": "Artist"
     },
+    "awards": {
+      "heading": "Awards",
+      "wins": "{count, plural, one {# win} other {# wins}}",
+      "nominations": "{count, plural, one {# nomination} other {# nominations}}",
+      "inductions": "{count, plural, one {# induction} other {# inductions}} into halls of fame",
+      "ceremonyWins": "{won} won of {count}",
+      "won": "Won",
+      "nominated": "Nominated",
+      "inducted": "Inducted"
+    },
     "tabs": {
       "label": "Artist sections",
       "discography": "Discography",
       "members": "Members",
       "bands": "Bands",
-      "biography": "Biography"
+      "biography": "Biography",
+      "awards": "Awards"
     },
     "photo": {
       "alt": "Photo of {name}",
@@ -313,7 +324,9 @@
       "lastLineup": "Last lineup",
       "bands": "Bands",
       "seeLineup": "See lineup",
-      "seeAll": "See all"
+      "seeAll": "See all",
+      "awards": "Awards",
+      "seeAwards": "See"
     },
     "summary": {
       "readMore": "Keep reading",
@@ -326,6 +339,18 @@
       }
     },
     "biography": {
+      "facts": {
+        "heading": "Discography facts",
+        "firstAlbum": "First album",
+        "latestAlbum": "Latest album",
+        "albums": "Albums",
+        "albumCount": "{count, plural, one {# album} other {# albums}}",
+        "members": "Members",
+        "current": "{count} current",
+        "past": "{count} former",
+        "bands": "Bands",
+        "bandCount": "{count, plural, one {# band} other {# bands}}"
+      },
       "heading": "Biography",
       "readFull": "Read the full article on Wikipedia",
       "languageNote": "Text in {language}"
@@ -350,6 +375,10 @@
       "collectionNone": "None of their records",
       "collectionHave": "{count, plural, one {# record} other {# records}}",
       "collectionSeeking": "seeking {count}",
+      "rated": "Ratings",
+      "ratedNone": "No records rated",
+      "ratedSummary": "{count, plural, one {# record} other {# records}} · average {average}",
+      "showUnrated": "See unrated",
       "lists": "{count, plural, =0 {In none of your lists} one {In # of your lists} other {In # of your lists}}",
       "chooseLists": "Choose lists",
       "listsLabel": "Lists",
@@ -403,6 +432,12 @@
         "eps": "EPs"
       },
       "noYear": "No year",
+      "filter": {
+        "label": "Filter by your records",
+        "all": "All",
+        "unrated": "Unrated",
+        "yours": "Yours"
+      },
       "ep": "EP",
       "bestRated": "Top rated",
       "listened": "Listened",
