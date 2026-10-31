@@ -47,6 +47,18 @@ describe("ReviewIndex", () => {
     expect(screen.getByRole("img", { name: "4,5 estrellas" })).toBeInTheDocument();
   });
 
+  it("con título muestra dos líneas del cuerpo; sin título no repite el extracto", () => {
+    renderWithIntl(
+      <ReviewIndex
+        releaseGroupId={RG}
+        initial={page([review("1", { body: "Cuerpo largo de la reseña" }), review("2", { title: null, body: "Solo cuerpo" })])}
+        sort="recent"
+      />,
+    );
+    expect(screen.getByText("Cuerpo largo de la reseña")).toHaveClass("line-clamp-2");
+    expect(screen.getAllByText("Solo cuerpo")).toHaveLength(1);
+  });
+
   it("dibuja la media estrella de la nota", () => {
     const { container } = renderWithIntl(
       <ReviewIndex

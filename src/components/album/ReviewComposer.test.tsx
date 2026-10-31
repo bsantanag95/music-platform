@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { act, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl, withIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../messages/es/catalog.json";
@@ -24,6 +24,12 @@ vi.mock("@/lib/api/social", () => ({
 }));
 
 const social = catalogEs.social;
+const reviews = catalogEs.album.reviews;
+
+/** Sin reseña propia el formulario empieza plegado (refine-album-page-phase3): se abre con la invitación. */
+function openComposer() {
+  fireEvent.click(screen.getByRole("button", { name: reviews.writeAction }));
+}
 const RG = "00000000-0000-4000-8000-0000000000a1";
 
 const ownReview: Review = {
@@ -52,10 +58,28 @@ describe("ReviewComposer", () => {
     expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
   });
 
-  it("sin hash no se desplaza ni roba el foco", () => {
+  it("sin reseña propia ni hash empieza plegado tras la invitación, sin desplazarse", () => {
     renderWithIntl(<ReviewComposer releaseGroupId={RG} authenticated ownStars={4} ownReview={null} />);
-    expect(screen.getByLabelText(social.reviewBodyLabel)).not.toHaveFocus();
+    expect(screen.getByText(reviews.invite)).toBeInTheDocument();
+    expect(screen.queryByLabelText(social.reviewBodyLabel)).not.toBeInTheDocument();
     expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it("la invitación abre el formulario con el foco en el cuerpo, y Cancelar lo vuelve a plegar", () => {
+    renderWithIntl(<ReviewComposer releaseGroupId={RG} authenticated ownStars={4} ownReview={null} />);
+    openComposer();
+    expect(screen.getByLabelText(social.reviewBodyLabel)).toHaveFocus();
+    fireEvent.click(screen.getByRole("button", { name: social.cancel }));
+    expect(screen.queryByLabelText(social.reviewBodyLabel)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: reviews.writeAction })).toBeInTheDocument();
+  });
+
+  it("sin reseña propia, revealReviewComposer abre el formulario plegado", () => {
+    renderWithIntl(<ReviewComposer releaseGroupId={RG} authenticated ownStars={4} ownReview={null} />);
+    act(() => {
+      expect(revealReviewComposer()).toBe(true);
+    });
+    expect(screen.getByLabelText(social.reviewBodyLabel)).toHaveFocus();
   });
 
   it("ya montado, revealReviewComposer lo muestra sin navegar y fija el hash", () => {
@@ -84,6 +108,7 @@ describe("ReviewComposer", () => {
 
   it("pide estrellas cuando el usuario no valoró el álbum", () => {
     renderWithIntl(<ReviewComposer releaseGroupId={RG} authenticated ownStars={0} ownReview={null} />);
+    openComposer();
     expect(screen.getByText(social.starsLabel)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: social.reviewSubmit })).toBeDisabled();
   });
@@ -92,6 +117,7 @@ describe("ReviewComposer", () => {
     const user = userEvent.setup();
     mocks.saveReview.mockResolvedValue({ ...ownReview, body: "Un texto nuevo" });
     renderWithIntl(<ReviewComposer releaseGroupId={RG} authenticated ownStars={4} ownReview={null} />);
+    openComposer();
     expect(screen.queryByRole("radio")).not.toBeInTheDocument();
 
     await user.type(screen.getByLabelText(social.reviewTitleLabel), "Mi título");
@@ -107,6 +133,7 @@ describe("ReviewComposer", () => {
     const user = userEvent.setup();
     mocks.saveReview.mockResolvedValue({ ...ownReview, body: "Un texto nuevo" });
     renderWithIntl(<ReviewComposer releaseGroupId={RG} authenticated ownStars={0} ownReview={null} />);
+    openComposer();
 
     // El control de estrellas ofrece diez radios (½…5), como el panel del álbum.
     expect(screen.getAllByRole("radio")).toHaveLength(10);
@@ -148,6 +175,7 @@ describe("ReviewComposer", () => {
     const { rerender } = renderWithIntl(
       <ReviewComposer releaseGroupId={RG} authenticated ownStars={0} ownReview={null} />,
     );
+    openComposer();
     await user.type(screen.getByLabelText(social.reviewBodyLabel), "Un texto nuevo");
     await user.click(screen.getByRole("radio", { name: "3,0 estrellas" }));
 
@@ -164,6 +192,7 @@ describe("ReviewComposer", () => {
     const { rerender } = renderWithIntl(
       <ReviewComposer releaseGroupId={RG} authenticated ownStars={4} ownReview={null} />,
     );
+    openComposer();
     await user.type(screen.getByLabelText(social.reviewBodyLabel), "Un texto nuevo");
     expect(screen.queryByRole("radio")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: social.reviewSubmit })).toBeEnabled();

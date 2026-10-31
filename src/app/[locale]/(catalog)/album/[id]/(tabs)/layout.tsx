@@ -21,6 +21,7 @@ import {
   loadAlbumDetail,
   loadAlbumEditions,
   loadAlbumPersonnel,
+  loadAlbumHref,
   loadCanModerate,
   loadCommunityStats,
   loadDiscographyStrip,
@@ -89,7 +90,7 @@ async function AlbumLayout({ children, modal, params }: AlbumLayoutProps) {
   const userId = session?.user.id ?? null;
   const socialTarget = await resolveSocialTarget("release-group", releaseGroupId);
 
-  const [stats, ratings, personal, canModerate, comments, strip, editions, personnel, albumGenres] = await Promise.all([
+  const [stats, ratings, personal, canModerate, comments, strip, editions, personnel, albumGenres, canonicalHref] = await Promise.all([
     loadCommunityStats(releaseGroupId),
     getRatings(socialTarget, userId ?? undefined),
     userId ? loadPersonalState(userId, releaseGroupId) : Promise.resolve(null),
@@ -101,6 +102,7 @@ async function AlbumLayout({ children, modal, params }: AlbumLayoutProps) {
     loadAlbumEditions(releaseGroupId),
     loadAlbumPersonnel(releaseGroupId),
     getAlbumGenres(releaseGroupId),
+    loadAlbumHref(releaseGroupId, detail.releaseGroup.title),
   ]);
 
   // Créditos y Ediciones solo existen con datos (openspec: enrich-album-editions-and-credits).
@@ -163,6 +165,7 @@ async function AlbumLayout({ children, modal, params }: AlbumLayoutProps) {
         <div className="[grid-area:panel]">
           <AlbumRelationPanel
             releaseGroupId={releaseGroupId}
+            reviewsHref={`${canonicalHref}/reviews`}
             state={
               personal
                 ? {

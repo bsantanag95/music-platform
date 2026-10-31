@@ -39,6 +39,11 @@ export interface AlbumRelationState {
 
 interface AlbumRelationPanelProps {
   releaseGroupId: string;
+  /**
+   * URL canónica (con slug) de la pestaña Reseñas: sin slug la ruta redirige a la canónica y se pierde
+   * `#your-review`, que abre el formulario plegado (openspec: refine-album-page-phase3). Sin ella, la URL por id.
+   */
+  reviewsHref?: string;
   /** `null` para visitantes anónimos. */
   state: AlbumRelationState | null;
 }
@@ -87,7 +92,7 @@ function Value({ empty, children }: { empty: boolean; children: ReactNode }) {
 
 const divider = "border-t border-ink-border";
 
-export function AlbumRelationPanel({ releaseGroupId, state }: AlbumRelationPanelProps) {
+export function AlbumRelationPanel({ releaseGroupId, reviewsHref, state }: AlbumRelationPanelProps) {
   const t = useTranslations("catalog.album.relation");
 
   if (!state) {
@@ -102,11 +107,12 @@ export function AlbumRelationPanel({ releaseGroupId, state }: AlbumRelationPanel
     );
   }
 
-  return <AuthenticatedPanel releaseGroupId={releaseGroupId} state={state} />;
+  return <AuthenticatedPanel releaseGroupId={releaseGroupId} reviewsHref={reviewsHref} state={state} />;
 }
 
 function AuthenticatedPanel({
   releaseGroupId,
+  reviewsHref,
   state,
 }: AlbumRelationPanelProps & { state: AlbumRelationState }) {
   const t = useTranslations("catalog.album.relation");
@@ -354,7 +360,7 @@ function AuthenticatedPanel({
           label={t("review")}
           action={
             <Link
-              href={`${albumHref(null, "", releaseGroupId)}/reviews#${REVIEW_COMPOSER_ANCHOR}`}
+              href={`${reviewsHref ?? `${albumHref(null, "", releaseGroupId)}/reviews`}#${REVIEW_COMPOSER_ANCHOR}`}
               scroll={false}
               onClick={(event) => {
                 if (revealReviewComposer()) event.preventDefault();
