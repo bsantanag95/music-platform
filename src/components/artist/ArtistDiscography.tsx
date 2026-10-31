@@ -22,6 +22,7 @@ import {
   type DiscographyFilter,
 } from "./discography-filter";
 import { AlbumQuickActions, type DiscMarks } from "@/components/catalog/AlbumQuickActions";
+import { SEGMENT_GROUP, SEGMENT_OPTION } from "@/components/ui/segmented";
 
 // Discografía de la página de artista (openspec: redesign-artist-page, capability
 // `artist-discography-view`): selector de secciones con su cantidad (la sección vive en la
@@ -381,7 +382,7 @@ export function ArtistDiscography({
             </div>
           )}
           {!result && filterable && (
-            <div role="group" aria-label={t("filter.label")} className="flex overflow-hidden rounded border border-ink-border">
+            <div role="group" aria-label={t("filter.label")} className={SEGMENT_GROUP}>
               {(["all", "unrated", "yours"] as const).map((option) => {
                 const count =
                   option === "unrated"
@@ -395,7 +396,7 @@ export function ArtistDiscography({
                     type="button"
                     aria-pressed={activeFilter === option}
                     onClick={() => setFilter(option)}
-                    className="whitespace-nowrap px-2.5 py-1 font-data text-xs text-paper-muted transition-colors aria-pressed:bg-ink-surface aria-pressed:text-paper"
+                    className={SEGMENT_OPTION}
                   >
                     {t(`filter.${option}`)}
                     {count !== null && <span className="ml-1 text-paper-muted">{count}</span>}
@@ -405,14 +406,14 @@ export function ArtistDiscography({
             </div>
           )}
           {!result && (
-            <div role="group" aria-label={t("viewLabel")} className="flex overflow-hidden rounded border border-ink-border">
+            <div role="group" aria-label={t("viewLabel")} className={SEGMENT_GROUP}>
               {(["grid", "table"] as const).map((option) => (
                 <button
                   key={option}
                   type="button"
                   aria-pressed={view === option}
                   onClick={() => setView(option)}
-                  className="px-2.5 py-1 font-data text-xs text-paper-muted transition-colors aria-pressed:bg-ink-surface aria-pressed:text-paper"
+                  className={SEGMENT_OPTION}
                 >
                   {option === "grid" ? t("viewGrid") : t("viewTable")}
                 </button>

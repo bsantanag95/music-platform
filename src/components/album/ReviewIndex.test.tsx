@@ -70,8 +70,14 @@ describe("ReviewIndex", () => {
     expect(screen.getByRole("link", { name: "Un disco que no envejece" })).toBeInTheDocument();
   });
 
+  it("sin orden con una sola reseña: no hay nada que ordenar", () => {
+    renderWithIntl(<ReviewIndex releaseGroupId={RG} initial={page([review("1")])} sort="recent" />);
+    expect(screen.queryByRole("navigation", { name: reviewsEs.sortLabel })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: reviewsEs.sort.best })).not.toBeInTheDocument();
+  });
+
   it("mantiene el orden en los enlaces y marca el orden activo", () => {
-    renderWithIntl(<ReviewIndex releaseGroupId={RG} initial={page([review("1")])} sort="best" />);
+    renderWithIntl(<ReviewIndex releaseGroupId={RG} initial={page([review("1"), review("2")])} sort="best" />);
     expect(screen.getByRole("link", { name: "Título 1" })).toHaveAttribute("href", "/review/1?sort=best");
     expect(screen.getByRole("link", { name: reviewsEs.sort.best })).toHaveAttribute("aria-current", "true");
     expect(screen.getByRole("link", { name: reviewsEs.sort.worst })).toHaveAttribute(

@@ -19,6 +19,7 @@ import { ListenReactionSchema, type ListenEntry, type ListenReaction } from "@/l
 import { formatDuration, formatStars, summarizeDurations } from "@/components/album/album-format";
 import type { AlbumTrack, AlbumCredit } from "@/services/catalog/album-detail";
 import { VersionAttributeTags } from "@/components/catalog/VersionAttributeTags";
+import { SECONDARY_LINK } from "@/components/ui/segmented";
 
 // Pestaña Canciones de la página de álbum (openspec: redesign-album-page, rehecha en
 // rework-album-tracklist). Títulos completos sin truncar; duración, estado personal y menú
@@ -295,7 +296,7 @@ export function TrackList({
         {editionsAvailable && (
           <>
             {" · "}
-            <Link href={`${albumHref(null, "", releaseGroupId)}/editions`} className="text-amber hover:underline">
+            <Link href={`${albumHref(null, "", releaseGroupId)}/editions`} className={SECONDARY_LINK}>
               {t("seeEditions")}
             </Link>
           </>
@@ -336,10 +337,11 @@ export function TrackList({
                 const openPanel = panel?.key === key ? panel.panel : null;
                 const rowStatus = status?.key === key ? status : null;
 
-                // Tu relación con la pista, en anchos fijos para que las columnas alineen.
-                const personal = authenticated ? (
+                // Tu relación con la pista. En escritorio, en anchos fijos para que las columnas alineen; en
+                // móvil (`compact`), las marcas que no existen no ocupan sitio (openspec: refine-album-page-phase1, D4).
+                const personal = (compact: boolean) => authenticated ? (
                   <span className="flex items-center gap-2">
-                    <span className="flex w-[3.75rem] justify-end">
+                    <span className={compact ? (own ? "flex" : "hidden") : "flex w-[3.75rem] justify-end"}>
                       {own && (
                         <button
                           type="button"
@@ -351,7 +353,10 @@ export function TrackList({
                         </button>
                       )}
                     </span>
-                    <span className="flex w-4 justify-center" title={isListened ? t("youListened") : undefined}>
+                    <span
+                      className={compact && !isListened ? "hidden" : "flex w-4 justify-center"}
+                      title={isListened ? t("youListened") : undefined}
+                    >
                       {isListened && (
                         <>
                           <CheckIcon />
@@ -380,7 +385,7 @@ export function TrackList({
                     className="-mx-2 flex flex-col px-2 py-2 transition-colors sm:focus-within:bg-ink-surface sm:hover:bg-ink-surface"
                   >
                     <div
-                      className={`grid grid-cols-[2rem_minmax(0,1fr)_2.5rem] items-start gap-x-3 ${
+                      className={`grid grid-cols-[2rem_minmax(0,1fr)_auto_2.5rem] items-start gap-x-3 ${
                         authenticated
                           ? "sm:grid-cols-[2rem_minmax(0,1fr)_7.5rem_3.5rem_2rem]"
                           : "sm:grid-cols-[2rem_minmax(0,1fr)_3.5rem_2rem]"
@@ -417,12 +422,12 @@ export function TrackList({
                             </Link>
                           </span>
                         )}
-                        <span className="flex items-center gap-3 font-data text-xs text-paper-muted sm:hidden">
-                          <span>{duration}</span>
-                          {personal}
-                        </span>
                       </div>
-                      {authenticated && <span className="hidden h-7 items-center justify-end sm:flex">{personal}</span>}
+                      <span className="flex h-7 items-center justify-end gap-1 font-data text-xs text-paper-muted sm:hidden">
+                        {personal(true)}
+                        <span>{duration}</span>
+                      </span>
+                      {authenticated && <span className="hidden h-7 items-center justify-end sm:flex">{personal(false)}</span>}
                       <span
                         className="hidden h-7 items-center justify-end font-data text-xs text-paper-muted sm:flex"
                         aria-label={`${tCatalog("durationLabel")}: ${duration}`}

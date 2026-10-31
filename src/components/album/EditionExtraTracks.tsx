@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { Chevron } from "@/components/ui/Chevron";
+import { SECONDARY_LINK } from "@/components/ui/segmented";
 import { songHref } from "@/lib/catalog-links";
 import { getEditionExtraTracks } from "@/lib/api/catalog";
 import { musicBrainzReleaseUrl } from "@/lib/site-links";
@@ -45,7 +47,7 @@ function VariantTracks({ releaseGroupId, editionId }: { releaseGroupId: string; 
     return (
       <p role="alert" className="flex gap-3 px-3 py-2 font-data text-xs text-danger">
         {t("loadError")}
-        <button type="button" onClick={() => void refetch()} className="text-amber underline">
+        <button type="button" onClick={() => void refetch()} className={SECONDARY_LINK}>
           {t("retry")}
         </button>
       </p>
@@ -151,7 +153,7 @@ export function EditionExtraTracks({ releaseGroupId, variants }: EditionExtraTra
                   <span className="flex flex-col">
                     <span className="font-body text-sm text-paper">
                       {name}{" "}
-                      <span className="ml-1 rounded bg-ink-surface px-1.5 font-data text-xs text-paper-muted">
+                      <span className="ml-1 whitespace-nowrap rounded bg-ink-surface px-1.5 font-data text-xs text-paper-muted">
                         {t("box", { count: variant.totalTracks ?? variant.estimatedExtraTracks })}
                       </span>
                     </span>
@@ -161,7 +163,7 @@ export function EditionExtraTracks({ releaseGroupId, variants }: EditionExtraTra
                     href={musicBrainzReleaseUrl(variant.editionMbid)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-data text-xs text-amber hover:underline"
+                    className={`shrink-0 font-data text-xs ${SECONDARY_LINK}`}
                   >
                     {t("boxLink")} ↗
                   </a>
@@ -173,20 +175,18 @@ export function EditionExtraTracks({ releaseGroupId, variants }: EditionExtraTra
                     aria-expanded={isOpen}
                     aria-controls={panelId}
                     onClick={() => toggle(variant.editionId)}
-                    className="flex w-full items-baseline justify-between gap-2 px-3 py-2 text-left"
+                    className="flex w-full items-baseline justify-between gap-2 px-3 py-2 text-left transition-colors hover:bg-ink-surface"
                   >
                     <span className="flex flex-col">
                       <span className="font-body text-sm text-paper">
                         {name}{" "}
-                        <span className="ml-1 rounded bg-ink-surface px-1.5 font-data text-xs text-amber">
+                        <span className="ml-1 whitespace-nowrap rounded bg-ink-surface px-1.5 font-data text-xs text-paper">
                           {t("extra", { count: variant.estimatedExtraTracks })}
                         </span>
                       </span>
                       <span className="font-data text-xs text-paper-muted">{details}</span>
                     </span>
-                    <span aria-hidden="true" className="font-data text-xs text-paper-muted">
-                      {isOpen ? "▴" : "▾"}
-                    </span>
+                    <Chevron direction={isOpen ? "up" : "down"} className="self-center text-paper-muted" />
                   </button>
                   {isOpen && (
                     <div id={panelId} className="border-t border-ink-border">

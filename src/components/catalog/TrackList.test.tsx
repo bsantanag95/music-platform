@@ -195,6 +195,19 @@ describe("TrackList", () => {
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
 
+  it("en móvil, corazón y duración van en la misma línea que el título, sin hueco reservado para la nota", () => {
+    const { container } = renderList([makeTrack(1, 1, "Uno")], { authenticated: true });
+    const row = container.querySelector("li")!;
+    const mobileCell = row.querySelector(":scope > div > span.sm\\:hidden")!;
+    expect(mobileCell).toHaveTextContent("3:20");
+    expect(within(mobileCell as HTMLElement).getByRole("button", { name: "Favorita: Uno" })).toBeInTheDocument();
+    // Sin nota propia ni escucha, sus huecos no ocupan sitio.
+    expect(mobileCell.querySelector(".w-\\[3\\.75rem\\]")).toBeNull();
+    expect(mobileCell.querySelector(".w-4")).toBeNull();
+    // La celda del título ya no repite la duración en una segunda línea.
+    expect(row.querySelector(":scope > div > div")).not.toHaveTextContent("3:20");
+  });
+
   it("sin sesión no muestra corazón ni estrellas propias", () => {
     renderList([makeTrack(1, 1, "Uno")], { ownRatings: { "rec-1-1": { stars: 3, detailedScore: null } } });
     expect(screen.queryByRole("button", { name: "Favorita: Uno" })).not.toBeInTheDocument();
