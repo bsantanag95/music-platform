@@ -4,7 +4,15 @@ import { renderWithIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../messages/es/catalog.json";
 import { EMPTY_DISCOGRAPHY_MARKS, type ArtistDiscographyItem } from "@/services/catalog/artist-discography-view";
 import type { DiscographySection } from "@/services/catalog/discography-sections";
-import { ArtistDiscography, GRID_PAGE_SIZE, sectionFromSearch, sortDiscographyRows, titleCollator } from "./ArtistDiscography";
+import {
+  ArtistDiscography,
+  DECADE_SEPARATORS_MIN,
+  GRID_PAGE_SIZE,
+  discographyBlocks,
+  sectionFromSearch,
+  sortDiscographyRows,
+  titleCollator,
+} from "./ArtistDiscography";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, className, ...rest }: { href: string; children: React.ReactNode; className?: string }) => (
@@ -126,14 +134,17 @@ describe("ArtistDiscography", () => {
     expect(screen.getByRole("table")).toBeInTheDocument();
   });
 
-  it("grilla: etiqueta EP, Mejor valorado y marcas personales", () => {
+  it("grilla: EP en su bloque, Mejor valorado y marcas personales", () => {
     renderDiscography({
       sections: [{ key: "main", items: [item("ep", { isEp: true }), item("dsotm", { community: { average: 4.6, count: 40 } })] }],
       bestRatedId: "dsotm",
       marks: { ...EMPTY_DISCOGRAPHY_MARKS, listened: ["ep"], stars: { dsotm: 4.5 }, favorites: ["dsotm"], pending: ["ep"] },
     });
     const ep = screen.getByText("Disco ep").closest("a")!;
-    expect(within(ep).getByText(d.ep)).toBeInTheDocument();
+    // Con álbumes y EP, el EP va en su bloque y no lleva etiqueta propia.
+    const epBlock = screen.getByRole("region", { name: new RegExp(`^${d.blocks.eps}`) });
+    expect(within(epBlock).getByText("Disco ep")).toBeInTheDocument();
+    expect(within(ep).queryByText(d.ep)).not.toBeInTheDocument();
     expect(within(ep).getByText(d.listened)).toBeInTheDocument();
     const best = screen.getByText("Disco dsotm").closest("a")!;
     expect(within(best).getByText(`★ ${d.bestRated}`)).toBeInTheDocument();
@@ -141,6 +152,73 @@ describe("ArtistDiscography", () => {
     // Favorito y Pendiente, con texto accesible.
     expect(within(best).getByText(d.favorite)).toBeInTheDocument();
     expect(within(ep).getByText(d.pendingMark)).toBeInTheDocument();
+  });
+
+  describe("Principal ordenada (refine-artist-page-phase2)", () => {
+    const studio = (id: string, year: number, overrides: Partial<ArtistDiscographyItem> = {}) =>
+      item(id, { year, ...overrides });
+
+    it("parte Principal en Álbumes y EP solo si tiene los dos", () => {
+      const albums = [studio("a", 1980)];
+      const eps = [studio("e", 1979, { isEp: true })];
+      expect(discographyBlocks("main", [...eps, ...albums]).map((b) => [b.key, b.items.length])).toEqual([
+        ["albums", 1],
+        ["eps", 1],
+      ]);
+      expect(discographyBlocks("main", albums).map((b) => b.key)).toEqual(["main"]);
+      expect(discographyBlocks("live", [...eps, ...albums]).map((b) => b.key)).toEqual(["live"]);
+    });
+
+    it("grilla: Álbumes primero y EP debajo, cada uno con su cantidad", () => {
+      renderDiscography({
+        sections: [{ key: "main", items: [studio("e1", 1979, { isEp: true }), studio("a1", 1980), studio("a2", 1981)] }],
+      });
+      const headings = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
+      expect(headings).toEqual([`${d.blocks.albums}2`, `${d.blocks.eps}1`]);
+    });
+
+    it("una Principal solo de EP no se parte y conserva la etiqueta EP", () => {
+      renderDiscography({ sections: [{ key: "main", items: [studio("e1", 1979, { isEp: true })] }] });
+      expect(screen.queryByRole("heading", { level: 3 })).not.toBeInTheDocument();
+      expect(screen.getByText(d.ep)).toBeInTheDocument();
+    });
+
+    it("tabla de Principal: un grupo por bloque", () => {
+      renderDiscography({
+        sections: [{ key: "main", items: [studio("e1", 1979, { isEp: true }), studio("a1", 1980)] }],
+      });
+      fireEvent.click(screen.getByRole("button", { name: d.viewTable }));
+      const groups = screen.getAllByRole("rowheader").map((h) => h.textContent);
+      expect(groups).toEqual([`${d.blocks.albums} · 1`, `${d.blocks.eps} · 1`]);
+    });
+
+    it("disco sin carátula: título y año en el cuadro en lugar del vinilo", () => {
+      renderDiscography({
+        sections: [{ key: "main", items: [studio("sin", 1983, { coverThumbUrl: null, title: "Christmas EP" })] }],
+      });
+      const tile = screen.getByTestId("title-tile");
+      expect(tile).toHaveTextContent("Christmas EP1983");
+      expect(tile).toHaveAttribute("aria-hidden", "true");
+    });
+
+    it(`separa por décadas desde ${DECADE_SEPARATORS_MIN} discos y no antes`, () => {
+      const many = Array.from({ length: DECADE_SEPARATORS_MIN }, (_, i) => studio(`d${i}`, 1978 + i * 2));
+      const { unmount } = renderDiscography({ sections: [{ key: "live", items: many }] , activeSection: "live" });
+      fireEvent.click(screen.getByRole("button", { name: d.viewGrid }));
+      expect(screen.getAllByText(/^Años /).map((el) => el.textContent)).toEqual(["Años 70", "Años 80", "Años 90", "Años 2000"]);
+      unmount();
+      renderDiscography({ sections: [{ key: "main", items: many.slice(0, DECADE_SEPARATORS_MIN - 1) }] });
+      expect(screen.queryByText(/^Años /)).not.toBeInTheDocument();
+    });
+
+    it("los discos sin año van bajo 'Sin año'", () => {
+      const many = [
+        ...Array.from({ length: DECADE_SEPARATORS_MIN }, (_, i) => studio(`d${i}`, 1990 + i)),
+        studio("x", 0, { year: null }),
+      ];
+      renderDiscography({ sections: [{ key: "main", items: many }] });
+      expect(screen.getByText(d.noYear)).toBeInTheDocument();
+    });
   });
 
   it("grilla: muestra 48 discos y 'Mostrar más' agrega los siguientes", () => {

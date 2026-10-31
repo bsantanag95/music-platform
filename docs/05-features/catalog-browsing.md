@@ -111,7 +111,13 @@ de biblioteca y biografía, con la misma estructura que el álbum):
    **Media** solo aparece si algún disco de la tabla llega al umbral y **Tú** solo con sesión; cambiar
    de sección no va al servidor (todas las secciones ya están en el cliente): actualiza la URL con
    `history.pushState`, "atrás" vuelve a la sección anterior y un clic con modificador abre la
-   sección en otra pestaña. En móvil las secciones van en una sola línea con desplazamiento. En la columna "Tú", el tooltip y el texto
+   sección en otra pestaña. En móvil las secciones van en una sola línea con desplazamiento.
+- **Principal ordenada** (cambio `refine-artist-page-phase2`): con álbumes y EP, Principal se parte en dos bloques con
+  título y cantidad, **Álbumes** y debajo **EP** (carátulas más chicas y sin etiqueta "EP"); en tabla, un grupo por
+  bloque. En la grilla, un disco sin carátula muestra su título y año en el cuadro en lugar del vinilo, y un bloque de 12
+  discos o más se separa por décadas ("Años 80", "Años 2000"; "Sin año" al final). Las pestañas y la barra de la
+  discografía quedan fijas al bajar (en móvil la barra va en una fila) y, con la barra pegada, cambiar de sección lleva
+  la sección nueva justo debajo. En la columna "Tú", el tooltip y el texto
    accesible de la nota propia incluyen el puntaje detallado (`Tu nota: 4,5 · 86/100`) cuando
    existe (cambio `add-my-ratings-library`); lo visible sigue siendo `★ 4,5`.
 - **Menú "…" por disco** (cambio `add-discography-quick-actions`): en la esquina de la carátula

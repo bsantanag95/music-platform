@@ -13,6 +13,7 @@ import type { DiscographySection } from "@/services/catalog/discography-sections
 import { kindKey } from "./artist-format";
 import { DISCOGRAPHY_SEARCH_MIN_DISCS, normalizeForSearch, searchDiscography } from "./discography-search";
 import { SearchIcon } from "@/components/home/QuickLinkIcons";
+import { decadeLabel } from "@/services/discovery/decade-label";
 import { AlbumQuickActions, type DiscMarks } from "@/components/catalog/AlbumQuickActions";
 
 // Discografía de la página de artista (openspec: redesign-artist-page, capability
@@ -24,6 +25,29 @@ import { AlbumQuickActions, type DiscMarks } from "@/components/catalog/AlbumQui
 // secciones (openspec: add-discography-search).
 
 export const GRID_PAGE_SIZE = 48;
+
+/** Desde cuántos discos un bloque de la grilla se separa por décadas (openspec: refine-artist-page-phase2, D3). */
+export const DECADE_SEPARATORS_MIN = 12;
+
+type MainBlockKey = "albums" | "eps";
+
+/**
+ * Bloques de una sección (openspec: refine-artist-page-phase2, design D1): Principal se parte en álbumes y EP cuando
+ * tiene los dos; el resto de las secciones, y una Principal con un solo tipo, es un bloque sin título.
+ */
+export function discographyBlocks(
+  section: DiscographySection,
+  items: ArtistDiscographyItem[],
+): { key: MainBlockKey | DiscographySection; items: ArtistDiscographyItem[] }[] {
+  if (section !== "main") return [{ key: section, items }];
+  const albums = items.filter((item) => !item.isEp);
+  const eps = items.filter((item) => item.isEp);
+  if (albums.length === 0 || eps.length === 0) return [{ key: section, items }];
+  return [
+    { key: "albums", items: albums },
+    { key: "eps", items: eps },
+  ];
+}
 
 type View = "grid" | "table";
 
@@ -164,9 +188,16 @@ function useActiveSection(
     (next, href) => {
       setSection(next);
       window.history.pushState(null, "", href);
+      // Con la barra fija ya pegada, la sección nueva empieza bajo la barra y no a mitad de la anterior.
+      const top = document.getElementById(DISCOGRAPHY_ANCHOR)?.getBoundingClientRect().top;
+      if (top !== undefined && top < 0) {
+        document.getElementById(DISCOGRAPHY_ANCHOR)?.scrollIntoView({ block: "start" });
+      }
     },
   ];
 }
+
+const DISCOGRAPHY_ANCHOR = "discography";
 
 export function ArtistDiscography({
   artistId,
@@ -202,6 +233,7 @@ export function ArtistDiscography({
     return <p className="font-body text-sm text-paper-muted">{t("empty")}</p>;
   }
 
+  const blocks = discographyBlocks(activeSection, active.items);
   const actions: DiscActions = {
     signedIn: marks !== null,
     marksOf: (id) => (marks ? (discMarks[id] ?? NO_MARKS) : null),
@@ -219,16 +251,19 @@ export function ArtistDiscography({
     }`;
 
   return (
-    <section aria-labelledby="discography-heading" data-menu-bounds className="flex flex-col gap-4">
+    <section
+      id={DISCOGRAPHY_ANCHOR}
+      aria-labelledby="discography-heading"
+      data-menu-bounds
+      className="flex scroll-mt-[var(--artist-sticky-top)] flex-col gap-4"
+    >
       <h2 id="discography-heading" className="sr-only">
         {t("heading")}
       </h2>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* En móvil las secciones van en una sola línea con desplazamiento (openspec: refine-artist-page-phase1). */}
-        <nav
-          aria-label={t("sectionsLabel")}
-          className="-mx-4 min-w-0 flex-[1_0_calc(100%+2rem)] overflow-x-auto px-4 sm:mx-0 sm:flex-initial sm:overflow-visible sm:px-0"
-        >
+      {/* Barra fija bajo las pestañas (openspec: refine-artist-page-phase2, design D4). En móvil las secciones van en una
+          línea con desplazamiento y comparten la fila con el buscador y la vista. */}
+      <div className="sticky top-[var(--artist-sticky-top)] z-10 -mx-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-transparent bg-ink px-4 py-2 sm:mx-0 sm:px-0">
+        <nav aria-label={t("sectionsLabel")} className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none] sm:flex-initial sm:overflow-visible">
           <ul className="flex min-w-max gap-1.5 sm:min-w-0 sm:flex-wrap">
             {sections.map((section) => {
               const label = t(`sections.${section.key}`);
@@ -277,7 +312,7 @@ export function ArtistDiscography({
           </ul>
         </nav>
         {/* En móvil el buscador es un botón que despliega el campo en su propia fila (design D7). */}
-        <div className={`flex items-center gap-2 ${searchExpanded ? "basis-full sm:basis-auto" : ""}`}>
+        <div className={`flex shrink-0 items-center gap-2 ${searchExpanded ? "basis-full sm:basis-auto" : ""}`}>
           {searchable && !searchExpanded && (
             <button
               type="button"
@@ -370,20 +405,33 @@ export function ArtistDiscography({
           )}
         </div>
       ) : view === "grid" ? (
-        <DiscographyGrid
-          key={activeSection}
-          artistName={artistName}
-          items={active.items}
-          bestRatedId={activeSection === "main" ? bestRatedId : null}
-          showEpBadge={activeSection === "main"}
-          actions={actions}
-        />
+        <div key={activeSection} className="flex flex-col gap-8">
+          {blocks.map((block) => (
+            <DiscographyGrid
+              key={block.key}
+              artistName={artistName}
+              items={block.items}
+              heading={blocks.length > 1 ? { id: blockAnchor(block.key), label: t(`blocks.${block.key}`) } : undefined}
+              compact={block.key === "eps"}
+              bestRatedId={activeSection === "main" ? bestRatedId : null}
+              showEpBadge={activeSection === "main" && blocks.length === 1}
+              actions={actions}
+            />
+          ))}
+        </div>
       ) : (
         // La clave de sección reinicia el orden al cambiar de sección.
         <DiscographyTable
           key={activeSection}
           artistName={artistName}
-          groups={[{ key: activeSection, items: active.items }]}
+          groups={blocks.map((block) => ({
+            key: block.key,
+            heading:
+              blocks.length > 1
+                ? { id: blockAnchor(block.key), label: t(`blocks.${block.key}`), count: block.items.length }
+                : undefined,
+            items: block.items,
+          }))}
           actions={actions}
         />
       )}
@@ -392,13 +440,43 @@ export function ArtistDiscography({
 }
 
 const groupAnchor = (section: DiscographySection) => `discography-group-${section}`;
+const blockAnchor = (block: string) => `discography-block-${block}`;
 
-function Cover({ item, className }: { item: ArtistDiscographyItem; className: string }) {
+function Cover({
+  item,
+  className,
+  titleTile = false,
+}: {
+  item: ArtistDiscographyItem;
+  className: string;
+  /** En la grilla, un disco sin carátula muestra su título y año en lugar del vinilo vacío. */
+  titleTile?: boolean;
+}) {
   const tArtist = useTranslations("catalog.artist");
-  return item.coverResolved ? (
-    <CoverThumb cover={item.coverThumbUrl} label="" className={className} />
-  ) : (
-    <LazyCoverImage releaseGroupId={item.id} coverLabel={tArtist("albumCoverLabel")} className={className} />
+  const tile = titleTile ? <TitleTile item={item} className={className} /> : undefined;
+  if (item.coverResolved) {
+    return tile && !item.coverThumbUrl ? tile : <CoverThumb cover={item.coverThumbUrl} label="" className={className} />;
+  }
+  return (
+    <LazyCoverImage releaseGroupId={item.id} coverLabel={tArtist("albumCoverLabel")} className={className} fallback={tile} />
+  );
+}
+
+/**
+ * Relleno tipográfico de un disco sin carátula (openspec: refine-artist-page-phase2, design D2): el título y el año en
+ * la tipografía de la página, para que el cuadro diga qué disco es sin leer debajo. Decorativo para lectores de
+ * pantalla: el título ya está en el enlace.
+ */
+function TitleTile({ item, className }: { item: ArtistDiscographyItem; className: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      data-testid="title-tile"
+      className={`flex flex-col justify-between overflow-hidden rounded border border-ink-border bg-ink-surface p-2 sm:p-2.5 ${className}`}
+    >
+      <span className="line-clamp-4 font-display text-xs leading-tight text-paper [overflow-wrap:anywhere] sm:text-sm">{item.title}</span>
+      {item.year !== null && <span className="font-data text-xs text-paper-muted">{item.year}</span>}
+    </span>
   );
 }
 
@@ -446,15 +524,24 @@ function DiscMarksView({ marks }: { marks: DiscMarks }) {
 const hasMarks = (marks: DiscMarks | null): marks is DiscMarks =>
   marks !== null && (marks.listened || marks.stars !== null || marks.favorite || marks.pending);
 
+/** Década de un disco (año de inicio) o `null` sin año. */
+const decadeOf = (year: number | null) => (year === null ? null : Math.floor(year / 10) * 10);
+
 function DiscographyGrid({
   artistName,
   items,
+  heading,
+  compact = false,
   bestRatedId,
   showEpBadge,
   actions,
 }: {
   artistName: string;
   items: ArtistDiscographyItem[];
+  /** Título del bloque cuando la sección tiene más de uno (Álbumes y EP en Principal). */
+  heading?: { id: string; label: string };
+  /** Carátulas más chicas: el bloque de EP va debajo de los álbumes con menos peso. */
+  compact?: boolean;
   bestRatedId: string | null;
   showEpBadge: boolean;
   actions: DiscActions;
@@ -462,22 +549,50 @@ function DiscographyGrid({
   const t = useTranslations("catalog.artist.discography");
   const locale = useLocale();
   const [visible, setVisible] = useState(GRID_PAGE_SIZE);
+  // Los discos llegan ordenados por año: un separador cada vez que cambia la década.
+  const withDecades = items.length >= DECADE_SEPARATORS_MIN;
+  const shown = items.slice(0, visible);
 
   return (
-    <div className="flex flex-col gap-4">
-      <ul className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
-        {items.slice(0, visible).map((item) => {
+    <section aria-labelledby={heading?.id} className="flex flex-col gap-4">
+      {heading && (
+        <h3
+          id={heading.id}
+          className="flex scroll-mt-[var(--artist-sticky-top)] items-baseline gap-2 border-b border-ink-border pb-1.5 font-display text-base text-paper"
+        >
+          {heading.label}
+          <span className="font-data text-xs text-paper-muted">{items.length}</span>
+        </h3>
+      )}
+      <ul
+        className={
+          compact
+            ? "grid grid-cols-3 gap-3 sm:grid-cols-6 lg:grid-cols-8"
+            : "grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6"
+        }
+      >
+        {shown.flatMap((item, index) => {
           const best = item.id === bestRatedId;
           const marks = actions.marksOf(item.id);
           const open = actions.openId === item.id;
-          return (
+          const decade = decadeOf(item.year);
+          const separator =
+            withDecades && (index === 0 || decade !== decadeOf(shown[index - 1]!.year)) ? (
+              <li
+                key={`decade-${decade ?? "none"}`}
+                className="col-span-full flex items-center gap-3 font-data text-xs uppercase tracking-wide text-paper-muted after:h-px after:flex-1 after:bg-ink-border"
+              >
+                {decade === null ? t("noYear") : decadeLabel(decade, locale)}
+              </li>
+            ) : null;
+          const card = (
             <li key={item.id} className="group/card relative">
               <Link
                 href={albumHref(item.primaryArtist?.name ?? (artistName || null), item.title, item.id)}
                 className="group flex flex-col gap-1.5"
               >
                 <span className="relative block">
-                  <Cover item={item} className="aspect-square w-full" />
+                  <Cover item={item} className="aspect-square w-full" titleTile />
                   {(best || (showEpBadge && item.isEp)) && (
                     <span className="absolute left-1.5 top-1.5 flex flex-col items-start gap-1">
                       {best && (
@@ -496,7 +611,11 @@ function DiscographyGrid({
                     </span>
                   )}
                 </span>
-                <span className="line-clamp-2 font-body text-sm text-paper group-hover:text-amber">{item.title}</span>
+                <span
+                  className={`line-clamp-2 font-body text-paper group-hover:text-amber ${compact ? "text-xs" : "text-sm"}`}
+                >
+                  {item.title}
+                </span>
                 <span className="font-data text-xs text-paper-muted">
                   {[
                     item.year,
@@ -523,6 +642,7 @@ function DiscographyGrid({
               />
             </li>
           );
+          return separator ? [separator, card] : [card];
         })}
       </ul>
       {visible < items.length && (
@@ -534,7 +654,7 @@ function DiscographyGrid({
           {t("showMore")}
         </button>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -725,7 +845,7 @@ function DiscographyTable({
                 scope="rowgroup"
                 colSpan={columnCount}
                 id={group.heading.id}
-                className="scroll-mt-6 pb-1.5 pt-5 text-left font-data text-xs font-normal uppercase tracking-wide text-paper-muted"
+                className="scroll-mt-[var(--artist-sticky-top)] pb-1.5 pt-5 text-left font-data text-xs font-normal uppercase tracking-wide text-paper-muted"
               >
                 {group.heading.label} <span className="text-paper-muted/70">· {group.heading.count}</span>
               </th>

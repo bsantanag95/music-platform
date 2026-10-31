@@ -39,8 +39,13 @@ export function ArtistTabs({ artistId, artistName = "", hasBiography, lineupTab 
   ];
 
   return (
-    <nav aria-label={t("label")} className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-      <ul className="flex min-w-max gap-1 border-b border-ink-border">
+    // Fija bajo el encabezado del sitio (openspec: refine-artist-page-phase2, design D4); la barra de la discografía se
+    // pega debajo, a `--artist-sticky-top`.
+    <nav
+      aria-label={t("label")}
+      className="sticky top-[var(--site-header-h)] z-20 -mx-4 h-[var(--artist-tabs-h)] overflow-x-auto bg-ink px-4 [scrollbar-width:none] sm:mx-0 sm:px-0"
+    >
+      <ul className="flex h-full min-w-max items-end gap-1 border-b border-ink-border">
         {tabs.map((tab) => {
           const own = SEGMENTS[tab];
           const active = own ? segment === own : segment === null || segment === "__PAGE__";

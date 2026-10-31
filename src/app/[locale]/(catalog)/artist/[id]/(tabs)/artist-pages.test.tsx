@@ -299,7 +299,7 @@ describe("pestaña Discografía", () => {
   it("Principal activa por defecto", async () => {
     await renderPage();
     expect(screen.getByRole("link", { name: /Principal/ })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByText("Disco dsotm")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^Disco dsotm/ })).toBeInTheDocument();
   });
 
   it("?section=live muestra En vivo", async () => {
