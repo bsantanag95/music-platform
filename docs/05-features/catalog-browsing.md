@@ -96,18 +96,22 @@ de biblioteca y biografía, con la misma estructura que el álbum):
   el panel se estira hasta el final de la cabecera.
 - **Bloque de comunidad**: Oyentes (personas con escuchas del artista o de sus discos),
   Seguidores (con "N lo tienen de favorito", también "<5") y En listas, con el umbral de 5 del
-  álbum; cada celda pone la cifra primero y la etiqueta debajo. Sin promedio de
-  estrellas ni agregado de recorridos.
+  álbum; cada celda pone la cifra primero y la etiqueta debajo, en una fila de tres también en
+  móvil (cambio `refine-artist-page-phase1`). Sin promedio de estrellas ni agregado de recorridos.
 - **Pestañas** enlazables: **Discografía** (por defecto), **Integrantes** (grupos) o **Bandas**
   (personas), solo si hay algo que listar, y **Biografía** (la introducción completa del artículo
-  de Wikipedia; solo si existe).
+  de Wikipedia; solo si existe). En Biografía la cabecera no repite el resumen.
 - **Discografía por secciones** (`?section=`): Principal (estudio, EP y bandas sonoras
   propias), En vivo, Recopilatorios, Sencillos, Otros y Apariciones, cada una con su cantidad;
   grilla por defecto en Principal y tabla en el resto, con la elección recordada por sección
   en el navegador; "Mostrar más" de a 48 en la grilla; "Mejor valorado" (mayor media con al
   menos 5 valoraciones) y las marcas del usuario (su nota o ✓ si solo escuchó, favorito y
    Pendiente). La tabla muestra la **Media** ("—" con menos de 5 valoraciones) y la etiqueta de
-   tipo junto al título solo cuando no es álbum. En la columna "Tú", el tooltip y el texto
+   tipo junto al título solo cuando no es álbum. Desde `refine-artist-page-phase1` la columna
+   **Media** solo aparece si algún disco de la tabla llega al umbral y **Tú** solo con sesión; cambiar
+   de sección no va al servidor (todas las secciones ya están en el cliente): actualiza la URL con
+   `history.pushState`, "atrás" vuelve a la sección anterior y un clic con modificador abre la
+   sección en otra pestaña. En móvil las secciones van en una sola línea con desplazamiento. En la columna "Tú", el tooltip y el texto
    accesible de la nota propia incluyen el puntaje detallado (`Tu nota: 4,5 · 86/100`) cuando
    existe (cambio `add-my-ratings-library`); lo visible sigue siendo `★ 4,5`.
 - **Menú "…" por disco** (cambio `add-discography-quick-actions`): en la esquina de la carátula

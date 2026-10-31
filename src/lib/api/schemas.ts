@@ -259,6 +259,9 @@ export const ArtistWithDiscographySchema = z.object({
 });
 export type ArtistWithDiscography = z.infer<typeof ArtistWithDiscographySchema>;
 
+/** Discos propios de un artista para el modal de inicio del recorrido (`GET /api/catalog/artist/:id/journey-albums`). */
+export const ArtistJourneyAlbumsResponseSchema = z.object({ albums: z.array(ReleaseGroupSchema) });
+
 export const ReleaseSchema = z.object({
   id: z.uuid(),
   mbid: z.uuid().nullable(),

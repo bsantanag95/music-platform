@@ -524,6 +524,7 @@
     "catalog.artist.relation.following",
     "catalog.artist.relation.heading",
     "catalog.artist.relation.journey",
+    "catalog.artist.relation.journeyLoadError",
     "catalog.artist.relation.journeyManage",
     "catalog.artist.relation.journeyNone",
     "catalog.artist.relation.journeyProgress",

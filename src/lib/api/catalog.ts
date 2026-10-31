@@ -6,6 +6,7 @@ import {
   ArtistFollowResponseSchema,
   ArtistSearchResponseSchema,
   ArtistWithDiscographySchema,
+  ArtistJourneyAlbumsResponseSchema,
   CoverSchema,
   ExtraTracksResponseSchema,
   ReleaseWithTracksSchema,
@@ -15,6 +16,7 @@ import {
   type ArtistFollowResponse,
   type ArtistSearchResponse,
   type ArtistWithDiscography,
+  type ReleaseGroup,
   type Cover,
   type ExtraTracksResponse,
   type ReleaseWithTracks,
@@ -107,4 +109,11 @@ export function getReleaseGroupMarks(id: string): Promise<ReleaseGroupMarks> {
 
 export function unfollowArtist(id: string): Promise<ArtistFollowResponse> {
   return apiFetch(`/api/artists/${id}/follow`, ArtistFollowResponseSchema, { method: "DELETE" });
+}
+
+/** Discos propios del artista para el modal "Completar discografía" (openspec: refine-artist-page-phase1). */
+export function getArtistJourneyAlbums(artistId: string): Promise<ReleaseGroup[]> {
+  return apiFetch(`/api/catalog/artist/${artistId}/journey-albums`, ArtistJourneyAlbumsResponseSchema).then(
+    (response) => response.albums,
+  );
 }

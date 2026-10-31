@@ -364,7 +364,8 @@
         "complete": "Complete",
         "archived": "Archived"
       },
-      "saveError": "Couldn't save. Try again."
+      "saveError": "Couldn't save. Try again.",
+      "journeyLoadError": "Couldn't load their records. Try again."
     },
     "community": {
       "heading": "Community",

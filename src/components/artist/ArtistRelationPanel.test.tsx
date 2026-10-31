@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   createListenEntry: vi.fn(),
   toggleFavorite: vi.fn(),
   toggleWantToListen: vi.fn(),
+  getArtistJourneyAlbums: vi.fn(),
   refresh: vi.fn(),
 }));
 
@@ -21,14 +22,20 @@ vi.mock("@/i18n/navigation", () => ({
   ),
   useRouter: () => ({ push: vi.fn(), refresh: mocks.refresh }),
 }));
-vi.mock("@/lib/api/catalog", () => ({ followArtist: mocks.followArtist, unfollowArtist: mocks.unfollowArtist }));
+vi.mock("@/lib/api/catalog", () => ({
+  followArtist: mocks.followArtist,
+  unfollowArtist: mocks.unfollowArtist,
+  getArtistJourneyAlbums: mocks.getArtistJourneyAlbums,
+}));
 vi.mock("@/lib/api/diary", () => ({ createListenEntry: mocks.createListenEntry }));
 vi.mock("@/lib/api/favorites", () => ({ toggleFavorite: mocks.toggleFavorite }));
 vi.mock("@/lib/api/want-to-listen", () => ({ toggleWantToListen: mocks.toggleWantToListen }));
 vi.mock("@/components/diary/ListenEntryForm", () => ({ ListenEntryForm: () => <div>formulario de escucha</div> }));
 vi.mock("@/components/album/AlbumListPicker", () => ({ AlbumListPicker: () => <div>selector de listas</div> }));
 vi.mock("@/components/artist-journey/ArtistJourneyStartModal", () => ({
-  ArtistJourneyStartModal: () => <div role="dialog">modal de inicio del recorrido</div>,
+  ArtistJourneyStartModal: ({ albums }: { albums: { title: string }[] }) => (
+    <div role="dialog">modal de inicio del recorrido: {albums.map((album) => album.title).join(", ")}</div>
+  ),
 }));
 
 const relation = catalogEs.artist.relation;
@@ -50,7 +57,7 @@ function makeState(overrides: Partial<ArtistRelationState> = {}): ArtistRelation
 
 function renderPanel(state: ArtistRelationState | null) {
   return renderWithIntl(
-    <ArtistRelationPanel artistId={ARTIST} artistName="Pink Floyd" state={state} journeyAlbums={[]} categoryLabels={categoryLabels} />,
+    <ArtistRelationPanel artistId={ARTIST} artistName="Pink Floyd" state={state} categoryLabels={categoryLabels} />,
   );
 }
 
@@ -128,10 +135,21 @@ describe("ArtistRelationPanel", () => {
     expect(screen.queryByText(/60/)).not.toBeInTheDocument();
   });
 
-  it("sin recorrido, 'Armar recorrido' abre el modal de inicio", () => {
+  it("sin recorrido, 'Completar discografía' pide los discos y abre el modal de inicio", async () => {
+    mocks.getArtistJourneyAlbums.mockResolvedValue([{ id: "a1", title: "Animals" }]);
+    renderPanel(makeState());
+    expect(mocks.getArtistJourneyAlbums).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: relation.journeyStart }));
+    expect(await screen.findByRole("dialog")).toHaveTextContent("modal de inicio del recorrido: Animals");
+    expect(mocks.getArtistJourneyAlbums).toHaveBeenCalledWith(ARTIST);
+  });
+
+  it("si los discos no llegan, avisa del error y no abre el modal", async () => {
+    mocks.getArtistJourneyAlbums.mockRejectedValue(new Error("red"));
     renderPanel(makeState());
     fireEvent.click(screen.getByRole("button", { name: relation.journeyStart }));
-    expect(screen.getByRole("dialog")).toHaveTextContent("modal de inicio del recorrido");
+    expect(await screen.findByRole("alert")).toHaveTextContent(relation.journeyLoadError);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("Listas abre el selector con casillas", () => {

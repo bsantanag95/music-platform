@@ -364,7 +364,8 @@
         "complete": "Completo",
         "archived": "Archivado"
       },
-      "saveError": "No pudimos guardar el cambio. Intenta de nuevo."
+      "saveError": "No pudimos guardar el cambio. Intenta de nuevo.",
+      "journeyLoadError": "No pudimos cargar sus discos. Intenta de nuevo."
     },
     "community": {
       "heading": "Comunidad",

@@ -437,6 +437,18 @@ con algún género efectivo de esa familia y `?genero=<slug>` los de ese género
 server-side (anterior / siguiente por `?page=`), sin fetch de cliente. Ver
 `docs/05-features/explore.md`.
 
+## `GET /api/catalog/artist/[id]/journey-albums` — ✅ Existe
+
+Discos con crédito principal del artista (`creditRole = "primary"`, sin los fuera de la discografía) en
+el formato `ReleaseGroup`, para el modal "Completar discografía" de la página de artista (openspec:
+`refine-artist-page-phase1`). Antes viajaban en cada visita con sesión; ahora se piden al abrir el
+modal. Datos de catálogo públicos: no exige sesión. Lee la discografía guardada: nunca consulta
+MusicBrainz ni enriquece stubs.
+
+**200 OK:** `{ albums: ReleaseGroup[] }`.
+
+**404** `ARTIST_NOT_FOUND`: id que no es UUID o artista inexistente.
+
 ## `GET /api/catalog/artist/[id]` — ✅ Existe
 
 Perfil de artista navegable directo por `id` propio. Si el artista es un stub

@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, screen, within } from "@testing-library/react";
+import { act, fireEvent, screen, within } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../messages/es/catalog.json";
 import { EMPTY_DISCOGRAPHY_MARKS, type ArtistDiscographyItem } from "@/services/catalog/artist-discography-view";
 import type { DiscographySection } from "@/services/catalog/discography-sections";
-import { ArtistDiscography, GRID_PAGE_SIZE, sortDiscographyRows, titleCollator } from "./ArtistDiscography";
+import { ArtistDiscography, GRID_PAGE_SIZE, sectionFromSearch, sortDiscographyRows, titleCollator } from "./ArtistDiscography";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, className, ...rest }: { href: string; children: React.ReactNode; className?: string }) => (
@@ -192,6 +192,68 @@ describe("ArtistDiscography", () => {
   it("sin discos muestra el aviso vacío", () => {
     renderDiscography({ sections: [], activeSection: "main" });
     expect(screen.getByText(d.empty)).toBeInTheDocument();
+  });
+
+  describe("cambio de sección sin ida al servidor (refine-artist-page-phase1)", () => {
+    it("muestra la sección en el cliente y la escribe en la URL", () => {
+      const push = vi.spyOn(window.history, "pushState");
+      renderDiscography();
+      const nav = screen.getByRole("navigation", { name: d.sectionsLabel });
+      fireEvent.click(within(nav).getByRole("link", { name: /En vivo/ }));
+      expect(push).toHaveBeenCalledWith(null, "", `/es/artist/${ARTIST}?section=live`);
+      expect(within(nav).getByRole("link", { name: /En vivo/ })).toHaveAttribute("aria-current", "page");
+      // En vivo se abre en tabla: 95 filas más el encabezado.
+      expect(screen.getAllByRole("row")).toHaveLength(96);
+    });
+
+    it("volver a la sección por defecto deja la URL sin parámetro", () => {
+      const push = vi.spyOn(window.history, "pushState");
+      renderDiscography({ activeSection: "live" });
+      fireEvent.click(screen.getByRole("link", { name: /Principal/ }));
+      expect(push).toHaveBeenCalledWith(null, "", `/es/artist/${ARTIST}`);
+    });
+
+    it("un clic con Ctrl deja que el navegador abra la pestaña nueva", () => {
+      const push = vi.spyOn(window.history, "pushState");
+      renderDiscography();
+      fireEvent.click(screen.getByRole("link", { name: /En vivo/ }), { ctrlKey: true });
+      expect(push).not.toHaveBeenCalled();
+    });
+
+    it("'atrás' recupera la sección de la URL", () => {
+      renderDiscography({ activeSection: "live" });
+      window.history.replaceState(null, "", "/es/artist/a1");
+      act(() => {
+        window.dispatchEvent(new PopStateEvent("popstate"));
+      });
+      expect(screen.getByRole("link", { name: /Principal/ })).toHaveAttribute("aria-current", "page");
+    });
+
+    it("una sección desconocida o vacía cae en la primera", () => {
+      const list = sections({ main: 2, live: 1 });
+      expect(sectionFromSearch("?section=live", list)).toBe("live");
+      expect(sectionFromSearch("?section=nada", list)).toBe("main");
+      expect(sectionFromSearch("", sections({ live: 1 }))).toBe("live");
+    });
+  });
+
+  describe("columnas de la tabla según los datos (refine-artist-page-phase1)", () => {
+    const headers = () => screen.getAllByRole("columnheader").map((h) => h.textContent);
+
+    it("sin sesión no muestra 'Tú' y sin medias no muestra 'Media'", () => {
+      renderDiscography({ sections: [{ key: "live", items: [item("x")] }], activeSection: "live" });
+      expect(headers()).not.toContain(d.columns.you);
+      expect(headers()).not.toContain(d.columns.average);
+    });
+
+    it("con sesión y algún disco sobre el umbral muestra las dos", () => {
+      renderDiscography({
+        sections: [{ key: "live", items: [item("x"), item("y", { community: { average: 4.2, count: 9 } })] }],
+        activeSection: "live",
+        marks: EMPTY_DISCOGRAPHY_MARKS,
+      });
+      expect(headers()).toEqual(expect.arrayContaining([d.columns.you, d.columns.average]));
+    });
   });
 });
 

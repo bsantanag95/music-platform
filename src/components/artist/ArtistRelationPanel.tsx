@@ -7,7 +7,7 @@ import { ListenEntryForm } from "@/components/diary/ListenEntryForm";
 import { AlbumListPicker, type PickerMembership } from "@/components/album/AlbumListPicker";
 import { HeartIcon, ToggleChip } from "@/components/album/AlbumRelationPanel";
 import { ArtistJourneyStartModal } from "@/components/artist-journey/ArtistJourneyStartModal";
-import { followArtist, unfollowArtist } from "@/lib/api/catalog";
+import { followArtist, getArtistJourneyAlbums, unfollowArtist } from "@/lib/api/catalog";
 import { createListenEntry } from "@/lib/api/diary";
 import { toggleFavorite } from "@/lib/api/favorites";
 import { toggleWantToListen } from "@/lib/api/want-to-listen";
@@ -35,8 +35,6 @@ interface ArtistRelationPanelProps {
   artistName: string;
   /** `null` para visitantes anónimos. */
   state: ArtistRelationState | null;
-  /** Discografía propia para el modal de inicio del recorrido. */
-  journeyAlbums: ReleaseGroup[];
   categoryLabels: Record<ReleaseGroupCategory, string>;
 }
 
@@ -88,7 +86,6 @@ function AuthenticatedPanel({
   artistId,
   artistName,
   state,
-  journeyAlbums,
   categoryLabels,
 }: ArtistRelationPanelProps & { state: ArtistRelationState }) {
   const t = useTranslations("catalog.artist.relation");
@@ -104,19 +101,21 @@ function AuthenticatedPanel({
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [memberships, setMemberships] = useState(state.ownListMemberships);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [journeyModalOpen, setJourneyModalOpen] = useState(false);
+  // Los discos del modal se piden al abrirlo (openspec: refine-artist-page-phase1, design D2).
+  const [journeyAlbums, setJourneyAlbums] = useState<ReleaseGroup[] | null>(null);
+  const [journeyLoading, setJourneyLoading] = useState(false);
   const listsChanged = useRef(false);
   const listsButton = useRef<HTMLButtonElement>(null);
   const [busy, setBusy] = useState<"follow" | "favorite" | "pending" | "listen" | null>(null);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<"saveError" | "journeyLoadError" | null>(null);
 
   async function run(kind: NonNullable<typeof busy>, action: () => Promise<void>) {
     setBusy(kind);
-    setError(false);
+    setError(null);
     try {
       await action();
     } catch {
-      setError(true);
+      setError("saveError");
     } finally {
       setBusy(null);
     }
@@ -297,7 +296,23 @@ function AuthenticatedPanel({
                 {t("journeyManage")} →
               </Link>
             ) : (
-              <button type="button" className={linkButton} onClick={() => setJourneyModalOpen(true)}>
+              <button
+                type="button"
+                className={linkButton}
+                disabled={journeyLoading}
+                aria-busy={journeyLoading || undefined}
+                onClick={async () => {
+                  setJourneyLoading(true);
+                  setError(null);
+                  try {
+                    setJourneyAlbums(await getArtistJourneyAlbums(artistId));
+                  } catch {
+                    setError("journeyLoadError");
+                  } finally {
+                    setJourneyLoading(false);
+                  }
+                }}
+              >
                 {t("journeyStart")}
               </button>
             )
@@ -324,20 +339,20 @@ function AuthenticatedPanel({
             <Value empty>{t("journeyNone")}</Value>
           )}
         </Field>
-        {journeyModalOpen && (
+        {journeyAlbums && (
           <ArtistJourneyStartModal
             artistId={artistId}
             artistName={artistName}
             albums={journeyAlbums}
             categoryLabels={categoryLabels}
-            onClose={() => setJourneyModalOpen(false)}
+            onClose={() => setJourneyAlbums(null)}
           />
         )}
       </div>
 
       {error && (
         <p role="alert" className="font-data text-xs text-danger">
-          {t("saveError")}
+          {t(error)}
         </p>
       )}
     </aside>
