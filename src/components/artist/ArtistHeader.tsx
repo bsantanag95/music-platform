@@ -13,7 +13,12 @@ import type { LineupFact } from "./lineup-fact";
 
 type ArtistType = "person" | "group" | "various" | "unknown";
 
-const externalLink = "text-amber hover:underline";
+// Enlaces que salen del sitio: texto claro con subrayado punteado y `↗`. El ámbar queda para lo activo del panel y
+// para "Seguir leyendo" (openspec: polish-artist-header).
+const externalLink = "text-paper underline decoration-dotted decoration-paper-muted/60 underline-offset-2 hover:text-amber";
+const internalMore = "text-paper-muted hover:text-paper hover:underline";
+// Crédito de la foto: lo exige la licencia, pero no compite con la ficha.
+const creditText = "font-data text-[0.65rem] leading-snug text-paper-muted/70";
 
 export function ArtistPhoto({ name, photo }: { name: string; photo: ArtistProfile["photo"] }) {
   const t = useTranslations("catalog.artist");
@@ -26,7 +31,7 @@ export function ArtistPhoto({ name, photo }: { name: string; photo: ArtistProfil
       </div>
       {/* Crédito obligatorio de la licencia (ADR 0021): autor enlazado al archivo en Commons
           y licencia enlazada a su texto. */}
-      <figcaption className="hidden font-data text-xs leading-snug text-paper-muted sm:block">
+      <figcaption className={`hidden ${creditText} sm:block`}>
         <a href={photo.sourceUrl} target="_blank" rel="noopener noreferrer" className="hover:text-paper hover:underline">
           {photo.author ? t("photo.credit", { author: photo.author }) : t("photo.creditNoAuthor")}
         </a>
@@ -48,7 +53,7 @@ export function ArtistPhotoCreditMobile({ photo }: { photo: ArtistProfile["photo
   const t = useTranslations("catalog.artist");
   if (!photo) return null;
   return (
-    <p className="font-data text-xs text-paper-muted sm:hidden">
+    <p className={`${creditText} sm:hidden`}>
       <a href={photo.sourceUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
         {photo.author ? t("photo.credit", { author: photo.author }) : t("photo.creditNoAuthor")}
       </a>
@@ -107,8 +112,9 @@ export function artistFactRows(
     if (facts.lifeEnded && facts.lifeEnd) {
       rows.push({ key: "died", label: t("facts.died"), value: formatPartialDate(facts.lifeEnd, locale) });
     }
+    // De un solista solo se sabe el año de su primer disco principal: se dice eso, no "Actividad".
     if (firstMainYear !== null) {
-      rows.push({ key: "activity", label: t("facts.activity"), value: t("facts.since", { year: firstMainYear }) });
+      rows.push({ key: "firstRecord", label: t("facts.firstRecord"), value: String(firstMainYear) });
     }
   } else {
     const origin = fromWikidata
@@ -140,7 +146,7 @@ export function artistFactRows(
             </span>
           ))}
           {" · "}
-          <Link href={lineup.href} className={`whitespace-nowrap ${externalLink}`}>
+          <Link href={lineup.href} className={`whitespace-nowrap ${internalMore}`}>
             {t(`facts.${lineup.more}`)} →
           </Link>
         </span>
@@ -168,6 +174,7 @@ export function artistFactRows(
               {index > 0 ? " · " : null}
               <a href={link.url} target="_blank" rel="noopener noreferrer" className={externalLink}>
                 {link.label}
+                <span aria-hidden> ↗</span>
               </a>
             </span>
           ))}

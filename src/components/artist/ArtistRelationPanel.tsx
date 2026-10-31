@@ -40,9 +40,10 @@ interface ArtistRelationPanelProps {
   categoryLabels: Record<ReleaseGroupCategory, string>;
 }
 
-const panelClass = "flex flex-col gap-3 rounded border border-ink-border bg-ink-surface p-4";
+const panelClass = "flex h-full flex-col gap-3 rounded border border-ink-border bg-ink-surface p-4";
+// Acciones de texto en gris: el ámbar del panel queda para los conmutadores activos.
 const linkButton =
-  "font-data text-xs text-amber underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50";
+  "font-data text-xs text-paper-muted underline-offset-2 hover:text-paper hover:underline disabled:cursor-not-allowed disabled:opacity-50";
 const divider = "border-t border-ink-border";
 
 /**

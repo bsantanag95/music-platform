@@ -297,6 +297,7 @@
       "heading": "Facts",
       "origin": "Origin",
       "activity": "Active",
+      "firstRecord": "First record",
       "born": "Born",
       "died": "Died",
       "links": "Links",
@@ -369,7 +370,7 @@
       "heading": "Community",
       "listeners": "Listeners",
       "followers": "Followers",
-      "favorites": "favorite of {value}",
+      "favorites": "<count></count> favorited it",
       "lists": "In lists"
     },
     "discography": {

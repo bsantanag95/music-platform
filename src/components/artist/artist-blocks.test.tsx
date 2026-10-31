@@ -33,7 +33,7 @@ describe("ArtistCommunity", () => {
     const block = screen.getByRole("region", { name: artistEs.community.heading });
     expect(within(block).getByText("312")).toBeInTheDocument();
     expect(within(block).getByText("120")).toBeInTheDocument();
-    expect(within(block).getByText("favorito de 34")).toBeInTheDocument();
+    expect(within(block).getByText((_, el) => el?.tagName === "DD" && el.textContent === "34 lo tienen de favorito")).toBeInTheDocument();
     expect(within(block).getByRole("link", { name: "12 →" })).toHaveAttribute("href", "/artist/a1/lists");
   });
 
@@ -41,9 +41,16 @@ describe("ArtistCommunity", () => {
     renderWithIntl(<ArtistCommunity stats={{ listeners: fewer, followers: fewer, favorites: exact(0), listCount: 0 }} listsHref="/x" />);
     expect(screen.getAllByText("Menos de 5").length).toBe(2);
     expect(screen.getAllByText("<5").length).toBe(2);
-    expect(screen.queryByText(/favorito de/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/de favorito/)).not.toBeInTheDocument();
     expect(screen.getByText("0")).toBeInTheDocument();
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
+  });
+
+  it("favoritos por debajo del umbral: '<5' a la vista, como la cifra principal", () => {
+    renderWithIntl(<ArtistCommunity stats={{ listeners: exact(9), followers: exact(9), favorites: fewer, listCount: 0 }} listsHref="/x" />);
+    const detail = screen.getByText((_, el) => el?.tagName === "DD" && /lo tienen de favorito$/.test(el.textContent ?? ""));
+    expect(within(detail).getByText("<5")).toBeInTheDocument();
+    expect(within(detail).getByText("Menos de 5")).toHaveClass("sr-only");
   });
 
   it("no muestra promedio de estrellas del artista", () => {

@@ -112,7 +112,7 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:py-12">
       <Breadcrumbs items={[{ label: tCommon("home"), href: "/" }, { label: artist.name }]} />
 
-      <header className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
+      <header className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-stretch">
         <div className="flex min-w-0 flex-col gap-5">
           <div className="flex items-start gap-4 sm:gap-6">
             <ArtistPhoto name={artist.name} photo={profile.photo} />
