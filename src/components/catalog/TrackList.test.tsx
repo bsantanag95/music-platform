@@ -51,11 +51,8 @@ function makeTrack(discNumber: number, position: number, title: string, override
 function renderList(tracks: AlbumTrack[], props: Partial<React.ComponentProps<typeof TrackList>> = {}, locale: "es" | "en" = "es") {
   return renderWithIntl(
     <TrackList
-      releaseGroupId="rg-1"
       tracks={tracks}
       albumArtistIds={[ALBUM_ARTIST]}
-      editionLabel="standard"
-      editionsAvailable={false}
       authenticated={false}
       communityFavoriteIds={[]}
       listenedIds={[]}
@@ -74,7 +71,8 @@ describe("TrackList", () => {
     renderList([makeTrack(1, 1, "Breathe", { durationSec: 163 }), makeTrack(1, 2, longTitle)]);
 
     expect(screen.getByRole("heading", { name: tracksEs.heading })).toHaveClass("sr-only");
-    expect(screen.getByText("Edición mostrada: Estándar")).toHaveClass("sm:hidden");
+    // La edición la muestra la ficha técnica, abierta en cualquier ancho (refine-album-page-phase2).
+    expect(screen.queryByText(/Edición mostrada/)).not.toBeInTheDocument();
     const link = screen.getByRole("link", { name: longTitle });
     expect(link).toHaveAttribute("href", "/song/rec-1-2");
     expect(link.className).not.toContain("truncate");

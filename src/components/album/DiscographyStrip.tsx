@@ -2,6 +2,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { albumHref } from "@/lib/catalog-links";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
+import { TitleTile } from "@/components/catalog/TitleTile";
 import { DiscographyScroller } from "./DiscographyScroller";
 import { StripItemActions } from "./StripItemActions";
 import type {
@@ -53,7 +54,11 @@ export function DiscographyStrip({ artistName, strip, authenticated = false }: D
                     : "border-ink-border opacity-75 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
                 }`}
               >
-                <CoverThumb cover={item.coverThumbUrl} label="" className="size-full" />
+                {item.coverThumbUrl ? (
+                  <CoverThumb cover={item.coverThumbUrl} label="" className="size-full" />
+                ) : (
+                  <TitleTile title={item.title} year={item.firstReleaseYear} className="size-full border-0 p-1.5 sm:p-1.5" />
+                )}
               </span>
               {/* Dos líneas reservadas siempre, para que los años queden alineados entre álbumes. */}
               <span

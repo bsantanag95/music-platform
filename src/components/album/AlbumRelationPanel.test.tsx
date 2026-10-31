@@ -92,7 +92,10 @@ describe("AlbumRelationPanel", () => {
     expect(screen.getAllByRole("radio")).toHaveLength(10);
     expect(screen.getByRole("button", { name: relation.detailAdd })).toBeEnabled();
     expect(screen.getByRole("link", { name: relation.writeReview })).toBeInTheDocument();
-    expect(screen.getByText(relation.listensNone)).toBeInTheDocument();
+    expect(screen.getByText(relation.listensEmpty)).toBeInTheDocument();
+    expect(screen.getByText(relation.reviewNone)).toBeInTheDocument();
+    expect(screen.getByText(relation.collectionNone)).toBeInTheDocument();
+    expect(screen.getByText(relation.listsLabel)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: relation.logListen })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: relation.favorite })).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByRole("button", { name: relation.pending })).toHaveAttribute("aria-pressed", "false");

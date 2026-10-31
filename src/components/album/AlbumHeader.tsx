@@ -30,11 +30,11 @@ export function AlbumIdentity({ title, category, artists }: AlbumIdentityProps) 
       <p className="font-data text-xs uppercase tracking-wider text-paper-muted">
         {t(`workType.${category}`)}
       </p>
-      <h1 className="font-display text-3xl leading-tight text-paper [overflow-wrap:anywhere] sm:text-4xl">
+      <h1 className="font-display text-2xl leading-tight text-paper [overflow-wrap:anywhere] sm:text-4xl">
         {title}
       </h1>
       {artists.length > 0 && (
-        <p className="font-body text-lg text-paper">
+        <p className="font-body text-base text-paper sm:text-lg">
           {artists.map((artist, index) => (
             <Fragment key={artist.id}>
               <Link href={artistHref(artist.name, artist.id)} className="text-amber hover:text-amber-hover hover:underline">
@@ -140,25 +140,15 @@ function FactRows({
 const factsGrid = "grid grid-cols-[max-content_minmax(0,1fr)] items-baseline gap-x-4 gap-y-1.5";
 
 /**
- * Ficha técnica: siempre visible desde `sm`; en móvil, colapsable con `<details>` (sin
- * JavaScript). Solo se renderizan las filas con dato.
+ * Ficha técnica: abierta en cualquier ancho, como la del artista (openspec: refine-album-page-phase2, D4); cuatro
+ * filas cortas no justifican plegarse en móvil. Solo se renderizan las filas con dato.
  */
 export function AlbumFacts(props: AlbumFactsProps) {
   const t = useTranslations("catalog.album.facts");
   return (
-    <>
-      <dl aria-label={t("heading")} className={`hidden sm:grid ${factsGrid}`}>
-        <FactRows {...props} />
-      </dl>
-      <details className="sm:hidden">
-        <summary className="cursor-pointer font-data text-xs uppercase tracking-wider text-paper-muted">
-          {t("heading")}
-        </summary>
-        <dl className={`mt-2 ${factsGrid}`}>
-          <FactRows {...props} />
-        </dl>
-      </details>
-    </>
+    <dl aria-label={t("heading")} className={factsGrid}>
+      <FactRows {...props} />
+    </dl>
   );
 }
 
@@ -229,43 +219,53 @@ interface CommunityStatsProps {
   listsHref: string;
 }
 
+/** Celda de la franja de comunidad: la cifra arriba y la etiqueta debajo, como en el artista (`ArtistCommunity`). */
+function Stat({ label, value, detail }: { label: string; value: React.ReactNode; detail?: React.ReactNode }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-0.5 px-3 py-2.5 sm:px-4">
+      {/* La cifra va primero a la vista; en el DOM el `dt` sigue antes del `dd`, como pide `<dl>`. */}
+      <dt className="order-2 font-data text-xs text-paper-muted">{label}</dt>
+      <dd className="order-1 font-display text-xl leading-tight text-paper tabular-nums">{value}</dd>
+      {detail ? <dd className="order-3 font-data text-xs text-paper-muted">{detail}</dd> : null}
+    </div>
+  );
+}
+
+const STRIP_COLUMNS = { 2: "grid-cols-2", 3: "grid-cols-3" } as const;
+
+/**
+ * Bloque de comunidad (openspec: refine-album-page-phase2, D1): una franja dividida como la del artista, en cualquier
+ * ancho. La Media solo existe con media (umbral de 5) y los detalles en cero se omiten: con poca actividad, tres
+ * tarjetas de "—", "Sin reseñas" y "0 lo buscan" eran ruido.
+ */
 export function CommunityStats({ stats, listsHref }: CommunityStatsProps) {
   const t = useTranslations("catalog.album.community");
   const locale = useLocale();
   const thresholded = useThresholdedValue();
   const number = (value: number) => new Intl.NumberFormat(locale).format(value);
   const { ratings } = stats;
-
-  const summary = [
-    ratings.averageStars !== null ? t("averageValue", { stars: formatStars(ratings.averageStars, locale) }) : null,
-    t("summaryRatings", { count: ratings.count }),
-    stats.collectors.kind === "exact" && stats.collectors.value === 0
-      ? null
-      : t("summaryCollectors", { value: thresholded(stats.collectors, true) }),
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const hasAverage = ratings.averageStars !== null;
+  const hasSeekers = !(stats.seekers.kind === "exact" && stats.seekers.value === 0);
 
   return (
     <section aria-label={t("heading")} className="flex flex-col gap-3">
-      <p className="font-data text-sm text-paper sm:hidden">{summary}</p>
-      <div className="hidden grid-cols-3 gap-2 sm:grid">
-        <StatTile
-          label={t("average")}
-          value={ratings.averageStars !== null ? t("averageValue", { stars: formatStars(ratings.averageStars, locale) }) : "—"}
-          detail={ratings.averageStars === null ? t("fewRatings") : undefined}
-        />
-        <StatTile
+      <dl
+        className={`grid ${STRIP_COLUMNS[hasAverage ? 3 : 2]} divide-x divide-ink-border rounded border border-ink-border bg-ink-surface`}
+      >
+        {hasAverage && (
+          <Stat label={t("average")} value={t("averageValue", { stars: formatStars(ratings.averageStars ?? 0, locale) })} />
+        )}
+        <Stat
           label={t("ratings")}
           value={number(ratings.count)}
-          detail={t("reviewCount", { count: stats.reviewCount })}
+          detail={stats.reviewCount > 0 ? t("reviewCount", { count: stats.reviewCount }) : undefined}
         />
-        <StatTile
+        <Stat
           label={t("collectors")}
           value={<ThresholdedTileValue count={stats.collectors} />}
-          detail={t("seekers", { value: thresholded(stats.seekers, true) })}
+          detail={hasSeekers ? t("seekers", { value: thresholded(stats.seekers, true) }) : undefined}
         />
-      </div>
+      </dl>
       {stats.listCount > 0 && (
         <Link href={listsHref} className={`self-start font-data text-xs ${SECONDARY_LINK}`}>
           {t("appearsInLists", { count: stats.listCount })} →

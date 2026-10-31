@@ -56,11 +56,8 @@ async function AlbumSongsPage({ params }: AlbumSongsPageProps) {
   return (
     <div className="flex flex-col gap-8">
       <TrackList
-        releaseGroupId={detail.releaseGroup.id}
         tracks={detail.tracks}
         albumArtistIds={detail.primaryArtists.map((artist) => artist.id)}
-        editionLabel={detail.release.editionLabel}
-        editionsAvailable={editions.editions.length > 1}
         authenticated={Boolean(userId)}
         communityFavoriteIds={[...communityFavorites]}
         listenedIds={personal ? [...personal.listenedRecordingIds] : []}

@@ -3,7 +3,7 @@
 import { Fragment, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
-import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
+import { artistHref, songHref } from "@/lib/catalog-links";
 import { RowMenu, RowMenuItem } from "@/components/ui/RowMenu";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ListsContainingItemPanel } from "@/components/lists/ListsContainingItemPanel";
@@ -19,7 +19,6 @@ import { ListenReactionSchema, type ListenEntry, type ListenReaction } from "@/l
 import { formatDuration, formatStars, summarizeDurations } from "@/components/album/album-format";
 import type { AlbumTrack, AlbumCredit } from "@/services/catalog/album-detail";
 import { VersionAttributeTags } from "@/components/catalog/VersionAttributeTags";
-import { SECONDARY_LINK } from "@/components/ui/segmented";
 
 // Pestaña Canciones de la página de álbum (openspec: redesign-album-page, rehecha en
 // rework-album-tracklist). Títulos completos sin truncar; duración, estado personal y menú
@@ -34,14 +33,9 @@ export interface TrackRatingValue {
 }
 
 interface TrackListProps {
-  releaseGroupId: string;
   tracks: AlbumTrack[];
   /** Artistas principales del álbum: una pista de otro artista lo muestra bajo el título. */
   albumArtistIds: string[];
-  /** Etiqueta de la edición mostrada (`release.edition_label`). */
-  editionLabel: string;
-  /** Pestaña Ediciones visible: la línea de edición enlaza a ella. */
-  editionsAvailable: boolean;
   authenticated: boolean;
   communityFavoriteIds: string[];
   listenedIds: string[];
@@ -108,11 +102,8 @@ function HeartIcon({ filled }: { filled: boolean }) {
 }
 
 export function TrackList({
-  releaseGroupId,
   tracks,
   albumArtistIds,
-  editionLabel,
-  editionsAvailable,
   authenticated,
   communityFavoriteIds,
   listenedIds,
@@ -147,13 +138,6 @@ export function TrackList({
   }
   const discNumbers = Array.from(discs.keys()).sort((a, b) => a - b);
   const multiDisc = discNumbers.length > 1;
-
-  const editionName =
-    editionLabel === "standard"
-      ? tFacts("editionStandard")
-      : editionLabel === "original"
-        ? tFacts("editionOriginal")
-        : editionLabel;
 
   function durationText(list: { durationSec: number | null }[]) {
     const summary = summarizeDurations(list);
@@ -285,23 +269,11 @@ export function TrackList({
 
   return (
     <section aria-labelledby="tracklist-heading" className="flex w-full flex-col gap-3">
-      {/* La pestaña activa ya dice "Canciones" y la ficha técnica muestra la edición: el
-          título queda para lectores de pantalla y la edición solo en móvil, donde la ficha
-          está contraída. */}
+      {/* La pestaña activa ya dice "Canciones" y la ficha técnica, abierta en cualquier ancho, muestra la edición:
+          el título queda para lectores de pantalla y no hay línea de edición (openspec: refine-album-page-phase2). */}
       <h2 id="tracklist-heading" className="sr-only">
         {t("heading")}
       </h2>
-      <p className="font-data text-xs text-paper-muted sm:hidden">
-        {t("shownEdition", { edition: editionName })}
-        {editionsAvailable && (
-          <>
-            {" · "}
-            <Link href={`${albumHref(null, "", releaseGroupId)}/editions`} className={SECONDARY_LINK}>
-              {t("seeEditions")}
-            </Link>
-          </>
-        )}
-      </p>
       {communityFavorites.size > 0 && (
         <p className="flex items-center gap-1.5 font-data text-xs text-paper-muted">
           <SparkleIcon />
