@@ -716,17 +716,14 @@
         "best": "Highest rated",
         "worst": "Lowest rated"
       },
-      "columns": {
-        "review": "Review",
-        "rating": "Rating",
-        "author": "Author",
-        "date": "Date"
-      },
       "empty": "No reviews of this album yet.",
       "loadMore": "Load more",
       "loadingMore": "Loading...",
       "loadError": "We could not load the reviews. Try again.",
-      "writeHeading": "Your review of this album"
+      "writeHeading": "Your review of this album",
+      "emptyDescription": "Reviews of this record will show up here.",
+      "invite": "Already listened? Say what you thought.",
+      "writeAction": "Write a review"
     },
     "reviewModal": {
       "close": "Close",
@@ -964,7 +961,7 @@
         "tracks": "Tracks",
         "link": "MusicBrainz"
       },
-      "shown": "shown",
+      "shown": "Shown",
       "extra": "{count, plural, one {+# track} other {+# tracks}}",
       "openInMusicBrainz": "See {title} on MusicBrainz",
       "empty": "No edition matches the filter.",
@@ -981,6 +978,15 @@
         "digital": "Digital",
         "cassette": "Cassette",
         "other": "Other"
+      },
+      "formatNames": {
+        "vinyl": "Vinyl",
+        "vinylSize": "{size}″ vinyl",
+        "cassette": "Cassette",
+        "digital": "Digital",
+        "eightTrack": "8-track cartridge",
+        "cdr": "CD-R",
+        "enhancedCd": "Enhanced CD"
       }
     },
     "upcomingTracksTitle": "Tracklist not available yet",

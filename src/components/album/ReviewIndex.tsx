@@ -8,10 +8,12 @@ import { getReviews } from "@/lib/api/social";
 import { REVIEW_SORTS, type ReviewSort, type ReviewsResponse } from "@/lib/api/schemas";
 import { StarRatingDisplay } from "@/components/social/StarRatingDisplay";
 import { SEGMENT_GROUP, SEGMENT_OPTION } from "@/components/ui/segmented";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { UserAvatar } from "@/components/social/UserAvatar";
 import { formatStars, reviewHeadline } from "./album-format";
 
-// Índice de reseñas de la pestaña Reseñas (openspec: redesign-album-page, patrón
-// Metal-Archives): una fila por reseña con título (o extracto), nota, autor y fecha. Cada
+// Índice de reseñas de la pestaña Reseñas (openspec: redesign-album-page; lista con monograma y extracto desde
+// refine-album-page-phase3): una fila por reseña con título (o extracto), nota, autor y fecha. Cada
 // fila abre `/review/{id}`, que desde el álbum se intercepta como modal. El orden vive en
 // la URL (`?sort=`) para que se pueda enlazar y el modal navegue en el mismo orden. La nota
 // se dibuja con la fila de estrellas de `rating-display` (openspec: unify-rating-representation).
@@ -65,7 +67,7 @@ export function ReviewIndex({ releaseGroupId, initial, sort, albumTitle, albumAr
   const sortQuery = sort === "recent" ? "" : `?sort=${sort}`;
 
   return (
-    <section aria-labelledby="review-index-heading" className="flex flex-col gap-3">
+    <section aria-labelledby="review-index-heading" className="flex w-full max-w-3xl flex-col gap-3">
       {/* La pestaña activa ya dice "Reseñas"; el orden solo aparece cuando hay algo que ordenar
           (openspec: refine-album-page-phase1). */}
       <h2 id="review-index-heading" className="sr-only">
@@ -88,56 +90,57 @@ export function ReviewIndex({ releaseGroupId, initial, sort, albumTitle, albumAr
       )}
 
       {reviews.length === 0 ? (
-        <p className="font-body text-paper-muted">{t("empty")}</p>
+        <EmptyState compact title={t("empty")} description={t("emptyDescription")} />
       ) : (
-        <table className="w-full table-fixed border-collapse text-left">
-          <thead>
-            <tr className="border-b border-ink-border font-data text-xs text-paper-muted">
-              <th scope="col" className="py-2 pr-3 font-normal">{t("columns.review")}</th>
-              <th scope="col" className="w-20 py-2 pr-3 font-normal">{t("columns.rating")}</th>
-              <th scope="col" className="hidden w-36 py-2 pr-3 font-normal sm:table-cell">{t("columns.author")}</th>
-              <th scope="col" className="hidden w-28 py-2 font-normal sm:table-cell">{t("columns.date")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {reviews.map((review) => {
-              const author = review.user.deactivated
-                ? tSocial("deactivatedAccount")
-                : (review.user.displayName ?? review.user.username);
-              const date = format.dateTime(new Date(review.createdAt), { dateStyle: "medium" });
-              return (
-                <tr key={review.id} className="border-b border-ink-border align-baseline">
-                  <td className="py-2 pr-3">
-                    <Link
-                      href={`${reviewHref(review.user.username, albumTitle ?? "", review.id)}${sortQuery}`}
-                      scroll={false}
-                      className={`block font-body text-sm hover:text-amber [overflow-wrap:anywhere] ${
-                        review.title ? "text-paper" : "italic text-paper-muted"
-                      }`}
-                    >
-                      {reviewHeadline(review)}
-                    </Link>
-                    <span className="font-data text-xs text-paper-muted sm:hidden">
-                      {author} · {date}
-                    </span>
-                  </td>
-                  <td className="py-2 pr-3 font-data text-sm">
-                    {review.rating ? (
-                      <StarRatingDisplay
-                        value={review.rating.stars}
-                        label={t("ratingLabel", { stars: formatStars(review.rating.stars, locale) })}
-                      />
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td className="hidden truncate py-2 pr-3 font-data text-xs text-paper-muted sm:table-cell">{author}</td>
-                  <td className="hidden py-2 font-data text-xs text-paper-muted sm:table-cell">{date}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        // Lista y no tabla (openspec: refine-album-page-phase3, D1): con monograma y extracto se decide qué abrir.
+        <ul className="flex flex-col divide-y divide-ink-border border-y border-ink-border">
+          {reviews.map((review) => {
+            const author = review.user.deactivated
+              ? tSocial("deactivatedAccount")
+              : (review.user.displayName ?? review.user.username);
+            const date = format.dateTime(new Date(review.createdAt), { dateStyle: "medium" });
+            return (
+              <li key={review.id} className="grid grid-cols-[1.75rem_minmax(0,1fr)_auto] items-start gap-x-3 py-3">
+                {review.user.deactivated ? (
+                  <span aria-hidden="true" className="size-7 rounded-full bg-ink-border" />
+                ) : (
+                  <UserAvatar avatarUrl={null} username={review.user.username} name={author} size="nav" />
+                )}
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <Link
+                    href={`${reviewHref(review.user.username, albumTitle ?? "", review.id)}${sortQuery}`}
+                    scroll={false}
+                    className={`font-body hover:text-amber [overflow-wrap:anywhere] ${
+                      review.title ? "text-paper" : "italic text-paper-muted"
+                    }`}
+                  >
+                    {reviewHeadline(review)}
+                  </Link>
+                  <span className="font-data text-xs text-paper-muted">
+                    <span>{author}</span>
+                    <span aria-hidden="true"> · </span>
+                    <time dateTime={review.createdAt}>{date}</time>
+                  </span>
+                  {review.title && (
+                    <p className="mt-1 line-clamp-2 font-body text-sm text-paper-muted [overflow-wrap:anywhere]">
+                      {review.body}
+                    </p>
+                  )}
+                </div>
+                <span className="pt-1 font-data text-sm">
+                  {review.rating ? (
+                    <StarRatingDisplay
+                      value={review.rating.stars}
+                      label={t("ratingLabel", { stars: formatStars(review.rating.stars, locale) })}
+                    />
+                  ) : (
+                    <span className="text-paper-muted">—</span>
+                  )}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
       )}
 
       {hasNext && (

@@ -716,17 +716,14 @@
         "best": "Mejor nota",
         "worst": "Peor nota"
       },
-      "columns": {
-        "review": "Reseña",
-        "rating": "Nota",
-        "author": "Autor",
-        "date": "Fecha"
-      },
       "empty": "Todavía no hay reseñas de este álbum.",
       "loadMore": "Cargar más",
       "loadingMore": "Cargando...",
       "loadError": "No pudimos cargar las reseñas. Intenta de nuevo.",
-      "writeHeading": "Tu reseña de este álbum"
+      "writeHeading": "Tu reseña de este álbum",
+      "emptyDescription": "Cuando alguien reseñe el disco aparecerá aquí.",
+      "invite": "¿Ya lo escuchaste? Cuenta qué te pareció.",
+      "writeAction": "Escribir reseña"
     },
     "reviewModal": {
       "close": "Cerrar",
@@ -964,7 +961,7 @@
         "tracks": "Pistas",
         "link": "MusicBrainz"
       },
-      "shown": "mostrada",
+      "shown": "Mostrada",
       "extra": "{count, plural, one {+# pista} other {+# pistas}}",
       "openInMusicBrainz": "Ver {title} en MusicBrainz",
       "empty": "Ninguna edición coincide con el filtro.",
@@ -981,6 +978,15 @@
         "digital": "Digital",
         "cassette": "Casete",
         "other": "Otros"
+      },
+      "formatNames": {
+        "vinyl": "Vinilo",
+        "vinylSize": "Vinilo {size}″",
+        "cassette": "Casete",
+        "digital": "Digital",
+        "eightTrack": "Cartucho de 8 pistas",
+        "cdr": "CD-R",
+        "enhancedCd": "CD mejorado"
       }
     },
     "upcomingTracksTitle": "Tracklist aún no disponible",

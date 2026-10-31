@@ -12,6 +12,7 @@ import type { AlbumDetail } from "@/services/catalog/album-detail";
 const mocks = vi.hoisted(() => ({
   loadAlbumDetail: vi.fn(),
   loadAlbumSegment: vi.fn(),
+  loadAlbumHref: vi.fn(),
   loadSession: vi.fn(),
   loadCanModerate: vi.fn(),
   loadCommunityStats: vi.fn(),
@@ -35,6 +36,7 @@ vi.mock("@/services/genres/display", () => ({
 vi.mock("../album-data", () => ({
   loadAlbumDetail: mocks.loadAlbumDetail,
   loadAlbumSegment: mocks.loadAlbumSegment,
+  loadAlbumHref: mocks.loadAlbumHref,
   loadSession: mocks.loadSession,
   loadCanModerate: mocks.loadCanModerate,
   loadCommunityStats: mocks.loadCommunityStats,
@@ -212,6 +214,7 @@ beforeEach(() => {
   mocks.loadAlbumSegment.mockImplementation(async (id: string, title: string) =>
     albumSegment("Pink Floyd", title, id),
   );
+  mocks.loadAlbumHref.mockImplementation(async (id: string, title: string) => albumHref("Pink Floyd", title, id));
   mocks.loadSession.mockResolvedValue(null);
   mocks.loadCommunityStats.mockResolvedValue(stats);
   mocks.loadCommunityFavorites.mockResolvedValue(new Set());

@@ -16,7 +16,8 @@ import type { Review } from "@/lib/api/schemas";
 // Mismas reglas que antes (spec album-review): cuerpo obligatorio, título opcional y
 // estrellas solo si el usuario todavía no valoró el álbum. El índice de la comunidad
 // vive aparte (`ReviewIndex`). Las estrellas se eligen con `StarRatingInput`, el mismo
-// control del panel "Tu relación" (openspec: unify-rating-representation, D5).
+// control del panel "Tu relación" (openspec: unify-rating-representation, D5). Sin reseña propia empieza plegado tras
+// una invitación (openspec: refine-album-page-phase3, D2): el panel ya ofrece "Escribir reseña".
 
 /** Ancla del editor; el panel "Tu relación" enlaza a `/album/<id>/reviews#your-review`. */
 export const REVIEW_COMPOSER_ANCHOR = "your-review";
@@ -46,6 +47,10 @@ interface ReviewComposerProps {
   albumTitle?: string;
 }
 
+/** Invitación a escribir: una franja discreta con su acción, en el ancho de lectura. */
+const invite =
+  "flex w-full max-w-3xl scroll-mt-32 flex-wrap items-center justify-between gap-3 rounded border border-dashed border-ink-border px-4 py-3";
+
 export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownReview, albumTitle }: ReviewComposerProps) {
   const t = useTranslations("catalog.social");
   const tAlbum = useTranslations("catalog.album.reviews");
@@ -62,6 +67,8 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
   const [pending, setPending] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [revealRequest, setRevealRequest] = useState(0);
+  // Sin reseña propia, el formulario está plegado hasta que se pide (invitación, panel o `#your-review`).
+  const [open, setOpen] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
@@ -71,6 +78,7 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
   useEffect(() => {
     const reveal = () => {
       setEditing(true);
+      setOpen(true);
       setRevealRequest((count) => count + 1);
     };
     if (window.location.hash === `#${REVIEW_COMPOSER_ANCHOR}`) reveal();
@@ -93,11 +101,30 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
 
   if (!authenticated) {
     return (
-      <p className="font-body text-paper-muted">
-        <Link href="/auth/login" className={SECONDARY_LINK}>
+      <div className={invite}>
+        <p className="font-body text-sm text-paper-muted">{tAlbum("invite")}</p>
+        <Link href="/auth/login" className={`shrink-0 font-data text-xs ${SECONDARY_LINK}`}>
           {t("loginToReview")}
         </Link>
-      </p>
+      </div>
+    );
+  }
+
+  if (!review && !open) {
+    return (
+      <section ref={sectionRef} id={REVIEW_COMPOSER_ANCHOR} aria-label={tAlbum("writeHeading")} className={invite}>
+        <p className="font-body text-sm text-paper-muted">{tAlbum("invite")}</p>
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(true);
+            setRevealRequest((count) => count + 1);
+          }}
+          className="shrink-0 rounded bg-amber px-3 py-1.5 font-display text-sm text-ink transition-colors hover:bg-amber-hover"
+        >
+          {tAlbum("writeAction")}
+        </button>
+      </section>
     );
   }
 
@@ -134,6 +161,7 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
       setTitle("");
       setBody("");
       setEditing(true);
+      setOpen(false);
       router.refresh();
     } catch (error) {
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
@@ -146,7 +174,8 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
     <section
       ref={sectionRef}
       id={REVIEW_COMPOSER_ANCHOR}
-      aria-labelledby="your-review-heading" className="flex scroll-mt-24 flex-col gap-3"
+      aria-labelledby="your-review-heading"
+      className="flex w-full max-w-3xl scroll-mt-32 flex-col gap-3"
     >
       <h3 id="your-review-heading" className="font-display text-lg text-paper">
         {tAlbum("writeHeading")}
@@ -217,10 +246,10 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
             >
               {pending ? t("saving") : review ? t("reviewUpdate") : t("reviewSubmit")}
             </button>
-            {review && (
+            {(review || open) && (
               <button
                 type="button"
-                onClick={() => setEditing(false)}
+                onClick={() => (review ? setEditing(false) : setOpen(false))}
                 className="rounded border border-ink-border px-4 py-2 font-display text-sm text-paper"
               >
                 {t("cancel")}

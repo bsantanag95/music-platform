@@ -62,7 +62,9 @@ describe("EditionsTable", () => {
     renderTable();
     const rows = screen.getAllByRole("row").slice(1);
     expect(rows).toHaveLength(3);
-    expect(within(rows[0]!).getByText(`· ${editionsEs.shown}`)).toBeInTheDocument();
+    expect(within(rows[0]!).getByText(editionsEs.shown)).toBeInTheDocument();
+    // Formato traducido conservando la medida (refine-album-page-phase3, D3).
+    expect(within(rows[0]!).getByText("Vinilo 12″")).toBeInTheDocument();
     expect(within(rows[0]!).getByRole("link", { name: "Ver Álbum en MusicBrainz" })).toHaveAttribute(
       "href",
       "https://musicbrainz.org/release/original-mbid",
@@ -79,11 +81,20 @@ describe("EditionsTable", () => {
 
   it("filtra por formato", () => {
     renderTable();
-    fireEvent.click(screen.getByRole("button", { name: editionsEs.families.cd }));
+    fireEvent.click(screen.getByRole("button", { name: `${editionsEs.families.cd} 2` }));
     const rows = screen.getAllByRole("row").slice(1);
     expect(rows).toHaveLength(2);
     expect(screen.queryByText("SHVL 804", { exact: false })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: editionsEs.families.cd })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: `${editionsEs.families.cd} 2` })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("ordena los filtros (CD antes que Vinilo) y cuenta según las no oficiales", () => {
+    renderTable();
+    const group = screen.getByRole("group", { name: editionsEs.formatFilter });
+    const labels = within(group).getAllByRole("button").map((b) => b.textContent);
+    expect(labels).toEqual(["Todas 3", "CD 2", "Vinilo 1"]);
+    fireEvent.click(screen.getByRole("checkbox"));
+    expect(within(group).getByRole("button", { name: `${editionsEs.families.cassette} 1` })).toBeInTheDocument();
   });
 
   it("lleva las ediciones con pistas adicionales a su sección en Canciones", () => {

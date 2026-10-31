@@ -86,6 +86,14 @@ describe("AlbumRelationPanel", () => {
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
+  it("el enlace a escribir la reseña usa la URL canónica de la pestaña, para no perder #your-review", () => {
+    renderWithIntl(<AlbumRelationPanel releaseGroupId={RG} reviewsHref="/album/artista-disco-abc/reviews" state={makeState()} />);
+    expect(screen.getByRole("link", { name: relation.writeReview })).toHaveAttribute(
+      "href",
+      "/album/artista-disco-abc/reviews#your-review",
+    );
+  });
+
   it("sin interacción muestra todas las filas, sin 'Más acciones' ni 'Ver en listas'", () => {
     renderWithIntl(<AlbumRelationPanel releaseGroupId={RG} state={makeState()} />);
     expect(screen.getByText(relation.rating)).toBeInTheDocument();

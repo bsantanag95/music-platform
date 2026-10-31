@@ -6,7 +6,7 @@ import { getDiscographyStrip } from "@/services/catalog/album-neighbors";
 import { getAlbumEditions } from "@/services/catalog/album-editions";
 import { getAlbumPersonnel } from "@/services/catalog/personnel-levels";
 import { resolvePrimaryArtists, slugArtistName } from "@/services/catalog/primary-artists";
-import { albumSegment } from "@/lib/catalog-links";
+import { albumHref, albumSegment } from "@/lib/catalog-links";
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
 import { getOwnRatingRow, resolveSocialTarget } from "@/services/social";
@@ -28,6 +28,15 @@ export const loadAlbumDetail = cache((id: string) => getAlbumDetail(id));
 export const loadAlbumSegment = cache(async (releaseGroupId: string, title: string) => {
   const { releaseGroups } = await resolvePrimaryArtists({ releaseGroupIds: [releaseGroupId] });
   return albumSegment(slugArtistName(releaseGroups.get(releaseGroupId)), title, releaseGroupId);
+});
+
+/**
+ * URL canónica del álbum (con slug), la misma que `loadAlbumSegment` exige en cada pestaña: un enlace sin slug redirige
+ * y pierde el `#` (openspec: refine-album-page-phase3, D6).
+ */
+export const loadAlbumHref = cache(async (releaseGroupId: string, title: string) => {
+  const { releaseGroups } = await resolvePrimaryArtists({ releaseGroupIds: [releaseGroupId] });
+  return albumHref(slugArtistName(releaseGroups.get(releaseGroupId)), title, releaseGroupId);
 });
 
 export const loadSession = cache(() => resolveSession());

@@ -11,7 +11,7 @@ import { getEditionExtraTracks } from "@/lib/api/catalog";
 import { musicBrainzReleaseUrl } from "@/lib/site-links";
 import { VersionAttributeTags } from "@/components/catalog/VersionAttributeTags";
 import { formatDuration } from "./album-format";
-import { describeFormats } from "./EditionsTable";
+import { describeFormats, formatName } from "./EditionsTable";
 
 // Pistas adicionales de otras ediciones, al pie de la pestaña Canciones (openspec:
 // redesign-album-page, tarea 7.7): una sección por variante, todas contraídas, con un
@@ -95,6 +95,7 @@ interface EditionExtraTracksProps {
 
 export function EditionExtraTracks({ releaseGroupId, variants }: EditionExtraTracksProps) {
   const t = useTranslations("catalog.album.extraTracks");
+  const tEditions = useTranslations("catalog.album.editions");
   const [open, setOpen] = useState<Set<string>>(new Set());
 
   // Llegada desde la pestaña Ediciones ("+N pistas" → `#variant-{id}`): abre esa sección.
@@ -125,7 +126,7 @@ export function EditionExtraTracks({ releaseGroupId, variants }: EditionExtraTra
       <p className="font-data text-xs text-paper-muted">{t("intro")}</p>
       <ul className="flex flex-col gap-2">
         {variants.map((variant) => {
-          const format = describeFormats(variant.formats);
+          const format = describeFormats(variant.formats, (f) => formatName(f, tEditions));
           const name =
             variant.name ??
             (variant.year !== null ? t("fallbackName", { year: variant.year, format }) : t("fallbackNameNoYear", { format }));

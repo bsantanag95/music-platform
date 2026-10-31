@@ -40,11 +40,37 @@ export function formatFamily(format: string): FormatFamily {
   return "other";
 }
 
-/** Formatos compactos: "2×CD", "CD + DVD". */
-export function describeFormats(formats: string[]): string {
+/** Orden fijo de los filtros (openspec: refine-album-page-phase3, D4): el formato más común primero. */
+const FAMILY_ORDER: FormatFamily[] = ["cd", "vinyl", "cassette", "digital", "other"];
+
+/** Formatos de MusicBrainz con nombre en la interfaz; el resto ("SACD", "Blu-ray") es nombre propio del dato. */
+const KNOWN_FORMATS: Record<string, "vinyl" | "cassette" | "digital" | "eightTrack" | "cdr" | "enhancedCd"> = {
+  Vinyl: "vinyl",
+  Cassette: "cassette",
+  "Digital Media": "digital",
+  "8-Track Cartridge": "eightTrack",
+  "CD-R": "cdr",
+  "Enhanced CD": "enhancedCd",
+};
+
+type FormatTranslator = (key: string, values?: Record<string, string>) => string;
+
+/**
+ * Nombre de un formato en el idioma de la interfaz (openspec: refine-album-page-phase3, D3): "12\" Vinyl" → "Vinilo
+ * 12″" conservando la medida; un formato desconocido queda tal como lo nombra MusicBrainz.
+ */
+export function formatName(format: string, t: FormatTranslator): string {
+  const size = /^(\d+)" Vinyl$/.exec(format);
+  if (size?.[1]) return t("formatNames.vinylSize", { size: size[1] });
+  const known = KNOWN_FORMATS[format];
+  return known ? t(`formatNames.${known}`) : format;
+}
+
+/** Formatos compactos: "2×CD", "CD + DVD". Con `name`, cada formato con su nombre en la interfaz. */
+export function describeFormats(formats: string[], name: (format: string) => string = (format) => format): string {
   const counts = new Map<string, number>();
   for (const f of formats) counts.set(f, (counts.get(f) ?? 0) + 1);
-  return [...counts].map(([format, n]) => (n > 1 ? `${n}×${format}` : format)).join(" + ");
+  return [...counts].map(([format, n]) => (n > 1 ? `${n}×${name(format)}` : name(format))).join(" + ");
 }
 
 interface EditionsTableProps {
@@ -60,12 +86,17 @@ export function EditionsTable({ releaseGroupId, editions, representativeMbid }: 
   const [visible, setVisible] = useState(PAGE);
 
   const official = editions.filter((e) => e.status === "Official");
-  const families = [...new Set(editions.flatMap((e) => e.formats.map(formatFamily)))];
-  const filtered = editions.filter(
-    (e) =>
-      (includeUnofficial || e.status === "Official" || e.mbid === representativeMbid) &&
-      (family === "all" || e.formats.some((f) => formatFamily(f) === family)),
+  const name = (format: string) => formatName(format, t);
+  // Ediciones que se ven con el filtro de no oficiales; los filtros de formato cuentan sobre ellas.
+  const inScope = editions.filter(
+    (e) => includeUnofficial || e.status === "Official" || e.mbid === representativeMbid,
   );
+  const hasFamily = (e: EditionRow, option: FormatFamily) => e.formats.some((f) => formatFamily(f) === option);
+  // Solo las familias con alguna edición visible: un filtro con 0 llevaría a una tabla vacía.
+  const families = FAMILY_ORDER.filter((option) => inScope.some((e) => hasFamily(e, option)));
+  const countOf = (option: FormatFamily | "all") =>
+    option === "all" ? inScope.length : inScope.filter((e) => hasFamily(e, option)).length;
+  const filtered = inScope.filter((e) => family === "all" || hasFamily(e, family));
 
   return (
     <section aria-labelledby="editions-heading" className="flex flex-col gap-3">
@@ -89,6 +120,8 @@ export function EditionsTable({ releaseGroupId, editions, representativeMbid }: 
               className={SEGMENT_OPTION}
             >
               {option === "all" ? t("allFormats") : t(`families.${option}`)}
+              {" "}
+              <span className="text-paper-muted">{countOf(option)}</span>
             </button>
           ))}
         </div>
@@ -101,6 +134,8 @@ export function EditionsTable({ releaseGroupId, editions, representativeMbid }: 
             checked={includeUnofficial}
             onChange={(event) => {
               setIncludeUnofficial(event.target.checked);
+              // Al ocultar las no oficiales, la familia elegida puede quedarse sin ediciones.
+              if (!event.target.checked) setFamily("all");
               setVisible(PAGE);
             }}
           />
@@ -111,9 +146,11 @@ export function EditionsTable({ releaseGroupId, editions, representativeMbid }: 
       {filtered.length === 0 ? (
         <p className="font-body text-paper-muted">{t("empty")}</p>
       ) : (
-        <div className="overflow-x-auto">
+        // Desde `sm` la tabla cabe y su cabecera queda fija bajo las pestañas; un `sticky` no funciona dentro de un
+        // contenedor con `overflow-x: auto`, así que solo desplaza en móvil (openspec: refine-album-page-phase3, D5).
+        <div className="overflow-x-auto sm:overflow-visible">
           <table className="w-full min-w-[36rem] border-collapse text-left">
-            <thead>
+            <thead className="sm:sticky sm:top-[calc(var(--site-header-h)+var(--album-tabs-h))] sm:z-10 sm:bg-ink">
               <tr className="border-b border-ink-border font-data text-xs text-paper-muted">
                 <th scope="col" className="w-14 py-2 pr-3 font-normal">{t("columns.year")}</th>
                 <th scope="col" className="w-14 py-2 pr-3 font-normal">{t("columns.country")}</th>
@@ -142,10 +179,12 @@ export function EditionsTable({ releaseGroupId, editions, representativeMbid }: 
                   >
                     <td className="py-2 pr-3 text-paper">{edition.year ?? t("unknown")}</td>
                     <td className="py-2 pr-3 text-paper-muted">{edition.country ?? t("unknown")}</td>
-                    <td className="py-2 pr-3 text-paper-muted">{describeFormats(edition.formats) || t("unknown")}</td>
+                    <td className="py-2 pr-3 text-paper-muted">{describeFormats(edition.formats, name) || t("unknown")}</td>
                     <td className="py-2 pr-3 text-paper">
                       {label || t("unknown")}
-                      {shown && <span className="ml-2 text-amber">· {t("shown")}</span>}
+                      {shown && (
+                        <span className="ml-2 whitespace-nowrap rounded bg-amber/15 px-1.5 py-px text-amber">{t("shown")}</span>
+                      )}
                       {status && <span className="ml-2 text-paper-muted">· {status}</span>}
                       {edition.variant && (
                         <Link
