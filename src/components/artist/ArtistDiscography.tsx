@@ -23,6 +23,7 @@ import {
 } from "./discography-filter";
 import { AlbumQuickActions, type DiscMarks } from "@/components/catalog/AlbumQuickActions";
 import { SEGMENT_GROUP, SEGMENT_OPTION } from "@/components/ui/segmented";
+import { TitleTile } from "@/components/catalog/TitleTile";
 
 // Discografía de la página de artista (openspec: redesign-artist-page, capability
 // `artist-discography-view`): selector de secciones con su cantidad (la sección vive en la
@@ -504,30 +505,12 @@ function Cover({
   titleTile?: boolean;
 }) {
   const tArtist = useTranslations("catalog.artist");
-  const tile = titleTile ? <TitleTile item={item} className={className} /> : undefined;
+  const tile = titleTile ? <TitleTile title={item.title} year={item.year} className={className} /> : undefined;
   if (item.coverResolved) {
     return tile && !item.coverThumbUrl ? tile : <CoverThumb cover={item.coverThumbUrl} label="" className={className} />;
   }
   return (
     <LazyCoverImage releaseGroupId={item.id} coverLabel={tArtist("albumCoverLabel")} className={className} fallback={tile} />
-  );
-}
-
-/**
- * Relleno tipográfico de un disco sin carátula (openspec: refine-artist-page-phase2, design D2): el título y el año en
- * la tipografía de la página, para que el cuadro diga qué disco es sin leer debajo. Decorativo para lectores de
- * pantalla: el título ya está en el enlace.
- */
-function TitleTile({ item, className }: { item: ArtistDiscographyItem; className: string }) {
-  return (
-    <span
-      aria-hidden="true"
-      data-testid="title-tile"
-      className={`flex flex-col justify-between overflow-hidden rounded border border-ink-border bg-ink-surface p-2 sm:p-2.5 ${className}`}
-    >
-      <span className="line-clamp-4 font-display text-xs leading-tight text-paper [overflow-wrap:anywhere] sm:text-sm">{item.title}</span>
-      {item.year !== null && <span className="font-data text-xs text-paper-muted">{item.year}</span>}
-    </span>
   );
 }
 

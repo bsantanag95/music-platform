@@ -124,7 +124,10 @@ describe("CommunityStats", () => {
         listsHref="/album/rg-1/lists"
       />,
     );
-    expect(screen.getByText(album.community.fewRatings)).toBeInTheDocument();
+    // Sin media no hay celda Media, y los detalles en cero no se muestran (refine-album-page-phase2, D1).
+    expect(screen.queryByText(album.community.average)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Sin reseñas/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/lo buscan/)).not.toBeInTheDocument();
     expect(screen.getByText("4")).toBeInTheDocument();
     const compact = screen.getByText("<5");
     expect(compact).toHaveAttribute("aria-hidden", "true");

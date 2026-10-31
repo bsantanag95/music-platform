@@ -59,8 +59,31 @@ function Row({ label, children }: { label: ReactNode; children: ReactNode }) {
   );
 }
 
+// Acciones de texto en gris, como en el panel del artista: el ámbar queda para los conmutadores activos y las
+// estrellas (openspec: refine-album-page-phase2, D3).
 const linkButton =
-  "font-data text-xs text-amber underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50";
+  "font-data text-xs text-paper-muted underline-offset-2 hover:text-paper hover:underline disabled:cursor-not-allowed disabled:opacity-50";
+
+/**
+ * Fila del panel con el patrón del artista: la etiqueta y su acción en la primera línea, el estado debajo. La Nota
+ * sigue en `Row` porque su control (las estrellas) es el propio estado.
+ */
+function Field({ label, action, children }: { label: string; action?: ReactNode; children?: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="font-body text-sm text-paper-muted">{label}</span>
+        {action}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/** Estado de una fila: atenuado cuando dice que no hay nada ("Sin escuchas"). */
+function Value({ empty, children }: { empty: boolean; children: ReactNode }) {
+  return <p className={`font-body text-sm ${empty ? "text-paper-muted" : "text-paper"}`}>{children}</p>;
+}
 
 const divider = "border-t border-ink-border";
 
@@ -252,7 +275,24 @@ function AuthenticatedPanel({
     <aside aria-label={t("heading")} className={panelClass}>
       <h2 className="font-display text-sm text-paper-muted">{t("heading")}</h2>
 
-      <div className="flex flex-col gap-1">
+      <div className="grid grid-cols-2 gap-2">
+        <ToggleChip
+          pressed={favorited}
+          disabled={busy === "favorite"}
+          onClick={() => void toggleFav()}
+          icon={<HeartIcon filled={favorited} />}
+          label={t("favorite")}
+        />
+        <ToggleChip
+          pressed={pending}
+          disabled={busy === "pending"}
+          onClick={() => void togglePending()}
+          icon={<BookmarkIcon filled={pending} />}
+          label={t("pending")}
+        />
+      </div>
+
+      <div className={`flex flex-col gap-1 pt-3 ${divider}`}>
         <Row label={t("rating")}>
           <StarRatingInput
             value={stars}
@@ -309,36 +349,44 @@ function AuthenticatedPanel({
         />
       </div>
 
-      <Row label={t("review")}>
-        {state.ownReviewId && <span className="font-body text-sm text-paper">{t("reviewWritten")}</span>}
-        <Link
-          href={`${albumHref(null, "", releaseGroupId)}/reviews#${REVIEW_COMPOSER_ANCHOR}`}
-          scroll={false}
-          onClick={(event) => {
-            if (revealReviewComposer()) event.preventDefault();
-          }}
-          className={linkButton}
+      <div className={`flex flex-col gap-3 pt-3 ${divider}`}>
+        <Field
+          label={t("review")}
+          action={
+            <Link
+              href={`${albumHref(null, "", releaseGroupId)}/reviews#${REVIEW_COMPOSER_ANCHOR}`}
+              scroll={false}
+              onClick={(event) => {
+                if (revealReviewComposer()) event.preventDefault();
+              }}
+              className={linkButton}
+            >
+              {state.ownReviewId ? t("editReview") : t("writeReview")}
+            </Link>
+          }
         >
-          {state.ownReviewId ? t("editReview") : t("writeReview")}
-        </Link>
-      </Row>
+          <Value empty={!state.ownReviewId}>{state.ownReviewId ? t("reviewWritten") : t("reviewNone")}</Value>
+        </Field>
 
-      <div className={`flex flex-col gap-2 pt-3 ${divider}`}>
-        <Row label={t("listens")}>
-          <span className="font-body text-sm text-paper">
+        <Field
+          label={t("listens")}
+          action={
+            <button type="button" className={linkButton} disabled={busy === "listen"} onClick={() => void logListen()}>
+              {busy === "listen" ? t("logging") : t("logListen")}
+            </button>
+          }
+        >
+          <Value empty={listens.count === 0}>
             {listens.count === 0
-              ? t("listensNone")
+              ? t("listensEmpty")
               : listens.lastAt
                 ? t("listensSummary", {
                     count: listens.count,
                     date: format.dateTime(new Date(listens.lastAt), { day: "numeric", month: "short" }),
                   })
                 : listens.count}
-          </span>
-          <button type="button" className={linkButton} disabled={busy === "listen"} onClick={() => void logListen()}>
-            {busy === "listen" ? t("logging") : t("logListen")}
-          </button>
-        </Row>
+          </Value>
+        </Field>
         {loggedEntry && !detailsOpen && (
           <p role="status" className="font-data text-xs text-paper-muted">
             {t("listenLogged")} ·{" "}
@@ -364,47 +412,29 @@ function AuthenticatedPanel({
           />
         )}
 
-        <div className="grid grid-cols-2 gap-2">
-          <ToggleChip
-            pressed={favorited}
-            disabled={busy === "favorite"}
-            onClick={() => void toggleFav()}
-            icon={<HeartIcon filled={favorited} />}
-            label={t("favorite")}
-          />
-          <ToggleChip
-            pressed={pending}
-            disabled={busy === "pending"}
-            onClick={() => void togglePending()}
-            icon={<BookmarkIcon filled={pending} />}
-            label={t("pending")}
-          />
-        </div>
-      </div>
-
-      <div className={`flex flex-col gap-2 pt-3 ${divider}`}>
         <div className="flex flex-col gap-1">
-          <Row
-            label={
-              hasCollection ? (
-                <span className="flex flex-col text-paper">
-                  {entries.length > 0 && <span>{t("haveFormats", { formats })}</span>}
-                  {wanted.length > 0 && <span>{t("seeking")}</span>}
-                </span>
-              ) : (
-                t("collection")
-              )
+          <Field
+            label={t("collection")}
+            action={
+              <button
+                type="button"
+                className={linkButton}
+                aria-expanded={collectionOpen}
+                onClick={() => setCollectionOpen((open) => !open)}
+              >
+                {collectionOpen ? t("close") : hasCollection ? t("manageCollection") : t("addToCollection")}
+              </button>
             }
           >
-            <button
-              type="button"
-              className={linkButton}
-              aria-expanded={collectionOpen}
-              onClick={() => setCollectionOpen((open) => !open)}
-            >
-              {collectionOpen ? t("close") : hasCollection ? t("manageCollection") : t("addToCollection")}
-            </button>
-          </Row>
+            {hasCollection ? (
+              <>
+                {entries.length > 0 && <Value empty={false}>{t("haveFormats", { formats })}</Value>}
+                {wanted.length > 0 && <Value empty={false}>{t("seeking")}</Value>}
+              </>
+            ) : (
+              <Value empty>{t("collectionNone")}</Value>
+            )}
+          </Field>
           {collectionOpen && (
             <CollectionAlbumAction
               releaseGroupId={releaseGroupId}
@@ -419,19 +449,26 @@ function AuthenticatedPanel({
             />
           )}
         </div>
+      </div>
 
+      <div className={`flex flex-col gap-3 pt-3 ${divider}`}>
         <div className="flex flex-col gap-1">
-          <Row label={<span className={memberships.length > 0 ? "text-paper" : undefined}>{t("lists", { count: memberships.length })}</span>}>
-            <button
-              ref={listsButton}
-              type="button"
-              className={linkButton}
-              aria-expanded={pickerOpen}
-              onClick={() => (pickerOpen ? closePicker() : setPickerOpen(true))}
-            >
-              {pickerOpen ? t("close") : t("chooseLists")}
-            </button>
-          </Row>
+          <Field
+            label={t("listsLabel")}
+            action={
+              <button
+                ref={listsButton}
+                type="button"
+                className={linkButton}
+                aria-expanded={pickerOpen}
+                onClick={() => (pickerOpen ? closePicker() : setPickerOpen(true))}
+              >
+                {pickerOpen ? t("close") : t("chooseLists")}
+              </button>
+            }
+          >
+            <Value empty={memberships.length === 0}>{t("lists", { count: memberships.length })}</Value>
+          </Field>
           {pickerOpen && (
             <AlbumListPicker
               target={target}
@@ -446,16 +483,19 @@ function AuthenticatedPanel({
         </div>
 
         <div className="flex flex-col gap-2">
-          <Row label={t("genres")}>
-            <button
-              type="button"
-              className={linkButton}
-              aria-expanded={genresOpen}
-              onClick={() => setGenresOpen((open) => !open)}
-            >
-              {genresOpen ? t("close") : t("voteGenres")}
-            </button>
-          </Row>
+          <Field
+            label={t("genres")}
+            action={
+              <button
+                type="button"
+                className={linkButton}
+                aria-expanded={genresOpen}
+                onClick={() => setGenresOpen((open) => !open)}
+              >
+                {genresOpen ? t("close") : t("voteGenres")}
+              </button>
+            }
+          />
           {genresOpen && <GenreVotePanel releaseGroupId={releaseGroupId} interacted={interacted} />}
         </div>
       </div>

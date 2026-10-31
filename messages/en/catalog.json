@@ -553,7 +553,6 @@
       "heading": "Community",
       "average": "Average",
       "averageValue": "★ {stars}",
-      "fewRatings": "Few ratings",
       "ratings": "Ratings",
       "reviewCount": "{count, plural, =0 {No reviews} one {# review} other {# reviews}}",
       "collectors": "Collected by",
@@ -564,8 +563,6 @@
       "histogramItem": "{stars} stars: {count}",
       "histogramMin": "½★",
       "histogramMax": "5★",
-      "summaryRatings": "{count, plural, one {# rating} other {# ratings}}",
-      "summaryCollectors": "collected by {value}",
       "fewerShort": "<{threshold}",
       "appearsInLists": "{count, plural, one {Appears in # list} other {Appears in # lists}}"
     },
@@ -578,8 +575,6 @@
     },
     "tracks": {
       "heading": "Songs",
-      "shownEdition": "Edition shown: {edition}",
-      "seeEditions": "See editions",
       "discSummary": "{tracks, plural, one {# track} other {# tracks}} · {duration}",
       "total": "{tracks, plural, one {# track} other {# tracks}}",
       "versionOf": "version of {title}",
@@ -705,7 +700,11 @@
       },
       "detailScale": "{score}/100",
       "genres": "Genres",
-      "voteGenres": "Vote on genres"
+      "voteGenres": "Vote on genres",
+      "reviewNone": "No review",
+      "listensEmpty": "No listens",
+      "collectionNone": "Not in your collection",
+      "listsLabel": "Lists"
     },
     "reviews": {
       "heading": "Reviews",

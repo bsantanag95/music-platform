@@ -553,7 +553,6 @@
       "heading": "Comunidad",
       "average": "Media",
       "averageValue": "★ {stars}",
-      "fewRatings": "Pocas valoraciones",
       "ratings": "Valoraciones",
       "reviewCount": "{count, plural, =0 {Sin reseñas} one {# reseña} other {# reseñas}}",
       "collectors": "Lo coleccionan",
@@ -564,8 +563,6 @@
       "histogramItem": "{stars} estrellas: {count}",
       "histogramMin": "½★",
       "histogramMax": "5★",
-      "summaryRatings": "{count, plural, one {# valoración} other {# valoraciones}}",
-      "summaryCollectors": "{value} lo coleccionan",
       "fewerShort": "<{threshold}",
       "appearsInLists": "{count, plural, one {Aparece en # lista} other {Aparece en # listas}}"
     },
@@ -578,8 +575,6 @@
     },
     "tracks": {
       "heading": "Canciones",
-      "shownEdition": "Edición mostrada: {edition}",
-      "seeEditions": "Ver ediciones",
       "discSummary": "{tracks, plural, one {# pista} other {# pistas}} · {duration}",
       "total": "{tracks, plural, one {# pista} other {# pistas}}",
       "versionOf": "versión de {title}",
@@ -705,7 +700,11 @@
       },
       "detailScale": "{score}/100",
       "genres": "Géneros",
-      "voteGenres": "Votar géneros"
+      "voteGenres": "Votar géneros",
+      "reviewNone": "Sin reseña",
+      "listensEmpty": "Sin escuchas",
+      "collectionNone": "No está en tu colección",
+      "listsLabel": "Listas"
     },
     "reviews": {
       "heading": "Reseñas",
