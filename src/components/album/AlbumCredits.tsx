@@ -15,6 +15,8 @@ import type {
   TrackCreditPerson,
 } from "@/services/catalog/personnel-levels";
 import { compactTracks, formatRoles, messageKey, type TrackPosition } from "./credit-roles";
+import { SEGMENT_GROUP, SEGMENT_OPTION } from "@/components/ui/segmented";
+import { Chevron } from "@/components/ui/Chevron";
 
 // Pestaña Créditos del álbum (openspec: redesign-album-page, tarea 8.1; compactada en
 // compact-album-credits; vista por canción en album-credits-by-song). Dos vistas elegibles
@@ -176,7 +178,7 @@ function CreditRow({
             <details className="group/roles inline">
               <summary
                 aria-label={t("moreRolesLabel", { count: hidden.length })}
-                className="ml-1 inline cursor-pointer list-none text-amber hover:underline group-open/roles:hidden [&::-webkit-details-marker]:hidden"
+                className="ml-1 inline cursor-pointer list-none text-paper-muted hover:text-amber hover:underline group-open/roles:hidden [&::-webkit-details-marker]:hidden"
               >
                 {t("moreRoles", { count: hidden.length })}
               </summary>
@@ -274,8 +276,8 @@ function CollapsibleLevel({
   return (
     <details className="group/level">
       <summary className="flex cursor-pointer list-none flex-wrap items-baseline gap-x-3 px-2 py-2.5 transition-colors hover:bg-ink-surface [&::-webkit-details-marker]:hidden">
-        <span aria-hidden="true" className="inline-block w-3 text-sm text-amber transition-transform group-open/level:rotate-90">
-          ›
+        <span className="inline-flex w-3 self-center text-paper-muted [&>svg]:-rotate-90 group-open/level:[&>svg]:rotate-0">
+          <Chevron direction="down" />
         </span>
         <h3 id={`credits-${level}`} className="inline font-data text-xs uppercase tracking-wider text-paper">
           {t(`levels.${level}`)}
@@ -478,13 +480,13 @@ function ViewSwitch({ view, releaseGroupId }: { view: CreditsView; releaseGroupI
       href={href}
       scroll={false}
       aria-current={view === value ? "page" : undefined}
-      className="rounded px-3 py-1.5 font-data text-xs text-paper-muted transition-colors hover:text-paper aria-[current=page]:bg-amber/15 aria-[current=page]:text-amber"
+      className={SEGMENT_OPTION}
     >
       {label}
     </Link>
   );
   return (
-    <nav aria-label={t("viewLabel")} className="inline-flex self-start rounded border border-ink-border bg-ink-surface p-0.5">
+    <nav aria-label={t("viewLabel")} className={SEGMENT_GROUP}>
       {option("people", base, t("viewPeople"))}
       {option("songs", `${base}?view=songs`, t("viewSongs"))}
     </nav>

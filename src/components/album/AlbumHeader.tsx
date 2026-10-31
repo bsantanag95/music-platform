@@ -9,6 +9,7 @@ import {
   type ThresholdedCount,
 } from "@/services/catalog/album-community-shared";
 import { formatDuration, formatReleaseDate, formatStars, isUpcomingRelease, summarizeDurations } from "./album-format";
+import { SECONDARY_LINK } from "@/components/ui/segmented";
 
 // Cabecera de la página de álbum (openspec: redesign-album-page): identidad, ficha técnica
 // y bloque de comunidad. Componentes sin estado: se renderizan en el servidor y se testean
@@ -119,7 +120,7 @@ function FactRows({
           {editionsAvailable && (
             <>
               {" · "}
-              <Link href={`${albumHref(null, "", releaseGroupId)}/editions`} className="text-amber hover:underline">
+              <Link href={`${albumHref(null, "", releaseGroupId)}/editions`} className={SECONDARY_LINK}>
                 {t("seeEditions")}
               </Link>
             </>
@@ -266,7 +267,7 @@ export function CommunityStats({ stats, listsHref }: CommunityStatsProps) {
         />
       </div>
       {stats.listCount > 0 && (
-        <Link href={listsHref} className="self-start font-data text-xs text-amber hover:underline">
+        <Link href={listsHref} className={`self-start font-data text-xs ${SECONDARY_LINK}`}>
           {t("appearsInLists", { count: stats.listCount })} →
         </Link>
       )}

@@ -574,8 +574,7 @@
       "songs": "Songs",
       "credits": "Credits",
       "editions": "Editions",
-      "reviews": "Reviews",
-      "reviewsCount": "Reviews ({count})"
+      "reviews": "Reviews"
     },
     "tracks": {
       "heading": "Songs",

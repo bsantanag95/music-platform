@@ -181,21 +181,25 @@ async function AlbumLayout({ children, modal, params }: AlbumLayoutProps) {
         </div>
       </header>
 
-      <div className="flex flex-col gap-6">
+      {/* Alturas de las barras fijas: el encabezado del sitio y las pestañas, las mismas que en artista
+          (openspec: refine-album-page-phase1, D1). */}
+      <div className="flex flex-col gap-6 [--album-tabs-h:2.375rem] [--site-header-h:3.625rem]">
         <AlbumTabs releaseGroupId={releaseGroupId} available={availableTabs} reviewCount={stats.reviewCount} />
         {children}
       </div>
 
       {strip && detail.primaryArtist && <DiscographyStrip artistName={detail.primaryArtist.name} strip={strip} authenticated={userId !== null} />}
 
-      <Comments
-        target="release-group"
-        targetId={releaseGroupId}
-        initial={comments}
-        authenticated={Boolean(userId)}
-        userId={userId ?? undefined}
-        canModerate={canModerate}
-      />
+      <div className="w-full max-w-3xl">
+        <Comments
+          target="release-group"
+          targetId={releaseGroupId}
+          initial={comments}
+          authenticated={Boolean(userId)}
+          userId={userId ?? undefined}
+          canModerate={canModerate}
+        />
+      </div>
 
       {modal}
     </main>

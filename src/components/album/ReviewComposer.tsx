@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { SubmitEventHandler } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
+import { SECONDARY_LINK } from "@/components/ui/segmented";
 import { reviewHref } from "@/lib/catalog-links";
 import { ApiError } from "@/lib/api/client";
 import { deleteReview, saveReview, updateReview } from "@/lib/api/social";
@@ -93,7 +94,7 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
   if (!authenticated) {
     return (
       <p className="font-body text-paper-muted">
-        <Link href="/auth/login" className="text-amber underline">
+        <Link href="/auth/login" className={SECONDARY_LINK}>
           {t("loginToReview")}
         </Link>
       </p>
@@ -156,10 +157,10 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
           {review.title && <p className="font-display text-paper">{review.title}</p>}
           <p className="line-clamp-4 whitespace-pre-wrap font-body text-sm text-paper">{review.body}</p>
           <div className="flex gap-3">
-            <Link href={reviewHref(review.user.username, albumTitle ?? "", review.id)} className="font-data text-xs text-amber underline">
+            <Link href={reviewHref(review.user.username, albumTitle ?? "", review.id)} className={`font-data text-xs ${SECONDARY_LINK}`}>
               {t("reviewShowMore")}
             </Link>
-            <button type="button" onClick={() => setEditing(true)} className="font-data text-xs text-amber underline">
+            <button type="button" onClick={() => setEditing(true)} className={`font-data text-xs ${SECONDARY_LINK}`}>
               {t("edit")}
             </button>
             <button

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { albumHref } from "@/lib/catalog-links";
 import { musicBrainzReleaseUrl } from "@/lib/site-links";
+import { SECONDARY_LINK, SEGMENT_GROUP, SEGMENT_OPTION } from "@/components/ui/segmented";
 
 // Pestaña Ediciones del álbum (openspec: redesign-album-page, tarea 8.3): tabla de todas las
 // ediciones con filtro por formato y solo las oficiales por defecto. Las ediciones no tienen
@@ -68,17 +69,14 @@ export function EditionsTable({ releaseGroupId, editions, representativeMbid }: 
 
   return (
     <section aria-labelledby="editions-heading" className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="editions-heading" className="font-display text-xl text-paper">
-          {t("heading")}
-        </h2>
-        <p className="font-data text-xs text-paper-muted">
-          {t("summary", { total: editions.length, official: official.length })}
-        </p>
-      </div>
+      {/* La pestaña activa ya dice "Ediciones": el título queda para lectores de pantalla y la primera fila es la
+          barra de filtros (openspec: refine-album-page-phase1). */}
+      <h2 id="editions-heading" className="sr-only">
+        {t("heading")}
+      </h2>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <div role="group" aria-label={t("formatFilter")} className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div role="group" aria-label={t("formatFilter")} className={SEGMENT_GROUP}>
           {(["all", ...families] as const).map((option) => (
             <button
               key={option}
@@ -88,15 +86,16 @@ export function EditionsTable({ releaseGroupId, editions, representativeMbid }: 
                 setFamily(option);
                 setVisible(PAGE);
               }}
-              className={`rounded border px-2 py-0.5 font-data text-xs ${
-                family === option ? "border-amber text-paper" : "border-ink-border text-paper-muted hover:text-paper"
-              }`}
+              className={SEGMENT_OPTION}
             >
               {option === "all" ? t("allFormats") : t(`families.${option}`)}
             </button>
           ))}
         </div>
-        <label className="ml-auto flex items-center gap-2 font-data text-xs text-paper-muted">
+        <p className="font-data text-xs text-paper-muted">
+          {t("summary", { total: editions.length, official: official.length })}
+        </p>
+        <label className="flex items-center gap-2 font-data text-xs text-paper-muted sm:ml-auto">
           <input
             type="checkbox"
             checked={includeUnofficial}
@@ -151,7 +150,7 @@ export function EditionsTable({ releaseGroupId, editions, representativeMbid }: 
                       {edition.variant && (
                         <Link
                           href={`${albumHref(null, "", releaseGroupId)}#variant-${edition.variant.editionId}`}
-                          className="ml-2 text-amber hover:underline"
+                          className={`ml-2 ${SECONDARY_LINK}`}
                         >
                           {t("extra", { count: edition.variant.extraTracks })}
                         </Link>

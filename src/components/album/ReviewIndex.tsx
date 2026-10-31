@@ -7,6 +7,7 @@ import { albumHref, reviewHref } from "@/lib/catalog-links";
 import { getReviews } from "@/lib/api/social";
 import { REVIEW_SORTS, type ReviewSort, type ReviewsResponse } from "@/lib/api/schemas";
 import { StarRatingDisplay } from "@/components/social/StarRatingDisplay";
+import { SEGMENT_GROUP, SEGMENT_OPTION } from "@/components/ui/segmented";
 import { formatStars, reviewHeadline } from "./album-format";
 
 // Índice de reseñas de la pestaña Reseñas (openspec: redesign-album-page, patrón
@@ -65,25 +66,26 @@ export function ReviewIndex({ releaseGroupId, initial, sort, albumTitle, albumAr
 
   return (
     <section aria-labelledby="review-index-heading" className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="review-index-heading" className="font-display text-xl text-paper">
-          {t("heading")}
-        </h2>
-        <nav aria-label={t("sortLabel")} className="flex flex-wrap items-baseline gap-3 font-data text-xs">
-          <span className="text-paper-muted">{t("sortLabel")}:</span>
+      {/* La pestaña activa ya dice "Reseñas"; el orden solo aparece cuando hay algo que ordenar
+          (openspec: refine-album-page-phase1). */}
+      <h2 id="review-index-heading" className="sr-only">
+        {t("heading")}
+      </h2>
+      {reviews.length > 1 && (
+        <nav aria-label={t("sortLabel")} className={SEGMENT_GROUP}>
           {REVIEW_SORTS.map((option) => (
             <Link
               key={option}
               href={`${albumHref(albumArtistName ?? null, albumTitle ?? "", releaseGroupId)}/reviews${option === "recent" ? "" : `?sort=${option}`}`}
               scroll={false}
               aria-current={option === sort ? "true" : undefined}
-              className={option === sort ? "text-paper underline" : "text-amber hover:underline"}
+              className={SEGMENT_OPTION}
             >
               {t(`sort.${option}`)}
             </Link>
           ))}
         </nav>
-      </div>
+      )}
 
       {reviews.length === 0 ? (
         <p className="font-body text-paper-muted">{t("empty")}</p>

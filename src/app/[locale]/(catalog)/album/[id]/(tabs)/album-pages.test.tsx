@@ -249,7 +249,7 @@ describe("layout de la página de álbum", () => {
     await renderLayout();
     const songs = screen.getByRole("link", { name: catalogEs.album.tabs.songs });
     expect(songs).toHaveAttribute("href", albumHref(null, "", VALID_UUID));
-    expect(screen.getByRole("link", { name: "Reseñas (17)" })).toHaveAttribute("href", `${albumHref(null, "", VALID_UUID)}/reviews`);
+    expect(screen.getByRole("link", { name: "Reseñas 17" })).toHaveAttribute("href", `${albumHref(null, "", VALID_UUID)}/reviews`);
     expect(screen.queryByRole("link", { name: catalogEs.album.tabs.credits })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: catalogEs.album.tabs.editions })).not.toBeInTheDocument();
   });
