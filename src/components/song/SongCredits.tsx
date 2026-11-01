@@ -2,6 +2,7 @@ import { Fragment } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { SECONDARY_LINK } from "@/components/ui/segmented";
+import { Chevron } from "@/components/ui/Chevron";
 import { albumHref, artistHref } from "@/lib/catalog-links";
 import { ROLES_VISIBLE, useRoleFormatter } from "@/components/album/AlbumCredits";
 import { SongwriterNames, songwritersShareRoles } from "@/components/catalog/SongwriterNames";
@@ -41,6 +42,17 @@ export function SongComposition({ credits }: { credits: RecordingCredits }) {
 }
 
 const RECORDING_KINDS = ["performers", "production", "sound", "other"] as const satisfies TrackCreditKind[];
+
+/**
+ * Un grupo con más personas se pliega con un resumen, como los niveles de Créditos del álbum (openspec:
+ * refine-song-page-phase3, D1). Intérpretes nunca se pliega.
+ */
+export const GROUP_OPEN_MAX = 6;
+/** Nombres que nombra el resumen de un grupo plegado ("10 · A, B, C y 7 más"). */
+const SUMMARY_NAMES = 3;
+
+/** Chevron de un desplegable: a la derecha cerrado, abajo abierto (`group` es el nombre del grupo de Tailwind). */
+const chevronSlot = "inline-flex w-3 self-center [&>svg]:-rotate-90";
 const REST_KINDS = ["production", "sound", "other"] as const satisfies TrackCreditKind[];
 
 /** El bloque de créditos aparece con créditos propios o con enlace a los del disco. */
@@ -114,7 +126,10 @@ function CreditGroup({ kind, credits }: { kind: TrackCreditKind; credits: Record
         <PeopleList kind={kind} people={main} />
         {assistants.length > 0 && (
           <details className="group/assistants">
-            <summary className="cursor-pointer list-none py-1.5 font-data text-xs text-paper-muted hover:text-amber hover:underline [&::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer list-none items-baseline gap-x-1.5 py-1.5 font-data text-xs text-paper-muted hover:text-amber [&::-webkit-details-marker]:hidden">
+              <span className={`${chevronSlot} group-open/assistants:[&>svg]:rotate-0`}>
+                <Chevron direction="down" className="size-3" />
+              </span>
               <span className="group-open/assistants:hidden">{tSong("assistants", { count: assistants.length })}</span>
               <span className="hidden group-open/assistants:inline">{tSong("hideAssistants")}</span>
             </summary>
@@ -127,9 +142,31 @@ function CreditGroup({ kind, credits }: { kind: TrackCreditKind; credits: Record
     body = <PeopleList kind={kind} people={people} />;
   }
 
+  const heading = t(`groups.${kind}`);
+
+  // Grupo largo: plegado con la cantidad y los primeros nombres (en Sonido, en el orden por rol y sin asistentes).
+  if (kind !== "performers" && people.length > GROUP_OPEN_MAX) {
+    const named = (kind === "sound" ? orderSound(people).main : people).slice(0, SUMMARY_NAMES).map((person) => person.name);
+    const summary = t("levelSummaryMore", { count: people.length, names: named.join(", "), rest: people.length - named.length });
+    return (
+      <section aria-label={heading} className="flex min-w-0 flex-col">
+        <details className="group/level">
+          <summary className="flex cursor-pointer list-none flex-wrap items-baseline gap-x-2 border-b border-ink-border pb-1 font-data text-xs text-paper-muted transition-colors hover:text-paper [&::-webkit-details-marker]:hidden">
+            <span className={`${chevronSlot} group-open/level:[&>svg]:rotate-0`}>
+              <Chevron direction="down" className="size-3" />
+            </span>
+            <h3 className="inline">{heading}</h3>
+            <span className="group-open/level:hidden">· {summary}</span>
+          </summary>
+          {body}
+        </details>
+      </section>
+    );
+  }
+
   return (
-    <section aria-label={t(`groups.${kind}`)} className="flex min-w-0 flex-col">
-      <h3 className="border-b border-ink-border pb-1 font-data text-xs text-paper-muted">{t(`groups.${kind}`)}</h3>
+    <section aria-label={heading} className="flex min-w-0 flex-col">
+      <h3 className="border-b border-ink-border pb-1 font-data text-xs text-paper-muted">{heading}</h3>
       {body}
     </section>
   );
