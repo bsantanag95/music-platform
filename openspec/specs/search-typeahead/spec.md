@@ -90,7 +90,8 @@ puente SHALL calcularse solo con datos locales.
 
 Debajo de las sugerencias, el desplegable SHALL ofrecer "Ver todos los resultados de «<texto>»
 en <tipo>" y accesos "Buscar en otro tipo" para los demás tipos, que cambian el tipo del campo
-conservando el texto. Si no hay sugerencias locales, el desplegable SHALL mostrar igualmente
+conservando el texto. En los tipos Artistas, Álbumes y Canciones SHALL ofrecer además **Búsqueda avanzada**,
+que navega a `/search?type=<tipo>&q=<texto>&filters=1` (con el panel de filtros abierto). Si no hay sugerencias locales, el desplegable SHALL mostrar igualmente
 estas acciones.
 
 #### Scenario: Sin sugerencias locales
@@ -102,6 +103,10 @@ estas acciones.
 - **WHEN** una persona pulsa "Álbumes" en "Buscar en otro tipo"
 - **THEN** el selector pasa a Álbumes, el texto se conserva y las sugerencias se recalculan para
   álbumes
+
+#### Scenario: Abrir la búsqueda avanzada desde el Header
+- **WHEN** una persona escribe `maiden` en Álbumes en el Header y elige **Búsqueda avanzada**
+- **THEN** la aplicación navega a `/search?type=album&q=maiden&filters=1` con el panel de filtros abierto
 
 ### Requirement: Navegación desde una sugerencia
 
