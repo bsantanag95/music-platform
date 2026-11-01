@@ -401,6 +401,57 @@ describe("página de canción", () => {
     expect(within(sound).getByText(song.hideAssistants)).toBeInTheDocument();
   });
 
+  it("un grupo de más de 6 personas se pliega con resumen; Intérpretes y los grupos cortos quedan abiertos", async () => {
+    const person = (id: string, relationType: string) => ({
+      artistId: id,
+      name: `Persona ${id}`,
+      creditedAs: null,
+      roles: [{ relationType, attributes: [] }],
+    });
+    const many = (prefix: string, n: number, relationType: string) =>
+      Array.from({ length: n }, (_, i) => person(`${prefix}${i + 1}`, relationType));
+    mocks.loadRecordingCredits.mockResolvedValue({
+      ...CREDITS,
+      groups: {
+        ...CREDITS.groups,
+        performers: many("p", 8, "vocal"),
+        production: many("pr", 3, "producer"),
+        sound: [...many("s", 7, "mix"), { ...person("a1", "engineer"), roles: [{ relationType: "engineer", attributes: ["assistant"] }] }],
+      },
+    });
+    await renderPage();
+    const credits = screen.getByRole("region", { name: song.recordingCredits });
+    const groups = catalogEs.album.credits.groups;
+
+    // Sonido (8 con el asistente): plegado, con la cantidad y los tres primeros nombres.
+    const sound = within(credits).getByRole("region", { name: groups.sound });
+    const soundDetails = sound.querySelector("details")!;
+    expect(soundDetails).not.toHaveAttribute("open");
+    expect(within(sound).getByText("· 8 · Persona s1, Persona s2, Persona s3 y 5 más")).toBeInTheDocument();
+    // Las filas siguen dentro, a un clic.
+    expect(within(soundDetails).getByRole("link", { name: "Persona s7" })).toBeInTheDocument();
+
+    // Producción (3) e Intérpretes (8) se ven abiertos, sin <details> de grupo.
+    const production = within(credits).getByRole("region", { name: groups.production });
+    expect(production.querySelector("details")).toBeNull();
+    const performers = within(credits).getByRole("region", { name: groups.performers });
+    expect(performers.querySelector("details")).toBeNull();
+    expect(within(performers).getAllByRole("link")).toHaveLength(8);
+  });
+
+  it("con exactamente 6 personas el grupo sigue abierto", async () => {
+    const people = Array.from({ length: 6 }, (_, i) => ({
+      artistId: `pr${i}`,
+      name: `Productor ${i}`,
+      creditedAs: null,
+      roles: [{ relationType: "producer", attributes: [] }],
+    }));
+    mocks.loadRecordingCredits.mockResolvedValue({ ...CREDITS, groups: { ...CREDITS.groups, production: people } });
+    await renderPage();
+    const production = screen.getByRole("region", { name: catalogEs.album.credits.groups.production });
+    expect(production.querySelector("details")).toBeNull();
+  });
+
   it("los roles desplegados se vuelven a contraer con 'ocultar'", async () => {
     const role = (a: string) => ({ relationType: "instrument", attributes: [a] });
     mocks.loadRecordingCredits.mockResolvedValue({
