@@ -66,14 +66,14 @@ function Row({ label, children }: { label: ReactNode; children: ReactNode }) {
 
 // Acciones de texto en gris, como en el panel del artista: el ámbar queda para los conmutadores activos y las
 // estrellas (openspec: refine-album-page-phase2, D3).
-const linkButton =
+export const linkButton =
   "font-data text-xs text-paper-muted underline-offset-2 hover:text-paper hover:underline disabled:cursor-not-allowed disabled:opacity-50";
 
 /**
  * Fila del panel con el patrón del artista: la etiqueta y su acción en la primera línea, el estado debajo. La Nota
  * sigue en `Row` porque su control (las estrellas) es el propio estado.
  */
-function Field({ label, action, children }: { label: string; action?: ReactNode; children?: ReactNode }) {
+export function Field({ label, action, children }: { label: string; action?: ReactNode; children?: ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
       <div className="flex items-baseline justify-between gap-3">
@@ -86,7 +86,7 @@ function Field({ label, action, children }: { label: string; action?: ReactNode;
 }
 
 /** Estado de una fila: atenuado cuando dice que no hay nada ("Sin escuchas"). */
-function Value({ empty, children }: { empty: boolean; children: ReactNode }) {
+export function Value({ empty, children }: { empty: boolean; children: ReactNode }) {
   return <p className={`font-body text-sm ${empty ? "text-paper-muted" : "text-paper"}`}>{children}</p>;
 }
 

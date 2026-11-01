@@ -10,6 +10,7 @@ import {
 } from "@/services/catalog/album-community-shared";
 import { formatDuration, formatReleaseDate, formatStars, isUpcomingRelease, summarizeDurations } from "./album-format";
 import { SECONDARY_LINK } from "@/components/ui/segmented";
+import { CommunityStrip } from "@/components/catalog/CommunityStrip";
 
 // Cabecera de la página de álbum (openspec: redesign-album-page): identidad, ficha técnica
 // y bloque de comunidad. Componentes sin estado: se renderizan en el servidor y se testean
@@ -219,20 +220,6 @@ interface CommunityStatsProps {
   listsHref: string;
 }
 
-/** Celda de la franja de comunidad: la cifra arriba y la etiqueta debajo, como en el artista (`ArtistCommunity`). */
-function Stat({ label, value, detail }: { label: string; value: React.ReactNode; detail?: React.ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-0.5 px-3 py-2.5 sm:px-4">
-      {/* La cifra va primero a la vista; en el DOM el `dt` sigue antes del `dd`, como pide `<dl>`. */}
-      <dt className="order-2 font-data text-xs text-paper-muted">{label}</dt>
-      <dd className="order-1 font-display text-xl leading-tight text-paper tabular-nums">{value}</dd>
-      {detail ? <dd className="order-3 font-data text-xs text-paper-muted">{detail}</dd> : null}
-    </div>
-  );
-}
-
-const STRIP_COLUMNS = { 2: "grid-cols-2", 3: "grid-cols-3" } as const;
-
 /**
  * Bloque de comunidad (openspec: refine-album-page-phase2, D1): una franja dividida como la del artista, en cualquier
  * ancho. La Media solo existe con media (umbral de 5) y los detalles en cero se omiten: con poca actividad, tres
@@ -249,23 +236,25 @@ export function CommunityStats({ stats, listsHref }: CommunityStatsProps) {
 
   return (
     <section aria-label={t("heading")} className="flex flex-col gap-3">
-      <dl
-        className={`grid ${STRIP_COLUMNS[hasAverage ? 3 : 2]} divide-x divide-ink-border rounded border border-ink-border bg-ink-surface`}
-      >
-        {hasAverage && (
-          <Stat label={t("average")} value={t("averageValue", { stars: formatStars(ratings.averageStars ?? 0, locale) })} />
-        )}
-        <Stat
-          label={t("ratings")}
-          value={number(ratings.count)}
-          detail={stats.reviewCount > 0 ? t("reviewCount", { count: stats.reviewCount }) : undefined}
-        />
-        <Stat
-          label={t("collectors")}
-          value={<ThresholdedTileValue count={stats.collectors} />}
-          detail={hasSeekers ? t("seekers", { value: thresholded(stats.seekers, true) }) : undefined}
-        />
-      </dl>
+      <CommunityStrip
+        cells={[
+          ...(hasAverage
+            ? [{ key: "average", label: t("average"), value: t("averageValue", { stars: formatStars(ratings.averageStars ?? 0, locale) }) }]
+            : []),
+          {
+            key: "ratings",
+            label: t("ratings"),
+            value: number(ratings.count),
+            detail: stats.reviewCount > 0 ? t("reviewCount", { count: stats.reviewCount }) : undefined,
+          },
+          {
+            key: "collectors",
+            label: t("collectors"),
+            value: <ThresholdedTileValue count={stats.collectors} />,
+            detail: hasSeekers ? t("seekers", { value: thresholded(stats.seekers, true) }) : undefined,
+          },
+        ]}
+      />
       {stats.listCount > 0 && (
         <Link href={listsHref} className={`self-start font-data text-xs ${SECONDARY_LINK}`}>
           {t("appearsInLists", { count: stats.listCount })} →

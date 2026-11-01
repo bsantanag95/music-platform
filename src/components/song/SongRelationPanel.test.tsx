@@ -74,7 +74,8 @@ describe("SongRelationPanel", () => {
   it("sin interacción: estrellas visibles de entrada, escuchas, favorita y listas; sin reseña ni Pendiente", () => {
     renderWithIntl(<SongRelationPanel recordingId={REC} state={makeState()} />);
     expect(screen.getAllByRole("radio")).toHaveLength(10);
-    expect(screen.getByText(relation.listensNone)).toBeInTheDocument();
+    expect(screen.getByText(relation.listensEmpty)).toBeInTheDocument();
+    expect(screen.getByText(relation.listsLabel)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: song.logListen })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: song.favorite })).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByText("En ninguna de tus listas")).toBeInTheDocument();
@@ -106,18 +107,19 @@ describe("SongRelationPanel", () => {
     expect(screen.getByRole("button", { name: /Puntuación detallada 88/ })).toHaveTextContent("88/100");
   });
 
-  it("sin escuchas dice 'Ninguna' y no ofrece el diario", () => {
+  it("sin escuchas dice 'Sin escuchas', atenuado, y no ofrece el diario", () => {
     renderWithIntl(<SongRelationPanel recordingId={REC} state={makeState()} />);
-    expect(screen.getByText(relation.listensNone)).toBeInTheDocument();
+    expect(screen.getByText(relation.listensEmpty)).toHaveClass("text-paper-muted");
     expect(screen.queryByRole("link", { name: new RegExp(song.diaryLink) })).not.toBeInTheDocument();
   });
 
-  it("Favorita es una fila compacta con un conmutador", () => {
+  it("Favorita es el conmutador de arriba, con su etiqueta, como en el álbum", () => {
     renderWithIntl(<SongRelationPanel recordingId={REC} state={makeState({ favorited: true })} />);
     const toggle = screen.getByRole("button", { name: song.favorite });
     expect(toggle).toHaveAttribute("aria-pressed", "true");
-    expect(toggle).not.toHaveTextContent(song.favorite);
-    expect(screen.getByText(song.favorite)).toBeInTheDocument();
+    expect(toggle).toHaveTextContent(song.favorite);
+    // Va antes que las estrellas de la Nota.
+    expect(toggle.compareDocumentPosition(screen.getAllByRole("radio")[0]!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("valorar guarda la nota de la grabación y actualiza sin recargar", async () => {

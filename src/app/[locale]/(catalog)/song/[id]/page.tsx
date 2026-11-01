@@ -107,7 +107,7 @@ async function SongPage({ params }: SongPageProps) {
       coverLabel={t("album.coverLabel")}
       coverPlaceholderAlt={t("album.coverPlaceholderAlt")}
       coverFailed={t("album.coverFailed")}
-      className="size-32 sm:size-[160px] lg:size-[200px]"
+      className="size-24 sm:size-[160px] lg:size-[200px]"
     />
   );
 
@@ -127,7 +127,7 @@ async function SongPage({ params }: SongPageProps) {
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:py-12">
       <Breadcrumbs items={breadcrumbItems} />
 
-      <header className="grid grid-cols-1 gap-5 [grid-template-areas:'cover'_'identity'_'community'_'panel'_'facts'] sm:grid-cols-[160px_minmax(0,1fr)] sm:[grid-template-areas:'cover_identity'_'cover_facts'_'community_community'_'panel_panel'] lg:grid-cols-[200px_minmax(0,1fr)_18rem] lg:grid-rows-[auto_auto_auto_1fr] lg:[grid-template-areas:'cover_identity_panel'_'cover_facts_panel'_'cover_community_panel'_'._._panel']">
+      <header className="grid grid-cols-[6rem_minmax(0,1fr)] gap-x-4 gap-y-5 [grid-template-areas:'cover_identity'_'facts_facts'_'community_community'_'panel_panel'] sm:gap-x-5 sm:grid-cols-[160px_minmax(0,1fr)] sm:[grid-template-areas:'cover_identity'_'cover_facts'_'community_community'_'panel_panel'] lg:grid-cols-[200px_minmax(0,1fr)_18rem] lg:grid-rows-[auto_auto_auto_1fr] lg:[grid-template-areas:'cover_identity_panel'_'cover_facts_panel'_'cover_community_panel'_'._._panel']">
         <div className="[grid-area:cover]">
           {detail.principalDisc ? (
             // La carátula es del disco principal: lleva a él (openspec: polish-song-header).
