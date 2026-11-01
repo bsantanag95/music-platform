@@ -193,14 +193,17 @@ async function SongPage({ params }: SongPageProps) {
 
       {versions && <SongVersions versions={versions} songTitle={detail.recording.title} songArtistIds={primaryArtists.map((artist) => artist.artistId)} />}
 
-      <Comments
-        target="recording"
-        targetId={recordingId}
-        initial={comments}
-        authenticated={Boolean(userId)}
-        userId={userId ?? undefined}
-        canModerate={canModerate}
-      />
+      {/* Ancho de lectura, como en álbum y artista (openspec: refine-song-page-phase1). */}
+      <div className="w-full max-w-3xl">
+        <Comments
+          target="recording"
+          targetId={recordingId}
+          initial={comments}
+          authenticated={Boolean(userId)}
+          userId={userId ?? undefined}
+          canModerate={canModerate}
+        />
+      </div>
     </main>
   );
 }

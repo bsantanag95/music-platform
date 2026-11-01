@@ -279,8 +279,10 @@ describe("página de canción", () => {
     await renderPage();
     const strip = screen.getByRole("navigation", { name: song.strip.label });
     expect(within(strip).getByText("· 10 de 16")).toBeInTheDocument();
-    expect(within(strip).getByText("← Anterior")).toBeInTheDocument();
-    expect(within(strip).getByText("Siguiente →")).toBeInTheDocument();
+    // Chevron SVG común, no flechas tipográficas (refine-song-page-phase1).
+    expect(within(strip).getByText(song.strip.previousLabel)).toBeInTheDocument();
+    expect(within(strip).getByText(song.strip.nextLabel)).toBeInTheDocument();
+    expect(within(strip).queryByText(/[←→]/)).not.toBeInTheDocument();
     expect(within(strip).getByRole("link", { name: "Pista anterior: 9. Double Talkin' Jive" })).toHaveAttribute("href", "/song/prev");
     expect(within(strip).getByRole("link", { name: "Pista siguiente: 11. The Garden" })).toHaveAttribute("href", "/song/next");
   });
@@ -440,8 +442,8 @@ describe("página de canción", () => {
     const section = screen.getByRole("region", { name: song.versions.heading });
     const tabs = within(section).getAllByRole("tab");
     expect(tabs.map((tab) => tab.textContent)).toEqual([
-      `${song.versions.groups.covers} · 1`,
-      `${song.versions.groups.live} · 1`,
+      `${song.versions.groups.covers} 1`,
+      `${song.versions.groups.live} 1`,
     ]);
     expect(tabs[0]).toHaveAttribute("aria-selected", "true");
     // Otros artistas: año, artista, disco y la versión con sus atributos extra.
@@ -453,6 +455,18 @@ describe("página de canción", () => {
     expect(tabs[1]).toHaveAttribute("aria-selected", "true");
     expect(within(section).queryByRole("link", { name: "Rockabye Baby!" })).not.toBeInTheDocument();
     expect(within(section).getByRole("link", { name: "Live Era '87–'93" })).toHaveAttribute("href", "/album/era");
+  });
+
+  it("una versión del artista comodín de MusicBrainz dice «Artista desconocido» sin enlace", async () => {
+    mocks.loadVersions.mockResolvedValue({
+      ...VERSIONS,
+      covers: [{ ...VERSIONS.covers[0]!, artist: { id: "unknown-id", name: "[unknown]" } }],
+    });
+    await renderPage();
+    const section = screen.getByRole("region", { name: song.versions.heading });
+    expect(within(section).getByText(song.versions.unknownArtist)).toBeInTheDocument();
+    expect(within(section).queryByText("[unknown]")).not.toBeInTheDocument();
+    expect(within(section).queryByRole("link", { name: song.versions.unknownArtist })).not.toBeInTheDocument();
   });
 
   it("otras versiones propias: una fila por disco con sus grabaciones como variantes", async () => {

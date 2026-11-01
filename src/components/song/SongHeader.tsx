@@ -1,6 +1,7 @@
 import { Fragment, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { SECONDARY_LINK } from "@/components/ui/segmented";
 import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 import { StatTile, ThresholdedTileValue } from "@/components/album/AlbumHeader";
 import { formatDuration, formatStars } from "@/components/album/album-format";
@@ -78,7 +79,7 @@ export function SongFacts({ durationSec, songwriters, firstAppearance, principal
       : null;
   const originalLink = (chunks: ReactNode) =>
     versionLine ? (
-      <Link href={songHref(versionLine.original.artistName, versionLine.original.title, versionLine.original.recordingId)} className="text-amber hover:underline">
+      <Link href={songHref(versionLine.original.artistName, versionLine.original.title, versionLine.original.recordingId)} className={SECONDARY_LINK}>
         {chunks}
       </Link>
     ) : null;
@@ -93,7 +94,7 @@ export function SongFacts({ durationSec, songwriters, firstAppearance, principal
       )}
       {firstAppearance && (
         <Fact label={t("firstAppearance")}>
-          <Link href={albumHref(null, firstAppearance.title, firstAppearance.releaseGroupId)} className="text-amber hover:underline">
+          <Link href={albumHref(null, firstAppearance.title, firstAppearance.releaseGroupId)} className={SECONDARY_LINK}>
             {firstAppearance.title}
           </Link>
           {discType && <span className="text-paper-muted"> ({discType})</span>}
@@ -177,7 +178,7 @@ export function SongCommunity({ stats, listsHref }: SongCommunityProps) {
         </>
       )}
       {stats.listCount > 0 && (
-        <Link href={listsHref} className="self-start font-data text-xs text-amber hover:underline">
+        <Link href={listsHref} className={`self-start font-data text-xs ${SECONDARY_LINK}`}>
           {tAlbum("appearsInLists", { count: stats.listCount })} →
         </Link>
       )}
