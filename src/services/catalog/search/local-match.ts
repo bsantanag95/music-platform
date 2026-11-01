@@ -24,7 +24,7 @@ import {
   type ReleaseGroupRow,
 } from "@/db/schema";
 import type { ReleaseGroupCategoryValue } from "../ingest-release-group";
-import type { ArtistTypeFilter } from "./mb-query";
+import type { ArtistQueryFilters, ArtistTypeFilter, RecordingQueryFilters } from "./mb-query";
 import { escapeLike, matchTier, normalizeSearchText } from "./normalize";
 
 /** Filas candidatas que se piden a la base antes de ordenar y recortar en TS. */
@@ -51,20 +51,44 @@ export function rankByMatchTier<T>(rows: T[], name: (row: T) => string, text: st
     .map(({ row }) => row);
 }
 
-export interface LocalArtistOptions {
+/** Año de un extremo del rango, o NULL si la fecha no empieza por un año. */
+function yearOf(column: AnyColumn): SQL {
+  return sql`(CASE WHEN ${column} ~ '^[0-9]{4}' THEN substr(${column}, 1, 4)::int END)`;
+}
+
+/**
+ * Filtros de la búsqueda avanzada sobre la ficha del artista (openspec: add-advanced-search-phase1).
+ * Una fila sin el dato no coincide, igual que en MusicBrainz.
+ */
+function artistFilters({ country, beginFrom, beginTo, ended }: ArtistQueryFilters): SQL[] {
+  const filters: SQL[] = [];
+  if (country) filters.push(sql`${artist.country} = ${country}`);
+  if (beginFrom !== undefined) filters.push(sql`${yearOf(artist.lifeBegin)} >= ${beginFrom}`);
+  if (beginTo !== undefined) filters.push(sql`${yearOf(artist.lifeBegin)} <= ${beginTo}`);
+  if (ended !== undefined) {
+    filters.push(ended ? sql`${artist.lifeEnded} IS TRUE` : sql`${artist.lifeEnded} IS NOT TRUE`);
+  }
+  return filters;
+}
+
+export interface LocalArtistOptions extends ArtistQueryFilters {
   limit: number;
   artistType?: ArtistTypeFilter;
 }
 
 export async function matchLocalArtists(
   text: string,
-  { limit, artistType }: LocalArtistOptions,
+  { limit, artistType, ...filters }: LocalArtistOptions,
 ): Promise<ArtistRow[]> {
   const rows = await db
     .select()
     .from(artist)
     .where(
-      artistType ? and(fuzzyMatch(artist.name, text), eq(artist.type, artistType)) : fuzzyMatch(artist.name, text),
+      and(
+        fuzzyMatch(artist.name, text),
+        ...(artistType ? [eq(artist.type, artistType)] : []),
+        ...artistFilters(filters),
+      ),
     )
     .orderBy(bySimilarity(artist.name, text))
     .limit(CANDIDATE_POOL);
@@ -75,14 +99,45 @@ export interface LocalReleaseGroupOptions {
   limit: number;
   category?: ReleaseGroupCategoryValue;
   decade?: number;
+  /** Rango de años (búsqueda avanzada): reemplaza a la década. */
+  yearFrom?: number;
+  yearTo?: number;
+  /** Artista principal acreditado. */
+  artist?: string;
 }
 
-function releaseGroupFilters({ category, decade }: Omit<LocalReleaseGroupOptions, "limit">): SQL[] {
+/**
+ * Artista principal cuyo nombre contiene `name` como palabras completas: el mismo criterio que la
+ * frase `artist:"…"` de MusicBrainz ("maiden" → Iron Maiden; "queen" ≠ Queens of the Stone Age).
+ * Columnas como literales con alias propios: un fragmento suelto puede salir sin tabla, y la consulta
+ * de fuera ya une `credit` (releaseGroupsByArtistsAndTitle).
+ */
+function creditedArtistMatches(name: string): SQL {
+  return sql`EXISTS (
+    SELECT 1 FROM "credit" "rg_credit"
+    JOIN "artist" "rg_artist" ON "rg_artist"."id" = "rg_credit"."artist_id"
+    WHERE "rg_credit"."release_group_id" = "release_group"."id"
+      AND "rg_credit"."role" = 'primary'
+      AND (' ' || search_key("rg_artist"."name") || ' ') LIKE ('% ' || search_key(${name}) || ' %')
+  )`;
+}
+
+function releaseGroupFilters({
+  category,
+  decade,
+  yearFrom,
+  yearTo,
+  artist: artistName,
+}: Omit<LocalReleaseGroupOptions, "limit">): SQL[] {
   const filters: SQL[] = [];
   if (category) filters.push(sql`${releaseGroup.category} = ${category}`);
-  if (decade !== undefined) {
+  if (yearFrom !== undefined || yearTo !== undefined) {
+    if (yearFrom !== undefined) filters.push(sql`${releaseGroup.firstReleaseYear} >= ${yearFrom}`);
+    if (yearTo !== undefined) filters.push(sql`${releaseGroup.firstReleaseYear} <= ${yearTo}`);
+  } else if (decade !== undefined) {
     filters.push(sql`${releaseGroup.firstReleaseYear} BETWEEN ${decade} AND ${decade + 9}`);
   }
+  if (artistName) filters.push(creditedArtistMatches(artistName));
   return filters;
 }
 
@@ -108,11 +163,16 @@ export async function matchLocalRecordings(
   text: string,
   limit: number,
   pool: number = CANDIDATE_POOL,
+  { durMin, durMax }: RecordingQueryFilters = {},
 ): Promise<RecordingRow[]> {
+  // Duración (búsqueda avanzada): una grabación sin duración conocida no coincide.
+  const duration: SQL[] = [];
+  if (durMin !== undefined) duration.push(sql`${recording.durationSec} >= ${durMin}`);
+  if (durMax !== undefined) duration.push(sql`${recording.durationSec} <= ${durMax}`);
   const rows = await db
     .select()
     .from(recording)
-    .where(fuzzyMatch(recording.title, text))
+    .where(and(fuzzyMatch(recording.title, text), ...duration))
     .orderBy(bySimilarity(recording.title, text))
     .limit(pool);
   return rankByMatchTier(rows, (row) => row.title, text).slice(0, limit);

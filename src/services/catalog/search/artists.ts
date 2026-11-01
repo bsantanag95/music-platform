@@ -12,7 +12,7 @@ import type { MBArtistSearchItem } from "../../musicbrainz/types";
 import { upsertArtistStubsFromSearch } from "../ingest-artist";
 import { activityScores } from "./activity";
 import { matchLocalArtists } from "./local-match";
-import { artistQuery, type ArtistTypeFilter } from "./mb-query";
+import { artistQuery, type ArtistQueryFilters, type ArtistTypeFilter } from "./mb-query";
 import { isExactMatch, matchTier } from "./normalize";
 import { localOnlyIndex, sortByRank, type RankKey } from "./rank";
 import type { ArtistSearchResponse, ArtistSearchResult, CatalogArtistType } from "./types";
@@ -21,6 +21,8 @@ const LOCAL_LIMIT = 10;
 
 export interface ArtistSearchOptions {
   artistType?: ArtistTypeFilter;
+  /** País, inicio de actividad y estado (openspec: add-advanced-search-phase1). */
+  filters?: ArtistQueryFilters;
   /** Abandono de quien busca: descarta la request en cola y evita escribir stubs. */
   signal?: AbortSignal;
 }
@@ -60,15 +62,18 @@ function toResult(entry: Entry, query: string): ArtistSearchResult {
  */
 export async function searchArtists(
   query: string,
-  { artistType, signal }: ArtistSearchOptions = {},
+  { artistType, filters = {}, signal }: ArtistSearchOptions = {},
 ): Promise<ArtistSearchResponse> {
   const q = query.trim();
-  const localRows = await matchLocalArtists(q, { limit: LOCAL_LIMIT, artistType });
+  // Cada fuente filtra con el mismo criterio: lo local por SQL, lo remoto en la propia consulta.
+  // Un artista local sin el dato queda fuera de lo local, pero vuelve con los datos de MusicBrainz
+  // si su página remota lo trae (se fusiona por mbid más abajo).
+  const localRows = await matchLocalArtists(q, { limit: LOCAL_LIMIT, artistType, ...filters });
 
   let remote: MBArtistSearchItem[] = [];
   let remoteFailed = false;
   try {
-    remote = (await musicbrainz.searchArtist(artistQuery(q, artistType), { signal })).artists;
+    remote = (await musicbrainz.searchArtist(artistQuery(q, artistType, filters), { signal })).artists;
   } catch {
     remoteFailed = true;
   }
@@ -98,7 +103,7 @@ export async function searchArtists(
     return {
       row,
       disambiguation: row.disambiguation ?? remoteItem?.disambiguation ?? null,
-      country: remoteItem?.country ?? null,
+      country: row.country ?? remoteItem?.country ?? null,
       rank: {
         level: 0,
         activity: 0,
@@ -114,7 +119,7 @@ export async function searchArtists(
     entries.push({
       row,
       disambiguation: item.disambiguation ?? row.disambiguation ?? null,
-      country: item.country ?? null,
+      country: item.country ?? row.country ?? null,
       rank: { level: 0, activity: 0, group: 1, index },
     });
   });

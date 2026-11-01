@@ -8,6 +8,10 @@
 //     fecha completa: el rango compara como texto y "1979-05" > "1979");
 //   - `releasegroup:"…" AND artist:"…"` / `recording:"…" AND artist:"…"`
 //     resuelven el separador explícito "Artista - Título".
+//
+// Filtros de la búsqueda avanzada (openspec: add-advanced-search-phase1): `country:AR`,
+// `begin:[1980 TO 1989-12-31]` y `ended:true` en artistas; `firstreleasedate` y `artist:"…"` en
+// release-groups; `artist:"…"` y `dur:[0 TO 420000]` (ms) en recordings. Extremo abierto: `*`.
 
 import type { ReleaseGroupCategoryValue } from "../ingest-release-group";
 
@@ -25,9 +29,32 @@ export function escapeLucenePhrase(value: string): string {
   return value.replace(/(["\\])/g, "\\$1");
 }
 
-export function artistQuery(query: string, artistType?: ArtistTypeFilter): string {
+/** Rango de años sobre un campo de fecha; el límite superior lleva fecha completa (ver arriba). */
+export function yearRangeClause(field: string, from: number | undefined, to: number | undefined): string | null {
+  if (from === undefined && to === undefined) return null;
+  return `${field}:[${from ?? "*"} TO ${to !== undefined ? `${to}-12-31` : "*"}]`;
+}
+
+export interface ArtistQueryFilters {
+  country?: string;
+  beginFrom?: number;
+  beginTo?: number;
+  ended?: boolean;
+}
+
+export function artistQuery(
+  query: string,
+  artistType?: ArtistTypeFilter,
+  filters: ArtistQueryFilters = {},
+): string {
   const text = escapeLucene(query.trim());
-  return artistType ? `(${text}) AND type:${artistType}` : text;
+  const clauses: string[] = [];
+  if (artistType) clauses.push(`type:${artistType}`);
+  if (filters.country) clauses.push(`country:${escapeLucene(filters.country)}`);
+  const begin = yearRangeClause("begin", filters.beginFrom, filters.beginTo);
+  if (begin) clauses.push(begin);
+  if (filters.ended !== undefined) clauses.push(`ended:${filters.ended}`);
+  return clauses.length ? [`(${text})`, ...clauses].join(" AND ") : text;
 }
 
 // Categorías propias (`mapReleaseGroupCategory`) traducidas a cláusulas de
@@ -48,16 +75,22 @@ const CATEGORY_CLAUSE: Record<ReleaseGroupCategoryValue, string> = {
 
 export interface ReleaseGroupQueryOptions {
   category?: ReleaseGroupCategoryValue;
-  /** Primer año de la década (1970, 1980, …). */
+  /** Primer año de la década (1970, 1980, …). Un rango de años la reemplaza. */
   decade?: number;
+  yearFrom?: number;
+  yearTo?: number;
+  /** Artista principal acreditado. */
+  artist?: string;
 }
 
 function filterClauses(options: ReleaseGroupQueryOptions): string[] {
   const clauses: string[] = [];
   if (options.category) clauses.push(`(${CATEGORY_CLAUSE[options.category]})`);
-  if (options.decade !== undefined) {
-    clauses.push(`firstreleasedate:[${options.decade} TO ${options.decade + 9}-12-31]`);
-  }
+  const years =
+    yearRangeClause("firstreleasedate", options.yearFrom, options.yearTo) ??
+    (options.decade !== undefined ? yearRangeClause("firstreleasedate", options.decade, options.decade + 9) : null);
+  if (years) clauses.push(years);
+  if (options.artist) clauses.push(`artist:"${escapeLucenePhrase(options.artist.trim())}"`);
   return clauses;
 }
 
@@ -78,6 +111,25 @@ export function releaseGroupFieldQuery(
     `artist:"${escapeLucenePhrase(artist.trim())}"`,
     ...filterClauses(options),
   ].join(" AND ");
+}
+
+export interface RecordingQueryFilters {
+  /** Duración en segundos. */
+  durMin?: number;
+  durMax?: number;
+}
+
+/** `dur` de MusicBrainz va en milisegundos. */
+export function durationClause({ durMin, durMax }: RecordingQueryFilters): string | null {
+  if (durMin === undefined && durMax === undefined) return null;
+  const ms = (seconds: number | undefined, edge: number) => (seconds === undefined ? "*" : String(seconds * 1000 + edge));
+  return `dur:[${ms(durMin, 0)} TO ${ms(durMax, 999)}]`;
+}
+
+/** Agrega el filtro de duración a una consulta de recordings ya armada. */
+export function withRecordingFilters(query: string, filters: RecordingQueryFilters = {}): string {
+  const clause = durationClause(filters);
+  return clause ? `(${query}) AND ${clause}` : query;
 }
 
 export function recordingFreeQuery(query: string): string {

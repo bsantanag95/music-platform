@@ -1,3 +1,4 @@
+import { filtersToParams, type AdvancedFilters } from "@/services/catalog/search/filters";
 import { apiFetch } from "./client";
 import {
   ReleaseGroupMarksSchema,
@@ -30,6 +31,8 @@ export interface CatalogSearchFilters {
   artistType?: "person" | "group";
   category?: string;
   decade?: number;
+  /** Filtros de la búsqueda avanzada (openspec: add-advanced-search-phase1). */
+  advanced?: AdvancedFilters;
   /**
    * `pick`: elegir un objetivo (diálogo "Añadir"); en Canciones trae todos los grupos con
    * grabación identidad y sin apariciones (openspec: speed-up-quick-actions-search).
@@ -46,6 +49,7 @@ function searchParams(type: string, query: string, filters: CatalogSearchFilters
   if (filters.category) params.set("category", filters.category);
   if (filters.decade !== undefined) params.set("decade", String(filters.decade));
   if (filters.purpose) params.set("purpose", filters.purpose);
+  for (const [key, value] of Object.entries(filtersToParams(filters.advanced ?? {}))) params.set(key, value);
   return params;
 }
 

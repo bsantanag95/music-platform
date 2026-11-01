@@ -48,6 +48,28 @@ score, coincidencia exacta al tope de su grupo). El campo del Header siempre nav
 Los homónimos ("Poison" glam vs. thrash) aparecen como filas separadas con su
 disambiguation — la ambigüedad la resuelve el usuario, no `artists[0]`.
 
+**Búsqueda avanzada (cambio `add-advanced-search-phase1`).** En `/search`, junto al campo, el
+botón **Filtros · n** abre un panel con los filtros del tipo activo. El panel es un formulario `GET`
+que escribe la URL (solo los campos con valor), así que un resultado filtrado se puede enlazar.
+El Header no tiene botón propio: su desplegable ofrece "Búsqueda avanzada", que abre `/search`
+con `filters=1` (el panel abierto). Filtros de esta fase, todos aplicados igual a la base local
+(SQL) y a la consulta de MusicBrainz (Lucene), así que no reducen la cobertura ni suman requests:
+
+| Tipo | Filtros (parámetro) |
+|---|---|
+| Artistas | País (`country`), inicio de actividad desde/hasta (`beginFrom`/`beginTo`: nacimiento o formación) y estado (`ended=0\|1`). |
+| Álbumes | Años de lanzamiento desde/hasta (`yearFrom`/`yearTo`, reemplazan a la década) y artista principal (`artist`, como palabras completas). |
+| Canciones | Artista (`artist`: fija la interpretación y ahorra la búsqueda de artistas) y duración mínima/máxima (`durMin`/`durMax` en segundos; el panel muestra `m:ss`). |
+| Usuarios | Ninguno. |
+
+Una fila sin el dato que pide un filtro no coincide (como en MusicBrainz). Un artista local sin
+ficha (sin país ni fechas) vuelve si la página de MusicBrainz lo trae con el dato. Debajo del
+resumen, un chip por filtro lo quita, y **Quitar filtros** vuelve a la búsqueda sin ellos. Con
+filtros activos, Artistas no redirige por coincidencia exacta única. Cambiar de tipo conserva
+solo los filtros que el otro tipo entiende (`artist` entre Álbumes y Canciones). Quedan para
+cambios propios los filtros solo del catálogo (género, valoración, premios, carátula, sello,
+autoría) y la búsqueda sin texto.
+
 **Tolerancia a errores de tipeo — limitación conocida (aceptada por ahora).** La base
 local coincide por *substring exacto*, sin distinguir mayúsculas (`ILIKE '%texto%'`): no
 tolera puntuación, apóstrofes ni palabras cambiadas — `Guns and Roses` no encuentra

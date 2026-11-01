@@ -47,6 +47,13 @@ artista) con los álbumes que la contienen. Enlazar a la página de una canción
 búsqueda sigue diferido (misma decisión de producto pendiente). Géneros, sellos y búsqueda
 avanzada quedan para cambios propios.
 
+**Resuelto en parte — `add-advanced-search-phase1`:** búsqueda avanzada en `/search` (botón
+"Filtros" y panel `GET` que escribe la URL; desde el Header, el enlace "Búsqueda avanzada") con los
+filtros que se aplican igual a la base local y a MusicBrainz: país, inicio de actividad y estado en
+Artistas; años y artista en Álbumes; artista y duración en Canciones. Pendientes: Fase 2, filtros solo
+del catálogo (género de la taxonomía propia, valoración media, premios, carátula, sello, autoría), y
+Fase 3, búsqueda sin texto.
+
 ## Fase 4 — Auth, ratings y comentarios
 
 Entregable: autenticación local de usuarios, valoración dual (estrellas + detallada) y comentarios funcionando sobre artista, álbum y canción. Es el núcleo social base y cierra el MVP definido en el PRD. El incremento posterior de Google OAuth/OIDC también está implementado y validado manualmente. El linking explícito de cuentas se agregó después desde Ajustes (ADR 0016); el scrobbling de servicios de streaming permanece fuera de esta fase.

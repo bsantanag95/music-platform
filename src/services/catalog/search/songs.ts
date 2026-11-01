@@ -37,7 +37,14 @@ import {
 import { activityScores } from "./activity";
 import { coverageLevel, edgeSplits, restAfterEdgeArtist } from "./coverage";
 import { findArtistsByKeys, matchLocalRecordings } from "./local-match";
-import { artistQuery, escapeLucenePhrase, recordingFieldQuery, recordingFreeQuery } from "./mb-query";
+import {
+  artistQuery,
+  escapeLucenePhrase,
+  recordingFieldQuery,
+  recordingFreeQuery,
+  withRecordingFilters,
+  type RecordingQueryFilters,
+} from "./mb-query";
 import { baseSongTitle, normalizeSearchText, splitExplicit, tokenize, withoutSeparator } from "./normalize";
 import type { SearchPurpose } from "./params";
 import { sortByRank, topArtistNames, type RankKey } from "./rank";
@@ -272,6 +279,14 @@ async function recordingQueryFor(
   return recordingFieldQuery(interpretation.artistName, interpretation.songPart);
 }
 
+/** La grabación remota cumple el filtro de duración; sin duración conocida no lo cumple. */
+function inDuration(item: MBRecordingSearchItem, { durMin, durMax }: RecordingQueryFilters): boolean {
+  if (durMin === undefined && durMax === undefined) return true;
+  if (typeof item.length !== "number") return false;
+  const seconds = Math.round(item.length / 1000);
+  return (durMin === undefined || seconds >= durMin) && (durMax === undefined || seconds <= durMax);
+}
+
 // ---------- Agrupación y apariciones
 
 function primaryArtistName(item: MBRecordingSearchItem): string | null {
@@ -307,8 +322,11 @@ interface LocalContribution {
  * visitados) cuyo título pasa el filtro de relevancia. Con artista, el
  * crédito primario debe coincidir con él.
  */
-async function localContributions(interpretation: Interpretation): Promise<LocalContribution[]> {
-  const candidates = await matchLocalRecordings(interpretation.songPart, LOCAL_RECORDING_LIMIT);
+async function localContributions(
+  interpretation: Interpretation,
+  duration: RecordingQueryFilters,
+): Promise<LocalContribution[]> {
+  const candidates = await matchLocalRecordings(interpretation.songPart, LOCAL_RECORDING_LIMIT, undefined, duration);
   const hint = interpretation.artistName ? normalizeSearchText(interpretation.artistName) : null;
   const contributions: LocalContribution[] = [];
   for (const candidate of candidates) {
@@ -494,28 +512,56 @@ export interface SongSearchOptions {
   purpose?: SearchPurpose;
   /** Abandono de quien busca: descarta las requests en cola y evita escribir. */
   signal?: AbortSignal;
+  /**
+   * Búsqueda avanzada (openspec: add-advanced-search-phase1): `artist` fija la interpretación
+   * (el texto completo es el título) y `durMin`/`durMax` filtran las grabaciones, en segundos.
+   */
+  filters?: { artist?: string } & RecordingQueryFilters;
+}
+
+/**
+ * Interpretación fija por el filtro de artista: sin búsqueda de artistas. El candidato local (por
+ * nombre normalizado) permite buscar dentro de sus release-groups, como una interpretación detectada.
+ */
+async function explicitArtistInterpretation(text: string, artistName: string): Promise<Interpretation> {
+  const [row] = await findArtistsByKeys([tokenize(artistName).join(" ")]);
+  const artist: ArtistCandidate | null = row
+    ? { name: row.name, mbid: row.mbid, localId: row.id, score: 0, activity: 0 }
+    : null;
+  return { songPart: normalizeSearchText(text), artist, artistName: row?.name ?? artistName.trim() };
 }
 
 export async function searchSongs(
   query: string,
-  { offset = 0, localOnly = false, purpose, signal }: SongSearchOptions = {},
+  { offset = 0, localOnly = false, purpose, signal, filters = {} }: SongSearchOptions = {},
 ): Promise<SongSearchResponse> {
   const pick = purpose === "pick";
   const q = query.trim();
   const text = withoutSeparator(q);
+  const duration: RecordingQueryFilters = { durMin: filters.durMin, durMax: filters.durMax };
 
-  const { candidates, remoteFailed: artistLegFailed } = await artistCandidates(text, localOnly, signal);
-  const interpretations = rankInterpretations(q, candidates);
-  // La mejor interpretación con artista y, si no da nada, la consulta
-  // completa como título (la cobertura de términos ordena igual los grupos).
-  // Con separador explícito, los dos órdenes escritos. Nunca más de dos
-  // búsquedas de recordings. Probar una segunda lectura con artista en vez
-  // del texto libre dejaba vacío "kiss of death": "KISS" y "Death" ocupan
-  // sus extremos y ninguna de las dos lecturas tiene esa canción.
   const freeText: Interpretation = { songPart: normalizeSearchText(text), artist: null, artistName: null };
-  const attempts = (
-    splitExplicit(q) ? interpretations : [...interpretations.slice(0, 1), freeText]
-  ).slice(0, MAX_ATTEMPTS);
+  let interpretations: Interpretation[];
+  let attempts: Interpretation[];
+  let artistLegFailed = false;
+  if (filters.artist) {
+    interpretations = [await explicitArtistInterpretation(text, filters.artist)];
+    attempts = interpretations;
+  } else {
+    const detected = await artistCandidates(text, localOnly, signal);
+    artistLegFailed = detected.remoteFailed;
+    interpretations = rankInterpretations(q, detected.candidates);
+    // La mejor interpretación con artista y, si no da nada, la consulta
+    // completa como título (la cobertura de términos ordena igual los grupos).
+    // Con separador explícito, los dos órdenes escritos. Nunca más de dos
+    // búsquedas de recordings. Probar una segunda lectura con artista en vez
+    // del texto libre dejaba vacío "kiss of death": "KISS" y "Death" ocupan
+    // sus extremos y ninguna de las dos lecturas tiene esa canción.
+    attempts = (splitExplicit(q) ? interpretations : [...interpretations.slice(0, 1), freeText]).slice(
+      0,
+      MAX_ATTEMPTS,
+    );
+  }
 
   let chosen: Interpretation | null = null;
   let recordings: MBRecordingSearchItem[] = [];
@@ -525,18 +571,20 @@ export async function searchSongs(
   let remoteFailed = artistLegFailed;
   for (const attempt of localOnly ? [] : attempts) {
     try {
-      const response = await musicbrainz.searchRecording(await recordingQueryFor(attempt, text, signal), {
-        offset,
-        signal,
-      });
+      const response = await musicbrainz.searchRecording(
+        withRecordingFilters(await recordingQueryFor(attempt, text, signal), duration),
+        { offset, signal },
+      );
       // Con artista, un título igual a la consulta COMPLETA no confirma la
       // lectura "canción X de artista Y": la persona escribió un título
       // ("stairway de prueba" no es «de prueba» de la banda Stairway).
+      // Con el filtro de artista la consulta completa SÍ es el título.
       const fullQuery = normalizeSearchText(text);
       const relevant = response.recordings.filter(
         (item) =>
           isRelevantRecordingTitle(attempt.songPart, item.title) &&
-          !(attempt.artistName && normalizeSearchText(baseSongTitle(item.title)) === fullQuery),
+          inDuration(item, duration) &&
+          !(attempt.artistName && !filters.artist && normalizeSearchText(baseSongTitle(item.title)) === fullQuery),
       );
       if (relevant.length > 0) {
         chosen = attempt;
@@ -556,7 +604,7 @@ export async function searchSongs(
   const used = chosen ?? attempts[0] ?? freeText;
 
   // Lo local (apariciones ya ingeridas) solo acompaña a la primera página.
-  const local = offset === 0 ? await localContributions(used).catch(() => []) : [];
+  const local = offset === 0 ? await localContributions(used, duration).catch(() => []) : [];
   if (remoteFailed && recordings.length === 0 && local.length === 0) {
     throw new ApiError("INTERNAL_ERROR", 502, "MusicBrainz no respondió y no hay coincidencias locales");
   }

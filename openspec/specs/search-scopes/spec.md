@@ -3,7 +3,6 @@
 ## Purpose
 
 Búsqueda del catálogo por tipo (Artistas, Álbumes, Canciones y Usuarios) con el tipo dentro del propio campo, al estilo de Metal Archives: tipo por defecto, contrato de URL `?type=`, cambio de tipo sin reescribir, redirección por coincidencia exacta única, mejor coincidencia ante homónimos, filtro Persona/Grupo y usuarios en el buscador global.
-
 ## Requirements
 ### Requirement: Selector de tipo dentro del campo de búsqueda
 
@@ -83,7 +82,7 @@ agregando `from=search` y la consulta. El perfil SHALL mostrar entonces un aviso
 "¿No era este?" que enlaza a `/search?type=artist&q=<consulta>&all=1`; con `all=1` la página
 SHALL listar los resultados sin redirigir. Si la pata de MusicBrainz falló, la unicidad no es
 verificable y la página SHALL NOT redirigir. Con dos o más coincidencias exactas SHALL NOT
-redirigir.
+redirigir. Con algún filtro activo (`artistType` o un filtro de `advanced-search-filters`) SHALL NOT redirigir.
 
 #### Scenario: Nombre único
 - **WHEN** una persona busca `Sabrina Carpenter` en Artistas y solo un artista se llama así
@@ -100,6 +99,10 @@ redirigir.
 #### Scenario: MusicBrainz caído
 - **WHEN** la búsqueda de artistas en MusicBrainz falla y la base local tiene un único `Icon`
 - **THEN** la página no redirige, muestra lo local y avisa que faltan resultados de MusicBrainz
+
+#### Scenario: Con filtros activos
+- **WHEN** una persona busca `Sabrina Carpenter` en Artistas con `country=US` y solo un artista se llama así
+- **THEN** la página no redirige y muestra la lista filtrada
 
 ### Requirement: Mejor coincidencia con homónimos
 

@@ -4,6 +4,7 @@
 
 import { ApiError } from "@/lib/api/errors";
 import type { ReleaseGroupCategoryValue } from "../ingest-release-group";
+import { parseAdvancedFilters, type AdvancedFilters } from "./filters";
 import type { ArtistTypeFilter } from "./mb-query";
 import type { CatalogSearchType, SearchType } from "./types";
 
@@ -62,6 +63,8 @@ export interface CatalogSearchParams {
   artistType?: ArtistTypeFilter;
   category?: ReleaseGroupCategoryValue;
   decade?: number;
+  /** Filtros del panel de búsqueda avanzada (openspec: add-advanced-search-phase1). */
+  filters: AdvancedFilters;
   /**
    * Para qué se busca: `pick` = elegir un objetivo (diálogo "Añadir"). En Canciones devuelve
    * todos los grupos con grabación identidad y sin apariciones (openspec:
@@ -76,6 +79,11 @@ export function parsePurpose(value: string | string[] | null | undefined): Searc
   return first(value) === "pick" ? "pick" : undefined;
 }
 
+/** Un rango de años gana a la década: con `yearFrom`/`yearTo` la década se ignora. */
+export function effectiveDecade(decade: number | undefined, filters: AdvancedFilters): number | undefined {
+  return filters.yearFrom !== undefined || filters.yearTo !== undefined ? undefined : decade;
+}
+
 /**
  * Contrato estricto del endpoint: `q` no vacío y `type` entre los tipos de
  * catálogo (Usuarios tiene su propio endpoint). Filtros inválidos se ignoran.
@@ -87,13 +95,15 @@ export function parseCatalogSearchParams(params: URLSearchParams): CatalogSearch
   if (type !== "artist" && type !== "album" && type !== "song") {
     throw new ApiError("VALIDATION_ERROR", 400, "El parámetro type debe ser artist, album o song");
   }
+  const filters = parseAdvancedFilters(type, (key) => params.get(key));
   return {
     type,
     q,
     offset: parseOffset(params.get("offset")),
     artistType: parseArtistTypeFilter(params.get("artistType")),
     category: parseCategory(params.get("category")),
-    decade: parseDecade(params.get("decade")),
+    decade: effectiveDecade(parseDecade(params.get("decade")), filters),
+    filters,
     purpose: parsePurpose(params.get("purpose")),
   };
 }

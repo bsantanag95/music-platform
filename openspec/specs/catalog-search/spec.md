@@ -260,7 +260,10 @@ apariciones de una canción (ver `catalog-recording-ingestion`). La respuesta SH
 y `cached`), `remoteFailed` y, para Álbumes y Canciones, `total` de MusicBrainz y `nextOffset`
 cuando hay más páginas; en Canciones, cada resultado SHALL ser un grupo (canción, artista) con
 sus álbumes y la respuesta SHALL incluir la interpretación usada y sus alternativas. Parámetros
-opcionales: `offset`, `artistType` (Artistas), `category` y `decade` (Álbumes).
+opcionales: `offset`; en Artistas `artistType`, `country`, `beginFrom`, `beginTo` y `ended`; en Álbumes
+`category`, `decade`, `yearFrom`, `yearTo` y `artist`; en Canciones `artist`, `durMin` y `durMax`. Los filtros
+siguen las reglas de `advanced-search-filters` (valores inválidos o de otro tipo se ignoran sin error) y
+`nextOffset` SHALL corresponder a la consulta filtrada.
 
 #### Scenario: Búsqueda de artistas
 - **WHEN** una persona busca `Poison` en Artistas
@@ -279,6 +282,11 @@ opcionales: `offset`, `artistType` (Artistas), `category` y `decade` (Álbumes).
 - **WHEN** una búsqueda de álbumes tiene más coincidencias en MusicBrainz que las devueltas
 - **THEN** la respuesta incluye `total` y `nextOffset`, y una solicitud con ese `offset` devuelve
   la página siguiente
+
+#### Scenario: Filtros en el endpoint
+- **WHEN** una solicitud pide `type=album&q=iron%20maiden&yearFrom=1983&yearTo=1986`
+- **THEN** el endpoint responde `200` solo con álbumes cuyo primer lanzamiento cae entre 1983 y 1986, y una
+  solicitud con `country=XYZ` en Artistas responde `200` ignorando ese filtro
 
 ### Requirement: Presupuesto de MusicBrainz por tipo
 

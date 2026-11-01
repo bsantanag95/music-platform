@@ -8,6 +8,7 @@ import {
   useTransition,
   type FocusEvent,
   type KeyboardEvent,
+  type ReactNode,
   type SubmitEventHandler,
 } from "react";
 import { useTranslations } from "next-intl";
@@ -33,6 +34,13 @@ interface ScopedSearchFieldProps {
   fluid?: boolean;
   /** Aviso de una búsqueda enviada (búsquedas recientes de /search). */
   onSubmitSearch?: (query: string, type: SearchType) => void;
+  /** Junto al botón de enviar (variante `full`): el botón de filtros de /search. */
+  trailing?: ReactNode;
+  /**
+   * Parámetros que conserva un nuevo envío del mismo tipo con el que arrancó el campo: los
+   * filtros activos de /search (openspec: add-advanced-search-phase1).
+   */
+  persistParams?: Record<string, string>;
 }
 
 type Option =
@@ -71,6 +79,8 @@ export function ScopedSearchField({
   resetAfterNavigate = false,
   fluid = false,
   onSubmitSearch,
+  trailing,
+  persistParams,
 }: ScopedSearchFieldProps) {
   const t = useTranslations("catalog.search");
   const tArtist = useTranslations("catalog.artist");
@@ -187,7 +197,7 @@ export function ScopedSearchField({
     }
     setValidationError(undefined);
     onSubmitSearch?.(trimmed, type);
-    navigate(searchHref(type, trimmed));
+    navigate(searchHref(type, trimmed, type === initialType ? persistParams : undefined));
   };
 
   const onInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -344,6 +354,7 @@ export function ScopedSearchField({
               {isNavigating ? t("submitting") : t("submit")}
             </button>
           )}
+          {compact ? null : trailing}
         </div>
 
         {typeMenuOpen ? (
@@ -444,6 +455,16 @@ export function ScopedSearchField({
                   {t(`types.${option}`)}
                 </button>
               ))}
+              {/* En /search el panel ya está junto al campo; el Header solo enlaza a él. */}
+              {compact && type !== "user" ? (
+                <button
+                  type="button"
+                  onClick={() => navigate(searchHref(type, trimmed, { filters: "1" }))}
+                  className="ml-auto inline-flex items-center gap-1.5 font-data text-[11px] text-paper-muted underline-offset-4 transition-colors hover:text-paper hover:underline"
+                >
+                  {t("advanced.headerLink")}
+                </button>
+              ) : null}
             </div>
           </div>
         ) : null}
