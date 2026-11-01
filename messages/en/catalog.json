@@ -1011,10 +1011,9 @@
       "reaction": "Common reaction",
       "reactionsCount": "{count, plural, =0 {No public reactions} one {# reaction} other {# reactions}}",
       "ratingsCount": "{count, plural, =0 {No ratings} one {# rating} other {# ratings}}",
-      "favorites": "Favorite of",
-      "favoritesSummary": "favorite of {value}",
       "sparse": "Not much community activity yet",
-      "none": "No community activity yet"
+      "none": "No community activity yet",
+      "favoritesLabel": "have it as a favorite"
     },
     "strip": {
       "label": "Tracks on the record",

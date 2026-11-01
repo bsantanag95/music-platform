@@ -257,6 +257,25 @@ describe("página de canción", () => {
     expect(screen.queryByText(song.community.reaction)).not.toBeInTheDocument();
   });
 
+  it("comunidad con algún dato: la franja del álbum, sin celdas vacías ni guiones", async () => {
+    mocks.loadSongCommunity.mockResolvedValue({
+      ratings: { count: 3, averageStars: null },
+      reactions: { count: 2, top: null },
+      favorites: { kind: "exact", value: 12 },
+      listCount: 0,
+    });
+    await renderPage();
+    const strip = screen.getByRole("region", { name: catalogEs.album.community.heading });
+    expect(within(strip).getByText(catalogEs.album.community.ratings)).toBeInTheDocument();
+    expect(within(strip).getByText("3")).toBeInTheDocument();
+    expect(within(strip).getByText(song.community.favoritesLabel)).toBeInTheDocument();
+    expect(within(strip).getByText("12")).toBeInTheDocument();
+    // Sin media ni reacción predominante, esas celdas no se dibujan.
+    expect(within(strip).queryByText(catalogEs.album.community.average)).not.toBeInTheDocument();
+    expect(within(strip).queryByText(song.community.reaction)).not.toBeInTheDocument();
+    expect(within(strip).queryByText("—")).not.toBeInTheDocument();
+  });
+
   it("primera aparición en un disco distinto del principal: dice su tipo", async () => {
     const single = disc("single", "Manchild", "single_ep", 1985);
     mocks.loadRecordingDetail.mockResolvedValue({

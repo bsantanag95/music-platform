@@ -5,7 +5,7 @@ import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { ListenEntryForm } from "@/components/diary/ListenEntryForm";
 import { AlbumListPicker, type PickerMembership } from "@/components/album/AlbumListPicker";
-import { HeartIcon } from "@/components/album/AlbumRelationPanel";
+import { Field, HeartIcon, ToggleChip, Value, linkButton } from "@/components/album/AlbumRelationPanel";
 import { RatingDetailDialog } from "@/components/album/RatingDetailDialog";
 import { formatStars } from "@/components/album/album-format";
 import { StarRatingInput } from "@/components/social/StarRatingInput";
@@ -20,7 +20,8 @@ import type { ListenEntry, ListenReaction, RatingsResponse } from "@/lib/api/sch
 // `song-personal-panel`). Mismo lenguaje que el panel del álbum, con las filas que aplican a
 // una canción: Nota (estrellas siempre visibles), Escuchas (la reacción se elige al
 // registrar, en el diario; el historial es una línea), Favorita y Listas. Sin reseña,
-// Pendiente ni colección.
+// Pendiente ni colección. Desde refine-song-page-phase2, con las piezas del panel del álbum: Favorita arriba como
+// conmutador y filas con etiqueta, acción en gris y estado debajo.
 
 export interface SongRelationState {
   ratings: RatingsResponse;
@@ -36,8 +37,6 @@ interface SongRelationPanelProps {
 }
 
 const panelClass = "flex flex-col gap-3 rounded border border-ink-border bg-ink-surface p-4";
-const linkButton =
-  "font-data text-xs text-amber underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50";
 const divider = "border-t border-ink-border";
 
 function Row({ label, children }: { label: ReactNode; children: ReactNode }) {
@@ -193,7 +192,16 @@ function AuthenticatedPanel({ recordingId, state }: { recordingId: string; state
     <aside aria-label={tAlbum("heading")} className={panelClass}>
       <h2 className="font-display text-sm text-paper-muted">{tAlbum("heading")}</h2>
 
-      <div className="flex flex-col gap-1">
+      {/* Sin Pendiente en la canción: Favorita va sola, a todo el ancho (openspec: refine-song-page-phase2, D3). */}
+      <ToggleChip
+        pressed={favorited}
+        disabled={busy === "favorite"}
+        onClick={() => void toggleFav()}
+        icon={<HeartIcon filled={favorited} />}
+        label={t("favorite")}
+      />
+
+      <div className={`flex flex-col gap-1 pt-3 ${divider}`}>
         <Row label={tAlbum("rating")}>
           <StarRatingInput
             value={stars}
@@ -250,33 +258,37 @@ function AuthenticatedPanel({ recordingId, state }: { recordingId: string; state
         />
       </div>
 
-      <div className={`flex flex-col gap-2 pt-3 ${divider}`}>
-        <Row label={tAlbum("listens")}>
-          <button type="button" className={linkButton} disabled={busy === "listen"} onClick={() => void logListen()}>
-            {busy === "listen" ? tAlbum("logging") : t("logListen")}
-          </button>
-        </Row>
-        {/* Segunda línea fija: el historial a la izquierda y el diario a la derecha. */}
-        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-          <span className="font-body text-sm text-paper">
-            {listens.count === 0
-              ? tAlbum("listensNone")
-              : listens.lastReaction && lastDate
-                ? t("historyWithReaction", {
-                    count: listens.count,
-                    reaction: tReaction(listens.lastReaction),
-                    date: lastDate,
-                  })
-                : lastDate
-                  ? t("history", { count: listens.count, date: lastDate })
-                  : t("historyCount", { count: listens.count })}
-          </span>
-          {listens.count > 0 && (
-            <Link href="/me/diary" className={linkButton}>
-              {t("diaryLink")} →
-            </Link>
-          )}
-        </div>
+      <div className={`flex flex-col gap-3 pt-3 ${divider}`}>
+        <Field
+          label={tAlbum("listens")}
+          action={
+            <button type="button" className={linkButton} disabled={busy === "listen"} onClick={() => void logListen()}>
+              {busy === "listen" ? tAlbum("logging") : t("logListen")}
+            </button>
+          }
+        >
+          {/* Segunda línea fija: el historial a la izquierda y el diario a la derecha. */}
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <Value empty={listens.count === 0}>
+              {listens.count === 0
+                ? tAlbum("listensEmpty")
+                : listens.lastReaction && lastDate
+                  ? t("historyWithReaction", {
+                      count: listens.count,
+                      reaction: tReaction(listens.lastReaction),
+                      date: lastDate,
+                    })
+                  : lastDate
+                    ? t("history", { count: listens.count, date: lastDate })
+                    : t("historyCount", { count: listens.count })}
+            </Value>
+            {listens.count > 0 && (
+              <Link href="/me/diary" className={linkButton}>
+                {t("diaryLink")} →
+              </Link>
+            )}
+          </div>
+        </Field>
         {loggedEntry && (
           <ListenEntryForm
             entryId={loggedEntry.id}
@@ -296,40 +308,23 @@ function AuthenticatedPanel({ recordingId, state }: { recordingId: string; state
 
       </div>
 
-      {/* Favorita como fila compacta, con el mismo ritmo que las demás (polish-song-header). */}
-      <div className={`pt-3 ${divider}`}>
-        <Row label={<span className={favorited ? "text-paper" : undefined}>{t("favorite")}</span>}>
-          <button
-            type="button"
-            aria-pressed={favorited}
-            aria-label={t("favorite")}
-            disabled={busy === "favorite"}
-            onClick={() => void toggleFav()}
-            className="inline-flex size-10 items-center justify-center rounded border border-ink-border text-paper-muted transition-colors hover:border-amber hover:text-paper aria-pressed:border-amber aria-pressed:text-amber disabled:cursor-wait disabled:opacity-60 sm:size-8"
-          >
-            <HeartIcon filled={favorited} />
-          </button>
-        </Row>
-      </div>
-
       <div className={`flex flex-col gap-1 pt-3 ${divider}`}>
-        <Row
-          label={
-            <span className={memberships.length > 0 ? "text-paper" : undefined}>
-              {tAlbum("lists", { count: memberships.length })}
-            </span>
+        <Field
+          label={tAlbum("listsLabel")}
+          action={
+            <button
+              ref={listsButton}
+              type="button"
+              className={linkButton}
+              aria-expanded={pickerOpen}
+              onClick={() => (pickerOpen ? closePicker() : setPickerOpen(true))}
+            >
+              {pickerOpen ? tAlbum("close") : tAlbum("chooseLists")}
+            </button>
           }
         >
-          <button
-            ref={listsButton}
-            type="button"
-            className={linkButton}
-            aria-expanded={pickerOpen}
-            onClick={() => (pickerOpen ? closePicker() : setPickerOpen(true))}
-          >
-            {pickerOpen ? tAlbum("close") : tAlbum("chooseLists")}
-          </button>
-        </Row>
+          <Value empty={memberships.length === 0}>{tAlbum("lists", { count: memberships.length })}</Value>
+        </Field>
         {pickerOpen && (
           <AlbumListPicker
             target={target}

@@ -1011,10 +1011,9 @@
       "reaction": "Reacción común",
       "reactionsCount": "{count, plural, =0 {Sin reacciones públicas} one {# reacción} other {# reacciones}}",
       "ratingsCount": "{count, plural, =0 {Sin valoraciones} one {# valoración} other {# valoraciones}}",
-      "favorites": "Favorita de",
-      "favoritesSummary": "favorita de {value}",
       "sparse": "Todavía hay poca actividad de la comunidad",
-      "none": "Todavía sin actividad de la comunidad"
+      "none": "Todavía sin actividad de la comunidad",
+      "favoritesLabel": "la tienen de favorita"
     },
     "strip": {
       "label": "Pistas del disco",

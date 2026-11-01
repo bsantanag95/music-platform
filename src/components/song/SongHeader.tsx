@@ -3,7 +3,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { SECONDARY_LINK } from "@/components/ui/segmented";
 import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
-import { StatTile, ThresholdedTileValue } from "@/components/album/AlbumHeader";
+import { ThresholdedTileValue } from "@/components/album/AlbumHeader";
+import { CommunityStrip, type CommunityCell } from "@/components/catalog/CommunityStrip";
 import { formatDuration, formatStars } from "@/components/album/album-format";
 import { SongwriterNames } from "@/components/catalog/SongwriterNames";
 import { discYear, type ContainingAlbum } from "@/services/catalog/recording-detail";
@@ -33,9 +34,9 @@ export function SongIdentity({ title, artists }: SongIdentityProps) {
         {/* La posición y el disco los nombran la tira y las migas (polish-song-credits-strip). */}
         {t("kicker")}
       </p>
-      <h1 className="font-display text-3xl leading-tight text-paper [overflow-wrap:anywhere] sm:text-4xl">{title}</h1>
+      <h1 className="font-display text-2xl leading-tight text-paper [overflow-wrap:anywhere] sm:text-4xl">{title}</h1>
       {artists.length > 0 && (
-        <p className="font-body text-lg text-paper">
+        <p className="font-body text-base text-paper sm:text-lg">
           {artists.map((artist, index) => (
             <Fragment key={artist.artistId}>
               <Link href={artistHref(artist.name, artist.artistId)} className="text-amber hover:text-amber-hover hover:underline">
@@ -131,8 +132,6 @@ export function SongCommunity({ stats, listsHref }: SongCommunityProps) {
   const locale = useLocale();
   const number = (value: number) => new Intl.NumberFormat(locale).format(value);
   const { ratings, reactions, favorites } = stats;
-  const favoritesText =
-    favorites.kind === "fewer" ? tAlbum("fewerLower", { threshold: favorites.threshold }) : number(favorites.value);
 
   const noFavorites = favorites.kind === "exact" && favorites.value === 0;
   // Sin media, reacción predominante ni favoritas, las tarjetas estarían vacías: una línea.
@@ -142,14 +141,17 @@ export function SongCommunity({ stats, listsHref }: SongCommunityProps) {
     reactions.count > 0 ? t("reactionsCount", { count: reactions.count }) : null,
   ].filter(Boolean);
 
-  const summary = [
-    ratings.averageStars !== null ? tAlbum("averageValue", { stars: formatStars(ratings.averageStars, locale) }) : null,
-    t("ratingsCount", { count: ratings.count }),
-    reactions.top ? tReaction(reactions.top) : null,
-    noFavorites ? null : t("favoritesSummary", { value: favoritesText }),
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  // Franja compartida con el álbum (openspec: refine-song-page-phase2, D2): Valoraciones siempre, el resto solo con dato.
+  const cells: CommunityCell[] = [
+    ...(ratings.averageStars !== null
+      ? [{ key: "average", label: tAlbum("average"), value: tAlbum("averageValue", { stars: formatStars(ratings.averageStars, locale) }) }]
+      : []),
+    { key: "ratings", label: tAlbum("ratings"), value: number(ratings.count) },
+    ...(reactions.top
+      ? [{ key: "reaction", label: t("reaction"), value: tReaction(reactions.top), detail: t("reactionsCount", { count: reactions.count }) }]
+      : []),
+    ...(noFavorites ? [] : [{ key: "favorites", label: t("favoritesLabel"), value: <ThresholdedTileValue count={favorites} /> }]),
+  ];
 
   return (
     <section aria-label={tAlbum("heading")} className="flex flex-col gap-3">
@@ -158,24 +160,7 @@ export function SongCommunity({ stats, listsHref }: SongCommunityProps) {
           {[counts.length > 0 ? t("sparse") : t("none"), ...counts].join(" · ")}
         </p>
       ) : (
-        <>
-          <p className="font-data text-sm text-paper sm:hidden">{summary}</p>
-          <div className="hidden grid-cols-3 gap-2 sm:grid">
-            <StatTile
-              label={tAlbum("average")}
-              value={
-                ratings.averageStars !== null ? tAlbum("averageValue", { stars: formatStars(ratings.averageStars, locale) }) : "—"
-              }
-              detail={t("ratingsCount", { count: ratings.count })}
-            />
-            <StatTile
-              label={t("reaction")}
-              value={reactions.top ? tReaction(reactions.top) : "—"}
-              detail={t("reactionsCount", { count: reactions.count })}
-            />
-            <StatTile label={t("favorites")} value={noFavorites ? "—" : <ThresholdedTileValue count={favorites} />} />
-          </div>
-        </>
+        <CommunityStrip cells={cells} />
       )}
       {stats.listCount > 0 && (
         <Link href={listsHref} className={`self-start font-data text-xs ${SECONDARY_LINK}`}>
