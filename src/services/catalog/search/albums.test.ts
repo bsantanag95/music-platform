@@ -208,6 +208,39 @@ describe("searchAlbums", () => {
     );
   });
 
+  it("rango de años y artista en las dos fuentes; el rango reemplaza a la década", async () => {
+    vi.mocked(musicbrainz.searchReleaseGroup).mockResolvedValue({
+      count: 3,
+      "release-groups": [
+        mbAlbum("piece", "Piece of Mind", "Iron Maiden", { "first-release-date": "1983-05-16" }),
+        mbAlbum("somewhere", "Somewhere in Time", "Iron Maiden", { "first-release-date": "1986-09-29" }),
+        // La cláusula es aproximada: el año se reaplica sobre lo que vuelve.
+        mbAlbum("beast", "The Number of the Beast", "Iron Maiden", { "first-release-date": "1982-03-22" }),
+      ],
+    });
+
+    const response = await searchAlbums("maiden", {
+      decade: 1970,
+      yearFrom: 1983,
+      yearTo: 1986,
+      artist: "Iron Maiden",
+    });
+
+    expect(response.results.map((result) => result.mbid)).toEqual(["piece", "somewhere"]);
+    expect(musicbrainz.searchReleaseGroup).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(musicbrainz.searchReleaseGroup).mock.calls[0]![0]).toBe(
+      '(maiden) AND firstreleasedate:[1983 TO 1986-12-31] AND artist:"Iron Maiden"',
+    );
+    expect(localMatch.matchLocalReleaseGroups).toHaveBeenCalledWith("maiden", {
+      limit: 10,
+      category: undefined,
+      decade: undefined,
+      yearFrom: 1983,
+      yearTo: 1986,
+      artist: "Iron Maiden",
+    });
+  });
+
   it("separador explícito: campos de artista y título, con el orden inverso si no hay nada", async () => {
     vi.mocked(musicbrainz.searchReleaseGroup)
       .mockResolvedValueOnce({ count: 0, "release-groups": [] })

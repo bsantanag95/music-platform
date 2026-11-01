@@ -6,6 +6,7 @@ import {
   recordingFreeQuery,
   releaseGroupFieldQuery,
   releaseGroupQuery,
+  withRecordingFilters,
 } from "./mb-query";
 
 describe("escapeLucene", () => {
@@ -23,6 +24,17 @@ describe("artistQuery", () => {
 
   it("filtro por tipo", () => {
     expect(artistQuery("dokken", "person")).toBe("(dokken) AND type:person");
+  });
+
+  it("filtros de país, inicio de actividad y estado", () => {
+    expect(artistQuery("soda", undefined, { country: "AR", beginFrom: 1980, beginTo: 1989 })).toBe(
+      "(soda) AND country:AR AND begin:[1980 TO 1989-12-31]",
+    );
+    expect(artistQuery("nirvana", "group", { ended: true })).toBe("(nirvana) AND type:group AND ended:true");
+    expect(artistQuery("x", undefined, { beginFrom: 1990 })).toBe("(x) AND begin:[1990 TO *]");
+    expect(artistQuery("x", undefined, { beginTo: 1960, ended: false })).toBe(
+      "(x) AND begin:[* TO 1960-12-31] AND ended:false",
+    );
   });
 });
 
@@ -52,6 +64,20 @@ describe("releaseGroupQuery", () => {
       'releasegroup:"C" AND artist:"A \\"B\\"" AND firstreleasedate:[1980 TO 1989-12-31]',
     );
   });
+
+  it("rango de años y artista", () => {
+    expect(releaseGroupQuery("iron maiden", { yearFrom: 1983, yearTo: 1986 })).toBe(
+      "(iron maiden) AND firstreleasedate:[1983 TO 1986-12-31]",
+    );
+    // El rango reemplaza a la década.
+    expect(releaseGroupQuery("kiss", { decade: 1970, yearFrom: 1980 })).toBe("(kiss) AND firstreleasedate:[1980 TO *]");
+    expect(releaseGroupQuery("greatest hits", { category: "compilation", artist: "Queen" })).toBe(
+      '(greatest hits) AND (secondarytype:compilation) AND artist:"Queen"',
+    );
+    expect(releaseGroupQuery("back in black", { artist: 'AC/DC "live"' })).toBe(
+      '(back in black) AND artist:"AC/DC \\"live\\""',
+    );
+  });
 });
 
 describe("recording queries", () => {
@@ -60,5 +86,13 @@ describe("recording queries", () => {
     expect(recordingFieldQuery("Dokken", "Kiss of Death")).toBe(
       'recording:"Kiss of Death" AND artist:"Dokken"',
     );
+  });
+
+  it("filtro de duración en milisegundos", () => {
+    expect(withRecordingFilters("hallelujah", { durMax: 420 })).toBe("(hallelujah) AND dur:[* TO 420999]");
+    expect(withRecordingFilters("hallelujah", { durMin: 60, durMax: 420 })).toBe(
+      "(hallelujah) AND dur:[60000 TO 420999]",
+    );
+    expect(withRecordingFilters("hallelujah")).toBe("hallelujah");
   });
 });

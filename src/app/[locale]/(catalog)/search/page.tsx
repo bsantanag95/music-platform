@@ -1,5 +1,11 @@
 import { getTranslations } from "next-intl/server";
-import { parseArtistTypeFilter, parseCategory, parseDecade } from "@/services/catalog/search/params";
+import {
+  effectiveDecade,
+  parseArtistTypeFilter,
+  parseCategory,
+  parseDecade,
+} from "@/services/catalog/search/params";
+import { fromRecord, parseAdvancedFilters } from "@/services/catalog/search/filters";
 import { SearchForm } from "@/components/catalog/SearchForm";
 import { RecentSearches } from "@/components/catalog/RecentSearches";
 import { parseSearchType } from "@/components/catalog/search-types";
@@ -32,6 +38,13 @@ async function SearchPage({ searchParams }: SearchPageProps) {
   const type = parseSearchType(params.type);
   const query = first(params.q)?.trim() ?? "";
   const all = first(params.all) === "1";
+  // Búsqueda avanzada (openspec: add-advanced-search-phase1): solo los filtros del tipo activo.
+  const filters = parseAdvancedFilters(type, fromRecord(params));
+  const artistType = parseArtistTypeFilter(params.artistType);
+  const category = parseCategory(params.category);
+  const pillParams: Record<string, string> = {};
+  if (type === "artist" && artistType) pillParams.artistType = artistType;
+  if (type === "album" && category) pillParams.category = category;
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col items-start gap-8 px-4 py-12">
@@ -42,20 +55,27 @@ async function SearchPage({ searchParams }: SearchPageProps) {
         ]}
       />
       <h1 className="font-display text-2xl text-paper">{t("search.pageTitle")}</h1>
-      <SearchForm initialQuery={query} initialType={type} />
+      <SearchForm
+        initialQuery={query}
+        initialType={type}
+        filters={filters}
+        pillParams={pillParams}
+        panelOpen={first(params.filters) === "1"}
+      />
       {!query ? <RecentSearches /> : null}
       {query ? (
         <section className="flex w-full flex-col gap-6">
           {type === "artist" ? (
-            <ArtistSection query={query} all={all} artistType={parseArtistTypeFilter(params.artistType)} />
+            <ArtistSection query={query} all={all} artistType={artistType} filters={filters} />
           ) : type === "album" ? (
             <AlbumSection
               query={query}
-              category={parseCategory(params.category)}
-              decade={parseDecade(params.decade)}
+              category={category}
+              decade={effectiveDecade(parseDecade(params.decade), filters)}
+              filters={filters}
             />
           ) : type === "song" ? (
-            <SongSection query={query} />
+            <SongSection query={query} filters={filters} />
           ) : (
             <UserSection query={query} all={all} />
           )}

@@ -13,6 +13,7 @@ import type {
   SongSearchResponse,
 } from "@/services/catalog/search/types";
 import type { ArtistTypeFilter } from "@/services/catalog/search/mb-query";
+import { filtersToParams, hasActiveFilters, type AdvancedFilters } from "@/services/catalog/search/filters";
 import type { ReleaseGroupCategoryValue } from "@/services/catalog/ingest-release-group";
 import { getProfileByUsername, searchUsers } from "@/services/social/profiles";
 import { getCurrentUser } from "@/services/auth/authorization";
@@ -27,6 +28,7 @@ import {
   SearchSummary,
 } from "@/components/catalog/search-results/SearchChrome";
 import { RemoteFailedNotice } from "@/components/catalog/search-results/RemoteFailedNotice";
+import { ActiveFilterChips } from "@/components/catalog/search-results/ActiveFilterChips";
 import { ArtistResults } from "@/components/catalog/search-results/ArtistResults";
 import { AlbumList } from "@/components/catalog/search-results/AlbumResults";
 import {
@@ -54,23 +56,26 @@ export async function ArtistSection({
   query,
   all,
   artistType,
+  filters = {},
 }: {
   query: string;
   all: boolean;
   artistType?: ArtistTypeFilter;
+  /** País, inicio de actividad y estado (openspec: add-advanced-search-phase1). */
+  filters?: AdvancedFilters;
 }) {
   const t = await getTranslations("catalog.search.results.artists");
   let response: ArtistSearchResponse | null = null;
   try {
-    response = await searchArtists(query, { artistType });
+    response = await searchArtists(query, { artistType, filters });
   } catch {
     return <SearchErrorState />;
   }
 
   // Coincidencia exacta única → perfil directo, con "¿No era este?" para
-  // volver a la lista (`all=1`). Con filtro de tipo la persona está
+  // volver a la lista (`all=1`). Con un filtro (tipo o panel) la persona está
   // explorando la lista, no buscando un nombre: no se redirige.
-  const unique = !all && !artistType ? uniqueExactArtist(response) : null;
+  const unique = !all && !artistType && !hasActiveFilters(filters) ? uniqueExactArtist(response) : null;
   if (unique) {
     redirect({
       href: `${artistHref(unique.name, unique.id)}?${new URLSearchParams({ from: "search", q: query }).toString()}`,
@@ -82,7 +87,9 @@ export async function ArtistSection({
     searchHref("artist", query, {
       artistType: value,
       all: all ? "1" : undefined,
+      ...filtersToParams(filters),
     });
+  const pillParams: Record<string, string> = artistType ? { artistType } : {};
 
   return (
     <>
@@ -90,7 +97,9 @@ export async function ArtistSection({
         query={query}
         type="artist"
         count={response.results.length}
+        filters={filters}
       />
+      <ActiveFilterChips type="artist" query={query} filters={filters} pillParams={pillParams} />
       <FilterPills
         label={t("filterLabel")}
         options={[
@@ -116,7 +125,7 @@ export async function ArtistSection({
       />
       {response.remoteFailed ? <RemoteFailedNotice /> : null}
       {response.results.length === 0 ? (
-        <SearchEmpty query={query} type="artist" />
+        <SearchEmpty query={query} type="artist" filters={filters} pillParams={pillParams} />
       ) : (
         <ArtistResults query={query} results={response.results} />
       )}
@@ -130,10 +139,14 @@ export async function AlbumSection({
   query,
   category,
   decade,
+  filters = {},
 }: {
   query: string;
   category?: ReleaseGroupCategoryValue;
+  /** Ya resuelta: sin década si hay un rango de años (`effectiveDecade`). */
   decade?: number;
+  /** Rango de años y artista (openspec: add-advanced-search-phase1). */
+  filters?: AdvancedFilters;
 }) {
   const t = await getTranslations("catalog");
   // Sesión para el menú de acciones de cada disco (openspec: extend-album-quick-actions).
@@ -141,14 +154,24 @@ export async function AlbumSection({
   const local = await searchAlbums(query, {
     category,
     decade,
+    ...filters,
     localOnly: true,
   });
+  // Las pastillas conservan los filtros del panel; elegir una década quita el rango de años.
+  const advanced = filtersToParams(filters);
+  const withoutYears = filtersToParams({ ...filters, yearFrom: undefined, yearTo: undefined });
   const href = (extra: { category?: string; decade?: number }) =>
-    searchHref("album", query, { category, decade, ...extra });
+    searchHref("album", query, {
+      category,
+      decade,
+      ...(extra.decade !== undefined ? withoutYears : advanced),
+      ...extra,
+    });
+  const pillParams: Record<string, string> = category ? { category } : {};
 
   // Los filtros van debajo del encabezado de resultados, tanto mientras llega
   // MusicBrainz (fallback) como en la lista final.
-  const filters = (
+  const pills = (
     <div className="flex flex-col gap-3">
       <FilterPills
         label={t("search.results.albums.categoryLabel")}
@@ -173,8 +196,8 @@ export async function AlbumSection({
           {
             key: "all",
             label: t("search.results.albums.decadeAll"),
-            href: searchHref("album", query, { category }),
-            active: decade === undefined,
+            href: searchHref("album", query, { category, ...advanced }),
+            active: decade === undefined && filters.yearFrom === undefined && filters.yearTo === undefined,
           },
           ...DECADES.map((value) => ({
             key: String(value),
@@ -193,8 +216,9 @@ export async function AlbumSection({
         <LocalFirst
           summary={
             <>
-              <SearchSummary query={query} type="album" count={null} />
-              {filters}
+              <SearchSummary query={query} type="album" count={null} filters={filters} />
+              {pills}
+              <ActiveFilterChips type="album" query={query} filters={filters} pillParams={pillParams} />
             </>
           }
         >
@@ -209,6 +233,8 @@ export async function AlbumSection({
         category={category}
         decade={decade}
         filters={filters}
+        pillParams={pillParams}
+        pills={pills}
         authenticated={authenticated}
       />
     </Suspense>
@@ -220,17 +246,21 @@ async function AlbumRemote({
   category,
   decade,
   filters,
+  pillParams,
+  pills,
   authenticated,
 }: {
   query: string;
   category?: ReleaseGroupCategoryValue;
   decade?: number;
-  filters: ReactNode;
+  filters: AdvancedFilters;
+  pillParams: Record<string, string>;
+  pills: ReactNode;
   authenticated: boolean;
 }) {
   let response: AlbumSearchResponse;
   try {
-    response = await searchAlbums(query, { category, decade });
+    response = await searchAlbums(query, { category, decade, ...filters });
   } catch {
     return <SearchErrorState />;
   }
@@ -240,14 +270,16 @@ async function AlbumRemote({
         query={query}
         type="album"
         count={response.total ?? response.results.length}
+        filters={filters}
       />
-      {filters}
+      {pills}
+      <ActiveFilterChips type="album" query={query} filters={filters} pillParams={pillParams} />
       {response.remoteFailed ? <RemoteFailedNotice /> : null}
       {response.refine ? (
         <RefineHint kind="album" query={query} {...response.refine} />
       ) : null}
       {response.results.length === 0 ? (
-        <SearchEmpty query={query} type="album" />
+        <SearchEmpty query={query} type="album" filters={filters} pillParams={pillParams} />
       ) : (
         <div className="flex flex-col gap-4">
           <AlbumList albums={response.results} authenticated={authenticated} />
@@ -255,7 +287,7 @@ async function AlbumRemote({
             <LoadMoreResults
               kind="album"
               query={query}
-              filters={{ category, decade }}
+              filters={{ category, decade, advanced: filters }}
               initialNextOffset={response.nextOffset}
               seen={response.results.map((album) => album.id)}
               authenticated={authenticated}
@@ -269,33 +301,46 @@ async function AlbumRemote({
 
 // ---------- Canciones
 
-export async function SongSection({ query }: { query: string }) {
-  const local = await searchSongs(query, { localOnly: true });
+export async function SongSection({
+  query,
+  filters = {},
+}: {
+  query: string;
+  /** Artista y duración (openspec: add-advanced-search-phase1). */
+  filters?: AdvancedFilters;
+}) {
+  const local = await searchSongs(query, { localOnly: true, filters });
   return (
     <Suspense
       fallback={
         <LocalFirst
-          summary={<SearchSummary query={query} type="song" count={null} />}
+          summary={
+            <>
+              <SearchSummary query={query} type="song" count={null} filters={filters} />
+              <ActiveFilterChips type="song" query={query} filters={filters} />
+            </>
+          }
         >
           {local.results.length > 0 ? <SongResults response={local} /> : null}
         </LocalFirst>
       }
     >
-      <SongRemote query={query} />
+      <SongRemote query={query} filters={filters} />
     </Suspense>
   );
 }
 
-async function SongRemote({ query }: { query: string }) {
+async function SongRemote({ query, filters }: { query: string; filters: AdvancedFilters }) {
   let response: SongSearchResponse;
   try {
-    response = await searchSongs(query);
+    response = await searchSongs(query, { filters });
   } catch {
     return <SearchErrorState />;
   }
   return (
     <>
-      <SearchSummary query={query} type="song" count={null} />
+      <SearchSummary query={query} type="song" count={null} filters={filters} />
+      <ActiveFilterChips type="song" query={query} filters={filters} />
       <SongInterpretation
         interpretation={response.interpretation}
         alternatives={response.alternatives}
@@ -305,7 +350,7 @@ async function SongRemote({ query }: { query: string }) {
         <RefineHint kind="song" query={query} {...response.refine} />
       ) : null}
       {response.results.length === 0 ? (
-        <SearchEmpty query={query} type="song" />
+        <SearchEmpty query={query} type="song" filters={filters} />
       ) : (
         <div className="flex flex-col gap-4">
           <SongResults response={response} />
@@ -313,7 +358,7 @@ async function SongRemote({ query }: { query: string }) {
             <LoadMoreResults
               kind="song"
               query={query}
-              filters={{}}
+              filters={{ advanced: filters }}
               initialNextOffset={response.nextOffset}
               seen={response.results.map((group) => group.key)}
             />

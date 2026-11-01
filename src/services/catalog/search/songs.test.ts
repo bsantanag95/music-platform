@@ -214,6 +214,42 @@ describe("searchSongs", () => {
     expect(response.results[0]).toMatchObject({ title: "Stairway de Prueba", artistName: "Artista de Prueba" });
   });
 
+  it("filtro de artista: sin búsqueda de artistas, una sola de recordings y el texto entero como título", async () => {
+    vi.mocked(musicbrainz.searchRecording).mockResolvedValue({
+      count: 2,
+      recordings: [
+        { ...rec("buckley", "Hallelujah", "Jeff Buckley"), length: 413_000 },
+        { ...rec("long", "Hallelujah", "Jeff Buckley"), length: 500_000 },
+      ],
+    });
+    vi.mocked(ingestRecording.albumsFromMbReleases).mockResolvedValue([album("rg-grace", "Grace", 1994)]);
+
+    const response = await searchSongs("hallelujah", { filters: { artist: "jeff buckley", durMax: 420 } });
+
+    expect(musicbrainz.searchArtist).not.toHaveBeenCalled();
+    expect(musicbrainz.searchRecording).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(musicbrainz.searchRecording).mock.calls[0]![0]).toBe(
+      '(recording:"hallelujah" AND artist:"jeff buckley") AND dur:[* TO 420999]',
+    );
+    expect(response.results).toHaveLength(1);
+    expect(response.results[0]).toMatchObject({ title: "Hallelujah", artistName: "Jeff Buckley" });
+    // Solo la versión que cumple la duración pasa al browse de apariciones.
+    expect(musicbrainz.browseReleasesByRecording).toHaveBeenCalledTimes(1);
+    expect(musicbrainz.browseReleasesByRecording).toHaveBeenCalledWith("buckley", undefined);
+  });
+
+  it("filtro de duración: una grabación sin duración conocida no pasa", async () => {
+    vi.mocked(musicbrainz.searchArtist).mockResolvedValue({ artists: [] });
+    vi.mocked(musicbrainz.searchRecording).mockResolvedValue({
+      count: 1,
+      recordings: [rec("unknown", "Hallelujah", "Someone")],
+    });
+
+    const response = await searchSongs("hallelujah", { filters: { durMax: 420 } });
+
+    expect(response.results).toEqual([]);
+  });
+
   it("una versión sin artista acreditado se une al grupo del mismo título", async () => {
     vi.mocked(musicbrainz.searchArtist).mockResolvedValue({ artists: [] });
     vi.mocked(musicbrainz.searchRecording).mockResolvedValue({

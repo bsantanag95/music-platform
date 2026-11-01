@@ -185,6 +185,37 @@ describe("searchArtists", () => {
     expect(response.results.map((result) => result.name)).toEqual(["Don Dokken"]);
   });
 
+  it("filtros avanzados en una sola consulta a MusicBrainz y en lo local", async () => {
+    vi.mocked(matchLocalArtists).mockResolvedValue([]);
+    vi.mocked(musicbrainz.searchArtist).mockResolvedValue({
+      artists: [{ id: "soda", name: "Soda Stereo", type: "Group", country: "AR", score: 100 }],
+    });
+
+    const filters = { country: "AR", beginFrom: 1980, beginTo: 1989 };
+    const response = await searchArtists("soda", { filters });
+
+    expect(musicbrainz.searchArtist).toHaveBeenCalledTimes(1);
+    expect(musicbrainz.searchArtist).toHaveBeenCalledWith(
+      "(soda) AND country:AR AND begin:[1980 TO 1989-12-31]",
+      { signal: undefined },
+    );
+    expect(matchLocalArtists).toHaveBeenCalledWith("soda", { limit: 10, ...filters });
+    expect(response.results.map((result) => [result.name, result.country])).toEqual([["Soda Stereo", "AR"]]);
+  });
+
+  it("un artista local sin país vuelve con el país de MusicBrainz", async () => {
+    // El SQL lo deja fuera (sin país); la página remota lo trae y el stub existente se reutiliza.
+    vi.mocked(matchLocalArtists).mockResolvedValue([]);
+    vi.mocked(musicbrainz.searchArtist).mockResolvedValue({
+      artists: [{ id: "sumo", name: "Sumo", type: "Group", country: "AR", score: 100 }],
+    });
+    vi.mocked(upsertArtistStubsFromSearch).mockResolvedValue([row({ mbid: "sumo", name: "Sumo" })]);
+
+    const response = await searchArtists("sumo", { filters: { country: "AR" } });
+
+    expect(response.results.map((result) => [result.name, result.country])).toEqual([["Sumo", "AR"]]);
+  });
+
   it("MusicBrainz caído con datos locales: 200 con remoteFailed y sin redirección", async () => {
     vi.mocked(matchLocalArtists).mockResolvedValue([row({ name: "Icon", mbid: "icon-az" })]);
     vi.mocked(musicbrainz.searchArtist).mockRejectedValue(new Error("503"));

@@ -1,5 +1,11 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import {
+  filtersForType,
+  filtersToParams,
+  hasActiveFilters,
+  type AdvancedFilters,
+} from "@/services/catalog/search/filters";
 import { SEARCH_TYPES, searchHref, type SearchType } from "../search-types";
 import { SearchTypeIcon } from "../SearchTypeIcon";
 
@@ -7,13 +13,18 @@ import { SearchTypeIcon } from "../SearchTypeIcon";
 // redesign-scoped-search). Sin "use client": se renderizan en el servidor y
 // también dentro de los Client Components que cargan más resultados.
 
-/** Accesos para repetir la misma consulta en los otros tipos, sin reescribir. */
+/**
+ * Accesos para repetir la misma consulta en los otros tipos, sin reescribir. Conservan solo los
+ * filtros que el tipo destino entiende (openspec: add-advanced-search-phase1).
+ */
 export function SearchTypeSwitch({
   query,
   current,
+  filters = {},
 }: {
   query: string;
   current: SearchType;
+  filters?: AdvancedFilters;
 }) {
   const t = useTranslations("catalog.search");
   return (
@@ -27,7 +38,7 @@ export function SearchTypeSwitch({
       {SEARCH_TYPES.filter((type) => type !== current).map((type) => (
         <Link
           key={type}
-          href={searchHref(type, query)}
+          href={searchHref(type, query, filtersToParams(filtersForType(type, filters)))}
           className="inline-flex items-center gap-1.5 rounded-full border border-ink-border px-2.5 py-1 font-data text-xs text-paper-muted transition-colors hover:border-amber/60 hover:text-paper"
         >
           <SearchTypeIcon type={type} className="size-3" />
@@ -43,10 +54,12 @@ export function SearchSummary({
   query,
   type,
   count,
+  filters,
 }: {
   query: string;
   type: SearchType;
   count: number | null;
+  filters?: AdvancedFilters;
 }) {
   const t = useTranslations("catalog.search");
   return (
@@ -65,29 +78,42 @@ export function SearchSummary({
           </span>
         ) : null}
       </div>
-      <SearchTypeSwitch query={query} current={type} />
+      <SearchTypeSwitch query={query} current={type} filters={filters} />
     </header>
   );
 }
 
-/** Estado vacío del tipo, con los accesos a los otros tipos. */
+/** Estado vacío del tipo, con los accesos a los otros tipos y, con filtros, "Quitar filtros". */
 export function SearchEmpty({
   query,
   type,
+  filters = {},
+  pillParams = {},
 }: {
   query: string;
   type: SearchType;
+  filters?: AdvancedFilters;
+  pillParams?: Record<string, string>;
 }) {
   const t = useTranslations("catalog.search");
+  const filtered = hasActiveFilters(filters);
   return (
     <div className="flex flex-col items-center gap-4 rounded-lg border border-ink-border bg-ink-surface px-6 py-10 text-center">
       <h3 className="font-display text-lg text-paper">
         {t("results.emptyTitle")}
       </h3>
       <p className="max-w-sm font-body text-sm text-paper-muted">
-        {t(`results.emptyDescription.${type}`)}
+        {filtered ? t("advanced.emptyFiltered") : t(`results.emptyDescription.${type}`)}
       </p>
-      <SearchTypeSwitch query={query} current={type} />
+      {filtered ? (
+        <Link
+          href={searchHref(type, query, pillParams)}
+          className="rounded border border-amber/70 px-3 py-1.5 font-display text-sm text-paper transition-colors hover:border-amber"
+        >
+          {t("advanced.clear")}
+        </Link>
+      ) : null}
+      <SearchTypeSwitch query={query} current={type} filters={filters} />
     </div>
   );
 }

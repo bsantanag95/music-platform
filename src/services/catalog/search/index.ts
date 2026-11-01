@@ -12,12 +12,13 @@ import { searchSongs } from "./songs";
 import type { CatalogSearchResponse } from "./types";
 
 export function searchCatalogByType(
-  { type, q, offset, artistType, category, decade, purpose }: CatalogSearchParams,
+  { type, q, offset, artistType, category, decade, filters, purpose }: CatalogSearchParams,
   signal?: AbortSignal,
 ): Promise<CatalogSearchResponse> {
-  if (type === "artist") return searchArtists(q, { artistType, signal });
-  if (type === "album") return searchAlbums(q, { category, decade, offset, signal });
-  return searchSongs(q, { offset, purpose, signal });
+  // `filters` solo trae los del tipo pedido (openspec: add-advanced-search-phase1).
+  if (type === "artist") return searchArtists(q, { artistType, filters, signal });
+  if (type === "album") return searchAlbums(q, { category, decade, ...filters, offset, signal });
+  return searchSongs(q, { offset, purpose, filters, signal });
 }
 
 export { searchAlbums, searchArtists, searchSongs };

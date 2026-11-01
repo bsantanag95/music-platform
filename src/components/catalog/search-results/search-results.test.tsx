@@ -9,6 +9,7 @@ import { ArtistResults } from "./ArtistResults";
 import { RefineHint, SearchEmpty, SearchTypeSwitch } from "./SearchChrome";
 import { SongInterpretation, SongResults } from "./SongResults";
 import { SearchOriginNotice } from "./SearchOriginNotice";
+import { ActiveFilterChips } from "./ActiveFilterChips";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, ...rest }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
@@ -53,6 +54,76 @@ describe("SearchTypeSwitch / SearchEmpty", () => {
 
     expect(screen.getByText(labels.results.emptyDescription.song)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: labels.types.album })).toBeInTheDocument();
+  });
+});
+
+describe("filtros de la búsqueda avanzada", () => {
+  it("cambiar de tipo conserva solo los filtros compatibles", () => {
+    renderWithIntl(
+      <SearchTypeSwitch
+        query="hallelujah"
+        current="album"
+        filters={{ artist: "jeff buckley", yearFrom: 1994 }}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: labels.types.song })).toHaveAttribute(
+      "href",
+      "/search?type=song&q=hallelujah&artist=jeff+buckley",
+    );
+    expect(screen.getByRole("link", { name: labels.types.artist })).toHaveAttribute(
+      "href",
+      "/search?type=artist&q=hallelujah",
+    );
+  });
+
+  it("un chip por filtro que lo quita, y Quitar filtros conserva las pastillas", () => {
+    renderWithIntl(
+      <ActiveFilterChips
+        type="artist"
+        query="sumo"
+        filters={{ country: "AR", beginFrom: 1980, beginTo: 1989, ended: true }}
+        pillParams={{ artistType: "group" }}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: /País: Argentina/ })).toHaveAttribute(
+      "href",
+      "/search?type=artist&q=sumo&artistType=group&beginFrom=1980&beginTo=1989&ended=1",
+    );
+    expect(screen.getByRole("link", { name: /Inicio: 1980–1989/ })).toHaveAttribute(
+      "href",
+      "/search?type=artist&q=sumo&artistType=group&country=AR&ended=1",
+    );
+    expect(screen.getByRole("link", { name: /Ya no en actividad/ })).toHaveAttribute(
+      "href",
+      "/search?type=artist&q=sumo&artistType=group&country=AR&beginFrom=1980&beginTo=1989",
+    );
+    expect(screen.getByRole("link", { name: labels.advanced.clear })).toHaveAttribute(
+      "href",
+      "/search?type=artist&q=sumo&artistType=group",
+    );
+  });
+
+  it("rangos abiertos y duraciones en m:ss; sin filtros no hay chips", () => {
+    const { unmount } = renderWithIntl(
+      <ActiveFilterChips type="song" query="hallelujah" filters={{ durMax: 420 }} />,
+    );
+    expect(screen.getByRole("link", { name: /Duración: Hasta 7:00/ })).toBeInTheDocument();
+    unmount();
+
+    renderWithIntl(<ActiveFilterChips type="album" query="kiss" filters={{ yearFrom: 1980 }} />);
+    expect(screen.getByRole("link", { name: /Desde 1980/ })).toHaveAttribute("href", "/search?type=album&q=kiss");
+  });
+
+  it("sin resultados con filtros: Quitar filtros", () => {
+    renderWithIntl(<SearchEmpty query="maiden" type="album" filters={{ yearFrom: 2090 }} />);
+
+    expect(screen.getByText(labels.advanced.emptyFiltered)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: labels.advanced.clear })).toHaveAttribute(
+      "href",
+      "/search?type=album&q=maiden",
+    );
   });
 });
 

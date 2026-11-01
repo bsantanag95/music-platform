@@ -58,6 +58,7 @@ describe("GET /api/catalog/search", () => {
         artistType: undefined,
         category: undefined,
         decade: undefined,
+        filters: {},
         purpose: undefined,
       },
       expect.any(AbortSignal),
@@ -79,9 +80,22 @@ describe("GET /api/catalog/search", () => {
     await GET(request("?type=album&q=destroyer&category=jazz&decade=1975"));
 
     expect(vi.mocked(searchCatalogByType).mock.calls.map(([params]) => params)).toEqual([
-      { type: "album", q: "destroyer", offset: 25, artistType: undefined, category: "studio", decade: 1970, purpose: undefined },
-      { type: "album", q: "destroyer", offset: 0, artistType: undefined, category: undefined, decade: undefined, purpose: undefined },
+      { type: "album", q: "destroyer", offset: 25, artistType: undefined, category: "studio", decade: 1970, filters: {}, purpose: undefined },
+      { type: "album", q: "destroyer", offset: 0, artistType: undefined, category: undefined, decade: undefined, filters: {}, purpose: undefined },
     ]);
+  });
+
+  it("pasa los filtros avanzados del tipo y descarta los inválidos con 200", async () => {
+    vi.mocked(searchCatalogByType).mockResolvedValue(poisons);
+
+    const ok = await GET(request("?type=album&q=iron%20maiden&yearFrom=1986&yearTo=1983&artist=Iron%20Maiden&decade=1980"));
+    const invalid = await GET(request("?type=artist&q=sumo&country=XYZ&beginFrom=80&ended=si&yearFrom=1983"));
+
+    expect(ok.status).toBe(200);
+    expect(invalid.status).toBe(200);
+    const [albumCall, artistCall] = vi.mocked(searchCatalogByType).mock.calls.map(([params]) => params);
+    expect(albumCall).toMatchObject({ decade: undefined, filters: { yearFrom: 1983, yearTo: 1986, artist: "Iron Maiden" } });
+    expect(artistCall!.filters).toEqual({});
   });
 
   it("pasa purpose=pick y la señal de la solicitud; otro purpose se ignora", async () => {

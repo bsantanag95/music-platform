@@ -41,8 +41,12 @@ const LOCAL_LIMIT = 10;
 
 export interface AlbumSearchOptions {
   category?: ReleaseGroupCategoryValue;
-  /** Primer año de la década (1970, 1980, …). */
+  /** Primer año de la década (1970, 1980, …). Un rango de años la reemplaza. */
   decade?: number;
+  /** Rango de años y artista (openspec: add-advanced-search-phase1). */
+  yearFrom?: number;
+  yearTo?: number;
+  artist?: string;
   offset?: number;
   /**
    * Solo coincidencias locales, sin MusicBrainz ni escrituras: lo que la
@@ -58,9 +62,12 @@ function joinArtistCredit(credits: MBArtistCreditItem[] | undefined): string | n
   return credits.map((item) => `${item.name}${item.joinphrase ?? ""}`).join("");
 }
 
-function inDecade(year: number | null, decade: number | undefined): boolean {
-  if (decade === undefined) return true;
-  return year !== null && year >= decade && year <= decade + 9;
+/** Año dentro del rango pedido (rango de años o década: `filters` nunca trae los dos). */
+function inYears(year: number | null, { decade, yearFrom, yearTo }: ReleaseGroupQueryOptions): boolean {
+  const from = yearFrom ?? decade;
+  const to = yearTo ?? (decade !== undefined ? decade + 9 : undefined);
+  if (from === undefined && to === undefined) return true;
+  return year !== null && (from === undefined || year >= from) && (to === undefined || year <= to);
 }
 
 /**
@@ -132,11 +139,18 @@ interface Entry {
 
 export async function searchAlbums(
   query: string,
-  { category, decade, offset = 0, localOnly = false, signal }: AlbumSearchOptions = {},
+  { category, decade, yearFrom, yearTo, artist, offset = 0, localOnly = false, signal }: AlbumSearchOptions = {},
 ): Promise<AlbumSearchResponse> {
   const q = query.trim();
   const text = withoutSeparator(q);
-  const filters: ReleaseGroupQueryOptions = { category, decade };
+  const hasRange = yearFrom !== undefined || yearTo !== undefined;
+  const filters: ReleaseGroupQueryOptions = {
+    category,
+    decade: hasRange ? undefined : decade,
+    yearFrom,
+    yearTo,
+    artist,
+  };
 
   // Lo local solo acompaña a la primera página: "Cargar más" pagina MusicBrainz.
   const localRows = offset === 0 ? await localCandidates(text, filters) : [];
@@ -237,10 +251,10 @@ export async function searchAlbums(
   });
 
   // Las cláusulas de MusicBrainz son una aproximación: el filtro exacto se
-  // reaplica sobre la categoría mapeada y el año conocido.
+  // reaplica sobre la categoría mapeada y el año conocido. El artista ya lo
+  // filtraron las dos fuentes (SQL y `artist:"…"`).
   const filtered = entries.filter(
-    (entry) =>
-      (!category || entry.result.category === category) && inDecade(entry.result.year, decade),
+    (entry) => (!category || entry.result.category === category) && inYears(entry.result.year, filters),
   );
   const activity = await activityScores(
     "release-group",

@@ -81,6 +81,12 @@ describe("ArtistSection", () => {
     mocks.searchArtists.mockResolvedValue(response([artist({ id: "s", name: "Sabrina Carpenter", exact: true })]));
     await ArtistSection({ query: "Sabrina Carpenter", all: true });
     await ArtistSection({ query: "Sabrina Carpenter", all: false, artistType: "person" });
+    // Un filtro del panel tampoco (openspec: add-advanced-search-phase1).
+    await ArtistSection({ query: "Sabrina Carpenter", all: false, filters: { country: "US" } });
+    expect(mocks.searchArtists).toHaveBeenLastCalledWith("Sabrina Carpenter", {
+      artistType: undefined,
+      filters: { country: "US" },
+    });
 
     mocks.searchArtists.mockResolvedValue(response([artist({ id: "i", name: "Icon", exact: true })], true));
     await ArtistSection({ query: "icon", all: false });
