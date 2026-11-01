@@ -12,8 +12,8 @@ bloques Composición y Créditos de esta grabación; "Esta grabación aparece en
 versiones de la canción"; y los comentarios. La página SHALL NOT tener pestañas. En
 escritorio el panel "Tu relación" SHALL ocupar una columna lateral solo a la altura de la
 cabecera, y el resto de las zonas SHALL usar el ancho completo. La carátula SHALL mostrarse
-como máximo a 250 px de lado. Una zona sin datos SHALL NOT renderizarse, salvo la cabecera,
-el panel y los comentarios.
+como máximo a 250 px de lado y, en móvil, a 96 px junto al bloque de identidad. Una zona sin
+datos SHALL NOT renderizarse, salvo la cabecera, el panel y los comentarios.
 
 #### Scenario: Escritorio
 
@@ -25,8 +25,8 @@ el panel y los comentarios.
 #### Scenario: Móvil
 
 - **WHEN** una persona abre una canción en un viewport móvil
-- **THEN** las zonas se apilan en este orden: carátula e identidad, una línea resumen de
-  comunidad, el panel "Tu relación", la ficha técnica, la tira de pistas, composición,
+- **THEN** las zonas se apilan en este orden: carátula junto a la identidad, la ficha
+  técnica, la franja de comunidad, el panel "Tu relación", la tira de pistas, composición,
   créditos, discos, versiones y comentarios, sin desbordamiento horizontal de la página
 
 #### Scenario: Canción sin créditos ni versiones
