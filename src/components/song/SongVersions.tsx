@@ -3,6 +3,7 @@
 import { useId, useState, type KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { SECONDARY_LINK, SEGMENT_GROUP, SEGMENT_OPTION } from "@/components/ui/segmented";
 import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 import { formatDuration } from "@/components/album/album-format";
 import { VersionAttributeTags } from "@/components/catalog/VersionAttributeTags";
@@ -18,6 +19,9 @@ import { groupByDisc, variantLabel, type VersionDiscRow } from "./song-versions"
 const GROUP_ORDER: VersionGroup[] = ["covers", "live", "others"];
 /** Filas (discos) visibles de un grupo antes del "+N". */
 export const ROWS_VISIBLE = 10;
+
+/** Nombre del artista comodín de MusicBrainz para créditos sin artista conocido. */
+const UNKNOWN_ARTIST = "[unknown]";
 
 // Columnas: año | (artista) | disco | grabaciones. Clases literales para que Tailwind las vea.
 const COLUMNS_OWN = "sm:grid-cols-[3rem_minmax(0,1fr)_minmax(0,1.2fr)]";
@@ -50,11 +54,16 @@ function DiscRow({ row, songTitle, withArtist }: { row: VersionDiscRow; songTitl
   const labels = row.recordings.map((entry) => variantLabel(entry.title, songTitle));
   const unnamedTotal = labels.filter((label) => label === null).length;
   let unnamed = 0;
-  const artist = row.artist && (
-    <Link href={artistHref(row.artist.name, row.artist.id)} className="text-paper [overflow-wrap:anywhere] hover:text-amber hover:underline">
-      {row.artist.name}
-    </Link>
-  );
+  // El artista comodín de MusicBrainz se nombra en la interfaz y sin enlace (openspec: refine-song-page-phase1, D2).
+  const artist =
+    row.artist &&
+    (row.artist.name === UNKNOWN_ARTIST ? (
+      <span className="text-paper-muted">{t("unknownArtist")}</span>
+    ) : (
+      <Link href={artistHref(row.artist.name, row.artist.id)} className="text-paper [overflow-wrap:anywhere] hover:text-amber hover:underline">
+        {row.artist.name}
+      </Link>
+    ));
   return (
     <li
       className={`grid grid-cols-[3rem_minmax(0,1fr)] items-baseline gap-x-4 gap-y-1 py-2.5 ${
@@ -123,7 +132,7 @@ function GroupTable({ entries, songTitle, songArtistIds, withArtist }: GroupTabl
           type="button"
           aria-expanded={showAll}
           onClick={() => setShowAll((current) => !current)}
-          className="self-start pt-2 font-data text-xs text-amber hover:underline"
+          className={`self-start pt-2 font-data text-xs ${SECONDARY_LINK}`}
         >
           {showAll ? t("showLess") : t("showMore", { count: hidden })}
         </button>
@@ -182,7 +191,7 @@ export function SongVersions({ versions, songTitle, songArtistIds }: SongVersion
         </>
       ) : (
         <>
-          <div role="tablist" aria-label={t("tablist")} className="flex flex-wrap gap-2" onKeyDown={onKeyDown}>
+          <div role="tablist" aria-label={t("tablist")} className={SEGMENT_GROUP} onKeyDown={onKeyDown}>
             {groups.map((group) => {
               const isActive = group === active;
               return (
@@ -195,11 +204,9 @@ export function SongVersions({ versions, songTitle, songArtistIds }: SongVersion
                   aria-controls={`${baseId}-panel-${group}`}
                   tabIndex={isActive ? 0 : -1}
                   onClick={() => setSelected(group)}
-                  className={`rounded border px-3 py-1.5 font-data text-xs transition-colors ${
-                    isActive ? "border-amber text-paper" : "border-ink-border text-paper-muted hover:text-paper"
-                  }`}
+                  className={SEGMENT_OPTION}
                 >
-                  {t(`groups.${group}`)} · {versions[group].length}
+                  {t(`groups.${group}`)} <span className="text-paper-muted">{versions[group].length}</span>
                 </button>
               );
             })}

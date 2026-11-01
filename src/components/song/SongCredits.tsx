@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { SECONDARY_LINK } from "@/components/ui/segmented";
 import { albumHref, artistHref } from "@/lib/catalog-links";
 import { ROLES_VISIBLE, useRoleFormatter } from "@/components/album/AlbumCredits";
 import { SongwriterNames, songwritersShareRoles } from "@/components/catalog/SongwriterNames";
@@ -13,8 +14,10 @@ import { orderSound, splitMembers } from "./song-credits";
 // créditos del álbum. La composición va aparte porque en la canción la obra es lo que une a sus
 // versiones.
 
-const blockClass = "flex min-w-0 flex-col gap-2 rounded border border-ink-border bg-ink-surface px-4 py-3";
-const headingClass = "font-data text-xs uppercase tracking-wider text-paper-muted";
+// Título de sección como Apariciones y Versiones; la caja envuelve solo el contenido (openspec: refine-song-page-phase1, D3).
+const sectionClass = "flex min-w-0 flex-col gap-3";
+const boxClass = "flex min-w-0 flex-col gap-2 rounded border border-ink-border bg-ink-surface px-4 py-3";
+const headingClass = "font-display text-lg text-paper";
 
 /** El bloque Composición solo aparece cuando agrega algo: roles distintos entre autores. */
 export function hasCompositionBlock(credits: RecordingCredits): boolean {
@@ -26,11 +29,11 @@ export function SongComposition({ credits }: { credits: RecordingCredits }) {
   const t = useTranslations("catalog.song");
   if (!hasCompositionBlock(credits)) return null;
   return (
-    <section aria-labelledby="song-composition" className={blockClass}>
+    <section aria-labelledby="song-composition" className={sectionClass}>
       <h2 id="song-composition" className={headingClass}>
         {t("composition")}
       </h2>
-      <p className="font-body text-sm text-paper">
+      <p className={`${boxClass} font-body text-sm text-paper`}>
         <SongwriterNames songwriters={credits.groups.songwriting} showRoles />
       </p>
     </section>
@@ -111,7 +114,7 @@ function CreditGroup({ kind, credits }: { kind: TrackCreditKind; credits: Record
         <PeopleList kind={kind} people={main} />
         {assistants.length > 0 && (
           <details className="group/assistants">
-            <summary className="cursor-pointer list-none py-1.5 font-data text-xs text-amber hover:underline [&::-webkit-details-marker]:hidden">
+            <summary className="cursor-pointer list-none py-1.5 font-data text-xs text-paper-muted hover:text-amber hover:underline [&::-webkit-details-marker]:hidden">
               <span className="group-open/assistants:hidden">{tSong("assistants", { count: assistants.length })}</span>
               <span className="hidden group-open/assistants:inline">{tSong("hideAssistants")}</span>
             </summary>
@@ -146,28 +149,30 @@ export function SongRecordingCredits({
   const hasRest = REST_KINDS.some((kind) => credits.groups[kind].length > 0);
 
   return (
-    <section aria-labelledby="song-credits" className={blockClass}>
+    <section aria-labelledby="song-credits" className={sectionClass}>
       <h2 id="song-credits" className={headingClass}>
         {t("recordingCredits")}
       </h2>
-      {/* Intérpretes a la izquierda y el resto apilado a la derecha: se leen en orden. */}
-      <div className={`grid grid-cols-1 gap-x-8 gap-y-4 ${hasPerformers && hasRest ? "lg:grid-cols-2" : ""}`}>
-        {hasPerformers && <CreditGroup kind="performers" credits={credits} />}
-        {hasRest && (
-          <div className="flex min-w-0 flex-col gap-4">
-            {REST_KINDS.map((kind) => (
-              <Fragment key={kind}>
-                <CreditGroup kind={kind} credits={credits} />
-              </Fragment>
-            ))}
-          </div>
+      <div className={boxClass}>
+        {/* Intérpretes a la izquierda y el resto apilado a la derecha: se leen en orden. */}
+        <div className={`grid grid-cols-1 gap-x-8 gap-y-4 ${hasPerformers && hasRest ? "lg:grid-cols-2" : ""}`}>
+          {hasPerformers && <CreditGroup kind="performers" credits={credits} />}
+          {hasRest && (
+            <div className="flex min-w-0 flex-col gap-4">
+              {REST_KINDS.map((kind) => (
+                <Fragment key={kind}>
+                  <CreditGroup kind={kind} credits={credits} />
+                </Fragment>
+              ))}
+            </div>
+          )}
+        </div>
+        {albumLink && (
+          <Link href={`${albumHref(null, "", principalReleaseGroupId)}/credits`} className={`self-start font-data text-xs ${SECONDARY_LINK}`}>
+            {t("albumWideCredits")} →
+          </Link>
         )}
       </div>
-      {albumLink && (
-        <Link href={`${albumHref(null, "", principalReleaseGroupId)}/credits`} className="self-start font-data text-xs text-amber hover:underline">
-          {t("albumWideCredits")} →
-        </Link>
-      )}
     </section>
   );
 }

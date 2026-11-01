@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { SECONDARY_LINK } from "@/components/ui/segmented";
 import { albumHref } from "@/lib/catalog-links";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { LazyCoverImage } from "@/components/catalog/LazyCoverImage";
@@ -51,7 +52,7 @@ function DiscRow({ disc, year, isOriginal }: { disc: ContainingAlbum; year: numb
             {isOriginal && (
               <span
                 title={fullDate ? t("originalOn", { date: fullDate }) : undefined}
-                className={`${TAG_CLASS} border-amber/60 text-amber`}
+                className={`${TAG_CLASS} border-ink-border text-paper`}
               >
                 {t("original")}
               </span>
@@ -106,7 +107,7 @@ export function SongAppearances({ grouped, years }: SongAppearancesProps) {
                 return next;
               })
             }
-            className="self-start font-data text-xs text-amber hover:underline"
+            className={`self-start font-data text-xs ${SECONDARY_LINK}`}
           >
             {open ? t("showLess") : t("showMore", { count: hidden })}
           </button>

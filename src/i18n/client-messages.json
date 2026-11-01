@@ -1840,6 +1840,7 @@
     "catalog.song.versions.showLess",
     "catalog.song.versions.showMore",
     "catalog.song.versions.tablist",
+    "catalog.song.versions.unknownArtist",
     "catalog.versionAttributes",
     "collection.addChoiceLabel",
     "collection.addToCollection",

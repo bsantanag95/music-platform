@@ -26,7 +26,7 @@ export function ExpandableRoles({ visible, hidden }: ExpandableRolesProps) {
           aria-expanded={open}
           aria-label={open ? undefined : t("moreRolesLabel", { count: hidden.length })}
           onClick={() => setOpen((current) => !current)}
-          className="ml-1 text-amber hover:underline"
+          className="ml-1 text-paper-muted hover:text-amber hover:underline"
         >
           {open ? tSong("fewerRoles") : t("moreRoles", { count: hidden.length })}
         </button>

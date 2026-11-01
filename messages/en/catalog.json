@@ -1058,7 +1058,8 @@
         "artist": "Artist",
         "disc": "Release",
         "recordings": "Recordings"
-      }
+      },
+      "unknownArtist": "Unknown artist"
     },
     "relation": {
       "signInPrompt": "Rate this song and log your listens.",

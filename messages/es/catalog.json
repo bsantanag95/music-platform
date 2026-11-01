@@ -1058,7 +1058,8 @@
         "artist": "Artista",
         "disc": "Disco",
         "recordings": "Grabaciones"
-      }
+      },
+      "unknownArtist": "Artista desconocido"
     },
     "relation": {
       "signInPrompt": "Valora y registra tus escuchas.",
