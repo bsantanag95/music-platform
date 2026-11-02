@@ -166,9 +166,11 @@ el primer orden vacío).
   palabras completas entre título y canción, ≤2 tokens extra en el título.
 - `results` son grupos **(título base, artista principal)**: las versiones (`(live)`,
   `[demo]`, ` - Live at …`) cuentan como la misma canción, pero nunca se mezclan artistas. Solo
-  el primer grupo se expande: se browséan sus primeras **4** grabaciones (una página de 100 cada
-  una), se unen con las apariciones locales (tracklists ya ingeridas) y se ingiere su grabación
-  identidad (la de mayor `release-count`; `recordingId` solo en ese grupo). `albums` va
+  el primer grupo se expande: se leen las ediciones de sus primeras **4** grabaciones, que la
+  búsqueda de recordings ya trae con el release-group embebido (todas, sin la página de 100 de un
+  browse; openspec `speed-up-search`), se unen con las apariciones locales (tracklists ya
+  ingeridas) y se ingiere su grabación identidad (la de más ediciones; `recordingId` solo en ese
+  grupo). `albums` va
   deduplicado por `release_group` (año mínimo entre fuentes), ordenado por categoría → año →
   título, máximo **12**. Los demás grupos llegan con `albums: []` y `query` =
   `"<artista> - <título>"` para abrirlos como primer grupo.
@@ -176,12 +178,13 @@ el primer orden vacío).
   además de listar sus álbumes; los grupos no expandidos (`recordingId: null`) siguen abriéndose
   con `query` como primer grupo. No cambia el shape de la respuesta.
 - Presupuesto: 1 búsqueda de artistas + por interpretación ≤1 browse de discografía (0 con
-  créditos locales) y 1 búsqueda de recordings (≤2 en total) + ≤4 browses de apariciones. Todo
-  comparte la caché TTL de búsquedas (10 min) salvo el browse de discografía. La resolución
+  créditos locales) y 1 búsqueda de recordings (≤2 en total); ningún browse de apariciones
+  (`/release?recording=`). Todo comparte la caché TTL de búsquedas (10 min) salvo el browse de
+  discografía. La resolución
   persiste `recording`, sus créditos y stubs de `release_group`; **nunca** `release` ni `track`
   (capacidad `catalog-recording-ingestion`).
 - **`purpose=pick`** (modo de elección): misma interpretación, filtro de relevancia, agrupación y
-  orden, pero **sin browse de apariciones**. Devuelve como máximo **10** grupos y **todos** traen
+  orden, pero **sin apariciones**. Devuelve como máximo **10** grupos y **todos** traen
   `recordingId` y `mbid`: la grabación local con más apariciones o, si no hay, la primera remota del
   grupo sin `disambiguation` (la primera si todas la tienen), registrada con sus créditos a partir de
   la propia búsqueda de recordings. `albums: []` en todos los grupos y `nextOffset: null`.

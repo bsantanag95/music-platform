@@ -3,6 +3,7 @@ import type { RecordingRow } from "@/db/schema";
 import {
   findOrIngestRecording,
   albumsFromMbReleases,
+  albumsFromMbReleaseLists,
   localAppearanceAlbums,
   sortSongContextAlbums,
   type RecordingSeed,
@@ -228,7 +229,52 @@ describe("albumsFromMbReleases", () => {
   it("conjunto vacío no consulta la base", async () => {
     vi.mocked(upsertReleaseGroupStubs).mockResolvedValue([]);
     await expect(albumsFromMbReleases([])).resolves.toEqual([]);
-    expect(upsertReleaseGroupStubs).toHaveBeenCalledWith([]);
+    expect(upsertReleaseGroupStubs).not.toHaveBeenCalled();
+  });
+
+  it("varias grabaciones: un solo upsert con la unión y una lista de apariciones por grabación", async () => {
+    const row = (id: string, mbid: string, title: string) => ({
+      id,
+      mbid,
+      searchText: null,
+      title,
+      category: "studio",
+      coverThumbUrl: null,
+      coverStorageKey: null,
+      coverCheckedAt: null,
+      coverBlockedAt: null,
+      editionsSyncedAt: null,
+      discographyUnlistedAt: null,
+      primaryType: null,
+      secondaryTypes: null,
+      wikidataId: null,
+      genresSyncedAt: null,
+      firstReleaseDate: null,
+      firstReleaseYear: null,
+      createdAt: new Date(),
+    });
+    vi.mocked(upsertReleaseGroupStubs).mockResolvedValue([row("l-iv", "rg-iv", "IV"), row("l-live", "rg-live", "Live")]);
+
+    const lists = await albumsFromMbReleaseLists([
+      [releaseItem("r1", "rg-iv", "IV", "1975", { "primary-type": "Album" })],
+      [
+        releaseItem("r2", "rg-iv", "IV", "1971", { "primary-type": "Album" }),
+        releaseItem("r3", "rg-live", "Live", "1976", { "primary-type": "Album" }),
+      ],
+    ]);
+
+    expect(upsertReleaseGroupStubs).toHaveBeenCalledTimes(1);
+    expect(upsertReleaseGroupStubs).toHaveBeenCalledWith([
+      { mbid: "rg-iv", title: "IV", category: "studio", firstReleaseYear: 1971 },
+      { mbid: "rg-live", title: "Live", category: "studio", firstReleaseYear: 1976 },
+    ]);
+    expect(lists.map((list) => list.map((album) => [album.releaseGroupId, album.year]))).toEqual([
+      [["l-iv", 1975]],
+      [
+        ["l-iv", 1971],
+        ["l-live", 1976],
+      ],
+    ]);
   });
 });
 

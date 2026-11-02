@@ -146,29 +146,6 @@ describe("búsqueda de grabaciones y apariciones (recording)", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
-
-  it("browseReleasesByRecording pide /release con recording, limit 100 e inc=release-groups", async () => {
-    fetchMock.mockResolvedValue(jsonResponse({ releases: [] }));
-
-    await musicbrainz.browseReleasesByRecording("rec-mbid-1");
-
-    const url = new URL(String(fetchMock.mock.calls[0]![0]));
-    expect(url.pathname).toBe("/ws/2/release");
-    expect(url.searchParams.get("recording")).toBe("rec-mbid-1");
-    expect(url.searchParams.get("limit")).toBe("100");
-    expect(url.searchParams.get("inc")).toBe("release-groups");
-  });
-
-  it("browseReleasesByRecording se cachea por mbid (contexto de búsqueda, no ingesta)", async () => {
-    fetchMock.mockResolvedValue(jsonResponse({ releases: [] }));
-
-    await musicbrainz.browseReleasesByRecording("rec-mbid-1");
-    await musicbrainz.browseReleasesByRecording("rec-mbid-1");
-    tickPastQueue();
-    await musicbrainz.browseReleasesByRecording("rec-mbid-2");
-
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-  });
 });
 
 describe("ediciones y créditos de personal (openspec: enrich-album-editions-and-credits)", () => {
@@ -245,7 +222,6 @@ describe("licencia de los géneros (ADR 0021 y 0023)", () => {
       () => musicbrainz.searchArtist("pink floyd"),
       () => musicbrainz.searchReleaseGroup("meddle"),
       () => musicbrainz.searchRecording("money"),
-      () => musicbrainz.browseReleasesByRecording("rec"),
       () => musicbrainz.getArtist("a"),
       () => musicbrainz.getArtistWithRelations("a"),
       () => musicbrainz.browseReleaseGroupsByArtist("a"),

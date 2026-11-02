@@ -21,7 +21,8 @@ import { upsertReleaseGroupStubs, type ReleaseGroupCategoryValue } from "./inges
 // `findOrIngestTracklist` devuelve el release local existente tal cual sin
 // re-consultar MusicBrainz, así que un tracklist parcial congelaría el álbum
 // con datos incompletos. Las apariciones que consume la búsqueda se calculan
-// en vivo desde el browse (cacheado como contexto de búsqueda).
+// en vivo desde las ediciones que trae la búsqueda de recordings (openspec:
+// speed-up-search), cacheada como contexto de búsqueda.
 
 export interface RecordingSeed {
   mbid: string;
@@ -98,38 +99,50 @@ export async function findOrIngestRecording(seed: RecordingSeed): Promise<Record
 }
 
 /**
- * Agrupa las apariciones de una grabación en álbumes (release_group): muchos
- * releases distintos comparten el mismo grupo. Cada grupo se persiste como
- * stub y se resuelve por su `id` local; el año es el del release más antiguo
- * del grupo.
+ * Agrupa las apariciones de varias grabaciones en álbumes (release_group), una
+ * lista por grabación: muchos releases distintos comparten el mismo grupo. Los
+ * grupos de todas las listas se persisten como stubs en UNA operación y se
+ * resuelven por su `id` local; el año es el del release más antiguo del grupo
+ * dentro de cada lista.
  */
-export async function albumsFromMbReleases(
-  releases: MBReleaseWithReleaseGroup[],
-): Promise<SongContextAlbum[]> {
+export async function albumsFromMbReleaseLists(
+  lists: MBReleaseWithReleaseGroup[][],
+): Promise<SongContextAlbum[][]> {
   interface Group {
     title: string;
     category: ReleaseGroupCategoryValue;
     year: number | null;
   }
-  const byMbid = new Map<string, Group>();
-
-  for (const item of releases) {
-    const rg = item["release-group"];
-    if (!rg?.id) continue;
-    const year = yearFromMbDate(item.date);
-    const known = byMbid.get(rg.id);
-    if (!known) {
-      byMbid.set(rg.id, {
-        title: rg.title,
-        category: mapReleaseGroupCategory(rg["primary-type"], rg["secondary-types"]),
-        year,
-      });
-      continue;
+  const grouped = lists.map((releases) => {
+    const byMbid = new Map<string, Group>();
+    for (const item of releases) {
+      const rg = item["release-group"];
+      if (!rg?.id) continue;
+      const year = yearFromMbDate(item.date);
+      const known = byMbid.get(rg.id);
+      if (!known) {
+        byMbid.set(rg.id, {
+          title: rg.title,
+          category: mapReleaseGroupCategory(rg["primary-type"], rg["secondary-types"]),
+          year,
+        });
+        continue;
+      }
+      if (year !== null && (known.year === null || year < known.year)) known.year = year;
     }
-    if (year !== null && (known.year === null || year < known.year)) known.year = year;
-  }
+    return byMbid;
+  });
 
-  const stubs = [...byMbid.entries()].map(([mbid, group]) => ({
+  // Un stub por release-group entre todas las listas, con el año mínimo.
+  const union = new Map<string, Group>();
+  for (const byMbid of grouped) {
+    for (const [mbid, group] of byMbid) {
+      const known = union.get(mbid);
+      if (!known) union.set(mbid, { ...group });
+      else if (group.year !== null && (known.year === null || group.year < known.year)) known.year = group.year;
+    }
+  }
+  const stubs = [...union.entries()].map(([mbid, group]) => ({
     mbid,
     title: group.title,
     category: group.category,
@@ -137,21 +150,33 @@ export async function albumsFromMbReleases(
     // se puebla cuando alguien abre el álbum (findOrIngestTracklist).
     ...(group.year !== null ? { firstReleaseYear: group.year } : {}),
   }));
-  const rows = await upsertReleaseGroupStubs(stubs);
+  const rows = stubs.length > 0 ? await upsertReleaseGroupStubs(stubs) : [];
+  const rowByMbid = new Map(rows.filter((row) => row.mbid !== null).map((row) => [row.mbid!, row]));
 
-  return rows
-    .filter((row): row is typeof row & { mbid: string } => row.mbid !== null)
-    .map((row) => {
-      const group = byMbid.get(row.mbid);
-      return {
-        releaseGroupId: row.id,
-        mbid: row.mbid,
-        // La fila local manda: un release_group ya enriquecido no se re-titula.
-        title: row.title,
-        category: row.category as ReleaseGroupCategoryValue,
-        year: group?.year ?? null,
-      };
-    });
+  return grouped.map((byMbid) =>
+    [...byMbid.entries()].flatMap(([mbid, group]) => {
+      const row = rowByMbid.get(mbid);
+      if (!row) return [];
+      return [
+        {
+          releaseGroupId: row.id,
+          mbid,
+          // La fila local manda: un release_group ya enriquecido no se re-titula.
+          title: row.title,
+          category: row.category as ReleaseGroupCategoryValue,
+          year: group.year,
+        },
+      ];
+    }),
+  );
+}
+
+/** Apariciones de UNA grabación (ver `albumsFromMbReleaseLists`). */
+export async function albumsFromMbReleases(
+  releases: MBReleaseWithReleaseGroup[],
+): Promise<SongContextAlbum[]> {
+  const [albums] = await albumsFromMbReleaseLists([releases]);
+  return albums ?? [];
 }
 
 /**

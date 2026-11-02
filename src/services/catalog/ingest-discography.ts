@@ -448,6 +448,60 @@ async function countUnlistedChanges(tx: Tx, artistId: string, groups: MBReleaseG
 }
 
 /**
+ * Créditos de varios álbumes en lote, como los trae una búsqueda de release-groups (openspec:
+ * speed-up-search): solo para los álbumes que todavía no tienen créditos, con los artistas
+ * acreditados como stubs en una operación y los créditos en otra. Mismo mapeo que
+ * `ingestCredits`. Una búsqueda repetida, con sus álbumes ya acreditados, no escribe nada.
+ */
+export async function ingestReleaseGroupCreditsBatch(
+  items: { releaseGroupId: string; credits: MBArtistCreditItem[] }[],
+): Promise<void> {
+  const withCredits = items.filter((item) => item.credits.length > 0);
+  if (withCredits.length === 0) return;
+
+  const credited = await db
+    .selectDistinct({ releaseGroupId: credit.releaseGroupId })
+    .from(credit)
+    .where(inArray(credit.releaseGroupId, withCredits.map((item) => item.releaseGroupId)));
+  const alreadyCredited = new Set(credited.map((row) => row.releaseGroupId));
+  const pending = withCredits.filter((item) => !alreadyCredited.has(item.releaseGroupId));
+  if (pending.length === 0) return;
+
+  // Stubs de los artistas acreditados: sin tipo confirmado, como `upsertArtistStub`.
+  const names = new Map<string, string>();
+  for (const item of pending) {
+    for (const entry of item.credits) names.set(entry.artist.id, entry.artist.name);
+  }
+  await db
+    .insert(artist)
+    .values([...names].map(([mbid, name]) => ({ mbid, name, type: "unknown" as const })))
+    .onConflictDoNothing({ target: artist.mbid });
+  const artistRows = await db
+    .select({ id: artist.id, mbid: artist.mbid })
+    .from(artist)
+    .where(inArray(artist.mbid, [...names.keys()]));
+  const artistIdByMbid = new Map(artistRows.map((row) => [row.mbid, row.id]));
+
+  const rows = pending.flatMap((item) =>
+    item.credits.flatMap((entry, position) => {
+      const artistId = artistIdByMbid.get(entry.artist.id);
+      if (!artistId) return [];
+      return [
+        {
+          artistId,
+          releaseGroupId: item.releaseGroupId,
+          recordingId: null,
+          position,
+          role: position === 0 ? ("primary" as const) : ("featured" as const),
+          joinPhrase: entry.joinphrase ?? null,
+        },
+      ];
+    }),
+  );
+  if (rows.length > 0) await db.insert(credit).values(rows).onConflictDoNothing();
+}
+
+/**
  * Crea los créditos de un target (álbum o canción) a partir del array
  * artist-credit de MusicBrainz — mapea 1:1 con el modelo CREDIT
  * (ver ADR 0004): posición 0 = primary, el resto = featured, y el

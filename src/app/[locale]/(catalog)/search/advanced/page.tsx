@@ -9,6 +9,10 @@ import {
   parseCriteria,
 } from "@/services/catalog/search/filters";
 import { AdvancedSearchForm } from "@/components/catalog/advanced-search/AdvancedSearchForm";
+import {
+  AdvancedSearchPendingProvider,
+  PendingResults,
+} from "@/components/catalog/advanced-search/AdvancedSearchPending";
 import { parseSearchType } from "@/components/catalog/search-types";
 import { SearchTypeIcon } from "@/components/catalog/SearchTypeIcon";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
@@ -59,41 +63,43 @@ async function AdvancedSearchPage({ searchParams }: AdvancedSearchPageProps) {
       />
       <h1 className="font-display text-2xl text-paper">{t("advanced.pageTitle")}</h1>
 
-      <div className="flex w-full flex-col gap-4">
-        <nav aria-label={t("advanced.tabsLabel")} className="flex gap-1 overflow-x-auto border-b border-ink-border">
-          {TABS.map((tab) => {
-            const active = tab === type;
-            return (
-              <Link
-                key={tab}
-                href={advancedSearchHref(tab, "", criteriaForTab(tab, criteria))}
-                aria-current={active ? "page" : undefined}
-                className={`-mb-px inline-flex shrink-0 items-center gap-2 rounded-t border px-3 py-2 font-display text-sm transition-colors sm:px-4 ${
-                  active
-                    ? "border-ink-border border-b-ink bg-ink text-paper"
-                    : "border-transparent text-paper-muted hover:text-paper"
-                }`}
-              >
-                <SearchTypeIcon type={tab} className="size-4" />
-                {t(`advanced.tabs.${tab}`)}
-              </Link>
-            );
-          })}
-        </nav>
-        <AdvancedSearchForm key={formKey} type={type} query={query} criteria={criteria} />
-      </div>
+      <AdvancedSearchPendingProvider>
+        <div className="flex w-full flex-col gap-4">
+          <nav aria-label={t("advanced.tabsLabel")} className="flex gap-1 overflow-x-auto border-b border-ink-border">
+            {TABS.map((tab) => {
+              const active = tab === type;
+              return (
+                <Link
+                  key={tab}
+                  href={advancedSearchHref(tab, "", criteriaForTab(tab, criteria))}
+                  aria-current={active ? "page" : undefined}
+                  className={`-mb-px inline-flex shrink-0 items-center gap-2 rounded-t border px-3 py-2 font-display text-sm transition-colors sm:px-4 ${
+                    active
+                      ? "border-ink-border border-b-ink bg-ink text-paper"
+                      : "border-transparent text-paper-muted hover:text-paper"
+                  }`}
+                >
+                  <SearchTypeIcon type={tab} className="size-4" />
+                  {t(`advanced.tabs.${tab}`)}
+                </Link>
+              );
+            })}
+          </nav>
+          <AdvancedSearchForm key={formKey} type={type} query={query} criteria={criteria} />
+        </div>
 
-      {searching ? (
-        <section aria-label={t("advanced.resultsTitle")} className="flex w-full flex-col gap-6">
-          {type === "artist" ? (
-            <ArtistSection query={query} criteria={criteria} advanced />
-          ) : type === "album" ? (
-            <AlbumSection query={query} criteria={criteria} advanced />
-          ) : (
-            <SongSection query={query} criteria={criteria} advanced />
-          )}
-        </section>
-      ) : null}
+        {searching ? (
+          <PendingResults label={t("advanced.resultsTitle")}>
+            {type === "artist" ? (
+              <ArtistSection query={query} criteria={criteria} advanced />
+            ) : type === "album" ? (
+              <AlbumSection query={query} criteria={criteria} advanced />
+            ) : (
+              <SongSection query={query} criteria={criteria} advanced />
+            )}
+          </PendingResults>
+        ) : null}
+      </AdvancedSearchPendingProvider>
     </main>
   );
 }

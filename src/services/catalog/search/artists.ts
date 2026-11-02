@@ -29,6 +29,11 @@ export interface ArtistSearchOptions {
   offset?: number;
   /** Abandono de quien busca: descarta la request en cola y evita escribir stubs. */
   signal?: AbortSignal;
+  /**
+   * Solo coincidencias locales, sin MusicBrainz ni stubs: lo que la página muestra mientras llega
+   * MusicBrainz (openspec: speed-up-search).
+   */
+  localOnly?: boolean;
 }
 
 function isArtistType(value: string): value is CatalogArtistType {
@@ -66,7 +71,7 @@ function toResult(entry: Entry, query: string): ArtistSearchResult {
  */
 export async function searchArtists(
   query: string,
-  { filters = {}, offset = 0, signal }: ArtistSearchOptions = {},
+  { filters = {}, offset = 0, signal, localOnly = false }: ArtistSearchOptions = {},
 ): Promise<ArtistSearchResponse> {
   const q = query.trim();
   // Cada fuente filtra con el mismo criterio: lo local por SQL, lo remoto en la propia consulta.
@@ -78,12 +83,14 @@ export async function searchArtists(
   let remote: MBArtistSearchItem[] = [];
   let total: number | null = null;
   let remoteFailed = false;
-  try {
-    const page = await musicbrainz.searchArtist(artistQuery(q, filters), { offset, signal });
-    remote = page.artists;
-    total = page.count ?? null;
-  } catch {
-    remoteFailed = true;
+  if (!localOnly) {
+    try {
+      const page = await musicbrainz.searchArtist(artistQuery(q, filters), { offset, signal });
+      remote = page.artists;
+      total = page.count ?? null;
+    } catch {
+      remoteFailed = true;
+    }
   }
   // Abandonada: ni stubs ni respuesta.
   signal?.throwIfAborted();
@@ -92,16 +99,18 @@ export async function searchArtists(
   }
 
   const knownMbids = new Set(localRows.map((row) => row.mbid).filter((mbid) => mbid !== null));
-  const stubbed = await upsertArtistStubsFromSearch(
-    remote
-      .filter((item) => !knownMbids.has(item.id))
-      .map((item) => ({
-        mbid: item.id,
-        name: item.name,
-        mbType: item.type,
-        disambiguation: item.disambiguation ?? null,
-      })),
-  );
+  const stubbed = localOnly
+    ? []
+    : await upsertArtistStubsFromSearch(
+        remote
+          .filter((item) => !knownMbids.has(item.id))
+          .map((item) => ({
+            mbid: item.id,
+            name: item.name,
+            mbType: item.type,
+            disambiguation: item.disambiguation ?? null,
+          })),
+      );
   const stubByMbid = new Map(stubbed.map((row) => [row.mbid, row]));
   const remoteByMbid = new Map(remote.map((item) => [item.id, item]));
   const remoteIndex = new Map(remote.map((item, index) => [item.id, index]));

@@ -59,6 +59,24 @@ describe("ScopedSearchField", () => {
     expect(mockPush).toHaveBeenCalledWith("/search?type=artist&q=Poison");
   });
 
+  it("Header: mientras navega, el envío queda deshabilitado e indica la búsqueda en curso (openspec: speed-up-search)", async () => {
+    let finish!: () => void;
+    mockPush.mockReturnValueOnce(
+      new Promise<void>((resolve) => {
+        finish = resolve;
+      }),
+    );
+    renderWithIntl(<ScopedSearchField variant="compact" />);
+
+    fireEvent.change(field(), { target: { value: "the cure" } });
+    submit();
+
+    const pending = await screen.findByRole("button", { name: labels.submitting });
+    expect(pending).toBeDisabled();
+    finish();
+    await waitFor(() => expect(screen.getByRole("button", { name: labels.submit })).toBeEnabled());
+  });
+
   it("el selector cambia el tipo y el envío lo respeta", () => {
     renderWithIntl(<ScopedSearchField variant="compact" />);
 
@@ -103,6 +121,49 @@ describe("ScopedSearchField", () => {
     fireEvent.click(option);
 
     expect(mockPush).toHaveBeenCalledWith(artistHref(SABRINA.name, SABRINA.id));
+  });
+
+  it("entre teclas conserva las sugerencias anteriores atenuadas y las reemplaza al llegar (openspec: speed-up-search)", async () => {
+    let answer!: (value: { suggestions: (typeof SABRINA)[] }) => void;
+    vi.mocked(getSearchSuggestions)
+      .mockResolvedValueOnce({ suggestions: [SABRINA, SABRINA_FILIPINA] })
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            answer = resolve;
+          }),
+      );
+    renderWithIntl(<ScopedSearchField variant="compact" />);
+
+    fireEvent.focus(field());
+    fireEvent.change(field(), { target: { value: "sabr" } });
+    await screen.findByRole("option", { name: /Sabrina Carpenter/ });
+
+    fireEvent.change(field(), { target: { value: "sabri" } });
+    const listbox = screen.getByRole("listbox", { name: labels.suggestions.listLabel });
+    expect(listbox).toHaveAttribute("aria-busy", "true");
+    expect(screen.getByRole("option", { name: /Filipina/ })).toBeInTheDocument();
+
+    await waitFor(() => expect(getSearchSuggestions).toHaveBeenCalledTimes(2));
+    answer({ suggestions: [SABRINA] });
+    await waitFor(() => expect(screen.queryByRole("option", { name: /Filipina/ })).not.toBeInTheDocument());
+    expect(listbox).not.toHaveAttribute("aria-busy");
+  });
+
+  it("cambiar de tipo retira las sugerencias del tipo anterior", async () => {
+    vi.mocked(getSearchSuggestions)
+      .mockResolvedValueOnce({ suggestions: [SABRINA] })
+      .mockImplementationOnce(() => new Promise(() => {}));
+    renderWithIntl(<ScopedSearchField variant="compact" />);
+
+    fireEvent.focus(field());
+    fireEvent.change(field(), { target: { value: "sabr" } });
+    await screen.findByRole("option", { name: /Sabrina Carpenter/ });
+
+    fireEvent.click(screen.getByRole("button", { name: labels.types.album }));
+
+    expect(screen.queryByRole("option", { name: /Sabrina Carpenter/ })).not.toBeInTheDocument();
+    await waitFor(() => expect(getSearchSuggestions).toHaveBeenCalledTimes(2));
   });
 
   it("flechas + Enter eligen la sugerencia activa; Escape cierra", async () => {

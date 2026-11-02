@@ -8,11 +8,13 @@ vi.mock("@/services/musicbrainz/client", () => ({
     searchArtist: vi.fn(),
     searchRecording: vi.fn(),
     browseReleaseGroupsByArtist: vi.fn(),
-    browseReleasesByRecording: vi.fn(),
   },
 }));
 vi.mock("../ingest-recording", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../ingest-recording")>();
+  // Apariciones por grabación: cada test fija lo que devuelve una lista; la versión en lote
+  // (la que usa la búsqueda) la aplica a cada lista recibida.
+  const albumsFromMbReleases = vi.fn();
   return {
     ...actual,
     findOrIngestRecording: vi.fn(async (seed: { mbid: string; title: string }) => ({
@@ -20,7 +22,10 @@ vi.mock("../ingest-recording", async (importOriginal) => {
       mbid: seed.mbid,
       title: seed.title,
     })),
-    albumsFromMbReleases: vi.fn(),
+    albumsFromMbReleases,
+    albumsFromMbReleaseLists: vi.fn(async (lists: unknown[]) =>
+      Promise.all(lists.map(async (list) => (await albumsFromMbReleases(list)) ?? [])),
+    ),
     localAppearanceAlbums: vi.fn(async () => []),
     localRecordingArtistName: vi.fn(async () => null),
   };
@@ -44,6 +49,10 @@ function rec(id: string, title: string, artist: string | null): MBRecordingSearc
   };
 }
 
+function edition(id: string, releaseGroupId: string) {
+  return { id, title: id, "release-group": { id: releaseGroupId, title: releaseGroupId, "primary-type": "Album" } };
+}
+
 function album(id: string, title: string, year: number) {
   return { releaseGroupId: id, mbid: id, title, category: "studio" as const, year };
 }
@@ -64,7 +73,6 @@ beforeEach(() => {
     "release-group-count": 1,
     "release-groups": [{ id: "rg-attack", title: "Back for the Attack", "primary-type": "Album" }],
   });
-  vi.mocked(musicbrainz.browseReleasesByRecording).mockResolvedValue({ releases: [], "release-count": 1 } as never);
 });
 
 describe("rankInterpretations", () => {
@@ -128,16 +136,18 @@ describe("searchSongs", () => {
     vi.mocked(musicbrainz.searchRecording).mockResolvedValue({
       count: 3,
       recordings: [
-        rec("kod-studio", "Kiss of Death", "Dokken"),
-        rec("kod-live", "Kiss of Death (live)", "Dokken"),
+        // La versión en vivo aparece en más ediciones de las que trae la búsqueda: la identidad
+        // es la de MÁS ediciones, no la primera.
+        { ...rec("kod-live", "Kiss of Death (live)", "Dokken"), releases: [edition("r-live", "rg-live")] },
+        {
+          ...rec("kod-studio", "Kiss of Death", "Dokken"),
+          releases: [edition("r1", "rg-attack"), edition("r2", "rg-attack"), edition("r3", "rg-attack")],
+        },
       ],
     });
     vi.mocked(ingestRecording.albumsFromMbReleases)
-      .mockResolvedValueOnce([album("rg-attack", "Back for the Attack", 1987)])
-      .mockResolvedValueOnce([album("rg-live", "Beast From the East", 1988)]);
-    vi.mocked(musicbrainz.browseReleasesByRecording)
-      .mockResolvedValueOnce({ releases: [], "release-count": 9 } as never)
-      .mockResolvedValueOnce({ releases: [], "release-count": 2 } as never);
+      .mockResolvedValueOnce([album("rg-live", "Beast From the East", 1988)])
+      .mockResolvedValueOnce([album("rg-attack", "Back for the Attack", 1987)]);
 
     const response = await searchSongs("dokken kiss of death");
 
@@ -161,6 +171,9 @@ describe("searchSongs", () => {
       "Beast From the East",
     ]);
     expect(ingestRecording.findOrIngestRecording).toHaveBeenCalledTimes(1);
+    // Las apariciones salen de la respuesta de la búsqueda: un solo lote, sin browse.
+    expect(ingestRecording.albumsFromMbReleaseLists).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(ingestRecording.albumsFromMbReleaseLists).mock.calls[0]![0]).toHaveLength(2);
   });
 
   it("sin canción con el artista, la segunda búsqueda es el título completo (nunca más de dos)", async () => {
@@ -233,9 +246,8 @@ describe("searchSongs", () => {
     );
     expect(response.results).toHaveLength(1);
     expect(response.results[0]).toMatchObject({ title: "Hallelujah", artistName: "Jeff Buckley" });
-    // Solo la versión que cumple la duración pasa al browse de apariciones.
-    expect(musicbrainz.browseReleasesByRecording).toHaveBeenCalledTimes(1);
-    expect(musicbrainz.browseReleasesByRecording).toHaveBeenCalledWith("buckley", undefined);
+    // Solo la versión que cumple la duración aporta apariciones.
+    expect(vi.mocked(ingestRecording.albumsFromMbReleaseLists).mock.calls[0]![0]).toHaveLength(1);
   });
 
   it("sin título: álbum y artista como campos, sin filtro de relevancia del título", async () => {
@@ -273,8 +285,9 @@ describe("searchSongs", () => {
     });
 
     expect(response.results).toHaveLength(1);
-    expect(musicbrainz.browseReleasesByRecording).toHaveBeenCalledTimes(1);
-    expect(musicbrainz.browseReleasesByRecording).toHaveBeenCalledWith("a", undefined);
+    expect(vi.mocked(ingestRecording.albumsFromMbReleaseLists).mock.calls[0]![0]).toEqual([
+      [{ id: "r1", title: "Grace" }],
+    ]);
   });
 
   it("filtro de duración: una grabación sin duración conocida no pasa", async () => {
@@ -301,7 +314,7 @@ describe("searchSongs", () => {
 
     expect(response.results).toHaveLength(1);
     expect(response.results[0]).toMatchObject({ title: "Stairway to Heaven", artistName: "Led Zeppelin" });
-    expect(musicbrainz.browseReleasesByRecording).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(ingestRecording.albumsFromMbReleaseLists).mock.calls[0]![0]).toHaveLength(2);
   });
 
   it("consulta que no es una canción: lista vacía", async () => {
@@ -352,8 +365,7 @@ describe("searchSongs en modo de elección (openspec: speed-up-quick-actions-sea
       ["Tributo", "local-cover", []],
       ["Otra Banda", "local-other", []],
     ]);
-    expect(musicbrainz.browseReleasesByRecording).not.toHaveBeenCalled();
-    expect(ingestRecording.albumsFromMbReleases).not.toHaveBeenCalled();
+    expect(ingestRecording.albumsFromMbReleaseLists).not.toHaveBeenCalled();
     expect(response.nextOffset).toBeNull();
   });
 
@@ -434,6 +446,6 @@ describe("searchSongs en modo de elección (openspec: speed-up-quick-actions-sea
     const response = await searchSongs("holy wars");
 
     expect(response.results.map((group) => group.recordingId)).toEqual(["local-wars", null]);
-    expect(musicbrainz.browseReleasesByRecording).toHaveBeenCalled();
+    expect(ingestRecording.albumsFromMbReleaseLists).toHaveBeenCalledTimes(1);
   });
 });

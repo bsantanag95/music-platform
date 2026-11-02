@@ -51,6 +51,7 @@ const { state, db } = vi.hoisted(() => {
   const db = {
     transaction: async (fn: (t: typeof tx) => unknown) => fn(tx),
     select: () => chain([], () => state.selects.shift() ?? []),
+    selectDistinct: () => chain([], () => state.selects.shift() ?? []),
     insert: (table: unknown) => {
       const calls: Call[] = [["table", [table]]];
       state.inserts.push(calls);
@@ -85,6 +86,7 @@ vi.mock("../genres/album-seeds", () => ({
 
 const {
   fetchDiscographyPages,
+  ingestReleaseGroupCreditsBatch,
   findOrIngestDiscography,
   needsDiscographyRefresh,
   needsFullWalk,
@@ -94,7 +96,7 @@ const {
   DISCOGRAPHY_REFRESH_MS,
   DISCOGRAPHY_FULL_WALK_MS,
 } = await import("./ingest-discography");
-const { artist, releaseGroup } = await import("@/db/schema");
+const { artist, credit, releaseGroup } = await import("@/db/schema");
 
 const PF1 = pinkFloydPage1 as MBReleaseGroupBrowseResponse;
 const PF2 = pinkFloydPage2 as MBReleaseGroupBrowseResponse;
@@ -635,5 +637,59 @@ describe("needsFullWalk", () => {
     expect(
       needsFullWalk(freshness({ discographyCompleteAt: new Date(now - DISCOGRAPHY_FULL_WALK_MS - 1), discographyMbTotal: 219 }), now),
     ).toBe(true);
+  });
+});
+
+describe("ingestReleaseGroupCreditsBatch (openspec: speed-up-search)", () => {
+  const creditOf = (mbid: string, name: string, joinphrase?: string) => ({
+    name,
+    joinphrase,
+    artist: { id: mbid, name },
+  });
+
+  it("solo los álbumes sin créditos: artistas y créditos en una operación cada uno", async () => {
+    // Ya acreditado: rg-known. Después, los artistas por mbid.
+    state.selects.push([{ releaseGroupId: "rg-known" }], [
+      { id: "a-kiss", mbid: "kiss" },
+      { id: "a-guest", mbid: "guest" },
+    ]);
+
+    await ingestReleaseGroupCreditsBatch([
+      { releaseGroupId: "rg-known", credits: [creditOf("kiss", "KISS")] },
+      { releaseGroupId: "rg-new", credits: [creditOf("kiss", "KISS", " feat. "), creditOf("guest", "Guest")] },
+      { releaseGroupId: "rg-other", credits: [creditOf("kiss", "KISS")] },
+    ]);
+
+    expect(state.inserts).toHaveLength(2);
+    const [artistInsert, creditInsert] = state.inserts;
+    expect(artistInsert![0]).toEqual(["table", [artist]]);
+    expect(artistInsert!.find(([name]) => name === "values")![1][0]).toEqual([
+      { mbid: "kiss", name: "KISS", type: "unknown" },
+      { mbid: "guest", name: "Guest", type: "unknown" },
+    ]);
+    expect(creditInsert![0]).toEqual(["table", [credit]]);
+    expect(creditInsert!.find(([name]) => name === "values")![1][0]).toEqual([
+      { artistId: "a-kiss", releaseGroupId: "rg-new", recordingId: null, position: 0, role: "primary", joinPhrase: " feat. " },
+      { artistId: "a-guest", releaseGroupId: "rg-new", recordingId: null, position: 1, role: "featured", joinPhrase: null },
+      { artistId: "a-kiss", releaseGroupId: "rg-other", recordingId: null, position: 0, role: "primary", joinPhrase: null },
+    ]);
+  });
+
+  it("búsqueda repetida con todo acreditado: no escribe nada", async () => {
+    state.selects.push([{ releaseGroupId: "rg-a" }, { releaseGroupId: "rg-b" }]);
+
+    await ingestReleaseGroupCreditsBatch([
+      { releaseGroupId: "rg-a", credits: [creditOf("kiss", "KISS")] },
+      { releaseGroupId: "rg-b", credits: [creditOf("kiss", "KISS")] },
+    ]);
+
+    expect(state.inserts).toHaveLength(0);
+  });
+
+  it("sin créditos que guardar no consulta la base", async () => {
+    await ingestReleaseGroupCreditsBatch([{ releaseGroupId: "rg-a", credits: [] }]);
+
+    expect(state.inserts).toHaveLength(0);
+    expect(state.selects).toHaveLength(0);
   });
 });

@@ -11,6 +11,7 @@ import {
   type SearchCriteria,
 } from "@/services/catalog/search/filters";
 import type { SearchType } from "../search-types";
+import { useAdvancedSearchTransition } from "./AdvancedSearchPending";
 import { CountryMultiPicker } from "./CountryMultiPicker";
 
 // Formulario de una pestaña de la búsqueda avanzada (openspec: redesign-advanced-search), al estilo
@@ -41,8 +42,11 @@ const EXACT_OF: Record<string, string> = { exact: "q", artistExact: "artist", al
 export function AdvancedSearchForm({ type, query, criteria }: Props) {
   const t = useTranslations("catalog.search.advanced");
   const tCategories = useTranslations("catalog.artist.categories");
+  const tSearch = useTranslations("catalog.search");
   const router = useRouter();
   const id = useId();
+  // Envío en curso: botón deshabilitado y resultados atenuados (openspec: speed-up-search).
+  const [isPending, startTransition] = useAdvancedSearchTransition();
 
   const onSubmit: SubmitEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
@@ -60,7 +64,7 @@ export function AdvancedSearchForm({ type, query, criteria }: Props) {
         params.append(key, value);
       }
     }
-    router.push(`/search/advanced?${params.toString()}`);
+    startTransition(() => router.push(`/search/advanced?${params.toString()}`));
   };
 
   /** Texto con su casilla de coincidencia exacta. */
@@ -233,6 +237,7 @@ export function AdvancedSearchForm({ type, query, criteria }: Props) {
       method="get"
       action="/search/advanced"
       onSubmit={onSubmit}
+      aria-busy={isPending || undefined}
       aria-label={t("formLabel", { type: t(`tabs.${type}`) })}
       className="flex w-full flex-col gap-6 rounded-lg border border-ink-border bg-ink-surface/70 p-4 sm:p-6"
     >
@@ -245,9 +250,10 @@ export function AdvancedSearchForm({ type, query, criteria }: Props) {
       <div className="flex flex-wrap items-center gap-3">
         <button
           type="submit"
-          className="h-10 rounded bg-amber px-5 font-display text-sm text-ink transition-colors hover:bg-amber-hover"
+          disabled={isPending}
+          className="h-10 rounded bg-amber px-5 font-display text-sm text-ink transition-colors hover:bg-amber-hover disabled:opacity-60"
         >
-          {t("submit")}
+          {isPending ? tSearch("submitting") : t("submit")}
         </button>
         <Link
           href={advancedSearchHref(type, "")}
