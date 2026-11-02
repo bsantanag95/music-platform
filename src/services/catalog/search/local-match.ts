@@ -24,7 +24,7 @@ import {
   type ReleaseGroupRow,
 } from "@/db/schema";
 import type { ReleaseGroupCategoryValue } from "../ingest-release-group";
-import type { ArtistQueryFilters, ArtistTypeFilter, RecordingQueryFilters } from "./mb-query";
+import type { ArtistQueryFilters, RecordingQueryFilters } from "./mb-query";
 import { escapeLike, matchTier, normalizeSearchText } from "./normalize";
 
 /** Filas candidatas que se piden a la base antes de ordenar y recortar en TS. */
@@ -57,12 +57,27 @@ function yearOf(column: AnyColumn): SQL {
 }
 
 /**
- * Filtros de la búsqueda avanzada sobre la ficha del artista (openspec: add-advanced-search-phase1).
+ * `value` aparece como palabras completas en `column` (texto o SQL): el mismo criterio que una frase
+ * de MusicBrainz ("maiden" → Iron Maiden; "queen" ≠ Queens of the Stone Age).
+ */
+function containsWords(column: AnyColumn | SQL, value: string): SQL {
+  return sql`(' ' || search_key(${column}) || ' ') LIKE ('% ' || search_key(${value}) || ' %')`;
+}
+
+/** Nombre o título: igual al normalizado con `exact`, tolerante sin él (openspec: redesign-advanced-search). */
+function textMatch(column: AnyColumn, text: string, exact: boolean | undefined): SQL {
+  return exact ? sql`search_key(${column}) = search_key(${text})` : fuzzyMatch(column, text);
+}
+
+/**
+ * Criterios sobre la ficha del artista (openspec: add-advanced-search-phase1, redesign-advanced-search).
  * Una fila sin el dato no coincide, igual que en MusicBrainz.
  */
-function artistFilters({ country, beginFrom, beginTo, ended }: ArtistQueryFilters): SQL[] {
+function artistFilters({ artistType, country, area, beginFrom, beginTo, ended }: ArtistQueryFilters): SQL[] {
   const filters: SQL[] = [];
-  if (country) filters.push(sql`${artist.country} = ${country}`);
+  if (artistType) filters.push(eq(artist.type, artistType));
+  if (country?.length) filters.push(inArray(artist.country, country));
+  if (area) filters.push(containsWords(artist.beginAreaName, area));
   if (beginFrom !== undefined) filters.push(sql`${yearOf(artist.lifeBegin)} >= ${beginFrom}`);
   if (beginTo !== undefined) filters.push(sql`${yearOf(artist.lifeBegin)} <= ${beginTo}`);
   if (ended !== undefined) {
@@ -73,85 +88,105 @@ function artistFilters({ country, beginFrom, beginTo, ended }: ArtistQueryFilter
 
 export interface LocalArtistOptions extends ArtistQueryFilters {
   limit: number;
-  artistType?: ArtistTypeFilter;
 }
 
+/**
+ * Con texto: por similitud y nivel de coincidencia. Sin texto (búsqueda avanzada solo con
+ * criterios): por los criterios, primero los de discografía sincronizada y luego por nombre.
+ */
 export async function matchLocalArtists(
   text: string,
-  { limit, artistType, ...filters }: LocalArtistOptions,
+  { limit, exact, ...filters }: LocalArtistOptions,
 ): Promise<ArtistRow[]> {
+  const conditions = artistFilters(filters);
+  if (!text && conditions.length === 0) return [];
   const rows = await db
     .select()
     .from(artist)
-    .where(
-      and(
-        fuzzyMatch(artist.name, text),
-        ...(artistType ? [eq(artist.type, artistType)] : []),
-        ...artistFilters(filters),
-      ),
+    .where(and(...(text ? [textMatch(artist.name, text, exact)] : []), ...conditions))
+    .orderBy(
+      ...(text
+        ? [bySimilarity(artist.name, text)]
+        : [sql`${artist.discographySyncedAt} DESC NULLS LAST`, asc(artist.name), asc(artist.id)]),
     )
-    .orderBy(bySimilarity(artist.name, text))
-    .limit(CANDIDATE_POOL);
-  return rankByMatchTier(rows, (row) => row.name, text).slice(0, limit);
+    .limit(text ? CANDIDATE_POOL : limit);
+  return text ? rankByMatchTier(rows, (row) => row.name, text).slice(0, limit) : rows;
 }
 
 export interface LocalReleaseGroupOptions {
   limit: number;
-  category?: ReleaseGroupCategoryValue;
+  categories?: ReleaseGroupCategoryValue[];
   decade?: number;
   /** Rango de años (búsqueda avanzada): reemplaza a la década. */
   yearFrom?: number;
   yearTo?: number;
-  /** Artista principal acreditado. */
+  /** Artista principal acreditado: palabras completas, o el nombre exacto con `artistExact`. */
   artist?: string;
+  artistExact?: boolean;
+  /** Título exacto (solo en `matchLocalReleaseGroups`). */
+  exact?: boolean;
 }
 
 /**
- * Artista principal cuyo nombre contiene `name` como palabras completas: el mismo criterio que la
- * frase `artist:"…"` de MusicBrainz ("maiden" → Iron Maiden; "queen" ≠ Queens of the Stone Age).
- * Columnas como literales con alias propios: un fragmento suelto puede salir sin tabla, y la consulta
- * de fuera ya une `credit` (releaseGroupsByArtistsAndTitle).
+ * Algún artista principal acreditado coincide con `name`. Columnas como literales con alias propios:
+ * un fragmento suelto puede salir sin tabla, y la consulta de fuera ya une `credit`
+ * (releaseGroupsByArtistsAndTitle).
  */
-function creditedArtistMatches(name: string): SQL {
+function creditedArtistMatches(name: string, exact: boolean | undefined): SQL {
+  const nameMatch = exact
+    ? sql`search_key("rg_artist"."name") = search_key(${name})`
+    : sql`(' ' || search_key("rg_artist"."name") || ' ') LIKE ('% ' || search_key(${name}) || ' %')`;
   return sql`EXISTS (
     SELECT 1 FROM "credit" "rg_credit"
     JOIN "artist" "rg_artist" ON "rg_artist"."id" = "rg_credit"."artist_id"
     WHERE "rg_credit"."release_group_id" = "release_group"."id"
       AND "rg_credit"."role" = 'primary'
-      AND (' ' || search_key("rg_artist"."name") || ' ') LIKE ('% ' || search_key(${name}) || ' %')
+      AND ${nameMatch}
   )`;
 }
 
 function releaseGroupFilters({
-  category,
+  categories,
   decade,
   yearFrom,
   yearTo,
   artist: artistName,
-}: Omit<LocalReleaseGroupOptions, "limit">): SQL[] {
+  artistExact,
+}: Omit<LocalReleaseGroupOptions, "limit" | "exact">): SQL[] {
   const filters: SQL[] = [];
-  if (category) filters.push(sql`${releaseGroup.category} = ${category}`);
+  if (categories?.length) filters.push(inArray(releaseGroup.category, categories));
   if (yearFrom !== undefined || yearTo !== undefined) {
     if (yearFrom !== undefined) filters.push(sql`${releaseGroup.firstReleaseYear} >= ${yearFrom}`);
     if (yearTo !== undefined) filters.push(sql`${releaseGroup.firstReleaseYear} <= ${yearTo}`);
   } else if (decade !== undefined) {
     filters.push(sql`${releaseGroup.firstReleaseYear} BETWEEN ${decade} AND ${decade + 9}`);
   }
-  if (artistName) filters.push(creditedArtistMatches(artistName));
+  if (artistName) filters.push(creditedArtistMatches(artistName, artistExact));
   return filters;
 }
 
+/** Con texto, por similitud; sin texto, por los criterios: estudio primero y los más antiguos. */
 export async function matchLocalReleaseGroups(
   text: string,
-  { limit, ...filters }: LocalReleaseGroupOptions,
+  { limit, exact, ...filters }: LocalReleaseGroupOptions,
 ): Promise<ReleaseGroupRow[]> {
+  const conditions = releaseGroupFilters(filters);
+  if (!text && conditions.length === 0) return [];
   const rows = await db
     .select()
     .from(releaseGroup)
-    .where(and(fuzzyMatch(releaseGroup.title, text), ...releaseGroupFilters(filters)))
-    .orderBy(bySimilarity(releaseGroup.title, text))
-    .limit(CANDIDATE_POOL);
-  return rankByMatchTier(rows, (row) => row.title, text).slice(0, limit);
+    .where(and(...(text ? [textMatch(releaseGroup.title, text, exact)] : []), ...conditions))
+    .orderBy(
+      ...(text
+        ? [bySimilarity(releaseGroup.title, text)]
+        : [
+            sql`(${releaseGroup.category} = 'studio') DESC`,
+            sql`${releaseGroup.firstReleaseYear} ASC NULLS LAST`,
+            asc(releaseGroup.id),
+          ]),
+    )
+    .limit(text ? CANDIDATE_POOL : limit);
+  return text ? rankByMatchTier(rows, (row) => row.title, text).slice(0, limit) : rows;
 }
 
 /**

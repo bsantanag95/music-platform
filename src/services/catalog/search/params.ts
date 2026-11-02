@@ -4,7 +4,7 @@
 
 import { ApiError } from "@/lib/api/errors";
 import type { ReleaseGroupCategoryValue } from "../ingest-release-group";
-import { parseAdvancedFilters, type AdvancedFilters } from "./filters";
+import { fromSearchParams, hasCriteria, parseCriteria, type SearchCriteria } from "./filters";
 import type { ArtistTypeFilter } from "./mb-query";
 import type { CatalogSearchType, SearchType } from "./types";
 
@@ -58,13 +58,12 @@ export function parseOffset(value: string | string[] | null | undefined): number
 
 export interface CatalogSearchParams {
   type: CatalogSearchType;
+  /** Nombre o título; puede ir vacío si hay criterios (openspec: redesign-advanced-search). */
   q: string;
   offset: number;
-  artistType?: ArtistTypeFilter;
-  category?: ReleaseGroupCategoryValue;
   decade?: number;
-  /** Filtros del panel de búsqueda avanzada (openspec: add-advanced-search-phase1). */
-  filters: AdvancedFilters;
+  /** Criterios del tipo: Persona/Grupo, categorías y los de la búsqueda avanzada. */
+  criteria: SearchCriteria;
   /**
    * Para qué se busca: `pick` = elegir un objetivo (diálogo "Añadir"). En Canciones devuelve
    * todos los grupos con grabación identidad y sin apariciones (openspec:
@@ -80,30 +79,30 @@ export function parsePurpose(value: string | string[] | null | undefined): Searc
 }
 
 /** Un rango de años gana a la década: con `yearFrom`/`yearTo` la década se ignora. */
-export function effectiveDecade(decade: number | undefined, filters: AdvancedFilters): number | undefined {
-  return filters.yearFrom !== undefined || filters.yearTo !== undefined ? undefined : decade;
+export function effectiveDecade(decade: number | undefined, criteria: SearchCriteria): number | undefined {
+  return criteria.yearFrom !== undefined || criteria.yearTo !== undefined ? undefined : decade;
 }
 
 /**
- * Contrato estricto del endpoint: `q` no vacío y `type` entre los tipos de
- * catálogo (Usuarios tiene su propio endpoint). Filtros inválidos se ignoran.
+ * Contrato estricto del endpoint: `type` entre los tipos de catálogo (Usuarios tiene su propio
+ * endpoint) y `q` no vacío o al menos un criterio del tipo. Criterios inválidos se ignoran.
  */
 export function parseCatalogSearchParams(params: URLSearchParams): CatalogSearchParams {
-  const q = params.get("q")?.trim();
-  if (!q) throw new ApiError("VALIDATION_ERROR", 400, "Falta el parámetro q");
   const type = params.get("type");
   if (type !== "artist" && type !== "album" && type !== "song") {
     throw new ApiError("VALIDATION_ERROR", 400, "El parámetro type debe ser artist, album o song");
   }
-  const filters = parseAdvancedFilters(type, (key) => params.get(key));
+  const q = params.get("q")?.trim() ?? "";
+  const criteria = parseCriteria(type, fromSearchParams(params), q);
+  if (!q && !hasCriteria(criteria)) {
+    throw new ApiError("VALIDATION_ERROR", 400, "Falta el parámetro q o algún criterio");
+  }
   return {
     type,
     q,
     offset: parseOffset(params.get("offset")),
-    artistType: parseArtistTypeFilter(params.get("artistType")),
-    category: parseCategory(params.get("category")),
-    decade: effectiveDecade(parseDecade(params.get("decade")), filters),
-    filters,
+    decade: effectiveDecade(parseDecade(params.get("decade")), criteria),
+    criteria,
     purpose: parsePurpose(params.get("purpose")),
   };
 }

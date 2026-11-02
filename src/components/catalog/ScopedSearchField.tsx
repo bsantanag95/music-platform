@@ -17,6 +17,7 @@ import { albumHref, artistHref } from "@/lib/catalog-links";
 import { getSearchSuggestions } from "@/lib/api/catalog";
 import type { SearchSuggestion } from "@/lib/api/schemas";
 import { UserAvatar } from "@/components/social/UserAvatar";
+import { advancedSearchHref } from "@/services/catalog/search/filters";
 import { SEARCH_TYPES, searchHref, type SearchType } from "./search-types";
 import { SearchTypeIcon } from "./SearchTypeIcon";
 
@@ -34,13 +35,8 @@ interface ScopedSearchFieldProps {
   fluid?: boolean;
   /** Aviso de una búsqueda enviada (búsquedas recientes de /search). */
   onSubmitSearch?: (query: string, type: SearchType) => void;
-  /** Junto al botón de enviar (variante `full`): el botón de filtros de /search. */
+  /** Junto al botón de enviar (variante `full`): el enlace a la búsqueda avanzada de /search. */
   trailing?: ReactNode;
-  /**
-   * Parámetros que conserva un nuevo envío del mismo tipo con el que arrancó el campo: los
-   * filtros activos de /search (openspec: add-advanced-search-phase1).
-   */
-  persistParams?: Record<string, string>;
 }
 
 type Option =
@@ -80,7 +76,6 @@ export function ScopedSearchField({
   fluid = false,
   onSubmitSearch,
   trailing,
-  persistParams,
 }: ScopedSearchFieldProps) {
   const t = useTranslations("catalog.search");
   const tArtist = useTranslations("catalog.artist");
@@ -197,7 +192,7 @@ export function ScopedSearchField({
     }
     setValidationError(undefined);
     onSubmitSearch?.(trimmed, type);
-    navigate(searchHref(type, trimmed, type === initialType ? persistParams : undefined));
+    navigate(searchHref(type, trimmed));
   };
 
   const onInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -455,11 +450,11 @@ export function ScopedSearchField({
                   {t(`types.${option}`)}
                 </button>
               ))}
-              {/* En /search el panel ya está junto al campo; el Header solo enlaza a él. */}
+              {/* En /search el enlace ya está junto al campo (openspec: redesign-advanced-search). */}
               {compact && type !== "user" ? (
                 <button
                   type="button"
-                  onClick={() => navigate(searchHref(type, trimmed, { filters: "1" }))}
+                  onClick={() => navigate(advancedSearchHref(type, trimmed))}
                   className="ml-auto inline-flex items-center gap-1.5 font-data text-[11px] text-paper-muted underline-offset-4 transition-colors hover:text-paper hover:underline"
                 >
                   {t("advanced.headerLink")}

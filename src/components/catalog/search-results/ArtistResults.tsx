@@ -49,7 +49,7 @@ function ArtistRow({ artist }: { artist: ArtistSearchResult }) {
   );
 }
 
-function ArtistList({ artists }: { artists: ArtistSearchResult[] }) {
+export function ArtistList({ artists }: { artists: ArtistSearchResult[] }) {
   return (
     <ul className="flex flex-col divide-y divide-ink-border">
       {artists.map((artist) => (

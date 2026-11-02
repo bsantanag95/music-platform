@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen, fireEvent } from "@testing-library/react";
+import type { AnchorHTMLAttributes, ReactNode } from "react";
 import { SearchForm } from "@/components/catalog/SearchForm";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../messages/es/catalog.json";
@@ -8,6 +9,11 @@ const mockPush = vi.fn();
 
 vi.mock("@/i18n/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
+  Link: ({ href, children, ...rest }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
 }));
 
 vi.mock("@/lib/api/catalog", () => ({
@@ -21,6 +27,18 @@ const { pushRecentSearch } = await import("@/lib/search/recent-searches");
 describe("SearchForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("enlaza a la búsqueda avanzada con el tipo y el texto; no en Usuarios", () => {
+    const { unmount } = renderWithIntl(<SearchForm initialType="album" initialQuery="maiden" />);
+    expect(screen.getByRole("link", { name: catalogEs.search.advanced.headerLink })).toHaveAttribute(
+      "href",
+      "/search/advanced?type=album&q=maiden",
+    );
+    unmount();
+
+    renderWithIntl(<SearchForm initialType="user" initialQuery="ana" />);
+    expect(screen.queryByRole("link", { name: catalogEs.search.advanced.headerLink })).not.toBeInTheDocument();
   });
 
   it("expone un label asociado al campo", () => {

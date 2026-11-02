@@ -182,6 +182,8 @@ export const ArtistSearchResponseSchema = z.object({
   type: z.literal("artist"),
   results: z.array(ArtistSearchResultSchema),
   remoteFailed: z.boolean(),
+  total: z.number().int().nullable().optional(),
+  nextOffset: z.number().int().nullable().optional(),
 });
 export type ArtistSearchResponse = z.infer<typeof ArtistSearchResponseSchema>;
 

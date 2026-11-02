@@ -12,7 +12,7 @@ import type { MBArtistSearchItem } from "../../musicbrainz/types";
 import { upsertArtistStubsFromSearch } from "../ingest-artist";
 import { activityScores } from "./activity";
 import { matchLocalArtists } from "./local-match";
-import { artistQuery, type ArtistQueryFilters, type ArtistTypeFilter } from "./mb-query";
+import { artistQuery, type ArtistQueryFilters } from "./mb-query";
 import { isExactMatch, matchTier } from "./normalize";
 import { localOnlyIndex, sortByRank, type RankKey } from "./rank";
 import type { ArtistSearchResponse, ArtistSearchResult, CatalogArtistType } from "./types";
@@ -20,9 +20,13 @@ import type { ArtistSearchResponse, ArtistSearchResult, CatalogArtistType } from
 const LOCAL_LIMIT = 10;
 
 export interface ArtistSearchOptions {
-  artistType?: ArtistTypeFilter;
-  /** País, inicio de actividad y estado (openspec: add-advanced-search-phase1). */
+  /**
+   * Persona/Grupo y criterios de la búsqueda avanzada: nombre exacto, países, ciudad o región,
+   * inicio de actividad y estado (openspec: add-advanced-search-phase1, redesign-advanced-search).
+   */
   filters?: ArtistQueryFilters;
+  /** Página siguiente de MusicBrainz; lo local solo acompaña a la primera. */
+  offset?: number;
   /** Abandono de quien busca: descarta la request en cola y evita escribir stubs. */
   signal?: AbortSignal;
 }
@@ -62,18 +66,22 @@ function toResult(entry: Entry, query: string): ArtistSearchResult {
  */
 export async function searchArtists(
   query: string,
-  { artistType, filters = {}, signal }: ArtistSearchOptions = {},
+  { filters = {}, offset = 0, signal }: ArtistSearchOptions = {},
 ): Promise<ArtistSearchResponse> {
   const q = query.trim();
   // Cada fuente filtra con el mismo criterio: lo local por SQL, lo remoto en la propia consulta.
   // Un artista local sin el dato queda fuera de lo local, pero vuelve con los datos de MusicBrainz
-  // si su página remota lo trae (se fusiona por mbid más abajo).
-  const localRows = await matchLocalArtists(q, { limit: LOCAL_LIMIT, artistType, ...filters });
+  // si su página remota lo trae (se fusiona por mbid más abajo). Sin nombre, la consulta es solo de
+  // criterios (openspec: redesign-advanced-search).
+  const localRows = offset === 0 ? await matchLocalArtists(q, { limit: LOCAL_LIMIT, ...filters }) : [];
 
   let remote: MBArtistSearchItem[] = [];
+  let total: number | null = null;
   let remoteFailed = false;
   try {
-    remote = (await musicbrainz.searchArtist(artistQuery(q, artistType, filters), { signal })).artists;
+    const page = await musicbrainz.searchArtist(artistQuery(q, filters), { offset, signal });
+    remote = page.artists;
+    total = page.count ?? null;
   } catch {
     remoteFailed = true;
   }
@@ -124,8 +132,12 @@ export async function searchArtists(
     });
   });
 
-  // Un stub ya existente puede tener otro tipo que el filtro pedido.
-  const filtered = artistType ? entries.filter((entry) => entry.row.type === artistType) : entries;
+  // Un stub ya existente puede tener otro tipo que el filtro pedido. La frase de MusicBrainz trae
+  // también nombres más largos ("Kiss" → "Kiss Kiss"): con nombre exacto se reaplica la igualdad.
+  const { artistType } = filters;
+  const filtered = entries.filter(
+    (entry) => (!artistType || entry.row.type === artistType) && (!filters.exact || isExactMatch(entry.row.name, q)),
+  );
   const activity = await activityScores(
     "artist",
     filtered.map((entry) => entry.row.id),
@@ -135,10 +147,13 @@ export async function searchArtists(
     entry.rank.activity = activity.get(entry.row.id) ?? 0;
   }
 
+  const fetched = offset + remote.length;
   return {
     type: "artist",
     results: sortByRank(filtered).map((entry) => toResult(entry, q)),
     remoteFailed,
+    total,
+    nextOffset: total !== null && remote.length > 0 && fetched < total ? fetched : null,
   };
 }
 

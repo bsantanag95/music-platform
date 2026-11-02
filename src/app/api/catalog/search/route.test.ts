@@ -15,6 +15,8 @@ function request(query: string): NextRequest {
 const poisons: ArtistSearchResponse = {
   type: "artist",
   remoteFailed: false,
+  total: 2,
+  nextOffset: null,
   results: [
     {
       kind: "artist",
@@ -55,10 +57,8 @@ describe("GET /api/catalog/search", () => {
         type: "artist",
         q: "Poison",
         offset: 0,
-        artistType: undefined,
-        category: undefined,
         decade: undefined,
-        filters: {},
+        criteria: {},
         purpose: undefined,
       },
       expect.any(AbortSignal),
@@ -80,8 +80,8 @@ describe("GET /api/catalog/search", () => {
     await GET(request("?type=album&q=destroyer&category=jazz&decade=1975"));
 
     expect(vi.mocked(searchCatalogByType).mock.calls.map(([params]) => params)).toEqual([
-      { type: "album", q: "destroyer", offset: 25, artistType: undefined, category: "studio", decade: 1970, filters: {}, purpose: undefined },
-      { type: "album", q: "destroyer", offset: 0, artistType: undefined, category: undefined, decade: undefined, filters: {}, purpose: undefined },
+      { type: "album", q: "destroyer", offset: 25, decade: 1970, criteria: { category: ["studio"] }, purpose: undefined },
+      { type: "album", q: "destroyer", offset: 0, decade: undefined, criteria: {}, purpose: undefined },
     ]);
   });
 
@@ -94,8 +94,24 @@ describe("GET /api/catalog/search", () => {
     expect(ok.status).toBe(200);
     expect(invalid.status).toBe(200);
     const [albumCall, artistCall] = vi.mocked(searchCatalogByType).mock.calls.map(([params]) => params);
-    expect(albumCall).toMatchObject({ decade: undefined, filters: { yearFrom: 1983, yearTo: 1986, artist: "Iron Maiden" } });
-    expect(artistCall!.filters).toEqual({});
+    expect(albumCall).toMatchObject({ decade: undefined, criteria: { yearFrom: 1983, yearTo: 1986, artist: "Iron Maiden" } });
+    expect(artistCall!.criteria).toEqual({});
+  });
+
+  it("sin q con criterios es 200; sin q ni criterios es 400 (openspec: redesign-advanced-search)", async () => {
+    vi.mocked(searchCatalogByType).mockResolvedValue(poisons);
+
+    const ok = await GET(request("?type=artist&country=CL&country=AR&artistType=group&offset=25"));
+    const empty = await GET(request("?type=album&country=CL"));
+
+    expect(ok.status).toBe(200);
+    expect(vi.mocked(searchCatalogByType).mock.calls[0]![0]).toMatchObject({
+      q: "",
+      offset: 25,
+      criteria: { artistType: "group", country: ["CL", "AR"] },
+    });
+    expect(empty.status).toBe(400);
+    await expect(empty.json()).resolves.toMatchObject({ code: "VALIDATION_ERROR" });
   });
 
   it("pasa purpose=pick y la señal de la solicitud; otro purpose se ignora", async () => {
@@ -137,12 +153,12 @@ describe("GET /api/catalog/search", () => {
   });
 
   it("sin coincidencias es 200 con lista vacía, no 404", async () => {
-    vi.mocked(searchCatalogByType).mockResolvedValue({ type: "artist", results: [], remoteFailed: false });
+    vi.mocked(searchCatalogByType).mockResolvedValue({ type: "artist", results: [], remoteFailed: false, total: 0, nextOffset: null });
 
     const res = await GET(request("?type=artist&q=zzzz"));
 
     expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({ type: "artist", results: [], remoteFailed: false });
+    await expect(res.json()).resolves.toEqual({ type: "artist", results: [], remoteFailed: false, total: 0, nextOffset: null });
   });
 
   it("falta q o type, o type no es de catálogo → 400 VALIDATION_ERROR", async () => {

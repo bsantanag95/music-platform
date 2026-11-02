@@ -40,12 +40,20 @@ import { findArtistsByKeys, matchLocalRecordings } from "./local-match";
 import {
   artistQuery,
   escapeLucenePhrase,
+  phraseClause,
   recordingFieldQuery,
   recordingFreeQuery,
   withRecordingFilters,
   type RecordingQueryFilters,
 } from "./mb-query";
-import { baseSongTitle, normalizeSearchText, splitExplicit, tokenize, withoutSeparator } from "./normalize";
+import {
+  baseSongTitle,
+  isExactMatch,
+  normalizeSearchText,
+  splitExplicit,
+  tokenize,
+  withoutSeparator,
+} from "./normalize";
 import type { SearchPurpose } from "./params";
 import { sortByRank, topArtistNames, type RankKey } from "./rank";
 import {
@@ -272,11 +280,13 @@ async function recordingQueryFor(
 ): Promise<string> {
   if (!interpretation.artistName) return recordingFreeQuery(fallbackText);
   const rgMbids = interpretation.artist ? await artistReleaseGroupMbids(interpretation.artist, signal) : [];
+  // Sin título (búsqueda avanzada solo con campos), sin cláusula de título: `""` no coincide con nada.
+  const title = interpretation.songPart;
   if (rgMbids.length > 0) {
     const clause = rgMbids.slice(0, RGID_CLAUSE_LIMIT).map((mbid) => `rgid:${mbid}`).join(" OR ");
-    return `"${escapeLucenePhrase(interpretation.songPart)}" AND (${clause})`;
+    return title ? `"${escapeLucenePhrase(title)}" AND (${clause})` : `(${clause})`;
   }
-  return recordingFieldQuery(interpretation.artistName, interpretation.songPart);
+  return title ? recordingFieldQuery(interpretation.artistName, title) : phraseClause("artist", interpretation.artistName);
 }
 
 /** La grabación remota cumple el filtro de duración; sin duración conocida no lo cumple. */
@@ -324,17 +334,23 @@ interface LocalContribution {
  */
 async function localContributions(
   interpretation: Interpretation,
-  duration: RecordingQueryFilters,
+  filters: SongFilters,
 ): Promise<LocalContribution[]> {
-  const candidates = await matchLocalRecordings(interpretation.songPart, LOCAL_RECORDING_LIMIT, undefined, duration);
+  // Sin título no hay candidatos locales que pedir por texto: lo trae MusicBrainz.
+  if (!interpretation.songPart) return [];
+  const candidates = await matchLocalRecordings(interpretation.songPart, LOCAL_RECORDING_LIMIT, undefined, filters);
   const hint = interpretation.artistName ? normalizeSearchText(interpretation.artistName) : null;
   const contributions: LocalContribution[] = [];
   for (const candidate of candidates) {
     if (!isRelevantRecordingTitle(interpretation.songPart, candidate.title)) continue;
-    const appearances = await localAppearanceAlbums(candidate.id);
+    if (!matchesSongTitle(candidate.title, filters)) continue;
+    // Álbum y tipos (openspec: redesign-advanced-search): solo las apariciones que cumplen.
+    const appearances = (await localAppearanceAlbums(candidate.id)).filter((album) => matchesAlbum(album, filters));
     if (appearances.length === 0) continue;
     const artistName = await localRecordingArtistName(candidate.id);
-    if (hint) {
+    if (filters.artistExact) {
+      if (!artistName || !isExactMatch(artistName, filters.artist ?? "")) continue;
+    } else if (hint) {
       const normalizedArtist = artistName ? normalizeSearchText(artistName) : "";
       if (!normalizedArtist.includes(hint) && !hint.includes(normalizedArtist)) continue;
     }
@@ -513,10 +529,46 @@ export interface SongSearchOptions {
   /** Abandono de quien busca: descarta las requests en cola y evita escribir. */
   signal?: AbortSignal;
   /**
-   * Búsqueda avanzada (openspec: add-advanced-search-phase1): `artist` fija la interpretación
-   * (el texto completo es el título) y `durMin`/`durMax` filtran las grabaciones, en segundos.
+   * Búsqueda avanzada (openspec: add-advanced-search-phase1, redesign-advanced-search): `artist` fija
+   * la interpretación (el texto completo es el título); álbum, tipos y duración filtran las
+   * grabaciones; `exact`, `artistExact` y `albumExact` exigen igualdad.
    */
-  filters?: { artist?: string } & RecordingQueryFilters;
+  filters?: SongFilters;
+}
+
+export type SongFilters = RecordingQueryFilters & {
+  exact?: boolean;
+  artist?: string;
+  artistExact?: boolean;
+  albumExact?: boolean;
+  /** Título pedido (`q`), para el filtro exacto. */
+  title?: string;
+};
+
+/** Título exacto: el título base (sin "(live)", "- Remastered") igual al pedido. */
+function matchesSongTitle(title: string, filters: SongFilters): boolean {
+  return !filters.exact || isExactMatch(baseSongTitle(title), filters.title ?? "");
+}
+
+/** Una aparición cumple el álbum (palabras completas o exacto) y los tipos pedidos. */
+function matchesAlbum(album: { title: string; category: ReleaseGroupCategoryValue }, filters: SongFilters): boolean {
+  if (filters.categories?.length && !filters.categories.includes(album.category)) return false;
+  if (!filters.album) return true;
+  if (filters.albumExact) return isExactMatch(album.title, filters.album);
+  return ` ${normalizeSearchText(album.title)} `.includes(` ${normalizeSearchText(filters.album)} `);
+}
+
+/** La grabación remota cumple los exactos de artista y álbum (las frases traen nombres más largos). */
+function matchesRemoteExact(item: MBRecordingSearchItem, filters: SongFilters): boolean {
+  if (!matchesSongTitle(item.title, filters)) return false;
+  if (filters.artistExact) {
+    const name = primaryArtistName(item);
+    if (!name || !isExactMatch(name, filters.artist ?? "")) return false;
+  }
+  if (filters.albumExact && filters.album) {
+    if (!(item.releases ?? []).some((release) => isExactMatch(release.title, filters.album ?? ""))) return false;
+  }
+  return true;
 }
 
 /**
@@ -538,7 +590,7 @@ export async function searchSongs(
   const pick = purpose === "pick";
   const q = query.trim();
   const text = withoutSeparator(q);
-  const duration: RecordingQueryFilters = { durMin: filters.durMin, durMax: filters.durMax };
+  const songFilters: SongFilters = { ...filters, title: q, exact: filters.exact && q ? true : undefined };
 
   const freeText: Interpretation = { songPart: normalizeSearchText(text), artist: null, artistName: null };
   let interpretations: Interpretation[];
@@ -547,6 +599,10 @@ export async function searchSongs(
   if (filters.artist) {
     interpretations = [await explicitArtistInterpretation(text, filters.artist)];
     attempts = interpretations;
+  } else if (!text || songFilters.exact) {
+    // Sin título (solo criterios) o con título exacto: no hay artista que detectar en la consulta.
+    interpretations = [];
+    attempts = [freeText];
   } else {
     const detected = await artistCandidates(text, localOnly, signal);
     artistLegFailed = detected.remoteFailed;
@@ -571,10 +627,9 @@ export async function searchSongs(
   let remoteFailed = artistLegFailed;
   for (const attempt of localOnly ? [] : attempts) {
     try {
-      const response = await musicbrainz.searchRecording(
-        withRecordingFilters(await recordingQueryFor(attempt, text, signal), duration),
-        { offset, signal },
-      );
+      const base =
+        songFilters.exact && !attempt.artistName ? phraseClause("recording", text) : await recordingQueryFor(attempt, text, signal);
+      const response = await musicbrainz.searchRecording(withRecordingFilters(base, songFilters), { offset, signal });
       // Con artista, un título igual a la consulta COMPLETA no confirma la
       // lectura "canción X de artista Y": la persona escribió un título
       // ("stairway de prueba" no es «de prueba» de la banda Stairway).
@@ -582,8 +637,9 @@ export async function searchSongs(
       const fullQuery = normalizeSearchText(text);
       const relevant = response.recordings.filter(
         (item) =>
-          isRelevantRecordingTitle(attempt.songPart, item.title) &&
-          inDuration(item, duration) &&
+          (!attempt.songPart || isRelevantRecordingTitle(attempt.songPart, item.title)) &&
+          inDuration(item, songFilters) &&
+          matchesRemoteExact(item, songFilters) &&
           !(attempt.artistName && !filters.artist && normalizeSearchText(baseSongTitle(item.title)) === fullQuery),
       );
       if (relevant.length > 0) {
@@ -604,7 +660,7 @@ export async function searchSongs(
   const used = chosen ?? attempts[0] ?? freeText;
 
   // Lo local (apariciones ya ingeridas) solo acompaña a la primera página.
-  const local = offset === 0 ? await localContributions(used, duration).catch(() => []) : [];
+  const local = offset === 0 ? await localContributions(used, songFilters).catch(() => []) : [];
   if (remoteFailed && recordings.length === 0 && local.length === 0) {
     throw new ApiError("INTERNAL_ERROR", 502, "MusicBrainz no respondió y no hay coincidencias locales");
   }

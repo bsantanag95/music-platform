@@ -28,7 +28,7 @@ import {
   releaseGroupsWithContent,
 } from "./local-match";
 import { releaseGroupFieldQuery, releaseGroupQuery, type ReleaseGroupQueryOptions } from "./mb-query";
-import { splitExplicit, tokenize, withoutSeparator } from "./normalize";
+import { isExactMatch, splitExplicit, tokenize, withoutSeparator } from "./normalize";
 import { localOnlyIndex, sortByRank, topArtistNames, type RankKey } from "./rank";
 import {
   GENERIC_QUERY_THRESHOLD,
@@ -40,13 +40,19 @@ import {
 const LOCAL_LIMIT = 10;
 
 export interface AlbumSearchOptions {
+  /** Una categoría (pastilla de /search o el diálogo "Añadir"). */
   category?: ReleaseGroupCategoryValue;
+  /** Varias categorías (búsqueda avanzada); reemplaza a `category`. */
+  categories?: ReleaseGroupCategoryValue[];
   /** Primer año de la década (1970, 1980, …). Un rango de años la reemplaza. */
   decade?: number;
   /** Rango de años y artista (openspec: add-advanced-search-phase1). */
   yearFrom?: number;
   yearTo?: number;
   artist?: string;
+  /** Coincidencias exactas de título y artista (openspec: redesign-advanced-search). */
+  exact?: boolean;
+  artistExact?: boolean;
   offset?: number;
   /**
    * Solo coincidencias locales, sin MusicBrainz ni escrituras: lo que la
@@ -77,6 +83,8 @@ function inYears(year: number | null, { decade, yearFrom, yearTo }: ReleaseGroup
  */
 async function localCandidates(text: string, filters: ReleaseGroupQueryOptions) {
   const byTitle = await matchLocalReleaseGroups(text, { limit: LOCAL_LIMIT, ...filters });
+  // Título exacto o sin título (solo criterios): no hay artista que buscar en la consulta.
+  if (filters.exact || !text) return byTitle;
 
   const tokens = tokenize(text);
   // La consulta completa es el nombre de un artista local ("pink floyd"): sus discos. Los álbumes
@@ -114,7 +122,8 @@ async function remotePage(
   offset: number,
   signal: AbortSignal | undefined,
 ): Promise<MBReleaseGroupSearchResponse> {
-  const explicit = splitExplicit(query);
+  // Con título exacto, la consulta es el título entero: sin lectura "Artista - Título".
+  const explicit = filters.exact ? null : splitExplicit(query);
   if (!explicit) {
     return musicbrainz.searchReleaseGroup(releaseGroupQuery(query, filters), { offset, signal });
   }
@@ -139,17 +148,31 @@ interface Entry {
 
 export async function searchAlbums(
   query: string,
-  { category, decade, yearFrom, yearTo, artist, offset = 0, localOnly = false, signal }: AlbumSearchOptions = {},
+  {
+    category,
+    categories = category ? [category] : undefined,
+    decade,
+    yearFrom,
+    yearTo,
+    artist,
+    exact,
+    artistExact,
+    offset = 0,
+    localOnly = false,
+    signal,
+  }: AlbumSearchOptions = {},
 ): Promise<AlbumSearchResponse> {
   const q = query.trim();
-  const text = withoutSeparator(q);
+  const text = exact ? q : withoutSeparator(q);
   const hasRange = yearFrom !== undefined || yearTo !== undefined;
   const filters: ReleaseGroupQueryOptions = {
-    category,
+    categories,
     decade: hasRange ? undefined : decade,
     yearFrom,
     yearTo,
     artist,
+    exact: exact && q ? true : undefined,
+    artistExact: artistExact && artist ? true : undefined,
   };
 
   // Lo local solo acompaña a la primera página: "Cargar más" pagina MusicBrainz.
@@ -253,8 +276,13 @@ export async function searchAlbums(
   // Las cláusulas de MusicBrainz son una aproximación: el filtro exacto se
   // reaplica sobre la categoría mapeada y el año conocido. El artista ya lo
   // filtraron las dos fuentes (SQL y `artist:"…"`).
+  // Las frases de MusicBrainz traen también títulos y nombres más largos: los exactos se reaplican.
   const filtered = entries.filter(
-    (entry) => (!category || entry.result.category === category) && inYears(entry.result.year, filters),
+    (entry) =>
+      (!categories || categories.includes(entry.result.category)) &&
+      inYears(entry.result.year, filters) &&
+      (!filters.exact || isExactMatch(entry.result.title, q)) &&
+      (!filters.artistExact || entry.artistNames.some((name) => isExactMatch(name, artist ?? ""))),
   );
   const activity = await activityScores(
     "release-group",
@@ -268,7 +296,7 @@ export async function searchAlbums(
 
   const hasArtistMatch = ranked.some((entry) => entry.rank.level === 1);
   const refine =
-    offset === 0 && !hasArtistMatch && total !== null && total > GENERIC_QUERY_THRESHOLD
+    q && offset === 0 && !hasArtistMatch && total !== null && total > GENERIC_QUERY_THRESHOLD
       ? {
           total,
           artists: topArtistNames(

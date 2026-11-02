@@ -141,14 +141,14 @@ describe("ScopedSearchField", () => {
     );
   });
 
-  it("'Búsqueda avanzada' abre /search con el panel; no se ofrece en Usuarios ni en /search", () => {
+  it("'Búsqueda avanzada' abre la página avanzada con el tipo y el texto; no se ofrece en Usuarios", () => {
     const { unmount } = renderWithIntl(<ScopedSearchField variant="compact" initialType="album" />);
 
     fireEvent.focus(field());
     fireEvent.change(field(), { target: { value: "maiden" } });
     fireEvent.click(screen.getByRole("button", { name: labels.advanced.headerLink }));
 
-    expect(mockPush).toHaveBeenCalledWith("/search?type=album&q=maiden&filters=1");
+    expect(mockPush).toHaveBeenCalledWith("/search/advanced?type=album&q=maiden");
     unmount();
 
     renderWithIntl(<ScopedSearchField variant="compact" initialType="user" />);

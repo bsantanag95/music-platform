@@ -9,9 +9,12 @@
 //   - `releasegroup:"…" AND artist:"…"` / `recording:"…" AND artist:"…"`
 //     resuelven el separador explícito "Artista - Título".
 //
-// Filtros de la búsqueda avanzada (openspec: add-advanced-search-phase1): `country:AR`,
-// `begin:[1980 TO 1989-12-31]` y `ended:true` en artistas; `firstreleasedate` y `artist:"…"` en
-// release-groups; `artist:"…"` y `dur:[0 TO 420000]` (ms) en recordings. Extremo abierto: `*`.
+// Criterios de la búsqueda avanzada (openspec: add-advanced-search-phase1, redesign-advanced-search):
+// `country:(AR OR CL)`, `beginarea:"…"`, `begin:[1980 TO 1989-12-31]` y `ended:true` en artistas;
+// `firstreleasedate`, `artist:"…"` y tipos en release-groups; `artist:"…"`, `release:"…"`, tipos y
+// `dur:[0 TO 420000]` (ms) en recordings. Extremo abierto: `*`. Sin texto libre, la consulta es
+// solo de campos (verificado contra la API real, 2026-11-01). Con coincidencia exacta, el texto va
+// como frase en su campo y el filtro exacto se reaplica sobre lo que vuelve.
 
 import type { ReleaseGroupCategoryValue } from "../ingest-release-group";
 
@@ -35,26 +38,44 @@ export function yearRangeClause(field: string, from: number | undefined, to: num
   return `${field}:[${from ?? "*"} TO ${to !== undefined ? `${to}-12-31` : "*"}]`;
 }
 
+/** Frase entre comillas en un campo (`artist:"Iron Maiden"`). */
+export function phraseClause(field: string, value: string): string {
+  return `${field}:"${escapeLucenePhrase(value.trim())}"`;
+}
+
+/** Sin acentos: el índice de áreas los ignora, y así no dependen de cómo se codifiquen. */
+function withoutAccents(value: string): string {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+/** Texto (libre o en su campo) y cláusulas, unidos con AND. Sin texto, solo las cláusulas. */
+function joinQuery(text: string, clauses: string[]): string {
+  if (!text) return clauses.join(" AND ");
+  return clauses.length ? [`(${text})`, ...clauses].join(" AND ") : text;
+}
+
 export interface ArtistQueryFilters {
-  country?: string;
+  artistType?: ArtistTypeFilter;
+  /** Nombre exacto: el texto va como frase en `artist:`. */
+  exact?: boolean;
+  country?: string[];
+  area?: string;
   beginFrom?: number;
   beginTo?: number;
   ended?: boolean;
 }
 
-export function artistQuery(
-  query: string,
-  artistType?: ArtistTypeFilter,
-  filters: ArtistQueryFilters = {},
-): string {
-  const text = escapeLucene(query.trim());
+export function artistQuery(query: string, filters: ArtistQueryFilters = {}): string {
+  const trimmed = query.trim();
+  const text = !trimmed ? "" : filters.exact ? phraseClause("artist", trimmed) : escapeLucene(trimmed);
   const clauses: string[] = [];
-  if (artistType) clauses.push(`type:${artistType}`);
-  if (filters.country) clauses.push(`country:${escapeLucene(filters.country)}`);
+  if (filters.artistType) clauses.push(`type:${filters.artistType}`);
+  if (filters.country?.length) clauses.push(`country:(${filters.country.map(escapeLucene).join(" OR ")})`);
+  if (filters.area) clauses.push(phraseClause("beginarea", withoutAccents(filters.area)));
   const begin = yearRangeClause("begin", filters.beginFrom, filters.beginTo);
   if (begin) clauses.push(begin);
   if (filters.ended !== undefined) clauses.push(`ended:${filters.ended}`);
-  return clauses.length ? [`(${text})`, ...clauses].join(" AND ") : text;
+  return joinQuery(text, clauses);
 }
 
 // Categorías propias (`mapReleaseGroupCategory`) traducidas a cláusulas de
@@ -73,31 +94,43 @@ const CATEGORY_CLAUSE: Record<ReleaseGroupCategoryValue, string> = {
     `(secondarytype:live OR NOT primarytype:(album OR single OR ep) OR (primarytype:album AND secondarytype:(${NON_STUDIO_SECONDARY}))) AND NOT secondarytype:compilation`,
 };
 
+/** Una o varias categorías: `(A)` o `((A) OR (B))`. Vale para release-groups y recordings. */
+export function categoriesClause(categories: readonly ReleaseGroupCategoryValue[] | undefined): string | null {
+  if (!categories?.length) return null;
+  if (categories.length === 1) return `(${CATEGORY_CLAUSE[categories[0]!]})`;
+  return `(${categories.map((category) => `(${CATEGORY_CLAUSE[category]})`).join(" OR ")})`;
+}
+
 export interface ReleaseGroupQueryOptions {
-  category?: ReleaseGroupCategoryValue;
+  categories?: ReleaseGroupCategoryValue[];
   /** Primer año de la década (1970, 1980, …). Un rango de años la reemplaza. */
   decade?: number;
   yearFrom?: number;
   yearTo?: number;
-  /** Artista principal acreditado. */
+  /** Artista principal acreditado (frase en `artist:`). */
   artist?: string;
+  /** Artista exacto: en MusicBrainz la misma frase; la igualdad se reaplica sobre lo que vuelve. */
+  artistExact?: boolean;
+  /** Título exacto: el texto va como frase en `releasegroup:`. */
+  exact?: boolean;
 }
 
 function filterClauses(options: ReleaseGroupQueryOptions): string[] {
   const clauses: string[] = [];
-  if (options.category) clauses.push(`(${CATEGORY_CLAUSE[options.category]})`);
+  const categories = categoriesClause(options.categories);
+  if (categories) clauses.push(categories);
   const years =
     yearRangeClause("firstreleasedate", options.yearFrom, options.yearTo) ??
     (options.decade !== undefined ? yearRangeClause("firstreleasedate", options.decade, options.decade + 9) : null);
   if (years) clauses.push(years);
-  if (options.artist) clauses.push(`artist:"${escapeLucenePhrase(options.artist.trim())}"`);
+  if (options.artist) clauses.push(phraseClause("artist", options.artist));
   return clauses;
 }
 
 export function releaseGroupQuery(query: string, options: ReleaseGroupQueryOptions = {}): string {
-  const clauses = filterClauses(options);
-  const text = escapeLucene(query.trim());
-  return clauses.length ? [`(${text})`, ...clauses].join(" AND ") : text;
+  const trimmed = query.trim();
+  const text = !trimmed ? "" : options.exact ? phraseClause("releasegroup", trimmed) : escapeLucene(trimmed);
+  return joinQuery(text, filterClauses(options));
 }
 
 /** Consulta con campos explícitos para "Artista - Título". */
@@ -117,6 +150,10 @@ export interface RecordingQueryFilters {
   /** Duración en segundos. */
   durMin?: number;
   durMax?: number;
+  /** Título de un álbum donde aparece (`release:`). */
+  album?: string;
+  /** Tipos de lanzamiento del release-group de sus ediciones. */
+  categories?: ReleaseGroupCategoryValue[];
 }
 
 /** `dur` de MusicBrainz va en milisegundos. */
@@ -126,10 +163,15 @@ export function durationClause({ durMin, durMax }: RecordingQueryFilters): strin
   return `dur:[${ms(durMin, 0)} TO ${ms(durMax, 999)}]`;
 }
 
-/** Agrega el filtro de duración a una consulta de recordings ya armada. */
+/** Agrega álbum, tipos y duración a una consulta de recordings ya armada (puede ir vacía). */
 export function withRecordingFilters(query: string, filters: RecordingQueryFilters = {}): string {
-  const clause = durationClause(filters);
-  return clause ? `(${query}) AND ${clause}` : query;
+  const clauses: string[] = [];
+  if (filters.album) clauses.push(phraseClause("release", filters.album));
+  const categories = categoriesClause(filters.categories);
+  if (categories) clauses.push(categories);
+  const duration = durationClause(filters);
+  if (duration) clauses.push(duration);
+  return joinQuery(query, clauses);
 }
 
 export function recordingFreeQuery(query: string): string {

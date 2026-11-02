@@ -1,30 +1,22 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import {
-  filtersForType,
-  filtersToParams,
-  hasActiveFilters,
-  type AdvancedFilters,
-} from "@/services/catalog/search/filters";
 import { SEARCH_TYPES, searchHref, type SearchType } from "../search-types";
 import { SearchTypeIcon } from "../SearchTypeIcon";
 
 // Piezas comunes de la página de resultados por tipo (openspec:
 // redesign-scoped-search). Sin "use client": se renderizan en el servidor y
-// también dentro de los Client Components que cargan más resultados.
+// también dentro de los Client Components que cargan más resultados. Con
+// `advanced` (página /search/advanced, openspec: redesign-advanced-search) el
+// encabezado no repite la consulta ni ofrece otros tipos: eso lo hacen el
+// formulario y las pestañas.
 
-/**
- * Accesos para repetir la misma consulta en los otros tipos, sin reescribir. Conservan solo los
- * filtros que el tipo destino entiende (openspec: add-advanced-search-phase1).
- */
+/** Accesos para repetir la misma consulta en los otros tipos, sin reescribir. */
 export function SearchTypeSwitch({
   query,
   current,
-  filters = {},
 }: {
   query: string;
   current: SearchType;
-  filters?: AdvancedFilters;
 }) {
   const t = useTranslations("catalog.search");
   return (
@@ -38,7 +30,7 @@ export function SearchTypeSwitch({
       {SEARCH_TYPES.filter((type) => type !== current).map((type) => (
         <Link
           key={type}
-          href={searchHref(type, query, filtersToParams(filtersForType(type, filters)))}
+          href={searchHref(type, query)}
           className="inline-flex items-center gap-1.5 rounded-full border border-ink-border px-2.5 py-1 font-data text-xs text-paper-muted transition-colors hover:border-amber/60 hover:text-paper"
         >
           <SearchTypeIcon type={type} className="size-3" />
@@ -54,23 +46,29 @@ export function SearchSummary({
   query,
   type,
   count,
-  filters,
+  advanced = false,
 }: {
   query: string;
   type: SearchType;
   count: number | null;
-  filters?: AdvancedFilters;
+  advanced?: boolean;
 }) {
   const t = useTranslations("catalog.search");
   return (
     <header className="flex flex-col gap-3 border-b border-ink-border pb-4">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <h2 className="min-w-0 wrap-break-word font-display text-lg text-paper">
-          {t("results.summary", { query })}{" "}
-          <span className="inline-flex items-center gap-1.5 align-middle font-data text-xs text-amber">
-            <SearchTypeIcon type={type} className="size-3.5" />
-            {t("results.inType", { type: t(`types.${type}`).toLowerCase() })}
-          </span>
+          {advanced ? (
+            t("advanced.resultsTitle")
+          ) : (
+            <>
+              {t("results.summary", { query })}{" "}
+              <span className="inline-flex items-center gap-1.5 align-middle font-data text-xs text-amber">
+                <SearchTypeIcon type={type} className="size-3.5" />
+                {t("results.inType", { type: t(`types.${type}`).toLowerCase() })}
+              </span>
+            </>
+          )}
         </h2>
         {count !== null ? (
           <span className="shrink-0 font-data text-xs text-paper-muted">
@@ -78,43 +76,46 @@ export function SearchSummary({
           </span>
         ) : null}
       </div>
-      <SearchTypeSwitch query={query} current={type} filters={filters} />
+      {advanced ? null : <SearchTypeSwitch query={query} current={type} />}
     </header>
   );
 }
 
-/** Estado vacío del tipo, con los accesos a los otros tipos y, con filtros, "Quitar filtros". */
+/** Estado vacío del tipo, con los accesos a los otros tipos (en la avanzada, sugiere menos campos). */
 export function SearchEmpty({
   query,
   type,
-  filters = {},
-  pillParams = {},
+  advanced = false,
 }: {
   query: string;
   type: SearchType;
-  filters?: AdvancedFilters;
-  pillParams?: Record<string, string>;
+  advanced?: boolean;
 }) {
   const t = useTranslations("catalog.search");
-  const filtered = hasActiveFilters(filters);
   return (
     <div className="flex flex-col items-center gap-4 rounded-lg border border-ink-border bg-ink-surface px-6 py-10 text-center">
       <h3 className="font-display text-lg text-paper">
         {t("results.emptyTitle")}
       </h3>
       <p className="max-w-sm font-body text-sm text-paper-muted">
-        {filtered ? t("advanced.emptyFiltered") : t(`results.emptyDescription.${type}`)}
+        {advanced ? t("advanced.emptyDescription") : t(`results.emptyDescription.${type}`)}
       </p>
-      {filtered ? (
-        <Link
-          href={searchHref(type, query, pillParams)}
-          className="rounded border border-amber/70 px-3 py-1.5 font-display text-sm text-paper transition-colors hover:border-amber"
-        >
-          {t("advanced.clear")}
-        </Link>
-      ) : null}
-      <SearchTypeSwitch query={query} current={type} filters={filters} />
+      {advanced ? null : <SearchTypeSwitch query={query} current={type} />}
     </div>
+  );
+}
+
+/** Total de MusicBrainz desde el que una búsqueda avanzada sin nombre sugiere sumar campos. */
+const BROAD_QUERY_THRESHOLD = 500;
+
+/** Búsqueda avanzada sin nombre con muchísimos resultados: sugiere sumar campos. */
+export function BroadQueryHint({ total }: { total: number | null }) {
+  const t = useTranslations("catalog.search.advanced");
+  if (total === null || total <= BROAD_QUERY_THRESHOLD) return null;
+  return (
+    <p className="rounded-lg border border-ink-border bg-ink-surface/70 px-4 py-3 font-body text-sm text-paper-muted">
+      {t("broadQuery", { total })}
+    </p>
   );
 }
 

@@ -48,27 +48,32 @@ score, coincidencia exacta al tope de su grupo). El campo del Header siempre nav
 Los homónimos ("Poison" glam vs. thrash) aparecen como filas separadas con su
 disambiguation — la ambigüedad la resuelve el usuario, no `artists[0]`.
 
-**Búsqueda avanzada (cambio `add-advanced-search-phase1`).** En `/search`, junto al campo, el
-botón **Filtros · n** abre un panel con los filtros del tipo activo. El panel es un formulario `GET`
-que escribe la URL (solo los campos con valor), así que un resultado filtrado se puede enlazar.
-El Header no tiene botón propio: su desplegable ofrece "Búsqueda avanzada", que abre `/search`
-con `filters=1` (el panel abierto). Filtros de esta fase, todos aplicados igual a la base local
-(SQL) y a la consulta de MusicBrainz (Lucene), así que no reducen la cobertura ni suman requests:
+**Búsqueda avanzada (cambios `add-advanced-search-phase1` y `redesign-advanced-search`).** Página
+propia `/search/advanced`, al estilo de Metal Archives: pestañas **Artistas · Álbumes · Canciones**
+(`?type=`), cada una con su formulario `GET` que escribe la URL (solo los campos con valor; los
+múltiples, repetidos), así que una búsqueda se puede enlazar. El nombre o título (`q`) es **un campo
+más, opcional**: basta con cualquier otro. Sin ningún campo, la página muestra el formulario y no
+busca. `/search` sigue siendo el buscador rápido: junto al campo, y en el desplegable del Header, un
+enlace "Búsqueda avanzada" abre la pestaña del tipo con el texto cargado. Un enlace a `/search` con
+criterios que la búsqueda rápida no tiene redirige a `/search/advanced` con los mismos parámetros.
+Todos los campos se aplican igual a la base local (SQL) y a la consulta de MusicBrainz (Lucene, que
+acepta consultas solo de campos), así que no reducen la cobertura ni suman requests:
 
-| Tipo | Filtros (parámetro) |
+| Pestaña | Campos (parámetro) |
 |---|---|
-| Artistas | País (`country`), inicio de actividad desde/hasta (`beginFrom`/`beginTo`: nacimiento o formación) y estado (`ended=0\|1`). |
-| Álbumes | Años de lanzamiento desde/hasta (`yearFrom`/`yearTo`, reemplazan a la década) y artista principal (`artist`, como palabras completas). |
-| Canciones | Artista (`artist`: fija la interpretación y ahorra la búsqueda de artistas) y duración mínima/máxima (`durMin`/`durMax` en segundos; el panel muestra `m:ss`). |
-| Usuarios | Ninguno. |
+| Artistas | Nombre (`q`) y ¿exacto? (`exact`), tipo (`artistType`), país, uno o varios (`country`), ciudad o región de nacimiento o formación (`area` → `beginarea`), año de inicio desde/hasta (`beginFrom`/`beginTo`) y estado (`ended=0\|1`). |
+| Álbumes | Título (`q`, `exact`), artista (`artist`, `artistExact`), año de lanzamiento desde/hasta (`yearFrom`/`yearTo`) y tipo de lanzamiento, uno o varios (`category`). |
+| Canciones | Título (`q`, `exact`), artista (`artist`, `artistExact`: fija la interpretación), álbum (`album`, `albumExact` → `release:`), tipo de lanzamiento de sus álbumes (`category`) y duración mínima/máxima (`durMin`/`durMax` en segundos; el formulario muestra `m:ss`). |
 
-Una fila sin el dato que pide un filtro no coincide (como en MusicBrainz). Un artista local sin
-ficha (sin país ni fechas) vuelve si la página de MusicBrainz lo trae con el dato. Debajo del
-resumen, un chip por filtro lo quita, y **Quitar filtros** vuelve a la búsqueda sin ellos. Con
-filtros activos, Artistas no redirige por coincidencia exacta única. Cambiar de tipo conserva
-solo los filtros que el otro tipo entiende (`artist` entre Álbumes y Canciones). Quedan para
-cambios propios los filtros solo del catálogo (género, valoración, premios, carátula, sello,
-autoría) y la búsqueda sin texto.
+Sin la casilla de exacto, el artista y el álbum coinciden por palabras completas y el nombre o título
+de forma tolerante; con ella, por igualdad del nombre normalizado (lo que trae la frase de MusicBrainz
+se vuelve a filtrar). Una fila sin el dato que pide un campo no coincide (como en MusicBrainz). Un
+artista local sin ficha (sin país, ciudad ni fechas) vuelve si la página de MusicBrainz lo trae con el
+dato. Artistas pagina ("Cargar más"), porque sin nombre puede haber miles; desde 500 resultados la
+página sugiere sumar campos. Cambiar de pestaña conserva solo lo que significa lo mismo en el destino
+(artista y tipos entre Álbumes y Canciones), nunca `q`. Quedan para un cambio propio los campos solo
+del catálogo (género, sello, número de catálogo, formato, país del artista en Álbumes, valoración,
+premios) y el mes en el rango de fechas.
 
 **Tolerancia a errores de tipeo — limitación conocida (aceptada por ahora).** La base
 local coincide por *substring exacto*, sin distinguir mayúsculas (`ILIKE '%texto%'`): no
