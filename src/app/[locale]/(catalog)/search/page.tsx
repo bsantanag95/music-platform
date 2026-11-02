@@ -1,11 +1,12 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { redirect } from "@/i18n/navigation";
+import { effectiveDecade, parseDecade } from "@/services/catalog/search/params";
 import {
-  effectiveDecade,
-  parseArtistTypeFilter,
-  parseCategory,
-  parseDecade,
-} from "@/services/catalog/search/params";
-import { fromRecord, parseAdvancedFilters } from "@/services/catalog/search/filters";
+  advancedSearchHref,
+  fromRecord,
+  isQuickSearch,
+  parseCriteria,
+} from "@/services/catalog/search/filters";
 import { SearchForm } from "@/components/catalog/SearchForm";
 import { RecentSearches } from "@/components/catalog/RecentSearches";
 import { parseSearchType } from "@/components/catalog/search-types";
@@ -31,6 +32,8 @@ function first(value: Param): string | undefined {
 //     MusicBrainz por streaming (Suspense), ya fusionado en el orden final;
 //   - Usuarios no sale a MusicBrainz y redirige con un username exacto.
 // La página no ingiere discografías: eso ocurre al abrir un resultado.
+// Es el buscador rápido: con criterios que no tiene (enlaces de la fase 1 de
+// la búsqueda avanzada) redirige a /search/advanced (openspec: redesign-advanced-search).
 async function SearchPage({ searchParams }: SearchPageProps) {
   const t = await getTranslations("catalog");
   const tCommon = await getTranslations("common");
@@ -38,13 +41,17 @@ async function SearchPage({ searchParams }: SearchPageProps) {
   const type = parseSearchType(params.type);
   const query = first(params.q)?.trim() ?? "";
   const all = first(params.all) === "1";
-  // Búsqueda avanzada (openspec: add-advanced-search-phase1): solo los filtros del tipo activo.
-  const filters = parseAdvancedFilters(type, fromRecord(params));
-  const artistType = parseArtistTypeFilter(params.artistType);
-  const category = parseCategory(params.category);
-  const pillParams: Record<string, string> = {};
-  if (type === "artist" && artistType) pillParams.artistType = artistType;
-  if (type === "album" && category) pillParams.category = category;
+  const criteria = parseCriteria(type, fromRecord(params), query);
+  const decade = effectiveDecade(parseDecade(params.decade), criteria);
+
+  if (!isQuickSearch(type, criteria)) {
+    // La avanzada no tiene década: se pasa a un rango de años si no hay uno.
+    const years =
+      type === "album" && decade !== undefined && criteria.yearFrom === undefined && criteria.yearTo === undefined
+        ? { yearFrom: decade, yearTo: decade + 9 }
+        : {};
+    redirect({ href: advancedSearchHref(type, query, { ...criteria, ...years }), locale: await getLocale() });
+  }
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col items-start gap-8 px-4 py-12">
@@ -55,27 +62,16 @@ async function SearchPage({ searchParams }: SearchPageProps) {
         ]}
       />
       <h1 className="font-display text-2xl text-paper">{t("search.pageTitle")}</h1>
-      <SearchForm
-        initialQuery={query}
-        initialType={type}
-        filters={filters}
-        pillParams={pillParams}
-        panelOpen={first(params.filters) === "1"}
-      />
+      <SearchForm initialQuery={query} initialType={type} />
       {!query ? <RecentSearches /> : null}
       {query ? (
         <section className="flex w-full flex-col gap-6">
           {type === "artist" ? (
-            <ArtistSection query={query} all={all} artistType={artistType} filters={filters} />
+            <ArtistSection query={query} all={all} criteria={criteria} />
           ) : type === "album" ? (
-            <AlbumSection
-              query={query}
-              category={category}
-              decade={effectiveDecade(parseDecade(params.decade), filters)}
-              filters={filters}
-            />
+            <AlbumSection query={query} decade={decade} criteria={criteria} />
           ) : type === "song" ? (
-            <SongSection query={query} filters={filters} />
+            <SongSection query={query} criteria={criteria} />
           ) : (
             <UserSection query={query} all={all} />
           )}

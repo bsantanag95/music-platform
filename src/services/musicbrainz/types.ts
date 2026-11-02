@@ -173,6 +173,8 @@ export interface MBRecordingSearchItem {
   length?: number; // milisegundos
   "first-release-date"?: string; // 'YYYY' | 'YYYY-MM' | 'YYYY-MM-DD' | ausente
   "artist-credit"?: MBArtistCreditItem[]; // requiere inc=artist-credits en la búsqueda
+  /** Releases donde aparece (la búsqueda los trae resumidos): el filtro de álbum exacto. */
+  releases?: { id: string; title: string }[];
   score?: number;
 }
 

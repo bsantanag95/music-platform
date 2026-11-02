@@ -26,22 +26,27 @@ un artista sin `type` en MusicBrainz se guarda como `unknown` (nunca `various`).
 
 | Param | Tipos | Descripción |
 |---|---|---|
-| `q` | todos | Requerido; vacío o solo espacios tras normalizar → 400. |
+| `q` | todos | Nombre o título. Opcional si hay al menos otro criterio del tipo (openspec `redesign-advanced-search`); sin `q` ni criterios → 400. |
 | `type` | — | Requerido: `artist`, `album` o `song` (Usuarios usa `/api/users` y `/api/search/suggest`). Otro valor → 400. |
-| `offset` | `album`, `song` | Página siguiente de MusicBrainz (lo local solo acompaña a la primera). |
+| `offset` | todos | Página siguiente de MusicBrainz (lo local solo acompaña a la primera). |
 | `artistType` | `artist` | `person` o `group`: filtra lo local y la consulta remota (`type:`). |
-| `category` | `album` | `studio`, `single_ep`, `compilation`, `live_other`. |
+| `exact` | todos | `1`: `q` coincide exactamente (nombre normalizado). En MusicBrainz, frase en su campo (`artist:`, `releasegroup:`, `recording:`) y se reaplica la igualdad. Sin `q`, se ignora. |
+| `category` | `album`, `song` | Repetible: `studio`, `single_ep`, `compilation`, `live_other` (en Canciones, de los álbumes donde aparece). Varias → `OR` de sus cláusulas. |
 | `decade` | `album` | Primer año de la década (`1970`) → `firstreleasedate:[1970 TO 1979-12-31]`. |
-| `country` | `artist` | ISO 3166-1 alfa-2 (se pasa a mayúsculas) → `artist.country` / `country:AR` (openspec `add-advanced-search-phase1`). |
+| `country` | `artist` | Repetible (hasta 10): ISO 3166-1 alfa-2 (se pasa a mayúsculas) → `artist.country IN (…)` / `country:(AR OR CL)` (openspec `add-advanced-search-phase1`). |
+| `area` | `artist` | Ciudad o región de nacimiento o formación → `artist.begin_area_name` por palabras completas / `beginarea:"…"` sin acentos. |
 | `beginFrom`, `beginTo` | `artist` | Años (1000–2100) del inicio de actividad (nacimiento o formación) → año de `artist.life_begin` / `begin:[1980 TO 1989-12-31]`. |
 | `ended` | `artist` | `1` ya no en actividad, `0` en actividad → `artist.life_ended` / `ended:true\|false`. |
 | `yearFrom`, `yearTo` | `album` | Años (1900–2100) del primer lanzamiento. Con un rango, `decade` se ignora. |
 | `artist` | `album`, `song` | Texto (1–200). Álbumes: artista principal acreditado, como palabras completas (`artist:"…"`). Canciones: fija la interpretación (el `q` entero es el título) sin búsqueda de artistas. |
+| `artistExact` | `album`, `song` | `1`: algún artista principal se llama exactamente así. Sin `artist`, se ignora. |
+| `album`, `albumExact` | `song` | Título de un álbum donde aparece (`release:"…"`), por palabras completas o exacto. |
 | `durMin`, `durMax` | `song` | Segundos (0–7200) o `m:ss` → `recording.duration_sec` / `dur:[ms TO ms]`, sobre cada grabación. |
 | `purpose` | `song` | `pick`: modo de elección para los buscadores que eligen un objetivo (diálogo "Añadir", openspec `speed-up-quick-actions-search`). Ver abajo. Otro valor se ignora. |
 
-Los filtros inválidos, vacíos o de otro tipo se ignoran (sin `400`); un rango invertido se
-intercambia. Las cláusulas de MusicBrainz para categoría, década y años son una aproximación: el
+Los criterios inválidos, vacíos o de otro tipo se ignoran (sin `400`); un rango invertido se
+intercambia. En los tres tipos la respuesta trae `total` y `nextOffset` (Artistas los suma desde
+`redesign-advanced-search`). Las cláusulas de MusicBrainz para categoría, década y años son una aproximación: el
 filtro exacto se reaplica sobre la categoría mapeada y el año conocido. Una fila sin el dato que
 pide un filtro no coincide. `nextOffset` corresponde a la consulta filtrada.
 

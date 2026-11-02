@@ -54,7 +54,7 @@ function artist(overrides: Partial<ArtistSearchResult>): ArtistSearchResult {
 }
 
 function response(results: ArtistSearchResult[], remoteFailed = false): ArtistSearchResponse {
-  return { type: "artist", results, remoteFailed };
+  return { type: "artist", results, remoteFailed, total: null, nextOffset: null };
 }
 
 describe("ArtistSection", () => {
@@ -80,13 +80,13 @@ describe("ArtistSection", () => {
 
     mocks.searchArtists.mockResolvedValue(response([artist({ id: "s", name: "Sabrina Carpenter", exact: true })]));
     await ArtistSection({ query: "Sabrina Carpenter", all: true });
-    await ArtistSection({ query: "Sabrina Carpenter", all: false, artistType: "person" });
-    // Un filtro del panel tampoco (openspec: add-advanced-search-phase1).
-    await ArtistSection({ query: "Sabrina Carpenter", all: false, filters: { country: "US" } });
+    await ArtistSection({ query: "Sabrina Carpenter", all: false, criteria: { artistType: "person" } });
+    // Un criterio de la búsqueda avanzada tampoco, ni la página avanzada (openspec: redesign-advanced-search).
+    await ArtistSection({ query: "Sabrina Carpenter", all: false, criteria: { country: ["US"] } });
     expect(mocks.searchArtists).toHaveBeenLastCalledWith("Sabrina Carpenter", {
-      artistType: undefined,
-      filters: { country: "US" },
+      filters: expect.objectContaining({ country: ["US"] }),
     });
+    await ArtistSection({ query: "Sabrina Carpenter", advanced: true });
 
     mocks.searchArtists.mockResolvedValue(response([artist({ id: "i", name: "Icon", exact: true })], true));
     await ArtistSection({ query: "icon", all: false });
@@ -115,14 +115,13 @@ describe("AlbumSection", () => {
       refine: null,
     });
 
-    await AlbumSection({ query: "destroyer", category: "studio", decade: 1970 });
+    await AlbumSection({ query: "destroyer", criteria: { category: ["studio"] }, decade: 1970 });
 
     expect(mocks.searchAlbums).toHaveBeenCalledTimes(1);
-    expect(mocks.searchAlbums).toHaveBeenCalledWith("destroyer", {
-      category: "studio",
-      decade: 1970,
-      localOnly: true,
-    });
+    expect(mocks.searchAlbums).toHaveBeenCalledWith(
+      "destroyer",
+      expect.objectContaining({ categories: ["studio"], decade: 1970, localOnly: true }),
+    );
   });
 });
 

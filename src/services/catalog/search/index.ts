@@ -7,18 +7,18 @@
 
 import { searchAlbums } from "./albums";
 import { searchArtists } from "./artists";
+import { albumOptions, artistFilters, songFilters } from "./filters";
 import type { CatalogSearchParams } from "./params";
 import { searchSongs } from "./songs";
 import type { CatalogSearchResponse } from "./types";
 
 export function searchCatalogByType(
-  { type, q, offset, artistType, category, decade, filters, purpose }: CatalogSearchParams,
+  { type, q, offset, decade, criteria, purpose }: CatalogSearchParams,
   signal?: AbortSignal,
 ): Promise<CatalogSearchResponse> {
-  // `filters` solo trae los del tipo pedido (openspec: add-advanced-search-phase1).
-  if (type === "artist") return searchArtists(q, { artistType, filters, signal });
-  if (type === "album") return searchAlbums(q, { category, decade, ...filters, offset, signal });
-  return searchSongs(q, { offset, purpose, filters, signal });
+  if (type === "artist") return searchArtists(q, { filters: artistFilters(criteria), offset, signal });
+  if (type === "album") return searchAlbums(q, { ...albumOptions(criteria), decade, offset, signal });
+  return searchSongs(q, { offset, purpose, filters: songFilters(criteria), signal });
 }
 
 export { searchAlbums, searchArtists, searchSongs };

@@ -28,6 +28,9 @@ export interface ArtistSearchResponse {
   results: ArtistSearchResult[];
   /** MusicBrainz falló: la lista tiene solo coincidencias locales. */
   remoteFailed: boolean;
+  /** Total de MusicBrainz y página siguiente (openspec: redesign-advanced-search). */
+  total: number | null;
+  nextOffset: number | null;
 }
 
 export interface AlbumSearchResult {

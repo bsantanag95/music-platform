@@ -2,18 +2,19 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { searchAlbums, searchSongs, type CatalogSearchFilters } from "@/lib/api/catalog";
-import type { AlbumSearchResult, SongGroupResult } from "@/lib/api/schemas";
+import { searchAlbums, searchArtists, searchSongs, type CatalogSearchFilters } from "@/lib/api/catalog";
+import type { AlbumSearchResult, ArtistSearchResult, SongGroupResult } from "@/lib/api/schemas";
 import { AlbumList } from "./AlbumResults";
+import { ArtistList } from "./ArtistResults";
 import { SongList } from "./SongResults";
 
 interface LoadMoreResultsProps {
-  kind: "album" | "song";
+  kind: "artist" | "album" | "song";
   query: string;
   filters: Omit<CatalogSearchFilters, "offset">;
   /** `nextOffset` de la primera página (resuelta en el servidor). */
   initialNextOffset: number;
-  /** Ids (álbumes) o keys (canciones) ya mostrados, para no repetirlos. */
+  /** Ids (artistas, álbumes) o keys (canciones) ya mostrados, para no repetirlos. */
   seen: string[];
   /** Hay sesión: el menú de acciones de cada disco pide sus marcas al abrirse. */
   authenticated?: boolean;
@@ -25,6 +26,7 @@ interface LoadMoreResultsProps {
 // `UserSearch`): una acción de la persona, no un dato a cachear.
 export function LoadMoreResults({ kind, query, filters, initialNextOffset, seen, authenticated = false }: LoadMoreResultsProps) {
   const t = useTranslations("catalog.search.results");
+  const [artists, setArtists] = useState<ArtistSearchResult[]>([]);
   const [albums, setAlbums] = useState<AlbumSearchResult[]>([]);
   const [songs, setSongs] = useState<SongGroupResult[]>([]);
   const [nextOffset, setNextOffset] = useState<number | null>(initialNextOffset);
@@ -38,7 +40,14 @@ export function LoadMoreResults({ kind, query, filters, initialNextOffset, seen,
     setFailed(false);
     try {
       const params = { ...filters, offset: nextOffset };
-      if (kind === "album") {
+      if (kind === "artist") {
+        // Artistas pagina desde la búsqueda avanzada sin nombre (openspec: redesign-advanced-search).
+        const page = await searchArtists(query, params);
+        const fresh = page.results.filter((artist) => !seenKeys.has(artist.id));
+        fresh.forEach((artist) => seenKeys.add(artist.id));
+        setArtists((current) => [...current, ...fresh]);
+        setNextOffset(page.nextOffset ?? null);
+      } else if (kind === "album") {
         const page = await searchAlbums(query, params);
         const fresh = page.results.filter((album) => !seenKeys.has(album.id));
         fresh.forEach((album) => seenKeys.add(album.id));
@@ -60,6 +69,7 @@ export function LoadMoreResults({ kind, query, filters, initialNextOffset, seen,
 
   return (
     <div className="flex flex-col gap-4" aria-busy={loading}>
+      {artists.length > 0 ? <ArtistList artists={artists} /> : null}
       {albums.length > 0 ? <AlbumList albums={albums} authenticated={authenticated} /> : null}
       {songs.length > 0 ? <SongList groups={songs} /> : null}
 

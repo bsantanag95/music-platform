@@ -241,6 +241,46 @@ describe("searchAlbums", () => {
     });
   });
 
+  it("sin título: solo campos, con artista exacto y varias categorías reaplicadas", async () => {
+    vi.mocked(musicbrainz.searchReleaseGroup).mockResolvedValue({
+      count: 3,
+      "release-groups": [
+        mbAlbum("live", "Alive!", "KISS", { "secondary-types": ["Live"], "first-release-date": "1975" }),
+        mbAlbum("best", "Double Platinum", "KISS", { "secondary-types": ["Compilation"], "first-release-date": "1978" }),
+        // La frase "Kiss" trae también otros artistas y discos de estudio: se descartan.
+        mbAlbum("other", "Kiss Kiss Live", "Kiss Kiss", { "secondary-types": ["Live"], "first-release-date": "2001" }),
+        mbAlbum("studio", "Destroyer", "KISS"),
+      ],
+    });
+
+    const response = await searchAlbums("", {
+      artist: "Kiss",
+      artistExact: true,
+      categories: ["live_other", "compilation"],
+    });
+
+    expect(response.results.map((result) => result.mbid)).toEqual(["live", "best"]);
+    expect(vi.mocked(musicbrainz.searchReleaseGroup).mock.calls[0]![0]).toMatch(/^\(\(\(secondarytype:live/);
+    expect(vi.mocked(musicbrainz.searchReleaseGroup).mock.calls[0]![0]).toContain('artist:"Kiss"');
+    expect(localMatch.findArtistsByKeys).not.toHaveBeenCalled();
+    expect(response.refine).toBeNull();
+  });
+
+  it("título exacto: frase en releasegroup y sin lectura artista + título", async () => {
+    vi.mocked(musicbrainz.searchReleaseGroup).mockResolvedValue({
+      count: 2,
+      "release-groups": [
+        mbAlbum("ps", "Powerslave", "Iron Maiden"),
+        mbAlbum("coll", "Powerslave / Single Collection 2", "Iron Maiden"),
+      ],
+    });
+
+    const response = await searchAlbums("Powerslave", { exact: true });
+
+    expect(vi.mocked(musicbrainz.searchReleaseGroup).mock.calls[0]![0]).toBe('releasegroup:"Powerslave"');
+    expect(response.results.map((result) => result.mbid)).toEqual(["ps"]);
+  });
+
   it("separador explícito: campos de artista y título, con el orden inverso si no hay nada", async () => {
     vi.mocked(musicbrainz.searchReleaseGroup)
       .mockResolvedValueOnce({ count: 0, "release-groups": [] })

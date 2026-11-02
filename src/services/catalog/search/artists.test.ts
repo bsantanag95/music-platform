@@ -178,9 +178,9 @@ describe("searchArtists", () => {
       ],
     });
 
-    const response = await searchArtists("dokken", { artistType: "person" });
+    const response = await searchArtists("dokken", { filters: { artistType: "person" } });
 
-    expect(musicbrainz.searchArtist).toHaveBeenCalledWith("(dokken) AND type:person", { signal: undefined });
+    expect(musicbrainz.searchArtist).toHaveBeenCalledWith("(dokken) AND type:person", { offset: 0, signal: undefined });
     expect(matchLocalArtists).toHaveBeenCalledWith("dokken", { limit: 10, artistType: "person" });
     expect(response.results.map((result) => result.name)).toEqual(["Don Dokken"]);
   });
@@ -191,13 +191,13 @@ describe("searchArtists", () => {
       artists: [{ id: "soda", name: "Soda Stereo", type: "Group", country: "AR", score: 100 }],
     });
 
-    const filters = { country: "AR", beginFrom: 1980, beginTo: 1989 };
+    const filters = { country: ["AR"], beginFrom: 1980, beginTo: 1989 };
     const response = await searchArtists("soda", { filters });
 
     expect(musicbrainz.searchArtist).toHaveBeenCalledTimes(1);
     expect(musicbrainz.searchArtist).toHaveBeenCalledWith(
-      "(soda) AND country:AR AND begin:[1980 TO 1989-12-31]",
-      { signal: undefined },
+      "(soda) AND country:(AR) AND begin:[1980 TO 1989-12-31]",
+      { offset: 0, signal: undefined },
     );
     expect(matchLocalArtists).toHaveBeenCalledWith("soda", { limit: 10, ...filters });
     expect(response.results.map((result) => [result.name, result.country])).toEqual([["Soda Stereo", "AR"]]);
@@ -211,9 +211,47 @@ describe("searchArtists", () => {
     });
     vi.mocked(upsertArtistStubsFromSearch).mockResolvedValue([row({ mbid: "sumo", name: "Sumo" })]);
 
-    const response = await searchArtists("sumo", { filters: { country: "AR" } });
+    const response = await searchArtists("sumo", { filters: { country: ["AR"] } });
 
     expect(response.results.map((result) => [result.name, result.country])).toEqual([["Sumo", "AR"]]);
+  });
+
+  it("sin nombre: solo campos, con total y página siguiente; lo local solo en la primera", async () => {
+    vi.mocked(matchLocalArtists).mockResolvedValue([row({ name: "Los Prisioneros", mbid: "prisioneros" })]);
+    vi.mocked(musicbrainz.searchArtist).mockResolvedValue({
+      count: 53,
+      artists: [
+        { id: "prisioneros", name: "Los Prisioneros", type: "Group", country: "CL", score: 100 },
+        { id: "laley", name: "La Ley", type: "Group", country: "CL", score: 100 },
+      ],
+    });
+
+    const response = await searchArtists("", { filters: { country: ["CL"], artistType: "group" } });
+
+    expect(musicbrainz.searchArtist).toHaveBeenCalledWith("type:group AND country:(CL)", { offset: 0, signal: undefined });
+    expect(response.results.map((result) => result.name)).toEqual(["Los Prisioneros", "La Ley"]);
+    expect(response.total).toBe(53);
+    expect(response.nextOffset).toBe(2);
+
+    vi.mocked(matchLocalArtists).mockClear();
+    const next = await searchArtists("", { filters: { country: ["CL"] }, offset: 2 });
+    expect(matchLocalArtists).not.toHaveBeenCalled();
+    expect(next.nextOffset).toBe(4);
+  });
+
+  it("nombre exacto: la frase de MusicBrainz trae nombres más largos y se reaplica la igualdad", async () => {
+    vi.mocked(matchLocalArtists).mockResolvedValue([]);
+    vi.mocked(musicbrainz.searchArtist).mockResolvedValue({
+      artists: [
+        { id: "kiss", name: "KISS", type: "Group", score: 100 },
+        { id: "kisskiss", name: "Kiss Kiss", type: "Group", score: 90 },
+      ],
+    });
+
+    const response = await searchArtists("Kiss", { filters: { exact: true } });
+
+    expect(musicbrainz.searchArtist).toHaveBeenCalledWith('artist:"Kiss"', { offset: 0, signal: undefined });
+    expect(response.results.map((result) => result.name)).toEqual(["KISS"]);
   });
 
   it("MusicBrainz caído con datos locales: 200 con remoteFailed y sin redirección", async () => {
@@ -247,7 +285,7 @@ describe("searchArtists abandonada (openspec: speed-up-quick-actions-search)", (
     await expect(searchArtists("slayer", { signal: controller.signal })).rejects.toMatchObject({
       name: "AbortError",
     });
-    expect(vi.mocked(musicbrainz.searchArtist).mock.calls[0]![1]).toEqual({ signal: controller.signal });
+    expect(vi.mocked(musicbrainz.searchArtist).mock.calls[0]![1]).toEqual({ offset: 0, signal: controller.signal });
     expect(upsertArtistStubsFromSearch).not.toHaveBeenCalled();
   });
 });

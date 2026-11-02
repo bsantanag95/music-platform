@@ -238,6 +238,45 @@ describe("searchSongs", () => {
     expect(musicbrainz.browseReleasesByRecording).toHaveBeenCalledWith("buckley", undefined);
   });
 
+  it("sin título: álbum y artista como campos, sin filtro de relevancia del título", async () => {
+    vi.mocked(musicbrainz.searchRecording).mockResolvedValue({
+      count: 2,
+      recordings: [
+        { ...rec("h", "Hallelujah", "Jeff Buckley"), releases: [{ id: "r1", title: "Grace" }] },
+        { ...rec("l", "Last Goodbye", "Jeff Buckley"), releases: [{ id: "r1", title: "Grace" }] },
+      ],
+    });
+    vi.mocked(ingestRecording.albumsFromMbReleases).mockResolvedValue([album("rg-grace", "Grace", 1994)]);
+
+    const response = await searchSongs("", { filters: { artist: "Jeff Buckley", album: "Grace" } });
+
+    expect(musicbrainz.searchArtist).not.toHaveBeenCalled();
+    expect(vi.mocked(musicbrainz.searchRecording).mock.calls[0]![0]).toBe(
+      '(artist:"Jeff Buckley") AND release:"Grace"',
+    );
+    expect(response.results.map((group) => group.title)).toEqual(["Hallelujah", "Last Goodbye"]);
+  });
+
+  it("álbum exacto y título exacto se reaplican sobre lo que vuelve", async () => {
+    vi.mocked(musicbrainz.searchRecording).mockResolvedValue({
+      count: 3,
+      recordings: [
+        { ...rec("a", "Hallelujah", "Jeff Buckley"), releases: [{ id: "r1", title: "Grace" }] },
+        { ...rec("b", "Hallelujah", "Jeff Buckley"), releases: [{ id: "r2", title: "Grace (Legacy Edition)" }] },
+        { ...rec("c", "Hallelujah, Hallelujah", "Jeff Buckley"), releases: [{ id: "r1", title: "Grace" }] },
+      ],
+    });
+    vi.mocked(ingestRecording.albumsFromMbReleases).mockResolvedValue([album("rg-grace", "Grace", 1994)]);
+
+    const response = await searchSongs("Hallelujah", {
+      filters: { exact: true, artist: "Jeff Buckley", album: "Grace", albumExact: true },
+    });
+
+    expect(response.results).toHaveLength(1);
+    expect(musicbrainz.browseReleasesByRecording).toHaveBeenCalledTimes(1);
+    expect(musicbrainz.browseReleasesByRecording).toHaveBeenCalledWith("a", undefined);
+  });
+
   it("filtro de duración: una grabación sin duración conocida no pasa", async () => {
     vi.mocked(musicbrainz.searchArtist).mockResolvedValue({ artists: [] });
     vi.mocked(musicbrainz.searchRecording).mockResolvedValue({

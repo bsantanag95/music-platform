@@ -47,12 +47,14 @@ artista) con los álbumes que la contienen. Enlazar a la página de una canción
 búsqueda sigue diferido (misma decisión de producto pendiente). Géneros, sellos y búsqueda
 avanzada quedan para cambios propios.
 
-**Resuelto en parte — `add-advanced-search-phase1`:** búsqueda avanzada en `/search` (botón
-"Filtros" y panel `GET` que escribe la URL; desde el Header, el enlace "Búsqueda avanzada") con los
-filtros que se aplican igual a la base local y a MusicBrainz: país, inicio de actividad y estado en
-Artistas; años y artista en Álbumes; artista y duración en Canciones. Pendientes: Fase 2, filtros solo
-del catálogo (género de la taxonomía propia, valoración media, premios, carátula, sello, autoría), y
-Fase 3, búsqueda sin texto.
+**Resuelto en parte — `add-advanced-search-phase1` y `redesign-advanced-search`:** búsqueda avanzada
+en su propia página `/search/advanced`, al estilo de Metal Archives (pestañas Artistas, Álbumes y
+Canciones, cada una con su formulario; el nombre o título es opcional y tiene "¿Coincidencia
+exacta?"), con los campos que se aplican igual a la base local y a MusicBrainz: país (varios), ciudad,
+inicio de actividad y estado en Artistas; artista, años y tipos en Álbumes; artista, álbum, tipos y
+duración en Canciones. `/search` queda como buscador rápido con un enlace a la avanzada. Pendientes:
+los campos solo del catálogo (género de la taxonomía propia, sello, número de catálogo, formato, país
+del artista en Álbumes, valoración media, premios, autoría).
 
 ## Fase 4 — Auth, ratings y comentarios
 
