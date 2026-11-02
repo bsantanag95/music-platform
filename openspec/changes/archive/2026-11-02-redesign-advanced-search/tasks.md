@@ -46,7 +46,7 @@
 - [x] 7.1 Mensajes `es`/`en` (pestañas, etiquetas como en Metal Archives, ayudas, Limpiar, avisos) y retirar los del panel y los chips; `pnpm run i18n:client-messages`
 - [x] 7.2 `docs/04-api/contracts.md` (`q` opcional, parámetros nuevos, paginación de Artistas)
 - [x] 7.3 `docs/05-features/catalog-browsing.md` (búsqueda avanzada como página) y `docs/00-product/roadmap.md`
-- [ ] 7.4 Tras archivar: actualizar el `## Purpose` de `openspec/specs/advanced-search-filters/spec.md` (ya no es un panel)
+- [x] 7.4 Tras archivar: actualizar el `## Purpose` de `openspec/specs/advanced-search-filters/spec.md` (ya no es un panel)
 
 ## 8. Verificación
 
