@@ -7,7 +7,7 @@ vi.mock("@/services/musicbrainz/client", () => ({
   musicbrainz: { searchReleaseGroup: vi.fn(), searchRecording: vi.fn(), searchArtist: vi.fn() },
 }));
 vi.mock("../ingest-release-group", () => ({ upsertReleaseGroupStubs: vi.fn() }));
-vi.mock("../ingest-discography", () => ({ ingestCredits: vi.fn() }));
+vi.mock("../ingest-discography", () => ({ ingestReleaseGroupCreditsBatch: vi.fn() }));
 vi.mock("./local-match", () => ({
   matchLocalReleaseGroups: vi.fn(async () => []),
   findArtistsByKeys: vi.fn(async () => []),
@@ -20,7 +20,7 @@ vi.mock("./activity", () => ({ activityScores: vi.fn(async () => new Map()) }));
 
 const { musicbrainz } = await import("@/services/musicbrainz/client");
 const { upsertReleaseGroupStubs } = await import("../ingest-release-group");
-const { ingestCredits } = await import("../ingest-discography");
+const { ingestReleaseGroupCreditsBatch } = await import("../ingest-discography");
 const localMatch = await import("./local-match");
 const { activityScores } = await import("./activity");
 const { searchAlbums } = await import("./albums");
@@ -148,7 +148,9 @@ describe("searchAlbums", () => {
     expect(musicbrainz.searchRecording).not.toHaveBeenCalled();
     expect(response.results.map((result) => result.title)).toEqual(["Destroyer", "Destroyer Demos", "Void"]);
     expect(response.results[0]).toMatchObject({ artistName: "KISS", year: 1976, category: "studio" });
-    expect(ingestCredits).toHaveBeenCalledTimes(3);
+    // Los créditos de los tres stubs, en un solo lote (openspec: speed-up-search).
+    expect(ingestReleaseGroupCreditsBatch).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(ingestReleaseGroupCreditsBatch).mock.calls[0]![0]).toHaveLength(3);
   });
 
   it("consulta genérica: sugiere acotar con los artistas más frecuentes y pagina", async () => {
@@ -341,6 +343,6 @@ describe("searchAlbums abandonada (openspec: speed-up-quick-actions-search)", ()
     });
     expect(vi.mocked(musicbrainz.searchReleaseGroup).mock.calls[0]![1]).toMatchObject({ signal: controller.signal });
     expect(upsertReleaseGroupStubs).not.toHaveBeenCalled();
-    expect(ingestCredits).not.toHaveBeenCalled();
+    expect(ingestReleaseGroupCreditsBatch).not.toHaveBeenCalled();
   });
 });

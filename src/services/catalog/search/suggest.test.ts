@@ -63,6 +63,25 @@ describe("suggest", () => {
     ]);
   });
 
+  it("puente con homónimos: una sola consulta de álbumes por resto, en el orden de los artistas (openspec: speed-up-search)", async () => {
+    const sodas = ["soda-1", "soda-2", "soda-3"].map((id) => ({ ...dokken, id, name: "Soda" }));
+    vi.mocked(localMatch.findArtistsByKeys).mockResolvedValue(sodas);
+    vi.mocked(localMatch.releaseGroupsByArtistsAndTitle).mockResolvedValue([
+      { row: { ...attack, id: "de-3", title: "Stereo 3" }, artistId: "soda-3" },
+      { row: { ...attack, id: "de-1", title: "Stereo 1" }, artistId: "soda-1" },
+    ]);
+    vi.mocked(localMatch.matchLocalArtists).mockResolvedValue([]);
+
+    const suggestions = await suggest("artist", "soda st");
+
+    expect(localMatch.releaseGroupsByArtistsAndTitle).toHaveBeenCalledTimes(1);
+    expect(localMatch.releaseGroupsByArtistsAndTitle).toHaveBeenCalledWith(["soda-1", "soda-2", "soda-3"], "st", {
+      limit: 6,
+      mode: "prefix",
+    });
+    expect(suggestions.map((item) => (item.kind === "album" ? item.title : item.kind))).toEqual(["Stereo 1", "Stereo 3"]);
+  });
+
   it("Álbumes: coincidencias por título con su artista principal", async () => {
     vi.mocked(localMatch.matchLocalReleaseGroups).mockResolvedValue([attack]);
     vi.mocked(localMatch.primaryArtistsByReleaseGroup).mockResolvedValue(

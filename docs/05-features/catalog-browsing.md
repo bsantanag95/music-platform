@@ -75,6 +75,14 @@ página sugiere sumar campos. Cambiar de pestaña conserva solo lo que significa
 del catálogo (género, sello, número de catálogo, formato, país del artista en Álbumes, valoración,
 premios) y el mes en el rango de fechas.
 
+**Tiempos de respuesta (cambio `speed-up-search`).** En `/search` y `/search/advanced`, los tres
+tipos pintan primero las coincidencias locales y transmiten lo de MusicBrainz cuando llega; en
+Artistas, la redirección por coincidencia exacta única la decide esa parte transmitida (la lista
+local puede verse un instante antes del salto). Canciones lee las apariciones de las ediciones que
+ya trae la búsqueda de recordings, sin browse aparte. Mientras se resuelve un envío, el botón del
+formulario avanzado y el del Header quedan deshabilitados y los resultados anteriores se atenúan;
+el desplegable conserva las sugerencias anteriores (atenuadas) hasta que llegan las nuevas.
+
 **Tolerancia a errores de tipeo — limitación conocida (aceptada por ahora).** La base
 local coincide por *substring exacto*, sin distinguir mayúsculas (`ILIKE '%texto%'`): no
 tolera puntuación, apóstrofes ni palabras cambiadas — `Guns and Roses` no encuentra

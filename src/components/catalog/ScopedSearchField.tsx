@@ -145,7 +145,12 @@ export function ScopedSearchField({
     if (typeMenuOpen) typeListRef.current?.focus();
   }, [typeMenuOpen]);
 
-  const visibleSuggestions = loadedFor === suggestKey ? suggestions : [];
+  // Mientras llega la respuesta de la consulta nueva, las sugerencias anteriores del mismo tipo
+  // siguen visibles (atenuadas): el desplegable no se vacía en cada tecla (openspec: speed-up-search).
+  // Cambiar de tipo o bajar de 2 caracteres las retira (el efecto reinicia `loadedFor`).
+  const sameTypeLoaded = loadedFor !== null && loadedFor.startsWith(`${type}|`);
+  const suggestionsPending = sameTypeLoaded && loadedFor !== suggestKey;
+  const visibleSuggestions = sameTypeLoaded ? suggestions : [];
   const options: Option[] = trimmed
     ? [
         ...visibleSuggestions.map(
@@ -315,13 +320,19 @@ export function ScopedSearchField({
       {compact ? (
         <button
           type="submit"
-          aria-label={t("submit")}
-          className="flex shrink-0 items-center px-2 text-paper-muted transition-colors hover:text-paper"
+          // Envío en curso: deshabilitado y con el indicador en lugar de la lupa (openspec: speed-up-search).
+          disabled={isNavigating}
+          aria-label={isNavigating ? t("submitting") : t("submit")}
+          className="flex shrink-0 items-center px-2 text-paper-muted transition-colors hover:text-paper disabled:cursor-wait"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
+          {isNavigating ? (
+            <span aria-hidden="true" className="inline-block size-3.5 animate-spin rounded-full border-2 border-ink-border border-t-amber" />
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          )}
         </button>
       ) : null}
     </div>
@@ -393,7 +404,13 @@ export function ScopedSearchField({
               compact && !fluid ? "w-[min(24rem,calc(100vw-2rem))]" : "w-full"
             }`}
           >
-            <ul id={listboxId} role="listbox" aria-label={t("suggestions.listLabel")} className="flex flex-col py-1">
+            <ul
+              id={listboxId}
+              role="listbox"
+              aria-label={t("suggestions.listLabel")}
+              aria-busy={suggestionsPending || undefined}
+              className="flex flex-col py-1"
+            >
               {visibleSuggestions.length > 0 ? (
                 <li role="presentation" className="px-3 pb-1 pt-1.5 font-data text-[11px] uppercase tracking-[0.14em] text-paper-muted">
                   {t("suggestions.fromCatalog")}
@@ -408,8 +425,8 @@ export function ScopedSearchField({
                   onPointerDown={(event) => event.preventDefault()}
                   onClick={() => navigate(option.href)}
                   onPointerEnter={() => setActiveIndex(index)}
-                  className={`flex cursor-pointer items-center gap-3 px-3 py-2 transition-colors ${
-                    option.kind === "seeAll" ? "border-t border-ink-border" : ""
+                  className={`flex cursor-pointer items-center gap-3 px-3 py-2 transition-[background-color,opacity] ${
+                    option.kind === "seeAll" ? "border-t border-ink-border" : suggestionsPending ? "opacity-60" : ""
                   } ${index === activeIndex ? "bg-ink" : ""}`}
                 >
                   {option.kind === "seeAll" ? (

@@ -16,7 +16,8 @@
 //
 // Presupuesto de MusicBrainz: una búsqueda de artistas; por interpretación,
 // un browse de discografía (solo sin créditos locales) y una búsqueda de
-// recordings; y hasta cuatro browse de apariciones del primer grupo.
+// recordings. Las apariciones salen de las ediciones que trae esa búsqueda:
+// ningún browse de apariciones (openspec: speed-up-search).
 
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
@@ -27,7 +28,7 @@ import { mapReleaseGroupCategory } from "../../musicbrainz/mappers";
 import type { MBArtistSearchItem, MBRecordingSearchItem } from "../../musicbrainz/types";
 import type { ReleaseGroupCategoryValue } from "../ingest-release-group";
 import {
-  albumsFromMbReleases,
+  albumsFromMbReleaseLists,
   findOrIngestRecording,
   localAppearanceAlbums,
   localRecordingArtistName,
@@ -69,10 +70,10 @@ const SONG_ALBUM_LIMIT = 12;
 const LOCAL_RECORDING_LIMIT = 10;
 /** Interpretaciones (y búsquedas de recordings) como máximo por búsqueda. */
 const MAX_ATTEMPTS = 2;
-// Versiones de la misma canción que se browséan y se unen: MB fragmenta una
+// Versiones de la misma canción cuyas apariciones se unen: MB fragmenta una
 // canción en tomas de estudio, lives, remixes y malvinculaciones, y ninguna
 // grabación individual tiene todas las apariciones.
-const CANDIDATE_BROWSE_LIMIT = 4;
+const CANDIDATE_LIMIT = 4;
 const RGID_CLAUSE_LIMIT = 120;
 /** Grupos que devuelve el modo de elección, cada uno con su grabación identidad. */
 export const PICK_GROUP_LIMIT = 10;
@@ -396,8 +397,8 @@ interface Group {
 }
 
 /**
- * Resuelve el primer grupo: browse de apariciones de sus primeras 4
- * grabaciones de MusicBrainz, unión con las apariciones locales del grupo, e
+ * Resuelve el primer grupo: apariciones de sus primeras 4 grabaciones de
+ * MusicBrainz (las ediciones que trae la búsqueda), unión con las apariciones locales del grupo, e
  * ingesta de la grabación identidad (la de más apariciones) — la única de la
  * búsqueda.
  */
@@ -417,14 +418,16 @@ async function expandGroup(group: Group, signal?: AbortSignal): Promise<{
   let winner: { item: MBRecordingSearchItem; count: number } | null = null;
   let remoteFailed = false;
 
+  // Las ediciones (con su release-group) vienen en la propia respuesta de la búsqueda de
+  // recordings: cero solicitudes extra a MusicBrainz (openspec: speed-up-search).
+  const candidates = group.remote.slice(0, CANDIDATE_LIMIT);
   try {
-    for (const item of group.remote.slice(0, CANDIDATE_BROWSE_LIMIT)) {
-      const browse = await musicbrainz.browseReleasesByRecording(item.id, signal);
-      signal?.throwIfAborted();
-      const appearances = await albumsFromMbReleases(browse.releases);
+    const appearanceLists = await albumsFromMbReleaseLists(candidates.map((item) => item.releases ?? []));
+    for (const [index, item] of candidates.entries()) {
+      const appearances = appearanceLists[index] ?? [];
       if (appearances.length === 0) continue;
       lists.push(appearances);
-      const count = browse["release-count"] ?? appearances.length;
+      const count = item.releases?.length ?? appearances.length;
       if (!winner || count > winner.count) winner = { item, count };
     }
   } catch {

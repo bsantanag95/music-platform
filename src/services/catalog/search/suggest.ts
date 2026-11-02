@@ -21,6 +21,7 @@ import {
   primaryArtistsByReleaseGroup,
   rankByMatchTier,
   releaseGroupsByArtistsAndTitle,
+  type ArtistTitleMatch,
 } from "./local-match";
 import {
   escapeLike,
@@ -104,13 +105,25 @@ async function bridgeAlbums(text: string, limit: number) {
   if (tokens.length < 2) return [];
   const keys = [...new Set(edgeSplits(tokens).map((split) => split.artistTokens.join(" ")))];
   const artists = await findArtistsByKeys(keys);
-  const matches = [];
+  // Una consulta por resto de título distinto, no una por artista: «soda st» encuentra decenas
+  // de artistas «Soda» con el mismo resto (openspec: speed-up-search).
+  const idsByRest = new Map<string, string[]>();
   for (const artist of artists) {
     const rest = restAfterEdgeArtist(tokens, artist.name);
     if (!rest) continue;
-    const rows = await releaseGroupsByArtistsAndTitle([artist.id], rest.join(" "), { limit, mode: "prefix" });
-    matches.push(...rows.map(({ row }) => ({ row, artistName: artist.name })));
+    const key = rest.join(" ");
+    idsByRest.set(key, [...(idsByRest.get(key) ?? []), artist.id]);
   }
+  const rowsByArtist = new Map<string, ArtistTitleMatch[]>();
+  for (const [rest, ids] of idsByRest) {
+    for (const match of await releaseGroupsByArtistsAndTitle(ids, rest, { limit, mode: "prefix" })) {
+      rowsByArtist.set(match.artistId, [...(rowsByArtist.get(match.artistId) ?? []), match]);
+    }
+  }
+  // Mismo orden que antes: por artista (el de `findArtistsByKeys`) y, dentro, el del ranking.
+  const matches = artists.flatMap((artist) =>
+    (rowsByArtist.get(artist.id) ?? []).map(({ row }) => ({ row, artistName: artist.name })),
+  );
   return matches.slice(0, limit);
 }
 

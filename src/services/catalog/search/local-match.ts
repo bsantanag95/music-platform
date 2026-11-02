@@ -36,6 +36,36 @@ function fuzzyMatch(column: AnyColumn, text: string): SQL {
   return sql`(search_normalize(${column}) % search_normalize(${text}) OR search_normalize(${column}) LIKE search_normalize(${pattern}))`;
 }
 
+/** Solo subcadena (sin acentos): la parte barata de `fuzzyMatch`. */
+function substringMatch(column: AnyColumn, text: string): SQL {
+  const pattern = `%${escapeLike(text)}%`;
+  return sql`search_normalize(${column}) LIKE search_normalize(${pattern})`;
+}
+
+/** Solo similitud por trigramas, sin las filas que ya casan por subcadena. */
+function trigramOnlyMatch(column: AnyColumn, text: string): SQL {
+  return sql`(search_normalize(${column}) % search_normalize(${text}) AND NOT ${substringMatch(column, text)})`;
+}
+
+/**
+ * Subcadena primero, trigramas solo como relleno (openspec: speed-up-search). Con palabras comunes
+ * («the d») los trigramas recorren miles de candidatos (~170 ms) cuando la subcadena ya llena el
+ * cupo (~15 ms). Si no lo llena (pocas coincidencias o una errata), se completa con las que casan
+ * solo por trigramas, detrás de las de subcadena: las dos consultas cuestan lo mismo que la
+ * combinada de antes.
+ */
+async function substringFirst<T>(
+  column: AnyColumn,
+  text: string,
+  pool: number,
+  run: (match: SQL) => Promise<T[]>,
+): Promise<T[]> {
+  const contained = await run(substringMatch(column, text));
+  if (contained.length >= pool) return contained;
+  const similar = await run(trigramOnlyMatch(column, text));
+  return [...contained, ...similar].slice(0, pool);
+}
+
 function bySimilarity(column: AnyColumn, text: string): SQL {
   return sql`similarity(search_normalize(${column}), search_normalize(${text})) DESC`;
 }
@@ -64,9 +94,9 @@ function containsWords(column: AnyColumn | SQL, value: string): SQL {
   return sql`(' ' || search_key(${column}) || ' ') LIKE ('% ' || search_key(${value}) || ' %')`;
 }
 
-/** Nombre o título: igual al normalizado con `exact`, tolerante sin él (openspec: redesign-advanced-search). */
-function textMatch(column: AnyColumn, text: string, exact: boolean | undefined): SQL {
-  return exact ? sql`search_key(${column}) = search_key(${text})` : fuzzyMatch(column, text);
+/** Nombre o título igual al normalizado: «¿Coincidencia exacta?» (openspec: redesign-advanced-search). */
+function exactMatch(column: AnyColumn, text: string): SQL {
+  return sql`search_key(${column}) = search_key(${text})`;
 }
 
 /**
@@ -100,17 +130,25 @@ export async function matchLocalArtists(
 ): Promise<ArtistRow[]> {
   const conditions = artistFilters(filters);
   if (!text && conditions.length === 0) return [];
-  const rows = await db
-    .select()
-    .from(artist)
-    .where(and(...(text ? [textMatch(artist.name, text, exact)] : []), ...conditions))
-    .orderBy(
-      ...(text
-        ? [bySimilarity(artist.name, text)]
-        : [sql`${artist.discographySyncedAt} DESC NULLS LAST`, asc(artist.name), asc(artist.id)]),
-    )
-    .limit(text ? CANDIDATE_POOL : limit);
-  return text ? rankByMatchTier(rows, (row) => row.name, text).slice(0, limit) : rows;
+  if (!text) {
+    return db
+      .select()
+      .from(artist)
+      .where(and(...conditions))
+      .orderBy(sql`${artist.discographySyncedAt} DESC NULLS LAST`, asc(artist.name), asc(artist.id))
+      .limit(limit);
+  }
+  const query = (match: SQL) =>
+    db
+      .select()
+      .from(artist)
+      .where(and(match, ...conditions))
+      .orderBy(bySimilarity(artist.name, text))
+      .limit(CANDIDATE_POOL);
+  const rows = exact
+    ? await query(exactMatch(artist.name, text))
+    : await substringFirst(artist.name, text, CANDIDATE_POOL, query);
+  return rankByMatchTier(rows, (row) => row.name, text).slice(0, limit);
 }
 
 export interface LocalReleaseGroupOptions {
@@ -172,21 +210,29 @@ export async function matchLocalReleaseGroups(
 ): Promise<ReleaseGroupRow[]> {
   const conditions = releaseGroupFilters(filters);
   if (!text && conditions.length === 0) return [];
-  const rows = await db
-    .select()
-    .from(releaseGroup)
-    .where(and(...(text ? [textMatch(releaseGroup.title, text, exact)] : []), ...conditions))
-    .orderBy(
-      ...(text
-        ? [bySimilarity(releaseGroup.title, text)]
-        : [
-            sql`(${releaseGroup.category} = 'studio') DESC`,
-            sql`${releaseGroup.firstReleaseYear} ASC NULLS LAST`,
-            asc(releaseGroup.id),
-          ]),
-    )
-    .limit(text ? CANDIDATE_POOL : limit);
-  return text ? rankByMatchTier(rows, (row) => row.title, text).slice(0, limit) : rows;
+  if (!text) {
+    return db
+      .select()
+      .from(releaseGroup)
+      .where(and(...conditions))
+      .orderBy(
+        sql`(${releaseGroup.category} = 'studio') DESC`,
+        sql`${releaseGroup.firstReleaseYear} ASC NULLS LAST`,
+        asc(releaseGroup.id),
+      )
+      .limit(limit);
+  }
+  const query = (match: SQL) =>
+    db
+      .select()
+      .from(releaseGroup)
+      .where(and(match, ...conditions))
+      .orderBy(bySimilarity(releaseGroup.title, text))
+      .limit(CANDIDATE_POOL);
+  const rows = exact
+    ? await query(exactMatch(releaseGroup.title, text))
+    : await substringFirst(releaseGroup.title, text, CANDIDATE_POOL, query);
+  return rankByMatchTier(rows, (row) => row.title, text).slice(0, limit);
 }
 
 /**
@@ -204,12 +250,14 @@ export async function matchLocalRecordings(
   const duration: SQL[] = [];
   if (durMin !== undefined) duration.push(sql`${recording.durationSec} >= ${durMin}`);
   if (durMax !== undefined) duration.push(sql`${recording.durationSec} <= ${durMax}`);
-  const rows = await db
-    .select()
-    .from(recording)
-    .where(and(fuzzyMatch(recording.title, text), ...duration))
-    .orderBy(bySimilarity(recording.title, text))
-    .limit(pool);
+  const rows = await substringFirst(recording.title, text, pool, (match) =>
+    db
+      .select()
+      .from(recording)
+      .where(and(match, ...duration))
+      .orderBy(bySimilarity(recording.title, text))
+      .limit(pool),
+  );
   return rankByMatchTier(rows, (row) => row.title, text).slice(0, limit);
 }
 

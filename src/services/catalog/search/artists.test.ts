@@ -8,7 +8,6 @@ vi.mock("@/services/musicbrainz/client", () => ({
     searchArtist: vi.fn(),
     searchReleaseGroup: vi.fn(),
     searchRecording: vi.fn(),
-    browseReleasesByRecording: vi.fn(),
   },
 }));
 vi.mock("../ingest-artist", () => ({ upsertArtistStubsFromSearch: vi.fn() }));
@@ -78,6 +77,20 @@ beforeEach(() => {
 });
 
 describe("searchArtists", () => {
+  it("localOnly: solo lo local, ordenado, sin MusicBrainz ni stubs (openspec: speed-up-search)", async () => {
+    vi.mocked(matchLocalArtists).mockResolvedValue([
+      row({ mbid: "kiss-army", name: "Kiss Army" }),
+      row({ mbid: "kiss", name: "Kiss", discographySyncedAt: new Date() }),
+    ]);
+
+    const response = await searchArtists("kiss", { localOnly: true });
+
+    expect(musicbrainz.searchArtist).not.toHaveBeenCalled();
+    expect(upsertArtistStubsFromSearch).not.toHaveBeenCalled();
+    expect(response.results.map((artist) => artist.name)).toEqual(["Kiss", "Kiss Army"]);
+    expect(response).toMatchObject({ remoteFailed: false, total: null, nextOffset: null });
+  });
+
   it("una sola solicitud a MusicBrainz y nunca resuelve álbumes ni canciones", async () => {
     vi.mocked(matchLocalArtists).mockResolvedValue([]);
     vi.mocked(musicbrainz.searchArtist).mockResolvedValue({ artists: [] });
@@ -87,7 +100,6 @@ describe("searchArtists", () => {
     expect(musicbrainz.searchArtist).toHaveBeenCalledTimes(1);
     expect(musicbrainz.searchReleaseGroup).not.toHaveBeenCalled();
     expect(musicbrainz.searchRecording).not.toHaveBeenCalled();
-    expect(musicbrainz.browseReleasesByRecording).not.toHaveBeenCalled();
   });
 
   it("antepone la coincidencia exacta a las subcadenas locales (caso Icon)", async () => {

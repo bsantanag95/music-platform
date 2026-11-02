@@ -75,22 +75,13 @@ export async function ArtistSection({
   advanced = false,
 }: SectionProps & { all?: boolean }) {
   const t = await getTranslations("catalog.search.results.artists");
-  let response: ArtistSearchResponse | null = null;
+  // Lo local se ve de inmediato y lo de MusicBrainz llega por streaming, como en Álbumes y
+  // Canciones (openspec: speed-up-search).
+  let local: ArtistSearchResponse;
   try {
-    response = await searchArtists(query, { filters: artistFilters(criteria) });
+    local = await searchArtists(query, { filters: artistFilters(criteria), localOnly: true });
   } catch {
     return <SearchErrorState />;
-  }
-
-  // Coincidencia exacta única → perfil directo, con "¿No era este?" para
-  // volver a la lista (`all=1`). Con un criterio la persona está explorando la
-  // lista, no buscando un nombre: no se redirige.
-  const unique = !advanced && !all && !hasCriteria(criteria) ? uniqueExactArtist(response) : null;
-  if (unique) {
-    redirect({
-      href: `${artistHref(unique.name, unique.id)}?${new URLSearchParams({ from: "search", q: query }).toString()}`,
-      locale: await getLocale(),
-    });
   }
 
   const { artistType } = criteria;
@@ -99,6 +90,84 @@ export async function ArtistSection({
       artistType: value,
       all: all ? "1" : undefined,
     });
+  const pills = advanced ? null : (
+    <FilterPills
+      label={t("filterLabel")}
+      options={[
+        {
+          key: "all",
+          label: t("filterAll"),
+          href: filterHref(),
+          active: !artistType,
+        },
+        {
+          key: "person",
+          label: t("filterPerson"),
+          href: filterHref("person"),
+          active: artistType === "person",
+        },
+        {
+          key: "group",
+          label: t("filterGroup"),
+          href: filterHref("group"),
+          active: artistType === "group",
+        },
+      ]}
+    />
+  );
+
+  return (
+    <Suspense
+      fallback={
+        <LocalFirst
+          summary={
+            <>
+              <SearchSummary query={query} type="artist" count={null} advanced={advanced} />
+              {pills}
+            </>
+          }
+        >
+          {local.results.length > 0 ? <ArtistResults query={query} results={local.results} /> : null}
+        </LocalFirst>
+      }
+    >
+      <ArtistRemote query={query} all={all} criteria={criteria} advanced={advanced} pills={pills} />
+    </Suspense>
+  );
+}
+
+async function ArtistRemote({
+  query,
+  all,
+  criteria,
+  advanced,
+  pills,
+}: {
+  query: string;
+  all: boolean;
+  criteria: SearchCriteria;
+  advanced: boolean;
+  pills: ReactNode;
+}) {
+  let response: ArtistSearchResponse;
+  try {
+    response = await searchArtists(query, { filters: artistFilters(criteria) });
+  } catch {
+    return <SearchErrorState />;
+  }
+
+  // Coincidencia exacta única → perfil directo, con "¿No era este?" para
+  // volver a la lista (`all=1`). Con un criterio la persona está explorando la
+  // lista, no buscando un nombre: no se redirige. Se decide acá, con la
+  // respuesta de MusicBrainz (sin ella no se sabe si hay homónimos), aunque lo
+  // local ya se haya mostrado.
+  const unique = !advanced && !all && !hasCriteria(criteria) ? uniqueExactArtist(response) : null;
+  if (unique) {
+    redirect({
+      href: `${artistHref(unique.name, unique.id)}?${new URLSearchParams({ from: "search", q: query }).toString()}`,
+      locale: await getLocale(),
+    });
+  }
 
   return (
     <>
@@ -108,31 +177,7 @@ export async function ArtistSection({
         count={response.total ?? response.results.length}
         advanced={advanced}
       />
-      {advanced ? null : (
-        <FilterPills
-          label={t("filterLabel")}
-          options={[
-            {
-              key: "all",
-              label: t("filterAll"),
-              href: filterHref(),
-              active: !artistType,
-            },
-            {
-              key: "person",
-              label: t("filterPerson"),
-              href: filterHref("person"),
-              active: artistType === "person",
-            },
-            {
-              key: "group",
-              label: t("filterGroup"),
-              href: filterHref("group"),
-              active: artistType === "group",
-            },
-          ]}
-        />
-      )}
+      {pills}
       {advanced && !query ? <BroadQueryHint total={response.total} /> : null}
       {response.remoteFailed ? <RemoteFailedNotice /> : null}
       {response.results.length === 0 ? (

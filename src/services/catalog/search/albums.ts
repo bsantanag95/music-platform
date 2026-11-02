@@ -15,7 +15,7 @@ import type {
   MBReleaseGroupSearchItem,
   MBReleaseGroupSearchResponse,
 } from "../../musicbrainz/types";
-import { ingestCredits } from "../ingest-discography";
+import { ingestReleaseGroupCreditsBatch } from "../ingest-discography";
 import { upsertReleaseGroupStubs, type ReleaseGroupCategoryValue } from "../ingest-release-group";
 import { activityScores } from "./activity";
 import { coverageLevel, edgeSplits, restAfterEdgeArtist } from "./coverage";
@@ -211,13 +211,14 @@ export async function searchAlbums(
 
   // Los stubs de búsqueda traen el crédito sin costo de red: se ingiere para
   // que el álbum tenga artista principal aunque se agregue a una lista sin
-  // pasar por su página (mismo criterio que la búsqueda anterior).
-  for (const item of newRemote) {
-    const row = stubByMbid.get(item.id);
-    if (row && item["artist-credit"]?.length) {
-      await ingestCredits(item["artist-credit"], { releaseGroupId: row.id });
-    }
-  }
+  // pasar por su página (mismo criterio que la búsqueda anterior). En lote y
+  // solo para los álbumes aún sin créditos (openspec: speed-up-search).
+  await ingestReleaseGroupCreditsBatch(
+    newRemote.flatMap((item) => {
+      const row = stubByMbid.get(item.id);
+      return row && item["artist-credit"]?.length ? [{ releaseGroupId: row.id, credits: item["artist-credit"] }] : [];
+    }),
+  );
 
   const localIds = localRows.map((row) => row.id);
   const [primaryArtists, withContent] = await Promise.all([

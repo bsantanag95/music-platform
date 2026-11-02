@@ -57,15 +57,35 @@ function response(results: ArtistSearchResult[], remoteFailed = false): ArtistSe
   return { type: "artist", results, remoteFailed, total: null, nextOffset: null };
 }
 
+/** Resuelve la parte transmitida (dentro del `Suspense`) de una sección, como haría el streaming. */
+async function streamed(section: unknown): Promise<unknown> {
+  const element = section as ReactElement<{ children: ReactElement }>;
+  const remote = element.props.children;
+  return (remote.type as (props: unknown) => Promise<unknown>)(remote.props);
+}
+
 describe("ArtistSection", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("coincidencia exacta única: redirige al perfil con el origen de la búsqueda", async () => {
+  it("muestra primero lo local y deja MusicBrainz al streaming (openspec: speed-up-search)", async () => {
+    mocks.searchArtists.mockResolvedValue(response([artist({ id: "kiss", name: "Kiss", exact: true })]));
+
+    const element = (await ArtistSection({ query: "kiss", all: false })) as ReactElement<{ fallback: unknown }>;
+
+    expect(mocks.searchArtists).toHaveBeenCalledTimes(1);
+    expect(mocks.searchArtists).toHaveBeenCalledWith("kiss", { filters: {}, localOnly: true });
+    expect(isValidElement(element.props.fallback)).toBe(true);
+    expect(mocks.redirect).not.toHaveBeenCalled();
+  });
+
+  it("coincidencia exacta única: la parte transmitida redirige al perfil con el origen de la búsqueda", async () => {
     mocks.searchArtists.mockResolvedValue(
       response([artist({ id: "sabrina", name: "Sabrina Carpenter", exact: true }), artist({ id: "c", name: "Carpenter" })]),
     );
 
-    await expect(ArtistSection({ query: "Sabrina Carpenter", all: false })).rejects.toThrow("NEXT_REDIRECT");
+    const section = await ArtistSection({ query: "Sabrina Carpenter", all: false });
+    await expect(streamed(section)).rejects.toThrow("NEXT_REDIRECT");
+    expect(mocks.searchArtists).toHaveBeenLastCalledWith("Sabrina Carpenter", { filters: {} });
     expect(mocks.redirect).toHaveBeenCalledWith({
       href: "/artist/sabrina?from=search&q=Sabrina+Carpenter",
       locale: "es",
@@ -76,28 +96,35 @@ describe("ArtistSection", () => {
     mocks.searchArtists.mockResolvedValue(
       response([artist({ id: "a", name: "KISS", exact: true }), artist({ id: "b", name: "KISS", exact: true })]),
     );
-    expect(isValidElement(await ArtistSection({ query: "KISS", all: false }))).toBe(true);
+    expect(isValidElement(await streamed(await ArtistSection({ query: "KISS", all: false })))).toBe(true);
 
     mocks.searchArtists.mockResolvedValue(response([artist({ id: "s", name: "Sabrina Carpenter", exact: true })]));
-    await ArtistSection({ query: "Sabrina Carpenter", all: true });
-    await ArtistSection({ query: "Sabrina Carpenter", all: false, criteria: { artistType: "person" } });
+    await streamed(await ArtistSection({ query: "Sabrina Carpenter", all: true }));
+    await streamed(await ArtistSection({ query: "Sabrina Carpenter", all: false, criteria: { artistType: "person" } }));
     // Un criterio de la búsqueda avanzada tampoco, ni la página avanzada (openspec: redesign-advanced-search).
-    await ArtistSection({ query: "Sabrina Carpenter", all: false, criteria: { country: ["US"] } });
+    await streamed(await ArtistSection({ query: "Sabrina Carpenter", all: false, criteria: { country: ["US"] } }));
     expect(mocks.searchArtists).toHaveBeenLastCalledWith("Sabrina Carpenter", {
       filters: expect.objectContaining({ country: ["US"] }),
     });
-    await ArtistSection({ query: "Sabrina Carpenter", advanced: true });
+    await streamed(await ArtistSection({ query: "Sabrina Carpenter", advanced: true }));
 
     mocks.searchArtists.mockResolvedValue(response([artist({ id: "i", name: "Icon", exact: true })], true));
-    await ArtistSection({ query: "icon", all: false });
+    await streamed(await ArtistSection({ query: "icon", all: false }));
 
     expect(mocks.redirect).not.toHaveBeenCalled();
   });
 
-  it("fallo total de la búsqueda: estado de error recuperable", async () => {
-    mocks.searchArtists.mockRejectedValue(new Error("502"));
+  it("fallo de la base: estado de error recuperable", async () => {
+    mocks.searchArtists.mockRejectedValue(new Error("db"));
 
     const element = (await ArtistSection({ query: "icon", all: false })) as ReactElement;
+    expect((element.type as { name?: string }).name).toBe("SearchErrorState");
+  });
+
+  it("fallo total de la parte remota: estado de error recuperable", async () => {
+    mocks.searchArtists.mockResolvedValueOnce(response([])).mockRejectedValueOnce(new Error("502"));
+
+    const element = (await streamed(await ArtistSection({ query: "icon", all: false }))) as ReactElement;
     expect((element.type as { name?: string }).name).toBe("SearchErrorState");
   });
 });

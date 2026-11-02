@@ -173,8 +173,12 @@ export interface MBRecordingSearchItem {
   length?: number; // milisegundos
   "first-release-date"?: string; // 'YYYY' | 'YYYY-MM' | 'YYYY-MM-DD' | ausente
   "artist-credit"?: MBArtistCreditItem[]; // requiere inc=artist-credits en la búsqueda
-  /** Releases donde aparece (la búsqueda los trae resumidos): el filtro de álbum exacto. */
-  releases?: { id: string; title: string }[];
+  /**
+   * Ediciones donde aparece, con su release-group embebido: la búsqueda las trae TODAS (más que
+   * la página de 100 del browse). Son las apariciones de la búsqueda de Canciones y el filtro de
+   * álbum exacto (openspec: redesign-advanced-search, speed-up-search).
+   */
+  releases?: MBReleaseWithReleaseGroup[];
   score?: number;
 }
 
@@ -182,7 +186,7 @@ export interface MBRecordingSearchResponse extends MBSearchPage {
   recordings: MBRecordingSearchItem[];
 }
 
-/** Release-summary devuelta por el browse `/release?recording=` con `inc=release-groups`. */
+/** Edición con su release-group embebido, como la trae la búsqueda de recordings. */
 export interface MBReleaseWithReleaseGroup {
   id: string; // mbid
   title: string;
@@ -194,12 +198,6 @@ export interface MBReleaseWithReleaseGroup {
     "primary-type"?: string;
     "secondary-types"?: string[];
   };
-}
-
-export interface MBReleaseBrowseResponse {
-  releases: MBReleaseWithReleaseGroup[];
-  /** Total de releases de la grabación (más allá de la página devuelta). */
-  "release-count"?: number;
 }
 
 export interface MBTrack {
