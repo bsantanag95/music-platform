@@ -35,7 +35,7 @@ import {
   sortSongContextAlbums,
   type SongContextAlbum,
 } from "../ingest-recording";
-import { activityScores } from "./activity";
+import { activityScores, exploredArtistMbids, exploredScores } from "./activity";
 import { coverageLevel, edgeSplits, restAfterEdgeArtist } from "./coverage";
 import { findArtistsByKeys, matchLocalRecordings } from "./local-match";
 import {
@@ -707,13 +707,26 @@ export async function searchSongs(
   });
 
   const allGroups = [...groups.values()];
-  const activity = await activityScores(
-    "recording",
-    allGroups.flatMap((group) => group.local.map((contribution) => contribution.row.id)),
-  );
+  const localIds = allGroups.flatMap((group) => group.local.map((contribution) => contribution.row.id));
+  const remoteArtistMbid = (item: MBRecordingSearchItem) => item["artist-credit"]?.[0]?.artist?.id;
+  const [activity, exploredLocal, exploredRemote] = await Promise.all([
+    activityScores("recording", localIds),
+    exploredScores("recording", localIds),
+    exploredArtistMbids(
+      allGroups.flatMap((group) => group.remote.map(remoteArtistMbid).filter((mbid): mbid is string => Boolean(mbid))),
+    ),
+  ]);
   for (const group of allGroups) {
     group.rank.level = coverageLevel(text, group.title, group.artistName ? [group.artistName] : []);
     group.rank.activity = group.local.reduce((sum, contribution) => sum + (activity.get(contribution.row.id) ?? 0), 0);
+    // Un grupo cuenta como explorado si alguna de sus grabaciones es de un artista ya explorado.
+    const known =
+      group.local.some((contribution) => exploredLocal.has(contribution.row.id)) ||
+      group.remote.some((item) => {
+        const mbid = remoteArtistMbid(item);
+        return mbid !== undefined && exploredRemote.has(mbid);
+      });
+    group.rank.known = known ? 1 : 0;
   }
   const ranked = sortByRank(allGroups);
 

@@ -21,12 +21,15 @@ import {
 } from "@/services/catalog/search/filters";
 import type { ReleaseGroupCategoryValue } from "@/services/catalog/ingest-release-group";
 import { getProfileByUsername, searchUsers } from "@/services/social/profiles";
+import { suggestSpelling } from "@/services/catalog/search/spelling";
+import { coverageLevel } from "@/services/catalog/search/coverage";
 import { getCurrentUser } from "@/services/auth/authorization";
 import { SearchErrorState } from "@/components/catalog/SearchErrorState";
 import { searchHref } from "@/components/catalog/search-types";
 import { artistHref } from "@/lib/catalog-links";
 import {
   BroadQueryHint,
+  DidYouMean,
   FilterPills,
   PendingRemote,
   RefineHint,
@@ -153,7 +156,7 @@ async function ArtistRemote({
   try {
     response = await searchArtists(query, { filters: artistFilters(criteria) });
   } catch {
-    return <SearchErrorState />;
+    return <SearchErrorState query={query} />;
   }
 
   // Coincidencia exacta única → perfil directo, con "¿No era este?" para
@@ -169,6 +172,12 @@ async function ArtistRemote({
     });
   }
 
+  const empty = response.results.length === 0;
+  const filtered = Boolean(criteria.artistType);
+  // Sin resultados ni filtro, las pastillas no tienen nada que filtrar (openspec: refine-search-results-phase1).
+  // Sugerencia con la lista vacía o débil: ningún nombre cubre todas las palabras de la consulta.
+  const weak = !empty && response.results.every((artist) => coverageLevel(query, artist.name, []) === 4);
+  const suggestion = (empty || weak) && !filtered && !advanced && query ? await suggestSpelling("artist", query) : null;
   return (
     <>
       <SearchSummary
@@ -177,11 +186,18 @@ async function ArtistRemote({
         count={response.total ?? response.results.length}
         advanced={advanced}
       />
-      {pills}
+      {empty && !filtered ? null : pills}
       {advanced && !query ? <BroadQueryHint total={response.total} /> : null}
       {response.remoteFailed ? <RemoteFailedNotice /> : null}
-      {response.results.length === 0 ? (
-        <SearchEmpty query={query} type="artist" advanced={advanced} />
+      {weak && suggestion ? <DidYouMean type="artist" suggestion={suggestion} /> : null}
+      {empty ? (
+        <SearchEmpty
+          query={query}
+          type="artist"
+          advanced={advanced}
+          suggestion={suggestion}
+          clearFiltersHref={filtered && !advanced ? searchHref("artist", query) : null}
+        />
       ) : (
         <div className="flex flex-col gap-4">
           <ArtistResults query={query} results={response.results} />
@@ -310,8 +326,14 @@ async function AlbumRemote({
   try {
     response = await searchAlbums(query, { ...albumOptions(criteria), decade });
   } catch {
-    return <SearchErrorState />;
+    return <SearchErrorState query={query} />;
   }
+  const empty = response.results.length === 0;
+  const filtered = Boolean(criteria.category?.length) || decade !== undefined;
+  const weak =
+    !empty &&
+    response.results.every((album) => coverageLevel(query, album.title, album.artistName ? [album.artistName] : []) === 4);
+  const suggestion = (empty || weak) && !filtered && !advanced && query ? await suggestSpelling("album", query) : null;
   return (
     <>
       <SearchSummary
@@ -320,14 +342,21 @@ async function AlbumRemote({
         count={response.total ?? response.results.length}
         advanced={advanced}
       />
-      {pills}
+      {empty && !filtered ? null : pills}
       {advanced && !query ? <BroadQueryHint total={response.total} /> : null}
       {response.remoteFailed ? <RemoteFailedNotice /> : null}
+      {weak && suggestion ? <DidYouMean type="album" suggestion={suggestion} /> : null}
       {response.refine ? (
         <RefineHint kind="album" query={query} {...response.refine} />
       ) : null}
-      {response.results.length === 0 ? (
-        <SearchEmpty query={query} type="album" advanced={advanced} />
+      {empty ? (
+        <SearchEmpty
+          query={query}
+          type="album"
+          advanced={advanced}
+          suggestion={suggestion}
+          clearFiltersHref={filtered && !advanced ? searchHref("album", query) : null}
+        />
       ) : (
         <div className="flex flex-col gap-4">
           <AlbumList albums={response.results} authenticated={authenticated} />
@@ -379,8 +408,13 @@ async function SongRemote({
   try {
     response = await searchSongs(query, { filters: songFilters(criteria) });
   } catch {
-    return <SearchErrorState />;
+    return <SearchErrorState query={query} />;
   }
+  const empty = response.results.length === 0;
+  const weak =
+    !empty &&
+    response.results.every((group) => coverageLevel(query, group.title, group.artistName ? [group.artistName] : []) === 4);
+  const suggestion = (empty || weak) && !advanced && query ? await suggestSpelling("song", query) : null;
   return (
     <>
       <SearchSummary query={query} type="song" count={null} advanced={advanced} />
@@ -392,11 +426,12 @@ async function SongRemote({
       )}
       {advanced && !query ? <BroadQueryHint total={response.total} /> : null}
       {response.remoteFailed ? <RemoteFailedNotice /> : null}
+      {weak && suggestion ? <DidYouMean type="song" suggestion={suggestion} /> : null}
       {response.refine ? (
         <RefineHint kind="song" query={query} {...response.refine} />
       ) : null}
-      {response.results.length === 0 ? (
-        <SearchEmpty query={query} type="song" advanced={advanced} />
+      {empty ? (
+        <SearchEmpty query={query} type="song" advanced={advanced} suggestion={suggestion} />
       ) : (
         <div className="flex flex-col gap-4">
           <SongResults response={response} />

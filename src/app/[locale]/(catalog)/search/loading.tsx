@@ -3,12 +3,13 @@ import { Skeleton } from "@/components/ui/Skeleton";
 
 // Espeja el ritmo real de la página resuelta: breadcrumb, título, formulario,
 // y una lista densa con la celda de disco a la izquierda y dos líneas de texto.
+// Mismo ancho que la página (max-w-3xl): con otro, todo saltaba al llegar.
 export default async function SearchLoading() {
   const t = await getTranslations("common");
 
   return (
     <div
-      className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-12"
+      className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-12"
       aria-busy="true"
     >
       <Skeleton variant="block" className="h-3 w-40" />

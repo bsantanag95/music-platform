@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { effectiveDecade, parseDecade } from "@/services/catalog/search/params";
@@ -22,6 +23,17 @@ interface SearchPageProps {
 
 function first(value: Param): string | undefined {
   return Array.isArray(value) ? value[0] : value;
+}
+
+// Título de la pestaña por estado (openspec: refine-search-results-phase1): "Buscar" sin consulta y
+// "«the wall» en álbumes · Buscar" con ella, para distinguir varias búsquedas abiertas.
+export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
+  const t = await getTranslations("catalog.search");
+  const params = await searchParams;
+  const query = first(params.q)?.trim() ?? "";
+  if (!query) return { title: t("pageTitle") };
+  const type = parseSearchType(params.type);
+  return { title: t("documentTitle", { query, type: t(`types.${type}`).toLowerCase() }) };
 }
 
 // Server Component: búsqueda POR TIPO a partir de la URL (openspec:

@@ -16,13 +16,17 @@ vi.mock("./local-match", () => ({
   primaryArtistsByReleaseGroup: vi.fn(async () => new Map()),
   releaseGroupsWithContent: vi.fn(async () => new Set()),
 }));
-vi.mock("./activity", () => ({ activityScores: vi.fn(async () => new Map()) }));
+vi.mock("./activity", () => ({
+  activityScores: vi.fn(async () => new Map()),
+  exploredScores: vi.fn(async () => new Map()),
+  exploredArtistMbids: vi.fn(async () => new Set()),
+}));
 
 const { musicbrainz } = await import("@/services/musicbrainz/client");
 const { upsertReleaseGroupStubs } = await import("../ingest-release-group");
 const { ingestReleaseGroupCreditsBatch } = await import("../ingest-discography");
 const localMatch = await import("./local-match");
-const { activityScores } = await import("./activity");
+const { activityScores, exploredScores } = await import("./activity");
 const { searchAlbums } = await import("./albums");
 
 function rgRow(overrides: Partial<ReleaseGroupRow>): ReleaseGroupRow {
@@ -68,12 +72,41 @@ function mbAlbum(
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(activityScores).mockResolvedValue(new Map());
+  vi.mocked(exploredScores).mockResolvedValue(new Map());
   vi.mocked(localMatch.findArtistsByKeys).mockResolvedValue([]);
   vi.mocked(localMatch.releaseGroupsByArtists).mockResolvedValue([]);
   vi.mocked(localMatch.primaryArtistsByReleaseGroup).mockResolvedValue(new Map());
   vi.mocked(upsertReleaseGroupStubs).mockImplementation(async (stubs) =>
     stubs.map((stub) => rgRow({ mbid: stub.mbid, title: stub.title, category: stub.category })),
   );
+});
+
+describe("searchAlbums — artista explorado (refine-search-results-phase1)", () => {
+  it("el disco de un artista explorado va antes que homónimos con más ediciones, y el de estudio antes", async () => {
+    vi.mocked(musicbrainz.searchReleaseGroup).mockResolvedValue({
+      count: 875412,
+      "release-groups": [
+        mbAlbum("buzzg", "The Wall", "buzzG", { count: 9 }),
+        mbAlbum("pf-single", "The Wall", "Pink Floyd", { "primary-type": "Single", count: 1 }),
+        mbAlbum("pf", "The Wall", "Pink Floyd", { count: 1 }),
+      ],
+    });
+    vi.mocked(exploredScores).mockResolvedValue(
+      new Map([
+        ["rg-pf", 2],
+        ["rg-pf-single", 1],
+      ]),
+    );
+
+    const response = await searchAlbums("the wall");
+
+    expect(response.results.map((result) => `${result.artistName} ${result.category}`)).toEqual([
+      "Pink Floyd studio",
+      "Pink Floyd single_ep",
+      "buzzG studio",
+    ]);
+    expect(exploredScores).toHaveBeenCalledWith("release-group", expect.arrayContaining(["rg-pf", "rg-buzzg"]));
+  });
 });
 
 describe("searchAlbums — notoriedad", () => {

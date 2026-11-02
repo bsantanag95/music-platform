@@ -4,7 +4,11 @@
 // de relevancia de MusicBrainz; lo local que MusicBrainz no devolvió va al
 // final de su nivel.
 //
-// Entre la actividad y lo cacheado entra la notoriedad (`popularity`, p. ej. el
+// Tras la actividad va lo explorado (`known`, openspec: refine-search-results-phase1): un disco o una canción de un
+// artista cuya página ya se abrió en la plataforma va antes que los homónimos que solo trajo la búsqueda. La primera
+// página de MusicBrainz para "the wall" (25 de 875.412, todos con puntaje 100) ni siquiera trae el de Pink Floyd.
+//
+// Entre lo explorado y lo cacheado entra la notoriedad (`popularity`, p. ej. el
 // número de ediciones del álbum en MusicBrainz): con decenas de homónimos que
 // MusicBrainz puntúa igual (100), el disco conocido no puede quedar a merced
 // de su orden arbitrario.
@@ -27,6 +31,8 @@ export interface RankKey {
   level: number;
   /** Actividad en la plataforma (mayor = mejor). */
   activity: number;
+  /** Artista ya explorado en la plataforma (mayor = mejor; 2 = disco de estudio); ausente = 0. */
+  known?: number;
   /** Notoriedad fuera de la plataforma (mayor = mejor); ausente = 0. */
   popularity?: number;
   group: SourceGroup;
@@ -38,6 +44,7 @@ export function compareRankKeys(a: RankKey, b: RankKey): number {
   return (
     a.level - b.level ||
     b.activity - a.activity ||
+    (b.known ?? 0) - (a.known ?? 0) ||
     (b.popularity ?? 0) - (a.popularity ?? 0) ||
     a.group - b.group ||
     a.index - b.index

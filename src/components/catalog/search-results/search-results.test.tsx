@@ -48,11 +48,39 @@ describe("SearchTypeSwitch / SearchEmpty", () => {
     expect(screen.getAllByRole("link")).toHaveLength(3);
   });
 
-  it("el estado vacío incluye los accesos a los otros tipos", () => {
+  it("el estado vacío dice qué no coincidió, da consejos y ofrece los otros tipos y la avanzada", () => {
     renderWithIntl(<SearchEmpty query="xyzzy" type="song" />);
 
-    expect(screen.getByText(labels.results.emptyDescription.song)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Ninguna canción coincide con «xyzzy»" })).toBeInTheDocument();
+    expect(screen.getByText(labels.results.tips.artistTitle)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: labels.types.album })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: `${labels.results.advancedLink} →` })).toHaveAttribute(
+      "href",
+      "/search/advanced?type=song&q=xyzzy",
+    );
+  });
+
+  it("¿Quisiste decir…? enlaza a la misma búsqueda con la sugerencia (refine-search-results-phase1)", () => {
+    renderWithIntl(<SearchEmpty query="pink floid" type="album" suggestion="Pink Floyd" />);
+
+    expect(screen.getByRole("link", { name: "Pink Floyd" })).toHaveAttribute("href", "/search?type=album&q=Pink+Floyd");
+  });
+
+  it("con filtros activos ofrece quitarlos en lugar de sugerencias", () => {
+    renderWithIntl(<SearchEmpty query="the wall" type="album" clearFiltersHref="/search?type=album&q=the+wall" />);
+
+    expect(screen.getByRole("heading", { name: labels.results.filteredEmptyTitle })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: labels.results.clearFilters })).toHaveAttribute(
+      "href",
+      "/search?type=album&q=the+wall",
+    );
+    expect(screen.queryByText(labels.results.tips.spelling)).not.toBeInTheDocument();
+  });
+
+  it("usuarios: sin enlace a la búsqueda avanzada", () => {
+    renderWithIntl(<SearchEmpty query="nadie" type="user" />);
+
+    expect(screen.queryByRole("link", { name: new RegExp(labels.results.advancedLink) })).not.toBeInTheDocument();
   });
 });
 

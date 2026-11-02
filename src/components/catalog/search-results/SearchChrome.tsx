@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { SEARCH_TYPES, searchHref, type SearchType } from "../search-types";
+import { advancedSearchHref } from "@/services/catalog/search/filters";
 import { SearchTypeIcon } from "../SearchTypeIcon";
 
 // Piezas comunes de la página de resultados por tipo (openspec:
@@ -81,27 +82,98 @@ export function SearchSummary({
   );
 }
 
-/** Estado vacío del tipo, con los accesos a los otros tipos (en la avanzada, sugiere menos campos). */
+/**
+ * Estado vacío del tipo (openspec: refine-search-results-phase1, design D2). Con un filtro activo, el problema es el
+ * filtro: se ofrece quitarlo. Sin filtro: "¿Quisiste decir…?" desde el catálogo, consejos, los otros tipos y la
+ * búsqueda avanzada. En la avanzada, sugiere menos campos.
+ */
 export function SearchEmpty({
   query,
   type,
   advanced = false,
+  suggestion = null,
+  clearFiltersHref = null,
 }: {
   query: string;
   type: SearchType;
   advanced?: boolean;
+  /** Texto parecido del catálogo para "¿Quisiste decir…?". */
+  suggestion?: string | null;
+  /** Con filtros activos: la misma búsqueda sin ellos. */
+  clearFiltersHref?: string | null;
 }) {
   const t = useTranslations("catalog.search");
+  if (clearFiltersHref) {
+    return (
+      <div className="flex flex-col items-start gap-3 rounded-lg border border-ink-border bg-ink-surface px-5 py-5">
+        <h3 className="font-display text-base text-paper">{t("results.filteredEmptyTitle")}</h3>
+        <p className="font-body text-sm text-paper-muted">{t("results.filteredEmptyDescription", { query })}</p>
+        <Link
+          href={clearFiltersHref}
+          className="rounded bg-amber px-3 py-1.5 font-display text-sm text-ink transition-colors hover:bg-amber-hover"
+        >
+          {t("results.clearFilters")}
+        </Link>
+      </div>
+    );
+  }
+  if (advanced) {
+    return (
+      <div className="flex flex-col items-start gap-2 rounded-lg border border-ink-border bg-ink-surface px-5 py-5">
+        <h3 className="font-display text-base text-paper">{t("results.emptyTitle")}</h3>
+        <p className="font-body text-sm text-paper-muted">{t("advanced.emptyDescription")}</p>
+      </div>
+    );
+  }
   return (
-    <div className="flex flex-col items-center gap-4 rounded-lg border border-ink-border bg-ink-surface px-6 py-10 text-center">
-      <h3 className="font-display text-lg text-paper">
-        {t("results.emptyTitle")}
-      </h3>
-      <p className="max-w-sm font-body text-sm text-paper-muted">
-        {advanced ? t("advanced.emptyDescription") : t(`results.emptyDescription.${type}`)}
-      </p>
-      {advanced ? null : <SearchTypeSwitch query={query} current={type} />}
+    <div className="flex flex-col items-start gap-3 rounded-lg border border-ink-border bg-ink-surface px-5 py-5">
+      <h3 className="font-display text-base text-paper">{t(`results.emptyTitleType.${type}`, { query })}</h3>
+      {suggestion ? (
+        <p className="font-body text-sm text-paper">
+          {t.rich("results.didYouMean", {
+            suggestion: () => (
+              <Link href={searchHref(type, suggestion)} className="text-amber hover:underline">
+                {suggestion}
+              </Link>
+            ),
+          })}
+        </p>
+      ) : null}
+      <ul className="flex list-disc flex-col gap-1 pl-5 font-body text-sm text-paper-muted">
+        <li>{t("results.tips.spelling")}</li>
+        {type === "album" || type === "song" ? <li>{t("results.tips.artistTitle")}</li> : null}
+      </ul>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <SearchTypeSwitch query={query} current={type} />
+        {type !== "user" ? (
+          <Link
+            href={advancedSearchHref(type, query)}
+            className="font-data text-xs text-paper-muted transition-colors hover:text-amber"
+          >
+            {t("results.advancedLink")} →
+          </Link>
+        ) : null}
+      </div>
     </div>
+  );
+}
+
+/**
+ * "¿Quisiste decir…?" sobre una lista en la que ningún resultado cubre todas las palabras de la consulta (openspec:
+ * refine-search-results-phase1, design D2): "pink floid" trae "Pink" de Four Tet y de Aerosmith, nunca una lista vacía.
+ */
+export function DidYouMean({ type, suggestion }: { type: SearchType; suggestion: string }) {
+  const t = useTranslations("catalog.search");
+  return (
+    <p className="rounded-lg border border-amber/40 bg-ink-surface px-4 py-3 font-body text-sm text-paper">
+      {t.rich("results.didYouMean", {
+        suggestion: () => (
+          <Link href={searchHref(type, suggestion)} className="text-amber hover:underline">
+            {suggestion}
+          </Link>
+        ),
+      })}
+    </p>
   );
 }
 

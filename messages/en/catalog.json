@@ -145,6 +145,7 @@
     "albumCount": "{formatted} {count, plural, one {album} other {albums}}"
   },
   "search": {
+    "documentTitle": "“{query}” in {type} · Search",
     "pageTitle": "Search",
     "breadcrumb": "Search",
     "fieldLabel": "Search text",
@@ -195,15 +196,26 @@
       "cachedTag": "in your catalog",
       "switchLabel": "Search “{query}” in:",
       "emptyTitle": "No matches",
-      "emptyDescription": {
-        "artist": "We couldn't find artists with that name. Try a different spelling or another type.",
-        "album": "We couldn't find albums for that search. Try adding the artist or another type.",
-        "song": "We couldn't find that song. Try adding the artist or another type.",
-        "user": "We couldn't find users with that name."
+      "emptyTitleType": {
+        "artist": "No artist matches “{query}”",
+        "album": "No album matches “{query}”",
+        "song": "No song matches “{query}”",
+        "user": "No user matches “{query}”"
       },
+      "didYouMean": "Did you mean <suggestion></suggestion>?",
+      "tips": {
+        "spelling": "Check the spelling or use fewer words.",
+        "artistTitle": "Type “Artist - Title” to narrow it down."
+      },
+      "advancedLink": "Advanced search",
+      "filteredEmptyTitle": "Nothing with these filters",
+      "filteredEmptyDescription": "There may be results for “{query}” without them.",
+      "clearFilters": "Clear filters",
+      "errorTitle": "We couldn't reach MusicBrainz",
+      "errorDescription": "“{query}” isn't in our catalog yet and the external source didn't respond. It usually clears up in a few seconds.",
       "remoteFailed": {
-        "title": "MusicBrainz results are missing",
-        "description": "MusicBrainz didn't respond: showing only what's already in the catalog.",
+        "title": "Only what is already in the catalog",
+        "description": "MusicBrainz didn't respond: some results may be missing.",
         "retry": "Retry"
       },
       "pendingRemote": "Searching MusicBrainz...",
