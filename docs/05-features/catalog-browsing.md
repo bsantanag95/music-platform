@@ -48,6 +48,15 @@ score, coincidencia exacta al tope de su grupo). El campo del Header siempre nav
 Los homónimos ("Poison" glam vs. thrash) aparecen como filas separadas con su
 disambiguation — la ambigüedad la resuelve el usuario, no `artists[0]`.
 
+**Relevancia y estados (cambio `refine-search-results-phase1`).** En Álbumes y Canciones, con la misma coincidencia y
+actividad, lo de un artista ya explorado en la plataforma (discografía sincronizada) va antes que los homónimos que solo
+trajo la búsqueda, y en Álbumes su disco de estudio antes que sus otros tipos: `the wall` pone primero el álbum de
+Pink Floyd aunque la primera página de MusicBrainz no lo traiga. Con un error de tipeo (ningún resultado cubre todas las
+palabras: `pink floid`), un aviso "¿Quisiste decir Pink Floyd?" va sobre la lista. Sin coincidencias, la página dice
+qué no coincidió, ofrece "¿Quisiste decir …?" desde el catálogo propio (trigramas, sin consultar MusicBrainz), consejos, los otros tipos y
+la búsqueda avanzada, sin pastillas de filtro; si un filtro vació la lista, ofrece "Quitar filtros". Si MusicBrainz no
+responde y no hay nada local, lo dice en lugar del error genérico. La pestaña se titula "«texto» en tipo · Buscar".
+
 **Búsqueda avanzada (cambios `add-advanced-search-phase1` y `redesign-advanced-search`).** Página
 propia `/search/advanced`, al estilo de Metal Archives: pestañas **Artistas · Álbumes · Canciones**
 (`?type=`), cada una con su formulario `GET` que escribe la URL (solo los campos con valor; los

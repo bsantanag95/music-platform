@@ -12,7 +12,10 @@ const mocks = vi.hoisted(() => ({
   searchUsers: vi.fn(),
   getProfileByUsername: vi.fn(),
   getCurrentUser: vi.fn(),
+  suggestSpelling: vi.fn(async (): Promise<string | null> => null),
 }));
+
+vi.mock("@/services/catalog/search/spelling", () => ({ suggestSpelling: mocks.suggestSpelling }));
 
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn().mockResolvedValue((key: string) => key),
@@ -149,6 +152,59 @@ describe("AlbumSection", () => {
       "destroyer",
       expect.objectContaining({ categories: ["studio"], decade: 1970, localOnly: true }),
     );
+  });
+});
+
+describe("estado vacío (refine-search-results-phase1)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const emptyAlbums = { type: "album", results: [], remoteFailed: false, total: 0, nextOffset: null, refine: null };
+  const flatten = (node: unknown): ReactElement[] => {
+    if (!isValidElement(node)) return Array.isArray(node) ? node.flatMap(flatten) : [];
+    const children = (node.props as { children?: unknown }).children;
+    return [node, ...flatten(children)];
+  };
+
+  it("sin filtro: sugiere desde el catálogo y oculta las pastillas", async () => {
+    mocks.searchAlbums.mockResolvedValue(emptyAlbums);
+    mocks.suggestSpelling.mockResolvedValue("Pink Floyd");
+
+    const tree = flatten(await streamed(await AlbumSection({ query: "pink floid" })));
+    const empty = tree.find((el) => (el.type as { name?: string }).name === "SearchEmpty");
+    expect(empty?.props).toMatchObject({ suggestion: "Pink Floyd", clearFiltersHref: null });
+    expect(tree.some((el) => (el.type as { name?: string }).name === "FilterPills")).toBe(false);
+    expect(mocks.suggestSpelling).toHaveBeenCalledWith("album", "pink floid");
+  });
+
+  it("lista débil (ninguno cubre todas las palabras): sugerencia sobre los resultados", async () => {
+    const album = (title: string, artistName: string) => ({
+      kind: "release-group", id: title, mbid: null, title, artistName, category: "studio", year: 2000, cached: false,
+    });
+    mocks.searchAlbums.mockResolvedValue({ ...emptyAlbums, results: [album("Pink", "Four Tet"), album("Pink", "Aerosmith")] });
+    mocks.suggestSpelling.mockResolvedValue("Pink Floyd");
+
+    const tree = flatten(await streamed(await AlbumSection({ query: "pink floid" })));
+    const hint = tree.find((el) => (el.type as { name?: string }).name === "DidYouMean");
+    expect(hint?.props).toMatchObject({ type: "album", suggestion: "Pink Floyd" });
+  });
+
+  it("lista con una coincidencia completa: sin sugerencia", async () => {
+    mocks.searchAlbums.mockResolvedValue({
+      ...emptyAlbums,
+      results: [{ kind: "release-group", id: "w", mbid: null, title: "The Wall", artistName: "Pink Floyd", category: "studio", year: 1979, cached: true }],
+    });
+
+    await streamed(await AlbumSection({ query: "the wall" }));
+    expect(mocks.suggestSpelling).not.toHaveBeenCalled();
+  });
+
+  it("con filtro: ofrece quitarlo y no busca sugerencias", async () => {
+    mocks.searchAlbums.mockResolvedValue(emptyAlbums);
+
+    const tree = flatten(await streamed(await AlbumSection({ query: "the wall", decade: 1960 })));
+    const empty = tree.find((el) => (el.type as { name?: string }).name === "SearchEmpty");
+    expect(empty?.props).toMatchObject({ clearFiltersHref: "/search?type=album&q=the+wall", suggestion: null });
+    expect(mocks.suggestSpelling).not.toHaveBeenCalled();
   });
 });
 

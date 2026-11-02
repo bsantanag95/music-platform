@@ -71,6 +71,23 @@ function bySimilarity(column: AnyColumn, text: string): SQL {
 }
 
 /**
+ * Desempate de la base entre títulos igual de parecidos (openspec: refine-search-results-phase1, design D1): primero
+ * los discos de un artista ya explorado en la plataforma (discografía sincronizada) y, entre ellos, los de estudio.
+ * Sin esto, con decenas de "The Wall" guardados por búsquedas anteriores, qué filas entran en el límite era casi
+ * arbitrario y el álbum de Pink Floyd podía quedar fuera.
+ */
+const releaseGroupExploredFirst = sql`EXISTS (
+  SELECT 1 FROM credit c JOIN artist a ON a.id = c.artist_id
+  WHERE c.release_group_id = ${releaseGroup.id} AND c.role = 'primary' AND a.discography_synced_at IS NOT NULL
+) DESC, (${releaseGroup.category} = 'studio') DESC`;
+
+/** Lo mismo para grabaciones: primero las de un artista ya explorado. */
+const recordingExploredFirst = sql`EXISTS (
+  SELECT 1 FROM credit c JOIN artist a ON a.id = c.artist_id
+  WHERE c.recording_id = ${recording.id} AND c.role = 'primary' AND a.discography_synced_at IS NOT NULL
+) DESC`;
+
+/**
  * Ordena por nivel de coincidencia (exacta → palabra completa → prefijo →
  * resto) preservando, dentro de cada nivel, el orden de similitud de la base.
  */
@@ -227,7 +244,7 @@ export async function matchLocalReleaseGroups(
       .select()
       .from(releaseGroup)
       .where(and(match, ...conditions))
-      .orderBy(bySimilarity(releaseGroup.title, text))
+      .orderBy(bySimilarity(releaseGroup.title, text), releaseGroupExploredFirst)
       .limit(CANDIDATE_POOL);
   const rows = exact
     ? await query(exactMatch(releaseGroup.title, text))
@@ -255,7 +272,7 @@ export async function matchLocalRecordings(
       .select()
       .from(recording)
       .where(and(match, ...duration))
-      .orderBy(bySimilarity(recording.title, text))
+      .orderBy(bySimilarity(recording.title, text), recordingExploredFirst)
       .limit(pool),
   );
   return rankByMatchTier(rows, (row) => row.title, text).slice(0, limit);

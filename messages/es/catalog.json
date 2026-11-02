@@ -145,6 +145,7 @@
     "albumCount": "{formatted} {count, plural, one {álbum} other {álbumes}}"
   },
   "search": {
+    "documentTitle": "«{query}» en {type} · Buscar",
     "pageTitle": "Buscar",
     "breadcrumb": "Búsqueda",
     "fieldLabel": "Texto a buscar",
@@ -195,15 +196,26 @@
       "cachedTag": "en tu catálogo",
       "switchLabel": "Buscar «{query}» en:",
       "emptyTitle": "Sin coincidencias",
-      "emptyDescription": {
-        "artist": "No encontramos artistas con ese nombre. Prueba con otro nombre o busca en otro tipo.",
-        "album": "No encontramos álbumes para esa búsqueda. Prueba sumar el artista o busca en otro tipo.",
-        "song": "No encontramos esa canción. Prueba sumar el artista o busca en otro tipo.",
-        "user": "No encontramos usuarios con ese nombre."
+      "emptyTitleType": {
+        "artist": "Ningún artista coincide con «{query}»",
+        "album": "Ningún álbum coincide con «{query}»",
+        "song": "Ninguna canción coincide con «{query}»",
+        "user": "Ningún usuario coincide con «{query}»"
       },
+      "didYouMean": "¿Quisiste decir <suggestion></suggestion>?",
+      "tips": {
+        "spelling": "Revisa la ortografía o usa menos palabras.",
+        "artistTitle": "Escribe «Artista - Título» para acotar."
+      },
+      "advancedLink": "Búsqueda avanzada",
+      "filteredEmptyTitle": "Nada con estos filtros",
+      "filteredEmptyDescription": "Puede haber resultados para «{query}» sin ellos.",
+      "clearFilters": "Quitar filtros",
+      "errorTitle": "No pudimos consultar MusicBrainz",
+      "errorDescription": "«{query}» no está todavía en nuestro catálogo y la fuente externa no respondió. Suele resolverse en unos segundos.",
       "remoteFailed": {
-        "title": "Faltan resultados de MusicBrainz",
-        "description": "MusicBrainz no respondió: mostramos solo lo que ya está en el catálogo.",
+        "title": "Solo lo que ya está en el catálogo",
+        "description": "MusicBrainz no respondió: puede faltar algún resultado.",
         "retry": "Reintentar"
       },
       "pendingRemote": "Buscando en MusicBrainz...",

@@ -34,7 +34,11 @@ vi.mock("./local-match", () => ({
   findArtistsByKeys: vi.fn(async () => []),
   matchLocalRecordings: vi.fn(async () => []),
 }));
-vi.mock("./activity", () => ({ activityScores: vi.fn(async () => new Map()) }));
+vi.mock("./activity", () => ({
+  activityScores: vi.fn(async () => new Map()),
+  exploredScores: vi.fn(async () => new Map()),
+  exploredArtistMbids: vi.fn(async () => new Set()),
+}));
 
 const { db } = await import("@/db");
 const { musicbrainz } = await import("@/services/musicbrainz/client");
