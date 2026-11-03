@@ -88,3 +88,48 @@ describe("AdvancedSearchForm", () => {
     expect(screen.getByRole("link", { name: labels.clear })).toHaveAttribute("href", "/search/advanced?type=song");
   });
 });
+
+describe("formulario agrupado y validación (openspec: refine-advanced-search-phase2)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("Artistas: grupos Identidad, Origen y Época y la cantidad de criterios de la URL", () => {
+    renderWithIntl(
+      <AdvancedSearchForm type="artist" query="" criteria={{ artistType: "group", country: ["CL"], beginFrom: 1980 }} />,
+    );
+    for (const legend of [labels.groups.identity, labels.groups.origin, labels.groups.period]) {
+      expect(screen.getByRole("group", { name: legend })).toBeInTheDocument();
+    }
+    expect(screen.getByText("3 criterios")).toBeInTheDocument();
+  });
+
+  it("un rango invertido no navega y muestra el error bajo el campo", () => {
+    renderWithIntl(<AdvancedSearchForm type="artist" query="" criteria={{}} />);
+    fireEvent.change(screen.getAllByLabelText(labels.from)[0]!, { target: { value: "1990" } });
+    fireEvent.change(screen.getAllByLabelText(labels.to)[0]!, { target: { value: "1980" } });
+    submit();
+
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent(labels.errors.rangeOrder);
+    expect(screen.getAllByLabelText(labels.from)[0]).toHaveAttribute("aria-invalid", "true");
+
+    // Al corregir, el error se va y la búsqueda sale.
+    fireEvent.input(screen.getAllByLabelText(labels.from)[0]!, { target: { value: "1975" } });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    submit();
+    expect(mockPush).toHaveBeenCalledWith("/search/advanced?type=artist&beginFrom=1975&beginTo=1980");
+  });
+
+  it("un año que no tiene 4 dígitos y una duración mal escrita", () => {
+    const { unmount } = renderWithIntl(<AdvancedSearchForm type="album" query="" criteria={{}} />);
+    fireEvent.change(screen.getAllByLabelText(labels.from)[0]!, { target: { value: "85" } });
+    submit();
+    expect(screen.getByRole("alert")).toHaveTextContent(labels.errors.yearFormat);
+    unmount();
+
+    renderWithIntl(<AdvancedSearchForm type="song" query="" criteria={{}} />);
+    fireEvent.change(screen.getAllByLabelText(labels.to)[0]!, { target: { value: "7.30" } });
+    submit();
+    expect(screen.getByRole("alert")).toHaveTextContent(labels.errors.durationFormat);
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+});

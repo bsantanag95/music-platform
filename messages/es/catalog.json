@@ -369,6 +369,33 @@
       "broad": {
         "shown": "Se muestran los primeros resultados.",
         "narrow": "Para acotar, agrega:"
+      },
+      "groups": {
+        "identity": "Identidad",
+        "origin": "Origen",
+        "period": "Época",
+        "release": "Lanzamiento"
+      },
+      "criteriaCount": "{count, plural, =0 {Ningún criterio} one {# criterio} other {# criterios}}",
+      "errors": {
+        "yearFormat": "Escribe el año con 4 dígitos (por ejemplo 1985).",
+        "durationFormat": "Escribe la duración como m:ss (por ejemplo 7:00).",
+        "rangeOrder": "«Desde» no puede ser posterior a «Hasta»."
+      },
+      "ignored": "Se ignoraron valores de la dirección que no se reconocen: {values}.",
+      "examplesTitle": "Prueba con",
+      "recentTitle": "Búsquedas recientes",
+      "recentRemove": "Quitar de las recientes",
+      "examples": {
+        "chileanBands80s": "Bandas chilenas de los 80",
+        "manchesterBands": "Grupos de Mánchester",
+        "mexicanSoloistsSince1990": "Solistas de México desde 1990",
+        "live1994": "Directos de 1994",
+        "pinkFloyd70s": "Pink Floyd en estudio, años 70",
+        "radioheadEps": "Sencillos y EP de Radiohead",
+        "radioheadLong": "Radiohead de 7 minutos o más",
+        "thrillerSongs": "Las canciones de Thriller",
+        "ramonesShort": "Ramones en menos de 2 minutos"
       }
     },
     "landing": {
