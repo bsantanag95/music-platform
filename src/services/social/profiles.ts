@@ -1,4 +1,4 @@
-import { and, eq, ilike, or } from "drizzle-orm";
+import { and, eq, ilike, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, userFollow } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
@@ -11,6 +11,7 @@ import {
 import { getRelationBetween, isBlocking, relationsFor } from "./relations";
 import { activeUserCondition } from "@/services/auth/account-status";
 import { resolveImageUrls } from "@/services/storage/avatar-urls";
+import { countFollowedFollowersOf } from "@/services/profiles/affinity";
 
 export interface OwnProfile {
   id: string;
@@ -155,7 +156,12 @@ export async function searchUsers(
     slice.map((row) => row.id),
   );
 
-  const avatarUrls = await resolveImageUrls(slice.map((row) => row.avatarImageId));
+  const ids = slice.map((row) => row.id);
+  const [avatarUrls, followers, inCommon] = await Promise.all([
+    resolveImageUrls(slice.map((row) => row.avatarImageId)),
+    followerCounts(slice.filter((row) => row.profileVisibility === "public").map((row) => row.id)),
+    viewerId ? countFollowedFollowersOf(viewerId, ids) : Promise.resolve(new Map<string, number>()),
+  ]);
   return {
     users: slice.map((row) => ({
       id: row.id,
@@ -164,11 +170,29 @@ export async function searchUsers(
       profileVisibility: row.profileVisibility as ProfileVisibility,
       relation: (relations.get(row.id) ?? "none") as FollowRelation,
       avatarUrl: row.avatarImageId ? (avatarUrls.get(row.avatarImageId) ?? null) : null,
+      // Para reconocer a alguien en la lista (openspec: refine-search-results-phase3): seguidores solo de perfiles
+      // públicos y, con sesión, cuántas de las personas que sigues lo siguen (la cifra, nunca quiénes).
+      followersCount: row.profileVisibility === "public" ? (followers.get(row.id) ?? 0) : null,
+      inCommon: inCommon.get(row.id) ?? 0,
     })),
     page,
     pageSize,
     hasNext: rows.length > pageSize,
   };
+}
+
+/** Seguidores aceptados de cuentas activas, en una consulta. */
+async function followerCounts(ids: string[]): Promise<Map<string, number>> {
+  if (ids.length === 0) return new Map();
+  const rows = await db.execute<{ id: string; n: number }>(sql`
+    SELECT f.followed_id AS id, count(*)::int AS n
+    FROM user_follow f JOIN app_user u ON u.id = f.follower_id AND u.deactivated_at IS NULL
+    WHERE f.status = 'accepted' AND f.followed_id IN (${sql.join(
+      ids.map((id) => sql`${id}::uuid`),
+      sql`, `,
+    )})
+    GROUP BY f.followed_id`);
+  return new Map(rows.map((row) => [row.id, Number(row.n)]));
 }
 
 export async function isApprovedFollower(

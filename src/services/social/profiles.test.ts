@@ -2,13 +2,15 @@ import { describe, expect, it, vi } from "vitest";
 import { getOwnProfile, getProfileByUsername, searchUsers, updateProfileVisibility } from "./profiles";
 
 const mocks = vi.hoisted(() => ({
-  db: { select: vi.fn(), update: vi.fn() },
+  db: { select: vi.fn(), update: vi.fn(), execute: vi.fn(async () => [{ id: "u1", n: 12 }]) },
+  countFollowedFollowersOf: vi.fn(async () => new Map([["u2", 3]])),
   getRelationBetween: vi.fn(),
   relationsFor: vi.fn(),
   isBlocking: vi.fn(),
 }));
 
 vi.mock("@/db", () => ({ db: mocks.db }));
+vi.mock("@/services/profiles/affinity", () => ({ countFollowedFollowersOf: mocks.countFollowedFollowersOf }));
 vi.mock("./relations", () => ({
   getRelationBetween: mocks.getRelationBetween,
   relationsFor: mocks.relationsFor,
@@ -146,6 +148,10 @@ describe("perfiles", () => {
     expect(result.users[0]).toMatchObject({ username: "ana", relation: "following" });
     expect(result.users[1]).toMatchObject({ username: "andre", relation: "requested" });
     expect(result.hasNext).toBe(false);
+    // Seguidores solo del perfil público; en común con quien busca (refine-search-results-phase3).
+    expect(result.users[0]).toMatchObject({ followersCount: 12, inCommon: 0 });
+    expect(result.users[1]).toMatchObject({ followersCount: null, inCommon: 3 });
+    expect(mocks.countFollowedFollowersOf).toHaveBeenCalledWith("viewer-1", ["u1", "u2"]);
   });
 
   it("exige un término de búsqueda", async () => {

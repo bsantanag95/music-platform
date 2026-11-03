@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { formatStars } from "@/components/album/album-format";
 import { Link } from "@/i18n/navigation";
 import { albumHref } from "@/lib/catalog-links";
 import type { AlbumSearchResult } from "@/services/catalog/search/types";
@@ -14,6 +15,10 @@ import { AlbumQuickActions } from "../AlbumQuickActions";
 
 export function AlbumRow({ album }: { album: AlbumSearchResult }) {
   const t = useTranslations("catalog");
+  const locale = useLocale();
+  // Media de la comunidad (desde 5 valoraciones) y la nota propia (openspec: refine-search-results-phase3).
+  const average = album.community?.average ?? null;
+  const yours = album.yourStars ?? null;
   const meta = [
     album.artistName,
     t(`artist.categories.${album.category}`),
@@ -37,6 +42,22 @@ export function AlbumRow({ album }: { album: AlbumSearchResult }) {
           </span>
         ) : null}
       </span>
+      {average !== null || yours !== null ? (
+        <span className="flex shrink-0 flex-col items-end gap-0.5 font-data text-xs">
+          {average !== null ? (
+            <span className="text-paper-muted" title={t("search.results.albums.communityTitle", { count: album.community?.count ?? 0 })}>
+              <span aria-hidden>★ </span>
+              {t("search.results.albums.community", {
+                average: formatStars(average, locale),
+                count: album.community?.count ?? 0,
+              })}
+            </span>
+          ) : null}
+          {yours !== null ? (
+            <span className="text-amber">{t("search.results.albums.yours", { stars: formatStars(yours, locale) })}</span>
+          ) : null}
+        </span>
+      ) : null}
     </Link>
   );
 }

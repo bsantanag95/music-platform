@@ -61,11 +61,12 @@ export function SearchTypeTabs({ query, current }: { query: string; current: Sea
               <Link
                 href={searchHref(type, query)}
                 aria-current={active ? "page" : undefined}
-                className={`-mb-px inline-flex items-center gap-1.5 border-b-2 px-3 py-2 font-display text-sm transition-colors ${
+                className={`-mb-px inline-flex items-center gap-1.5 border-b-2 px-2.5 py-2 font-display text-sm transition-colors sm:px-3 ${
                   active ? "border-amber text-paper" : "border-transparent text-paper-muted hover:text-paper"
                 }`}
               >
-                <SearchTypeIcon type={type} className="size-3.5" />
+                {/* Sin ícono en móvil: así las cuatro pestañas caben en 375 px y la activa no queda cortada. */}
+                <SearchTypeIcon type={type} className="hidden size-3.5 sm:inline" />
                 {t(`types.${type}`)}
               </Link>
             </li>

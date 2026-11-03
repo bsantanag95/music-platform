@@ -21,6 +21,15 @@ export interface ArtistSearchResult {
   cached: boolean;
   /** Nombre igual a la consulta (normalizado). */
   exact: boolean;
+  /**
+   * Datos para elegir entre homónimos (openspec: refine-search-results-phase3): foto de Commons (si no está retirada),
+   * años de actividad o de vida, y cuántos discos principales tiene en el catálogo (solo con la discografía
+   * sincronizada; `null` si no se exploró).
+   */
+  photoUrl?: string | null;
+  beginYear?: number | null;
+  endYear?: number | null;
+  discCount?: number | null;
 }
 
 export interface ArtistSearchResponse {
@@ -44,6 +53,13 @@ export interface AlbumSearchResult {
   year: number | null;
   /** Tracklist ya ingerida en la base local. */
   cached: boolean;
+  /**
+   * Media de la comunidad con su cantidad (openspec: refine-search-results-phase3); `average` es `null` con menos
+   * de 5 valoraciones (umbral del álbum).
+   */
+  community?: { average: number | null; count: number };
+  /** Nota de quien busca, si tiene sesión y valoró el disco. */
+  yourStars?: number | null;
 }
 
 /** Sugerencia para acotar una consulta genérica ("Agrega el artista"). */

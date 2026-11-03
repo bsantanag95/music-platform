@@ -237,14 +237,20 @@
         "filterLabel": "Artist type",
         "filterAll": "All",
         "filterPerson": "Person",
-        "filterGroup": "Group"
+        "filterGroup": "Group",
+        "yearsRange": "{begin}–{end}",
+        "yearsSince": "since {begin}",
+        "discs": "{count, plural, one {# record} other {# records}}"
       },
       "albums": {
         "categoryLabel": "Category",
         "categoryAll": "All",
         "decadeLabel": "Decade",
         "decadeAll": "All",
-        "decade": "{decade}s"
+        "decade": "{decade}s",
+        "community": "{average} · {count}",
+        "communityTitle": "Average of {count} ratings",
+        "yours": "Your rating {stars}"
       },
       "songs": {
         "interpretation": "Read as the song “{song}” by {artist}",
@@ -263,6 +269,12 @@
       "filters": {
         "toggle": "Filters",
         "toggleActive": "Filters · {count}"
+      },
+      "users": {
+        "followers": "{count, plural, one {# follower} other {# followers}}",
+        "inCommon": "{count} in common",
+        "private": "Private profile",
+        "signInNotice": "<link>Sign in</link> to follow the people you find."
       }
     },
     "origin": {

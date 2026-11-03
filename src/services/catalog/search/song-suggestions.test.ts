@@ -2,7 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ArtistRow, RecordingRow } from "@/db/schema";
 
 vi.mock("@/db", () => ({ db: {} }));
-vi.mock("./activity", () => ({ activityScores: vi.fn(async () => new Map()) }));
+vi.mock("./activity", () => ({
+  activityScores: vi.fn(async () => new Map()),
+  primaryDiscCounts: vi.fn(async () => new Map()),
+  albumCommunity: vi.fn(async () => new Map()),
+  exploredScores: vi.fn(async () => new Map()),
+  exploredArtistMbids: vi.fn(async () => new Set()),
+}));
 vi.mock("./local-match", () => ({
   matchLocalRecordings: vi.fn(async () => []),
   findArtistsByKeys: vi.fn(async () => []),

@@ -127,7 +127,7 @@ describe("ArtistResults", () => {
     expect(screen.getByText(labels.results.artists.bestMatch)).toBeInTheDocument();
     const best = screen.getByRole("link", { name: /US rock band/ });
     expect(best).toHaveAttribute("href", "/artist/us");
-    expect(within(best).getByText(/Grupo · US · US rock band/)).toBeInTheDocument();
+    expect(within(best).getByText(/Grupo · Estados Unidos · US rock band/)).toBeInTheDocument();
     expect(screen.getByText(labels.results.artists.homonyms.replace("{query}", "KISS"))).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /South Korean girl group/ })).toHaveAttribute("href", "/artist/kr");
     // Tipo desconocido: sin etiqueta "Sin clasificar".
@@ -323,5 +323,37 @@ describe("RefineHint con la cifra acotada (refine-search-results-phase2)", () =>
   it("por encima de 1.000 dice 'Más de 1000', como el encabezado", () => {
     renderWithIntl(<RefineHint kind="album" query="the wall" total={875466} artists={["Pink Floyd"]} />);
     expect(screen.getByText(/^Más de 1000 álbumes coinciden con «the wall»/)).toBeInTheDocument();
+  });
+});
+
+describe("filas que ayudan a elegir (refine-search-results-phase3)", () => {
+  const kiss: ArtistSearchResult = {
+    kind: "artist",
+    id: "k",
+    mbid: null,
+    name: "KISS",
+    disambiguation: "US rock band",
+    artistType: "group",
+    country: "US",
+    cached: true,
+    exact: true,
+    photoUrl: "https://upload.wikimedia.org/kiss.jpg",
+    beginYear: 1973,
+    endYear: null,
+    discCount: 43,
+  };
+
+  it("artista: país por su nombre, años, discos, foto y géneros en la mejor coincidencia", () => {
+    renderWithIntl(<ArtistResults query="kiss" results={[kiss]} bestGenres={["hard rock", "heavy metal"]} />);
+    expect(screen.getByText("Grupo · Estados Unidos · desde 1973 · 43 discos · US rock band")).toBeInTheDocument();
+    expect(screen.getByText("hard rock")).toBeInTheDocument();
+    expect(document.querySelector('img[src*="kiss.jpg"]')).not.toBeNull();
+  });
+
+  it("artista sin datos extra: solo lo que hay", () => {
+    renderWithIntl(
+      <ArtistResults query="kiss" results={[{ ...kiss, photoUrl: null, beginYear: null, discCount: null, country: null }]} />,
+    );
+    expect(screen.getByText("Grupo · US rock band")).toBeInTheDocument();
   });
 });

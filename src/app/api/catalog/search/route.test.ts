@@ -4,6 +4,10 @@ import { ApiError } from "@/lib/api/errors";
 import type { ArtistSearchResponse } from "@/services/catalog/search/types";
 
 vi.mock("@/services/catalog/search", () => ({ searchCatalogByType: vi.fn() }));
+vi.mock("@/services/auth/sessions", () => ({ resolveSession: vi.fn(async () => null) }));
+vi.mock("@/services/catalog/search/activity", () => ({
+  withViewerStars: vi.fn(async (results: { id: string }[]) => results.map((r) => ({ ...r, yourStars: null }))),
+}));
 
 const { searchCatalogByType } = await import("@/services/catalog/search");
 const { GET } = await import("./route");
