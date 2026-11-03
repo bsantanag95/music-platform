@@ -331,8 +331,45 @@
       "submit": "Buscar",
       "clear": "Limpiar",
       "resultsTitle": "Resultados",
-      "emptyDescription": "Ningún resultado cumple todos los campos. Prueba quitando alguno.",
-      "broadQuery": "Hay {total} resultados en MusicBrainz. Suma campos para acotar la búsqueda."
+      "editSearch": "Editar búsqueda",
+      "hideForm": "Ocultar formulario",
+      "criteriaLabel": "Criterios de la búsqueda",
+      "removeCriterion": "Quitar {criterion}",
+      "chips": {
+        "q": "«{value}»",
+        "qExact": "«{value}» (exacto)",
+        "area": "Ciudad: {value}",
+        "begin": "Inicio {range}",
+        "artist": "Artista: {value}",
+        "artistExact": "Artista: {value} (exacto)",
+        "year": "Año {range}",
+        "album": "Álbum: {value}",
+        "albumExact": "Álbum: {value} (exacto)",
+        "duration": "Duración {range}"
+      },
+      "range": {
+        "between": "{from}–{to}",
+        "from": "desde {from}",
+        "to": "hasta {to}"
+      },
+      "count": {
+        "artists": "{count, plural, one {# artista} other {# artistas}}",
+        "groups": "{count, plural, one {# grupo} other {# grupos}}",
+        "people": "{count, plural, one {# persona} other {# personas}}",
+        "albums": "{count, plural, one {# álbum} other {# álbumes}}",
+        "songs": "{count, plural, one {# canción} other {# canciones}}"
+      },
+      "empty": {
+        "title": "Ningún resultado cumple todos los criterios",
+        "relax": "Quita un criterio para ampliar:",
+        "without": "Sin {criterion}",
+        "resultCount": "{count, plural, =0 {ninguno} one {# resultado} other {# resultados}}",
+        "quickSearch": "Buscar «{query}» en la búsqueda rápida"
+      },
+      "broad": {
+        "shown": "Se muestran los primeros resultados.",
+        "narrow": "Para acotar, agrega:"
+      }
     },
     "landing": {
       "tryHeading": "Prueba con",

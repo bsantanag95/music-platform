@@ -47,6 +47,13 @@ import {
   SongResults,
 } from "@/components/catalog/search-results/SongResults";
 import { LoadMoreResults } from "@/components/catalog/search-results/LoadMoreResults";
+import {
+  AdvancedEmpty,
+  AlternativeCount,
+  MAX_COUNTED_ALTERNATIVES,
+} from "@/components/catalog/advanced-search/AdvancedEmpty";
+import { criterionChips, removeCriterion, type CriterionChip } from "@/services/catalog/search/filters";
+import type { SearchType } from "@/services/catalog/search/types";
 import { UserResults } from "@/components/catalog/search-results/UserResults";
 
 // Secciones de /search por tipo (openspec: redesign-scoped-search). Viven
@@ -128,7 +135,7 @@ export async function ArtistSection({
         <LocalFirst
           summary={
             <>
-              <SearchSummary query={query} type="artist" count={null} advanced={advanced} />
+              <SearchSummary query={query} type="artist" count={null} advanced={advanced} artistType={criteria.artistType} />
               {pills}
             </>
           }
@@ -196,18 +203,20 @@ async function ArtistRemote({
         type="artist"
         count={response.total ?? response.results.length}
         advanced={advanced}
+        artistType={criteria.artistType}
       />
       {empty && !filtered ? null : pills}
-      {advanced && !query ? <BroadQueryHint total={response.total} /> : null}
+      {advanced && !query ? <BroadQueryHint total={response.total} type="artist" criteria={criteria} /> : null}
       {response.remoteFailed ? <RemoteFailedNotice /> : null}
       {weak && suggestion ? <DidYouMean type="artist" suggestion={suggestion} /> : null}
-      {empty ? (
+      {empty && advanced ? (
+        <AdvancedNoResults type="artist" query={query} criteria={criteria} />
+      ) : empty ? (
         <SearchEmpty
           query={query}
           type="artist"
-          advanced={advanced}
           suggestion={suggestion}
-          clearFiltersHref={filtered && !advanced ? searchHref("artist", query) : null}
+          clearFiltersHref={filtered ? searchHref("artist", query) : null}
         />
       ) : (
         <div className="flex flex-col gap-4">
@@ -359,19 +368,20 @@ async function AlbumRemote({
         advanced={advanced}
       />
       {empty && !filtered ? null : pills}
-      {advanced && !query ? <BroadQueryHint total={response.total} /> : null}
+      {advanced && !query ? <BroadQueryHint total={response.total} type="album" criteria={criteria} /> : null}
       {response.remoteFailed ? <RemoteFailedNotice /> : null}
       {weak && suggestion ? <DidYouMean type="album" suggestion={suggestion} /> : null}
       {response.refine ? (
         <RefineHint kind="album" query={query} {...response.refine} />
       ) : null}
-      {empty ? (
+      {empty && advanced ? (
+        <AdvancedNoResults type="album" query={query} criteria={criteria} />
+      ) : empty ? (
         <SearchEmpty
           query={query}
           type="album"
-          advanced={advanced}
           suggestion={suggestion}
-          clearFiltersHref={filtered && !advanced ? searchHref("album", query) : null}
+          clearFiltersHref={filtered ? searchHref("album", query) : null}
         />
       ) : (
         <div className="flex flex-col gap-4">
@@ -402,7 +412,7 @@ export async function SongSection({ query, criteria = {}, advanced = false }: Se
         <LocalFirst
           summary={<SearchSummary query={query} type="song" count={null} advanced={advanced} />}
         >
-          {local.results.length > 0 ? <SongResults response={local} /> : null}
+          {local.results.length > 0 ? <SongResults response={local} plain={advanced && !query} /> : null}
         </LocalFirst>
       }
     >
@@ -433,24 +443,32 @@ async function SongRemote({
   const suggestion = (empty || weak) && !advanced && query ? await suggestSpelling("song", query) : null;
   return (
     <>
-      <SearchSummary query={query} type="song" count={null} advanced={advanced} />
+      <SearchSummary
+        query={query}
+        type="song"
+        count={advanced ? (response.total ?? response.results.length) : null}
+        advanced={advanced}
+      />
       {advanced ? null : (
         <SongInterpretation
           interpretation={response.interpretation}
           alternatives={response.alternatives}
         />
       )}
-      {advanced && !query ? <BroadQueryHint total={response.total} /> : null}
+      {advanced && !query ? <BroadQueryHint total={response.total} type="song" criteria={criteria} /> : null}
       {response.remoteFailed ? <RemoteFailedNotice /> : null}
       {weak && suggestion ? <DidYouMean type="song" suggestion={suggestion} /> : null}
       {response.refine ? (
         <RefineHint kind="song" query={query} {...response.refine} />
       ) : null}
-      {empty ? (
-        <SearchEmpty query={query} type="song" advanced={advanced} suggestion={suggestion} />
+      {empty && advanced ? (
+        <AdvancedNoResults type="song" query={query} criteria={criteria} />
+      ) : empty ? (
+        <SearchEmpty query={query} type="song" suggestion={suggestion} />
       ) : (
         <div className="flex flex-col gap-4">
-          <SongResults response={response} />
+          {/* Sin título no hay "mejor coincidencia": lista simple (openspec: refine-advanced-search-phase1). */}
+          <SongResults response={response} plain={advanced && !query} />
           {response.nextOffset !== null ? (
             <LoadMoreResults
               kind="song"
@@ -512,6 +530,71 @@ export async function UserSection({
       )}
     </>
   );
+}
+
+// ---------- Sin coincidencias en la búsqueda avanzada
+
+/**
+ * Alternativas sin cada criterio (openspec: refine-advanced-search-phase1, design D3). Con 2 a 4 criterios cada enlace
+ * suma la cifra que daría, por streaming: los enlaces se ven de inmediato.
+ */
+function AdvancedNoResults({
+  type,
+  query,
+  criteria,
+}: {
+  type: Exclude<SearchType, "user">;
+  query: string;
+  criteria: SearchCriteria;
+}) {
+  const chips = criterionChips(type, query, criteria);
+  const counted = chips.length > 1 && chips.length <= MAX_COUNTED_ALTERNATIVES;
+  return (
+    <AdvancedEmpty
+      type={type}
+      query={query}
+      criteria={criteria}
+      countOf={
+        counted
+          ? (chip: CriterionChip) => (
+              <Suspense fallback={null}>
+                <AlternativeCountFor type={type} query={query} criteria={criteria} chip={chip} />
+              </Suspense>
+            )
+          : undefined
+      }
+    />
+  );
+}
+
+async function AlternativeCountFor({
+  type,
+  query,
+  criteria,
+  chip,
+}: {
+  type: Exclude<SearchType, "user">;
+  query: string;
+  criteria: SearchCriteria;
+  chip: CriterionChip;
+}) {
+  const next = removeCriterion(query, criteria, chip);
+  let count: number | null = null;
+  try {
+    if (type === "artist") {
+      const response = await searchArtists(next.query, { filters: artistFilters(next.criteria) });
+      count = response.total ?? response.results.length;
+    } else if (type === "album") {
+      const response = await searchAlbums(next.query, albumOptions(next.criteria));
+      count = response.total ?? response.results.length;
+    } else {
+      const response = await searchSongs(next.query, { filters: songFilters(next.criteria) });
+      count = response.total ?? response.results.length;
+    }
+  } catch {
+    count = null;
+  }
+  return <AlternativeCount count={count} />;
 }
 
 // ---------- Streaming local → remoto

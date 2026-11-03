@@ -1,8 +1,14 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { SEARCH_TYPES, searchHref, type SearchType } from "../search-types";
-import { advancedSearchHref } from "@/services/catalog/search/filters";
+import {
+  advancedSearchHref,
+  narrowingFields,
+  type NarrowingField,
+  type SearchCriteria,
+} from "@/services/catalog/search/filters";
 import { SearchTypeIcon } from "../SearchTypeIcon";
+import { EditFieldButton } from "../advanced-search/AdvancedSearchDisclosure";
 
 // Piezas comunes de la página de resultados por tipo (openspec:
 // redesign-scoped-search). Sin "use client": se renderizan en el servidor y
@@ -83,22 +89,36 @@ export function SearchSummary({
   type,
   count,
   advanced = false,
+  artistType,
 }: {
   query: string;
   type: SearchType;
   count: number | null;
   advanced?: boolean;
+  /** Búsqueda avanzada: el filtro de tipo de artista decide si se cuentan grupos o personas. */
+  artistType?: "person" | "group";
 }) {
   const t = useTranslations("catalog.search");
+  if (advanced) {
+    // Una sola cifra, completa y con lo que se cuenta (openspec: refine-advanced-search-phase1, design D4): con
+    // criterios sí describe lo pedido. El título queda para lectores de pantalla; la barra ya dice qué se buscó.
+    const noun =
+      type === "artist" ? (artistType === "group" ? "groups" : artistType === "person" ? "people" : "artists") : `${type}s`;
+    return (
+      <header className="flex flex-col">
+        <h2 className="sr-only">{t("advanced.resultsTitle")}</h2>
+        {/* Con 0, el estado sin coincidencias ya lo dice. */}
+        {count ? <p className="font-data text-sm text-paper-muted">{t(`advanced.count.${noun}`, { count })}</p> : null}
+      </header>
+    );
+  }
   const countLabel =
     count === null ? null : count > COUNT_CAP ? t("results.countOver", { count: COUNT_CAP }) : t("results.count", { count });
   return (
     <header className="flex flex-col gap-3">
-      {advanced ? null : <SearchTypeTabs query={query} current={type} />}
+      <SearchTypeTabs query={query} current={type} />
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <h2 className="min-w-0 wrap-break-word font-display text-base text-paper">
-          {advanced ? t("advanced.resultsTitle") : t("results.summary", { query })}
-        </h2>
+        <h2 className="min-w-0 wrap-break-word font-display text-base text-paper">{t("results.summary", { query })}</h2>
         {countLabel !== null ? <span className="shrink-0 font-data text-xs text-paper-muted">{countLabel}</span> : null}
       </div>
     </header>
@@ -108,18 +128,16 @@ export function SearchSummary({
 /**
  * Estado vacío del tipo (openspec: refine-search-results-phase1, design D2). Con un filtro activo, el problema es el
  * filtro: se ofrece quitarlo. Sin filtro: "¿Quisiste decir…?" desde el catálogo, consejos, los otros tipos y la
- * búsqueda avanzada. En la avanzada, sugiere menos campos.
+ * búsqueda avanzada. La avanzada tiene su propio estado (`AdvancedEmpty`).
  */
 export function SearchEmpty({
   query,
   type,
-  advanced = false,
   suggestion = null,
   clearFiltersHref = null,
 }: {
   query: string;
   type: SearchType;
-  advanced?: boolean;
   /** Texto parecido del catálogo para "¿Quisiste decir…?". */
   suggestion?: string | null;
   /** Con filtros activos: la misma búsqueda sin ellos. */
@@ -137,14 +155,6 @@ export function SearchEmpty({
         >
           {t("results.clearFilters")}
         </Link>
-      </div>
-    );
-  }
-  if (advanced) {
-    return (
-      <div className="flex flex-col items-start gap-2 rounded-lg border border-ink-border bg-ink-surface px-5 py-5">
-        <h3 className="font-display text-base text-paper">{t("results.emptyTitle")}</h3>
-        <p className="font-body text-sm text-paper-muted">{t("advanced.emptyDescription")}</p>
       </div>
     );
   }
@@ -203,14 +213,49 @@ export function DidYouMean({ type, suggestion }: { type: SearchType; suggestion:
 /** Total de MusicBrainz desde el que una búsqueda avanzada sin nombre sugiere sumar campos. */
 const BROAD_QUERY_THRESHOLD = 500;
 
-/** Búsqueda avanzada sin nombre con muchísimos resultados: sugiere sumar campos. */
-export function BroadQueryHint({ total }: { total: number | null }) {
+/** Etiqueta de cada campo sugerido para acotar (claves de `catalog.search.advanced`). */
+const NARROWING_LABEL: Record<NarrowingField, string> = {
+  country: "country",
+  beginFrom: "begin",
+  artistType: "artistType",
+  yearFrom: "releaseYear",
+  artist: "artist",
+  album: "album",
+  durMin: "duration",
+};
+
+/**
+ * Búsqueda avanzada sin nombre con muchísimos resultados (openspec: refine-advanced-search-phase1): la cifra ya está en
+ * el encabezado; aquí se dice que solo se ven los primeros y qué campos sin valor acotan, cada uno abre el formulario
+ * en ese campo.
+ */
+export function BroadQueryHint({
+  total,
+  type,
+  criteria,
+}: {
+  total: number | null;
+  type: SearchType;
+  criteria: SearchCriteria;
+}) {
   const t = useTranslations("catalog.search.advanced");
   if (total === null || total <= BROAD_QUERY_THRESHOLD) return null;
+  const fields = narrowingFields(type, criteria);
   return (
-    <p className="rounded-lg border border-ink-border bg-ink-surface/70 px-4 py-3 font-body text-sm text-paper-muted">
-      {t("broadQuery", { total })}
-    </p>
+    <div className="flex flex-col gap-2 rounded-lg border border-amber/40 bg-ink-surface/70 px-4 py-3">
+      <p className="font-body text-sm text-paper-muted">
+        {t("broad.shown")} {fields.length > 0 ? t("broad.narrow") : null}
+      </p>
+      {fields.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {fields.map((field) => (
+            <EditFieldButton key={field} field={field}>
+              {t(NARROWING_LABEL[field])}
+            </EditFieldButton>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }
 

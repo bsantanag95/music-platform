@@ -85,29 +85,47 @@ describe("SearchTypeSwitch / SearchEmpty", () => {
   });
 });
 
-describe("variante de la búsqueda avanzada (openspec: redesign-advanced-search)", () => {
-  it("el encabezado no repite la consulta ni ofrece otros tipos", () => {
-    renderWithIntl(<SearchSummary query="" type="artist" count={53} advanced />);
-
+describe("variante de la búsqueda avanzada (openspec: redesign-advanced-search, refine-advanced-search-phase1)", () => {
+  it("el encabezado dice la cifra completa y qué se cuenta, sin repetir la consulta ni ofrecer otros tipos", () => {
+    const { unmount } = renderWithIntl(<SearchSummary query="" type="artist" count={53} advanced artistType="group" />);
     expect(screen.getByRole("heading", { name: labels.advanced.resultsTitle })).toBeInTheDocument();
-    expect(screen.getByText("53 resultados")).toBeInTheDocument();
+    expect(screen.getByText("53 grupos")).toBeInTheDocument();
     expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
-  });
-
-  it("el estado vacío sugiere quitar campos, sin accesos a otros tipos", () => {
-    renderWithIntl(<SearchEmpty query="" type="album" advanced />);
-
-    expect(screen.getByText(labels.advanced.emptyDescription)).toBeInTheDocument();
-    expect(screen.queryByRole("link")).not.toBeInTheDocument();
-  });
-
-  it("sugiere sumar campos solo con muchísimos resultados", () => {
-    const { unmount } = renderWithIntl(<BroadQueryHint total={120} />);
-    expect(screen.queryByText(/Suma campos/)).not.toBeInTheDocument();
     unmount();
 
-    renderWithIntl(<BroadQueryHint total={741} />);
-    expect(screen.getByText(/Hay 741 resultados en MusicBrainz/)).toBeInTheDocument();
+    // Sin el tope "más de 1000" de /search y con separador de miles.
+    renderWithIntl(<SearchSummary query="" type="album" count={14514} advanced />);
+    expect(screen.getByText("14.514 álbumes")).toBeInTheDocument();
+  });
+
+  it("búsqueda amplia: solo con muchísimos resultados, sin repetir la cifra y con los campos que acotan", () => {
+    const { unmount } = renderWithIntl(<BroadQueryHint total={120} type="album" criteria={{}} />);
+    expect(screen.queryByText(labels.advanced.broad.shown)).not.toBeInTheDocument();
+    unmount();
+
+    renderWithIntl(<BroadQueryHint total={14514} type="album" criteria={{ category: ["live_other"] }} />);
+    expect(screen.getByText(new RegExp(labels.advanced.broad.shown))).toBeInTheDocument();
+    expect(screen.queryByText(/14\.?514/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Año de lanzamiento/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Artista/ })).toBeInTheDocument();
+  });
+
+  it("canciones sin título: lista simple, sin mejor coincidencia", () => {
+    const group = {
+      key: "g1",
+      title: "Separator",
+      artistName: "Radiohead",
+      query: "Radiohead - Separator",
+    } as unknown as SongGroupResult;
+    renderWithIntl(
+      <SongResults
+        plain
+        response={{ results: [group, { ...group, key: "g2", title: "Bloom" }] } as never}
+      />,
+    );
+    expect(screen.getByText("Separator")).toBeInTheDocument();
+    expect(screen.getByText("Bloom")).toBeInTheDocument();
+    expect(screen.queryByText(labels.results.songs.otherSongs)).not.toBeInTheDocument();
   });
 });
 

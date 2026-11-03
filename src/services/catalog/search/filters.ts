@@ -249,3 +249,118 @@ export function parseDurationInput(value: string): number | undefined {
   const seconds = Number(match[1]) * 60 + (match[2] ? Number(match[2]) : 0);
   return seconds <= MAX_DURATION_SEC ? seconds : undefined;
 }
+
+// Barra de criterios de la búsqueda avanzada (openspec: refine-advanced-search-phase1, design D1): una pastilla por
+// criterio activo, en el orden del formulario. Un rango es una pastilla; cada país y cada tipo de lanzamiento, una.
+
+export type CriterionChip =
+  | { id: "q" }
+  | { id: "artistType" }
+  | { id: "country"; value: string }
+  | { id: "area" }
+  | { id: "begin" }
+  | { id: "ended" }
+  | { id: "artist" }
+  | { id: "year" }
+  | { id: "category"; value: ReleaseGroupCategoryValue }
+  | { id: "album" }
+  | { id: "duration" };
+
+/** Criterios activos de la búsqueda, como pastillas. */
+export function criterionChips(type: SearchType, query: string, criteria: SearchCriteria): CriterionChip[] {
+  const chips: CriterionChip[] = [];
+  if (query.trim()) chips.push({ id: "q" });
+  if (type === "artist") {
+    if (criteria.artistType) chips.push({ id: "artistType" });
+    criteria.country?.forEach((value) => chips.push({ id: "country", value }));
+    if (criteria.area) chips.push({ id: "area" });
+    if (criteria.beginFrom !== undefined || criteria.beginTo !== undefined) chips.push({ id: "begin" });
+    if (criteria.ended !== undefined) chips.push({ id: "ended" });
+    return chips;
+  }
+  if (criteria.artist) chips.push({ id: "artist" });
+  if (type === "album" && (criteria.yearFrom !== undefined || criteria.yearTo !== undefined)) chips.push({ id: "year" });
+  criteria.category?.forEach((value) => chips.push({ id: "category", value }));
+  if (type === "song") {
+    if (criteria.album) chips.push({ id: "album" });
+    if (criteria.durMin !== undefined || criteria.durMax !== undefined) chips.push({ id: "duration" });
+  }
+  return chips;
+}
+
+/** La misma búsqueda sin un criterio. Quitar un texto quita también su coincidencia exacta. */
+export function removeCriterion(
+  query: string,
+  criteria: SearchCriteria,
+  chip: CriterionChip,
+): { query: string; criteria: SearchCriteria } {
+  const next: SearchCriteria = { ...criteria };
+  let nextQuery = query;
+  const without = <T,>(list: T[] | undefined, value: T) => {
+    const rest = list?.filter((item) => item !== value);
+    return rest && rest.length > 0 ? rest : undefined;
+  };
+  switch (chip.id) {
+    case "q":
+      nextQuery = "";
+      delete next.exact;
+      break;
+    case "country":
+      next.country = without(next.country, chip.value);
+      break;
+    case "category":
+      next.category = without(next.category, chip.value);
+      break;
+    case "begin":
+      delete next.beginFrom;
+      delete next.beginTo;
+      break;
+    case "year":
+      delete next.yearFrom;
+      delete next.yearTo;
+      break;
+    case "duration":
+      delete next.durMin;
+      delete next.durMax;
+      break;
+    case "artist":
+      delete next.artist;
+      delete next.artistExact;
+      break;
+    case "album":
+      delete next.album;
+      delete next.albumExact;
+      break;
+    default:
+      delete next[chip.id];
+  }
+  for (const key of Object.keys(next) as CriteriaKey[]) if (next[key] === undefined) delete next[key];
+  return { query: nextQuery, criteria: next };
+}
+
+/** Campo del formulario que se sugiere para acotar una búsqueda amplia, con el `name` a enfocar. */
+export type NarrowingField = "country" | "beginFrom" | "artistType" | "yearFrom" | "artist" | "album" | "durMin";
+
+/** Hasta tres campos sin valor que acotan el tipo, en orden de utilidad. */
+export function narrowingFields(type: SearchType, criteria: SearchCriteria): NarrowingField[] {
+  const candidates: [NarrowingField, boolean][] =
+    type === "artist"
+      ? [
+          ["country", Boolean(criteria.country)],
+          ["beginFrom", criteria.beginFrom !== undefined || criteria.beginTo !== undefined],
+          ["artistType", Boolean(criteria.artistType)],
+        ]
+      : type === "album"
+        ? [
+            ["yearFrom", criteria.yearFrom !== undefined || criteria.yearTo !== undefined],
+            ["artist", Boolean(criteria.artist)],
+          ]
+        : type === "song"
+          ? [
+              ["artist", Boolean(criteria.artist)],
+              ["album", Boolean(criteria.album)],
+              ["durMin", criteria.durMin !== undefined || criteria.durMax !== undefined],
+            ]
+          : [];
+  return candidates.filter(([, set]) => !set).map(([field]) => field);
+}
