@@ -27,11 +27,12 @@ export function RecentSearches() {
   if (searches.length === 0) return null;
 
   return (
-    <section className="flex w-full flex-col gap-3" aria-label={t("search.recent.heading")}>
+    <section
+      className="flex w-full flex-col gap-3 rounded-lg border border-ink-border bg-ink-surface px-4 py-3"
+      aria-label={t("search.recent.heading")}
+    >
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="font-display text-sm text-paper-muted">
-          {t("search.recent.heading")}
-        </h2>
+        <h2 className="font-display text-sm text-paper">{t("search.recent.heading")}</h2>
         <button
           type="button"
           onClick={() => setSearches(clearRecentSearches())}
@@ -41,18 +42,19 @@ export function RecentSearches() {
         </button>
       </div>
 
-      <ul className="flex flex-col divide-y divide-ink-border">
+      {/* Pastillas en lugar de una lista (openspec: refine-search-results-phase2): cada una vuelve a su tipo. */}
+      <ul className="flex flex-wrap gap-1.5">
         {searches.map((search) => (
           <li
             key={`${search.type}-${search.q}`}
-            className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0"
+            className="inline-flex min-w-0 max-w-full items-center rounded-full border border-ink-border"
           >
             <Link
               href={searchHref(search.type, search.q)}
-              className="group flex min-w-0 items-center gap-2.5"
+              className="group inline-flex min-w-0 items-center gap-1.5 py-1 pl-2.5 pr-1"
             >
               <span className="text-paper-muted" aria-hidden>
-                <SearchTypeIcon type={search.type} className="size-3.5" />
+                <SearchTypeIcon type={search.type} className="size-3" />
               </span>
               <span className="min-w-0 truncate font-body text-sm text-paper transition-colors group-hover:text-amber">
                 {search.q}
@@ -63,9 +65,9 @@ export function RecentSearches() {
               type="button"
               aria-label={t("search.recent.remove", { query: search.q })}
               onClick={() => setSearches(removeRecentSearch(search))}
-              className="shrink-0 font-data text-xs text-paper-muted transition-colors hover:text-danger"
+              className="shrink-0 rounded-full px-2 py-1 font-data text-xs text-paper-muted transition-colors hover:text-danger"
             >
-              {t("search.recent.removeShort")}
+              <span aria-hidden>×</span>
             </button>
           </li>
         ))}

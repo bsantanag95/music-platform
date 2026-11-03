@@ -37,6 +37,7 @@ import {
   SearchSummary,
 } from "@/components/catalog/search-results/SearchChrome";
 import { RemoteFailedNotice } from "@/components/catalog/search-results/RemoteFailedNotice";
+import { FiltersDisclosure } from "@/components/catalog/search-results/FiltersDisclosure";
 import { ArtistResults } from "@/components/catalog/search-results/ArtistResults";
 import { AlbumList } from "@/components/catalog/search-results/AlbumResults";
 import {
@@ -240,7 +241,7 @@ export async function AlbumSection({
   // Los filtros van debajo del encabezado de resultados, tanto mientras llega
   // MusicBrainz (fallback) como en la lista final.
   const pills = advanced ? null : (
-    <div className="flex flex-col gap-3">
+    <FiltersDisclosure active={(category ? 1 : 0) + (decade !== undefined ? 1 : 0)}>
       <FilterPills
         label={t("search.results.albums.categoryLabel")}
         options={[
@@ -275,7 +276,7 @@ export async function AlbumSection({
           })),
         ]}
       />
-    </div>
+    </FiltersDisclosure>
   );
 
   return (
@@ -511,8 +512,8 @@ function LocalFirst({
   return (
     <>
       {summary}
-      <PendingRemote />
       {children}
+      <PendingRemote />
     </>
   );
 }

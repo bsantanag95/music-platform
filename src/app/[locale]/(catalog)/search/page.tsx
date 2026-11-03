@@ -9,7 +9,8 @@ import {
   parseCriteria,
 } from "@/services/catalog/search/filters";
 import { SearchForm } from "@/components/catalog/SearchForm";
-import { RecentSearches } from "@/components/catalog/RecentSearches";
+import { SearchLanding } from "@/components/catalog/SearchLanding";
+import { listTrySuggestions } from "@/services/catalog/search/try-suggestions";
 import { parseSearchType } from "@/components/catalog/search-types";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { AlbumSection, ArtistSection, SongSection, UserSection } from "./sections";
@@ -65,17 +66,24 @@ async function SearchPage({ searchParams }: SearchPageProps) {
     redirect({ href: advancedSearchHref(type, query, { ...criteria, ...years }), locale: await getLocale() });
   }
 
+  // Sin consulta, la portada (recientes, "Prueba con", consejo); con consulta, encabezado compacto: el título queda
+  // para lectores de pantalla y los resultados suben (openspec: refine-search-results-phase2).
+  const suggestions = query ? null : await listTrySuggestions().catch(() => null);
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col items-start gap-8 px-4 py-12">
+    <main
+      className={`mx-auto flex min-h-screen w-full max-w-3xl flex-col items-start px-4 ${
+        query ? "gap-5 py-6 sm:py-8" : "gap-8 py-12"
+      }`}
+    >
       <Breadcrumbs
         items={[
           { label: tCommon("home"), href: "/" },
           { label: t("search.breadcrumb") },
         ]}
       />
-      <h1 className="font-display text-2xl text-paper">{t("search.pageTitle")}</h1>
-      <SearchForm initialQuery={query} initialType={type} />
-      {!query ? <RecentSearches /> : null}
+      <h1 className={query ? "sr-only" : "font-display text-2xl text-paper"}>{t("search.pageTitle")}</h1>
+      <SearchForm initialQuery={query} initialType={type} compact={Boolean(query)} />
+      {!query ? <SearchLanding suggestions={suggestions} /> : null}
       {query ? (
         <section className="flex w-full flex-col gap-6">
           {type === "artist" ? (

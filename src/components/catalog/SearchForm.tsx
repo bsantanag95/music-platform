@@ -12,17 +12,20 @@ interface SearchFormProps {
   // La búsqueda la ejecuta la página como Server Component.
   initialQuery?: string;
   initialType?: SearchType;
+  /** Con resultados debajo: etiqueta oculta (openspec: refine-search-results-phase2). */
+  compact?: boolean;
 }
 
 // Buscador de la página /search: la misma pieza que el Header, en su variante
 // completa. Arranca con el tipo de la URL, así que refinar una búsqueda
 // conserva el tipo elegido (openspec: redesign-scoped-search). Al lado, el
 // enlace a la búsqueda avanzada con el tipo y el texto cargados (openspec:
-// redesign-advanced-search).
-export function SearchForm({ initialQuery = "", initialType = "artist" }: SearchFormProps) {
+// redesign-advanced-search), como texto bajo el campo: a lo ancho competía con
+// "Buscar" (openspec: refine-search-results-phase2).
+export function SearchForm({ initialQuery = "", initialType = "artist", compact = false }: SearchFormProps) {
   const t = useTranslations("catalog.search.advanced");
   return (
-    <div className="w-full max-w-xl">
+    <div className="flex w-full max-w-xl flex-col gap-2">
       <ScopedSearchField
         // Remonta al cambiar la URL (enlace de otro tipo, búsqueda reciente):
         // el campo refleja siempre el tipo y el texto de la búsqueda en curso.
@@ -31,17 +34,16 @@ export function SearchForm({ initialQuery = "", initialType = "artist" }: Search
         initialType={initialType}
         initialQuery={initialQuery}
         onSubmitSearch={(query, type) => pushRecentSearch(query, type)}
-        trailing={
-          initialType === "user" ? null : (
-            <Link
-              href={advancedSearchHref(initialType, initialQuery)}
-              className="inline-flex h-11 shrink-0 items-center justify-center rounded border border-ink-border px-4 font-display text-sm text-paper-muted transition-colors hover:border-amber/60 hover:text-paper"
-            >
-              {t("headerLink")}
-            </Link>
-          )
-        }
+        labelHidden={compact}
       />
+      {initialType === "user" ? null : (
+        <Link
+          href={advancedSearchHref(initialType, initialQuery)}
+          className="self-end font-data text-xs text-paper-muted transition-colors hover:text-amber"
+        >
+          {t("headerLink")} →
+        </Link>
+      )}
     </div>
   );
 }

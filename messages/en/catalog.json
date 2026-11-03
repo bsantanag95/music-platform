@@ -191,8 +191,9 @@
     },
     "results": {
       "summary": "Results for “{query}”",
-      "inType": "in {type}",
       "count": "{count, plural, one {# result} other {# results}}",
+      "countOver": "more than {count, number}",
+      "tabsLabel": "Result type",
       "cachedTag": "in your catalog",
       "switchLabel": "Search “{query}” in:",
       "emptyTitle": "No matches",
@@ -224,7 +225,9 @@
       "loadMoreError": "Couldn't load more results.",
       "refine": {
         "album": "{total, plural, one {# album matches} other {# albums match}} “{query}”. Add the artist to narrow it down:",
-        "song": "{total, plural, one {# song matches} other {# songs match}} “{query}”. Add the artist to narrow it down:"
+        "song": "{total, plural, one {# song matches} other {# songs match}} “{query}”. Add the artist to narrow it down:",
+        "albumOver": "More than {total, number} albums match “{query}”. Add the artist to narrow it down:",
+        "songOver": "More than {total, number} songs match “{query}”. Add the artist to narrow it down:"
       },
       "artists": {
         "bestMatch": "Best match",
@@ -256,6 +259,10 @@
         "showLess": "Show less",
         "viewSong": "Open song",
         "viewSongAria": "Open the song “{song}”"
+      },
+      "filters": {
+        "toggle": "Filters",
+        "toggleActive": "Filters · {count}"
       }
     },
     "origin": {
@@ -314,6 +321,14 @@
       "resultsTitle": "Results",
       "emptyDescription": "No results match every field. Try removing one.",
       "broadQuery": "There are {total} results on MusicBrainz. Add fields to narrow the search."
+    },
+    "landing": {
+      "tryHeading": "Try",
+      "tryCaption": "What people follow, rate and listen to the most these days.",
+      "artist": "Artist",
+      "album": "Album",
+      "albumBy": "Album by {artist}",
+      "tip": "Tip: “Radiohead - Creep” finds that artist's song; “Pink Floyd - Animals”, the album."
     }
   },
   "artist": {

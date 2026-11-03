@@ -9,6 +9,7 @@ import { ArtistResults } from "./ArtistResults";
 import { BroadQueryHint, RefineHint, SearchEmpty, SearchSummary, SearchTypeSwitch } from "./SearchChrome";
 import { SongInterpretation, SongResults } from "./SongResults";
 import { SearchOriginNotice } from "./SearchOriginNotice";
+import { FiltersDisclosure } from "./FiltersDisclosure";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, ...rest }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
@@ -276,5 +277,51 @@ describe("SearchOriginNotice", () => {
     expect(
       screen.getByRole("link", { name: labels.origin.seeAll.replace("{query}", "Sabrina Carpenter") }),
     ).toHaveAttribute("href", "/search?type=artist&q=Sabrina+Carpenter&all=1");
+  });
+});
+
+describe("encabezado compacto (refine-search-results-phase2)", () => {
+  it("pestañas de tipo con el actual marcado y la misma consulta en cada una", () => {
+    renderWithIntl(<SearchSummary query="the wall" type="album" count={12} />);
+    const tabs = screen.getByRole("navigation", { name: labels.results.tabsLabel });
+    expect(within(tabs).getByRole("link", { name: labels.types.album })).toHaveAttribute("aria-current", "page");
+    expect(within(tabs).getByRole("link", { name: labels.types.song })).toHaveAttribute(
+      "href",
+      "/search?type=song&q=the+wall",
+    );
+    expect(screen.getByText("12 resultados")).toBeInTheDocument();
+  });
+
+  it("más de 1.000 resultados se dicen 'más de 1.000'", () => {
+    renderWithIntl(<SearchSummary query="the wall" type="album" count={875412} />);
+    expect(screen.getByText("más de 1000")).toBeInTheDocument();
+  });
+
+  it("la avanzada no muestra pestañas", () => {
+    renderWithIntl(<SearchSummary query="" type="album" count={3} advanced />);
+    expect(screen.queryByRole("navigation", { name: labels.results.tabsLabel })).not.toBeInTheDocument();
+  });
+});
+
+describe("FiltersDisclosure (refine-search-results-phase2)", () => {
+  it("en móvil se pliega tras 'Filtros' con la cuenta de activos", () => {
+    renderWithIntl(
+      <FiltersDisclosure active={1}>
+        <span>pastillas</span>
+      </FiltersDisclosure>,
+    );
+    const toggle = screen.getByRole("button", { name: /Filtros · 1/ });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByText("pastillas").parentElement).toHaveClass("hidden", "sm:flex");
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("pastillas").parentElement).not.toHaveClass("hidden");
+  });
+});
+
+describe("RefineHint con la cifra acotada (refine-search-results-phase2)", () => {
+  it("por encima de 1.000 dice 'Más de 1000', como el encabezado", () => {
+    renderWithIntl(<RefineHint kind="album" query="the wall" total={875466} artists={["Pink Floyd"]} />);
+    expect(screen.getByText(/^Más de 1000 álbumes coinciden con «the wall»/)).toBeInTheDocument();
   });
 });
