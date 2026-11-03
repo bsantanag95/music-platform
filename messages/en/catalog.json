@@ -369,6 +369,33 @@
       "broad": {
         "shown": "Showing the first results.",
         "narrow": "To narrow it down, add:"
+      },
+      "groups": {
+        "identity": "Identity",
+        "origin": "Origin",
+        "period": "Period",
+        "release": "Release"
+      },
+      "criteriaCount": "{count, plural, =0 {No criteria} one {# criterion} other {# criteria}}",
+      "errors": {
+        "yearFormat": "Enter the year with 4 digits (for example 1985).",
+        "durationFormat": "Enter the length as m:ss (for example 7:00).",
+        "rangeOrder": "“From” can't be later than “To”."
+      },
+      "ignored": "Some values in the address weren't recognized and were ignored: {values}.",
+      "examplesTitle": "Try",
+      "recentTitle": "Recent searches",
+      "recentRemove": "Remove from recent searches",
+      "examples": {
+        "chileanBands80s": "Chilean bands from the 80s",
+        "manchesterBands": "Bands from Manchester",
+        "mexicanSoloistsSince1990": "Mexican solo artists since 1990",
+        "live1994": "Live albums from 1994",
+        "pinkFloyd70s": "Pink Floyd in the studio, 1970s",
+        "radioheadEps": "Radiohead singles and EPs",
+        "radioheadLong": "Radiohead, 7 minutes or longer",
+        "thrillerSongs": "The songs on Thriller",
+        "ramonesShort": "Ramones in under 2 minutes"
       }
     },
     "landing": {

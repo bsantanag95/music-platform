@@ -109,6 +109,16 @@ tolera errores. Una búsqueda amplia (sin nombre, más de 500 resultados) sugier
 acotan, y cada sugerencia abre el formulario en ese campo. En Canciones sin título, los resultados son
 una lista simple, sin bloque de mejor coincidencia.
 
+**Formulario de la búsqueda avanzada (cambio `refine-advanced-search-phase2`).** Los campos van en
+grupos con nombre (Artistas: Identidad · Origen · Época; Álbumes y Canciones: Identidad · Lanzamiento),
+todos del mismo alto y alineados, con la coincidencia exacta y la ayuda bajo su control. La fila de envío cuenta los criterios como la barra ("3 criterios") y en móvil queda fija al
+pie. Con JavaScript el formulario valida en español antes de navegar (año de 4 dígitos, duración
+`m:ss`, "desde" no posterior a "hasta") y marca el campo; sin JavaScript sigue la validación del
+navegador y, por URL, un rango invertido se intercambia. Un valor de la URL que no se reconoce
+(`category=live`) se avisa sobre la barra en lugar de ignorarse en silencio. Sin campos, la página
+ofrece tres ejemplos por pestaña y las últimas 5 búsquedas avanzadas mostradas en ese navegador
+(`localStorage`, como las recientes de `/search`).
+
 **Tiempos de respuesta (cambio `speed-up-search`).** En `/search` y `/search/advanced`, los tres
 tipos pintan primero las coincidencias locales y transmiten lo de MusicBrainz cuando llega; en
 Artistas, la redirección por coincidencia exacta única la decide esa parte transmitida (la lista

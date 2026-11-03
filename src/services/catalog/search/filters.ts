@@ -338,6 +338,71 @@ export function removeCriterion(
   return { query: nextQuery, criteria: next };
 }
 
+// Validación del formulario y valores ignorados de la URL (openspec: refine-advanced-search-phase2, design D3 y D4).
+
+/** Rangos del formulario de cada tipo: campos "desde" y "hasta", y si son años (con su mínimo) o duraciones. */
+const FORM_RANGES: Record<SearchType, { range: "begin" | "year" | "duration"; from: string; to: string; minYear?: number }[]> = {
+  artist: [{ range: "begin", from: "beginFrom", to: "beginTo", minYear: 1000 }],
+  album: [{ range: "year", from: "yearFrom", to: "yearTo", minYear: 1900 }],
+  song: [{ range: "duration", from: "durMin", to: "durMax" }],
+  user: [],
+};
+
+export type FormRangeError = "yearFormat" | "durationFormat" | "rangeOrder";
+
+/**
+ * Errores del formulario por rango (`begin`, `year`, `duration`), con el primer campo a enfocar. Vacío = válido. Los
+ * vacíos no son error; un rango invertido sí (por URL, en cambio, se intercambia).
+ */
+export function validateAdvancedForm(
+  type: SearchType,
+  get: (name: string) => string,
+): Partial<Record<"begin" | "year" | "duration", { error: FormRangeError; field: string }>> {
+  const errors: Partial<Record<"begin" | "year" | "duration", { error: FormRangeError; field: string }>> = {};
+  for (const { range, from, to, minYear } of FORM_RANGES[type]) {
+    const read = (name: string): number | null | "invalid" => {
+      const raw = get(name).trim();
+      if (!raw) return null;
+      if (minYear !== undefined) {
+        if (!/^\d{4}$/.test(raw)) return "invalid";
+        const year = Number(raw);
+        return year >= minYear && year <= 2100 ? year : "invalid";
+      }
+      return parseDurationInput(raw) ?? "invalid";
+    };
+    const a = read(from);
+    const b = read(to);
+    const format: FormRangeError = minYear !== undefined ? "yearFormat" : "durationFormat";
+    if (a === "invalid") errors[range] = { error: format, field: from };
+    else if (b === "invalid") errors[range] = { error: format, field: to };
+    else if (a !== null && b !== null && a > b) errors[range] = { error: "rangeOrder", field: from };
+  }
+  return errors;
+}
+
+/**
+ * `campo=valor` de la URL que no se reconocieron y se ignoraron, solo en los campos del tipo. Las banderas de
+ * coincidencia exacta sin su campo no se avisan.
+ */
+export function ignoredParams(type: SearchType, read: ParamReader, criteria: SearchCriteria): string[] {
+  const ignored: string[] = [];
+  for (const key of CRITERIA_KEYS[type]) {
+    if (key === "exact" || key === "artistExact" || key === "albumExact") continue;
+    const raw = read(key)
+      .map((value) => value.trim())
+      .filter(Boolean);
+    if (raw.length === 0) continue;
+    const value = criteria[key];
+    if (Array.isArray(value)) {
+      const accepted = (value as string[]).map((item) => item.toUpperCase());
+      raw.filter((item) => !accepted.includes(item.toUpperCase())).forEach((item) => ignored.push(`${key}=${item}`));
+    } else if (value === undefined) {
+      ignored.push(`${key}=${raw[0]}`);
+    }
+  }
+  return ignored;
+}
+
 /** Campo del formulario que se sugiere para acotar una búsqueda amplia, con el `name` a enfocar. */
 export type NarrowingField = "country" | "beginFrom" | "artistType" | "yearFrom" | "artist" | "album" | "durMin";
 

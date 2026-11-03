@@ -10,6 +10,8 @@ import {
   fromRecord,
   fromSearchParams,
   hasCriteria,
+  ignoredParams,
+  validateAdvancedForm,
   isQuickSearch,
   parseCriteria,
   parseDurationInput,
@@ -168,5 +170,42 @@ describe("barra de criterios (openspec: refine-advanced-search-phase1)", () => {
     expect(narrowingFields("artist", { country: ["CL"] })).toEqual(["beginFrom", "artistType"]);
     expect(narrowingFields("album", { category: ["live_other"] })).toEqual(["yearFrom", "artist"]);
     expect(narrowingFields("song", { durMin: 420 })).toEqual(["artist", "album"]);
+  });
+});
+
+describe("validación y valores ignorados (openspec: refine-advanced-search-phase2)", () => {
+  const values = (record: Record<string, string>) => (name: string) => record[name] ?? "";
+
+  it("valida años, duraciones y el orden del rango", () => {
+    expect(validateAdvancedForm("artist", values({ beginFrom: "1980", beginTo: "1989" }))).toEqual({});
+    expect(validateAdvancedForm("artist", values({ beginFrom: "80" }))).toEqual({
+      begin: { error: "yearFormat", field: "beginFrom" },
+    });
+    expect(validateAdvancedForm("album", values({ yearFrom: "1999", yearTo: "1990" }))).toEqual({
+      year: { error: "rangeOrder", field: "yearFrom" },
+    });
+    expect(validateAdvancedForm("album", values({ yearTo: "1850" }))).toEqual({
+      year: { error: "yearFormat", field: "yearTo" },
+    });
+    expect(validateAdvancedForm("song", values({ durMin: "7", durMax: "7:30" }))).toEqual({});
+    expect(validateAdvancedForm("song", values({ durMin: "8:00", durMax: "7:30" }))).toEqual({
+      duration: { error: "rangeOrder", field: "durMin" },
+    });
+    expect(validateAdvancedForm("song", values({ durMax: "7.30" }))).toEqual({
+      duration: { error: "durationFormat", field: "durMax" },
+    });
+  });
+
+  it("avisa lo que la URL trae y la búsqueda no reconoce, solo en los campos del tipo", () => {
+    const params = new URLSearchParams("type=album&category=live&category=studio&yearFrom=94&country=CL&exact=1");
+    const read = fromSearchParams(params);
+    const criteria = parseCriteria("album", read);
+    expect(ignoredParams("album", read, criteria)).toEqual(["yearFrom=94", "category=live"]);
+
+    const artist = new URLSearchParams("country=cl&country=Chile&artistType=band");
+    expect(ignoredParams("artist", fromSearchParams(artist), parseCriteria("artist", fromSearchParams(artist)))).toEqual([
+      "artistType=band",
+      "country=Chile",
+    ]);
   });
 });

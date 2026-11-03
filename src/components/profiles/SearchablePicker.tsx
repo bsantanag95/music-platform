@@ -58,6 +58,8 @@ interface SearchablePickerProps {
   onChange: (value: string) => void;
   options: readonly PickerOption[];
   texts: SearchablePickerTexts;
+  /** Clase del campo, para igualarlo a los de un formulario (búsqueda avanzada). */
+  inputClassName?: string;
 }
 
 type Row = { kind: "none" } | { kind: "option"; option: PickerOption };
@@ -66,7 +68,7 @@ type Row = { kind: "none" } | { kind: "option"; option: PickerOption };
 // ARIA con la lista en línea, no flotante: dentro del panel lateral de edición una lista
 // absoluta quedaría recortada por su scroll. Se filtra al escribir; las flechas mueven la
 // opción activa, Enter elige, Escape cierra la lista (sin cerrar el panel que la aloja).
-export function SearchablePicker({ id, label, value, onChange, options, texts }: SearchablePickerProps) {
+export function SearchablePicker({ id, label, value, onChange, options, texts, inputClassName }: SearchablePickerProps) {
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -174,7 +176,9 @@ export function SearchablePicker({ id, label, value, onChange, options, texts }:
         }}
         onBlur={() => close()}
         onKeyDown={onKeyDown}
-        className="rounded border border-ink-border bg-ink-surface px-3 py-2 font-body text-paper placeholder:text-paper-muted"
+        className={
+          inputClassName ?? "rounded border border-ink-border bg-ink-surface px-3 py-2 font-body text-paper placeholder:text-paper-muted"
+        }
       />
 
       {open && (

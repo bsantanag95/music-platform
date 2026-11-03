@@ -12,7 +12,16 @@ import { normalizeSearch, SearchablePicker, type PickerOption } from "@/componen
 
 const MAX_COUNTRIES = 10;
 
-export function CountryMultiPicker({ id, initial }: { id: string; initial: string[] }) {
+export function CountryMultiPicker({
+  id,
+  initial,
+  inputClassName,
+}: {
+  id: string;
+  initial: string[];
+  /** Clase de los demás campos del formulario (openspec: refine-advanced-search-phase2). */
+  inputClassName?: string;
+}) {
   const t = useTranslations("catalog.search.advanced");
   const locale = useLocale();
   const [selected, setSelected] = useState<string[]>(initial);
@@ -51,6 +60,7 @@ export function CountryMultiPicker({ id, initial }: { id: string; initial: strin
         }}
         options={options}
         texts={texts}
+        inputClassName={inputClassName}
       />
       {selected.length > 0 ? (
         <ul className="flex flex-wrap gap-1.5" aria-label={t("countrySelected")}>

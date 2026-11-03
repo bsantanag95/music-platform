@@ -6,11 +6,16 @@ import {
   criteriaForTab,
   fromRecord,
   hasCriteria,
+  ignoredParams,
   parseCriteria,
 } from "@/services/catalog/search/filters";
 import { AdvancedSearchForm } from "@/components/catalog/advanced-search/AdvancedSearchForm";
 import { AdvancedSearchDisclosure } from "@/components/catalog/advanced-search/AdvancedSearchDisclosure";
 import { CriteriaChips } from "@/components/catalog/advanced-search/CriteriaChips";
+import {
+  AdvancedSearchLanding,
+  RecordAdvancedSearch,
+} from "@/components/catalog/advanced-search/AdvancedSearchLanding";
 import {
   AdvancedSearchPendingProvider,
   PendingResults,
@@ -50,6 +55,9 @@ async function AdvancedSearchPage({ searchParams }: AdvancedSearchPageProps) {
   const type = parsed === "user" ? "artist" : parsed;
   const query = first(params.q)?.trim().slice(0, 200) ?? "";
   const criteria = parseCriteria(type, fromRecord(params), query);
+  // Valores de la URL que no se entienden: se avisa en lugar de ignorarlos en silencio (openspec:
+  // refine-advanced-search-phase2).
+  const ignored = ignoredParams(type, fromRecord(params), criteria);
   const searching = query !== "" || hasCriteria(criteria);
   // Remonta el formulario con otra URL: sus campos no controlados muestran siempre la búsqueda en curso.
   const formKey = JSON.stringify([type, query, criteria]);
@@ -87,6 +95,11 @@ async function AdvancedSearchPage({ searchParams }: AdvancedSearchPageProps) {
               );
             })}
           </nav>
+          {ignored.length > 0 ? (
+            <p role="status" className="rounded-lg border border-amber/40 bg-ink-surface/70 px-4 py-2.5 font-body text-sm text-paper-muted">
+              {t("advanced.ignored", { values: ignored.join(", ") })}
+            </p>
+          ) : null}
           {/* Con una búsqueda en curso, el formulario se recoge tras la barra de criterios (openspec:
               refine-advanced-search-phase1); la misma `key` lo vuelve a recoger en cada búsqueda nueva. */}
           <AdvancedSearchDisclosure
@@ -98,6 +111,8 @@ async function AdvancedSearchPage({ searchParams }: AdvancedSearchPageProps) {
           </AdvancedSearchDisclosure>
         </div>
 
+        {searching ? null : <AdvancedSearchLanding type={type} />}
+        {searching ? <RecordAdvancedSearch href={advancedSearchHref(type, query, criteria)} /> : null}
         {searching ? (
           <PendingResults label={t("advanced.resultsTitle")}>
             {type === "artist" ? (
