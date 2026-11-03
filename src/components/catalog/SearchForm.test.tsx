@@ -31,14 +31,20 @@ describe("SearchForm", () => {
 
   it("enlaza a la búsqueda avanzada con el tipo y el texto; no en Usuarios", () => {
     const { unmount } = renderWithIntl(<SearchForm initialType="album" initialQuery="maiden" />);
-    expect(screen.getByRole("link", { name: catalogEs.search.advanced.headerLink })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: `${catalogEs.search.advanced.headerLink} →` })).toHaveAttribute(
       "href",
       "/search/advanced?type=album&q=maiden",
     );
     unmount();
 
     renderWithIntl(<SearchForm initialType="user" initialQuery="ana" />);
-    expect(screen.queryByRole("link", { name: catalogEs.search.advanced.headerLink })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: `${catalogEs.search.advanced.headerLink} →` })).not.toBeInTheDocument();
+  });
+
+  it("con resultados, la etiqueta queda solo para lectores de pantalla (refine-search-results-phase2)", () => {
+    renderWithIntl(<SearchForm initialType="album" initialQuery="maiden" compact />);
+    expect(screen.getByText(catalogEs.search.fieldLabel)).toHaveClass("sr-only");
+    expect(screen.getByLabelText(catalogEs.search.fieldLabel)).toBeInTheDocument();
   });
 
   it("expone un label asociado al campo", () => {

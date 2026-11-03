@@ -42,7 +42,41 @@ export function SearchTypeSwitch({
   );
 }
 
-/** Encabezado de resultados: consulta, tipo, conteo y cambio de tipo. */
+/** Desde cuántos resultados la cifra se dice "más de 1.000": el total de MusicBrainz no es lo que se recorre. */
+export const COUNT_CAP = 1000;
+
+/**
+ * Pestañas de tipo bajo el formulario (openspec: refine-search-results-phase2, design D1): la misma consulta en cada
+ * tipo, con el actual marcado. Reemplazan a "Buscar «x» en:", que repetía lo que ya dice el selector del campo.
+ */
+export function SearchTypeTabs({ query, current }: { query: string; current: SearchType }) {
+  const t = useTranslations("catalog.search");
+  return (
+    <nav aria-label={t("results.tabsLabel")} className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
+      <ul className="flex min-w-max gap-1 border-b border-ink-border">
+        {SEARCH_TYPES.map((type) => {
+          const active = type === current;
+          return (
+            <li key={type}>
+              <Link
+                href={searchHref(type, query)}
+                aria-current={active ? "page" : undefined}
+                className={`-mb-px inline-flex items-center gap-1.5 border-b-2 px-3 py-2 font-display text-sm transition-colors ${
+                  active ? "border-amber text-paper" : "border-transparent text-paper-muted hover:text-paper"
+                }`}
+              >
+                <SearchTypeIcon type={type} className="size-3.5" />
+                {t(`types.${type}`)}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
+/** Encabezado de resultados: pestañas de tipo, consulta y conteo (acotado a "más de 1.000"). */
 export function SearchSummary({
   query,
   type,
@@ -55,29 +89,17 @@ export function SearchSummary({
   advanced?: boolean;
 }) {
   const t = useTranslations("catalog.search");
+  const countLabel =
+    count === null ? null : count > COUNT_CAP ? t("results.countOver", { count: COUNT_CAP }) : t("results.count", { count });
   return (
-    <header className="flex flex-col gap-3 border-b border-ink-border pb-4">
+    <header className="flex flex-col gap-3">
+      {advanced ? null : <SearchTypeTabs query={query} current={type} />}
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <h2 className="min-w-0 wrap-break-word font-display text-lg text-paper">
-          {advanced ? (
-            t("advanced.resultsTitle")
-          ) : (
-            <>
-              {t("results.summary", { query })}{" "}
-              <span className="inline-flex items-center gap-1.5 align-middle font-data text-xs text-amber">
-                <SearchTypeIcon type={type} className="size-3.5" />
-                {t("results.inType", { type: t(`types.${type}`).toLowerCase() })}
-              </span>
-            </>
-          )}
+        <h2 className="min-w-0 wrap-break-word font-display text-base text-paper">
+          {advanced ? t("advanced.resultsTitle") : t("results.summary", { query })}
         </h2>
-        {count !== null ? (
-          <span className="shrink-0 font-data text-xs text-paper-muted">
-            {t("results.count", { count })}
-          </span>
-        ) : null}
+        {countLabel !== null ? <span className="shrink-0 font-data text-xs text-paper-muted">{countLabel}</span> : null}
       </div>
-      {advanced ? null : <SearchTypeSwitch query={query} current={type} />}
     </header>
   );
 }
@@ -241,7 +263,9 @@ export function RefineHint({
   return (
     <aside className="flex flex-col gap-2.5 rounded-lg border border-ink-border bg-ink-surface/70 px-4 py-3">
       <p className="font-body text-sm text-paper-muted">
-        {t(`results.refine.${kind}`, { total, query })}
+        {total > COUNT_CAP
+          ? t(`results.refine.${kind}Over`, { total: COUNT_CAP, query })
+          : t(`results.refine.${kind}`, { total, query })}
       </p>
       <div className="flex flex-wrap gap-1.5">
         {artists.map((artist) => (
@@ -258,19 +282,29 @@ export function RefineHint({
   );
 }
 
-/** Indicador de la pata remota pendiente (fallback del streaming). */
+/**
+ * Indicador de la pata remota pendiente (fallback del streaming). Va bajo lo local, donde aparecerán las filas nuevas,
+ * con dos filas de esqueleto (openspec: refine-search-results-phase2, design D4).
+ */
 export function PendingRemote() {
   const t = useTranslations("catalog.search");
   return (
-    <p
-      role="status"
-      className="flex items-center gap-2 font-data text-xs text-paper-muted"
-    >
-      <span
-        className="size-1.5 animate-pulse rounded-full bg-amber"
-        aria-hidden
-      />
-      {t("results.pendingRemote")}
-    </p>
+    <div className="flex flex-col gap-3">
+      <ul aria-hidden className="flex flex-col divide-y divide-ink-border">
+        {[0, 1].map((row) => (
+          <li key={row} className="flex items-center gap-3 py-3 first:pt-0">
+            <span className="size-10 shrink-0 animate-pulse rounded bg-ink-surface" />
+            <span className="flex flex-1 flex-col gap-2">
+              <span className="h-3 w-2/5 animate-pulse rounded bg-ink-surface" />
+              <span className="h-2.5 w-1/4 animate-pulse rounded bg-ink-surface" />
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p role="status" className="flex items-center gap-2 font-data text-xs text-paper-muted">
+        <span className="size-1.5 animate-pulse rounded-full bg-amber" aria-hidden />
+        {t("results.pendingRemote")}
+      </p>
+    </div>
   );
 }

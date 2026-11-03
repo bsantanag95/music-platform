@@ -37,6 +37,8 @@ interface ScopedSearchFieldProps {
   onSubmitSearch?: (query: string, type: SearchType) => void;
   /** Junto al botón de enviar (variante `full`): el enlace a la búsqueda avanzada de /search. */
   trailing?: ReactNode;
+  /** Variante `full` con resultados debajo: la etiqueta solo para lectores de pantalla. */
+  labelHidden?: boolean;
 }
 
 type Option =
@@ -76,6 +78,7 @@ export function ScopedSearchField({
   fluid = false,
   onSubmitSearch,
   trailing,
+  labelHidden = false,
 }: ScopedSearchFieldProps) {
   const t = useTranslations("catalog.search");
   const tArtist = useTranslations("catalog.artist");
@@ -344,18 +347,19 @@ export function ScopedSearchField({
       role="search"
       className={`relative flex flex-col gap-1.5 ${fluid || !compact ? "w-full" : ""}`}
     >
-      <label htmlFor={inputId} className={compact ? "sr-only" : "font-display text-sm text-paper-muted"}>
+      <label htmlFor={inputId} className={compact || labelHidden ? "sr-only" : "font-display text-sm text-paper-muted"}>
         {t("fieldLabel")}
       </label>
 
       <div ref={containerRef} onBlur={onBlur} className="relative">
-        <div className={compact ? "" : "flex flex-col gap-3 sm:flex-row"}>
+        {/* Campo y botón en una fila también en móvil (openspec: refine-search-results-phase2). */}
+        <div className={compact ? "" : "flex gap-2 sm:gap-3"}>
           <div className="min-w-0 flex-1">{field}</div>
           {compact ? null : (
             <button
               type="submit"
               disabled={isNavigating}
-              className="h-11 shrink-0 rounded bg-amber px-5 font-display text-sm text-ink transition-colors hover:bg-amber-hover disabled:opacity-60"
+              className="h-11 shrink-0 rounded bg-amber px-4 font-display text-sm text-ink transition-colors hover:bg-amber-hover disabled:opacity-60 sm:px-5"
             >
               {isNavigating ? t("submitting") : t("submit")}
             </button>

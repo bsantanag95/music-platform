@@ -191,8 +191,9 @@
     },
     "results": {
       "summary": "Resultados para «{query}»",
-      "inType": "en {type}",
       "count": "{count, plural, one {# resultado} other {# resultados}}",
+      "countOver": "más de {count, number}",
+      "tabsLabel": "Tipo de resultado",
       "cachedTag": "en tu catálogo",
       "switchLabel": "Buscar «{query}» en:",
       "emptyTitle": "Sin coincidencias",
@@ -224,7 +225,9 @@
       "loadMoreError": "No se pudieron cargar más resultados.",
       "refine": {
         "album": "{total, plural, one {# álbum coincide} other {# álbumes coinciden}} con «{query}». Agrega el artista para acotar:",
-        "song": "{total, plural, one {# canción coincide} other {# canciones coinciden}} con «{query}». Agrega el artista para acotar:"
+        "song": "{total, plural, one {# canción coincide} other {# canciones coinciden}} con «{query}». Agrega el artista para acotar:",
+        "albumOver": "Más de {total, number} álbumes coinciden con «{query}». Agrega el artista para acotar:",
+        "songOver": "Más de {total, number} canciones coinciden con «{query}». Agrega el artista para acotar:"
       },
       "artists": {
         "bestMatch": "Mejor coincidencia",
@@ -256,6 +259,10 @@
         "showLess": "Ver menos",
         "viewSong": "Ver canción",
         "viewSongAria": "Ver la canción «{song}»"
+      },
+      "filters": {
+        "toggle": "Filtros",
+        "toggleActive": "Filtros · {count}"
       }
     },
     "origin": {
@@ -314,6 +321,14 @@
       "resultsTitle": "Resultados",
       "emptyDescription": "Ningún resultado cumple todos los campos. Prueba quitando alguno.",
       "broadQuery": "Hay {total} resultados en MusicBrainz. Suma campos para acotar la búsqueda."
+    },
+    "landing": {
+      "tryHeading": "Prueba con",
+      "tryCaption": "Lo que más se sigue, valora y escucha estos días.",
+      "artist": "Artista",
+      "album": "Álbum",
+      "albumBy": "Álbum de {artist}",
+      "tip": "Consejo: «Radiohead - Creep» busca la canción de ese artista; «Pink Floyd - Animals», el álbum."
     }
   },
   "artist": {

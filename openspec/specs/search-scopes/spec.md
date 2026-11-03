@@ -63,8 +63,9 @@ SHALL mapearse: `artists` y `all` → `artist`, `albums` → `album`. La página
 
 ### Requirement: Cambiar de tipo sin reescribir
 
-La página de resultados SHALL ofrecer, junto al resumen de la búsqueda, accesos para repetir la
-misma consulta en cada uno de los otros tipos. Elegir uno SHALL navegar a
+La página de resultados SHALL ofrecer, sobre el resumen de la búsqueda, una barra de pestañas con los
+cuatro tipos (Artistas, Álbumes, Canciones, Usuarios), el actual marcado, para repetir la misma consulta
+en cualquiera de los otros; la barra se desplaza de lado en móvil. Elegir uno SHALL navegar a
 `/search?type=<otro>&q=<misma consulta>` sin que la persona reescriba el texto. Cuando un tipo
 no tiene resultados, el estado vacío SHALL incluir esos mismos accesos.
 
@@ -72,6 +73,11 @@ no tiene resultados, el estado vacío SHALL incluir esos mismos accesos.
 - **WHEN** una persona busca `back for the attack` en Artistas y no hay coincidencias útiles
 - **THEN** el estado vacío ofrece "Buscar en Álbumes" y un clic navega a
   `/search?type=album&q=back%20for%20the%20attack`
+
+#### Scenario: Pestañas de tipo
+- **WHEN** una persona está en `/search?type=album&q=the wall`
+- **THEN** sobre los resultados ve las pestañas Artistas · Álbumes · Canciones · Usuarios con Álbumes marcada, y
+  Canciones lleva a `/search?type=song&q=the%20wall`
 
 ### Requirement: Redirección por coincidencia exacta única
 
@@ -147,7 +153,7 @@ mayúsculas) con un username, `/search` SHALL redirigir a `/users/<username>`, s
 ### Requirement: La búsqueda rápida enlaza a la avanzada
 
 `/search` SHALL ser el buscador rápido: campo con tipo, pastillas (Persona/Grupo, categoría, década) y resultados, sin
-panel de filtros. Junto al campo SHALL ofrecer un enlace **Búsqueda avanzada** a
+panel de filtros. Bajo el campo, como enlace de texto (no como un segundo botón), SHALL ofrecer **Búsqueda avanzada →** a
 `/search/advanced?type=<tipo>&q=<texto>` (Artistas, Álbumes y Canciones; no en Usuarios). Si la URL de `/search` trae
 algún criterio que la búsqueda rápida no tiene (cualquiera de `advanced-search-filters` salvo `q`, `artistType`, una sola
 `category` y `decade`), la página SHALL redirigir a `/search/advanced` con los mismos parámetros.

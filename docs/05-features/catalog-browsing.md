@@ -57,6 +57,14 @@ qué no coincidió, ofrece "¿Quisiste decir …?" desde el catálogo propio (tr
 la búsqueda avanzada, sin pastillas de filtro; si un filtro vació la lista, ofrece "Quitar filtros". Si MusicBrainz no
 responde y no hay nada local, lo dice en lugar del error genérico. La pestaña se titula "«texto» en tipo · Buscar".
 
+**Encabezado y portada (cambio `refine-search-results-phase2`).** Con una consulta, el título y la etiqueta quedan
+para lectores de pantalla, campo y botón van en una fila (también en móvil), "Búsqueda avanzada →" es un enlace bajo el
+campo y unas pestañas de tipo (Artistas · Álbumes · Canciones · Usuarios) reemplazan a "Buscar «x» en:". La cifra es
+exacta hasta 1.000 y "más de 1.000" por encima. En móvil, categoría y década de Álbumes se pliegan tras "Filtros · N".
+Mientras llega MusicBrainz, el aviso va bajo las filas locales con dos filas de esqueleto. Sin consulta, la portada
+muestra las búsquedas recientes como pastillas, "Prueba con" (hasta 4 artistas y 4 discos con más personas que los
+siguieron, valoraron o escucharon en público en 7 días, o 30; sin cifras) y el consejo «Artista - Título».
+
 **Búsqueda avanzada (cambios `add-advanced-search-phase1` y `redesign-advanced-search`).** Página
 propia `/search/advanced`, al estilo de Metal Archives: pestañas **Artistas · Álbumes · Canciones**
 (`?type=`), cada una con su formulario `GET` que escribe la URL (solo los campos con valor; los
