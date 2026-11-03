@@ -252,6 +252,8 @@ describe("searchSongs", () => {
     );
     expect(response.results).toHaveLength(1);
     expect(response.results[0]).toMatchObject({ title: "Hallelujah", artistName: "Jeff Buckley" });
+    // La duración del grupo es la de su primera grabación (openspec: refine-advanced-search-phase3).
+    expect(response.results[0]!.durationSec).toBe(413);
     // Solo la versión que cumple la duración aporta apariciones.
     expect(vi.mocked(ingestRecording.albumsFromMbReleaseLists).mock.calls[0]![0]).toHaveLength(1);
   });

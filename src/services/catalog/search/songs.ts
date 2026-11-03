@@ -323,7 +323,7 @@ function groupKey(title: string, artistName: string | null): string {
 }
 
 interface LocalContribution {
-  row: { id: string; mbid: string | null; title: string };
+  row: { id: string; mbid: string | null; title: string; durationSec?: number | null };
   artistName: string | null;
   appearances: SongContextAlbum[];
 }
@@ -456,9 +456,20 @@ async function expandGroup(group: Group, signal?: AbortSignal): Promise<{
       mbid: identity?.row.mbid ?? null,
       albums: toSongAlbums(mergeAppearances(lists)),
       query: artistName ? `${artistName} - ${group.title}` : group.title,
+      durationSec: groupDuration(group),
     },
     remoteFailed,
   };
+}
+
+/**
+ * Duración del grupo (openspec: refine-advanced-search-phase3): la de la primera grabación remota que la trae (el orden
+ * de MusicBrainz) o, si no hay, la de la grabación local más presente.
+ */
+function groupDuration(group: Group): number | null {
+  const remote = group.remote.find((item) => typeof item.length === "number");
+  if (remote) return Math.round((remote.length as number) / 1000);
+  return group.local.find((contribution) => typeof contribution.row.durationSec === "number")?.row.durationSec ?? null;
 }
 
 /** La contribución local con más apariciones (la grabación canónica conocida). */
@@ -491,6 +502,7 @@ function collapsedResult(group: Group): SongGroupResult {
     mbid: null,
     albums: [],
     query: group.artistName ? `${group.artistName} - ${group.title}` : group.title,
+    durationSec: groupDuration(group),
   };
 }
 

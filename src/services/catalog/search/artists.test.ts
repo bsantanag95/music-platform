@@ -307,3 +307,36 @@ describe("searchArtists abandonada (openspec: speed-up-quick-actions-search)", (
     expect(upsertArtistStubsFromSearch).not.toHaveBeenCalled();
   });
 });
+
+describe("años y lugar de MusicBrainz (openspec: refine-advanced-search-phase3)", () => {
+  it("un stub sin ficha toma años y ciudad de la búsqueda; la ficha local manda", async () => {
+    vi.mocked(matchLocalArtists).mockResolvedValue([
+      row({ mbid: "mb-local", name: "Los Tres", lifeBegin: "1987", beginAreaName: "Concepción" }),
+    ]);
+    vi.mocked(musicbrainz.searchArtist).mockResolvedValue({
+      count: 2,
+      artists: [
+        {
+          id: "mb-local",
+          name: "Los Tres",
+          "life-span": { begin: "1990" },
+          "begin-area": { id: "a1", name: "Santiago" },
+        },
+        {
+          id: "mb-remote",
+          name: "Los Prisioneros",
+          type: "Group",
+          country: "CL",
+          "life-span": { begin: "1982-05", end: "2006", ended: true },
+          "begin-area": { id: "a2", name: "San Miguel" },
+        },
+      ],
+    });
+
+    const { results } = await searchArtists("los", {});
+    const local = results.find((artist) => artist.name === "Los Tres");
+    const remote = results.find((artist) => artist.name === "Los Prisioneros");
+    expect(local).toMatchObject({ beginYear: 1987, beginArea: "Concepción", endYear: null });
+    expect(remote).toMatchObject({ beginYear: 1982, endYear: 2006, beginArea: "San Miguel" });
+  });
+});

@@ -9,6 +9,7 @@ import {
 } from "@/services/catalog/search/filters";
 import { SearchTypeIcon } from "../SearchTypeIcon";
 import { EditFieldButton } from "../advanced-search/AdvancedSearchDisclosure";
+import { ResultsViewToggle } from "../advanced-search/ResultsView";
 
 // Piezas comunes de la página de resultados por tipo (openspec:
 // redesign-scoped-search). Sin "use client": se renderizan en el servidor y
@@ -105,10 +106,12 @@ export function SearchSummary({
     const noun =
       type === "artist" ? (artistType === "group" ? "groups" : artistType === "person" ? "people" : "artists") : `${type}s`;
     return (
-      <header className="flex flex-col">
+      <header className="flex items-center justify-between gap-3">
         <h2 className="sr-only">{t("advanced.resultsTitle")}</h2>
         {/* Con 0, el estado sin coincidencias ya lo dice. */}
         {count ? <p className="font-data text-sm text-paper-muted">{t(`advanced.count.${noun}`, { count })}</p> : null}
+        {/* Lista o Tabla (openspec: refine-advanced-search-phase3), con resultados y desde `md`. */}
+        {count ? <ResultsViewToggle /> : null}
       </header>
     );
   }

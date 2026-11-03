@@ -12,6 +12,7 @@ import {
 import { AdvancedSearchForm } from "@/components/catalog/advanced-search/AdvancedSearchForm";
 import { AdvancedSearchDisclosure } from "@/components/catalog/advanced-search/AdvancedSearchDisclosure";
 import { CriteriaChips } from "@/components/catalog/advanced-search/CriteriaChips";
+import { ResultsViewProvider } from "@/components/catalog/advanced-search/ResultsView";
 import {
   AdvancedSearchLanding,
   RecordAdvancedSearch,
@@ -115,13 +116,15 @@ async function AdvancedSearchPage({ searchParams }: AdvancedSearchPageProps) {
         {searching ? <RecordAdvancedSearch href={advancedSearchHref(type, query, criteria)} /> : null}
         {searching ? (
           <PendingResults label={t("advanced.resultsTitle")}>
-            {type === "artist" ? (
-              <ArtistSection query={query} criteria={criteria} advanced />
-            ) : type === "album" ? (
-              <AlbumSection query={query} criteria={criteria} advanced />
-            ) : (
-              <SongSection query={query} criteria={criteria} advanced />
-            )}
+            <ResultsViewProvider>
+              {type === "artist" ? (
+                <ArtistSection query={query} criteria={criteria} advanced />
+              ) : type === "album" ? (
+                <AlbumSection query={query} criteria={criteria} advanced />
+              ) : (
+                <SongSection query={query} criteria={criteria} advanced />
+              )}
+            </ResultsViewProvider>
           </PendingResults>
         ) : null}
       </AdvancedSearchPendingProvider>

@@ -52,7 +52,14 @@ import {
   AlternativeCount,
   MAX_COUNTED_ALTERNATIVES,
 } from "@/components/catalog/advanced-search/AdvancedEmpty";
-import { criterionChips, removeCriterion, type CriterionChip } from "@/services/catalog/search/filters";
+import {
+  criterionChips,
+  highlightFields,
+  removeCriterion,
+  type CriterionChip,
+} from "@/services/catalog/search/filters";
+import { ResultsViewSwitch } from "@/components/catalog/advanced-search/ResultsView";
+import { ResultsTable } from "@/components/catalog/advanced-search/ResultsTable";
 import type { SearchType } from "@/services/catalog/search/types";
 import { UserResults } from "@/components/catalog/search-results/UserResults";
 
@@ -184,6 +191,7 @@ async function ArtistRemote({
 
   const empty = response.results.length === 0;
   const filtered = Boolean(criteria.artistType);
+  const highlight = advanced ? highlightFields("artist", criteria) : undefined;
   // Géneros de la mejor coincidencia (la primera exacta), para distinguirla de sus homónimos.
   const best = response.results.find((artist) => artist.exact);
   const locale = await getLocale();
@@ -220,7 +228,22 @@ async function ArtistRemote({
         />
       ) : (
         <div className="flex flex-col gap-4">
-          <ArtistResults query={query} results={response.results} bestGenres={bestGenres} />
+          {advanced ? (
+            // Lista o tabla, con los datos filtrados destacados (openspec: refine-advanced-search-phase3).
+            <ResultsViewSwitch
+              list={
+                <ArtistResults
+                  query={query}
+                  results={response.results}
+                  bestGenres={bestGenres}
+                  highlight={highlight}
+                />
+              }
+              table={<ResultsTable type="artist" rows={response.results} highlight={highlight ?? []} />}
+            />
+          ) : (
+            <ArtistResults query={query} results={response.results} bestGenres={bestGenres} />
+          )}
           {response.nextOffset !== null ? (
             <LoadMoreResults
               kind="artist"
@@ -228,6 +251,7 @@ async function ArtistRemote({
               filters={{ criteria }}
               initialNextOffset={response.nextOffset}
               seen={response.results.map((artist) => artist.id)}
+              highlight={highlight}
             />
           ) : null}
         </div>
@@ -355,6 +379,7 @@ async function AlbumRemote({
   }
   const empty = response.results.length === 0;
   const filtered = Boolean(criteria.category?.length) || decade !== undefined;
+  const highlight = advanced ? highlightFields("album", criteria) : undefined;
   const weak =
     !empty &&
     response.results.every((album) => coverageLevel(query, album.title, album.artistName ? [album.artistName] : []) === 4);
@@ -385,7 +410,14 @@ async function AlbumRemote({
         />
       ) : (
         <div className="flex flex-col gap-4">
-          <AlbumList albums={response.results} authenticated={authenticated} />
+          {advanced && highlight ? (
+            <ResultsViewSwitch
+              list={<AlbumList albums={response.results} authenticated={authenticated} highlight={highlight} />}
+              table={<ResultsTable type="album" rows={response.results} highlight={highlight} />}
+            />
+          ) : (
+            <AlbumList albums={response.results} authenticated={authenticated} />
+          )}
           {response.nextOffset !== null ? (
             <LoadMoreResults
               kind="album"
@@ -394,6 +426,7 @@ async function AlbumRemote({
               initialNextOffset={response.nextOffset}
               seen={response.results.map((album) => album.id)}
               authenticated={authenticated}
+              highlight={highlight}
             />
           ) : null}
         </div>
@@ -441,6 +474,7 @@ async function SongRemote({
     !empty &&
     response.results.every((group) => coverageLevel(query, group.title, group.artistName ? [group.artistName] : []) === 4);
   const suggestion = (empty || weak) && !advanced && query ? await suggestSpelling("song", query) : null;
+  const highlight = advanced ? highlightFields("song", criteria) : undefined;
   return (
     <>
       <SearchSummary
@@ -468,7 +502,14 @@ async function SongRemote({
       ) : (
         <div className="flex flex-col gap-4">
           {/* Sin título no hay "mejor coincidencia": lista simple (openspec: refine-advanced-search-phase1). */}
-          <SongResults response={response} plain={advanced && !query} />
+          {advanced && highlight ? (
+            <ResultsViewSwitch
+              list={<SongResults response={response} plain={!query} highlight={highlight} />}
+              table={<ResultsTable type="song" rows={response.results} highlight={highlight} />}
+            />
+          ) : (
+            <SongResults response={response} />
+          )}
           {response.nextOffset !== null ? (
             <LoadMoreResults
               kind="song"
@@ -476,6 +517,7 @@ async function SongRemote({
               filters={{ criteria }}
               initialNextOffset={response.nextOffset}
               seen={response.results.map((group) => group.key)}
+              highlight={highlight}
             />
           ) : null}
         </div>

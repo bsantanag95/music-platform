@@ -207,6 +207,10 @@ retirada), `beginYear`, `endYear` (solo si terminó) y `discCount` (discos princ
 discografía no se exploró). Cada álbum suma `community: { average, count }` (`average` es `null` con menos de 5
 valoraciones) y, con sesión, `yourStars` (`null` si no lo valoró).
 
+Desde `refine-advanced-search-phase3`, cada artista suma `beginArea` (ciudad o región donde nació o se formó; `null` si
+no se conoce) y, si aún no tiene ficha local, `beginYear`, `endYear` y `beginArea` salen de lo que trae la búsqueda de
+MusicBrainz. Cada canción suma `durationSec` (segundos de su grabación principal; `null` si no se conoce).
+
 ## `GET /api/search/suggest?type=<tipo>&q=<texto>` — ✅ Existe
 
 Sugerencias del buscador mientras se escribe (openspec `redesign-scoped-search`, capacidad

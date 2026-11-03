@@ -1,3 +1,4 @@
+import { formatDuration, type ResultHighlight } from "@/services/catalog/search/filters";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { SongGroupResult, SongSearchResponse } from "@/services/catalog/search/types";
@@ -33,7 +34,7 @@ export function SongInterpretation({
   );
 }
 
-export function SongRow({ group }: { group: SongGroupResult }) {
+export function SongRow({ group, highlight = [] }: { group: SongGroupResult; highlight?: ResultHighlight[] }) {
   const t = useTranslations("catalog.search.results.songs");
   return (
     <Link
@@ -49,9 +50,17 @@ export function SongRow({ group }: { group: SongGroupResult }) {
           {group.title}
         </span>
         {group.artistName ? (
-          <span className="truncate font-data text-xs text-paper-muted">{group.artistName}</span>
+          <span className={`truncate font-data text-xs ${highlight.includes("artist") ? "text-amber" : "text-paper-muted"}`}>
+            {group.artistName}
+          </span>
         ) : null}
       </span>
+      {/* La duración siempre a la derecha; destacada si la búsqueda la filtró (openspec: refine-advanced-search-phase3). */}
+      {group.durationSec != null ? (
+        <span className={`shrink-0 font-data text-xs ${highlight.includes("duration") ? "text-amber" : "text-paper-muted"}`}>
+          {formatDuration(group.durationSec)}
+        </span>
+      ) : null}
       <span className="shrink-0 font-data text-xs text-paper-muted transition-colors group-hover:text-amber" aria-hidden>
         →
       </span>
@@ -59,12 +68,12 @@ export function SongRow({ group }: { group: SongGroupResult }) {
   );
 }
 
-export function SongList({ groups }: { groups: SongGroupResult[] }) {
+export function SongList({ groups, highlight }: { groups: SongGroupResult[]; highlight?: ResultHighlight[] }) {
   return (
     <ul className="flex flex-col divide-y divide-ink-border">
       {groups.map((group) => (
         <li key={group.key} className="py-3 first:pt-0 last:pb-0">
-          <SongRow group={group} />
+          <SongRow group={group} highlight={highlight} />
         </li>
       ))}
     </ul>
@@ -74,15 +83,17 @@ export function SongList({ groups }: { groups: SongGroupResult[] }) {
 export function SongResults({
   response,
   plain = false,
+  highlight,
 }: {
   response: SongSearchResponse;
   /** Búsqueda avanzada sin título: no hay "mejor coincidencia", solo la lista (openspec: refine-advanced-search-phase1). */
   plain?: boolean;
+  highlight?: ResultHighlight[];
 }) {
   const t = useTranslations("catalog.search.results.songs");
   const [first, ...others] = response.results;
   if (!first) return null;
-  if (plain) return <SongList groups={response.results} />;
+  if (plain) return <SongList groups={response.results} highlight={highlight} />;
 
   return (
     <div className="flex flex-col gap-6">
@@ -90,7 +101,7 @@ export function SongResults({
       {others.length > 0 ? (
         <section className="flex flex-col gap-3">
           <h3 className="font-display text-sm text-paper-muted">{t("otherSongs")}</h3>
-          <SongList groups={others} />
+          <SongList groups={others} highlight={highlight} />
         </section>
       ) : null}
     </div>

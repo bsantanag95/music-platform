@@ -50,6 +50,9 @@ export interface MBArtistDetail extends MBArtistSummary {
 export interface MBArtistSearchItem extends MBArtistSummary {
   score?: number; // relevancia asignada por MusicBrainz (0-100), ya ordenado por score
   country?: string; // ISO 3166-1 alfa-2 del área principal, si se conoce
+  /** La búsqueda también trae fechas y lugar de inicio (openspec: refine-advanced-search-phase3). */
+  "life-span"?: { begin?: string | null; end?: string | null; ended?: boolean | null };
+  "begin-area"?: MBArea | null;
 }
 
 /** Campos de paginación comunes a las respuestas de búsqueda. */

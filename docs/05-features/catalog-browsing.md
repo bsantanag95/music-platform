@@ -119,6 +119,16 @@ navegador y, por URL, un rango invertido se intercambia. Un valor de la URL que 
 ofrece tres ejemplos por pestaña y las últimas 5 búsquedas avanzadas mostradas en ese navegador
 (`localStorage`, como las recientes de `/search`).
 
+**Resultados de la búsqueda avanzada (cambio `refine-advanced-search-phase3`).** Las filas destacan
+los datos que la búsqueda filtró (tipo, país, ciudad y años del artista; artista, tipo y año del
+lanzamiento; álbum y duración de la canción), para comprobar de un vistazo que cumplen lo pedido. En
+todas las búsquedas, las filas de artista suman la ciudad o región de inicio y los años también para
+los artistas que solo vienen de MusicBrainz (con lo que trae la propia búsqueda), la desambiguación
+deja de repetir el país, y las canciones muestran su duración. En pantallas anchas hay vista
+**Tabla** al estilo de Metal Archives (una columna por dato, las de los criterios marcadas, sin orden
+por columna porque MusicBrainz no ordena); Lista es la vista por defecto, la elección se recuerda en
+el navegador y "Cargar más" la respeta. En el teléfono siempre se ve la lista.
+
 **Tiempos de respuesta (cambio `speed-up-search`).** En `/search` y `/search/advanced`, los tres
 tipos pintan primero las coincidencias locales y transmiten lo de MusicBrainz cuando llega; en
 Artistas, la redirección por coincidencia exacta única la decide esa parte transmitida (la lista

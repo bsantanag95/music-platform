@@ -134,6 +134,7 @@ export const ArtistSearchResultSchema = z.object({
   beginYear: z.number().int().nullable().optional(),
   endYear: z.number().int().nullable().optional(),
   discCount: z.number().int().nullable().optional(),
+  beginArea: z.string().nullable().optional(),
 });
 export type ArtistSearchResult = z.infer<typeof ArtistSearchResultSchema>;
 
@@ -169,6 +170,7 @@ export const SongGroupResultSchema = z.object({
   mbid: z.uuid().nullable(),
   albums: z.array(SongAlbumSchema),
   query: z.string(),
+  durationSec: z.number().int().nullable().optional(),
 });
 export type SongGroupResult = z.infer<typeof SongGroupResultSchema>;
 
