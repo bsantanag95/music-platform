@@ -9,6 +9,8 @@ import {
   parseCriteria,
 } from "@/services/catalog/search/filters";
 import { AdvancedSearchForm } from "@/components/catalog/advanced-search/AdvancedSearchForm";
+import { AdvancedSearchDisclosure } from "@/components/catalog/advanced-search/AdvancedSearchDisclosure";
+import { CriteriaChips } from "@/components/catalog/advanced-search/CriteriaChips";
 import {
   AdvancedSearchPendingProvider,
   PendingResults,
@@ -65,7 +67,7 @@ async function AdvancedSearchPage({ searchParams }: AdvancedSearchPageProps) {
 
       <AdvancedSearchPendingProvider>
         <div className="flex w-full flex-col gap-4">
-          <nav aria-label={t("advanced.tabsLabel")} className="flex gap-1 overflow-x-auto border-b border-ink-border">
+          <nav aria-label={t("advanced.tabsLabel")} className="flex gap-1 overflow-x-auto border-b border-ink-border [scrollbar-width:none]">
             {TABS.map((tab) => {
               const active = tab === type;
               return (
@@ -85,7 +87,15 @@ async function AdvancedSearchPage({ searchParams }: AdvancedSearchPageProps) {
               );
             })}
           </nav>
-          <AdvancedSearchForm key={formKey} type={type} query={query} criteria={criteria} />
+          {/* Con una búsqueda en curso, el formulario se recoge tras la barra de criterios (openspec:
+              refine-advanced-search-phase1); la misma `key` lo vuelve a recoger en cada búsqueda nueva. */}
+          <AdvancedSearchDisclosure
+            key={formKey}
+            searching={searching}
+            bar={<CriteriaChips type={type} query={query} criteria={criteria} />}
+          >
+            <AdvancedSearchForm type={type} query={query} criteria={criteria} />
+          </AdvancedSearchDisclosure>
         </div>
 
         {searching ? (

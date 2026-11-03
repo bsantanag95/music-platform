@@ -71,10 +71,18 @@ export function SongList({ groups }: { groups: SongGroupResult[] }) {
   );
 }
 
-export function SongResults({ response }: { response: SongSearchResponse }) {
+export function SongResults({
+  response,
+  plain = false,
+}: {
+  response: SongSearchResponse;
+  /** Búsqueda avanzada sin título: no hay "mejor coincidencia", solo la lista (openspec: refine-advanced-search-phase1). */
+  plain?: boolean;
+}) {
   const t = useTranslations("catalog.search.results.songs");
   const [first, ...others] = response.results;
   if (!first) return null;
+  if (plain) return <SongList groups={response.results} />;
 
   return (
     <div className="flex flex-col gap-6">

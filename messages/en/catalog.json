@@ -331,8 +331,45 @@
       "submit": "Search",
       "clear": "Clear",
       "resultsTitle": "Results",
-      "emptyDescription": "No results match every field. Try removing one.",
-      "broadQuery": "There are {total} results on MusicBrainz. Add fields to narrow the search."
+      "editSearch": "Edit search",
+      "hideForm": "Hide form",
+      "criteriaLabel": "Search criteria",
+      "removeCriterion": "Remove {criterion}",
+      "chips": {
+        "q": "“{value}”",
+        "qExact": "“{value}” (exact)",
+        "area": "City: {value}",
+        "begin": "Began {range}",
+        "artist": "Artist: {value}",
+        "artistExact": "Artist: {value} (exact)",
+        "year": "Year {range}",
+        "album": "Album: {value}",
+        "albumExact": "Album: {value} (exact)",
+        "duration": "Length {range}"
+      },
+      "range": {
+        "between": "{from}–{to}",
+        "from": "from {from}",
+        "to": "until {to}"
+      },
+      "count": {
+        "artists": "{count, plural, one {# artist} other {# artists}}",
+        "groups": "{count, plural, one {# group} other {# groups}}",
+        "people": "{count, plural, one {# person} other {# people}}",
+        "albums": "{count, plural, one {# album} other {# albums}}",
+        "songs": "{count, plural, one {# song} other {# songs}}"
+      },
+      "empty": {
+        "title": "No result matches every criterion",
+        "relax": "Remove a criterion to widen the search:",
+        "without": "Without {criterion}",
+        "resultCount": "{count, plural, =0 {none} one {# result} other {# results}}",
+        "quickSearch": "Search “{query}” in quick search"
+      },
+      "broad": {
+        "shown": "Showing the first results.",
+        "narrow": "To narrow it down, add:"
+      }
     },
     "landing": {
       "tryHeading": "Try",

@@ -98,6 +98,17 @@ página sugiere sumar campos. Cambiar de pestaña conserva solo lo que significa
 del catálogo (género, sello, número de catálogo, formato, país del artista en Álbumes, valoración,
 premios) y el mes en el rango de fechas.
 
+**Recorrido de la búsqueda avanzada (cambio `refine-advanced-search-phase1`).** Con una búsqueda en
+curso, el formulario se recoge tras una barra con una pastilla por criterio (un rango es una; cada país
+y cada tipo de lanzamiento, una) que enlaza a la búsqueda sin él, y "Editar búsqueda" lo vuelve a
+abrir; así los resultados quedan arriba también en móvil. El encabezado dice la cifra completa y qué se
+cuenta ("53 grupos", "14.514 álbumes"), sin el tope "más de 1000" de `/search`. Sin coincidencias, la
+página ofrece quitar cada criterio y, con 2 a 4 criterios, la cifra que daría cada alternativa (llega
+por streaming; cada una es una búsqueda más); con nombre, la misma consulta en la búsqueda rápida, que
+tolera errores. Una búsqueda amplia (sin nombre, más de 500 resultados) sugiere los campos vacíos que
+acotan, y cada sugerencia abre el formulario en ese campo. En Canciones sin título, los resultados son
+una lista simple, sin bloque de mejor coincidencia.
+
 **Tiempos de respuesta (cambio `speed-up-search`).** En `/search` y `/search/advanced`, los tres
 tipos pintan primero las coincidencias locales y transmiten lo de MusicBrainz cuando llega; en
 Artistas, la redirección por coincidencia exacta única la decide esa parte transmitida (la lista

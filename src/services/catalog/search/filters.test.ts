@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   advancedSearchHref,
   criteriaForTab,
+  criterionChips,
+  narrowingFields,
+  removeCriterion,
   criteriaToParams,
   formatDuration,
   fromRecord,
@@ -130,5 +133,40 @@ describe("utilidades", () => {
     expect(parseDurationInput("3")).toBe(180);
     expect(parseDurationInput("3:75")).toBeUndefined();
     expect(parseDurationInput("abc")).toBeUndefined();
+  });
+});
+
+describe("barra de criterios (openspec: refine-advanced-search-phase1)", () => {
+  it("una pastilla por criterio en el orden del formulario; los rangos, una", () => {
+    expect(
+      criterionChips("artist", "kiss", { exact: true, country: ["US", "CA"], beginFrom: 1973, ended: false }),
+    ).toEqual([{ id: "q" }, { id: "country", value: "US" }, { id: "country", value: "CA" }, { id: "begin" }, { id: "ended" }]);
+    expect(criterionChips("album", "", { artist: "Pink Floyd", yearTo: 1979, category: ["studio"] })).toEqual([
+      { id: "artist" },
+      { id: "year" },
+      { id: "category", value: "studio" },
+    ]);
+  });
+
+  it("quitar un criterio deja el resto; un texto se lleva su coincidencia exacta", () => {
+    expect(removeCriterion("kiss", { exact: true, country: ["US"] }, { id: "q" })).toEqual({
+      query: "",
+      criteria: { country: ["US"] },
+    });
+    expect(removeCriterion("", { country: ["US", "CA"] }, { id: "country", value: "US" })).toEqual({
+      query: "",
+      criteria: { country: ["CA"] },
+    });
+    expect(removeCriterion("", { country: ["US"], beginFrom: 1973 }, { id: "country", value: "US" })).toEqual({
+      query: "",
+      criteria: { beginFrom: 1973 },
+    });
+    expect(removeCriterion("x", { artist: "A", artistExact: true }, { id: "artist" }).criteria).toEqual({});
+  });
+
+  it("campos que acotan una búsqueda amplia: solo los vacíos, hasta tres", () => {
+    expect(narrowingFields("artist", { country: ["CL"] })).toEqual(["beginFrom", "artistType"]);
+    expect(narrowingFields("album", { category: ["live_other"] })).toEqual(["yearFrom", "artist"]);
+    expect(narrowingFields("song", { durMin: 420 })).toEqual(["artist", "album"]);
   });
 });
