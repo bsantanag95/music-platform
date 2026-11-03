@@ -4,19 +4,26 @@ import { artistHref } from "@/lib/catalog-links";
 import { AppImage } from "@/components/ui/AppImage";
 import { countryName } from "@/components/artist/artist-format";
 import type { ArtistSearchResult } from "@/services/catalog/search/types";
+import type { ResultHighlight } from "@/services/catalog/search/filters";
 import { SearchTypeIcon } from "../SearchTypeIcon";
+import { MetaLine, type MetaSegment } from "./MetaLine";
 
 // Resultados del tipo Artistas (openspec: redesign-scoped-search). Con
 // homónimos (KISS, Icon) no hay redirección: la primera coincidencia exacta
 // va en una tarjeta de "Mejor coincidencia", los demás homónimos debajo con
 // su desambiguación, y después las coincidencias no exactas.
 
+const same = (a: string | null | undefined, b: string | null | undefined) =>
+  Boolean(a && b && a.trim().toLowerCase() === b.trim().toLowerCase());
+
 // Para elegir entre homónimos (openspec: refine-search-results-phase3): el país por su nombre, los años de actividad
-// (o de vida, en una persona) y los discos en el catálogo cuando la discografía ya se exploró.
-function useArtistMeta() {
+// (o de vida, en una persona) y los discos en el catálogo cuando la discografía ya se exploró. Desde
+// refine-advanced-search-phase3 también la ciudad o región de inicio, la desambiguación sin repetir el país ("Belial ·
+// Chile · Chile") y, en la búsqueda avanzada, los datos filtrados destacados.
+function useArtistMeta(highlight: ResultHighlight[] = []) {
   const t = useTranslations("catalog");
   const locale = useLocale();
-  return (artist: ArtistSearchResult) => {
+  return (artist: ArtistSearchResult): MetaSegment[] => {
     const begin = artist.beginYear ?? null;
     const end = artist.endYear ?? null;
     const years = begin
@@ -24,15 +31,20 @@ function useArtistMeta() {
         ? t("search.results.artists.yearsRange", { begin, end })
         : t("search.results.artists.yearsSince", { begin })
       : null;
+    const country = countryName(artist.country, locale) ?? artist.country;
+    const area = same(artist.beginArea, country) ? null : (artist.beginArea ?? null);
+    const repeated = [country, artist.country, area].some((value) => same(artist.disambiguation, value));
     return [
-      artist.artistType === "unknown" ? null : t(`artist.typeLabels.${artist.artistType}`),
-      countryName(artist.country, locale) ?? artist.country,
-      years,
-      artist.discCount ? t("search.results.artists.discs", { count: artist.discCount }) : null,
-      artist.disambiguation,
-    ]
-      .filter(Boolean)
-      .join(" · ");
+      {
+        text: artist.artistType === "unknown" ? null : t(`artist.typeLabels.${artist.artistType}`),
+        hit: highlight.includes("type"),
+      },
+      { text: country, hit: highlight.includes("country") },
+      { text: area, hit: highlight.includes("area") },
+      { text: years, hit: highlight.includes("years") },
+      { text: artist.discCount ? t("search.results.artists.discs", { count: artist.discCount }) : null },
+      { text: repeated ? null : artist.disambiguation },
+    ];
   };
 }
 
@@ -67,8 +79,8 @@ function CachedTag() {
   );
 }
 
-function ArtistRow({ artist }: { artist: ArtistSearchResult }) {
-  const meta = useArtistMeta()(artist);
+function ArtistRow({ artist, highlight }: { artist: ArtistSearchResult; highlight?: ResultHighlight[] }) {
+  const meta = useArtistMeta(highlight)(artist);
   return (
     <Link href={artistHref(artist.name, artist.id)} className="group flex items-center gap-3">
       <ArtistAvatar artist={artist} size="sm" />
@@ -76,28 +88,36 @@ function ArtistRow({ artist }: { artist: ArtistSearchResult }) {
         <span className="truncate font-display text-sm text-paper transition-colors group-hover:text-amber">
           {artist.name}
         </span>
-        {meta ? <span className="truncate font-data text-xs text-paper-muted">{meta}</span> : null}
+        <MetaLine segments={meta} className="truncate" />
         {artist.cached ? <CachedTag /> : null}
       </span>
     </Link>
   );
 }
 
-export function ArtistList({ artists }: { artists: ArtistSearchResult[] }) {
+export function ArtistList({ artists, highlight }: { artists: ArtistSearchResult[]; highlight?: ResultHighlight[] }) {
   return (
     <ul className="flex flex-col divide-y divide-ink-border">
       {artists.map((artist) => (
         <li key={artist.id} className="py-3 first:pt-0 last:pb-0">
-          <ArtistRow artist={artist} />
+          <ArtistRow artist={artist} highlight={highlight} />
         </li>
       ))}
     </ul>
   );
 }
 
-function BestMatch({ artist, genres = [] }: { artist: ArtistSearchResult; genres?: string[] }) {
+function BestMatch({
+  artist,
+  genres = [],
+  highlight,
+}: {
+  artist: ArtistSearchResult;
+  genres?: string[];
+  highlight?: ResultHighlight[];
+}) {
   const t = useTranslations("catalog.search.results.artists");
-  const meta = useArtistMeta()(artist);
+  const meta = useArtistMeta(highlight)(artist);
   return (
     <section aria-labelledby={`best-${artist.id}`} className="flex flex-col gap-2">
       <h3 className="flex items-center gap-2 font-data text-xs uppercase tracking-[0.16em] text-amber">
@@ -113,7 +133,7 @@ function BestMatch({ artist, genres = [] }: { artist: ArtistSearchResult; genres
           <span id={`best-${artist.id}`} className="truncate font-display text-xl text-paper">
             {artist.name}
           </span>
-          {meta ? <span className="font-data text-xs text-paper-muted">{meta}</span> : null}
+          <MetaLine segments={meta} />
           {genres.length > 0 ? (
             <span className="flex flex-wrap gap-1.5">
               {genres.map((name) => (
@@ -137,11 +157,14 @@ export function ArtistResults({
   query,
   results,
   bestGenres = [],
+  highlight,
 }: {
   query: string;
   results: ArtistSearchResult[];
   /** Géneros de la mejor coincidencia (hasta 3), en el idioma de la interfaz. */
   bestGenres?: string[];
+  /** Búsqueda avanzada: datos filtrados que se destacan. */
+  highlight?: ResultHighlight[];
 }) {
   const t = useTranslations("catalog.search.results.artists");
   const exact = results.filter((artist) => artist.exact);
@@ -151,19 +174,19 @@ export function ArtistResults({
 
   return (
     <div className="flex flex-col gap-6">
-      {best ? <BestMatch artist={best} genres={bestGenres} /> : null}
+      {best ? <BestMatch artist={best} genres={bestGenres} highlight={highlight} /> : null}
 
       {homonyms.length > 0 ? (
         <section className="flex flex-col gap-3">
           <h3 className="font-display text-sm text-paper-muted">{t("homonyms", { query })}</h3>
-          <ArtistList artists={homonyms} />
+          <ArtistList artists={homonyms} highlight={highlight} />
         </section>
       ) : null}
 
       {rest.length > 0 ? (
         <section className="flex flex-col gap-3">
           {best ? <h3 className="font-display text-sm text-paper-muted">{t("more")}</h3> : null}
-          <ArtistList artists={rest} />
+          <ArtistList artists={rest} highlight={highlight} />
         </section>
       ) : null}
     </div>

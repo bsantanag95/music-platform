@@ -403,6 +403,33 @@ export function ignoredParams(type: SearchType, read: ParamReader, criteria: Sea
   return ignored;
 }
 
+/**
+ * Datos de una fila que la búsqueda filtró, para destacarlos en la lista y la tabla (openspec:
+ * refine-advanced-search-phase3): así se comprueba de un vistazo que cada resultado cumple lo pedido.
+ */
+export type ResultHighlight = "type" | "country" | "area" | "years" | "artist" | "year" | "category" | "album" | "duration";
+
+export function highlightFields(type: SearchType, criteria: SearchCriteria): ResultHighlight[] {
+  const fields: ResultHighlight[] = [];
+  if (type === "artist") {
+    if (criteria.artistType) fields.push("type");
+    if (criteria.country) fields.push("country");
+    if (criteria.area) fields.push("area");
+    if (criteria.beginFrom !== undefined || criteria.beginTo !== undefined || criteria.ended !== undefined) {
+      fields.push("years");
+    }
+    return fields;
+  }
+  if (criteria.artist) fields.push("artist");
+  if (criteria.category) fields.push("category");
+  if (type === "album" && (criteria.yearFrom !== undefined || criteria.yearTo !== undefined)) fields.push("year");
+  if (type === "song") {
+    if (criteria.album) fields.push("album");
+    if (criteria.durMin !== undefined || criteria.durMax !== undefined) fields.push("duration");
+  }
+  return fields;
+}
+
 /** Campo del formulario que se sugiere para acotar una búsqueda amplia, con el `name` a enfocar. */
 export type NarrowingField = "country" | "beginFrom" | "artistType" | "yearFrom" | "artist" | "album" | "durMin";
 

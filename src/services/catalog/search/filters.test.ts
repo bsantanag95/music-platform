@@ -10,6 +10,7 @@ import {
   fromRecord,
   fromSearchParams,
   hasCriteria,
+  highlightFields,
   ignoredParams,
   validateAdvancedForm,
   isQuickSearch,
@@ -207,5 +208,23 @@ describe("validación y valores ignorados (openspec: refine-advanced-search-phas
       "artistType=band",
       "country=Chile",
     ]);
+  });
+});
+
+describe("datos destacados (openspec: refine-advanced-search-phase3)", () => {
+  it("traduce los criterios a los datos de la fila que filtran", () => {
+    expect(highlightFields("artist", { artistType: "group", country: ["CL"], beginFrom: 1980 })).toEqual([
+      "type",
+      "country",
+      "years",
+    ]);
+    expect(highlightFields("artist", { ended: true })).toEqual(["years"]);
+    expect(highlightFields("album", { artist: "Pink Floyd", category: ["studio"], yearTo: 1979 })).toEqual([
+      "artist",
+      "category",
+      "year",
+    ]);
+    expect(highlightFields("song", { album: "Thriller", durMin: 420 })).toEqual(["album", "duration"]);
+    expect(highlightFields("song", {})).toEqual([]);
   });
 });

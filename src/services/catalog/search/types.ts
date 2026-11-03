@@ -30,6 +30,11 @@ export interface ArtistSearchResult {
   beginYear?: number | null;
   endYear?: number | null;
   discCount?: number | null;
+  /**
+   * Ciudad o región donde nació o se formó (openspec: refine-advanced-search-phase3). Años y lugar salen de la ficha
+   * local o, si aún no se visitó, de lo que trae la propia búsqueda de MusicBrainz.
+   */
+  beginArea?: string | null;
 }
 
 export interface ArtistSearchResponse {
@@ -100,6 +105,8 @@ export interface SongGroupResult {
   albums: SongAlbum[];
   /** Consulta que resuelve este grupo en primer lugar ("artista - título"). */
   query: string;
+  /** Duración en segundos de la grabación principal del grupo, si se conoce (openspec: refine-advanced-search-phase3). */
+  durationSec?: number | null;
 }
 
 export interface SongInterpretation {

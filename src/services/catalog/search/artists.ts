@@ -44,6 +44,8 @@ interface Entry {
   row: ArtistRow;
   disambiguation: string | null;
   country: string | null;
+  /** El resultado de MusicBrainz, si vino en la página: años y lugar de un stub aún sin ficha. */
+  remote?: MBArtistSearchItem;
   rank: RankKey;
 }
 
@@ -54,6 +56,9 @@ function yearOf(date: string | null | undefined): number | null {
 }
 
 function toResult(entry: Entry, query: string, discCounts: Map<string, number>): ArtistSearchResult {
+  // La ficha local manda; un stub sin ficha toma lo que trae la búsqueda (openspec: refine-advanced-search-phase3).
+  const span = entry.remote?.["life-span"];
+  const ended = entry.row.lifeEnded ?? span?.ended ?? null;
   return {
     kind: "artist",
     id: entry.row.id,
@@ -65,9 +70,10 @@ function toResult(entry: Entry, query: string, discCounts: Map<string, number>):
     cached: entry.row.discographySyncedAt !== null,
     exact: isExactMatch(entry.row.name, query),
     photoUrl: entry.row.photoBlockedAt ? null : (entry.row.photoUrl ?? null),
-    beginYear: yearOf(entry.row.lifeBegin),
-    endYear: entry.row.lifeEnded ? yearOf(entry.row.lifeEnd) : null,
+    beginYear: yearOf(entry.row.lifeBegin ?? span?.begin),
+    endYear: ended ? yearOf(entry.row.lifeEnd ?? span?.end) : null,
     discCount: entry.row.discographySyncedAt ? (discCounts.get(entry.row.id) ?? 0) : null,
+    beginArea: entry.row.beginAreaName ?? entry.remote?.["begin-area"]?.name ?? null,
   };
 }
 
@@ -131,6 +137,7 @@ export async function searchArtists(
       row,
       disambiguation: row.disambiguation ?? remoteItem?.disambiguation ?? null,
       country: row.country ?? remoteItem?.country ?? null,
+      remote: remoteItem,
       rank: {
         level: 0,
         activity: 0,
@@ -147,6 +154,7 @@ export async function searchArtists(
       row,
       disambiguation: item.disambiguation ?? row.disambiguation ?? null,
       country: item.country ?? row.country ?? null,
+      remote: item,
       rank: { level: 0, activity: 0, group: 1, index },
     });
   });

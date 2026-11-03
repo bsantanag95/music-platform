@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { searchAlbums, searchArtists, searchSongs, type CatalogSearchFilters } from "@/lib/api/catalog";
 import type { AlbumSearchResult, ArtistSearchResult, SongGroupResult } from "@/lib/api/schemas";
 import { AlbumList } from "./AlbumResults";
 import { ArtistList } from "./ArtistResults";
 import { SongList } from "./SongResults";
+import type { ResultHighlight } from "@/services/catalog/search/filters";
+import { useResultsView } from "../advanced-search/ResultsView";
+import { ResultsTable } from "../advanced-search/ResultsTable";
 
 interface LoadMoreResultsProps {
   kind: "artist" | "album" | "song";
@@ -18,14 +21,35 @@ interface LoadMoreResultsProps {
   seen: string[];
   /** Hay sesión: el menú de acciones de cada disco pide sus marcas al abrirse. */
   authenticated?: boolean;
+  /** Búsqueda avanzada: datos filtrados que se destacan (openspec: refine-advanced-search-phase3). */
+  highlight?: ResultHighlight[];
 }
 
 // "Cargar más" de Álbumes y Canciones (openspec: redesign-scoped-search): pide
 // la página siguiente de MusicBrainz y la agrega debajo sin reemplazar lo ya
 // mostrado. La primera página la resuelve el servidor. Estado explícito (como
 // `UserSearch`): una acción de la persona, no un dato a cachear.
-export function LoadMoreResults({ kind, query, filters, initialNextOffset, seen, authenticated = false }: LoadMoreResultsProps) {
+export function LoadMoreResults({
+  kind,
+  query,
+  filters,
+  initialNextOffset,
+  seen,
+  authenticated = false,
+  highlight,
+}: LoadMoreResultsProps) {
   const t = useTranslations("catalog.search.results");
+  // Con la vista Tabla de la búsqueda avanzada, las páginas nuevas llegan como filas de tabla (desde `md`).
+  const table = useResultsView() === "table";
+  const asTable = (node: ReactNode, rows: ReactNode) =>
+    table ? (
+      <>
+        <div className="md:hidden">{node}</div>
+        <div className="hidden md:block">{rows}</div>
+      </>
+    ) : (
+      node
+    );
   const [artists, setArtists] = useState<ArtistSearchResult[]>([]);
   const [albums, setAlbums] = useState<AlbumSearchResult[]>([]);
   const [songs, setSongs] = useState<SongGroupResult[]>([]);
@@ -69,9 +93,24 @@ export function LoadMoreResults({ kind, query, filters, initialNextOffset, seen,
 
   return (
     <div className="flex flex-col gap-4" aria-busy={loading}>
-      {artists.length > 0 ? <ArtistList artists={artists} /> : null}
-      {albums.length > 0 ? <AlbumList albums={albums} authenticated={authenticated} /> : null}
-      {songs.length > 0 ? <SongList groups={songs} /> : null}
+      {artists.length > 0
+        ? asTable(
+            <ArtistList artists={artists} highlight={highlight} />,
+            <ResultsTable type="artist" rows={artists} highlight={highlight ?? []} header={false} />,
+          )
+        : null}
+      {albums.length > 0
+        ? asTable(
+            <AlbumList albums={albums} authenticated={authenticated} highlight={highlight} />,
+            <ResultsTable type="album" rows={albums} highlight={highlight ?? []} header={false} />,
+          )
+        : null}
+      {songs.length > 0
+        ? asTable(
+            <SongList groups={songs} highlight={highlight} />,
+            <ResultsTable type="song" rows={songs} highlight={highlight ?? []} header={false} />,
+          )
+        : null}
 
       {failed ? (
         <p role="alert" className="font-body text-sm text-danger">

@@ -396,6 +396,34 @@
         "radioheadLong": "Radiohead, 7 minutes or longer",
         "thrillerSongs": "The songs on Thriller",
         "ramonesShort": "Ramones in under 2 minutes"
+      },
+      "view": {
+        "label": "Results view",
+        "list": "List",
+        "table": "Table"
+      },
+      "table": {
+        "artist": {
+          "name": "Name",
+          "type": "Type",
+          "country": "Country",
+          "area": "City or region",
+          "years": "Years",
+          "discs": "Records"
+        },
+        "album": {
+          "title": "Title",
+          "artist": "Artist",
+          "category": "Type",
+          "year": "Year",
+          "community": "Average",
+          "yours": "You"
+        },
+        "song": {
+          "title": "Title",
+          "artist": "Artist",
+          "duration": "Length"
+        }
       }
     },
     "landing": {

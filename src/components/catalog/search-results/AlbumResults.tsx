@@ -6,6 +6,8 @@ import { formatStars } from "@/components/album/album-format";
 import { Link } from "@/i18n/navigation";
 import { albumHref } from "@/lib/catalog-links";
 import type { AlbumSearchResult } from "@/services/catalog/search/types";
+import type { ResultHighlight } from "@/services/catalog/search/filters";
+import { MetaLine } from "./MetaLine";
 import { LazyCoverImage } from "../LazyCoverImage";
 import { AlbumQuickActions } from "../AlbumQuickActions";
 
@@ -13,19 +15,18 @@ import { AlbumQuickActions } from "../AlbumQuickActions";
 // "Cargar más", que agrega páginas en el cliente. Cada fila lleva el menú de acciones del disco
 // al final, fuera del enlace (openspec: extend-album-quick-actions).
 
-export function AlbumRow({ album }: { album: AlbumSearchResult }) {
+export function AlbumRow({ album, highlight = [] }: { album: AlbumSearchResult; highlight?: ResultHighlight[] }) {
   const t = useTranslations("catalog");
   const locale = useLocale();
   // Media de la comunidad (desde 5 valoraciones) y la nota propia (openspec: refine-search-results-phase3).
   const average = album.community?.average ?? null;
   const yours = album.yourStars ?? null;
+  // En la búsqueda avanzada, los datos filtrados se destacan (openspec: refine-advanced-search-phase3).
   const meta = [
-    album.artistName,
-    t(`artist.categories.${album.category}`),
-    album.year !== null ? String(album.year) : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+    { text: album.artistName, hit: highlight.includes("artist") },
+    { text: t(`artist.categories.${album.category}`), hit: highlight.includes("category") },
+    { text: album.year !== null ? String(album.year) : null, hit: highlight.includes("year") },
+  ];
 
   return (
     <Link href={albumHref(album.artistName, album.title, album.id)} className="group flex min-w-0 flex-1 items-center gap-3">
@@ -34,7 +35,7 @@ export function AlbumRow({ album }: { album: AlbumSearchResult }) {
         <span className="truncate font-display text-sm text-paper transition-colors group-hover:text-amber">
           {album.title}
         </span>
-        {meta ? <span className="truncate font-data text-xs text-paper-muted">{meta}</span> : null}
+        <MetaLine segments={meta} className="truncate" />
         {album.cached ? (
           <span className="inline-flex items-center gap-1.5 font-data text-xs text-paper-muted">
             <span className="size-1 rounded-full bg-petrol" aria-hidden />
@@ -62,13 +63,21 @@ export function AlbumRow({ album }: { album: AlbumSearchResult }) {
   );
 }
 
-export function AlbumList({ albums, authenticated }: { albums: AlbumSearchResult[]; authenticated: boolean }) {
+export function AlbumList({
+  albums,
+  authenticated,
+  highlight,
+}: {
+  albums: AlbumSearchResult[];
+  authenticated: boolean;
+  highlight?: ResultHighlight[];
+}) {
   const [openId, setOpenId] = useState<string | null>(null);
   return (
     <ul className="flex flex-col divide-y divide-ink-border">
       {albums.map((album) => (
         <li key={album.id} className="flex items-center gap-2 py-3 first:pt-0 last:pb-0">
-          <AlbumRow album={album} />
+          <AlbumRow album={album} highlight={highlight} />
           <AlbumQuickActions
             item={album}
             authenticated={authenticated}
