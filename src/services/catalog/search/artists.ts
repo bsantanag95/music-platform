@@ -10,7 +10,7 @@ import type { ArtistRow } from "@/db/schema";
 import { musicbrainz } from "../../musicbrainz/client";
 import type { MBArtistSearchItem } from "../../musicbrainz/types";
 import { upsertArtistStubsFromSearch } from "../ingest-artist";
-import { activityScores } from "./activity";
+import { activityScores, primaryDiscCounts } from "./activity";
 import { matchLocalArtists } from "./local-match";
 import { artistQuery, type ArtistQueryFilters } from "./mb-query";
 import { isExactMatch, matchTier } from "./normalize";
@@ -47,7 +47,13 @@ interface Entry {
   rank: RankKey;
 }
 
-function toResult(entry: Entry, query: string): ArtistSearchResult {
+/** Año de una fecha parcial de MusicBrainz ("1973", "1973-01", "1973-01-30"). */
+function yearOf(date: string | null | undefined): number | null {
+  const year = date ? Number(date.slice(0, 4)) : NaN;
+  return Number.isInteger(year) ? year : null;
+}
+
+function toResult(entry: Entry, query: string, discCounts: Map<string, number>): ArtistSearchResult {
   return {
     kind: "artist",
     id: entry.row.id,
@@ -58,6 +64,10 @@ function toResult(entry: Entry, query: string): ArtistSearchResult {
     country: entry.country,
     cached: entry.row.discographySyncedAt !== null,
     exact: isExactMatch(entry.row.name, query),
+    photoUrl: entry.row.photoBlockedAt ? null : (entry.row.photoUrl ?? null),
+    beginYear: yearOf(entry.row.lifeBegin),
+    endYear: entry.row.lifeEnded ? yearOf(entry.row.lifeEnd) : null,
+    discCount: entry.row.discographySyncedAt ? (discCounts.get(entry.row.id) ?? 0) : null,
   };
 }
 
@@ -157,9 +167,13 @@ export async function searchArtists(
   }
 
   const fetched = offset + remote.length;
+  // Discos principales de los artistas explorados de esta página, en una consulta (openspec: refine-search-results-phase3).
+  const discCounts = await primaryDiscCounts(
+    filtered.filter((entry) => entry.row.discographySyncedAt !== null).map((entry) => entry.row.id),
+  );
   return {
     type: "artist",
-    results: sortByRank(filtered).map((entry) => toResult(entry, q)),
+    results: sortByRank(filtered).map((entry) => toResult(entry, q, discCounts)),
     remoteFailed,
     total,
     nextOffset: total !== null && remote.length > 0 && fetched < total ? fetched : null,

@@ -16,7 +16,13 @@ vi.mock("@/services/storage/avatar-urls", () => ({ resolveImageUrls: vi.fn(async
 vi.mock("./song-suggestions", () => ({
   songSuggestions: vi.fn(async () => [{ id: "taste", title: "Taste", artistName: "Sabrina Carpenter" }]),
 }));
-vi.mock("./activity", () => ({ activityScores: vi.fn(async () => new Map()) }));
+vi.mock("./activity", () => ({
+  activityScores: vi.fn(async () => new Map()),
+  primaryDiscCounts: vi.fn(async () => new Map()),
+  albumCommunity: vi.fn(async () => new Map()),
+  exploredScores: vi.fn(async () => new Map()),
+  exploredArtistMbids: vi.fn(async () => new Set()),
+}));
 vi.mock("./local-match", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./local-match")>();
   return {

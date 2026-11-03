@@ -14,13 +14,15 @@ interface UserCardProps {
   onRelationChange?: (username: string, relation: FollowRelation) => void;
   /** Acción adicional junto al `FollowButton` (p. ej. "Quitar seguidor" en las vistas de conexiones del propio dueño). */
   extra?: ReactNode;
+  /** Línea bajo el @usuario (p. ej. seguidores y en común en la búsqueda). */
+  detail?: ReactNode;
 }
 
 // Tarjeta de usuario reutilizable en la búsqueda social. Separa identidad
 // (monograma + nombre + username) de la acción social, y en móvil la acción
 // pasa a una segunda línea para no recortar etiquetas largas. El nombre es dato
 // de usuario (no se traduce); las etiquetas de estado sí vienen de i18n.
-export function UserCard({ user, authenticated, showFollow = true, onRelationChange, extra }: UserCardProps) {
+export function UserCard({ user, authenticated, showFollow = true, onRelationChange, extra, detail }: UserCardProps) {
   const t = useTranslations("users");
   const name = user.displayName ?? user.username;
 
@@ -43,6 +45,7 @@ export function UserCard({ user, authenticated, showFollow = true, onRelationCha
           <span className="mt-0.5 block truncate font-data text-xs text-paper-muted">
             @{user.username}
           </span>
+          {detail ? <span className="mt-0.5 block truncate font-data text-xs text-paper-muted">{detail}</span> : null}
         </span>
       </Link>
       {((showFollow && (user.relation || authenticated)) || extra) && (

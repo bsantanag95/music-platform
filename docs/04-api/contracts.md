@@ -202,6 +202,11 @@ abandonada es `499` sin cuerpo (nadie la lee) y no se registra como error.
 MusicBrainz falla y hay coincidencias locales, **200** con `remoteFailed: true` (la página lo
 avisa y ofrece reintentar); sin coincidencias locales, **502** `INTERNAL_ERROR`.
 
+**Filas (openspec: `refine-search-results-phase3`).** Cada artista suma `photoUrl` (Commons, `null` si no hay o fue
+retirada), `beginYear`, `endYear` (solo si terminó) y `discCount` (discos principales en el catálogo; `null` si la
+discografía no se exploró). Cada álbum suma `community: { average, count }` (`average` es `null` con menos de 5
+valoraciones) y, con sesión, `yourStars` (`null` si no lo valoró).
+
 ## `GET /api/search/suggest?type=<tipo>&q=<texto>` — ✅ Existe
 
 Sugerencias del buscador mientras se escribe (openspec `redesign-scoped-search`, capacidad
@@ -751,6 +756,10 @@ incluye `relation` (`none` | `following` | `requested` | `incoming` | `blocked` 
 
 **400** con `VALIDATION_ERROR` si falta `q` o la paginación es inválida. **401** con
 `AUTH_REQUIRED` en operaciones que exijan sesión.
+
+Desde `refine-search-results-phase3`, cada usuario suma `followersCount` (seguidores aceptados de cuentas activas; `null`
+para perfiles privados) e `inCommon` (cuántas de las personas que sigue quien consulta siguen a ese usuario; 0 sin
+sesión).
 
 ### `GET /api/users/[username]`
 

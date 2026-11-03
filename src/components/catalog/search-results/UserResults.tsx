@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { apiFetch } from "@/lib/api/client";
 import { UserSearchResponseSchema, type UserSearchResult } from "@/lib/api/schemas";
+import { Link } from "@/i18n/navigation";
 import { UserCard } from "@/components/social/UserCard";
 
 interface UserResultsProps {
@@ -42,11 +43,42 @@ export function UserResults({ query, authenticated, initialUsers, initialHasNext
     }
   };
 
+  // Cifras para reconocer a alguien (openspec: refine-search-results-phase3). Sin sesión, un solo aviso arriba en lugar
+  // de "Iniciar sesión para seguir" en cada fila.
+  const detail = (user: UserSearchResult) =>
+    [
+      user.profileVisibility === "private"
+        ? tResults("users.private")
+        : user.followersCount != null
+          ? tResults("users.followers", { count: user.followersCount })
+          : null,
+      user.inCommon ? tResults("users.inCommon", { count: user.inCommon }) : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+
   return (
     <div className="flex flex-col gap-4" aria-busy={loading}>
+      {authenticated ? null : (
+        <p className="font-body text-sm text-paper-muted">
+          {tResults.rich("users.signInNotice", {
+            link: (chunks) => (
+              <Link href="/auth/login" className="text-amber hover:underline">
+                {chunks}
+              </Link>
+            ),
+          })}
+        </p>
+      )}
       <ul className="flex flex-col gap-3" aria-label={t("searchFieldLabel")}>
         {users.map((user) => (
-          <UserCard key={user.id} user={user} authenticated={authenticated} />
+          <UserCard
+            key={user.id}
+            user={user}
+            authenticated={authenticated}
+            showFollow={authenticated}
+            detail={detail(user) || undefined}
+          />
         ))}
       </ul>
       {failed ? (

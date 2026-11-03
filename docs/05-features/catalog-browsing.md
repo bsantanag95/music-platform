@@ -65,6 +65,12 @@ Mientras llega MusicBrainz, el aviso va bajo las filas locales con dos filas de 
 muestra las búsquedas recientes como pastillas, "Prueba con" (hasta 4 artistas y 4 discos con más personas que los
 siguieron, valoraron o escucharon en público en 7 días, o 30; sin cifras) y el consejo «Artista - Título».
 
+**Filas (cambio `refine-search-results-phase3`).** Artistas: foto de Commons, país por su nombre, años de actividad o
+de vida y, con la discografía explorada, cuántos discos tiene en el catálogo; la mejor coincidencia suma hasta 3 géneros.
+Álbumes: media de la comunidad (desde 5 valoraciones) y, con sesión, tu nota, también en "Cargar más". Usuarios:
+seguidores de los perfiles públicos y, con sesión, cuántos de los que sigues lo siguen; sin sesión, un solo aviso para
+iniciar sesión en lugar de un botón por fila.
+
 **Búsqueda avanzada (cambios `add-advanced-search-phase1` y `redesign-advanced-search`).** Página
 propia `/search/advanced`, al estilo de Metal Archives: pestañas **Artistas · Álbumes · Canciones**
 (`?type=`), cada una con su formulario `GET` que escribe la URL (solo los campos con valor; los

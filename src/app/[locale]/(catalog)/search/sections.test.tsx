@@ -16,6 +16,10 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/services/catalog/search/spelling", () => ({ suggestSpelling: mocks.suggestSpelling }));
+vi.mock("@/services/catalog/search/activity", () => ({
+  withViewerStars: vi.fn(async (results: { id: string }[]) => results.map((r) => ({ ...r, yourStars: null }))),
+}));
+vi.mock("@/services/genres/display", () => ({ getArtistGenres: vi.fn(async () => ({ genres: [], descriptors: [] })) }));
 
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn().mockResolvedValue((key: string) => key),

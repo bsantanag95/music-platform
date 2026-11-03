@@ -17,7 +17,7 @@ import type {
 } from "../../musicbrainz/types";
 import { ingestReleaseGroupCreditsBatch } from "../ingest-discography";
 import { upsertReleaseGroupStubs, type ReleaseGroupCategoryValue } from "../ingest-release-group";
-import { activityScores, exploredScores } from "./activity";
+import { activityScores, albumCommunity, exploredScores } from "./activity";
 import { coverageLevel, edgeSplits, restAfterEdgeArtist } from "./coverage";
 import {
   findArtistsByKeys,
@@ -286,14 +286,16 @@ export async function searchAlbums(
       (!filters.artistExact || entry.artistNames.some((name) => isExactMatch(name, artist ?? ""))),
   );
   const ids = filtered.map((entry) => entry.result.id);
-  const [activity, explored] = await Promise.all([
+  const [activity, explored, community] = await Promise.all([
     activityScores("release-group", ids),
     exploredScores("release-group", ids),
+    albumCommunity(ids),
   ]);
   for (const entry of filtered) {
     entry.rank.level = coverageLevel(text, entry.result.title, entry.artistNames);
     entry.rank.activity = activity.get(entry.result.id) ?? 0;
     entry.rank.known = explored.get(entry.result.id) ?? 0;
+    entry.result.community = community.get(entry.result.id) ?? { average: null, count: 0 };
   }
   const ranked = sortByRank(filtered);
 

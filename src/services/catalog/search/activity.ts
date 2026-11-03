@@ -9,6 +9,7 @@
 
 import { sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
+import { COMMUNITY_MIN_COUNT } from "@/services/catalog/album-community-shared";
 
 export type ActivityKind = "artist" | "release-group" | "recording";
 
@@ -111,4 +112,55 @@ export async function exploredArtistMbids(mbids: string[]): Promise<Set<string>>
     SELECT mbid::text AS mbid FROM artist
     WHERE mbid IN ${idList(unique)} AND discography_synced_at IS NOT NULL`)) as unknown as { mbid: string }[];
   return new Set(rows.map((row) => row.mbid));
+}
+
+/** Discos con crédito principal de cada artista (sin los fuera de la discografía), para las filas de Artistas. */
+export async function primaryDiscCounts(artistIds: string[]): Promise<Map<string, number>> {
+  const unique = [...new Set(artistIds)];
+  if (unique.length === 0) return new Map();
+  const rows = (await db.execute(sql`
+    SELECT c.artist_id AS id, count(DISTINCT c.release_group_id)::int AS discs
+    FROM credit c
+    JOIN release_group rg ON rg.id = c.release_group_id
+    WHERE c.artist_id IN ${idList(unique)} AND c.role = 'primary' AND rg.discography_unlisted_at IS NULL
+    GROUP BY c.artist_id`)) as unknown as { id: string; discs: number }[];
+  return new Map(rows.map((row) => [row.id, Number(row.discs)]));
+}
+
+/**
+ * Media de estrellas de la comunidad por disco, con el umbral del álbum (openspec: refine-search-results-phase3): con
+ * menos de 5 valoraciones la media es `null`, como en la ficha del álbum y la discografía.
+ */
+export async function albumCommunity(ids: string[]): Promise<Map<string, { average: number | null; count: number }>> {
+  const unique = [...new Set(ids)];
+  if (unique.length === 0) return new Map();
+  const rows = (await db.execute(sql`
+    SELECT release_group_id AS id, count(*)::int AS count, avg(stars)::float AS average
+    FROM rating WHERE release_group_id IN ${idList(unique)}
+    GROUP BY release_group_id`)) as unknown as { id: string; count: number; average: number }[];
+  return new Map(
+    rows.map((row) => {
+      const count = Number(row.count);
+      return [row.id, { count, average: count >= COMMUNITY_MIN_COUNT ? Math.round(Number(row.average) * 10) / 10 : null }];
+    }),
+  );
+}
+
+/** Nota propia de quien busca en cada disco de la página; solo con sesión. */
+export async function viewerStars(userId: string, ids: string[]): Promise<Map<string, number>> {
+  const unique = [...new Set(ids)];
+  if (unique.length === 0) return new Map();
+  const rows = (await db.execute(sql`
+    SELECT release_group_id AS id, stars::float AS stars FROM rating
+    WHERE user_id = ${userId} AND release_group_id IN ${idList(unique)}`)) as unknown as { id: string; stars: number }[];
+  return new Map(rows.map((row) => [row.id, Number(row.stars)]));
+}
+
+/** Suma la nota propia a resultados de Álbumes (página y "Cargar más" usan lo mismo). */
+export async function withViewerStars<T extends { id: string }>(
+  results: T[],
+  userId: string | null,
+): Promise<(T & { yourStars: number | null })[]> {
+  const stars = userId ? await viewerStars(userId, results.map((result) => result.id)) : new Map<string, number>();
+  return results.map((result) => ({ ...result, yourStars: stars.get(result.id) ?? null }));
 }

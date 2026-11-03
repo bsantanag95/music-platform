@@ -12,7 +12,13 @@ vi.mock("@/services/musicbrainz/client", () => ({
 }));
 vi.mock("../ingest-artist", () => ({ upsertArtistStubsFromSearch: vi.fn() }));
 vi.mock("./local-match", () => ({ matchLocalArtists: vi.fn() }));
-vi.mock("./activity", () => ({ activityScores: vi.fn(async () => new Map()) }));
+vi.mock("./activity", () => ({
+  activityScores: vi.fn(async () => new Map()),
+  primaryDiscCounts: vi.fn(async () => new Map()),
+  albumCommunity: vi.fn(async () => new Map()),
+  exploredScores: vi.fn(async () => new Map()),
+  exploredArtistMbids: vi.fn(async () => new Set()),
+}));
 
 const { musicbrainz } = await import("@/services/musicbrainz/client");
 const { upsertArtistStubsFromSearch } = await import("../ingest-artist");

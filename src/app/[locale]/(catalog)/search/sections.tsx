@@ -23,6 +23,8 @@ import type { ReleaseGroupCategoryValue } from "@/services/catalog/ingest-releas
 import { getProfileByUsername, searchUsers } from "@/services/social/profiles";
 import { suggestSpelling } from "@/services/catalog/search/spelling";
 import { coverageLevel } from "@/services/catalog/search/coverage";
+import { withViewerStars } from "@/services/catalog/search/activity";
+import { getArtistGenres } from "@/services/genres/display";
 import { getCurrentUser } from "@/services/auth/authorization";
 import { SearchErrorState } from "@/components/catalog/SearchErrorState";
 import { searchHref } from "@/components/catalog/search-types";
@@ -175,6 +177,14 @@ async function ArtistRemote({
 
   const empty = response.results.length === 0;
   const filtered = Boolean(criteria.artistType);
+  // Géneros de la mejor coincidencia (la primera exacta), para distinguirla de sus homónimos.
+  const best = response.results.find((artist) => artist.exact);
+  const locale = await getLocale();
+  const bestGenres = best
+    ? (await getArtistGenres(best.id).catch(() => ({ genres: [] }))).genres
+        .slice(0, 3)
+        .map((genre) => (locale.startsWith("es") ? (genre.nameEs ?? genre.name) : genre.name))
+    : [];
   // Sin resultados ni filtro, las pastillas no tienen nada que filtrar (openspec: refine-search-results-phase1).
   // Sugerencia con la lista vacía o débil: ningún nombre cubre todas las palabras de la consulta.
   const weak = !empty && response.results.every((artist) => coverageLevel(query, artist.name, []) === 4);
@@ -201,7 +211,7 @@ async function ArtistRemote({
         />
       ) : (
         <div className="flex flex-col gap-4">
-          <ArtistResults query={query} results={response.results} />
+          <ArtistResults query={query} results={response.results} bestGenres={bestGenres} />
           {response.nextOffset !== null ? (
             <LoadMoreResults
               kind="artist"
@@ -230,7 +240,8 @@ export async function AlbumSection({
 }) {
   const t = await getTranslations("catalog");
   // Sesión para el menú de acciones de cada disco (openspec: extend-album-quick-actions).
-  const authenticated = (await getCurrentUser()) !== null;
+  const viewer = await getCurrentUser();
+  const authenticated = viewer !== null;
   const options = { ...albumOptions(criteria), decade };
   const local = await searchAlbums(query, { ...options, localOnly: true });
   // Pastillas de la búsqueda rápida: una categoría y una década.
@@ -303,6 +314,7 @@ export async function AlbumSection({
         advanced={advanced}
         pills={pills}
         authenticated={authenticated}
+        viewerId={viewer?.id ?? null}
       />
     </Suspense>
   );
@@ -315,6 +327,7 @@ async function AlbumRemote({
   advanced,
   pills,
   authenticated,
+  viewerId,
 }: {
   query: string;
   decade?: number;
@@ -322,10 +335,12 @@ async function AlbumRemote({
   advanced: boolean;
   pills: ReactNode;
   authenticated: boolean;
+  viewerId?: string | null;
 }) {
   let response: AlbumSearchResponse;
   try {
     response = await searchAlbums(query, { ...albumOptions(criteria), decade });
+    response = { ...response, results: await withViewerStars(response.results, viewerId ?? null) };
   } catch {
     return <SearchErrorState query={query} />;
   }

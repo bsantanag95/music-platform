@@ -38,6 +38,8 @@ vi.mock("./activity", () => ({
   activityScores: vi.fn(async () => new Map()),
   exploredScores: vi.fn(async () => new Map()),
   exploredArtistMbids: vi.fn(async () => new Set()),
+  primaryDiscCounts: vi.fn(async () => new Map()),
+  albumCommunity: vi.fn(async () => new Map()),
 }));
 
 const { db } = await import("@/db");

@@ -130,6 +130,10 @@ export const ArtistSearchResultSchema = z.object({
   country: z.string().nullable(),
   cached: z.boolean(),
   exact: z.boolean(),
+  photoUrl: z.string().nullable().optional(),
+  beginYear: z.number().int().nullable().optional(),
+  endYear: z.number().int().nullable().optional(),
+  discCount: z.number().int().nullable().optional(),
 });
 export type ArtistSearchResult = z.infer<typeof ArtistSearchResultSchema>;
 
@@ -142,6 +146,8 @@ export const AlbumSearchResultSchema = z.object({
   category: ReleaseGroupCategorySchema,
   year: z.number().int().nullable(),
   cached: z.boolean(),
+  community: z.object({ average: z.number().nullable(), count: z.number().int() }).optional(),
+  yourStars: z.number().nullable().optional(),
 });
 export type AlbumSearchResult = z.infer<typeof AlbumSearchResultSchema>;
 
@@ -920,6 +926,9 @@ export type UserSummary = z.infer<typeof UserSummarySchema>;
 
 export const UserSearchResultSchema = UserSummarySchema.extend({
   relation: FollowRelationSchema,
+  /** Seguidores (solo perfiles públicos) y seguidos en común con quien busca (openspec: refine-search-results-phase3). */
+  followersCount: z.number().int().nullable().optional(),
+  inCommon: z.number().int().optional(),
 });
 export type UserSearchResult = z.infer<typeof UserSearchResultSchema>;
 

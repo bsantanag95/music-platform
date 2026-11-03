@@ -237,14 +237,20 @@
         "filterLabel": "Tipo de artista",
         "filterAll": "Todos",
         "filterPerson": "Persona",
-        "filterGroup": "Grupo"
+        "filterGroup": "Grupo",
+        "yearsRange": "{begin}–{end}",
+        "yearsSince": "desde {begin}",
+        "discs": "{count, plural, one {# disco} other {# discos}}"
       },
       "albums": {
         "categoryLabel": "Categoría",
         "categoryAll": "Todas",
         "decadeLabel": "Década",
         "decadeAll": "Todas",
-        "decade": "{decade}s"
+        "decade": "{decade}s",
+        "community": "{average} · {count}",
+        "communityTitle": "Media de {count} valoraciones",
+        "yours": "Tu nota {stars}"
       },
       "songs": {
         "interpretation": "Interpretado como canción «{song}» de {artist}",
@@ -263,6 +269,12 @@
       "filters": {
         "toggle": "Filtros",
         "toggleActive": "Filtros · {count}"
+      },
+      "users": {
+        "followers": "{count, plural, one {# seguidor} other {# seguidores}}",
+        "inCommon": "{count, plural, one {# en común} other {# en común}}",
+        "private": "Perfil privado",
+        "signInNotice": "<link>Inicia sesión</link> para seguir a quien encuentres."
       }
     },
     "origin": {
