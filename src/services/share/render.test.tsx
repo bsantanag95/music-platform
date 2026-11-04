@@ -1,0 +1,129 @@
+// @vitest-environment node
+import { writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import sharp from "sharp";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ShareTarget } from "./types";
+
+const images = vi.hoisted(() => ({ cover: vi.fn(), image: vi.fn() }));
+vi.mock("./images", async (original) => ({
+  ...(await original<typeof import("./images")>()),
+  loadEmbeddedCover: images.cover,
+  loadEmbeddedImage: images.image,
+}));
+
+import { renderShareImage } from "./render";
+
+async function coverDataUri(color: { r: number; g: number; b: number }): Promise<string> {
+  const png = await sharp({ create: { width: 250, height: 250, channels: 3, background: color } }).png().toBuffer();
+  return `data:image/png;base64,${png.toString("base64")}`;
+}
+
+function target(overrides: Partial<ShareTarget["card"]> = {}): ShareTarget {
+  return {
+    kind: "album",
+    ref: "rg1",
+    locale: "es",
+    canonicalPath: "/es/album/metallica-master-of-puppets-abc",
+    title: "Master of Puppets",
+    description: "Metallica · Álbum de estudio · 1986",
+    imageAlt: "Master of Puppets, de Metallica",
+    downloadName: "metallica-master-of-puppets",
+    card: {
+      kicker: "Álbum",
+      title: "Master of Puppets",
+      subtitle: "Metallica",
+      meta: ["Álbum de estudio", "1986"],
+      media: { type: "cover", cover: { url: "https://coverartarchive.org/x", fallbackTitle: "Master of Puppets", fallbackSubtitle: "Metallica" } },
+      community: { averageStars: 4.6, count: 128 },
+      credits: ["Carátulas: Cover Art Archive", "Datos: MusicBrainz"],
+      ...overrides,
+    },
+  };
+}
+
+async function size(response: Response) {
+  const bytes = Buffer.from(await response.arrayBuffer());
+  // Muestra opcional para la revisión visual (tarea 3.5): SHARE_RENDER_SAMPLES=<carpeta>.
+  return { bytes, meta: await sharp(bytes).metadata() };
+}
+
+const samples = process.env.SHARE_RENDER_SAMPLES;
+
+async function keep(name: string, bytes: Buffer) {
+  if (samples) await writeFile(join(samples, `${name}.png`), bytes);
+}
+
+beforeEach(async () => {
+  images.cover.mockResolvedValue(await coverDataUri({ r: 180, g: 40, b: 30 }));
+  images.image.mockResolvedValue(null);
+});
+
+describe("renderShareImage", () => {
+  it("genera un PNG de 1200×630 para un álbum", async () => {
+    const { bytes, meta } = await size(await renderShareImage(target(), "es"));
+    expect(meta.format).toBe("png");
+    expect([meta.width, meta.height]).toEqual([1200, 630]);
+    await keep("album", bytes);
+  });
+
+  it("dibuja el recuadro tipográfico si la carátula no se pudo obtener", async () => {
+    images.cover.mockResolvedValue(null);
+    const { bytes, meta } = await size(await renderShareImage(target({ community: null }), "es"));
+    expect(meta.width).toBe(1200);
+    await keep("album-sin-caratula", bytes);
+  });
+
+  it("genera el mosaico de un género", async () => {
+    const cover = { url: "https://coverartarchive.org/x", fallbackTitle: "Disco", fallbackSubtitle: "Artista" };
+    const { bytes, meta } = await size(
+      await renderShareImage(
+        target({ kicker: "Género", title: "Thrash metal", subtitle: null, meta: [], community: null, media: { type: "mosaic", covers: [cover, cover, cover, cover] } }),
+        "es",
+      ),
+    );
+    expect(meta.height).toBe(630);
+    await keep("genero", bytes);
+  });
+
+  it("genera el perfil con monograma y carátulas de su Tarjeta de Identidad", async () => {
+    const cover = { url: "https://coverartarchive.org/x", fallbackTitle: "Disco", fallbackSubtitle: null };
+    const { bytes } = await size(
+      await renderShareImage(
+        target({
+          kicker: "Perfil",
+          title: "Ana Pérez",
+          subtitle: "@ana",
+          meta: ["120 seguidores", "80 siguiendo"],
+          community: null,
+          media: { type: "identity", avatarUrl: null, monogram: "A", monogramVariant: 0, covers: [cover, cover, cover] },
+        }),
+        "es",
+      ),
+    );
+    await keep("perfil", bytes);
+  });
+
+  it("genera la imagen genérica en el idioma pedido", async () => {
+    const { bytes, meta } = await size(await renderShareImage(null, "en"));
+    expect([meta.width, meta.height]).toEqual([1200, 630]);
+    await keep("generica-en", bytes);
+  });
+
+  it("pasa las cabeceras de caché pedidas", async () => {
+    const response = await renderShareImage(target(), "es", { headers: { "Cache-Control": "public, max-age=300" } });
+    expect(response.headers.get("Cache-Control")).toBe("public, max-age=300");
+  });
+
+  it("si una carátula con URL no se pudo obtener, usa la caché de imagen degradada", async () => {
+    images.cover.mockResolvedValue(null);
+    const options = { headers: { "Cache-Control": "immutable" }, degradedCacheControl: "public, max-age=300" };
+    expect((await renderShareImage(target(), "es", options)).headers.get("Cache-Control")).toBe("public, max-age=300");
+  });
+
+  it("sin carátula en el catálogo (URL nula) la imagen no está degradada", async () => {
+    const noCover = target({ media: { type: "cover", cover: { url: null, fallbackTitle: "X", fallbackSubtitle: null } } });
+    const options = { headers: { "Cache-Control": "immutable" }, degradedCacheControl: "public, max-age=300" };
+    expect((await renderShareImage(noCover, "es", options)).headers.get("Cache-Control")).toBe("immutable");
+  });
+});

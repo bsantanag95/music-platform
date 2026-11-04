@@ -329,3 +329,18 @@ el mismo umbral que el álbum, aplicado en el read-model (`artist-community.ts`)
   muestran **"menos de 5"** entre 1 y 4. No hay promedio de estrellas del artista (su opinión
   es una nota, no una valoración), ni conteo de Pendiente, ni **ningún agregado de
   recorridos** entre usuarios.
+
+## Compartir (`add-share-foundation`, ADR 0049)
+
+- Lo que se comparte (imagen y metadatos del enlace) se calcula **siempre como visitante anónimo**, aunque quien
+  comparta sea el dueño o un seguidor: compartir nunca muestra más de lo que ve un anónimo.
+- Un objeto que un anónimo no puede ver (inexistente, oculto por moderación, de una cuenta desactivada) se comparte
+  con la imagen genérica de la marca, sin nombrarlo. Un perfil privado comparte solo su identidad pública (foto o
+  monograma, nombre, usuario y contadores), sin la bio ni la Tarjeta de Identidad.
+- Las cifras de la comunidad en una imagen siguen los mismos umbrales que la página: la media de estrellas de un
+  álbum solo con 5 o más valoraciones.
+- Una valoración que solo tiene estrellas se muestra como estrellas: nunca se deriva un número 1–100 para mostrarlo.
+- Una imagen puede juntar hasta 4 carátulas de 250 px como máximo, sin ampliarlas, con la línea de créditos; una
+  carátula retirada a pedido no aparece en ninguna imagen. La foto de un artista solo con su crédito de Commons.
+- La medición de lo compartido (`share_event`) guarda qué, por qué canal y en qué formato; nunca quién comparte ni
+  quién visita. Al eliminar una cuenta se borran los eventos de su perfil.

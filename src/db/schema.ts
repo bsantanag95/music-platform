@@ -27,6 +27,7 @@ import {
   pgView,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
+import type { ShareChannel, ShareFormat, ShareTargetKind } from "../lib/share/kinds";
 
 /**
  * Temas de los comentarios de artista (add-artist-comment-topics). Catálogo cerrado: el
@@ -2305,3 +2306,33 @@ export const awardNomination = pgTable(
 );
 
 export type AwardNominationRow = typeof awardNomination.$inferSelect;
+
+// Uso de la hoja de compartir (migración 0079, openspec: add-share-foundation). Sin datos personales ni FK:
+// la referencia es un id o un slug según `target_kind`. Las listas viven en src/lib/share/kinds.ts.
+export const shareEvent = pgTable(
+  "share_event",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    targetKind: text("target_kind").$type<ShareTargetKind>().notNull(),
+    targetRef: text("target_ref").notNull(),
+    channel: text("channel").$type<ShareChannel>().notNull(),
+    format: text("format").$type<ShareFormat>().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_share_event_created").on(t.createdAt),
+    index("idx_share_event_target").on(t.targetKind, t.targetRef),
+    check(
+      "chk_share_event_target_kind",
+      sql`${t.targetKind} IN ('album', 'song', 'artist', 'genre', 'awards', 'award', 'ceremony', 'halls', 'hall', 'hall_class', 'collections', 'collection', 'profile')`,
+    ),
+    check("chk_share_event_target_ref", sql`char_length(${t.targetRef}) BETWEEN 1 AND 200`),
+    check(
+      "chk_share_event_channel",
+      sql`${t.channel} IN ('native', 'copy', 'x', 'whatsapp', 'threads', 'bluesky', 'facebook', 'telegram', 'reddit', 'download')`,
+    ),
+    check("chk_share_event_format", sql`${t.format} IN ('link')`),
+  ],
+);
+
+export type ShareEventRow = typeof shareEvent.$inferSelect;

@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { cache, Suspense, type ReactNode } from "react";
 import { notFound } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { getProfileView } from "@/services/profiles/profile-view";
+import { buildProfileShareMetadata } from "@/services/share/metadata";
+import { ShareAction } from "@/components/share/ShareAction";
 import { getMutualFollowersPreview, mutualFollowersHint } from "@/services/profiles/affinity";
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
@@ -52,11 +55,14 @@ function Streamed({ children }: { children: ReactNode }) {
 export async function generateMetadata({ params }: UserProfilePageProps): Promise<Metadata> {
   const { username } = await params;
   const session = await resolveSession();
+  // Los metadatos de compartir se calculan siempre como anónimo (spec share-metadata), aunque el título use la
+  // vista de quien visita.
+  const share = await buildProfileShareMetadata(username, await getLocale());
   try {
     const profile = await getProfileViewCached(username, session?.user.id ?? null);
-    return { title: profile.displayName ?? profile.username };
+    return { title: profile.displayName ?? profile.username, ...share };
   } catch {
-    return {};
+    return share;
   }
 }
 
@@ -114,6 +120,7 @@ async function UserProfilePage({ params, searchParams }: UserProfilePageProps) {
             preview={previewing}
             canModerate={canModerate}
           />
+          <ShareAction kind="profile" username={profile.username} />
         </div>
       </main>
     );
@@ -147,6 +154,10 @@ async function UserProfilePage({ params, searchParams }: UserProfilePageProps) {
     <div className="grid w-full max-w-5xl gap-8 lg:grid-cols-[19rem_minmax(0,1fr)] lg:gap-10">
       <aside className="flex flex-col gap-6 lg:sticky lg:top-20 lg:self-start">
         {isOwn ? <EditablePlaca profile={profile}>{placa}</EditablePlaca> : placa}
+        {/* Compartir el perfil (add-share-foundation): la imagen y el enlace son siempre los de un anónimo. */}
+        <Suspense fallback={null}>
+          <ShareAction kind="profile" username={profile.username} className="self-start" />
+        </Suspense>
         {isOwn && (
           <Suspense fallback={<SectionFallback />}>
             <SettingsCardSection ownerId={profile.id} />

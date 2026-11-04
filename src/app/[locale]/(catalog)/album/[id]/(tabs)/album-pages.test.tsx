@@ -28,6 +28,9 @@ const mocks = vi.hoisted(() => ({
 
 // Géneros de la cabecera (openspec: show-genres): sin base en este test; los chips tienen sus propios tests.
 // El panel de votos es cliente (React Query + router): su comportamiento lo cubre su propio test.
+// Compartir (add-share-foundation): carga datos de la base; acá no se prueba.
+vi.mock("@/components/share/ShareAction", () => ({ ShareAction: () => null }));
+vi.mock("@/services/share/metadata", () => ({ buildShareMetadata: async () => ({}), buildProfileShareMetadata: async () => ({}) }));
 vi.mock("@/components/genres/GenreVotePanel", () => ({ GenreVotePanel: () => null }));
 vi.mock("@/services/genres/display", () => ({
   getAlbumGenres: vi.fn(async () => ({ genres: [], descriptors: [] })),

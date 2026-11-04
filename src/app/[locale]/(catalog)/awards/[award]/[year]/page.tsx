@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { ShareAction } from "@/components/share/ShareAction";
 import { AppImage } from "@/components/ui/AppImage";
 import { StickyJumpNav } from "@/components/awards/StickyJumpNav";
 import { NomineeVisual } from "@/components/awards/NominationItem";
@@ -15,6 +16,7 @@ import { groupByField } from "@/components/awards/group-by-field";
 import { AWARD_CATEGORY_TIERS } from "@/db/schema";
 import { getCeremonyPage } from "@/services/awards/read";
 import { withClientMessages } from "@/i18n/client-messages";
+import { buildShareMetadata } from "@/services/share/metadata";
 
 // Página de una ceremonia cerrada (openspec: add-music-awards, design D5; redesign-awards-pages): campo general primero, luego
 // por álbum y por género. Las cuatro categorías grandes van destacadas (ganador grande y todos los nominados); el resto, como
@@ -31,11 +33,16 @@ async function load(params: CeremonyPageProps["params"]) {
 }
 
 export async function generateMetadata({ params }: CeremonyPageProps): Promise<Metadata> {
-  const { page } = await load(params);
+  const { locale, page } = await load(params);
   if (!page) return {};
   const t = await getTranslations("awards");
   const award = t.has(`names.${page.awardSlug}`) ? t(`names.${page.awardSlug}`) : page.awardSlug;
-  return { title: t(page.kind === "hall_of_fame" ? "hall.classFull" : "ceremonyTitle", { award, year: page.ceremony.year }) };
+  const share = await buildShareMetadata(
+    page.kind === "hall_of_fame" ? "hall_class" : "ceremony",
+    `${page.awardSlug}:${page.ceremony.year}`,
+    locale,
+  );
+  return { title: t(page.kind === "hall_of_fame" ? "hall.classFull" : "ceremonyTitle", { award, year: page.ceremony.year }), ...share };
 }
 
 async function CeremonyPage({ params }: CeremonyPageProps) {
@@ -107,6 +114,7 @@ async function CeremonyPage({ params }: CeremonyPageProps) {
             { label: award, href: awardHref(page.awardSlug) },
             { label: String(page.ceremony.year) },
           ]}
+          action={<ShareAction kind="ceremony" refId={`${page.awardSlug}:${page.ceremony.year}`} />}
         />
         <header className="relative isolate flex w-full flex-col-reverse gap-6 overflow-hidden rounded-xl border border-ink-border bg-ink-surface p-5 sm:p-8 md:flex-row md:items-center md:justify-between">
           {headlineAlbum?.cover.coverThumbUrl ? (

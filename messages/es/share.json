@@ -1,0 +1,74 @@
+{
+  "button": "Compartir",
+  "sheet": {
+    "title": "Compartir",
+    "previewAlt": "Vista previa: {alt}",
+    "native": "Compartir…",
+    "copy": "Copiar enlace",
+    "copied": "Enlace copiado",
+    "copyFallback": "Copia el enlace:",
+    "download": "Descargar imagen",
+    "close": "Cerrar",
+    "channels": {
+      "x": "X",
+      "whatsapp": "WhatsApp",
+      "threads": "Threads",
+      "bluesky": "Bluesky",
+      "facebook": "Facebook",
+      "telegram": "Telegram",
+      "reddit": "Reddit"
+    },
+    "openIn": "Compartir en {channel}"
+  },
+  "image": {
+    "unavailable": "Contenido no disponible",
+    "kicker": {
+      "album": "Álbum",
+      "song": "Canción",
+      "artist": "Artista",
+      "genre": "Género",
+      "awards": "Premios",
+      "award": "Premio",
+      "ceremony": "Premio",
+      "halls": "Salones de la fama",
+      "hall": "Salón de la fama",
+      "hall_class": "Salón de la fama",
+      "collections": "Colecciones",
+      "collection": "Colección",
+      "profile": "Perfil"
+    },
+    "category": {
+      "studio": "Álbum de estudio",
+      "single_ep": "Sencillo o EP",
+      "compilation": "Recopilación",
+      "live_other": "En vivo u otro"
+    },
+    "artistType": {
+      "person": "Solista",
+      "group": "Grupo",
+      "various": "Varios artistas",
+      "unknown": "Artista"
+    },
+    "fromAlbum": "del álbum {album}",
+    "communityAverage": "{count, plural, one {# valoración} other {# valoraciones}}",
+    "followers": "{count, plural, one {# seguidor} other {# seguidores}}",
+    "following": "{count} siguiendo",
+    "privateProfile": "Perfil privado",
+    "credits": {
+      "catalog": "Datos: MusicBrainz",
+      "covers": "Carátulas: Cover Art Archive",
+      "photo": "Foto: {author} · {license}"
+    },
+    "descriptions": {
+      "awards": "Premios musicales y sus ganadores, ceremonia por ceremonia.",
+      "halls": "Grabaciones incorporadas a los salones de la fama, clase por clase.",
+      "collections": "Selecciones con un criterio detrás: efemérides, premios, novedades y hallazgos.",
+      "genre": "Discos, artistas y listas del género {genre}.",
+      "ceremony": "Ganadores y nominados de {title}.",
+      "hallClass": "Grabaciones incorporadas en {title}.",
+      "collection": "Una colección de discos para explorar.",
+      "profile": "Perfil musical de {name}.",
+      "privateProfile": "{name} tiene un perfil privado."
+    }
+  }
+}

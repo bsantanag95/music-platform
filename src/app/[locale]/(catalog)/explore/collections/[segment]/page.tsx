@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { ShareAction } from "@/components/share/ShareAction";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CollectionDetailHeader } from "@/components/discovery/CollectionDetailHeader";
 import { renderContext, type ContextTranslator } from "@/components/discovery/collection-context-render";
@@ -21,6 +22,7 @@ import { countsByListId } from "@/services/journeys/progress";
 import { getUserListDetail } from "@/services/lists/lists";
 import { saveCountsFor, savedStateFor } from "@/services/lists/saved-lists";
 import { withClientMessages } from "@/i18n/client-messages";
+import { buildShareMetadata } from "@/services/share/metadata";
 
 interface CollectionDetailPageProps {
   params: Promise<{ locale: string; segment: string }>;
@@ -30,8 +32,11 @@ export async function generateMetadata({ params }: CollectionDetailPageProps): P
   const { locale, segment } = await params;
   const parsed = parseCatalogSegment(segment);
   const collection = parsed ? await findGeneratedCollection(parsed.id) : null;
-  if (!collection) return {};
-  return { title: collectionTitle(collection.templateKey, collection.periodKey, locale, collection.storedTitle) };
+  if (!collection || !parsed) return {};
+  return {
+    title: collectionTitle(collection.templateKey, collection.periodKey, locale, collection.storedTitle),
+    ...(await buildShareMetadata("collection", parsed.id, locale)),
+  };
 }
 
 // Detalle de una colección generada (openspec: localize-collection-titles, ADR 0037). Vive bajo Explorar y no bajo la
@@ -96,6 +101,7 @@ async function CollectionDetailPage({ params }: CollectionDetailPageProps) {
             { label: tExplore("collectionsHub.heading"), href: "/explore/collections" },
             { label: title },
           ]}
+          action={<ShareAction kind="collection" refId={parsed.id} />}
         />
         <CollectionDetailHeader
           list={{ ...list, title }}

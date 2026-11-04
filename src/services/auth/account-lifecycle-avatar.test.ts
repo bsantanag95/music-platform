@@ -46,6 +46,7 @@ vi.mock("@/db", () => ({ db: h.db }));
 vi.mock("@/db/schema", () => ({
   appUser: { __name: "app_user", id: "app_user.id", avatarImageId: "app_user.avatar_image_id" },
   session: { __name: "session", userId: "session.user_id" },
+  shareEvent: { __name: "share_event", targetKind: "share_event.target_kind", targetRef: "share_event.target_ref" },
 }));
 vi.mock("./recent-auth", () => ({ requireRecentAuth: h.requireRecentAuth }));
 vi.mock("@/services/storage", () => ({ imageService: h.imageService }));
@@ -73,7 +74,7 @@ describe("deleteAccount: limpieza de avatar", () => {
     h.state.avatarImageId = "img-avatar-123";
     await deleteAccount(current, { username: "ana" });
 
-    expect(h.state.deletes).toEqual(["app_user"]);
+    expect(h.state.deletes).toEqual(["app_user", "share_event"]);
     expect(h.imageService.deleteImage).toHaveBeenCalledWith("img-avatar-123");
   });
 
@@ -81,7 +82,7 @@ describe("deleteAccount: limpieza de avatar", () => {
     h.state.avatarImageId = null;
     await deleteAccount(current, { username: "ana" });
 
-    expect(h.state.deletes).toEqual(["app_user"]);
+    expect(h.state.deletes).toEqual(["app_user", "share_event"]);
     expect(h.imageService.deleteImage).not.toHaveBeenCalled();
   });
 
@@ -90,7 +91,7 @@ describe("deleteAccount: limpieza de avatar", () => {
     h.imageService.deleteImage.mockRejectedValue(new Error("fallo de red"));
 
     await expect(deleteAccount(current, { username: "ana" })).resolves.toBeUndefined();
-    expect(h.state.deletes).toEqual(["app_user"]);
+    expect(h.state.deletes).toEqual(["app_user", "share_event"]);
     expect(h.imageService.deleteImage).toHaveBeenCalledWith("img-avatar-123");
   });
 });

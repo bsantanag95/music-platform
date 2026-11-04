@@ -34,6 +34,8 @@ import { parseGenreParams, type RawSearchParams } from "@/services/genres/page-p
 import { findStyleGenreBySlug } from "@/services/genres/read";
 import { getGenreStats } from "@/services/genres/stats";
 import { withClientMessages } from "@/i18n/client-messages";
+import { buildShareMetadata } from "@/services/share/metadata";
+import { ShareAction } from "@/components/share/ShareAction";
 
 interface GenrePageProps {
   params: Promise<{ locale: string; slug: string }>;
@@ -45,7 +47,10 @@ export async function generateMetadata({ params }: GenrePageProps): Promise<Meta
   const genre = await findStyleGenreBySlug(slug);
   if (!genre) return {};
   const t = await getTranslations("catalog.genres.page");
-  return { title: t("pageTitle", { genre: genreDisplayName(genre, genreLocaleOf(locale)) }) };
+  return {
+    title: t("pageTitle", { genre: genreDisplayName(genre, genreLocaleOf(locale)) }),
+    ...(await buildShareMetadata("genre", genre.slug, locale)),
+  };
 }
 
 function RailFallback({ label }: { label: string }) {
@@ -105,6 +110,7 @@ async function GenrePage({ params, searchParams }: GenrePageProps) {
     <main className="flex min-h-screen w-full flex-col items-start gap-6 px-4 py-12">
       <GenreHeader
         name={name}
+        share={<ShareAction kind="genre" refId={slug} />}
         families={data.families}
         stats={<GenreStatsLine stats={stats} movedBy={movedBy} />}
         actions={authenticated ? <GenreMoveButton slug={data.genre.slug} initialDeclared={declared} /> : undefined}

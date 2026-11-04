@@ -55,6 +55,18 @@ reevaluación (riesgo 9) y las decisiones completas están en
 `docs/02-architecture/adr/0018-espejo-de-caratulas.md`. Los gates de monetización de abajo siguen
 vigentes.
 
+**Imágenes para compartir (cambio `add-share-foundation`, ADR 0049):** las imágenes de 1200×630 que
+acompañan un enlace compartido usan las mismas miniaturas, bajo estas condiciones adicionales:
+
+- a lo sumo **4 carátulas por imagen**, cada una a **≤250 px y nunca ampliada**, identificando su
+  disco dentro de un objeto concreto (un álbum, un género, una ceremonia, una clase de salón, una
+  colección); es la única excepción a "sin exposición como colección";
+- la imagen lleva su **línea de créditos** (Cover Art Archive y MusicBrainz; la foto de un artista,
+  con su autor y licencia de Commons), porque sale de la app sin el bloque de atribución del footer;
+- la respuesta **no expone** las URL ni las claves de las carátulas que contiene;
+- un **retiro a pedido** deja la carátula fuera de toda imagen nueva; las ya publicadas en redes
+  quedan fuera del alcance de la app, igual que cualquier captura de pantalla.
+
 **Géneros y etiquetas (cambio `enrich-artist-profile`):** los géneros de MusicBrainz son una
 lista curada de **etiquetas**, así que son datos suplementarios (CC BY-NC-SA 3.0, no comerciales).
 No se ingieren; la fuente de los géneros del artista queda pendiente (la alternativa CC0 es la

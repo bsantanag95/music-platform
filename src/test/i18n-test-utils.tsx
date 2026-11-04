@@ -38,6 +38,8 @@ import awardsEs from "../../messages/es/awards.json";
 import awardsEn from "../../messages/en/awards.json";
 import notificationsEs from "../../messages/es/notifications.json";
 import notificationsEn from "../../messages/en/notifications.json";
+import shareEs from "../../messages/es/share.json";
+import shareEn from "../../messages/en/share.json";
 
 const messagesByLocale = {
   es: {
@@ -59,6 +61,7 @@ const messagesByLocale = {
     onboarding: onboardingEs,
     awards: awardsEs,
     notifications: notificationsEs,
+    share: shareEs,
   },
   en: {
     common: commonEn,
@@ -79,6 +82,7 @@ const messagesByLocale = {
     onboarding: onboardingEn,
     awards: awardsEn,
     notifications: notificationsEn,
+    share: shareEn,
   },
 };
 

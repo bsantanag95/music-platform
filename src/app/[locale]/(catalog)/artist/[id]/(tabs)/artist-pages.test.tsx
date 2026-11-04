@@ -54,6 +54,9 @@ const SOME_AWARDS = {
   inductions: 1,
 };
 
+// Compartir (add-share-foundation): carga datos de la base; acá no se prueba.
+vi.mock("@/components/share/ShareAction", () => ({ ShareAction: () => null }));
+vi.mock("@/services/share/metadata", () => ({ buildShareMetadata: async () => ({}), buildProfileShareMetadata: async () => ({}) }));
 vi.mock("@/services/awards/artist-awards", () => ({ getArtistAwards: mocks.getArtistAwards }));
 
 // Géneros de la cabecera (openspec: show-genres): sin base en este test; los chips tienen sus propios tests.

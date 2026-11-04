@@ -14,6 +14,7 @@ import { ARTIST_TABS_ANCHOR, lineupFact, lineupTabOf } from "@/components/artist
 import { itemListsHref } from "@/components/lists/lists-shared";
 import { Comments } from "@/components/social/Comments";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { ShareAction } from "@/components/share/ShareAction";
 import { parseCatalogSegment } from "@/lib/slug";
 import type { ReleaseGroupCategory } from "@/lib/api/schemas";
 import { scheduleArtistProfileRefresh } from "@/services/catalog/artist-profile-sync";
@@ -30,6 +31,7 @@ import {
   loadSession,
 } from "../artist-data";
 import { withClientMessages } from "@/i18n/client-messages";
+import { buildShareMetadata } from "@/services/share/metadata";
 
 // Layout común de la página de artista (openspec: redesign-artist-page, design D1): la
 // cabecera (foto, identidad, ficha, resumen, comunidad y panel "Tu relación"), la barra de
@@ -49,7 +51,7 @@ export async function generateMetadata({ params }: ArtistLayoutProps): Promise<M
   const parsed = parseCatalogSegment(id);
   if (!parsed) return {};
   const artist = await loadArtist(parsed.id);
-  return artist ? { title: artist.name } : {};
+  return artist ? { title: artist.name, ...(await buildShareMetadata("artist", parsed.id, await getLocale())) } : {};
 }
 
 async function ArtistLayout({ children, params }: ArtistLayoutProps) {
@@ -102,7 +104,10 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:py-12">
-      <Breadcrumbs items={[{ label: tCommon("home"), href: "/" }, { label: artist.name }]} />
+      <Breadcrumbs
+        items={[{ label: tCommon("home"), href: "/" }, { label: artist.name }]}
+        action={<ShareAction kind="artist" refId={artist.id} />}
+      />
 
       <header className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-stretch">
         <div className="flex min-w-0 flex-col gap-5">

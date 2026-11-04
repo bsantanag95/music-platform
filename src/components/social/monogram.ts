@@ -18,8 +18,13 @@ export function monogramLetter(name: string): string {
   return first ? first.toUpperCase() : "?";
 }
 
+// Variante de color determinista por username (índice en MONOGRAM_STYLES). La usa
+// también la imagen de compartir del perfil, que no lee clases de Tailwind.
+export function monogramVariant(username: string): 0 | 1 {
+  return Math.abs(username.charCodeAt(0) || 0) % MONOGRAM_STYLES.length === 0 ? 0 : 1;
+}
+
 // Clase de color determinista por username.
 export function monogramStyle(username: string): string {
-  const index = Math.abs(username.charCodeAt(0) || 0) % MONOGRAM_STYLES.length;
-  return MONOGRAM_STYLES[index] ?? MONOGRAM_STYLES[0];
+  return MONOGRAM_STYLES[monogramVariant(username)];
 }
