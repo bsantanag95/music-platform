@@ -14,6 +14,7 @@ import { listCollectionSummaries } from "@/services/discovery/collections/summar
 import { CURATOR_USERNAME } from "@/services/discovery/constants";
 import { listCollectionArchive, listCollectionFamilies, listCollectionsHub } from "@/services/discovery/discovery";
 import { withClientMessages } from "@/i18n/client-messages";
+import { buildShareMetadata } from "@/services/share/metadata";
 
 interface CollectionsPageProps {
   params: Promise<{ locale: string }>;
@@ -21,9 +22,9 @@ interface CollectionsPageProps {
 }
 
 export async function generateMetadata({ params }: CollectionsPageProps): Promise<Metadata> {
-  await params;
+  const { locale } = await params;
   const t = await getTranslations("catalog.explore.collectionsHub");
-  return { title: t("pageTitle") };
+  return { title: t("pageTitle"), ...(await buildShareMetadata("collections", "-", locale)) };
 }
 
 const BASE = "/explore/collections";

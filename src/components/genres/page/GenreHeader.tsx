@@ -14,6 +14,8 @@ interface GenreHeaderProps {
   families: FamilyKey[];
   stats?: ReactNode;
   actions?: ReactNode;
+  /** Botón Compartir del género, a la derecha de las migas (add-share-foundation). */
+  share?: ReactNode;
 }
 
 const CHIP =
@@ -24,7 +26,7 @@ export function primaryFamily(families: readonly FamilyKey[]): FamilyKey | null 
   return GENRE_FAMILIES.find((f) => families.includes(f.key))?.key ?? null;
 }
 
-export function GenreHeader({ name, families, stats, actions }: GenreHeaderProps) {
+export function GenreHeader({ name, families, stats, actions, share }: GenreHeaderProps) {
   const t = useTranslations("catalog.genres");
   const tPage = useTranslations("catalog.genres.page");
   const tExplore = useTranslations("catalog.explore");
@@ -40,7 +42,7 @@ export function GenreHeader({ name, families, stats, actions }: GenreHeaderProps
 
   return (
     <header className="flex w-full flex-col gap-3">
-      <Breadcrumbs items={crumbs} />
+      <Breadcrumbs items={crumbs} action={share} />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <h1 className="font-display text-3xl text-paper [overflow-wrap:anywhere]">{name}</h1>
         {actions}

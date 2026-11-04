@@ -6,6 +6,11 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 const nextConfig = {
   reactStrictMode: true,
   serverExternalPackages: ["sharp"],
+  // Las imágenes de compartir leen las fuentes de la marca del disco (openspec: add-share-foundation);
+  // sin esto el build de producción no las incluye junto al route handler.
+  outputFileTracingIncludes: {
+    "/api/share/image/[kind]/[ref]": ["./assets/fonts/**/*"],
+  },
   // El dominio público del storage no es un secreto (aparece en cada URL
   // servida y en `remotePatterns`); se expone al cliente para que `AppImage`
   // pueda decidir si saltea el optimizador (openspec: mirror-cover-art).

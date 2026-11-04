@@ -58,6 +58,7 @@ vi.mock("@/db", () => ({ db: h.db }));
 vi.mock("@/db/schema", () => ({
   appUser: { __name: "app_user", id: "app_user.id", deactivatedAt: "app_user.deactivated_at", avatarImageId: "app_user.avatar_image_id" },
   session: { __name: "session", userId: "session.user_id" },
+  shareEvent: { __name: "share_event", targetKind: "share_event.target_kind", targetRef: "share_event.target_ref" },
 }));
 vi.mock("./recent-auth", () => ({ requireRecentAuth: h.requireRecentAuth }));
 vi.mock("@/services/storage", () => ({
@@ -132,12 +133,13 @@ describe("deleteAccount", () => {
   it("con el usuario correcto y el factor, borra la cuenta (la base borra el resto en cascada)", async () => {
     await deleteAccount(current, { username: "ana", password: "secreta" });
     expect(h.requireRecentAuth).toHaveBeenCalledWith(current, "secreta");
-    expect(h.state.deletes).toEqual(["app_user"]);
+    // `share_event` no tiene FK: los eventos de su perfil se borran en la misma transacción.
+    expect(h.state.deletes).toEqual(["app_user", "share_event"]);
   });
 
   it("ignora los espacios de los bordes del usuario de confirmación", async () => {
     await deleteAccount(current, { username: "  ana  " });
-    expect(h.state.deletes).toEqual(["app_user"]);
+    expect(h.state.deletes).toEqual(["app_user", "share_event"]);
   });
 
   it.each(["ANA", "otra", ""])("un usuario de confirmación incorrecto (%j) no borra nada ni gasta un intento de contraseña", async (username) => {

@@ -17,10 +17,14 @@ import {
   SettingsCardSection,
 } from "./sections";
 import type { ProfileView } from "@/services/profiles/profile-view";
+// Compartir (add-share-foundation): carga datos de la base; acá no se prueba.
+vi.mock("@/components/share/ShareAction", () => ({ ShareAction: () => null }));
+vi.mock("@/services/share/metadata", () => ({ buildShareMetadata: async () => ({}), buildProfileShareMetadata: async () => ({}) }));
 vi.mock("@/services/profiles/renamed-redirect", () => ({ redirectIfRenamed: vi.fn().mockResolvedValue(undefined) }));
 
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn().mockResolvedValue((key: string) => key),
+  getLocale: vi.fn().mockResolvedValue("es"),
 }));
 
 const resolveSession = vi.fn();

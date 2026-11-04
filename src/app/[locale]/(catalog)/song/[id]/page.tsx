@@ -14,6 +14,7 @@ import { SongTrackStrip } from "@/components/song/SongTrackStrip";
 import { SongVersions } from "@/components/song/SongVersions";
 import { Comments } from "@/components/social/Comments";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { ShareAction } from "@/components/share/ShareAction";
 import { albumHref, artistHref } from "@/lib/catalog-links";
 import { resolveCatalogRoute } from "@/lib/catalog-route";
 import { parseCatalogSegment } from "@/lib/slug";
@@ -33,6 +34,7 @@ import {
   loadVersions,
 } from "./song-data";
 import { withClientMessages } from "@/i18n/client-messages";
+import { buildShareMetadata } from "@/services/share/metadata";
 
 // Página de canción como ficha compacta de biblioteca (openspec: redesign-song-page): sin
 // pestañas; cabecera con carátula del disco principal, identidad, ficha técnica y comunidad
@@ -49,7 +51,9 @@ export async function generateMetadata({ params }: SongPageProps): Promise<Metad
   const parsed = parseCatalogSegment(id);
   if (!parsed) return {};
   const result = await loadRecordingDetail(parsed.id);
-  return result.kind === "ok" ? { title: result.detail.recording.title } : {};
+  return result.kind === "ok"
+    ? { title: result.detail.recording.title, ...(await buildShareMetadata("song", parsed.id, await getLocale())) }
+    : {};
 }
 
 async function SongPage({ params }: SongPageProps) {
@@ -125,7 +129,7 @@ async function SongPage({ params }: SongPageProps) {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:py-12">
-      <Breadcrumbs items={breadcrumbItems} />
+      <Breadcrumbs items={breadcrumbItems} action={<ShareAction kind="song" refId={parsed.id} />} />
 
       <header className="grid grid-cols-[6rem_minmax(0,1fr)] gap-x-4 gap-y-5 [grid-template-areas:'cover_identity'_'facts_facts'_'community_community'_'panel_panel'] sm:gap-x-5 sm:grid-cols-[160px_minmax(0,1fr)] sm:[grid-template-areas:'cover_identity'_'cover_facts'_'community_community'_'panel_panel'] lg:grid-cols-[200px_minmax(0,1fr)_18rem] lg:grid-rows-[auto_auto_auto_1fr] lg:[grid-template-areas:'cover_identity_panel'_'cover_facts_panel'_'cover_community_panel'_'._._panel']">
         <div className="[grid-area:cover]">

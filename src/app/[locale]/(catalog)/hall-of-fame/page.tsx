@@ -4,6 +4,7 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { HallOfFameLatestRail } from "@/components/awards/HallOfFameLatestRail";
 import { listHallOfFameClasses } from "@/services/awards/read";
 import { withClientMessages } from "@/i18n/client-messages";
+import { buildShareMetadata } from "@/services/share/metadata";
 
 // Índice de los salones de la fama (openspec: add-hall-of-fame-page, design D3; polish-hall-of-fame-page): un bloque por salón, con
 // sus datos, sus clases y las incorporaciones de la última. Antes, además, la tarjeta de cada salón repetía la última clase arriba. Sin salones, un mensaje de vacío (no redirige).
@@ -13,9 +14,9 @@ interface HallOfFameIndexProps {
 }
 
 export async function generateMetadata({ params }: HallOfFameIndexProps): Promise<Metadata> {
-  await params;
+  const { locale } = await params;
   const t = await getTranslations("awards");
-  return { title: t("hall.hubHeading") };
+  return { title: t("hall.hubHeading"), ...(await buildShareMetadata("halls", "-", locale)) };
 }
 
 async function HallOfFameIndexPage({ params }: HallOfFameIndexProps) {

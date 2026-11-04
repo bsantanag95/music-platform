@@ -1,0 +1,74 @@
+{
+  "button": "Share",
+  "sheet": {
+    "title": "Share",
+    "previewAlt": "Preview: {alt}",
+    "native": "Share…",
+    "copy": "Copy link",
+    "copied": "Link copied",
+    "copyFallback": "Copy the link:",
+    "download": "Download image",
+    "close": "Close",
+    "channels": {
+      "x": "X",
+      "whatsapp": "WhatsApp",
+      "threads": "Threads",
+      "bluesky": "Bluesky",
+      "facebook": "Facebook",
+      "telegram": "Telegram",
+      "reddit": "Reddit"
+    },
+    "openIn": "Share on {channel}"
+  },
+  "image": {
+    "unavailable": "Content not available",
+    "kicker": {
+      "album": "Album",
+      "song": "Song",
+      "artist": "Artist",
+      "genre": "Genre",
+      "awards": "Awards",
+      "award": "Award",
+      "ceremony": "Award",
+      "halls": "Halls of fame",
+      "hall": "Hall of fame",
+      "hall_class": "Hall of fame",
+      "collections": "Collections",
+      "collection": "Collection",
+      "profile": "Profile"
+    },
+    "category": {
+      "studio": "Studio album",
+      "single_ep": "Single or EP",
+      "compilation": "Compilation",
+      "live_other": "Live or other"
+    },
+    "artistType": {
+      "person": "Solo artist",
+      "group": "Group",
+      "various": "Various artists",
+      "unknown": "Artist"
+    },
+    "fromAlbum": "from the album {album}",
+    "communityAverage": "{count, plural, one {# rating} other {# ratings}}",
+    "followers": "{count, plural, one {# follower} other {# followers}}",
+    "following": "{count} following",
+    "privateProfile": "Private profile",
+    "credits": {
+      "catalog": "Data: MusicBrainz",
+      "covers": "Covers: Cover Art Archive",
+      "photo": "Photo: {author} · {license}"
+    },
+    "descriptions": {
+      "awards": "Music awards and their winners, ceremony by ceremony.",
+      "halls": "Recordings inducted into the halls of fame, class by class.",
+      "collections": "Selections with a point of view: anniversaries, awards, new releases and finds.",
+      "genre": "Albums, artists and lists in {genre}.",
+      "ceremony": "Winners and nominees of {title}.",
+      "hallClass": "Recordings inducted in {title}.",
+      "collection": "A collection of albums to explore.",
+      "profile": "{name}'s music profile.",
+      "privateProfile": "{name} has a private profile."
+    }
+  }
+}

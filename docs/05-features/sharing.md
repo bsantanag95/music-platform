@@ -1,6 +1,7 @@
 # Compartir
 
-**Estado:** 🟢 Dirección aprobada (2026-11-04), sin implementar. Documento de dirección: reúne en un
+**Estado:** 🟢 Dirección aprobada (2026-11-04). Bloque A en curso: `add-share-foundation` implementado
+(imagen del enlace, hoja de compartir y medición en catálogo y perfil). Documento de dirección: reúne en un
 solo lugar todo lo que abarca "Compartir" antes de abrir cualquier cambio de OpenSpec, para que cada
 cambio posterior parta del mismo contexto. Las decisiones de la §8 quedaron **adoptadas como punto de
 partida**; cada una se revisa en detalle, y se confirma o corrige, en el cambio que la implementa.
@@ -53,6 +54,9 @@ Principios que este feature no puede romper:
 
 ## 2. Qué existe hoy
 
+> Este apartado describe el punto de partida (2026-11-04). Desde `add-share-foundation` las páginas de
+> catálogo y el perfil tienen imagen del enlace, metadatos Open Graph y botón Compartir (§9).
+
 - Ninguna página define metadatos Open Graph propios con imagen (`openGraph`, `twitter:`) ni genera
   imágenes sociales. Un enlace pegado hoy en WhatsApp o X sale sin carátula ni descripción útil.
 - No hay botón ni hoja de "Compartir" en ninguna superficie.
@@ -67,8 +71,9 @@ Principios que este feature no puede romper:
   - **Carátulas solo en baja resolución** (`front-250`, ≤250 px, ADR 0018,
     [`data-licensing.md`](../03-data/data-licensing.md) §C), con retiro a pedido y sin exposición como
     colección. Afecta directamente a imágenes que juntan muchas carátulas (§5.5).
-  - **No hay avatar** de usuario (`rework-account-settings`): la identidad en la imagen es nombre +
-    `@usuario`.
+  - **Foto de perfil opcional** (`avatar-upload`, migración 0045): la identidad en la imagen es la foto o,
+    sin ella, el monograma determinista, más nombre y `@usuario`. (La primera versión de este documento
+    decía que no había avatar; se corrigió en `add-share-foundation`.)
   - Tipografías de la app: Space Grotesk (display), Source Serif 4 (cuerpo), IBM Plex Mono (datos).
   - Escala: estrellas 0.5–5 y "Valoración detallada" 1–100 opcional, coherente con las estrellas.
   - Las escuchas **nacen privadas**.
@@ -434,19 +439,19 @@ hasta tener datos reales.
 
 | # | Decisión | Opciones | Adoptada |
 |---|---|---|---|
-| D1 | Nombre visible de la familia de gráficos | Láminas · Postales · Carteles · Afiches · sin nombre propio | **Láminas** (es) / *Cards* (en): corto, evoca coleccionar, no choca con "Listas" |
+| D1 | Nombre visible de la familia de gráficos | Láminas · Postales · Carteles · Afiches · sin nombre propio | ✅ **Láminas** (es) / *Cards* (en), confirmada en `add-share-foundation` |
 | D2 | Orden de construcción | A completo y luego B · intercalar | **A primero** (§9): B necesita el renderizador, la hoja de compartir y las páginas de destino de A |
-| D3 | Formatos del bloque A | Solo enlace · enlace + historia · todos | **Enlace + Historia**; Publicación/Cuadrado llegan con B |
+| D3 | Formatos del bloque A | Solo enlace · enlace + historia · todos | ✅ **Enlace + Historia**: `add-share-foundation` trae el Enlace y la hoja; la Historia llega con `add-share-user-actions`; Publicación/Cuadrado con B |
 | D4 | Página de relación persona ↔ disco | `/users/<u>/album/<id>` única · una página por acción | **Única por objeto** (álbum, canción, artista); el artista es a la vez la lámina de discografía y el progreso público |
 | D5 | Compartir algo privado | Bloquear · pedir hacerlo público · permitir solo descarga | **Pedir "Hacer pública y compartir"**; sin ese gesto, solo descarga de la imagen (son datos propios) |
-| D6 | Carátulas compuestas en imágenes descargables | Permitir con 250 px y atribución · solo carátula única · sin carátulas | **Permitir con 250 px, atribución y retiro**, registrado en un ADR nuevo antes del bloque B |
+| D6 | Carátulas compuestas en imágenes descargables | Permitir con 250 px y atribución · solo carátula única · sin carátulas | ✅ **Hasta 4 carátulas de ≤250 px sin ampliar, con créditos y respetando retiros** — ADR 0049 (`add-share-foundation`) |
 | D7 | Persistencia de láminas de autor | `user_list` con `kind` nuevos · tabla `lamina` | **`user_list`** salvo que la tier list distorsione el modelo; revisar en el propose |
 | D8 | ¿La tier list escribe valoraciones? | No · ofrecer "actualizar mis notas" | **No**; quizá un "¿actualizar tu nota?" puntual en una fase posterior |
 | D9 | Umbral para la vista "Por canción" | ≥ x % de pistas valoradas · ≥ N pistas | A definir con datos reales de cuántas canciones se valoran |
 | D10 | Grilla 3×3 sin números | Incluir · solo Top 5/10 | **Incluir como estilo del Cuadrado** (es el formato que la gente ya conoce) |
 | D11 | Etiquetas de la escala | Solo rangos numéricos · nombres de marca | **Rangos numéricos** por defecto |
 | D12 | El editor de lámina como valoración en lote | Sí · no | **Sí, para la discografía**: "valora lo que falta" desde la grilla — baja la fricción del bucle viral |
-| D13 | Métricas de compartir | Contador propio (`share_event`) · solo `?via=` en logs · nada | **`?via=` + contador mínimo propio**, sin terceros; decidir en el propose de A1 |
+| D13 | Métricas de compartir | Contador propio (`share_event`) · solo `?via=` en logs · nada | ✅ **`share_event` (migración 0079, sin datos personales) + `?via=<canal>`** en los enlaces (`add-share-foundation`) |
 | D14 | ¿Las láminas de autor generan entrada en el feed? | Sí · no | **Sí**, como una lista nueva, con la audiencia de la lámina |
 
 ---
@@ -458,10 +463,12 @@ Cada cambio parte de este documento y abre con el repaso en detalle de las decis
 
 **Bloque A**
 
-1. **`add-share-foundation`** — renderizador (`next/og` + fuentes + carátulas), marco y componentes de
-   la §5.4, escala de la casa, `ShareSheet`, imágenes OG + `generateMetadata` en catálogo (álbum,
-   artista, canción, género, premios, colecciones) y perfil. Decisiones: D1, D3, D6 (si el catálogo ya
-   compone carátulas), D13.
+1. **`add-share-foundation`** ✅ implementado — renderizador (`next/og` + fuentes + carátulas), marco y
+   componentes de la §5.4, escala de la casa, `ShareSheet`, imágenes OG + `generateMetadata` en catálogo
+   (álbum, artista, canción, género, premios, salones, colecciones) y perfil. Decisiones: D1, D3, D6, D13.
+   Hallazgos: `next/og` no acepta WebP (se convierte con `sharp`); la ficha de un premio o de un salón
+   redirige a su última ceremonia o clase, así que no tiene imagen propia; los glifos fuera del subconjunto
+   latin los pide `next/og` a Google Fonts en el momento (ADR 0049, consecuencias).
 2. **`add-share-user-actions`** — páginas de relación (D4), enlace directo a comentarios, imágenes de
    valoración, escucha, reseña, lista, lista para completar, colección, huella; flujo "Hacer pública y
    compartir" (D5); ofrecimiento en momentos con significado (§3.4); formato Historia.

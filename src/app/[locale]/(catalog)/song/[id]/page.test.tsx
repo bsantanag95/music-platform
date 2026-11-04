@@ -28,6 +28,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 // Géneros de la cabecera (openspec: show-genres): sin base en este test; los chips tienen sus propios tests.
+// Compartir (add-share-foundation): carga datos de la base; acá no se prueba.
+vi.mock("@/components/share/ShareAction", () => ({ ShareAction: () => null }));
+vi.mock("@/services/share/metadata", () => ({ buildShareMetadata: async () => ({}), buildProfileShareMetadata: async () => ({}) }));
 vi.mock("@/services/genres/display", () => ({
   getSongGenres: vi.fn(async () => ({ genres: [], descriptors: [] })),
 }));

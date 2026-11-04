@@ -12,6 +12,7 @@ import { AlbumTabs } from "@/components/album/AlbumTabs";
 import { DiscographyStrip } from "@/components/album/DiscographyStrip";
 import { Comments } from "@/components/social/Comments";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { ShareAction } from "@/components/share/ShareAction";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { artistHref } from "@/lib/catalog-links";
 import { parseCatalogSegment } from "@/lib/slug";
@@ -29,6 +30,7 @@ import {
   loadSession,
 } from "../album-data";
 import { withClientMessages } from "@/i18n/client-messages";
+import { buildShareMetadata } from "@/services/share/metadata";
 
 // Layout común de la página de álbum (openspec: redesign-album-page, D2 y D15): la cabecera
 // (carátula, identidad, ficha, comunidad y panel "Tu relación"), la barra de pestañas, la
@@ -49,7 +51,7 @@ export async function generateMetadata({ params }: AlbumLayoutProps): Promise<Me
   if (!parsed) return {};
   const result = await loadAlbumDetail(parsed.id);
   if (result.kind !== "ok") return {};
-  return { title: result.detail.releaseGroup.title };
+  return { title: result.detail.releaseGroup.title, ...(await buildShareMetadata("album", parsed.id, await getLocale())) };
 }
 
 async function AlbumLayout({ children, modal, params }: AlbumLayoutProps) {
@@ -120,7 +122,7 @@ async function AlbumLayout({ children, modal, params }: AlbumLayoutProps) {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:py-12">
-      <Breadcrumbs items={breadcrumbItems} />
+      <Breadcrumbs items={breadcrumbItems} action={<ShareAction kind="album" refId={parsed.id} />} />
 
       <header
         className="grid grid-cols-[6rem_minmax(0,1fr)] gap-x-4 gap-y-5 [grid-template-areas:'cover_identity'_'facts_facts'_'community_community'_'panel_panel'] sm:gap-x-5 sm:grid-cols-[200px_minmax(0,1fr)] sm:[grid-template-areas:'cover_identity'_'cover_facts'_'community_community'_'panel_panel'] lg:grid-cols-[250px_minmax(0,1fr)_18rem] lg:grid-rows-[auto_auto_auto_1fr] lg:[grid-template-areas:'cover_identity_panel'_'cover_facts_panel'_'cover_community_panel'_'._._panel']"

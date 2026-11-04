@@ -2236,3 +2236,48 @@ Baja en un clic del resumen semanal (RFC 8058), la que invoca el cliente de corr
 ya no existe: no distingue). Sin token, o con uno alterado o firmado con otro secreto, responde
 `400 INVALID_UNSUBSCRIBE_TOKEN` y no cambia nada. Un `GET` sobre esta ruta no existe: el enlace del
 cuerpo del correo abre la página de confirmación, que es quien hace el `POST`.
+
+## Compartir (cambio `add-share-foundation`, ADR 0049)
+
+Diseño y decisiones en `docs/05-features/sharing.md`. Las dos rutas aceptan pedidos con y sin sesión y no guardan
+datos de quien las llama; el límite por IP vive en memoria.
+
+### `GET /api/share/image/[kind]/[ref]?locale=&format=&v=&download=`
+
+PNG para compartir de un objeto. `kind` es uno de `album`, `song`, `artist`, `genre`, `awards`, `ceremony`, `halls`,
+`hall_class`, `collections`, `collection`, `profile` (la lista de `src/lib/share/kinds.ts` incluye además `award` y
+`hall`, que no tienen imagen propia porque su ficha redirige a la última ceremonia o clase). `ref` es la referencia
+estable del objeto: el id interno (álbum, canción, artista, colección, cuenta), el slug del género, `<slug>:<año>`
+de una ceremonia o clase, o `-` en los índices.
+
+- `locale`: `es` (por defecto) o `en`; idioma de los textos de la imagen.
+- `format`: solo `link` (1200×630) en este cambio.
+- `v`: versión de contenido que anuncian los metadatos de la página. Si coincide con la vigente, la respuesta lleva
+  `Cache-Control: public, max-age=31536000, immutable`; si no viene o no coincide, se genera con los datos actuales y
+  `public, max-age=300`. Si alguna carátula, foto o avatar con URL no se pudo obtener (fuente lenta o caída), la
+  respuesta lleva la caché corta aunque la versión coincida: esa imagen sale con el recuadro tipográfico y no debe
+  quedar congelada en el CDN. Las imágenes ya convertidas se recuerdan 1 hora en memoria y los fallos 5 minutos.
+- `download=1`: agrega `Content-Disposition: attachment; filename="<nombre legible>.png"`.
+
+La imagen se calcula siempre como visitante anónimo. Un objeto inexistente, oculto por moderación, de una cuenta
+desactivada o que un anónimo no puede ver responde **200 con la imagen genérica** de la marca (no 404: los crawlers no
+muestran nada útil ante un error). Errores: `VALIDATION_ERROR` (400) con `kind`, `format` o `locale` desconocidos o
+una referencia vacía o de más de 200 caracteres; `RATE_LIMITED` (429) con más de 60 imágenes por minuto por IP.
+
+Los metadatos de las páginas de destino (álbum, artista, canción, género, premios e índice de premios, salones e
+índice de salones, colecciones e índice de colecciones, perfil) anuncian esta URL, absoluta y versionada, en
+`og:image` y `twitter:image`, junto con `og:title`, `og:description`, `og:url` (canónica, sin query),
+`og:locale`, `og:image:alt` y `twitter:card = summary_large_image`.
+
+### `POST /api/share/events`
+
+Registra un uso de la hoja de compartir en `share_event`. Cuerpo:
+
+```json
+{ "kind": "album", "ref": "<id>", "channel": "whatsapp", "format": "link" }
+```
+
+`channel` es uno de `native`, `copy`, `x`, `whatsapp`, `threads`, `bluesky`, `facebook`, `telegram`, `reddit`,
+`download`. Respuesta `204` sin cuerpo. No guarda usuario, IP ni agente. Errores: `VALIDATION_ERROR` (400) con un
+valor fuera de lista o una referencia vacía o de más de 200 caracteres; `RATE_LIMITED` (429) con más de 30 eventos
+por minuto por IP. El cliente lo dispara sin esperar la respuesta: un fallo nunca impide compartir.

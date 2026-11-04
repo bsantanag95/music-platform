@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
@@ -75,7 +76,8 @@ function InducteeCard({ nomination }: { nomination: NominationView }) {
   );
 }
 
-export function HallOfFameClassView({ page, awardName }: { page: CeremonyPage; awardName: string }) {
+/** `share`: botón Compartir de la clase (add-share-foundation), resuelto en el servidor. */
+export function HallOfFameClassView({ page, awardName, share }: { page: CeremonyPage; awardName: string; share?: ReactNode }) {
   const t = useTranslations("awards");
   const tCommon = useTranslations("common");
   const locale = useLocale();
@@ -103,6 +105,7 @@ export function HallOfFameClassView({ page, awardName }: { page: CeremonyPage; a
             { label: awardName, href: hallHref(page.awardSlug) },
             { label: t("hall.classTitle", { year: page.ceremony.year }) },
           ]}
+          action={share}
         />
         <header className="relative isolate flex w-full items-center justify-between gap-6 overflow-hidden rounded-xl border border-ink-border bg-ink-surface p-5 sm:p-8">
           {backdrop ? (

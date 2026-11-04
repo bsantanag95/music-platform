@@ -23,6 +23,7 @@ import {
   listRecentHeadlineWinners,
 } from "@/services/awards/read";
 import { withClientMessages } from "@/i18n/client-messages";
+import { buildShareMetadata } from "@/services/share/metadata";
 
 // Hub de premios (openspec: add-music-awards, design D5; redesign-awards-pages; add-four-music-awards, design D7;
 // enrich-awards-hub). Con un solo premio no hay nada que elegir —la ceremonia ya trae la navegación por años—: redirige a su
@@ -44,9 +45,9 @@ const MOST_AWARDED_LIMIT = 10;
 const MOST_AWARDED_MIN_ROWS = 3;
 
 export async function generateMetadata({ params }: AwardsIndexProps): Promise<Metadata> {
-  await params;
+  const { locale } = await params;
   const t = await getTranslations("awards");
-  return { title: t("pageTitle") };
+  return { title: t("pageTitle"), ...(await buildShareMetadata("awards", "-", locale)) };
 }
 
 async function AwardsIndexPage({ params, searchParams }: AwardsIndexProps) {

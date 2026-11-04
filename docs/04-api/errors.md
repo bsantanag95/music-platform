@@ -34,7 +34,7 @@ además del `error` legible:
 | `AUTH_REQUIRED` | 401 | Falta una sesión válida para una operación protegida. |
 | `INVALID_CREDENTIALS` | 401 | Login fallido; no revela si falló el identificador o la contraseña. |
 | `USERNAME_TAKEN` / `EMAIL_TAKEN` | 409 | El registro duplicaría una cuenta existente. |
-| `RATE_LIMITED` | 429 | Se superó el límite temporal de login o registro, del flujo OAuth de Google (`/start` y `/callback` limitan por IP; el callback redirige a la página de error con este código) o de los endpoints de recuperación de contraseña (`/password/forgot` limita por IP y email; `/password/reset` por IP). |
+| `RATE_LIMITED` | 429 | Se superó el límite temporal de login o registro, del flujo OAuth de Google (`/start` y `/callback` limitan por IP; el callback redirige a la página de error con este código) o de los endpoints de recuperación de contraseña (`/password/forgot` limita por IP y email; `/password/reset` por IP). También las rutas de compartir: `GET /api/share/image/…` (60 imágenes por minuto por IP) y `POST /api/share/events` (30 eventos por minuto por IP). |
 | `PERMISSION_DENIED` | 403 | El usuario no puede modificar el recurso (también: dar like al propio comentario, `PUT /api/catalog/comments/{commentId}/like`). |
 | `INVALID_TARGET` | 400/404 | Tipo, UUID u objetivo inexistente. |
 | `INVALID_RATING` / `INVALID_COMMENT` | 400 | Entrada social inválida. |

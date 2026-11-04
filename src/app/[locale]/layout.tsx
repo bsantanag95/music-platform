@@ -1,5 +1,6 @@
 import { resolveImageUrl } from "@/services/storage/avatar-urls";
 import type { Metadata } from "next";
+import { appOrigin } from "@/lib/share/app-url";
 import { Space_Grotesk, Source_Serif_4, IBM_Plex_Mono } from "next/font/google";
 import { getMessages, getTimeZone } from "next-intl/server";
 import { ClientMessages } from "@/i18n/client-messages";
@@ -38,6 +39,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const common = messages.common as { appName: string; tagline: string };
 
   return {
+    // Base de las URL absolutas de los metadatos de compartir (spec share-metadata): sin ella, `og:image`
+    // saldría relativa y los crawlers no la resuelven.
+    metadataBase: new URL(appOrigin()),
     title: common.appName,
     description: common.tagline,
     alternates: {

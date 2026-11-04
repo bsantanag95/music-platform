@@ -1,6 +1,6 @@
 import { and, eq, isNotNull } from "drizzle-orm";
 import { db } from "@/db";
-import { appUser, session } from "@/db/schema";
+import { appUser, session, shareEvent } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { requireRecentAuth } from "./recent-auth";
 import type { ResolvedSession } from "./sessions";
@@ -54,7 +54,8 @@ export async function reactivateAccount(userId: string): Promise<boolean> {
 /**
  * Elimina la cuenta de forma definitiva. Exige el usuario como confirmación (igual
  * al de la cuenta; solo se ignoran los espacios de los bordes) y el factor de identidad. `DELETE FROM app_user` borra en cascada todo lo
- * que la persona creó (la base ya lo declara con `ON DELETE CASCADE`).
+ * que la persona creó (la base ya lo declara con `ON DELETE CASCADE`). En la misma transacción borra los
+ * `share_event` de su perfil: esa tabla no tiene FK y su referencia es el id de la persona.
  *
  * Una cuenta con historial de moderación o editorial no se puede borrar: sus filas
  * de auditoría referencian a la persona con `RESTRICT`. La violación de clave
@@ -78,7 +79,12 @@ export async function deleteAccount(
   const avatarImageId = avatar?.avatarImageId ?? null;
 
   try {
-    await db.delete(appUser).where(eq(appUser.id, current.user.id));
+    await db.transaction(async (tx) => {
+      await tx.delete(appUser).where(eq(appUser.id, current.user.id));
+      await tx
+        .delete(shareEvent)
+        .where(and(eq(shareEvent.targetKind, "profile"), eq(shareEvent.targetRef, current.user.id)));
+    });
   } catch (error) {
     if (isForeignKeyViolation(error)) {
       throw new ApiError(
