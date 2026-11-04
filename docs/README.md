@@ -27,7 +27,7 @@ Este directorio es la fuente de verdad técnica y de producto del proyecto. Se p
 | `03-data/data-licensing.md` | Licencias de MusicBrainz y Cover Art Archive, y sus implicancias | ✅ |
 | `04-api/contracts.md` | Contrato real de los endpoints REST de catálogo, auth y funciones sociales | ✅ |
 | `04-api/errors.md` | Convención de errores de la API — código `code` machine-readable | ✅ Implementada |
-| `05-features/` | Especificaciones de producto por feature (catálogo, valoraciones, diario de escucha, listas, feed, notificaciones) — ver su propio índice en `05-features/README.md` | 🟡 Fases 3 y 4 implementadas; Fase 5: privacidad, seguimiento, diario, favoritos y listas, feed v1 y notificaciones in-app (Fases 1 y 2) implementados; scrobbling pendiente |
+| `05-features/` | Especificaciones de producto por feature (catálogo, valoraciones, diario de escucha, listas, feed, notificaciones) — ver su propio índice en `05-features/README.md` | 🟡 Fases 3 y 4 implementadas; Fase 5: privacidad, seguimiento, diario, favoritos y listas, feed v1 y notificaciones in-app (Fases 1 y 2) implementados; scrobbling pendiente · 🟢 `sharing.md` (Compartir y Láminas) con dirección aprobada, sin implementar |
 | `06-operations/backup-restore.md` | Operación de backup y restore de la base de datos local, con prueba real de restauración (item A.7 del checklist de infraestructura) | ✅ Backup nocturno + prueba de restore real (2026-08-31); PITR diferido |
 
 ## Regla de mantenimiento
