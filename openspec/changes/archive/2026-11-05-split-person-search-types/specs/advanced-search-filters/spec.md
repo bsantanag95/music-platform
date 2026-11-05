@@ -147,6 +147,10 @@ grabación, programación o arreglos) y **Músico invitado o de sesión** (`musi
 donde no es artista principal). Sin Tipo Otras personas, `role` SHALL ignorarse, y el formulario SHALL mostrar Rol solo
 con Otras personas.
 
+#### Scenario: Solo con discos propios
+- **WHEN** una persona busca Otras personas, sin rol, y el catálogo tiene integrantes con y sin discos a su nombre
+- **THEN** solo ve a los que no tienen discos a su nombre; quien sí los tiene se busca con Solista
+
 #### Scenario: Integrantes con carrera solista
 - **WHEN** una persona busca Otras personas con Integrante de una banda y el nombre de un integrante que también tiene
   discos propios
@@ -157,7 +161,7 @@ con Otras personas.
   propios
 - **THEN** lo ve en los resultados, y con Solista en modo solo catálogo no
 
-#### Scenario: Rol sin Otras personas
+#### Scenario: Rol sin persona
 - **WHEN** una persona abre `/search/advanced?type=artist&artistType=group&role=member`
 - **THEN** la búsqueda ignora el rol y sigue el modo habitual
 
