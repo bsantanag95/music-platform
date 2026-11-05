@@ -104,7 +104,8 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
   const [count, setCount] = useState(() => initialCount(type, query, criteria));
 
   useEffect(() => setHydrated(true), []);
-  // El tipo de artista decide la etiqueta del año y si se ofrece el rol (openspec: add-catalog-search-fields).
+  // El tipo de artista decide la etiqueta del año y si se ofrecen el rol y la actividad (openspec:
+  // add-catalog-search-fields, split-person-search-types).
   const [artistType, setArtistType] = useState(criteria.artistType ?? "");
 
   // Las etiquetas de países cambian sin evento de campo: se recuenta tras cada interacción.
@@ -286,7 +287,7 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
       onChange={recount}
     />
   );
-  const beginLabel = artistType === "person" ? "beginPerson" : artistType === "group" ? "beginGroup" : "begin";
+  const beginLabel = artistType === "group" ? "beginGroup" : artistType ? "beginPerson" : "begin";
 
   let groups: [string, ReactNode, string?][];
   if (type === "artist") {
@@ -298,17 +299,18 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
           {select(
             "artistType",
             t("artistType"),
-            null,
+            artistType === "other" ? t("otherHint") : null,
             criteria.artistType ?? "",
             [
               ["", t("any")],
-              ["person", t("person")],
               ["group", t("group")],
+              ["solo", t("solo")],
+              ["other", t("other")],
             ],
             setArtistType,
           )}
-          {/* Solo con Persona: al cambiar el tipo el campo sale del formulario y no se envía. */}
-          {artistType === "person"
+          {/* Solo con Otras personas: al cambiar el tipo el campo sale del formulario y no se envía. */}
+          {artistType === "other"
             ? select("role", t("role"), t("roleHint"), criteria.role ?? "", [
                 ["", t("any")],
                 ...ARTIST_ROLES.map((role): [string, string] => [role, t(`roles.${role}`)]),
@@ -341,7 +343,10 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
       [
         t("groups.catalog"),
         <>
-          {range("active", t("active"), t("activeHint"), criteria.activeFrom, criteria.activeTo, YEAR_PATTERN)}
+          {/* La actividad sale de los discos propios: no aplica a Otras personas. */}
+          {artistType === "other"
+            ? null
+            : range("active", t("active"), t("activeHint"), criteria.activeFrom, criteria.activeTo, YEAR_PATTERN)}
           {genreField}
           {awardField}
         </>,

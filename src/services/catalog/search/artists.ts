@@ -114,10 +114,12 @@ export async function searchArtists(
   { filters = {}, offset = 0, signal, localOnly = false, catalog }: ArtistSearchOptions = {},
 ): Promise<ArtistSearchResponse> {
   const q = query.trim();
-  if (catalog && hasCatalogFields(catalog)) {
-    const resolved = await resolveCatalogFields(catalog);
-    const fields = withoutUnresolved(catalog, resolved);
-    if (hasCatalogFields(fields)) return catalogArtists(q, filters, fields, resolved, offset);
+  // Otras personas (integrantes, producción, sesión) solo lo distingue la base propia (openspec: split-person-search-types).
+  const otherPersons = filters.artistType === "other";
+  if (otherPersons || (catalog && hasCatalogFields(catalog))) {
+    const resolved = await resolveCatalogFields(catalog ?? {});
+    const fields = withoutUnresolved(catalog ?? {}, resolved);
+    if (otherPersons || hasCatalogFields(fields)) return catalogArtists(q, filters, fields, resolved, offset);
   }
   // Cada fuente filtra con el mismo criterio: lo local por SQL, lo remoto en la propia consulta.
   // Un artista local sin el dato queda fuera de lo local, pero vuelve con los datos de MusicBrainz
@@ -191,9 +193,20 @@ export async function searchArtists(
   // Un stub ya existente puede tener otro tipo que el filtro pedido. La frase de MusicBrainz trae
   // también nombres más largos ("Kiss" → "Kiss Kiss"): con nombre exacto se reaplica la igualdad.
   const { artistType } = filters;
-  const filtered = entries.filter(
-    (entry) => (!artistType || entry.row.type === artistType) && (!filters.exact || isExactMatch(entry.row.name, q)),
+  const rowType = artistType === undefined ? undefined : artistType === "group" ? "group" : "person";
+  const matching = entries.filter(
+    (entry) => (!rowType || entry.row.type === rowType) && (!filters.exact || isExactMatch(entry.row.name, q)),
   );
+  // Discos principales de los artistas explorados de esta página, en una consulta (openspec: refine-search-results-phase3).
+  const discCounts = await primaryDiscCounts(
+    matching.filter((entry) => entry.row.discographySyncedAt !== null).map((entry) => entry.row.id),
+  );
+  // Solista quita solo lo que el catálogo sabe: discografía explorada y ningún disco propio. Una persona sin explorar
+  // se conserva, porque puede ser un solista cargado como integrante (openspec: split-person-search-types).
+  const filtered =
+    artistType === "solo"
+      ? matching.filter((entry) => entry.row.discographySyncedAt === null || (discCounts.get(entry.row.id) ?? 0) > 0)
+      : matching;
   const activity = await activityScores(
     "artist",
     filtered.map((entry) => entry.row.id),
@@ -204,12 +217,8 @@ export async function searchArtists(
   }
 
   const fetched = offset + remote.length;
-  // Discos principales de los artistas explorados de esta página, en una consulta (openspec: refine-search-results-phase3).
   // "Integrante de" de las personas de la página, en una consulta (openspec: add-catalog-search-fields).
-  const [discCounts, members] = await Promise.all([
-    primaryDiscCounts(filtered.filter((entry) => entry.row.discographySyncedAt !== null).map((entry) => entry.row.id)),
-    memberOf(filtered.map((entry) => entry.row)),
-  ]);
+  const members = await memberOf(filtered.map((entry) => entry.row));
   return {
     type: "artist",
     results: sortByRank(filtered).map((entry) => toResult(entry, q, { discCounts, members })),

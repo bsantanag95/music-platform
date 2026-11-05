@@ -122,7 +122,7 @@ export function exactMatch(column: AnyColumn, text: string): SQL {
  */
 export function artistFilters({ artistType, country, area, beginFrom, beginTo, ended }: ArtistQueryFilters): SQL[] {
   const filters: SQL[] = [];
-  if (artistType) filters.push(eq(artist.type, artistType));
+  if (artistType) filters.push(eq(artist.type, artistType === "group" ? "group" : "person"));
   if (country?.length) filters.push(inArray(artist.country, country));
   if (area) filters.push(containsWords(artist.beginAreaName, area));
   if (beginFrom !== undefined) filters.push(sql`${yearOf(artist.lifeBegin)} >= ${beginFrom}`);

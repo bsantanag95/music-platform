@@ -1,4 +1,5 @@
 import { criteriaToParams, type SearchCriteria } from "@/services/catalog/search/filters";
+import type { ArtistTypeFilter } from "@/services/catalog/search/mb-query";
 import { apiFetch } from "./client";
 import {
   ReleaseGroupMarksSchema,
@@ -28,7 +29,7 @@ import {
 /** Filtros opcionales de la búsqueda por tipo (openspec: redesign-scoped-search). */
 export interface CatalogSearchFilters {
   offset?: number;
-  artistType?: "person" | "group";
+  artistType?: ArtistTypeFilter;
   category?: string;
   decade?: number;
   /** Criterios de la búsqueda avanzada (openspec: redesign-advanced-search); los múltiples, repetidos. */

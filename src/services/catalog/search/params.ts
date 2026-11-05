@@ -34,7 +34,9 @@ export function parseSearchType(value: string | string[] | null | undefined): Se
 
 export function parseArtistTypeFilter(value: string | string[] | null | undefined): ArtistTypeFilter | undefined {
   const raw = first(value);
-  return raw === "person" || raw === "group" ? raw : undefined;
+  // `person` es el valor anterior a Solista (openspec: split-person-search-types).
+  if (raw === "person") return "solo";
+  return raw === "group" || raw === "solo" || raw === "other" ? raw : undefined;
 }
 
 export function parseCategory(value: string | string[] | null | undefined): ReleaseGroupCategoryValue | undefined {

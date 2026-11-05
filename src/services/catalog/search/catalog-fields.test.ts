@@ -14,6 +14,7 @@ const {
   artistCatalogConditions,
   catalogAlbumPage,
   hasCatalogFields,
+  personKindConditions,
   resolveCatalogFields,
   withoutUnresolved,
 } = await import("./catalog-fields");
@@ -43,10 +44,8 @@ describe("condiciones del catálogo (openspec: add-catalog-search-fields)", () =
     expect(params).toEqual([2100, 2026, 2020]);
   });
 
-  it("cada rol mira su dato: créditos propios, pertenencias o personal", () => {
-    const sqlOf = (role: "own" | "member" | "producer" | "musician") =>
-      render(artistCatalogConditions({ role }, none)[0]!);
-    expect(sqlOf("own").sql).toContain("c.role = 'primary'");
+  it("cada rol mira su dato: pertenencias o personal", () => {
+    const sqlOf = (role: "member" | "producer" | "musician") => render(artistCatalogConditions({ role }, none)[0]!);
     expect(sqlOf("member").sql).toContain("FROM membership");
     expect(sqlOf("producer").params).toEqual(["producer", "engineer", "mix", "recording", "programming", "arranger"]);
     const musician = sqlOf("musician");
@@ -67,6 +66,21 @@ describe("condiciones del catálogo (openspec: add-catalog-search-fields)", () =
     const conditions = albumCatalogConditions({ artistCountry: ["CL", "AR"] }, { genreId: "genre-rock", award: null });
     expect(conditions).toHaveLength(2);
     expect(render(conditions[1]!).params).toEqual(["CL", "AR"]);
+  });
+
+  it("Solista exige discos propios; Otras personas sin rol, ninguno y algún dato de personal (openspec: split-person-search-types)", () => {
+    const [own] = personKindConditions("solo", {});
+    expect(render(own!).sql).toContain("c.role = 'primary'");
+    const other = personKindConditions("other", {}).map((condition) => render(condition).sql);
+    expect(other).toHaveLength(2);
+    expect(other[0]).toContain("FROM membership m UNION SELECT p.artist_id FROM personnel_credit p");
+    expect(other[1]).toContain("NOT EXISTS");
+    // Con un rol, el rol basta (también solistas que lo cumplen); Grupo y sin tipo no suman nada.
+    expect(personKindConditions("other", { role: "member" })).toEqual([]);
+    // Con actividad, Solista no repite la condición: el período ya exige discos propios.
+    expect(personKindConditions("solo", { activeFrom: 1980 })).toEqual([]);
+    expect(personKindConditions("group", {})).toEqual([]);
+    expect(personKindConditions(undefined, {})).toEqual([]);
   });
 
   it("sin campos no hay condiciones", () => {

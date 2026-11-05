@@ -34,7 +34,7 @@ export function useCriterionLabel(query: string, criteria: SearchCriteria, genre
       case "q":
         return t(criteria.exact ? "chips.qExact" : "chips.q", { value: query });
       case "artistType":
-        return t(criteria.artistType === "group" ? "group" : "person");
+        return t(criteria.artistType ?? "group");
       case "country":
         return countryName(chip.value, locale) ?? chip.value;
       case "area":
@@ -57,7 +57,7 @@ export function useCriterionLabel(query: string, criteria: SearchCriteria, genre
       case "active":
         return t("chips.active", { range: range(criteria.activeFrom, criteria.activeTo) });
       case "role":
-        return t(`roles.${criteria.role ?? "own"}`);
+        return t(`roles.${criteria.role ?? "member"}`);
       case "genre":
         return t("chips.genre", { value: genreName ?? (criteria.genre ?? "").replace(/-/g, " ") });
       case "award": {

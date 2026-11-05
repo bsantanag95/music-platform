@@ -236,7 +236,7 @@
         "viewProfile": "Ver perfil",
         "filterLabel": "Tipo de artista",
         "filterAll": "Todos",
-        "filterPerson": "Persona",
+        "filterPerson": "Solista",
         "filterGroup": "Grupo",
         "yearsRange": "{begin}–{end}",
         "yearsSince": "desde {begin}",
@@ -306,8 +306,10 @@
       "exactMatchFor": "Coincidencia exacta en {field}",
       "artistType": "Tipo",
       "any": "Cualquiera",
-      "person": "Persona",
       "group": "Grupo",
+      "solo": "Solista",
+      "other": "Otras personas",
+      "otherHint": "Integrantes, producción, músicos de sesión. Solo del catálogo.",
       "country": "País",
       "countryAny": "Cualquier país",
       "countryAddAnother": "Agregar otro país",
@@ -364,6 +366,7 @@
       "count": {
         "artists": "{count, plural, one {# artista} other {# artistas}}",
         "groups": "{count, plural, one {# grupo} other {# grupos}}",
+        "soloists": "{count, plural, one {# solista} other {# solistas}}",
         "people": "{count, plural, one {# persona} other {# personas}}",
         "albums": "{count, plural, one {# álbum} other {# álbumes}}",
         "songs": "{count, plural, one {# canción} other {# canciones}}"
@@ -446,10 +449,9 @@
       "role": "Rol",
       "roleHint": "Qué hace en el catálogo",
       "roles": {
-        "own": "Con discografía propia",
         "member": "Integrante de una banda",
         "producer": "Producción o técnica",
-        "musician": "Músico en discos de otros"
+        "musician": "Músico invitado o de sesión"
       },
       "genre": "Género",
       "genreSearch": "Buscar un género",

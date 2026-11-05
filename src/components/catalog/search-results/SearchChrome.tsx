@@ -1,4 +1,5 @@
 import { useTranslations } from "next-intl";
+import type { ArtistTypeFilter } from "@/services/catalog/search/mb-query";
 import { Link } from "@/i18n/navigation";
 import { SEARCH_TYPES, searchHref, type SearchType } from "../search-types";
 import {
@@ -96,15 +97,15 @@ export function SearchSummary({
   type: SearchType;
   count: number | null;
   advanced?: boolean;
-  /** Búsqueda avanzada: el filtro de tipo de artista decide si se cuentan grupos o personas. */
-  artistType?: "person" | "group";
+  /** Búsqueda avanzada: el filtro de tipo de artista decide si se cuentan grupos, solistas o personas. */
+  artistType?: ArtistTypeFilter;
 }) {
   const t = useTranslations("catalog.search");
   if (advanced) {
     // Una sola cifra, completa y con lo que se cuenta (openspec: refine-advanced-search-phase1, design D4): con
     // criterios sí describe lo pedido. El título queda para lectores de pantalla; la barra ya dice qué se buscó.
     const noun =
-      type === "artist" ? (artistType === "group" ? "groups" : artistType === "person" ? "people" : "artists") : `${type}s`;
+      type === "artist" ? (artistType === "group" ? "groups" : artistType === "solo" ? "soloists" : artistType === "other" ? "people" : "artists") : `${type}s`;
     return (
       <header className="flex items-center justify-between gap-3">
         <h2 className="sr-only">{t("advanced.resultsTitle")}</h2>

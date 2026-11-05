@@ -231,21 +231,37 @@ describe("datos destacados (openspec: refine-advanced-search-phase3)", () => {
 });
 
 describe("campos del catálogo (openspec: add-catalog-search-fields)", () => {
-  it("Artistas: actividad, rol, género y premios; el rol solo con Persona", () => {
+  it("Artistas: actividad, género y premios; el rol solo con Otras personas", () => {
     expect(
-      parseCriteria("artist", read("artistType=person&activeFrom=1990&activeTo=1980&role=member&genre=Rock&award=grammy&awardWon=1")),
+      parseCriteria("artist", read("artistType=solo&activeFrom=1990&activeTo=1980&role=member&genre=Rock&award=grammy&awardWon=1")),
     ).toEqual({
-      artistType: "person",
+      artistType: "solo",
       activeFrom: 1980,
       activeTo: 1990,
-      role: "member",
       genre: "rock",
       award: "grammy",
       awardWon: true,
     });
+    expect(parseCriteria("artist", read("artistType=other&role=producer&activeFrom=1980&genre=rock"))).toEqual({
+      artistType: "other",
+      role: "producer",
+      genre: "rock",
+    });
     expect(parseCriteria("artist", read("artistType=group&role=member"))).toEqual({ artistType: "group" });
     expect(parseCriteria("artist", read("role=own"))).toEqual({});
-    expect(parseCriteria("artist", read("artistType=person&role=boss"))).toEqual({ artistType: "person" });
+    expect(parseCriteria("artist", read("artistType=other&role=own"))).toEqual({ artistType: "other" });
+    expect(parseCriteria("artist", read("artistType=persona"))).toEqual({});
+  });
+
+  it("los enlaces con Persona se leen como Solista u Otras personas (openspec: split-person-search-types)", () => {
+    expect(parseCriteria("artist", read("artistType=person"))).toEqual({ artistType: "solo" });
+    expect(parseCriteria("artist", read("artistType=person&role=own"))).toEqual({ artistType: "solo" });
+    expect(parseCriteria("artist", read("artistType=person&role=boss"))).toEqual({ artistType: "solo" });
+    expect(parseCriteria("artist", read("artistType=person&role=member&country=CL"))).toEqual({
+      artistType: "other",
+      role: "member",
+      country: ["CL"],
+    });
   });
 
   it("Álbumes: género, países del artista y premios; awardWon sin premio se ignora", () => {
@@ -265,10 +281,12 @@ describe("campos del catálogo (openspec: add-catalog-search-fields)", () => {
     expect(isCatalogOnly({ country: ["CL"], genre: "rock" })).toBe(true);
     expect(isCatalogOnly({ activeTo: 1990 })).toBe(true);
     expect(isCatalogOnly({ artistCountry: ["CL"] })).toBe(true);
+    expect(isCatalogOnly({ artistType: "other" })).toBe(true);
+    expect(isCatalogOnly({ artistType: "solo", country: ["CL"] })).toBe(false);
   });
 
   it("las pestañas conservan género y premios entre Artistas y Álbumes", () => {
-    const criteria = { country: ["CL"], genre: "rock", award: "any", awardWon: true, role: "own" as const };
+    const criteria = { country: ["CL"], genre: "rock", award: "any", awardWon: true, role: "member" as const };
     expect(criteriaForTab("album", criteria)).toEqual({ genre: "rock", award: "any", awardWon: true });
     expect(criteriaForTab("artist", { genre: "rock", artistCountry: ["CL"], category: ["studio" as const] })).toEqual({
       genre: "rock",
@@ -277,8 +295,8 @@ describe("campos del catálogo (openspec: add-catalog-search-fields)", () => {
   });
 
   it("pastillas y quitar un campo del catálogo", () => {
-    const criteria = { activeFrom: 1980, activeTo: 1990, role: "own" as const, genre: "rock", award: "grammy", awardWon: true };
-    expect(criterionChips("artist", "", { artistType: "person", ...criteria }).map((chip) => chip.id)).toEqual([
+    const criteria = { activeFrom: 1980, activeTo: 1990, role: "member" as const, genre: "rock", award: "grammy", awardWon: true };
+    expect(criterionChips("artist", "", { artistType: "other", ...criteria }).map((chip) => chip.id)).toEqual([
       "artistType",
       "role",
       "active",
@@ -288,10 +306,13 @@ describe("campos del catálogo (openspec: add-catalog-search-fields)", () => {
     expect(removeCriterion("", criteria, { id: "award" }).criteria).toEqual({
       activeFrom: 1980,
       activeTo: 1990,
-      role: "own",
+      role: "member",
       genre: "rock",
     });
     expect(removeCriterion("", criteria, { id: "active" }).criteria).not.toHaveProperty("activeFrom");
+    // Quitar Otras personas quita también el rol.
+    const other = removeCriterion("", { artistType: "other", role: "member", country: ["CL"] }, { id: "artistType" });
+    expect(other.criteria).toEqual({ country: ["CL"] });
     const album = { artistCountry: ["CL", "AR"], genre: "rock" };
     expect(criterionChips("album", "", album)).toEqual([
       { id: "genre" },

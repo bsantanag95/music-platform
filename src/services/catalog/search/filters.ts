@@ -6,7 +6,7 @@
 import type { ReleaseGroupCategoryValue } from "../ingest-release-group";
 import type { AlbumSearchOptions } from "./albums";
 import type { AlbumCatalogFilters, ArtistCatalogFilters } from "./catalog-fields";
-import type { ArtistQueryFilters } from "./mb-query";
+import type { ArtistQueryFilters, ArtistTypeFilter } from "./mb-query";
 import type { SongFilters } from "./songs";
 import type { SearchType } from "./types";
 
@@ -18,8 +18,11 @@ export const CATEGORY_VALUES: readonly ReleaseGroupCategoryValue[] = ["studio", 
 export interface SearchCriteria {
   /** `q` debe coincidir exactamente (nombre del artista, título del álbum o de la canción). */
   exact?: boolean;
-  /** Artistas. */
-  artistType?: "person" | "group";
+  /**
+   * Artistas: grupo, solista (persona buscada como un grupo, también en MusicBrainz) u otras personas (integrantes,
+   * producción, músicos de sesión: solo del catálogo). openspec: split-person-search-types.
+   */
+  artistType?: ArtistTypeFilter;
   /** Artistas: ISO 3166-1 alfa-2, uno o varios. */
   country?: string[];
   /** Artistas: ciudad o región de nacimiento o formación. */
@@ -48,7 +51,7 @@ export interface SearchCriteria {
   /** Artistas: años de actividad (primer al último disco propio, hasta hoy si sigue activo). */
   activeFrom?: number;
   activeTo?: number;
-  /** Artistas, solo con `artistType=person`: rol en el catálogo. */
+  /** Artistas, solo con `artistType=other`: rol en el catálogo. */
   role?: ArtistRole;
   /** Artistas y Álbumes: slug de un género de la taxonomía propia (con sus subgéneros). */
   genre?: string;
@@ -60,7 +63,7 @@ export interface SearchCriteria {
   artistCountry?: string[];
 }
 
-export const ARTIST_ROLES = ["own", "member", "producer", "musician"] as const;
+export const ARTIST_ROLES = ["member", "producer", "musician"] as const;
 export type ArtistRole = (typeof ARTIST_ROLES)[number];
 
 /** Claves que MusicBrainz no sabe filtrar: con alguna, la búsqueda es solo del catálogo. */
@@ -74,9 +77,12 @@ export const CATALOG_ONLY_KEYS: readonly CriteriaKey[] = [
   "artistCountry",
 ];
 
-/** La búsqueda tiene algún campo del catálogo (los criterios ya vienen acotados al tipo por `parseCriteria`). */
+/**
+ * La búsqueda tiene algún campo del catálogo, u Otras personas, que MusicBrainz tampoco distingue (los criterios ya
+ * vienen acotados al tipo por `parseCriteria`).
+ */
 export function isCatalogOnly(criteria: SearchCriteria): boolean {
-  return CATALOG_ONLY_KEYS.some((key) => criteria[key] !== undefined);
+  return criteria.artistType === "other" || CATALOG_ONLY_KEYS.some((key) => criteria[key] !== undefined);
 }
 
 export type CriteriaKey = keyof SearchCriteria;
@@ -106,6 +112,12 @@ export const CRITERIA_KEYS: Record<SearchType, readonly CriteriaKey[]> = {
 const MAX_TEXT_LENGTH = 200;
 const MAX_DURATION_SEC = 7200;
 const MAX_LIST = 10;
+
+export const ARTIST_TYPES: readonly ArtistTypeFilter[] = ["group", "solo", "other"];
+
+function parseArtistType(raw: string | undefined): ArtistTypeFilter | undefined {
+  return (ARTIST_TYPES as readonly string[]).includes(raw ?? "") ? (raw as ArtistTypeFilter) : undefined;
+}
 
 function firstOf(values: string[]): string | undefined {
   const trimmed = values[0]?.trim();
@@ -191,8 +203,14 @@ export function parseCriteria(type: SearchType, read: ParamReader, query = ""): 
   };
 
   if (query.trim() && parseFlag(read("exact"))) set("exact", true);
-  const artistType = firstOf(read("artistType"));
-  if (artistType === "person" || artistType === "group") set("artistType", artistType);
+  // `person` es el valor anterior a Solista / Otras personas: con un rol de personal es Otras personas; si no, Solista
+  // (openspec: split-person-search-types).
+  const rawType = firstOf(read("artistType"));
+  const role = firstOf(read("role"));
+  const isPersonnelRole = (ARTIST_ROLES as readonly string[]).includes(role ?? "");
+  const artistType: ArtistTypeFilter | undefined =
+    rawType === "person" ? (isPersonnelRole ? "other" : "solo") : parseArtistType(rawType);
+  set("artistType", artistType);
   set("country", parseList(read("country"), parseCountry));
   set("area", parseText(read("area")));
   const [beginFrom, beginTo] = ordered(parseYear(read("beginFrom"), 1000, 2100), parseYear(read("beginTo"), 1000, 2100));
@@ -221,9 +239,13 @@ export function parseCriteria(type: SearchType, read: ParamReader, query = ""): 
   const [activeFrom, activeTo] = ordered(parseYear(read("activeFrom"), 1900, 2100), parseYear(read("activeTo"), 1900, 2100));
   set("activeFrom", activeFrom);
   set("activeTo", activeTo);
-  // El rol solo tiene sentido para una persona: sin Persona se ignora, como una bandera sin su campo.
-  const role = firstOf(read("role"));
-  if (artistType === "person" && (ARTIST_ROLES as readonly string[]).includes(role ?? "")) set("role", role as ArtistRole);
+  // El rol solo tiene sentido con Otras personas: con otro tipo se ignora, como una bandera sin su campo. La actividad
+  // sale de los discos propios: con Otras personas tampoco aplica.
+  if (artistType === "other") {
+    if (isPersonnelRole) set("role", role as ArtistRole);
+    delete criteria.activeFrom;
+    delete criteria.activeTo;
+  }
   set("genre", parseSlug(read("genre")));
   const award = parseSlug(read("award"));
   set("award", award);
@@ -278,13 +300,13 @@ export function criteriaForTab(target: SearchType, criteria: SearchCriteria): Se
 }
 
 /**
- * La URL de /search solo trae lo que el buscador rápido tiene: Persona/Grupo en Artistas y una
+ * La URL de /search solo trae lo que el buscador rápido tiene: Solista/Grupo en Artistas y una
  * categoría en Álbumes (además de `q`, `decade`, `all` y `offset`). Si trae más, va a la avanzada.
  */
 export function isQuickSearch(type: SearchType, criteria: SearchCriteria): boolean {
   return Object.entries(criteria).every(([key, value]) => {
     if (value === undefined) return true;
-    if (type === "artist" && key === "artistType") return true;
+    if (type === "artist" && key === "artistType") return value !== "other";
     if (type === "album" && key === "category") return (value as unknown[]).length === 1;
     return false;
   });
@@ -415,6 +437,11 @@ export function removeCriterion(
       break;
     case "artistCountry":
       next.artistCountry = without(next.artistCountry, chip.value);
+      break;
+    case "artistType":
+      // El rol solo existe con Otras personas: quitar el tipo lo quita también.
+      delete next.artistType;
+      delete next.role;
       break;
     case "active":
       delete next.activeFrom;

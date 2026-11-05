@@ -23,7 +23,8 @@ describe("artistQuery", () => {
   });
 
   it("filtro por tipo", () => {
-    expect(artistQuery("dokken", { artistType: "person" })).toBe("(dokken) AND type:person");
+    expect(artistQuery("dokken", { artistType: "solo" })).toBe("(dokken) AND type:person");
+    expect(artistQuery("dokken", { artistType: "group" })).toBe("(dokken) AND type:group");
   });
 
   it("filtros de país, inicio de actividad y estado", () => {

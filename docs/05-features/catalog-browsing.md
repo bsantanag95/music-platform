@@ -99,11 +99,20 @@ página sugiere sumar campos. Cambiar de pestaña conserva solo lo que significa
 **Campos del catálogo (cambio `add-catalog-search-fields`).** Un grupo **Del catálogo** suma los campos que MusicBrainz
 no indexa: en Artistas, **Activo entre** (del primer al último disco propio, hasta hoy si sigue en actividad; solo
 artistas con la discografía explorada), **Género** (con subgéneros) y **Premios** (cualquiera o uno, "Solo
-ganadores"); en Álbumes, **Género**, **País del artista** y **Premios**. Con Persona, Identidad suma **Rol** (con
-discografía propia, integrante de una banda, producción o técnica, músico en discos de otros), y el año de Época se
-llama "Año de nacimiento" con Persona y "Año de formación" con Grupo: nacimiento y actividad no son lo mismo para una
-persona (mediana de 26 años entre nacer y el primer disco en el catálogo; 1 año entre formación y primer disco para un
-grupo). Con alguno de esos campos la búsqueda es **solo del catálogo**: no consulta MusicBrainz, pagina de 25 en la
+ganadores"); en Álbumes, **Género**, **País del artista** y **Premios**. El año de Época se llama "Año de nacimiento"
+con una persona y "Año de formación" con Grupo: nacimiento y actividad no son lo mismo para una persona (mediana de 26
+años entre nacer y el primer disco en el catálogo; 1 año entre formación y primer disco para un grupo).
+
+**Tipo de artista (cambio `split-person-search-types`).** Tipo ofrece **Grupo**, **Solista** y **Otras personas**.
+Solista se busca como Grupo (base propia y MusicBrainz, `type:person`): buscar a Madonna es lo mismo que buscar a Iron
+Maiden. MusicBrainz no indexa cuántos discos tiene alguien, así que Solista solo quita a quien el catálogo sabe sin
+discos propios (discografía explorada y ninguno como principal); una persona aún no explorada se conserva, porque puede
+ser un solista cargado como integrante de su banda. Otras personas (integrantes, producción, músicos de sesión) es una
+búsqueda específica y solo del catálogo: sin rol, personas sin discos propios con alguna pertenencia o crédito de
+personal; con **Rol** (Integrante de una banda, Producción o técnica, Músico invitado o de sesión), cualquiera que lo
+cumpla, también solistas (Bruce Dickinson es integrante de Iron Maiden). "Activo entre" no aplica a Otras personas. Los
+enlaces anteriores con `artistType=person` se leen como Solista, o como Otras personas si traen un rol de personal; el
+filtro "Solista" de `/search` usa el mismo valor. Con alguno de esos campos la búsqueda es **solo del catálogo**: no consulta MusicBrainz, pagina de 25 en la
 base con la cifra exacta y lo avisa ("Solo artistas/álbumes del catálogo"). Las personas integrantes de una banda
 muestran "Integrante de <banda>" en cualquier búsqueda de Artistas. Cobertura en scratch (2026-11-04): género del 75 %
 de los álbumes, país del artista del 81 %, 906 artistas con discografía explorada. Quedan fuera: sello, número de
