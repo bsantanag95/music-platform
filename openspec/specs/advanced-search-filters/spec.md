@@ -1,7 +1,7 @@
 # advanced-search-filters Specification
 
 ## Purpose
-Búsqueda avanzada en su propia página `/search/advanced`, al estilo de Metal Archives: pestañas Artistas, Álbumes y Canciones, cada una con su formulario GET que escribe la URL; el nombre o título es un campo opcional con coincidencia exacta; cada campo (países, ciudad, inicio y estado del artista; artista, años y tipos del álbum; artista, álbum, tipos y duración de la canción) se aplica con el mismo criterio a la base local y a la consulta de MusicBrainz, con lectura tolerante de los criterios y cambio de pestaña con los campos equivalentes.
+Búsqueda avanzada en su propia página `/search/advanced`, al estilo de Metal Archives: pestañas Artistas, Álbumes y Canciones, cada una con su formulario GET que escribe la URL; el nombre o título es un campo opcional con coincidencia exacta; cada campo (países, ciudad, inicio y estado del artista; artista, años y tipos del álbum; artista, álbum, tipos y duración de la canción) se aplica con el mismo criterio a la base local y a la consulta de MusicBrainz, con lectura tolerante de los criterios y cambio de pestaña con los campos equivalentes. Los campos que MusicBrainz no indexa (actividad, rol de una persona, género, premios y país del artista en Álbumes) resuelven la búsqueda solo con el catálogo, paginada y con aviso.
 ## Requirements
 ### Requirement: Página de búsqueda avanzada con pestañas
 
