@@ -13,9 +13,12 @@ import type {
   SongSearchResponse,
 } from "@/services/catalog/search/types";
 import {
+  albumCatalogFilters,
   albumOptions,
+  artistCatalogFilters,
   artistFilters,
   hasCriteria,
+  isCatalogOnly,
   songFilters,
   type SearchCriteria,
 } from "@/services/catalog/search/filters";
@@ -31,6 +34,7 @@ import { searchHref } from "@/components/catalog/search-types";
 import { artistHref } from "@/lib/catalog-links";
 import {
   BroadQueryHint,
+  CatalogOnlyNotice,
   DidYouMean,
   FilterPills,
   PendingRemote,
@@ -95,6 +99,11 @@ export async function ArtistSection({
   advanced = false,
 }: SectionProps & { all?: boolean }) {
   const t = await getTranslations("catalog.search.results.artists");
+  // Solo del catálogo: una consulta local paginada, sin MusicBrainz que esperar ni streaming
+  // (openspec: add-catalog-search-fields).
+  if (isCatalogOnly(criteria)) {
+    return <ArtistRemote query={query} all={all} criteria={criteria} advanced={advanced} pills={null} />;
+  }
   // Lo local se ve de inmediato y lo de MusicBrainz llega por streaming, como en Álbumes y
   // Canciones (openspec: speed-up-search).
   let local: ArtistSearchResponse;
@@ -171,7 +180,10 @@ async function ArtistRemote({
 }) {
   let response: ArtistSearchResponse;
   try {
-    response = await searchArtists(query, { filters: artistFilters(criteria) });
+    response = await searchArtists(query, {
+      filters: artistFilters(criteria),
+      catalog: artistCatalogFilters(criteria),
+    });
   } catch {
     return <SearchErrorState query={query} />;
   }
@@ -214,7 +226,8 @@ async function ArtistRemote({
         artistType={criteria.artistType}
       />
       {empty && !filtered ? null : pills}
-      {advanced && !query ? <BroadQueryHint total={response.total} type="artist" criteria={criteria} /> : null}
+      {response.catalogOnly ? <CatalogOnlyNotice type="artist" /> : null}
+      {advanced && !query && !response.catalogOnly ? <BroadQueryHint total={response.total} type="artist" criteria={criteria} /> : null}
       {response.remoteFailed ? <RemoteFailedNotice /> : null}
       {weak && suggestion ? <DidYouMean type="artist" suggestion={suggestion} /> : null}
       {empty && advanced ? (
@@ -276,6 +289,20 @@ export async function AlbumSection({
   const viewer = await getCurrentUser();
   const authenticated = viewer !== null;
   const options = { ...albumOptions(criteria), decade };
+  // Solo del catálogo: una consulta local paginada, sin streaming (openspec: add-catalog-search-fields).
+  if (isCatalogOnly(criteria)) {
+    return (
+      <AlbumRemote
+        query={query}
+        decade={decade}
+        criteria={criteria}
+        advanced={advanced}
+        pills={null}
+        authenticated={authenticated}
+        viewerId={viewer?.id ?? null}
+      />
+    );
+  }
   const local = await searchAlbums(query, { ...options, localOnly: true });
   // Pastillas de la búsqueda rápida: una categoría y una década.
   const category = criteria.category?.[0];
@@ -372,7 +399,7 @@ async function AlbumRemote({
 }) {
   let response: AlbumSearchResponse;
   try {
-    response = await searchAlbums(query, { ...albumOptions(criteria), decade });
+    response = await searchAlbums(query, { ...albumOptions(criteria), catalog: albumCatalogFilters(criteria), decade });
     response = { ...response, results: await withViewerStars(response.results, viewerId ?? null) };
   } catch {
     return <SearchErrorState query={query} />;
@@ -393,7 +420,8 @@ async function AlbumRemote({
         advanced={advanced}
       />
       {empty && !filtered ? null : pills}
-      {advanced && !query ? <BroadQueryHint total={response.total} type="album" criteria={criteria} /> : null}
+      {response.catalogOnly ? <CatalogOnlyNotice type="album" /> : null}
+      {advanced && !query && !response.catalogOnly ? <BroadQueryHint total={response.total} type="album" criteria={criteria} /> : null}
       {response.remoteFailed ? <RemoteFailedNotice /> : null}
       {weak && suggestion ? <DidYouMean type="album" suggestion={suggestion} /> : null}
       {response.refine ? (
@@ -624,10 +652,16 @@ async function AlternativeCountFor({
   let count: number | null = null;
   try {
     if (type === "artist") {
-      const response = await searchArtists(next.query, { filters: artistFilters(next.criteria) });
+      const response = await searchArtists(next.query, {
+        filters: artistFilters(next.criteria),
+        catalog: artistCatalogFilters(next.criteria),
+      });
       count = response.total ?? response.results.length;
     } else if (type === "album") {
-      const response = await searchAlbums(next.query, albumOptions(next.criteria));
+      const response = await searchAlbums(next.query, {
+        ...albumOptions(next.criteria),
+        catalog: albumCatalogFilters(next.criteria),
+      });
       count = response.total ?? response.results.length;
     } else {
       const response = await searchSongs(next.query, { filters: songFilters(next.criteria) });

@@ -92,7 +92,7 @@ describe("ArtistSection", () => {
 
     const section = await ArtistSection({ query: "Sabrina Carpenter", all: false });
     await expect(streamed(section)).rejects.toThrow("NEXT_REDIRECT");
-    expect(mocks.searchArtists).toHaveBeenLastCalledWith("Sabrina Carpenter", { filters: {} });
+    expect(mocks.searchArtists).toHaveBeenLastCalledWith("Sabrina Carpenter", { filters: {}, catalog: {} });
     expect(mocks.redirect).toHaveBeenCalledWith({
       href: "/artist/sabrina?from=search&q=Sabrina+Carpenter",
       locale: "es",
@@ -112,6 +112,7 @@ describe("ArtistSection", () => {
     await streamed(await ArtistSection({ query: "Sabrina Carpenter", all: false, criteria: { country: ["US"] } }));
     expect(mocks.searchArtists).toHaveBeenLastCalledWith("Sabrina Carpenter", {
       filters: expect.objectContaining({ country: ["US"] }),
+      catalog: {},
     });
     await streamed(await ArtistSection({ query: "Sabrina Carpenter", advanced: true }));
 

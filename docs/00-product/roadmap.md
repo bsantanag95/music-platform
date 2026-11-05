@@ -52,9 +52,11 @@ en su propia página `/search/advanced`, al estilo de Metal Archives (pestañas 
 Canciones, cada una con su formulario; el nombre o título es opcional y tiene "¿Coincidencia
 exacta?"), con los campos que se aplican igual a la base local y a MusicBrainz: país (varios), ciudad,
 inicio de actividad y estado en Artistas; artista, años y tipos en Álbumes; artista, álbum, tipos y
-duración en Canciones. `/search` queda como buscador rápido con un enlace a la avanzada. Pendientes:
-los campos solo del catálogo (género de la taxonomía propia, sello, número de catálogo, formato, país
-del artista en Álbumes, valoración media, premios, autoría).
+duración en Canciones. `/search` queda como buscador rápido con un enlace a la avanzada.
+`add-catalog-search-fields` suma los campos solo del catálogo: actividad, rol de una persona, género y premios en
+Artistas; género, país del artista y premios en Álbumes. Pendientes: sello, número de catálogo y formato (vía la
+búsqueda de *releases* de MusicBrainz), valoración media (cuando haya comunidad), autoría y campos del catálogo en
+Canciones.
 
 ## Fase 4 — Auth, ratings y comentarios
 

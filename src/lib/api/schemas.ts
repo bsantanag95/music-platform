@@ -135,6 +135,9 @@ export const ArtistSearchResultSchema = z.object({
   endYear: z.number().int().nullable().optional(),
   discCount: z.number().int().nullable().optional(),
   beginArea: z.string().nullable().optional(),
+  activeFrom: z.number().int().nullable().optional(),
+  activeTo: z.number().int().nullable().optional(),
+  memberOf: z.object({ id: z.uuid(), name: z.string(), more: z.number().int() }).nullable().optional(),
 });
 export type ArtistSearchResult = z.infer<typeof ArtistSearchResultSchema>;
 
@@ -149,6 +152,8 @@ export const AlbumSearchResultSchema = z.object({
   cached: z.boolean(),
   community: z.object({ average: z.number().nullable(), count: z.number().int() }).optional(),
   yourStars: z.number().nullable().optional(),
+  genre: z.object({ slug: z.string(), name: z.string(), nameEs: z.string().nullable() }).nullable().optional(),
+  artistCountry: z.string().nullable().optional(),
 });
 export type AlbumSearchResult = z.infer<typeof AlbumSearchResultSchema>;
 
@@ -192,6 +197,7 @@ export const ArtistSearchResponseSchema = z.object({
   remoteFailed: z.boolean(),
   total: z.number().int().nullable().optional(),
   nextOffset: z.number().int().nullable().optional(),
+  catalogOnly: z.boolean().optional(),
 });
 export type ArtistSearchResponse = z.infer<typeof ArtistSearchResponseSchema>;
 
@@ -202,6 +208,7 @@ export const AlbumSearchResponseSchema = z.object({
   total: z.number().int().nullable(),
   nextOffset: z.number().int().nullable(),
   refine: SearchRefineHintSchema.nullable(),
+  catalogOnly: z.boolean().optional(),
 });
 export type AlbumSearchResponse = z.infer<typeof AlbumSearchResponseSchema>;
 

@@ -31,7 +31,7 @@ import { escapeLike, matchTier, normalizeSearchText } from "./normalize";
 const CANDIDATE_POOL = 40;
 
 /** Coincidencia tolerante de `column` con el texto: trigramas o subcadena, sin acentos. */
-function fuzzyMatch(column: AnyColumn, text: string): SQL {
+export function fuzzyMatch(column: AnyColumn, text: string): SQL {
   const pattern = `%${escapeLike(text)}%`;
   return sql`(search_normalize(${column}) % search_normalize(${text}) OR search_normalize(${column}) LIKE search_normalize(${pattern}))`;
 }
@@ -112,7 +112,7 @@ function containsWords(column: AnyColumn | SQL, value: string): SQL {
 }
 
 /** Nombre o título igual al normalizado: «¿Coincidencia exacta?» (openspec: redesign-advanced-search). */
-function exactMatch(column: AnyColumn, text: string): SQL {
+export function exactMatch(column: AnyColumn, text: string): SQL {
   return sql`search_key(${column}) = search_key(${text})`;
 }
 
@@ -120,7 +120,7 @@ function exactMatch(column: AnyColumn, text: string): SQL {
  * Criterios sobre la ficha del artista (openspec: add-advanced-search-phase1, redesign-advanced-search).
  * Una fila sin el dato no coincide, igual que en MusicBrainz.
  */
-function artistFilters({ artistType, country, area, beginFrom, beginTo, ended }: ArtistQueryFilters): SQL[] {
+export function artistFilters({ artistType, country, area, beginFrom, beginTo, ended }: ArtistQueryFilters): SQL[] {
   const filters: SQL[] = [];
   if (artistType) filters.push(eq(artist.type, artistType));
   if (country?.length) filters.push(inArray(artist.country, country));
@@ -200,7 +200,7 @@ function creditedArtistMatches(name: string, exact: boolean | undefined): SQL {
   )`;
 }
 
-function releaseGroupFilters({
+export function releaseGroupFilters({
   categories,
   decade,
   yearFrom,

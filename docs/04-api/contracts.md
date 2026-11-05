@@ -42,6 +42,11 @@ un artista sin `type` en MusicBrainz se guarda como `unknown` (nunca `various`).
 | `artistExact` | `album`, `song` | `1`: algún artista principal se llama exactamente así. Sin `artist`, se ignora. |
 | `album`, `albumExact` | `song` | Título de un álbum donde aparece (`release:"…"`), por palabras completas o exacto. |
 | `durMin`, `durMax` | `song` | Segundos (0–7200) o `m:ss` → `recording.duration_sec` / `dur:[ms TO ms]`, sobre cada grabación. |
+| `activeFrom`, `activeTo` | `artist` | **Solo catálogo.** Años (1900–2100) de actividad: el período del primer al último disco propio (hasta hoy si `life_ended` no es verdadero) se solapa con el rango; solo artistas con la discografía explorada (openspec `add-catalog-search-fields`). |
+| `role` | `artist` | **Solo catálogo**, solo con `artistType=person` (sin él se ignora): `own` (algún disco como principal), `member` (pertenencia a una banda), `producer` (personal de producción, ingeniería, mezcla, grabación, programación o arreglos), `musician` (instrumento o voz en discos donde no es principal). |
+| `genre` | `artist`, `album` | **Solo catálogo.** Slug de un género visible de la taxonomía propia, con sus subgéneros. Álbumes: género efectivo (votos, semillas y herencia); Artistas: semilla del artista o algún disco propio con el género. Un slug desconocido se ignora. |
+| `award`, `awardWon` | `artist`, `album` | **Solo catálogo.** `any` o el slug de un premio o salón de la fama cargado; `awardWon=1`, solo ganados (el salón de la fama cuenta como ganado). Álbumes: nominación del álbum o de una grabación anclada en él; Artistas: la del artista o de sus discos o grabaciones como principal. |
+| `artistCountry` | `album` | **Solo catálogo.** Repetible (hasta 10): país de algún artista principal acreditado. |
 | `purpose` | `song` | `pick`: modo de elección para los buscadores que eligen un objetivo (diálogo "Añadir", openspec `speed-up-quick-actions-search`). Ver abajo. Otro valor se ignora. |
 
 Los criterios inválidos, vacíos o de otro tipo se ignoran (sin `400`); un rango invertido se
@@ -49,6 +54,14 @@ intercambia. En los tres tipos la respuesta trae `total` y `nextOffset` (Artista
 `redesign-advanced-search`). Las cláusulas de MusicBrainz para categoría, década y años son una aproximación: el
 filtro exacto se reaplica sobre la categoría mapeada y el año conocido. Una fila sin el dato que
 pide un filtro no coincide. `nextOffset` corresponde a la consulta filtrada.
+
+**Modo solo catálogo** (openspec `add-catalog-search-fields`): con algún campo marcado "solo catálogo" que resulte
+válido, Artistas y Álbumes se resuelven solo con la base propia, sin solicitudes a MusicBrainz ni stubs nuevos: todos
+los criterios en SQL, orden estable, páginas de 25 por `offset`, `total` exacto y `catalogOnly: true` en la respuesta
+(`false` en el modo habitual). Estos campos bastan por sí solos para buscar sin `q`. Cada resultado de Artistas puede
+traer `memberOf` (`{ id, name, more }`, en los dos modos) y, con un filtro de actividad, `activeFrom`/`activeTo`
+(`activeTo: null` = sigue en actividad); cada álbum, con un filtro de género o de país del artista, `genre`
+(`{ slug, name, nameEs }`) y `artistCountry`.
 
 **200 OK — `type=artist`**
 

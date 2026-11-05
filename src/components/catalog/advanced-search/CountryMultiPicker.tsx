@@ -16,9 +16,15 @@ export function CountryMultiPicker({
   id,
   initial,
   inputClassName,
+  name = "country",
+  label,
 }: {
   id: string;
   initial: string[];
+  /** Parámetro de la URL: `country` (Artistas) o `artistCountry` (Álbumes, openspec: add-catalog-search-fields). */
+  name?: "country" | "artistCountry";
+  /** Etiqueta del campo; por defecto "País". */
+  label?: string;
   /** Clase de los demás campos del formulario (openspec: refine-advanced-search-phase2). */
   inputClassName?: string;
 }) {
@@ -51,7 +57,7 @@ export function CountryMultiPicker({
     <div className="flex flex-col gap-2">
       <SearchablePicker
         id={id}
-        label={t("country")}
+        label={label ?? t("country")}
         value=""
         onChange={(code) => {
           if (code && !selected.includes(code) && selected.length < MAX_COUNTRIES) {
@@ -66,7 +72,7 @@ export function CountryMultiPicker({
         <ul className="flex flex-wrap gap-1.5" aria-label={t("countrySelected")}>
           {selected.map((code) => (
             <li key={code}>
-              <input type="hidden" name="country" value={code} />
+              <input type="hidden" name={name} value={code} />
               <button
                 type="button"
                 onClick={() => setSelected((current) => current.filter((item) => item !== code))}

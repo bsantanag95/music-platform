@@ -12,6 +12,14 @@ vi.mock("@/services/musicbrainz/client", () => ({
 }));
 vi.mock("../ingest-artist", () => ({ upsertArtistStubsFromSearch: vi.fn() }));
 vi.mock("./local-match", () => ({ matchLocalArtists: vi.fn() }));
+// "Integrante de" lee la base por página (openspec: add-catalog-search-fields): aquí, nadie es integrante.
+vi.mock("./catalog-fields", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./catalog-fields")>()),
+  memberOf: vi.fn(async () => new Map()),
+  resolveCatalogFields: vi.fn(async () => ({ genreId: null, award: null })),
+  catalogArtistPage: vi.fn(),
+  activeSpans: vi.fn(async () => new Map()),
+}));
 vi.mock("./activity", () => ({
   activityScores: vi.fn(async () => new Map()),
   primaryDiscCounts: vi.fn(async () => new Map()),
@@ -25,6 +33,7 @@ const { upsertArtistStubsFromSearch } = await import("../ingest-artist");
 const { matchLocalArtists } = await import("./local-match");
 const { activityScores } = await import("./activity");
 const { searchArtists, uniqueExactArtist } = await import("./artists");
+const catalogFields = await import("./catalog-fields");
 
 function row(overrides: Partial<ArtistRow>): ArtistRow {
   return {
@@ -338,5 +347,46 @@ describe("años y lugar de MusicBrainz (openspec: refine-advanced-search-phase3)
     const remote = results.find((artist) => artist.name === "Los Prisioneros");
     expect(local).toMatchObject({ beginYear: 1987, beginArea: "Concepción", endYear: null });
     expect(remote).toMatchObject({ beginYear: 1982, endYear: 2006, beginArea: "San Miguel" });
+  });
+});
+
+describe("searchArtists solo del catálogo (openspec: add-catalog-search-fields)", () => {
+  it("con un campo del catálogo no consulta MusicBrainz y pagina la base con período e integrantes", async () => {
+    const mena = row({ mbid: "mena", name: "Javiera Mena", type: "person", discographySyncedAt: new Date() });
+    vi.mocked(catalogFields.catalogArtistPage).mockResolvedValue({ rows: [mena], total: 30, nextOffset: 25 });
+    vi.mocked(catalogFields.activeSpans).mockResolvedValue(new Map([[mena.id, { from: 2006, to: null }]]));
+    vi.mocked(catalogFields.memberOf).mockResolvedValue(new Map([[mena.id, { id: "band", name: "Prisma", more: 1 }]]));
+
+    const response = await searchArtists("", {
+      filters: { artistType: "person", country: ["CL"] },
+      catalog: { activeFrom: 2005, activeTo: 2010 },
+    });
+
+    expect(musicbrainz.searchArtist).not.toHaveBeenCalled();
+    expect(upsertArtistStubsFromSearch).not.toHaveBeenCalled();
+    expect(catalogFields.catalogArtistPage).toHaveBeenCalledWith(
+      "",
+      { artistType: "person", country: ["CL"] },
+      { activeFrom: 2005, activeTo: 2010 },
+      { genreId: null, award: null },
+      0,
+    );
+    expect(response).toMatchObject({ catalogOnly: true, total: 30, nextOffset: 25, remoteFailed: false });
+    expect(response.results[0]).toMatchObject({
+      name: "Javiera Mena",
+      activeFrom: 2006,
+      activeTo: null,
+      memberOf: { name: "Prisma", more: 1 },
+    });
+  });
+
+  it("un género desconocido no activa el modo catálogo", async () => {
+    vi.mocked(matchLocalArtists).mockResolvedValue([]);
+    vi.mocked(musicbrainz.searchArtist).mockResolvedValue({ artists: [] });
+
+    const response = await searchArtists("kiss", { catalog: { genre: "zzz" } });
+
+    expect(musicbrainz.searchArtist).toHaveBeenCalledTimes(1);
+    expect(response.catalogOnly).toBe(false);
   });
 });

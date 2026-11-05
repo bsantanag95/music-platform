@@ -262,6 +262,20 @@ export function BroadQueryHint({
   );
 }
 
+/**
+ * Búsqueda solo del catálogo (openspec: add-catalog-search-fields): algún campo no existe en MusicBrainz, así que los
+ * resultados salen solo de la base propia y dejan fuera lo que el catálogo aún no tiene.
+ */
+export function CatalogOnlyNotice({ type }: { type: "artist" | "album" }) {
+  const t = useTranslations("catalog.search.advanced.catalogOnly");
+  return (
+    <div role="note" className="flex flex-col gap-1 rounded-lg border border-ink-border bg-ink-surface/70 px-4 py-3">
+      <p className="font-display text-sm text-paper">{t(`title.${type}`)}</p>
+      <p className="font-body text-sm text-paper-muted">{t("description")}</p>
+    </div>
+  );
+}
+
 /** Pastillas de filtro como enlaces (la página se re-resuelve con el filtro en la URL). */
 export function FilterPills({
   label,

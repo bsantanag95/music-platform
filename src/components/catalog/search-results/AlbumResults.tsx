@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { formatStars } from "@/components/album/album-format";
+import { countryName } from "@/components/artist/artist-format";
+import { genreDisplayName, genreLocaleOf } from "@/services/genres/names";
 import { Link } from "@/i18n/navigation";
 import { albumHref } from "@/lib/catalog-links";
 import type { AlbumSearchResult } from "@/services/catalog/search/types";
@@ -26,6 +28,12 @@ export function AlbumRow({ album, highlight = [] }: { album: AlbumSearchResult; 
     { text: album.artistName, hit: highlight.includes("artist") },
     { text: t(`artist.categories.${album.category}`), hit: highlight.includes("category") },
     { text: album.year !== null ? String(album.year) : null, hit: highlight.includes("year") },
+    // Género y país del artista que coincidieron, solo con esos filtros (openspec: add-catalog-search-fields).
+    { text: album.genre ? genreDisplayName(album.genre, genreLocaleOf(locale)) : null, hit: highlight.includes("genre") },
+    {
+      text: album.artistCountry ? (countryName(album.artistCountry, locale) ?? album.artistCountry) : null,
+      hit: highlight.includes("artistCountry"),
+    },
   ];
 
   return (

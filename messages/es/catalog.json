@@ -240,7 +240,11 @@
         "filterGroup": "Grupo",
         "yearsRange": "{begin}–{end}",
         "yearsSince": "desde {begin}",
-        "discs": "{count, plural, one {# disco} other {# discos}}"
+        "discs": "{count, plural, one {# disco} other {# discos}}",
+        "memberOf": "Integrante de {band}",
+        "memberOfMore": "Integrante de {band} y {count, plural, one {# más} other {# más}}",
+        "activeSpan": "Activo {from}–{to}",
+        "activeSpanOpen": "Activo desde {from}"
       },
       "albums": {
         "categoryLabel": "Categoría",
@@ -314,7 +318,7 @@
       "countryRemove": "Quitar {country}",
       "area": "Ciudad o región",
       "areaHint": "Donde nació la persona o se formó el grupo",
-      "begin": "Año de inicio",
+      "begin": "Año de nacimiento o formación",
       "beginHint": "Nacimiento de una persona o formación de un grupo",
       "from": "Desde",
       "to": "Hasta",
@@ -345,7 +349,12 @@
         "year": "Año {range}",
         "album": "Álbum: {value}",
         "albumExact": "Álbum: {value} (exacto)",
-        "duration": "Duración {range}"
+        "duration": "Duración {range}",
+        "active": "Activo {range}",
+        "genre": "{value} y subgéneros",
+        "awardWon": "{value} · ganador",
+        "awardAny": "Algún premio",
+        "awardAnyWon": "Ganador de algún premio"
       },
       "range": {
         "between": "{from}–{to}",
@@ -374,7 +383,9 @@
         "identity": "Identidad",
         "origin": "Origen",
         "period": "Época",
-        "release": "Lanzamiento"
+        "release": "Lanzamiento",
+        "catalog": "Del catálogo",
+        "catalogHint": "Buscan solo en lo que ya está en el catálogo, no en MusicBrainz."
       },
       "criteriaCount": "{count, plural, =0 {Ningún criterio} one {# criterio} other {# criterios}}",
       "errors": {
@@ -409,7 +420,8 @@
           "country": "País",
           "area": "Ciudad o región",
           "years": "Años",
-          "discs": "Discos"
+          "discs": "Discos",
+          "active": "Activo"
         },
         "album": {
           "title": "Título",
@@ -424,6 +436,35 @@
           "artist": "Artista",
           "duration": "Duración"
         }
+      },
+      "beginPerson": "Año de nacimiento",
+      "beginPersonHint": "Año en que nació",
+      "beginGroup": "Año de formación",
+      "beginGroupHint": "Año en que se formó el grupo",
+      "active": "Activo entre",
+      "activeHint": "Del primer al último disco propio, hasta hoy si sigue en actividad. Solo artistas con la discografía explorada.",
+      "role": "Rol",
+      "roleHint": "Qué hace en el catálogo",
+      "roles": {
+        "own": "Con discografía propia",
+        "member": "Integrante de una banda",
+        "producer": "Producción o técnica",
+        "musician": "Músico en discos de otros"
+      },
+      "genre": "Género",
+      "genreSearch": "Buscar un género",
+      "genreHint": "Incluye sus subgéneros",
+      "genreRemove": "Quitar el género {genre}",
+      "award": "Premios",
+      "awardAny": "Cualquier premio",
+      "awardWon": "Solo ganadores",
+      "artistCountry": "País del artista",
+      "catalogOnly": {
+        "title": {
+          "artist": "Solo artistas del catálogo",
+          "album": "Solo álbumes del catálogo"
+        },
+        "description": "Algunos campos no existen en MusicBrainz, así que esta búsqueda solo ve lo que ya está en el catálogo."
       }
     },
     "landing": {

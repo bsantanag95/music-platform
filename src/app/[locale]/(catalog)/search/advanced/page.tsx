@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { listAwardOptions } from "@/services/catalog/search/catalog-fields";
+import { findStyleGenreBySlug, genreDisplayName } from "@/services/genres/read";
+import { genreLocaleOf } from "@/services/genres/names";
 import { Link } from "@/i18n/navigation";
 import {
   advancedSearchHref,
@@ -60,6 +63,14 @@ async function AdvancedSearchPage({ searchParams }: AdvancedSearchPageProps) {
   // refine-advanced-search-phase2).
   const ignored = ignoredParams(type, fromRecord(params), criteria);
   const searching = query !== "" || hasCriteria(criteria);
+  // Campos del catálogo (openspec: add-catalog-search-fields): los premios cargados para el selector y el nombre del
+  // género de la URL, para el formulario y la barra de criterios.
+  const [awards, genreRow, locale] = await Promise.all([
+    listAwardOptions(),
+    criteria.genre ? findStyleGenreBySlug(criteria.genre) : null,
+    getLocale(),
+  ]);
+  const genreName = genreRow ? genreDisplayName(genreRow, genreLocaleOf(locale)) : null;
   // Remonta el formulario con otra URL: sus campos no controlados muestran siempre la búsqueda en curso.
   const formKey = JSON.stringify([type, query, criteria]);
 
@@ -106,9 +117,9 @@ async function AdvancedSearchPage({ searchParams }: AdvancedSearchPageProps) {
           <AdvancedSearchDisclosure
             key={formKey}
             searching={searching}
-            bar={<CriteriaChips type={type} query={query} criteria={criteria} />}
+            bar={<CriteriaChips type={type} query={query} criteria={criteria} genreName={genreName} />}
           >
-            <AdvancedSearchForm type={type} query={query} criteria={criteria} />
+            <AdvancedSearchForm type={type} query={query} criteria={criteria} awards={awards} genreName={genreName} />
           </AdvancedSearchDisclosure>
         </div>
 

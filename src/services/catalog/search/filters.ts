@@ -5,6 +5,7 @@
 
 import type { ReleaseGroupCategoryValue } from "../ingest-release-group";
 import type { AlbumSearchOptions } from "./albums";
+import type { AlbumCatalogFilters, ArtistCatalogFilters } from "./catalog-fields";
 import type { ArtistQueryFilters } from "./mb-query";
 import type { SongFilters } from "./songs";
 import type { SearchType } from "./types";
@@ -42,14 +43,62 @@ export interface SearchCriteria {
   /** Canciones: duración en segundos. */
   durMin?: number;
   durMax?: number;
+  // Campos del catálogo (openspec: add-catalog-search-fields): MusicBrainz no los indexa, así que una búsqueda con
+  // alguno se resuelve solo con la base propia (`isCatalogOnly`).
+  /** Artistas: años de actividad (primer al último disco propio, hasta hoy si sigue activo). */
+  activeFrom?: number;
+  activeTo?: number;
+  /** Artistas, solo con `artistType=person`: rol en el catálogo. */
+  role?: ArtistRole;
+  /** Artistas y Álbumes: slug de un género de la taxonomía propia (con sus subgéneros). */
+  genre?: string;
+  /** Artistas y Álbumes: `any` o el slug de un premio o salón de la fama. */
+  award?: string;
+  /** Con `award`: solo lo que lo ganó. */
+  awardWon?: boolean;
+  /** Álbumes: país (ISO 3166-1 alfa-2) de algún artista principal. */
+  artistCountry?: string[];
+}
+
+export const ARTIST_ROLES = ["own", "member", "producer", "musician"] as const;
+export type ArtistRole = (typeof ARTIST_ROLES)[number];
+
+/** Claves que MusicBrainz no sabe filtrar: con alguna, la búsqueda es solo del catálogo. */
+export const CATALOG_ONLY_KEYS: readonly CriteriaKey[] = [
+  "activeFrom",
+  "activeTo",
+  "role",
+  "genre",
+  "award",
+  "awardWon",
+  "artistCountry",
+];
+
+/** La búsqueda tiene algún campo del catálogo (los criterios ya vienen acotados al tipo por `parseCriteria`). */
+export function isCatalogOnly(criteria: SearchCriteria): boolean {
+  return CATALOG_ONLY_KEYS.some((key) => criteria[key] !== undefined);
 }
 
 export type CriteriaKey = keyof SearchCriteria;
 
 /** Parámetros de cada tipo. */
 export const CRITERIA_KEYS: Record<SearchType, readonly CriteriaKey[]> = {
-  artist: ["exact", "artistType", "country", "area", "beginFrom", "beginTo", "ended"],
-  album: ["exact", "artist", "artistExact", "yearFrom", "yearTo", "category"],
+  artist: [
+    "exact",
+    "artistType",
+    "country",
+    "area",
+    "beginFrom",
+    "beginTo",
+    "ended",
+    "activeFrom",
+    "activeTo",
+    "role",
+    "genre",
+    "award",
+    "awardWon",
+  ],
+  album: ["exact", "artist", "artistExact", "yearFrom", "yearTo", "category", "genre", "artistCountry", "award", "awardWon"],
   song: ["exact", "artist", "artistExact", "album", "albumExact", "category", "durMin", "durMax"],
   user: [],
 };
@@ -83,6 +132,17 @@ function parseSeconds(values: string[]): number | undefined {
 function parseText(values: string[]): string | undefined {
   const raw = firstOf(values);
   return raw && raw.length <= MAX_TEXT_LENGTH ? raw : undefined;
+}
+
+/** Slug de la taxonomía o de un premio: minúsculas, dígitos y guiones. Si existe lo decide la base. */
+function parseSlug(values: string[]): string | undefined {
+  const raw = firstOf(values)?.toLowerCase();
+  return raw && /^[a-z0-9][a-z0-9-]{0,79}$/.test(raw) ? raw : undefined;
+}
+
+function parseCountry(raw: string): string | undefined {
+  const code = raw.toUpperCase();
+  return /^[A-Z]{2}$/.test(code) ? code : undefined;
 }
 
 function parseFlag(values: string[]): boolean {
@@ -133,13 +193,7 @@ export function parseCriteria(type: SearchType, read: ParamReader, query = ""): 
   if (query.trim() && parseFlag(read("exact"))) set("exact", true);
   const artistType = firstOf(read("artistType"));
   if (artistType === "person" || artistType === "group") set("artistType", artistType);
-  set(
-    "country",
-    parseList(read("country"), (raw) => {
-      const code = raw.toUpperCase();
-      return /^[A-Z]{2}$/.test(code) ? code : undefined;
-    }),
-  );
+  set("country", parseList(read("country"), parseCountry));
   set("area", parseText(read("area")));
   const [beginFrom, beginTo] = ordered(parseYear(read("beginFrom"), 1000, 2100), parseYear(read("beginTo"), 1000, 2100));
   set("beginFrom", beginFrom);
@@ -164,6 +218,17 @@ export function parseCriteria(type: SearchType, read: ParamReader, query = ""): 
   const [durMin, durMax] = ordered(parseSeconds(read("durMin")), parseSeconds(read("durMax")));
   set("durMin", durMin);
   set("durMax", durMax);
+  const [activeFrom, activeTo] = ordered(parseYear(read("activeFrom"), 1900, 2100), parseYear(read("activeTo"), 1900, 2100));
+  set("activeFrom", activeFrom);
+  set("activeTo", activeTo);
+  // El rol solo tiene sentido para una persona: sin Persona se ignora, como una bandera sin su campo.
+  const role = firstOf(read("role"));
+  if (artistType === "person" && (ARTIST_ROLES as readonly string[]).includes(role ?? "")) set("role", role as ArtistRole);
+  set("genre", parseSlug(read("genre")));
+  const award = parseSlug(read("award"));
+  set("award", award);
+  if (award && keys.includes("award") && parseFlag(read("awardWon"))) set("awardWon", true);
+  set("artistCountry", parseList(read("artistCountry"), parseCountry));
   return criteria;
 }
 
@@ -194,11 +259,18 @@ export function advancedSearchHref(type: SearchType, query: string, criteria: Se
 
 /**
  * Al cambiar de pestaña, solo lo que significa lo mismo en el destino: artista y tipos de lanzamiento
- * entre Álbumes y Canciones. `q` no se arrastra (es nombre en una pestaña y título en otra).
+ * entre Álbumes y Canciones; género y premios entre Artistas y Álbumes. `q` no se arrastra (es nombre en
+ * una pestaña y título en otra).
  */
 export function criteriaForTab(target: SearchType, criteria: SearchCriteria): SearchCriteria {
-  if (target !== "album" && target !== "song") return {};
   const kept: SearchCriteria = {};
+  // Género y premios significan lo mismo en Artistas y Álbumes (openspec: add-catalog-search-fields).
+  if (target === "artist" || target === "album") {
+    if (criteria.genre) kept.genre = criteria.genre;
+    if (criteria.award) kept.award = criteria.award;
+    if (criteria.award && criteria.awardWon) kept.awardWon = true;
+  }
+  if (target !== "album" && target !== "song") return kept;
   if (criteria.artist) kept.artist = criteria.artist;
   if (criteria.artistExact) kept.artistExact = true;
   if (criteria.category) kept.category = criteria.category;
@@ -224,6 +296,18 @@ export function isQuickSearch(type: SearchType, criteria: SearchCriteria): boole
 export function artistFilters(criteria: SearchCriteria): ArtistQueryFilters {
   const { exact, artistType, country, area, beginFrom, beginTo, ended } = criteria;
   return { exact, artistType, country, area, beginFrom, beginTo, ended };
+}
+
+/** Campos del catálogo de Artistas (openspec: add-catalog-search-fields). */
+export function artistCatalogFilters(criteria: SearchCriteria): ArtistCatalogFilters {
+  const { activeFrom, activeTo, role, genre, award, awardWon } = criteria;
+  return { activeFrom, activeTo, role, genre, award, awardWon };
+}
+
+/** Campos del catálogo de Álbumes (openspec: add-catalog-search-fields). */
+export function albumCatalogFilters(criteria: SearchCriteria): AlbumCatalogFilters {
+  const { genre, award, awardWon, artistCountry } = criteria;
+  return { genre, award, awardWon, artistCountry };
 }
 
 export function albumOptions(criteria: SearchCriteria): AlbumSearchOptions {
@@ -264,7 +348,12 @@ export type CriterionChip =
   | { id: "year" }
   | { id: "category"; value: ReleaseGroupCategoryValue }
   | { id: "album" }
-  | { id: "duration" };
+  | { id: "duration" }
+  | { id: "active" }
+  | { id: "role" }
+  | { id: "genre" }
+  | { id: "award" }
+  | { id: "artistCountry"; value: string };
 
 /** Criterios activos de la búsqueda, como pastillas. */
 export function criterionChips(type: SearchType, query: string, criteria: SearchCriteria): CriterionChip[] {
@@ -276,6 +365,9 @@ export function criterionChips(type: SearchType, query: string, criteria: Search
     if (criteria.area) chips.push({ id: "area" });
     if (criteria.beginFrom !== undefined || criteria.beginTo !== undefined) chips.push({ id: "begin" });
     if (criteria.ended !== undefined) chips.push({ id: "ended" });
+    if (criteria.role) chips.push({ id: "role" });
+    if (criteria.activeFrom !== undefined || criteria.activeTo !== undefined) chips.push({ id: "active" });
+    catalogChips(criteria, chips);
     return chips;
   }
   if (criteria.artist) chips.push({ id: "artist" });
@@ -285,7 +377,17 @@ export function criterionChips(type: SearchType, query: string, criteria: Search
     if (criteria.album) chips.push({ id: "album" });
     if (criteria.durMin !== undefined || criteria.durMax !== undefined) chips.push({ id: "duration" });
   }
+  if (type === "album") {
+    catalogChips(criteria, chips);
+    criteria.artistCountry?.forEach((value) => chips.push({ id: "artistCountry", value }));
+  }
   return chips;
+}
+
+/** Género y premios, en el orden del grupo "Del catálogo". */
+function catalogChips(criteria: SearchCriteria, chips: CriterionChip[]): void {
+  if (criteria.genre) chips.push({ id: "genre" });
+  if (criteria.award) chips.push({ id: "award" });
 }
 
 /** La misma búsqueda sin un criterio. Quitar un texto quita también su coincidencia exacta. */
@@ -310,6 +412,17 @@ export function removeCriterion(
       break;
     case "category":
       next.category = without(next.category, chip.value);
+      break;
+    case "artistCountry":
+      next.artistCountry = without(next.artistCountry, chip.value);
+      break;
+    case "active":
+      delete next.activeFrom;
+      delete next.activeTo;
+      break;
+    case "award":
+      delete next.award;
+      delete next.awardWon;
       break;
     case "begin":
       delete next.beginFrom;
@@ -341,14 +454,18 @@ export function removeCriterion(
 // Validación del formulario y valores ignorados de la URL (openspec: refine-advanced-search-phase2, design D3 y D4).
 
 /** Rangos del formulario de cada tipo: campos "desde" y "hasta", y si son años (con su mínimo) o duraciones. */
-const FORM_RANGES: Record<SearchType, { range: "begin" | "year" | "duration"; from: string; to: string; minYear?: number }[]> = {
-  artist: [{ range: "begin", from: "beginFrom", to: "beginTo", minYear: 1000 }],
+const FORM_RANGES: Record<SearchType, { range: FormRange; from: string; to: string; minYear?: number }[]> = {
+  artist: [
+    { range: "begin", from: "beginFrom", to: "beginTo", minYear: 1000 },
+    { range: "active", from: "activeFrom", to: "activeTo", minYear: 1900 },
+  ],
   album: [{ range: "year", from: "yearFrom", to: "yearTo", minYear: 1900 }],
   song: [{ range: "duration", from: "durMin", to: "durMax" }],
   user: [],
 };
 
 export type FormRangeError = "yearFormat" | "durationFormat" | "rangeOrder";
+export type FormRange = "begin" | "active" | "year" | "duration";
 
 /**
  * Errores del formulario por rango (`begin`, `year`, `duration`), con el primer campo a enfocar. Vacío = válido. Los
@@ -357,8 +474,8 @@ export type FormRangeError = "yearFormat" | "durationFormat" | "rangeOrder";
 export function validateAdvancedForm(
   type: SearchType,
   get: (name: string) => string,
-): Partial<Record<"begin" | "year" | "duration", { error: FormRangeError; field: string }>> {
-  const errors: Partial<Record<"begin" | "year" | "duration", { error: FormRangeError; field: string }>> = {};
+): Partial<Record<FormRange, { error: FormRangeError; field: string }>> {
+  const errors: Partial<Record<FormRange, { error: FormRangeError; field: string }>> = {};
   for (const { range, from, to, minYear } of FORM_RANGES[type]) {
     const read = (name: string): number | null | "invalid" => {
       const raw = get(name).trim();
@@ -387,7 +504,7 @@ export function validateAdvancedForm(
 export function ignoredParams(type: SearchType, read: ParamReader, criteria: SearchCriteria): string[] {
   const ignored: string[] = [];
   for (const key of CRITERIA_KEYS[type]) {
-    if (key === "exact" || key === "artistExact" || key === "albumExact") continue;
+    if (key === "exact" || key === "artistExact" || key === "albumExact" || key === "awardWon") continue;
     const raw = read(key)
       .map((value) => value.trim())
       .filter(Boolean);
@@ -407,7 +524,19 @@ export function ignoredParams(type: SearchType, read: ParamReader, criteria: Sea
  * Datos de una fila que la búsqueda filtró, para destacarlos en la lista y la tabla (openspec:
  * refine-advanced-search-phase3): así se comprueba de un vistazo que cada resultado cumple lo pedido.
  */
-export type ResultHighlight = "type" | "country" | "area" | "years" | "artist" | "year" | "category" | "album" | "duration";
+export type ResultHighlight =
+  | "type"
+  | "country"
+  | "area"
+  | "years"
+  | "artist"
+  | "year"
+  | "category"
+  | "album"
+  | "duration"
+  | "active"
+  | "genre"
+  | "artistCountry";
 
 export function highlightFields(type: SearchType, criteria: SearchCriteria): ResultHighlight[] {
   const fields: ResultHighlight[] = [];
@@ -418,11 +547,14 @@ export function highlightFields(type: SearchType, criteria: SearchCriteria): Res
     if (criteria.beginFrom !== undefined || criteria.beginTo !== undefined || criteria.ended !== undefined) {
       fields.push("years");
     }
+    if (criteria.activeFrom !== undefined || criteria.activeTo !== undefined) fields.push("active");
     return fields;
   }
   if (criteria.artist) fields.push("artist");
   if (criteria.category) fields.push("category");
   if (type === "album" && (criteria.yearFrom !== undefined || criteria.yearTo !== undefined)) fields.push("year");
+  if (type === "album" && criteria.genre) fields.push("genre");
+  if (type === "album" && criteria.artistCountry) fields.push("artistCountry");
   if (type === "song") {
     if (criteria.album) fields.push("album");
     if (criteria.durMin !== undefined || criteria.durMax !== undefined) fields.push("duration");

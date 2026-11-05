@@ -13,6 +13,7 @@ import {
   highlightFields,
   ignoredParams,
   validateAdvancedForm,
+  isCatalogOnly,
   isQuickSearch,
   parseCriteria,
   parseDurationInput,
@@ -226,5 +227,93 @@ describe("datos destacados (openspec: refine-advanced-search-phase3)", () => {
     ]);
     expect(highlightFields("song", { album: "Thriller", durMin: 420 })).toEqual(["album", "duration"]);
     expect(highlightFields("song", {})).toEqual([]);
+  });
+});
+
+describe("campos del catálogo (openspec: add-catalog-search-fields)", () => {
+  it("Artistas: actividad, rol, género y premios; el rol solo con Persona", () => {
+    expect(
+      parseCriteria("artist", read("artistType=person&activeFrom=1990&activeTo=1980&role=member&genre=Rock&award=grammy&awardWon=1")),
+    ).toEqual({
+      artistType: "person",
+      activeFrom: 1980,
+      activeTo: 1990,
+      role: "member",
+      genre: "rock",
+      award: "grammy",
+      awardWon: true,
+    });
+    expect(parseCriteria("artist", read("artistType=group&role=member"))).toEqual({ artistType: "group" });
+    expect(parseCriteria("artist", read("role=own"))).toEqual({});
+    expect(parseCriteria("artist", read("artistType=person&role=boss"))).toEqual({ artistType: "person" });
+  });
+
+  it("Álbumes: género, países del artista y premios; awardWon sin premio se ignora", () => {
+    expect(parseCriteria("album", read("genre=alternative-rock&artistCountry=cl&artistCountry=CL&artistCountry=Chile&award=any"))).toEqual({
+      genre: "alternative-rock",
+      artistCountry: ["CL"],
+      award: "any",
+    });
+    expect(parseCriteria("album", read("awardWon=1&yearFrom=1990"))).toEqual({ yearFrom: 1990 });
+    expect(parseCriteria("album", read("genre=no%20vale"))).toEqual({});
+    // Canciones no tiene campos del catálogo.
+    expect(parseCriteria("song", read("genre=rock&award=any&artistCountry=CL"))).toEqual({});
+  });
+
+  it("modo solo catálogo con cualquier campo del catálogo", () => {
+    expect(isCatalogOnly({ country: ["CL"], beginFrom: 1980 })).toBe(false);
+    expect(isCatalogOnly({ country: ["CL"], genre: "rock" })).toBe(true);
+    expect(isCatalogOnly({ activeTo: 1990 })).toBe(true);
+    expect(isCatalogOnly({ artistCountry: ["CL"] })).toBe(true);
+  });
+
+  it("las pestañas conservan género y premios entre Artistas y Álbumes", () => {
+    const criteria = { country: ["CL"], genre: "rock", award: "any", awardWon: true, role: "own" as const };
+    expect(criteriaForTab("album", criteria)).toEqual({ genre: "rock", award: "any", awardWon: true });
+    expect(criteriaForTab("artist", { genre: "rock", artistCountry: ["CL"], category: ["studio" as const] })).toEqual({
+      genre: "rock",
+    });
+    expect(criteriaForTab("song", { genre: "rock", artist: "Kiss" })).toEqual({ artist: "Kiss" });
+  });
+
+  it("pastillas y quitar un campo del catálogo", () => {
+    const criteria = { activeFrom: 1980, activeTo: 1990, role: "own" as const, genre: "rock", award: "grammy", awardWon: true };
+    expect(criterionChips("artist", "", { artistType: "person", ...criteria }).map((chip) => chip.id)).toEqual([
+      "artistType",
+      "role",
+      "active",
+      "genre",
+      "award",
+    ]);
+    expect(removeCriterion("", criteria, { id: "award" }).criteria).toEqual({
+      activeFrom: 1980,
+      activeTo: 1990,
+      role: "own",
+      genre: "rock",
+    });
+    expect(removeCriterion("", criteria, { id: "active" }).criteria).not.toHaveProperty("activeFrom");
+    const album = { artistCountry: ["CL", "AR"], genre: "rock" };
+    expect(criterionChips("album", "", album)).toEqual([
+      { id: "genre" },
+      { id: "artistCountry", value: "CL" },
+      { id: "artistCountry", value: "AR" },
+    ]);
+    expect(removeCriterion("", album, { id: "artistCountry", value: "CL" }).criteria).toEqual({
+      artistCountry: ["AR"],
+      genre: "rock",
+    });
+  });
+
+  it("destaca la actividad en Artistas y el género y el país del artista en Álbumes", () => {
+    expect(highlightFields("artist", { activeFrom: 1980 })).toEqual(["active"]);
+    expect(highlightFields("album", { genre: "rock", artistCountry: ["CL"] })).toEqual(["genre", "artistCountry"]);
+  });
+
+  it("valida el rango de actividad del formulario y no avisa awardWon sin premio", () => {
+    const values: Record<string, string> = { activeFrom: "1995", activeTo: "1990" };
+    expect(validateAdvancedForm("artist", (name) => values[name] ?? "")).toEqual({
+      active: { error: "rangeOrder", field: "activeFrom" },
+    });
+    expect(ignoredParams("album", read("awardWon=1"), {})).toEqual([]);
   });
 });
