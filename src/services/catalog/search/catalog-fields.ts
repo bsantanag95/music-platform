@@ -40,7 +40,7 @@ export interface AlbumCatalogFilters {
 
 /** Relaciones de personal que cuentan como "Producción o técnica". */
 const PRODUCTION_RELATIONS = ["producer", "engineer", "mix", "recording", "programming", "arranger"];
-/** Relaciones de personal que cuentan como "Músico en discos de otros". */
+/** Relaciones de personal que cuentan como "Músico invitado o de sesión". */
 const MUSICIAN_RELATIONS = ["instrument", "vocal"];
 
 /** Género visible y premio cargado, ya resueltos: un slug desconocido u oculto se ignora. */
@@ -141,6 +141,31 @@ function albumsInGenreTree(genreId: string): SQL {
   )`;
 }
 
+/** Algún disco como artista principal. */
+const OWN_DISCS = sql`"artist"."id" IN (
+  SELECT c.artist_id FROM credit c WHERE c.role = 'primary' AND c.release_group_id IS NOT NULL
+)`;
+
+/**
+ * Solista y Otras personas en el modo solo catálogo (openspec: split-person-search-types). Solista: algún disco propio
+ * (aquí solo cuenta lo que está en la base). Otras personas sin rol: sin discos propios y con alguna pertenencia o
+ * crédito de personal; con rol, la condición del rol (`artistCatalogConditions`) basta, tenga o no discos propios.
+ */
+export function personKindConditions(
+  artistType: ArtistQueryFilters["artistType"],
+  { role, activeFrom, activeTo }: ArtistCatalogFilters,
+): SQL[] {
+  // La actividad ya sale de los discos propios: repetir la semi-unión sobre todos los créditos costaba ~200 ms.
+  if (artistType === "solo") return activeFrom !== undefined || activeTo !== undefined ? [] : [OWN_DISCS];
+  if (artistType !== "other" || role) return [];
+  return [
+    sql`"artist"."id" IN (SELECT m.person_id FROM membership m UNION SELECT p.artist_id FROM personnel_credit p)`,
+    sql`NOT EXISTS (
+      SELECT 1 FROM credit c WHERE c.artist_id = "artist"."id" AND c.role = 'primary' AND c.release_group_id IS NOT NULL
+    )`,
+  ];
+}
+
 /** Condiciones del catálogo sobre la tabla `artist`. */
 export function artistCatalogConditions(
   { activeFrom, activeTo, role, awardWon }: ArtistCatalogFilters,
@@ -161,11 +186,6 @@ export function artistCatalogConditions(
       WHERE span.first_year <= ${activeTo ?? 2100}
         AND (CASE WHEN "artist"."life_ended" IS TRUE THEN span.last_year ELSE ${currentYear} END) >= ${activeFrom ?? 0}
     )`);
-  }
-  if (role === "own") {
-    conditions.push(
-      sql`"artist"."id" IN (SELECT c.artist_id FROM credit c WHERE c.role = 'primary' AND c.release_group_id IS NOT NULL)`,
-    );
   }
   if (role === "member") conditions.push(sql`"artist"."id" IN (SELECT m.person_id FROM membership m)`);
   if (role === "producer") {
@@ -273,6 +293,7 @@ export async function catalogArtistPage(
   const where = and(
     ...(text ? [exact ? exactMatch(artist.name, text) : fuzzyMatch(artist.name, text)] : []),
     ...artistFilters(filters),
+    ...personKindConditions(filters.artistType, catalog),
     ...artistCatalogConditions(catalog, resolved),
   );
   const order = text

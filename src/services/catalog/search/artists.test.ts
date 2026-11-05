@@ -31,7 +31,7 @@ vi.mock("./activity", () => ({
 const { musicbrainz } = await import("@/services/musicbrainz/client");
 const { upsertArtistStubsFromSearch } = await import("../ingest-artist");
 const { matchLocalArtists } = await import("./local-match");
-const { activityScores } = await import("./activity");
+const { activityScores, primaryDiscCounts } = await import("./activity");
 const { searchArtists, uniqueExactArtist } = await import("./artists");
 const catalogFields = await import("./catalog-fields");
 
@@ -205,11 +205,41 @@ describe("searchArtists", () => {
       ],
     });
 
-    const response = await searchArtists("dokken", { filters: { artistType: "person" } });
+    const response = await searchArtists("dokken", { filters: { artistType: "solo" } });
 
     expect(musicbrainz.searchArtist).toHaveBeenCalledWith("(dokken) AND type:person", { offset: 0, signal: undefined });
-    expect(matchLocalArtists).toHaveBeenCalledWith("dokken", { limit: 10, artistType: "person" });
+    expect(matchLocalArtists).toHaveBeenCalledWith("dokken", { limit: 10, artistType: "solo" });
     expect(response.results.map((result) => result.name)).toEqual(["Don Dokken"]);
+  });
+
+  it("Solista descarta a quien el catálogo sabe sin discos propios y conserva lo sin explorar (openspec: split-person-search-types)", async () => {
+    const sideman = row({ mbid: "side", name: "Dokken Sideman", type: "person", discographySyncedAt: new Date() });
+    const solo = row({ mbid: "don", name: "Don Dokken", type: "person", discographySyncedAt: new Date() });
+    const member = row({ mbid: "member", name: "Dokken Member", type: "person", discographySyncedAt: null });
+    vi.mocked(matchLocalArtists).mockResolvedValue([sideman, solo, member]);
+    vi.mocked(musicbrainz.searchArtist).mockResolvedValue({ artists: [] });
+    vi.mocked(primaryDiscCounts).mockResolvedValueOnce(new Map([[solo.id, 3]]));
+
+    const response = await searchArtists("dokken", { filters: { artistType: "solo" } });
+
+    expect(vi.mocked(primaryDiscCounts).mock.calls.at(-1)?.[0]).toEqual([sideman.id, solo.id]);
+    expect(response.results.map((result) => result.name).sort()).toEqual(["Dokken Member", "Don Dokken"]);
+  });
+
+  it("Otras personas no consulta MusicBrainz aunque no haya campos del catálogo", async () => {
+    vi.mocked(catalogFields.catalogArtistPage).mockResolvedValue({ rows: [], total: 0, nextOffset: null });
+
+    const response = await searchArtists("", { filters: { artistType: "other", country: ["CL"] } });
+
+    expect(musicbrainz.searchArtist).not.toHaveBeenCalled();
+    expect(catalogFields.catalogArtistPage).toHaveBeenCalledWith(
+      "",
+      { artistType: "other", country: ["CL"] },
+      {},
+      { genreId: null, award: null },
+      0,
+    );
+    expect(response.catalogOnly).toBe(true);
   });
 
   it("filtros avanzados en una sola consulta a MusicBrainz y en lo local", async () => {
@@ -358,7 +388,7 @@ describe("searchArtists solo del catálogo (openspec: add-catalog-search-fields)
     vi.mocked(catalogFields.memberOf).mockResolvedValue(new Map([[mena.id, { id: "band", name: "Prisma", more: 1 }]]));
 
     const response = await searchArtists("", {
-      filters: { artistType: "person", country: ["CL"] },
+      filters: { artistType: "solo", country: ["CL"] },
       catalog: { activeFrom: 2005, activeTo: 2010 },
     });
 
@@ -366,7 +396,7 @@ describe("searchArtists solo del catálogo (openspec: add-catalog-search-fields)
     expect(upsertArtistStubsFromSearch).not.toHaveBeenCalled();
     expect(catalogFields.catalogArtistPage).toHaveBeenCalledWith(
       "",
-      { artistType: "person", country: ["CL"] },
+      { artistType: "solo", country: ["CL"] },
       { activeFrom: 2005, activeTo: 2010 },
       { genreId: null, award: null },
       0,

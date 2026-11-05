@@ -236,7 +236,7 @@
         "viewProfile": "View profile",
         "filterLabel": "Artist type",
         "filterAll": "All",
-        "filterPerson": "Person",
+        "filterPerson": "Solo artist",
         "filterGroup": "Group",
         "yearsRange": "{begin}–{end}",
         "yearsSince": "since {begin}",
@@ -306,8 +306,10 @@
       "exactMatchFor": "Exact match on {field}",
       "artistType": "Type",
       "any": "Any",
-      "person": "Person",
       "group": "Group",
+      "solo": "Solo artist",
+      "other": "Other people",
+      "otherHint": "Band members, production, session musicians. Catalog only.",
       "country": "Country",
       "countryAny": "Any country",
       "countryAddAnother": "Add another country",
@@ -364,6 +366,7 @@
       "count": {
         "artists": "{count, plural, one {# artist} other {# artists}}",
         "groups": "{count, plural, one {# group} other {# groups}}",
+        "soloists": "{count, plural, one {# solo artist} other {# solo artists}}",
         "people": "{count, plural, one {# person} other {# people}}",
         "albums": "{count, plural, one {# album} other {# albums}}",
         "songs": "{count, plural, one {# song} other {# songs}}"
@@ -446,10 +449,9 @@
       "role": "Role",
       "roleHint": "What they do in the catalog",
       "roles": {
-        "own": "With their own discography",
         "member": "Band member",
         "producer": "Production or engineering",
-        "musician": "Musician on others' records"
+        "musician": "Guest or session musician"
       },
       "genre": "Genre",
       "genreSearch": "Search a genre",

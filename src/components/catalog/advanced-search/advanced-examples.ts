@@ -14,7 +14,7 @@ export const ADVANCED_EXAMPLES: Record<"artist" | "album" | "song", AdvancedExam
   artist: [
     { key: "chileanBands80s", criteria: { artistType: "group", country: ["CL"], beginFrom: 1980, beginTo: 1989 } },
     { key: "manchesterBands", criteria: { artistType: "group", area: "Manchester" } },
-    { key: "mexicanSoloistsSince1990", criteria: { artistType: "person", country: ["MX"], beginFrom: 1990 } },
+    { key: "mexicanSoloistsSince1990", criteria: { artistType: "solo", country: ["MX"], beginFrom: 1990 } },
   ],
   album: [
     { key: "live1994", criteria: { category: ["live_other"], yearFrom: 1994, yearTo: 1994 } },

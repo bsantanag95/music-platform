@@ -107,7 +107,7 @@ describe("ArtistSection", () => {
 
     mocks.searchArtists.mockResolvedValue(response([artist({ id: "s", name: "Sabrina Carpenter", exact: true })]));
     await streamed(await ArtistSection({ query: "Sabrina Carpenter", all: true }));
-    await streamed(await ArtistSection({ query: "Sabrina Carpenter", all: false, criteria: { artistType: "person" } }));
+    await streamed(await ArtistSection({ query: "Sabrina Carpenter", all: false, criteria: { artistType: "solo" } }));
     // Un criterio de la búsqueda avanzada tampoco, ni la página avanzada (openspec: redesign-advanced-search).
     await streamed(await ArtistSection({ query: "Sabrina Carpenter", all: false, criteria: { country: ["US"] } }));
     expect(mocks.searchArtists).toHaveBeenLastCalledWith("Sabrina Carpenter", {

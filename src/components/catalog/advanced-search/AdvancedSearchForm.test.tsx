@@ -143,19 +143,25 @@ describe("formulario agrupado y validación (openspec: refine-advanced-search-ph
 describe("campos del catálogo (openspec: add-catalog-search-fields)", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("Artistas: la etiqueta del año sigue al tipo y el rol aparece solo con Persona", () => {
+  it("Artistas: la etiqueta del año sigue al tipo; rol y actividad según Otras personas (openspec: split-person-search-types)", () => {
     renderForm(<AdvancedSearchForm type="artist" query="" criteria={{}} />);
 
     expect(screen.getByRole("group", { name: labels.begin })).toBeInTheDocument();
     expect(screen.queryByLabelText(new RegExp(`^${labels.role}`))).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText(labels.artistType), { target: { value: "person" } });
+    fireEvent.change(screen.getByLabelText(new RegExp(`^${labels.artistType}`)), { target: { value: "solo" } });
     expect(screen.getByRole("group", { name: labels.beginPerson })).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText(new RegExp(`^${labels.role}`)), { target: { value: "own" } });
-    submit();
-    expect(mockPush).toHaveBeenLastCalledWith("/search/advanced?type=artist&artistType=person&role=own");
+    expect(screen.queryByLabelText(new RegExp(`^${labels.role}`))).not.toBeInTheDocument();
+    expect(screen.getByRole("group", { name: labels.active })).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText(labels.artistType), { target: { value: "group" } });
+    fireEvent.change(screen.getByLabelText(new RegExp(`^${labels.artistType}`)), { target: { value: "other" } });
+    expect(screen.getByRole("group", { name: labels.beginPerson })).toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: labels.active })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(new RegExp(`^${labels.role}`)), { target: { value: "member" } });
+    submit();
+    expect(mockPush).toHaveBeenLastCalledWith("/search/advanced?type=artist&artistType=other&role=member");
+
+    fireEvent.change(screen.getByLabelText(new RegExp(`^${labels.artistType}`)), { target: { value: "group" } });
     expect(screen.getByRole("group", { name: labels.beginGroup })).toBeInTheDocument();
     expect(screen.queryByLabelText(new RegExp(`^${labels.role}`))).not.toBeInTheDocument();
   });

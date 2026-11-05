@@ -18,7 +18,8 @@
 
 import type { ReleaseGroupCategoryValue } from "../ingest-release-group";
 
-export type ArtistTypeFilter = "person" | "group";
+/** Tipo de artista de la búsqueda (openspec: split-person-search-types). `solo` y `other` son personas. */
+export type ArtistTypeFilter = "group" | "solo" | "other";
 
 const LUCENE_SPECIAL = /[+\-&|!(){}[\]^"~*?:\\/]/g;
 
@@ -69,7 +70,8 @@ export function artistQuery(query: string, filters: ArtistQueryFilters = {}): st
   const trimmed = query.trim();
   const text = !trimmed ? "" : filters.exact ? phraseClause("artist", trimmed) : escapeLucene(trimmed);
   const clauses: string[] = [];
-  if (filters.artistType) clauses.push(`type:${filters.artistType}`);
+  // Solista es una persona en MusicBrainz; Otras personas nunca llega aquí (es solo del catálogo).
+  if (filters.artistType) clauses.push(`type:${filters.artistType === "group" ? "group" : "person"}`);
   if (filters.country?.length) clauses.push(`country:(${filters.country.map(escapeLucene).join(" OR ")})`);
   if (filters.area) clauses.push(phraseClause("beginarea", withoutAccents(filters.area)));
   const begin = yearRangeClause("begin", filters.beginFrom, filters.beginTo);

@@ -114,7 +114,7 @@ export async function ArtistSection({
   }
 
   const { artistType } = criteria;
-  const filterHref = (value?: "person" | "group") =>
+  const filterHref = (value?: "solo" | "group") =>
     searchHref("artist", query, {
       artistType: value,
       all: all ? "1" : undefined,
@@ -130,10 +130,10 @@ export async function ArtistSection({
           active: !artistType,
         },
         {
-          key: "person",
+          key: "solo",
           label: t("filterPerson"),
-          href: filterHref("person"),
-          active: artistType === "person",
+          href: filterHref("solo"),
+          active: artistType === "solo",
         },
         {
           key: "group",
