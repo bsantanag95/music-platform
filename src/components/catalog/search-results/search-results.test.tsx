@@ -6,7 +6,7 @@ import { songHref } from "@/lib/catalog-links";
 import catalogEs from "../../../../messages/es/catalog.json";
 import type { ArtistSearchResult, SongGroupResult } from "@/services/catalog/search/types";
 import { ArtistResults } from "./ArtistResults";
-import { BroadQueryHint, RefineHint, SearchEmpty, SearchSummary, SearchTypeSwitch } from "./SearchChrome";
+import { BroadQueryHint, CatalogOnlyNotice, RefineHint, SearchEmpty, SearchSummary, SearchTypeSwitch } from "./SearchChrome";
 import { SongInterpretation, SongResults } from "./SongResults";
 import { SearchOriginNotice } from "./SearchOriginNotice";
 import { FiltersDisclosure } from "./FiltersDisclosure";
@@ -373,5 +373,31 @@ describe("filas que ayudan a elegir (refine-search-results-phase3)", () => {
       <ArtistResults query="kiss" results={[{ ...kiss, photoUrl: null, beginYear: null, discCount: null, country: null }]} />,
     );
     expect(screen.getByText("Grupo · US rock band")).toBeInTheDocument();
+  });
+});
+
+describe("campos del catálogo (openspec: add-catalog-search-fields)", () => {
+  const advanced = catalogEs.search.advanced;
+
+  it("aviso de búsqueda solo del catálogo", () => {
+    renderWithIntl(<CatalogOnlyNotice type="album" />);
+    expect(screen.getByRole("note")).toHaveTextContent(advanced.catalogOnly.title.album);
+    expect(screen.getByRole("note")).toHaveTextContent(advanced.catalogOnly.description);
+  });
+
+  it("una persona integrante muestra su banda, y el período de actividad se destaca", () => {
+    renderWithIntl(
+      <ArtistResults
+        query=""
+        results={[
+          artist({ id: "grohl", name: "Dave Grohl", artistType: "person", memberOf: { id: "ff", name: "Foo Fighters", more: 2 } }),
+          artist({ id: "mena", name: "Javiera Mena", artistType: "person", activeFrom: 2006, activeTo: null }),
+        ]}
+        highlight={["active"]}
+      />,
+    );
+
+    expect(screen.getByText(/Integrante de Foo Fighters y 2 más/)).toBeInTheDocument();
+    expect(screen.getByText(/Activo desde 2006/)).toBeInTheDocument();
   });
 });

@@ -11,6 +11,16 @@ import { musicbrainz } from "../../musicbrainz/client";
 import type { MBArtistSearchItem } from "../../musicbrainz/types";
 import { upsertArtistStubsFromSearch } from "../ingest-artist";
 import { activityScores, primaryDiscCounts } from "./activity";
+import {
+  activeSpans,
+  catalogArtistPage,
+  hasCatalogFields,
+  memberOf,
+  resolveCatalogFields,
+  withoutUnresolved,
+  type ArtistCatalogFilters,
+  type ResolvedCatalogFields,
+} from "./catalog-fields";
 import { matchLocalArtists } from "./local-match";
 import { artistQuery, type ArtistQueryFilters } from "./mb-query";
 import { isExactMatch, matchTier } from "./normalize";
@@ -34,6 +44,11 @@ export interface ArtistSearchOptions {
    * MusicBrainz (openspec: speed-up-search).
    */
   localOnly?: boolean;
+  /**
+   * Campos del catálogo (openspec: add-catalog-search-fields): con alguno válido, la búsqueda entera sale de la base
+   * propia, paginada, sin MusicBrainz (`catalogOnly`).
+   */
+  catalog?: ArtistCatalogFilters;
 }
 
 function isArtistType(value: string): value is CatalogArtistType {
@@ -55,10 +70,17 @@ function yearOf(date: string | null | undefined): number | null {
   return Number.isInteger(year) ? year : null;
 }
 
-function toResult(entry: Entry, query: string, discCounts: Map<string, number>): ArtistSearchResult {
+interface Extras {
+  discCounts: Map<string, number>;
+  members: Map<string, { id: string; name: string; more: number }>;
+  spans?: Map<string, { from: number; to: number | null }>;
+}
+
+function toResult(entry: Entry, query: string, { discCounts, members, spans }: Extras): ArtistSearchResult {
+  const span = spans?.get(entry.row.id);
   // La ficha local manda; un stub sin ficha toma lo que trae la búsqueda (openspec: refine-advanced-search-phase3).
-  const span = entry.remote?.["life-span"];
-  const ended = entry.row.lifeEnded ?? span?.ended ?? null;
+  const life = entry.remote?.["life-span"];
+  const ended = entry.row.lifeEnded ?? life?.ended ?? null;
   return {
     kind: "artist",
     id: entry.row.id,
@@ -70,10 +92,12 @@ function toResult(entry: Entry, query: string, discCounts: Map<string, number>):
     cached: entry.row.discographySyncedAt !== null,
     exact: isExactMatch(entry.row.name, query),
     photoUrl: entry.row.photoBlockedAt ? null : (entry.row.photoUrl ?? null),
-    beginYear: yearOf(entry.row.lifeBegin ?? span?.begin),
-    endYear: ended ? yearOf(entry.row.lifeEnd ?? span?.end) : null,
+    beginYear: yearOf(entry.row.lifeBegin ?? life?.begin),
+    endYear: ended ? yearOf(entry.row.lifeEnd ?? life?.end) : null,
     discCount: entry.row.discographySyncedAt ? (discCounts.get(entry.row.id) ?? 0) : null,
     beginArea: entry.row.beginAreaName ?? entry.remote?.["begin-area"]?.name ?? null,
+    ...(spans ? { activeFrom: span?.from ?? null, activeTo: span ? span.to : null } : {}),
+    memberOf: members.get(entry.row.id) ?? null,
   };
 }
 
@@ -87,9 +111,14 @@ function toResult(entry: Entry, query: string, discCounts: Map<string, number>):
  */
 export async function searchArtists(
   query: string,
-  { filters = {}, offset = 0, signal, localOnly = false }: ArtistSearchOptions = {},
+  { filters = {}, offset = 0, signal, localOnly = false, catalog }: ArtistSearchOptions = {},
 ): Promise<ArtistSearchResponse> {
   const q = query.trim();
+  if (catalog && hasCatalogFields(catalog)) {
+    const resolved = await resolveCatalogFields(catalog);
+    const fields = withoutUnresolved(catalog, resolved);
+    if (hasCatalogFields(fields)) return catalogArtists(q, filters, fields, resolved, offset);
+  }
   // Cada fuente filtra con el mismo criterio: lo local por SQL, lo remoto en la propia consulta.
   // Un artista local sin el dato queda fuera de lo local, pero vuelve con los datos de MusicBrainz
   // si su página remota lo trae (se fusiona por mbid más abajo). Sin nombre, la consulta es solo de
@@ -176,15 +205,52 @@ export async function searchArtists(
 
   const fetched = offset + remote.length;
   // Discos principales de los artistas explorados de esta página, en una consulta (openspec: refine-search-results-phase3).
-  const discCounts = await primaryDiscCounts(
-    filtered.filter((entry) => entry.row.discographySyncedAt !== null).map((entry) => entry.row.id),
-  );
+  // "Integrante de" de las personas de la página, en una consulta (openspec: add-catalog-search-fields).
+  const [discCounts, members] = await Promise.all([
+    primaryDiscCounts(filtered.filter((entry) => entry.row.discographySyncedAt !== null).map((entry) => entry.row.id)),
+    memberOf(filtered.map((entry) => entry.row)),
+  ]);
   return {
     type: "artist",
-    results: sortByRank(filtered).map((entry) => toResult(entry, q, discCounts)),
+    results: sortByRank(filtered).map((entry) => toResult(entry, q, { discCounts, members })),
     remoteFailed,
     total,
     nextOffset: total !== null && remote.length > 0 && fetched < total ? fetched : null,
+    catalogOnly: false,
+  };
+}
+
+/**
+ * Artistas solo del catálogo (openspec: add-catalog-search-fields): una página de 25 en el orden de la base, con la
+ * cifra exacta, sin MusicBrainz ni stubs. Con un filtro de actividad, cada fila trae su período.
+ */
+async function catalogArtists(
+  q: string,
+  filters: ArtistQueryFilters,
+  fields: ArtistCatalogFilters,
+  resolved: ResolvedCatalogFields,
+  offset: number,
+): Promise<ArtistSearchResponse> {
+  const page = await catalogArtistPage(q, filters, fields, resolved, offset);
+  const active = fields.activeFrom !== undefined || fields.activeTo !== undefined;
+  const [discCounts, members, spans] = await Promise.all([
+    primaryDiscCounts(page.rows.filter((row) => row.discographySyncedAt !== null).map((row) => row.id)),
+    memberOf(page.rows),
+    active ? activeSpans(page.rows) : undefined,
+  ]);
+  const entries: Entry[] = page.rows.map((row, index) => ({
+    row,
+    disambiguation: row.disambiguation,
+    country: row.country,
+    rank: { level: 0, activity: 0, group: 0, index },
+  }));
+  return {
+    type: "artist",
+    results: entries.map((entry) => toResult(entry, q, { discCounts, members, spans })),
+    remoteFailed: false,
+    total: page.total,
+    nextOffset: page.nextOffset,
+    catalogOnly: true,
   };
 }
 

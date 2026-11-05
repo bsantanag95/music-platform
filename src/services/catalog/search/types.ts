@@ -35,6 +35,14 @@ export interface ArtistSearchResult {
    * local o, si aún no se visitó, de lo que trae la propia búsqueda de MusicBrainz.
    */
   beginArea?: string | null;
+  /**
+   * Período de actividad del catálogo (openspec: add-catalog-search-fields): primer y último año con discos propios,
+   * solo con la discografía explorada; `activeTo` `null` = sigue en actividad.
+   */
+  activeFrom?: number | null;
+  activeTo?: number | null;
+  /** Persona integrante de alguna banda del catálogo: la de más actividad y cuántas más. */
+  memberOf?: { id: string; name: string; more: number } | null;
 }
 
 export interface ArtistSearchResponse {
@@ -45,6 +53,8 @@ export interface ArtistSearchResponse {
   /** Total de MusicBrainz y página siguiente (openspec: redesign-advanced-search). */
   total: number | null;
   nextOffset: number | null;
+  /** Solo de la base propia: la búsqueda tiene campos que MusicBrainz no indexa (openspec: add-catalog-search-fields). */
+  catalogOnly?: boolean;
 }
 
 export interface AlbumSearchResult {
@@ -65,6 +75,12 @@ export interface AlbumSearchResult {
   community?: { average: number | null; count: number };
   /** Nota de quien busca, si tiene sesión y valoró el disco. */
   yourStars?: number | null;
+  /**
+   * Con un filtro de género o de país del artista (openspec: add-catalog-search-fields): el género del disco que
+   * coincidió (el de mejor posición dentro del género pedido y sus subgéneros) y el país de su artista principal.
+   */
+  genre?: { slug: string; name: string; nameEs: string | null } | null;
+  artistCountry?: string | null;
 }
 
 /** Sugerencia para acotar una consulta genérica ("Agrega el artista"). */
@@ -81,6 +97,8 @@ export interface AlbumSearchResponse {
   total: number | null;
   nextOffset: number | null;
   refine: SearchRefineHint | null;
+  /** Solo de la base propia (openspec: add-catalog-search-fields). */
+  catalogOnly?: boolean;
 }
 
 export interface SongAlbum {

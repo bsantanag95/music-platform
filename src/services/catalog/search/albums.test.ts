@@ -16,6 +16,18 @@ vi.mock("./local-match", () => ({
   primaryArtistsByReleaseGroup: vi.fn(async () => new Map()),
   releaseGroupsWithContent: vi.fn(async () => new Set()),
 }));
+vi.mock("./catalog-fields", () => ({
+  hasCatalogFields: (fields: object) => Object.values(fields).some((value) => value !== undefined),
+  resolveCatalogFields: vi.fn(async (fields: { genre?: string }) => ({
+    genreId: fields.genre === "rock" ? "genre-rock" : null,
+    award: null,
+  })),
+  withoutUnresolved: (fields: { genre?: string }, resolved: { genreId: string | null }) =>
+    resolved.genreId ? fields : { ...fields, genre: undefined },
+  catalogAlbumPage: vi.fn(),
+  matchedGenres: vi.fn(async () => new Map()),
+  primaryArtistCountries: vi.fn(async () => new Map()),
+}));
 vi.mock("./activity", () => ({
   activityScores: vi.fn(async () => new Map()),
   exploredScores: vi.fn(async () => new Map()),
@@ -30,6 +42,7 @@ const { ingestReleaseGroupCreditsBatch } = await import("../ingest-discography")
 const localMatch = await import("./local-match");
 const { activityScores, exploredScores } = await import("./activity");
 const { searchAlbums } = await import("./albums");
+const catalogFields = await import("./catalog-fields");
 
 function rgRow(overrides: Partial<ReleaseGroupRow>): ReleaseGroupRow {
   return {
@@ -379,5 +392,42 @@ describe("searchAlbums abandonada (openspec: speed-up-quick-actions-search)", ()
     expect(vi.mocked(musicbrainz.searchReleaseGroup).mock.calls[0]![1]).toMatchObject({ signal: controller.signal });
     expect(upsertReleaseGroupStubs).not.toHaveBeenCalled();
     expect(ingestReleaseGroupCreditsBatch).not.toHaveBeenCalled();
+  });
+});
+
+describe("searchAlbums solo del catálogo (openspec: add-catalog-search-fields)", () => {
+  it("con género y país del artista no consulta MusicBrainz y trae lo que coincidió", async () => {
+    const corazones = rgRow({ mbid: "corazones", title: "Corazones", firstReleaseYear: 1990 });
+    vi.mocked(catalogFields.catalogAlbumPage).mockResolvedValue({ rows: [corazones], total: 1, nextOffset: null });
+    vi.mocked(catalogFields.matchedGenres).mockResolvedValue(
+      new Map([[corazones.id, { slug: "new-wave", name: "new wave", nameEs: null }]]),
+    );
+    vi.mocked(catalogFields.primaryArtistCountries).mockResolvedValue(new Map([[corazones.id, "CL"]]));
+    vi.mocked(localMatch.primaryArtistsByReleaseGroup).mockResolvedValue(
+      new Map([[corazones.id, [{ id: "prisioneros", name: "Los Prisioneros" }]]]),
+    );
+
+    const response = await searchAlbums("", { catalog: { genre: "rock", artistCountry: ["CL"] } });
+
+    expect(musicbrainz.searchReleaseGroup).not.toHaveBeenCalled();
+    expect(upsertReleaseGroupStubs).not.toHaveBeenCalled();
+    expect(response).toMatchObject({ catalogOnly: true, total: 1, nextOffset: null, refine: null });
+    expect(response.results[0]).toMatchObject({
+      title: "Corazones",
+      artistName: "Los Prisioneros",
+      year: 1990,
+      genre: { slug: "new-wave" },
+      artistCountry: "CL",
+    });
+  });
+
+  it("solo con un género desconocido busca como siempre", async () => {
+    vi.mocked(musicbrainz.searchReleaseGroup).mockResolvedValue({ count: 0, "release-groups": [] });
+    vi.mocked(upsertReleaseGroupStubs).mockResolvedValue([]);
+
+    const response = await searchAlbums("destroyer", { catalog: { genre: "zzz" } });
+
+    expect(musicbrainz.searchReleaseGroup).toHaveBeenCalledTimes(1);
+    expect(response.catalogOnly).toBe(false);
   });
 });

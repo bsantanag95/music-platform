@@ -118,6 +118,19 @@ describe("GET /api/catalog/search", () => {
     await expect(empty.json()).resolves.toMatchObject({ code: "VALIDATION_ERROR" });
   });
 
+  it("un campo del catálogo basta sin q y viaja con su página (openspec: add-catalog-search-fields)", async () => {
+    vi.mocked(searchCatalogByType).mockResolvedValue(poisons);
+
+    const awards = await GET(request("?type=artist&award=any"));
+    const albums = await GET(request("?type=album&genre=rock&artistCountry=CL&offset=25"));
+
+    expect(awards.status).toBe(200);
+    expect(albums.status).toBe(200);
+    const [artistCall, albumCall] = vi.mocked(searchCatalogByType).mock.calls.map(([params]) => params);
+    expect(artistCall).toMatchObject({ q: "", criteria: { award: "any" } });
+    expect(albumCall).toMatchObject({ offset: 25, criteria: { genre: "rock", artistCountry: ["CL"] } });
+  });
+
   it("pasa purpose=pick y la señal de la solicitud; otro purpose se ignora", async () => {
     vi.mocked(searchCatalogByType).mockResolvedValue({
       type: "song",

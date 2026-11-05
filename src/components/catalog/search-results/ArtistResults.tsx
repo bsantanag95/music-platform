@@ -42,7 +42,25 @@ function useArtistMeta(highlight: ResultHighlight[] = []) {
       { text: country, hit: highlight.includes("country") },
       { text: area, hit: highlight.includes("area") },
       { text: years, hit: highlight.includes("years") },
+      // Período de actividad del catálogo, solo cuando la búsqueda filtró por él (openspec: add-catalog-search-fields).
+      {
+        text:
+          artist.activeFrom != null
+            ? artist.activeTo != null
+              ? t("search.results.artists.activeSpan", { from: artist.activeFrom, to: artist.activeTo })
+              : t("search.results.artists.activeSpanOpen", { from: artist.activeFrom })
+            : null,
+        hit: highlight.includes("active"),
+      },
       { text: artist.discCount ? t("search.results.artists.discs", { count: artist.discCount }) : null },
+      // "Integrante de", para reconocer a una persona que no tiene discos a su nombre.
+      {
+        text: artist.memberOf
+          ? artist.memberOf.more > 0
+            ? t("search.results.artists.memberOfMore", { band: artist.memberOf.name, count: artist.memberOf.more })
+            : t("search.results.artists.memberOf", { band: artist.memberOf.name })
+          : null,
+      },
       { text: repeated ? null : artist.disambiguation },
     ];
   };

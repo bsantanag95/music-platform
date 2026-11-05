@@ -50,15 +50,19 @@ export function ResultsTable(props: Props) {
   const t = useTranslations("catalog");
   const locale = useLocale();
   const { type, highlight, header = true } = props;
-  const columns = COLUMNS[type];
+  // Con un filtro de actividad, Artistas suma la columna "Activo" (openspec: add-catalog-search-fields).
+  const columns =
+    type === "artist" && highlight.includes("active")
+      ? [...COLUMNS.artist.slice(0, 5), { key: "active", width: "12%", hit: "active" as const }, COLUMNS.artist[5]!]
+      : COLUMNS[type];
   const marked = (column: Column) => Boolean(column.hit && highlight.includes(column.hit));
   // Una sola clase de color por celda: con dos, gana la que Tailwind genere después.
   const color = (column: Column) => (marked(column) ? "text-amber" : "text-paper-muted");
 
-  const cells = (values: (string | null)[]) =>
-    columns.slice(1).map((column, index) => (
+  const cells = (values: Record<string, string | null>) =>
+    columns.slice(1).map((column) => (
       <td key={column.key} className={`${cellClass} ${color(column)}`}>
-        {values[index] ?? "—"}
+        {values[column.key] ?? "—"}
       </td>
     ));
 
@@ -101,13 +105,15 @@ export function ResultsTable(props: Props) {
                       {artist.name}
                     </Link>
                   </th>
-                  {cells([
-                    artist.artistType === "unknown" ? null : t(`artist.typeLabels.${artist.artistType}`),
-                    countryName(artist.country, locale) ?? artist.country,
-                    artist.beginArea ?? null,
-                    years(artist),
-                    artist.discCount ? String(artist.discCount) : null,
-                  ])}
+                  {cells({
+                    type: artist.artistType === "unknown" ? null : t(`artist.typeLabels.${artist.artistType}`),
+                    country: countryName(artist.country, locale) ?? artist.country,
+                    area: artist.beginArea ?? null,
+                    years: years(artist),
+                    active:
+                      artist.activeFrom != null ? `${artist.activeFrom}–${artist.activeTo ?? ""}` : null,
+                    discs: artist.discCount ? String(artist.discCount) : null,
+                  })}
                 </tr>
               ))
             : props.type === "album"
@@ -118,15 +124,16 @@ export function ResultsTable(props: Props) {
                         {album.title}
                       </Link>
                     </th>
-                    {cells([
-                      album.artistName,
-                      t(`artist.categories.${album.category}`),
-                      album.year !== null ? String(album.year) : null,
-                      album.community?.average != null
-                        ? `${formatStars(album.community.average, locale)} · ${album.community.count}`
-                        : null,
-                      album.yourStars != null ? formatStars(album.yourStars, locale) : null,
-                    ])}
+                    {cells({
+                      artist: album.artistName,
+                      category: t(`artist.categories.${album.category}`),
+                      year: album.year !== null ? String(album.year) : null,
+                      community:
+                        album.community?.average != null
+                          ? `${formatStars(album.community.average, locale)} · ${album.community.count}`
+                          : null,
+                      yours: album.yourStars != null ? formatStars(album.yourStars, locale) : null,
+                    })}
                   </tr>
                 ))
               : props.rows.map((group) => (
@@ -136,7 +143,10 @@ export function ResultsTable(props: Props) {
                         {group.title}
                       </Link>
                     </th>
-                    {cells([group.artistName, group.durationSec != null ? formatDuration(group.durationSec) : null])}
+                    {cells({
+                      artist: group.artistName,
+                      duration: group.durationSec != null ? formatDuration(group.durationSec) : null,
+                    })}
                   </tr>
                 ))}
         </tbody>

@@ -18,6 +18,16 @@ import type {
 import { ingestReleaseGroupCreditsBatch } from "../ingest-discography";
 import { upsertReleaseGroupStubs, type ReleaseGroupCategoryValue } from "../ingest-release-group";
 import { activityScores, albumCommunity, exploredScores } from "./activity";
+import {
+  catalogAlbumPage,
+  hasCatalogFields,
+  matchedGenres,
+  primaryArtistCountries,
+  resolveCatalogFields,
+  withoutUnresolved,
+  type AlbumCatalogFilters,
+  type ResolvedCatalogFields,
+} from "./catalog-fields";
 import { coverageLevel, edgeSplits, restAfterEdgeArtist } from "./coverage";
 import {
   findArtistsByKeys,
@@ -61,6 +71,11 @@ export interface AlbumSearchOptions {
   localOnly?: boolean;
   /** Abandono de quien busca: descarta las requests en cola y evita escribir stubs. */
   signal?: AbortSignal;
+  /**
+   * Campos del catálogo (openspec: add-catalog-search-fields): con alguno válido, la búsqueda entera sale de la base
+   * propia, paginada, sin MusicBrainz (`catalogOnly`).
+   */
+  catalog?: AlbumCatalogFilters;
 }
 
 function joinArtistCredit(credits: MBArtistCreditItem[] | undefined): string | null {
@@ -160,6 +175,7 @@ export async function searchAlbums(
     offset = 0,
     localOnly = false,
     signal,
+    catalog,
   }: AlbumSearchOptions = {},
 ): Promise<AlbumSearchResponse> {
   const q = query.trim();
@@ -174,6 +190,12 @@ export async function searchAlbums(
     exact: exact && q ? true : undefined,
     artistExact: artistExact && artist ? true : undefined,
   };
+
+  if (catalog && hasCatalogFields(catalog)) {
+    const resolved = await resolveCatalogFields(catalog);
+    const fields = withoutUnresolved(catalog, resolved);
+    if (hasCatalogFields(fields)) return catalogAlbums(text, filters, fields, resolved, offset);
+  }
 
   // Lo local solo acompaña a la primera página: "Cargar más" pagina MusicBrainz.
   const localRows = offset === 0 ? await localCandidates(text, filters) : [];
@@ -319,5 +341,52 @@ export async function searchAlbums(
     total,
     nextOffset: total !== null && remote.length > 0 && fetched < total ? fetched : null,
     refine,
+    catalogOnly: false,
+  };
+}
+
+/**
+ * Álbumes solo del catálogo (openspec: add-catalog-search-fields): una página de 25 en el orden de la base, con la
+ * cifra exacta, sin MusicBrainz ni stubs. Con un género o un país del artista, cada fila trae el que coincidió.
+ */
+async function catalogAlbums(
+  text: string,
+  filters: ReleaseGroupQueryOptions,
+  fields: AlbumCatalogFilters,
+  resolved: ResolvedCatalogFields,
+  offset: number,
+): Promise<AlbumSearchResponse> {
+  const page = await catalogAlbumPage(text, filters, fields, resolved, offset);
+  const ids = page.rows.map((row) => row.id);
+  const [primaryArtists, withContent, community, genres, countries] = await Promise.all([
+    primaryArtistsByReleaseGroup(ids),
+    releaseGroupsWithContent(ids),
+    albumCommunity(ids),
+    resolved.genreId ? matchedGenres(ids, resolved.genreId) : new Map(),
+    fields.artistCountry ? primaryArtistCountries(ids, fields.artistCountry) : new Map<string, string>(),
+  ]);
+  return {
+    type: "album",
+    results: page.rows.map((row) => {
+      const artists = primaryArtists.get(row.id)?.map((artist) => artist.name) ?? [];
+      return {
+        kind: "release-group",
+        id: row.id,
+        mbid: row.mbid,
+        title: row.title,
+        artistName: artists.length ? artists.join(", ") : null,
+        category: row.category as ReleaseGroupCategoryValue,
+        year: row.firstReleaseYear,
+        cached: withContent.has(row.id),
+        community: community.get(row.id) ?? { average: null, count: 0 },
+        genre: genres.get(row.id) ?? null,
+        artistCountry: countries.get(row.id) ?? null,
+      };
+    }),
+    remoteFailed: false,
+    total: page.total,
+    nextOffset: page.nextOffset,
+    refine: null,
+    catalogOnly: true,
   };
 }

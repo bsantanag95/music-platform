@@ -94,9 +94,22 @@ se vuelve a filtrar). Una fila sin el dato que pide un campo no coincide (como e
 artista local sin ficha (sin país, ciudad ni fechas) vuelve si la página de MusicBrainz lo trae con el
 dato. Artistas pagina ("Cargar más"), porque sin nombre puede haber miles; desde 500 resultados la
 página sugiere sumar campos. Cambiar de pestaña conserva solo lo que significa lo mismo en el destino
-(artista y tipos entre Álbumes y Canciones), nunca `q`. Quedan para un cambio propio los campos solo
-del catálogo (género, sello, número de catálogo, formato, país del artista en Álbumes, valoración,
-premios) y el mes en el rango de fechas.
+(artista y tipos entre Álbumes y Canciones; género y premios entre Artistas y Álbumes), nunca `q`.
+
+**Campos del catálogo (cambio `add-catalog-search-fields`).** Un grupo **Del catálogo** suma los campos que MusicBrainz
+no indexa: en Artistas, **Activo entre** (del primer al último disco propio, hasta hoy si sigue en actividad; solo
+artistas con la discografía explorada), **Género** (con subgéneros) y **Premios** (cualquiera o uno, "Solo
+ganadores"); en Álbumes, **Género**, **País del artista** y **Premios**. Con Persona, Identidad suma **Rol** (con
+discografía propia, integrante de una banda, producción o técnica, músico en discos de otros), y el año de Época se
+llama "Año de nacimiento" con Persona y "Año de formación" con Grupo: nacimiento y actividad no son lo mismo para una
+persona (mediana de 26 años entre nacer y el primer disco en el catálogo; 1 año entre formación y primer disco para un
+grupo). Con alguno de esos campos la búsqueda es **solo del catálogo**: no consulta MusicBrainz, pagina de 25 en la
+base con la cifra exacta y lo avisa ("Solo artistas/álbumes del catálogo"). Las personas integrantes de una banda
+muestran "Integrante de <banda>" en cualquier búsqueda de Artistas. Cobertura en scratch (2026-11-04): género del 75 %
+de los álbumes, país del artista del 81 %, 906 artistas con discografía explorada. Quedan fuera: sello, número de
+catálogo y formato (solo ~122 álbumes con ediciones; la vía es la búsqueda de *releases* de MusicBrainz), valoración
+media (ningún álbum llega a 5 valoraciones), Canciones (necesita apariciones locales) y el mes en el rango de
+fechas.
 
 **Recorrido de la búsqueda avanzada (cambio `refine-advanced-search-phase1`).** Con una búsqueda en
 curso, el formulario se recoge tras una barra con una pastilla por criterio (un rango es una; cada país

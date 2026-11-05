@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
   advancedSearchHref,
+  ARTIST_ROLES,
   CATEGORY_VALUES,
   criterionChips,
   formatDuration,
@@ -18,6 +19,7 @@ import {
 import type { SearchType } from "../search-types";
 import { useAdvancedSearchTransition } from "./AdvancedSearchPending";
 import { CountryMultiPicker } from "./CountryMultiPicker";
+import { GenrePicker } from "./GenrePicker";
 
 // Formulario de una pestaña de la búsqueda avanzada (openspec: redesign-advanced-search, refine-advanced-search-phase2),
 // al estilo de Metal Archives: el nombre o título es un campo más (opcional) con "¿Coincidencia exacta?". Los campos
@@ -27,12 +29,22 @@ import { CountryMultiPicker } from "./CountryMultiPicker";
 // tiene valor y la duración en segundos, y la fila de envío cuenta los criterios (fija al pie en móvil).
 
 type AdvancedType = Exclude<SearchType, "user">;
-type RangeKey = "begin" | "year" | "duration";
+type RangeKey = "begin" | "active" | "year" | "duration";
+
+/** Premio que se puede elegir en "Premios" (los cargados en el catálogo). */
+export interface AwardOption {
+  slug: string;
+  kind: "competition" | "hall_of_fame";
+}
 
 interface Props {
   type: AdvancedType;
   query: string;
   criteria: SearchCriteria;
+  /** Premios cargados, para el campo del catálogo (openspec: add-catalog-search-fields). */
+  awards?: AwardOption[];
+  /** Nombre del género de la URL, ya resuelto en el servidor. */
+  genreName?: string | null;
 }
 
 const YEAR_PATTERN = "\\d{4}";
@@ -76,8 +88,9 @@ function initialCount(type: AdvancedType, query: string, criteria: SearchCriteri
   return criterionChips(type, query, criteria).length;
 }
 
-export function AdvancedSearchForm({ type, query, criteria }: Props) {
+export function AdvancedSearchForm({ type, query, criteria, awards = [], genreName = null }: Props) {
   const t = useTranslations("catalog.search.advanced");
+  const tAwards = useTranslations("awards");
   const tCategories = useTranslations("catalog.artist.categories");
   const tSearch = useTranslations("catalog.search");
   const router = useRouter();
@@ -91,6 +104,8 @@ export function AdvancedSearchForm({ type, query, criteria }: Props) {
   const [count, setCount] = useState(() => initialCount(type, query, criteria));
 
   useEffect(() => setHydrated(true), []);
+  // El tipo de artista decide la etiqueta del año y si se ofrece el rol (openspec: add-catalog-search-fields).
+  const [artistType, setArtistType] = useState(criteria.artistType ?? "");
 
   // Las etiquetas de países cambian sin evento de campo: se recuenta tras cada interacción.
   const recount = () => {
@@ -222,10 +237,22 @@ export function AdvancedSearchForm({ type, query, criteria }: Props) {
     </fieldset>
   );
 
-  const select = (name: "artistType" | "ended", label: string, hint: string | null, value: string, options: [string, string][]) => (
+  const select = (
+    name: "artistType" | "ended" | "role" | "award",
+    label: string,
+    hint: string | null,
+    value: string,
+    options: [string, string][],
+    onChange?: (value: string) => void,
+  ) => (
     <label className="flex flex-col gap-1.5">
       <span className={labelClass}>{label}</span>
-      <select name={name} defaultValue={value} className={inputClass}>
+      <select
+        name={name}
+        defaultValue={value}
+        onChange={onChange ? (event) => onChange(event.target.value) : undefined}
+        className={inputClass}
+      >
         {options.map(([optionValue, optionLabel]) => (
           <option key={optionValue} value={optionValue}>
             {optionLabel}
@@ -236,18 +263,57 @@ export function AdvancedSearchForm({ type, query, criteria }: Props) {
     </label>
   );
 
-  let groups: [string, ReactNode][];
+  // Premios: cualquiera o uno cargado, y "Solo ganadores" (un salón de la fama cuenta siempre como ganado).
+  const awardName = (slug: string) => (tAwards.has(`names.${slug}`) ? tAwards(`names.${slug}`) : slug);
+  const awardField = (
+    <div className="flex flex-col gap-1.5">
+      {select("award", t("award"), null, criteria.award ?? "", [
+        ["", t("any")],
+        ["any", t("awardAny")],
+        ...awards.map((award): [string, string] => [award.slug, awardName(award.slug)]),
+      ])}
+      <label className="inline-flex items-center gap-2 font-data text-xs text-paper-muted">
+        <input type="checkbox" name="awardWon" value="1" defaultChecked={criteria.awardWon ?? false} className="accent-amber" />
+        {t("awardWon")}
+      </label>
+    </div>
+  );
+  const genreField = (
+    <GenrePicker
+      id={`${id}-genre`}
+      initial={criteria.genre ? { slug: criteria.genre, name: genreName ?? criteria.genre } : null}
+      inputClassName={inputClass}
+      onChange={recount}
+    />
+  );
+  const beginLabel = artistType === "person" ? "beginPerson" : artistType === "group" ? "beginGroup" : "begin";
+
+  let groups: [string, ReactNode, string?][];
   if (type === "artist") {
     groups = [
       [
         t("groups.identity"),
         <>
           {textField("q", "exact", t("name"), query, criteria.exact ?? false)}
-          {select("artistType", t("artistType"), null, criteria.artistType ?? "", [
-            ["", t("any")],
-            ["person", t("person")],
-            ["group", t("group")],
-          ])}
+          {select(
+            "artistType",
+            t("artistType"),
+            null,
+            criteria.artistType ?? "",
+            [
+              ["", t("any")],
+              ["person", t("person")],
+              ["group", t("group")],
+            ],
+            setArtistType,
+          )}
+          {/* Solo con Persona: al cambiar el tipo el campo sale del formulario y no se envía. */}
+          {artistType === "person"
+            ? select("role", t("role"), t("roleHint"), criteria.role ?? "", [
+                ["", t("any")],
+                ...ARTIST_ROLES.map((role): [string, string] => [role, t(`roles.${role}`)]),
+              ])
+            : null}
         </>,
       ],
       [
@@ -264,13 +330,22 @@ export function AdvancedSearchForm({ type, query, criteria }: Props) {
       [
         t("groups.period"),
         <>
-          {range("begin", t("begin"), t("beginHint"), criteria.beginFrom, criteria.beginTo, YEAR_PATTERN)}
+          {range("begin", t(beginLabel), t(`${beginLabel}Hint`), criteria.beginFrom, criteria.beginTo, YEAR_PATTERN)}
           {select("ended", t("ended"), t("endedHint"), criteria.ended === undefined ? "" : criteria.ended ? "1" : "0", [
             ["", t("any")],
             ["0", t("endedActive")],
             ["1", t("endedInactive")],
           ])}
         </>,
+      ],
+      [
+        t("groups.catalog"),
+        <>
+          {range("active", t("active"), t("activeHint"), criteria.activeFrom, criteria.activeTo, YEAR_PATTERN)}
+          {genreField}
+          {awardField}
+        </>,
+        t("groups.catalogHint"),
       ],
     ];
   } else if (type === "album") {
@@ -288,6 +363,21 @@ export function AdvancedSearchForm({ type, query, criteria }: Props) {
           {range("year", t("releaseYear"), null, criteria.yearFrom, criteria.yearTo, YEAR_PATTERN)}
           {categories}
         </>,
+      ],
+      [
+        t("groups.catalog"),
+        <>
+          {genreField}
+          <CountryMultiPicker
+            id={`${id}-artistCountry`}
+            name="artistCountry"
+            label={t("artistCountry")}
+            initial={criteria.artistCountry ?? []}
+            inputClassName={inputClass}
+          />
+          {awardField}
+        </>,
+        t("groups.catalogHint"),
       ],
     ];
   } else {
@@ -335,11 +425,13 @@ export function AdvancedSearchForm({ type, query, criteria }: Props) {
     >
       <input type="hidden" name="type" value={type} />
       <p className={hintClass}>{t("intro")}</p>
-      {groups.map(([legend, fields]) => (
+      {groups.map(([legend, fields, groupHint]) => (
         <fieldset key={legend} className="flex flex-col gap-4 border-t border-ink-border pt-4 first-of-type:border-t-0 first-of-type:pt-0">
           <legend className="float-left mb-4 w-full font-data text-[11px] uppercase tracking-wider text-amber">
             {legend}
           </legend>
+          {/* El grupo del catálogo dice que sus campos no buscan en MusicBrainz (openspec: add-catalog-search-fields). */}
+          {groupHint ? <p className={`${hintClass} -mt-2`}>{groupHint}</p> : null}
           <div className="grid gap-x-10 gap-y-5 md:grid-cols-2">{fields}</div>
         </fieldset>
       ))}
@@ -369,6 +461,7 @@ export function AdvancedSearchForm({ type, query, criteria }: Props) {
 /** Nombres de los campos "desde" y "hasta" de cada rango. */
 const RANGE_FIELDS: Record<RangeKey, [string, string]> = {
   begin: ["beginFrom", "beginTo"],
+  active: ["activeFrom", "activeTo"],
   year: ["yearFrom", "yearTo"],
   duration: ["durMin", "durMax"],
 };
