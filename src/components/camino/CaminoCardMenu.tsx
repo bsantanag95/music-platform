@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { LazyShareSheet } from "@/components/share/LazyShareSheet";
 import { useRouter } from "@/i18n/navigation";
 import { RowMenu, RowMenuItem } from "@/components/ui/RowMenu";
 import type { CaminoSummary } from "@/lib/api/schemas";
@@ -18,11 +20,15 @@ interface CaminoCardMenuProps {
 // refine-progress-page-phase1, D2).
 export function CaminoCardMenu({ camino, actions }: CaminoCardMenuProps) {
   const t = useTranslations("camino");
+  const tShare = useTranslations("share");
   const router = useRouter();
+  const [sharing, setSharing] = useState(false);
 
   return (
+    <>
     <RowMenu label={t("cardMenuLabel", { title: camino.title })} triggerClassName="size-8 [@media(pointer:coarse)]:size-11">
       <RowMenuItem onSelect={() => router.push(`/me/caminos/${camino.id}`)}>{t("manage")}</RowMenuItem>
+      {camino.audience === "public" ? <RowMenuItem onSelect={() => setSharing(true)}>{tShare("button")}</RowMenuItem> : null}
       <RowMenuItem onSelect={() => actions.archive(camino.id)}>
         {camino.state === "archived" ? t("unarchive") : t("archive")}
       </RowMenuItem>
@@ -30,5 +36,7 @@ export function CaminoCardMenu({ camino, actions }: CaminoCardMenuProps) {
         {t("delete")}
       </RowMenuItem>
     </RowMenu>
+    {sharing ? <LazyShareSheet open onClose={() => setSharing(false)} kind="camino" refId={camino.id} /> : null}
+    </>
   );
 }

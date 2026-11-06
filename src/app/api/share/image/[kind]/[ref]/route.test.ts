@@ -58,9 +58,23 @@ describe("GET /api/share/image/[kind]/[ref]", () => {
     expect(mocks.render).toHaveBeenCalledWith(null, "en", expect.anything());
   });
 
-  it("una valoración o una escucha nunca es inmutable: su dueño puede cerrarla", async () => {
-    const res = await call("rating", "r1", "?v=abc123def456");
-    expect(res.headers.get("Cache-Control")).toBe("public, max-age=300");
+  it.each(["review", "comment", "list", "camino", "user_collection", "fingerprint", "profile", "rating", "listen"])(
+    "lo de una persona (%s) nunca es inmutable: se puede cerrar",
+    async (kind) => {
+      const res = await call(kind, "r1", "?v=abc123def456");
+      expect(res.headers.get("Cache-Control")).toBe("public, max-age=300");
+    },
+  );
+
+  it.each(["album", "song", "artist", "genre", "ceremony", "hall_class", "collection"])("el catálogo (%s) sí", async (kind) => {
+    const res = await call(kind, "x", "?v=abc123def456");
+    expect(res.headers.get("Cache-Control")).toBe("public, max-age=31536000, immutable");
+  });
+
+  it("pasa el formato al renderizador y nombra la descarga", async () => {
+    const res = await call("album", "rg1", "?format=story&download=1");
+    expect(mocks.render).toHaveBeenCalledWith(target, "es", expect.objectContaining({ format: "story" }));
+    expect(res.headers.get("Content-Disposition")).toBe('attachment; filename="metallica-master-of-puppets-story.png"');
   });
 
   describe("imagen privada del dueño", () => {
@@ -85,6 +99,14 @@ describe("GET /api/share/image/[kind]/[ref]", () => {
       expect(res.headers.get("Cache-Control")).toBe("private, no-store");
     });
 
+    it("también en Historia", async () => {
+      mocks.session.mockResolvedValue({ user: { id: "u1" } });
+      mocks.own.mockResolvedValue(target);
+      const res = await call("rating", "r1", "?personal=1&format=story");
+      expect(mocks.render).toHaveBeenCalledWith(target, "es", expect.objectContaining({ format: "story" }));
+      expect(res.headers.get("Cache-Control")).toBe("private, no-store");
+    });
+
     it("no aplica a otros tipos", async () => {
       await call("album", "rg1", "?personal=1");
       expect(mocks.session).not.toHaveBeenCalled();
@@ -99,7 +121,7 @@ describe("GET /api/share/image/[kind]/[ref]", () => {
 
   it.each([
     ["tipo desconocido", "podcast", "x", ""],
-    ["formato no disponible", "album", "rg1", "?format=story"],
+    ["formato no disponible", "album", "rg1", "?format=square"],
     ["idioma desconocido", "album", "rg1", "?locale=fr"],
   ])("rechaza %s con VALIDATION_ERROR", async (_label, kind, ref, query) => {
     const res = await call(kind, ref, query);

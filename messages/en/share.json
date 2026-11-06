@@ -18,7 +18,12 @@
       "telegram": "Telegram",
       "reddit": "Reddit"
     },
-    "openIn": "Share on {channel}"
+    "openIn": "Share on {channel}",
+    "formats": {
+      "label": "Format",
+      "link": "Link",
+      "story": "Story"
+    }
   },
   "image": {
     "unavailable": "Content not available",
@@ -116,6 +121,12 @@
       "listen": "This listen is not public. To make the link work, make it public.",
       "listenNote": "This listen is not public. To make the link work, make it public: your note will be visible too.",
       "privateProfile": "Your profile is private: nobody without an account could open a link. You can download the image."
-    }
+    },
+    "unavailable": "This content can no longer be shared."
+  },
+  "offer": {
+    "review": "Your review is live.",
+    "list": "Your list is now public.",
+    "camino": "You completed this Path."
   }
 }

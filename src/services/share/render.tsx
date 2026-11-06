@@ -2,8 +2,9 @@ import { ImageResponse } from "next/og";
 import type { ReactNode } from "react";
 import { appDomain } from "@/lib/share/app-url";
 import { BRAND_COLORS, BRAND_MONOGRAM } from "@/lib/share/brand-tokens";
-import type { ShareLocale } from "@/lib/share/kinds";
+import type { ShareFormat, ShareLocale } from "@/lib/share/kinds";
 import { AuthorNote, CommunityScore, CoverTile, IdentityBadge, LINK_FORMAT, LaminaFrame, SleeveWithRecord } from "./frame/LaminaFrame";
+import { STORY_FORMAT, STORY_RECORD, STORY_RECORD_COMPACT, StoryFrame, StoryRecord } from "./frame/StoryFrame";
 import { loadShareFonts } from "./fonts";
 import { shareAppName, shareTranslator } from "./i18n";
 import { MAX_COVER_SIDE, loadEmbeddedCover, loadEmbeddedImage } from "./images";
@@ -17,8 +18,14 @@ const MOSAIC_TILE = 184;
 const PHOTO_SIDE = 340;
 const AVATAR_SIDE = 260;
 const PROFILE_COVER = 104;
+const STORY_PHOTO = 640;
+const STORY_AVATAR = 420;
+const STORY_MOSAIC_GAP = 8;
+const NOTE_SCALE_STORY = 1.35;
 
 interface RenderOptions {
+  /** Por defecto, Enlace. */
+  format?: ShareFormat;
   headers?: Record<string, string>;
   /**
    * `Cache-Control` si alguna imagen con URL no se pudo obtener (fuente lenta o caída): esa versión no debe
@@ -106,20 +113,83 @@ async function renderMedia(media: ShareMedia): Promise<RenderedMedia> {
   }
 }
 
-function TypographicMark() {
+/** Medio de la Historia: la carátula nunca pasa de 250 px, así que el ancho lo llena el vinilo dibujado. */
+async function renderStoryMedia(media: ShareMedia, size: number): Promise<RenderedMedia> {
+  switch (media.type) {
+    case "cover": {
+      const cover = await embed(media.cover);
+      return {
+        node: (
+          <StoryRecord size={size}>
+            <CoverTile src={cover.src} size={MAX_COVER_SIDE} title={cover.fallbackTitle} subtitle={cover.fallbackSubtitle} />
+          </StoryRecord>
+        ),
+        covers: [],
+        degraded: isDegraded([cover]),
+      };
+    }
+    case "mosaic": {
+      if (media.covers.length === 1) return renderStoryMedia({ type: "cover", cover: media.covers[0]! }, size);
+      const covers = await Promise.all(media.covers.slice(0, 4).map((c) => embed(c)));
+      if (covers.length === 0) return { node: <TypographicMark size={size} />, covers: [], degraded: false };
+      return {
+        node: (
+          <StoryRecord size={size}>
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", width: MAX_COVER_SIDE * 2 + STORY_MOSAIC_GAP, gap: STORY_MOSAIC_GAP }}>
+              {covers.map((c, i) => (
+                <CoverTile key={i} src={c.src} size={MAX_COVER_SIDE} title={c.fallbackTitle} subtitle={c.fallbackSubtitle} />
+              ))}
+            </div>
+          </StoryRecord>
+        ),
+        covers: [],
+        degraded: isDegraded(covers),
+      };
+    }
+    case "photo": {
+      const side = Math.min(STORY_PHOTO, size);
+      const photo = await embed(media.photo, side);
+      return {
+        node: photo.src ? (
+          // eslint-disable-next-line @next/next/no-img-element -- imagen para el renderizador, no para el navegador
+          <img src={photo.src} width={side} height={side} alt="" style={{ objectFit: "cover", borderRadius: 16 }} />
+        ) : (
+          <IdentityBadge src={null} letter={media.monogram} variant={1} size={side} />
+        ),
+        covers: [],
+        degraded: isDegraded([photo]),
+      };
+    }
+    case "identity": {
+      const [avatar, covers] = await Promise.all([
+        loadEmbeddedImage(media.avatarUrl, STORY_AVATAR),
+        Promise.all(media.covers.slice(0, 3).map((c) => embed(c))),
+      ]);
+      return {
+        node: <IdentityBadge src={avatar} letter={media.monogram} variant={media.monogramVariant} size={STORY_AVATAR} />,
+        covers,
+        degraded: isDegraded([...covers, { url: media.avatarUrl, src: avatar }]),
+      };
+    }
+    case "typographic":
+      return { node: <TypographicMark size={size} />, covers: [], degraded: false };
+  }
+}
+
+function TypographicMark({ size = 340 }: { size?: number }) {
   return (
     <div
       style={{
         display: "flex",
-        width: 340,
-        height: 340,
+        width: size,
+        height: size,
         borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: BRAND_COLORS.inkSurface,
         border: `1px solid ${BRAND_COLORS.inkBorder}`,
         color: BRAND_COLORS.amber,
-        fontSize: 160,
+        fontSize: Math.round(size * 0.47),
         fontWeight: 700,
       }}
     >
@@ -139,18 +209,24 @@ function ProfileCovers({ covers }: { covers: EmbeddedImage[] }) {
   );
 }
 
-async function buildElement(target: ShareTarget | null, locale: ShareLocale): Promise<{ element: ReactNode; degraded: boolean }> {
+async function buildElement(
+  target: ShareTarget | null,
+  locale: ShareLocale,
+  format: ShareFormat,
+): Promise<{ element: ReactNode; degraded: boolean }> {
   const appName = shareAppName(locale);
   const domain = appDomain();
+  const story = format === "story";
+  const Frame = story ? StoryFrame : LaminaFrame;
   if (!target) {
     const t = shareTranslator(locale);
     const element = (
-      <LaminaFrame
+      <Frame
         kicker=""
         title={t("share.image.unavailable")}
         subtitle={null}
         meta={[]}
-        media={<TypographicMark />}
+        media={<TypographicMark size={story ? STORY_RECORD_COMPACT : 340} />}
         credits={[]}
         appName={appName}
         domain={domain}
@@ -161,10 +237,12 @@ async function buildElement(target: ShareTarget | null, locale: ShareLocale): Pr
 
   const t = shareTranslator(locale);
   const { card } = target;
-  const media = await renderMedia(card.media);
+  const media = story
+    ? await renderStoryMedia(card.media, card.quote ? STORY_RECORD_COMPACT : STORY_RECORD)
+    : await renderMedia(card.media);
   const authored = Boolean(card.quote || card.byline);
   const extra = authored ? (
-    <AuthorNote quote={card.quote ?? null} stars={card.stars ?? null} detailedScore={card.detailedScore ?? null} byline={card.byline ?? null} />
+    <AuthorNote quote={card.quote ?? null} stars={card.stars ?? null} detailedScore={card.detailedScore ?? null} byline={card.byline ?? null} scale={story ? NOTE_SCALE_STORY : 1} />
   ) : card.community ? (
     <CommunityScore
       score={card.community}
@@ -174,7 +252,7 @@ async function buildElement(target: ShareTarget | null, locale: ShareLocale): Pr
     <ProfileCovers covers={media.covers} />
   );
   const element = (
-    <LaminaFrame
+    <Frame
       kicker={card.kicker}
       title={card.title}
       subtitle={card.subtitle}
@@ -190,14 +268,15 @@ async function buildElement(target: ShareTarget | null, locale: ShareLocale): Pr
   return { element, degraded: media.degraded };
 }
 
-/** PNG del formato Enlace (1200×630) de un objetivo, o la imagen genérica si es `null`. */
+/** PNG de un objetivo en el formato pedido (Enlace por defecto), o la imagen genérica si es `null`. */
 export async function renderShareImage(
   target: ShareTarget | null,
   locale: ShareLocale,
   options: RenderOptions = {},
 ): Promise<ImageResponse> {
-  const [{ element, degraded }, fonts] = await Promise.all([buildElement(target, locale), loadShareFonts()]);
+  const format = options.format ?? "link";
+  const [{ element, degraded }, fonts] = await Promise.all([buildElement(target, locale, format), loadShareFonts()]);
   const headers = { ...options.headers };
   if (degraded && options.degradedCacheControl) headers["Cache-Control"] = options.degradedCacheControl;
-  return new ImageResponse(element as React.ReactElement, { ...LINK_FORMAT, fonts, headers });
+  return new ImageResponse(element as React.ReactElement, { ...(format === "story" ? STORY_FORMAT : LINK_FORMAT), fonts, headers });
 }

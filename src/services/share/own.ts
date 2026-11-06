@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, ratingShare } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
-import type { ShareLocale } from "@/lib/share/kinds";
+import type { ShareFormat, ShareLocale } from "@/lib/share/kinds";
 import { updateListenEntry } from "@/services/diary/diary";
 import { sharePayloadFor } from "./metadata";
 import { loadListenTarget, loadRatingTarget } from "./targets/relation";
@@ -45,8 +45,8 @@ async function isProfilePrivate(userId: string): Promise<boolean> {
   return row?.visibility === "private";
 }
 
-function personalImagePath(kind: OwnShareKind, ref: string, locale: ShareLocale): string {
-  const params = new URLSearchParams({ locale, format: "link", personal: "1" });
+function personalImagePath(kind: OwnShareKind, ref: string, locale: ShareLocale, format: ShareFormat): string {
+  const params = new URLSearchParams({ locale, format, personal: "1" });
   return `/api/share/image/${kind}/${encodeURIComponent(ref)}?${params.toString()}`;
 }
 
@@ -63,7 +63,11 @@ export async function ownShareState(kind: OwnShareKind, ref: string, locale: Sha
   return {
     state: (await isProfilePrivate(userId)) ? ("private_profile" as const) : ("needs_gesture" as const),
     ...common,
-    payload: { ...sharePayloadFor(own), imageUrl: personalImagePath(kind, ref, locale) },
+    payload: {
+      ...sharePayloadFor(own),
+      imageUrl: personalImagePath(kind, ref, locale, "link"),
+      storyImageUrl: personalImagePath(kind, ref, locale, "story"),
+    },
   };
 }
 

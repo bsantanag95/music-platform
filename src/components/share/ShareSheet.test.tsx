@@ -14,6 +14,7 @@ const payload: SharePayload = {
   ref: "rg1",
   url: "https://ejemplo.app/es/album/metallica-master-of-puppets-abc",
   title: "Master of Puppets · Metallica",
+  storyImageUrl: "/api/share/image/album/rg1?locale=es&format=story&v=abc",
   imageUrl: "/api/share/image/album/rg1?locale=es&format=link&v=abc",
   imageAlt: "Master of Puppets · Metallica · 1986",
   downloadName: "metallica-master-of-puppets",
@@ -103,5 +104,58 @@ describe("hoja de compartir", () => {
     await user.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(screen.getByRole("button", { name: "Compartir" })).toHaveFocus();
+  });
+
+  describe("formato Historia", () => {
+    const story = () => userEvent.click(screen.getByRole("button", { name: "Historia" }));
+
+    it("cambia la vista previa y la descarga, y mantiene el enlace en los atajos", async () => {
+      renderWithIntl(<ShareButton payload={payload} />);
+      await userEvent.click(screen.getByRole("button", { name: "Compartir" }));
+      await story();
+      expect(screen.getByRole("img").getAttribute("src")).toContain("format=story");
+      const download = screen.getByRole("link", { name: "Descargar imagen" });
+      expect(download.getAttribute("href")).toContain("format=story");
+      expect(download.getAttribute("download")).toMatch(/-story\.png$/);
+      expect(screen.getByRole("link", { name: "Compartir en X" }).getAttribute("href")).toContain("intent");
+    });
+
+    it("registra el formato elegido", async () => {
+      renderWithIntl(<ShareButton payload={payload} />);
+      await userEvent.click(screen.getByRole("button", { name: "Compartir" }));
+      await story();
+      await userEvent.click(screen.getByRole("link", { name: "Descargar imagen" }));
+      expect(mocks.post).toHaveBeenCalledWith(expect.objectContaining({ channel: "download", format: "story" }));
+    });
+
+    it("manda el archivo al menú nativo si el navegador puede", async () => {
+      const share = vi.fn().mockResolvedValue(undefined);
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, blob: async () => new Blob(["png"], { type: "image/png" }) }));
+      Object.defineProperty(navigator, "share", { configurable: true, value: share });
+      Object.defineProperty(navigator, "canShare", { configurable: true, value: () => true });
+      renderWithIntl(<ShareButton payload={payload} />);
+      await userEvent.click(screen.getByRole("button", { name: "Compartir" }));
+      await story();
+      await waitFor(() => expect(fetch).toHaveBeenCalled());
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await userEvent.click(screen.getByRole("button", { name: "Compartir…" }));
+      expect(share.mock.calls[0]?.[0].files?.[0]?.name).toMatch(/-story\.png$/);
+      Reflect.deleteProperty(navigator, "share");
+      Reflect.deleteProperty(navigator, "canShare");
+      vi.unstubAllGlobals();
+    });
+
+    it("sin archivos comparte el enlace", async () => {
+      const share = vi.fn().mockResolvedValue(undefined);
+      vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("sin red")));
+      Object.defineProperty(navigator, "share", { configurable: true, value: share });
+      renderWithIntl(<ShareButton payload={payload} />);
+      await userEvent.click(screen.getByRole("button", { name: "Compartir" }));
+      await story();
+      await userEvent.click(screen.getByRole("button", { name: "Compartir…" }));
+      expect(share.mock.calls[0]?.[0].url).toContain("via=native");
+      Reflect.deleteProperty(navigator, "share");
+      vi.unstubAllGlobals();
+    });
   });
 });

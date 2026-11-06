@@ -51,7 +51,7 @@ describe("POST /api/share/events", () => {
   it.each([
     ["canal desconocido", { ...valid, channel: "myspace" }],
     ["tipo desconocido", { ...valid, kind: "podcast" }],
-    ["formato no disponible", { ...valid, format: "story" }],
+    ["formato no disponible", { ...valid, format: "square" }],
     ["referencia vacía", { ...valid, ref: "" }],
     ["referencia de más de 200", { ...valid, ref: "x".repeat(201) }],
     ["cuerpo no JSON", null],

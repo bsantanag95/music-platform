@@ -210,24 +210,27 @@ export function AuthorNote({
   stars,
   detailedScore = null,
   byline,
+  scale = 1,
 }: {
   quote: string | null;
   stars: number | null;
   detailedScore?: number | null;
   byline: string | null;
+  /** Historia: el mismo bloque, más grande. */
+  scale?: number;
 }) {
   const score = stars !== null ? scaleScore({ stars, detailedScore }) : null;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: GRID * 2, marginTop: GRID / 2 }}>
       {quote ? (
-        <div style={{ display: "flex", fontFamily: body, fontSize: 28, lineHeight: 1.35, color: BRAND_COLORS.paper }}>
+        <div style={{ display: "flex", fontFamily: body, fontSize: 28 * scale, lineHeight: 1.35, color: BRAND_COLORS.paper }}>
           {`“${quote}”`}
         </div>
       ) : null}
       <div style={{ display: "flex", alignItems: "center", gap: GRID * 2 }}>
-        {score ? <ScoreChip label={score.label} background={score.band.background} foreground={score.band.foreground} size={quote ? 24 : 44} /> : null}
+        {score ? <ScoreChip label={score.label} background={score.band.background} foreground={score.band.foreground} size={(quote ? 24 : 44) * scale} /> : null}
         {byline ? (
-          <div style={{ display: "flex", fontFamily: data, fontSize: 24, color: BRAND_COLORS.paperMuted }}>{byline}</div>
+          <div style={{ display: "flex", fontFamily: data, fontSize: 24 * scale, color: BRAND_COLORS.paperMuted }}>{byline}</div>
         ) : null}
       </div>
     </div>

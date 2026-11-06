@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { absoluteUrl } from "@/lib/share/app-url";
-import type { ShareLocale, ShareTargetKind } from "@/lib/share/kinds";
+import type { ShareFormat, ShareLocale, ShareTargetKind } from "@/lib/share/kinds";
 import { shareAppName } from "./i18n";
 import { LINK_FORMAT } from "./frame/LaminaFrame";
 import { loadShareTarget, shareTargetVersion } from "./targets";
@@ -15,8 +15,15 @@ import type { ShareTarget } from "./types";
 const OG_LOCALES: Record<ShareLocale, string> = { es: "es_ES", en: "en_US" };
 
 /** URL relativa de la imagen de un objetivo; sin objetivo, la de la imagen genérica (sin versión). */
-export function shareImagePath(kind: ShareTargetKind, ref: string, locale: ShareLocale, target: ShareTarget | null, download = false): string {
-  const params = new URLSearchParams({ locale, format: "link" });
+export function shareImagePath(
+  kind: ShareTargetKind,
+  ref: string,
+  locale: ShareLocale,
+  target: ShareTarget | null,
+  download = false,
+  format: ShareFormat = "link",
+): string {
+  const params = new URLSearchParams({ locale, format });
   if (target) params.set("v", shareTargetVersion(target));
   if (download) params.set("download", "1");
   return `/api/share/image/${kind}/${encodeURIComponent(ref)}?${params.toString()}`;
@@ -103,6 +110,7 @@ export function sharePayloadFor(target: ShareTarget) {
     url: absoluteUrl(target.canonicalPath),
     title: target.title,
     imageUrl: shareImagePath(target.kind, target.ref, target.locale, target),
+    storyImageUrl: shareImagePath(target.kind, target.ref, target.locale, target, false, "story"),
     imageAlt: target.imageAlt,
     downloadName: target.downloadName,
   };

@@ -155,6 +155,33 @@ describe("CaminoManager", () => {
   });
 
   describe("registrar escucha", () => {
+    const completed = (audience: string) =>
+      camino({
+        audience: audience as CaminoDetail["audience"],
+        state: "complete",
+        progress: { selectedCount: 2, listenedCount: 2 },
+      });
+
+    it("completar un Camino público ofrece compartir", async () => {
+      const user = userEvent.setup();
+      mocks.createListenEntry.mockResolvedValueOnce(listenEntry("a1"));
+      mocks.getMyCamino.mockResolvedValueOnce(completed("public"));
+      renderManager();
+      await user.click(screen.getByRole("button", { name: "Registrar escucha de Loveless" }));
+      expect(await screen.findByText("Completaste este Camino.")).toBeInTheDocument();
+    });
+
+    it("completar un Camino que no es público no ofrece nada", async () => {
+      const user = userEvent.setup();
+      mocks.createListenEntry.mockResolvedValueOnce(listenEntry("a1"));
+      mocks.getMyCamino.mockResolvedValueOnce(completed("private"));
+      renderManager();
+      await user.click(screen.getByRole("button", { name: "Registrar escucha de Loveless" }));
+      await screen.findByRole("button", { name: "Registrar escucha de Souvlaki" });
+      expect(mocks.getMyCamino).toHaveBeenCalled();
+      expect(screen.queryByText("Completaste este Camino.")).not.toBeInTheDocument();
+    });
+
     it("registrar una escucha marca el álbum y refresca el progreso", async () => {
       const user = userEvent.setup();
       mocks.createListenEntry.mockResolvedValueOnce(listenEntry("a1"));

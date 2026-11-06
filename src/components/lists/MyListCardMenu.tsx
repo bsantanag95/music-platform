@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { LazyShareSheet } from "@/components/share/LazyShareSheet";
 import { useRouter } from "@/i18n/navigation";
 import { RowMenu, RowMenuItem, RowMenuSeparator } from "@/components/ui/RowMenu";
 import { listHref } from "@/lib/catalog-links";
@@ -24,8 +26,11 @@ export function MyListCardMenu({
   onDelete: () => void;
 }) {
   const t = useTranslations("lists");
+  const tShare = useTranslations("share");
   const router = useRouter();
+  const [sharing, setSharing] = useState(false);
   return (
+    <>
     <RowMenu
       label={t("cardMenuLabel", { title: list.title })}
       triggerClassName="size-8 [@media(pointer:coarse)]:size-11"
@@ -37,10 +42,13 @@ export function MyListCardMenu({
           {t("viewAsOthers")}
         </RowMenuItem>
       ) : null}
+      {list.audience === "public" ? <RowMenuItem onSelect={() => setSharing(true)}>{tShare("button")}</RowMenuItem> : null}
       <RowMenuSeparator />
       <RowMenuItem danger onSelect={onDelete}>
         {t("deleteListEllipsis")}
       </RowMenuItem>
     </RowMenu>
+    {sharing ? <LazyShareSheet open onClose={() => setSharing(false)} kind="list" refId={list.id} /> : null}
+    </>
   );
 }

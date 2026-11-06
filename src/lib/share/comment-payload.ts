@@ -6,13 +6,14 @@ import { absoluteUrl } from "./app-url";
 
 export function commentSharePayload(input: { commentId: string; locale: string; title: string; username: string }) {
   const { commentId, locale, title, username } = input;
-  const params = new URLSearchParams({ locale, format: "link" });
+  const image = (format: string) => `/api/share/image/comment/${commentId}?${new URLSearchParams({ locale, format }).toString()}`;
   return {
     kind: "comment" as const,
     ref: commentId,
     url: absoluteUrl(`/${locale}/comment/${commentId}`),
     title,
-    imageUrl: `/api/share/image/comment/${commentId}?${params.toString()}`,
+    imageUrl: image("link"),
+    storyImageUrl: image("story"),
     imageAlt: title,
     downloadName: `comment-${username}`,
   };

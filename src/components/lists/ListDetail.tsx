@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Link } from "@/i18n/navigation";
 import { ListDetailHeader } from "./ListDetailHeader";
 import { ListItemsView } from "./ListItemsView";
+import { ShareOfferToast } from "@/components/share/ShareOfferToast";
 import { UndoToast } from "@/components/ui/UndoToast";
 import { addItemToList, removeItemFromList, reorderListItems } from "@/lib/api/lists";
 import type { UserListDetail, UserListItem } from "@/lib/api/schemas";
@@ -34,6 +35,8 @@ export function ListDetail({ initial, saveCount }: ListDetailProps) {
   const t = useTranslations("lists");
   const [list, setList] = useState<UserListDetail>(initial);
   const [busy, setBusy] = useState(false);
+  const [offer, setOffer] = useState(false);
+  const tShare = useTranslations("share");
   const [error, setError] = useState(false);
 
   const reorder = async (orderedIds: string[]) => {
@@ -97,7 +100,15 @@ export function ListDetail({ initial, saveCount }: ListDetailProps) {
       >
         {t("backToLists")}
       </Link>
-      <ListDetailHeader list={list} canManage saveCount={saveCount} onUpdated={setList} />
+      <ListDetailHeader
+        list={list}
+        canManage
+        saveCount={saveCount}
+        onUpdated={(updated) => {
+          if (updated.audience === "public" && list.audience !== "public") setOffer(true);
+          setList(updated);
+        }}
+      />
 
       {list.items.length === 0 ? (
         <EmptyState title={t("noItems")} description={t("emptyItemsHint")} />
@@ -118,6 +129,10 @@ export function ListDetail({ initial, saveCount }: ListDetailProps) {
           undoing={removed.undoing}
           onExpire={() => setRemoved(null)}
         />
+      ) : null}
+
+      {offer ? (
+        <ShareOfferToast message={tShare("offer.list")} kind="list" refId={list.id} onDone={() => setOffer(false)} />
       ) : null}
 
       {error ? (

@@ -2350,7 +2350,7 @@ export const shareEvent = pgTable(
       "chk_share_event_channel",
       sql`${t.channel} IN ('native', 'copy', 'x', 'whatsapp', 'threads', 'bluesky', 'facebook', 'telegram', 'reddit', 'download')`,
     ),
-    check("chk_share_event_format", sql`${t.format} IN ('link')`),
+    check("chk_share_event_format", sql`${t.format} IN ('link', 'story')`),
   ],
 );
 

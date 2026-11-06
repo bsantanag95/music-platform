@@ -291,5 +291,12 @@
     "title": "Template not found",
     "description": "That collection template does not exist."
   },
-  "PROFILE_PRIVATE": "With a private profile nobody without an account could open the link."
+  "PROFILE_PRIVATE": {
+    "title": "Your profile is private",
+    "description": "With a private profile nobody without an account could open the link."
+  },
+  "SHARE_TARGET_NOT_FOUND": {
+    "title": "This content can no longer be shared.",
+    "description": "This content can no longer be shared."
+  }
 }

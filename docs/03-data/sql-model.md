@@ -1227,7 +1227,7 @@ Una fila hace pública esa valoración para su página de relación y su imagen;
 no disparar `trg_rating_touch`. PK `(user_id, rating_id)`, `ON DELETE CASCADE` en ambas: borrar la valoración borra la marca, editarla
 la conserva. Índice por `rating_id`. Entra en la exportación de datos como `sharedRatings`.
 
-## `share_event` (migraciones `0079` a `0081`, openspec `add-share-foundation` y `add-share-user-actions`)
+## `share_event` (migraciones `0079` a `0082`, openspec `add-share-foundation` y `add-share-user-actions`)
 
 Un registro por cada uso de la hoja de compartir (`docs/05-features/sharing.md`, D13): qué se compartió
 (`target_kind` + `target_ref`), por qué canal (`channel`) y en qué formato (`format`), con `created_at`.

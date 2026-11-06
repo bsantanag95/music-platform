@@ -2255,6 +2255,12 @@ cuerpo del correo abre la página de confirmación, que es quien hace el `POST`.
 Diseño y decisiones en `docs/05-features/sharing.md`. Las dos rutas aceptan pedidos con y sin sesión y no guardan
 datos de quien las llama; el límite por IP vive en memoria.
 
+### `GET /api/share/payload/[kind]/[ref]?locale=`
+
+Datos de la hoja de un objeto, calculados como anónimo: `{ kind, ref, url, title, imageUrl, storyImageUrl, imageAlt, downloadName }`.
+La hoja los pide al abrirse, para que un menú no cueste consultas. `SHARE_TARGET_NOT_FOUND` (404) si un anónimo no puede verlo,
+`VALIDATION_ERROR` (400) con tipo o idioma desconocidos, `RATE_LIMITED` (429) con más de 60 pedidos por minuto por IP.
+
 ### `GET|POST|DELETE /api/me/share/[kind]/[ref]?locale=`
 
 Compartir lo propio, con sesión. `kind` es `rating` o `listen`. Lo ajeno o inexistente responde `404` (`RATING_NOT_FOUND`,
@@ -2277,14 +2283,13 @@ canción, artista, colección, cuenta, reseña, comentario, lista, Camino), el i
 respuesta da la imagen de su comentario raíz.
 
 - `locale`: `es` (por defecto) o `en`; idioma de los textos de la imagen.
-- `format`: solo `link` (1200×630) en este cambio.
-- `v`: versión de contenido que anuncian los metadatos de la página. Si coincide con la vigente, la respuesta lleva
-  `Cache-Control: public, max-age=31536000, immutable`; si no viene o no coincide, se genera con los datos actuales y
+- `format`: `link` (1200×630) o `story` (1080×1920). Mismos datos y misma versión; la carátula sigue en 250 px como máximo.
+- `v`: versión de contenido que anuncian los metadatos de la página. Si coincide con la vigente y es un objeto de catálogo, la
+  respuesta lleva `Cache-Control: public, max-age=31536000, immutable`; lo que es de una persona lleva siempre la caché corta. Si no viene o no coincide, se genera con los datos actuales y
   `public, max-age=300`. Si alguna carátula, foto o avatar con URL no se pudo obtener (fuente lenta o caída), la
   respuesta lleva la caché corta aunque la versión coincida: esa imagen sale con el recuadro tipográfico y no debe
   quedar congelada en el CDN. Las imágenes ya convertidas se recuerdan 1 hora en memoria y los fallos 5 minutos.
 - `download=1`: agrega `Content-Disposition: attachment; filename="<nombre legible>.png"`.
-- `rating` y `listen` siempre llevan la caché corta, aunque `v` coincida: su dueño puede cerrarlas.
 - `personal=1`: solo `rating` y `listen`. Imagen privada para su dueño, con `Cache-Control: private, no-store`; a cualquier
   otro visitante le responde la imagen genérica. La pide la hoja; nunca se anuncia en metadatos.
 

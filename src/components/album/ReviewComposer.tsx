@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ShareOfferToast } from "@/components/share/ShareOfferToast";
 import type { SubmitEventHandler } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -64,6 +65,8 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
   const [title, setTitle] = useState(ownReview?.title ?? "");
   const [body, setBody] = useState(ownReview?.body ?? "");
   const [stars, setStars] = useState(0);
+  const [offerId, setOfferId] = useState<string | null>(null);
+  const tShare = useTranslations("share");
   const [pending, setPending] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [revealRequest, setRevealRequest] = useState(0);
@@ -141,6 +144,7 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
             title: title.trim() || null,
             ...(showStarPicker && stars ? { stars } : {}),
           });
+      if (!review) setOfferId(saved.id);
       setReview(saved);
       setEditing(false);
       router.refresh();
@@ -264,6 +268,8 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
           {tErrors(`${errorCode}.description`)}
         </p>
       )}
+
+      {offerId ? <ShareOfferToast message={tShare("offer.review")} kind="review" refId={offerId} onDone={() => setOfferId(null)} /> : null}
     </section>
   );
 }
