@@ -5,6 +5,8 @@ import esCatalog from "../../../messages/es/catalog.json";
 import enCatalog from "../../../messages/en/catalog.json";
 import esCommon from "../../../messages/es/common.json";
 import enCommon from "../../../messages/en/common.json";
+import esDiary from "../../../messages/es/diary.json";
+import enDiary from "../../../messages/en/diary.json";
 import esShare from "../../../messages/es/share.json";
 import enShare from "../../../messages/en/share.json";
 import type { ShareLocale } from "@/lib/share/kinds";
@@ -14,8 +16,8 @@ import type { ShareLocale } from "@/lib/share/kinds";
 // mismos catálogos que la interfaz (patrón del resumen semanal por email).
 
 const MESSAGES = {
-  es: { share: esShare, awards: esAwards, common: esCommon },
-  en: { share: enShare, awards: enAwards, common: enCommon },
+  es: { share: esShare, awards: esAwards, common: esCommon, diary: esDiary },
+  en: { share: enShare, awards: enAwards, common: enCommon, diary: enDiary },
 } as const;
 
 export function shareTranslator(locale: ShareLocale) {

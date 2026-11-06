@@ -290,5 +290,6 @@
   "TEMPLATE_NOT_FOUND": {
     "title": "Template not found",
     "description": "That collection template does not exist."
-  }
+  },
+  "PROFILE_PRIVATE": "With a private profile nobody without an account could open the link."
 }

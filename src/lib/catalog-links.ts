@@ -79,6 +79,11 @@ export function collectionHref(title: string, collectionId: string): string {
   return `/explore/collections/${collectionSegment(title, collectionId)}`;
 }
 
+/** Página de relación de una persona con un álbum o una canción, a partir del segmento canónico del objeto. */
+export function relationHref(username: string, type: "album" | "song", segment: string): string {
+  return `/users/${encodeURIComponent(username)}/${type}/${segment}`;
+}
+
 export function reviewHref(username: string, albumTitle: string, reviewId: string): string {
   return `/review/${reviewSegment(username, albumTitle, reviewId)}`;
 }

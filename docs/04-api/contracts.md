@@ -2250,16 +2250,27 @@ ya no existe: no distingue). Sin token, o con uno alterado o firmado con otro se
 `400 INVALID_UNSUBSCRIBE_TOKEN` y no cambia nada. Un `GET` sobre esta ruta no existe: el enlace del
 cuerpo del correo abre la página de confirmación, que es quien hace el `POST`.
 
-## Compartir (cambios `add-share-foundation` y `add-share-user-actions-phase1`, ADR 0049)
+## Compartir (cambios `add-share-foundation` y `add-share-user-actions`, ADR 0049 y 0050)
 
 Diseño y decisiones en `docs/05-features/sharing.md`. Las dos rutas aceptan pedidos con y sin sesión y no guardan
 datos de quien las llama; el límite por IP vive en memoria.
 
-### `GET /api/share/image/[kind]/[ref]?locale=&format=&v=&download=`
+### `GET|POST|DELETE /api/me/share/[kind]/[ref]?locale=`
+
+Compartir lo propio, con sesión. `kind` es `rating` o `listen`. Lo ajeno o inexistente responde `404` (`RATING_NOT_FOUND`,
+`LISTEN_ENTRY_NOT_FOUND`), igual que una valoración o escucha de un artista.
+
+- `GET`: `{ state, canUnshare, hasNote, payload }`. `state` es `public`, `needs_gesture` o `private_profile`. `payload` son los
+  datos de la hoja; fuera de `public`, su imagen es la personal.
+- `POST`: hace pública solo esa fila y responde lo mismo que `GET`. Idempotente. `PROFILE_PRIVATE` (409) con el perfil privado y
+  `SOCIAL_SUSPENSION_ACTIVE` (403) con una suspensión activa.
+- `DELETE`: solo `rating`, quita la marca. Una escucha se cierra con `PATCH /api/me/diary/<id>`.
+
+### `GET /api/share/image/[kind]/[ref]?locale=&format=&v=&download=&personal=`
 
 PNG para compartir de un objeto. `kind` es uno de `album`, `song`, `artist`, `genre`, `awards`, `ceremony`, `halls`,
 `hall_class`, `collections`, `collection`, `profile`, `review`, `comment`, `list`, `camino`, `user_collection`,
-`fingerprint` (la lista de `src/lib/share/kinds.ts` incluye además `award` y `hall`, que no tienen imagen propia porque
+`fingerprint`, `rating`, `listen` (la lista de `src/lib/share/kinds.ts` incluye además `award` y `hall`, que no tienen imagen propia porque
 su ficha redirige a la última ceremonia o clase). `ref` es la referencia estable del objeto: el id interno (álbum,
 canción, artista, colección, cuenta, reseña, comentario, lista, Camino), el id de la cuenta para `user_collection` y
 `fingerprint`, el slug del género, `<slug>:<año>` de una ceremonia o clase, o `-` en los índices. La referencia de una
@@ -2273,6 +2284,9 @@ respuesta da la imagen de su comentario raíz.
   respuesta lleva la caché corta aunque la versión coincida: esa imagen sale con el recuadro tipográfico y no debe
   quedar congelada en el CDN. Las imágenes ya convertidas se recuerdan 1 hora en memoria y los fallos 5 minutos.
 - `download=1`: agrega `Content-Disposition: attachment; filename="<nombre legible>.png"`.
+- `rating` y `listen` siempre llevan la caché corta, aunque `v` coincida: su dueño puede cerrarlas.
+- `personal=1`: solo `rating` y `listen`. Imagen privada para su dueño, con `Cache-Control: private, no-store`; a cualquier
+  otro visitante le responde la imagen genérica. La pide la hoja; nunca se anuncia en metadatos.
 
 La imagen se calcula siempre como visitante anónimo. Un objeto inexistente, oculto por moderación, de una cuenta
 desactivada o que un anónimo no puede ver responde **200 con la imagen genérica** de la marca (no 404: los crawlers no

@@ -130,6 +130,14 @@ de cuál de las filas con el mismo título haya en la BD.
 >   comentario, lista, Camino, colección y huella como anónimo, la dirección de un comentario (respuesta a su raíz, oculto,
 >   cuenta desactivada, bloqueo), que una lista o un Camino ocultos no se leen desde la vista ajena y qué eventos de
 >   compartir se borran al eliminar una cuenta.
+> - `smoke-test-share-relation.ts` crea un artista y un álbum sintéticos (MBID `5e0ce000-0000-4000-8000-00000000c0b*`) y
+>   usuarios `smoke_rel_*`, y los borra al terminar (también si falla). Si se interrumpió, limpiar con `DELETE FROM app_user
+>   WHERE username LIKE 'smoke_rel_%'; DELETE FROM release_group WHERE mbid::text LIKE
+>   '5e0ce000-0000-4000-8000-00000000c0b%'; DELETE FROM artist WHERE mbid::text LIKE
+>   '5e0ce000-0000-4000-8000-00000000c0b%';`. Necesita las migraciones `0079` a `0081`. Verifica la marca de valoración
+>   compartida (sin tocar `rating.updated_at`, idempotente, cascada, valoración de artista), los objetivos de valoración y
+>   escucha como anónimo y como dueño, la página de relación por visitante, `?escucha=`, el estado para la hoja, el perfil
+>   privado y los eventos que se borran con la cuenta.
 > - `smoke-test-comment-replies.ts` crea un artista y un álbum sintéticos (MBID
 >   `5e0ce000-0000-4000-8000-0000000009b0` / `...09b1`) y usuarios `smoke_reply_*`, y los borra al terminar
 >   (también si falla; el `ON DELETE CASCADE` limpia comentarios, respuestas, likes y bloqueos). Si se

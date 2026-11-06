@@ -921,5 +921,14 @@
     "blocked": "Bloqueaste a {name}.",
     "followedByYourFollows": "{count, plural, one {lo sigue # persona que sigues} other {lo siguen # personas que sigues}}",
     "tabShort": "Solicitudes"
+  },
+  "relation": {
+    "title": "Su relación",
+    "ownedBy": "De {name}",
+    "rating": "Valoración",
+    "review": "Reseña",
+    "listens": "Escuchas",
+    "favorite": "Favorito",
+    "readReview": "Leer la reseña"
   }
 }

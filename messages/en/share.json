@@ -41,7 +41,9 @@
       "list": "List",
       "camino": "Path",
       "user_collection": "Collection",
-      "fingerprint": "Taste fingerprint"
+      "fingerprint": "Taste fingerprint",
+      "rating": "Rating",
+      "listen": "Listen"
     },
     "category": {
       "studio": "Studio album",
@@ -81,7 +83,9 @@
       "comment": "Comment by {author} on {object}",
       "list": "{title}, by {author}",
       "collection": "{name}'s collection",
-      "fingerprint": "{name}'s taste fingerprint"
+      "fingerprint": "{name}'s taste fingerprint",
+      "rating": "{author}: {score} for {object}",
+      "listen": "{author} listened to {object}"
     },
     "listItems": {
       "artist": "{count, plural, one {# artist} other {# artists}}",
@@ -99,5 +103,19 @@
       "family": "Most present family: {family}"
     }
   },
-  "commentTitle": "Comment by {author}"
+  "commentTitle": "Comment by {author}",
+  "own": {
+    "title": "Share",
+    "loading": "Loading…",
+    "failed": "That did not work. Please try again.",
+    "makePublic": "Make public and share",
+    "download": "Download image",
+    "stop": "Stop sharing",
+    "notice": {
+      "rating": "This rating is not public. To make the link work, make it public: it will show your current score, even if you change it.",
+      "listen": "This listen is not public. To make the link work, make it public.",
+      "listenNote": "This listen is not public. To make the link work, make it public: your note will be visible too.",
+      "privateProfile": "Your profile is private: nobody without an account could open a link. You can download the image."
+    }
+  }
 }

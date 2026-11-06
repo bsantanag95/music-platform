@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { Dialog } from "@/components/ui/Dialog";
 import { postShareEvent } from "@/lib/api/share";
@@ -25,7 +25,18 @@ export interface SharePayload {
 
 type CopyState = "idle" | "copied" | "failed";
 
-export function ShareSheet({ open, onClose, payload }: { open: boolean; onClose: () => void; payload: SharePayload }) {
+export function ShareSheet({
+  open,
+  onClose,
+  payload,
+  footer,
+}: {
+  open: boolean;
+  onClose: () => void;
+  payload: SharePayload;
+  /** Acción extra al pie (dejar de compartir). */
+  footer?: ReactNode;
+}) {
   const t = useTranslations("share.sheet");
   const [canNativeShare, setCanNativeShare] = useState(false);
   const [copy, setCopy] = useState<CopyState>("idle");
@@ -140,6 +151,7 @@ export function ShareSheet({ open, onClose, payload }: { open: boolean; onClose:
       >
         {t("download")}
       </a>
+      {footer}
     </Dialog>
   );
 }

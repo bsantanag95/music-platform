@@ -1,3 +1,4 @@
+import { ApiError } from "@/lib/api/errors";
 import { slugify } from "@/lib/slug";
 import type { ShareTranslator } from "../i18n";
 
@@ -12,6 +13,16 @@ export function clipDescription(text: string, max = DESCRIPTION_MAX): string {
   const cut = clean.slice(0, max - 1);
   const space = cut.lastIndexOf(" ");
   return `${(space > 0 ? cut.slice(0, space) : cut).trimEnd()}…`;
+}
+
+/** Lee como anónimo: el "no existe / no se puede ver" del servicio (`ApiError`) es no tener objetivo. */
+export async function ifVisible<T>(read: Promise<T>): Promise<T | null> {
+  try {
+    return await read;
+  } catch (error) {
+    if (error instanceof ApiError) return null;
+    throw error;
+  }
 }
 
 /** Nombre de archivo legible para la descarga, sin caracteres inválidos ("metallica-master-of-puppets"). */

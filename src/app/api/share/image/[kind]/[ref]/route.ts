@@ -3,6 +3,8 @@ import { ApiError } from "@/lib/api/errors";
 import { isShareFormat, isShareLocale, isShareTargetKind } from "@/lib/share/kinds";
 import { withErrorHandling } from "@/lib/with-error-handling";
 import { consumeAuthAttempt, getAuthClientIp } from "@/services/auth/rate-limit";
+import { resolveSession } from "@/services/auth/sessions";
+import { isOwnShareKind, loadOwnTarget } from "@/services/share/own";
 import { renderShareImage } from "@/services/share/render";
 import { loadShareTarget, shareTargetVersion } from "@/services/share/targets";
 
@@ -16,6 +18,8 @@ const IMAGES_PER_WINDOW = 60;
 const IMAGES_WINDOW_MS = 60_000;
 const IMMUTABLE = "public, max-age=31536000, immutable";
 const SHORT = "public, max-age=300";
+/** Imagen privada del dueño (spec personal-share-image): nunca entra a una caché compartida. */
+const PERSONAL = "private, no-store";
 
 type Params = { params: Promise<{ kind: string; ref: string }> };
 
@@ -33,11 +37,23 @@ export const GET = withErrorHandling(async (request: NextRequest, { params }: Pa
     throw new ApiError("RATE_LIMITED", 429, "Demasiadas imágenes pedidas. Probá en un minuto");
   }
 
+  if (search.get("personal") === "1") {
+    const session = isOwnShareKind(kind) ? await resolveSession() : null;
+    const own = session && isOwnShareKind(kind) ? await loadOwnTarget(kind, ref, locale, session.user.id) : null;
+    const headers: Record<string, string> = { "Cache-Control": PERSONAL };
+    if (search.get("download") === "1") {
+      headers["Content-Disposition"] = `attachment; filename="${own?.downloadName ?? "compartir"}.png"`;
+    }
+    return renderShareImage(own, locale, { headers });
+  }
+
   const target = await loadShareTarget(kind, ref, locale);
   const requested = search.get("v");
   const current = target ? shareTargetVersion(target) : null;
+  // El dueño puede dejar de compartir una valoración o cerrar una escucha: esas imágenes nunca se congelan en un CDN.
+  const revocable = isOwnShareKind(kind);
   const headers: Record<string, string> = {
-    "Cache-Control": requested !== null && requested === current ? IMMUTABLE : SHORT,
+    "Cache-Control": !revocable && requested !== null && requested === current ? IMMUTABLE : SHORT,
   };
   if (search.get("download") === "1") {
     headers["Content-Disposition"] = `attachment; filename="${target?.downloadName ?? "compartir"}.png"`;

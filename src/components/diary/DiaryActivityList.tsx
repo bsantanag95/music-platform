@@ -10,6 +10,7 @@ import { AddToListPanel } from "@/components/lists/AddToListPanel";
 import { ListsContainingItemPanel } from "@/components/lists/ListsContainingItemPanel";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { OwnShareSheet } from "@/components/share/OwnShareSheet";
 import { RowMenu, RowMenuItem, RowMenuSeparator } from "@/components/ui/RowMenu";
 import { AudienceIcon, DiaryCover } from "./diary-row-parts";
 import { useDiaryBridgeRegistration } from "./DiaryBridge";
@@ -122,6 +123,7 @@ const TARGET_TYPE_KEY = { artist: "artist", "release-group": "album", recording:
 
 export function DiaryActivityList({ initial, initialFilters = EMPTY_DIARY_FILTERS, empty }: DiaryActivityListProps) {
   const t = useTranslations("diary");
+  const tShare = useTranslations("share");
   const locale = useLocale();
   const timeZone = useTimeZone() ?? "UTC";
   const queryClient = useQueryClient();
@@ -130,6 +132,7 @@ export function DiaryActivityList({ initial, initialFilters = EMPTY_DIARY_FILTER
   const [searchInput, setSearchInput] = useState(initialFilters.q);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [shareEntryId, setShareEntryId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [addToListEntryId, setAddToListEntryId] = useState<string | null>(null);
   const [showInListsEntryId, setShowInListsEntryId] = useState<string | null>(null);
@@ -509,6 +512,9 @@ export function DiaryActivityList({ initial, initialFilters = EMPTY_DIARY_FILTER
                   {t(entry.inWantToListen ? "unwantToListen" : "wantToListen")}
                 </RowMenuItem>
               )}
+              {entry.target.type !== "artist" && (
+                <RowMenuItem onSelect={() => setShareEntryId(entry.id)}>{tShare("button")}</RowMenuItem>
+              )}
               <RowMenuItem onSelect={() => void handleToggleHighlight(entry)}>
                 {t(entry.isHighlighted ? "unhighlight" : "highlight")}
               </RowMenuItem>
@@ -687,6 +693,15 @@ export function DiaryActivityList({ initial, initialFilters = EMPTY_DIARY_FILTER
           {t("loadError")}
         </span>
       )}
+      {shareEntryId ? (
+        <OwnShareSheet
+          open
+          kind="listen"
+          refId={shareEntryId}
+          onClose={() => setShareEntryId(null)}
+          onChanged={() => void queryClient.invalidateQueries({ queryKey })}
+        />
+      ) : null}
     </div>
   );
 }

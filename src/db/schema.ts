@@ -1817,6 +1817,25 @@ export const ratingHighlight = pgTable(
   ],
 );
 
+// Valoraciones compartidas (migración 0081, openspec: add-share-user-actions-phase2): una fila hace pública esa
+// valoración para su página de relación y su imagen. Misma razón de tabla aparte que rating_highlight: no tocar
+// rating.updated_at. Sin tope. Editar la valoración conserva la marca; borrarla la borra en cascada.
+export const ratingShare = pgTable(
+  "rating_share",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    ratingId: uuid("rating_id")
+      .notNull()
+      .references(() => rating.id, { onDelete: "cascade" }),
+    sharedAt: timestamp("shared_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.ratingId] }), index("idx_rating_share_rating").on(t.ratingId)],
+);
+
+export type RatingShareRow = typeof ratingShare.$inferSelect;
+
 // Entradas de diario destacadas del perfil (openspec: rework-user-profile).
 // Misma razón de tabla aparte que rating_highlight: no tocar
 // listen_entry.updated_at. Una entrada destacada anula la matriz de
@@ -2324,7 +2343,7 @@ export const shareEvent = pgTable(
     index("idx_share_event_target").on(t.targetKind, t.targetRef),
     check(
       "chk_share_event_target_kind",
-      sql`${t.targetKind} IN ('album', 'song', 'artist', 'genre', 'awards', 'award', 'ceremony', 'halls', 'hall', 'hall_class', 'collections', 'collection', 'profile', 'review', 'comment', 'list', 'camino', 'user_collection', 'fingerprint')`,
+      sql`${t.targetKind} IN ('album', 'song', 'artist', 'genre', 'awards', 'award', 'ceremony', 'halls', 'hall', 'hall_class', 'collections', 'collection', 'profile', 'review', 'comment', 'list', 'camino', 'user_collection', 'fingerprint', 'rating', 'listen')`,
     ),
     check("chk_share_event_target_ref", sql`char_length(${t.targetRef}) BETWEEN 1 AND 200`),
     check(

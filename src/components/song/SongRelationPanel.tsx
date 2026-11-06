@@ -7,6 +7,7 @@ import { ListenEntryForm } from "@/components/diary/ListenEntryForm";
 import { AlbumListPicker, type PickerMembership } from "@/components/album/AlbumListPicker";
 import { Field, HeartIcon, ToggleChip, Value, linkButton } from "@/components/album/AlbumRelationPanel";
 import { RatingDetailDialog } from "@/components/album/RatingDetailDialog";
+import { OwnShareButton } from "@/components/share/OwnShareSheet";
 import { formatStars } from "@/components/album/album-format";
 import { StarRatingInput } from "@/components/social/StarRatingInput";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -228,6 +229,7 @@ function AuthenticatedPanel({ recordingId, state }: { recordingId: string; state
               {tAlbum("clearRating")}
             </button>
           )}
+          {own && <OwnShareButton kind="rating" refId={own.id} />}
         </Row>
         {ratingNotice && (
           <p role="status" className="font-data text-xs text-paper-muted">

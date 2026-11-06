@@ -11,15 +11,24 @@ const COMPACT_STYLE = "inline-flex items-center gap-1.5 font-data text-xs text-p
 // Botón Compartir de las cabeceras y, en su versión compacta, de una fila (spec share-sheet). Visible con y sin
 // sesión; abre la hoja del objeto.
 export function ShareButton({ payload, className = "", compact = false }: { payload: SharePayload; className?: string; compact?: boolean }) {
-  const t = useTranslations("share");
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
 
   return (
     <>
-      <button
+      <ShareTrigger onClick={() => setOpen(true)} className={className} compact={compact} />
+      <ShareSheet open={open} onClose={close} payload={payload} />
+    </>
+  );
+}
+
+/** El botón en sí, para quien maneja su propia hoja. */
+export function ShareTrigger({ onClick, className = "", compact = false }: { onClick: () => void; className?: string; compact?: boolean }) {
+  const t = useTranslations("share");
+  return (
+    <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={onClick}
         aria-haspopup="dialog"
         className={`${compact ? COMPACT_STYLE : FULL_STYLE} ${className}`}
       >
@@ -27,8 +36,6 @@ export function ShareButton({ payload, className = "", compact = false }: { payl
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
         </svg>
         {t("button")}
-      </button>
-      <ShareSheet open={open} onClose={close} payload={payload} />
-    </>
+    </button>
   );
 }

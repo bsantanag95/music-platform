@@ -13,6 +13,7 @@ import {
   notificationPreference,
   rating,
   ratingHighlight,
+  ratingShare,
   recording,
   releaseGroup,
   review,
@@ -65,6 +66,8 @@ export interface DataExport {
   activity: { ratings: unknown[]; reviews: unknown[]; comments: unknown[] };
   lists: { owned: unknown[]; saved: unknown[]; pinned: unknown[] };
   highlights: { ratings: unknown[]; diaryEntries: unknown[] };
+  /** Valoraciones que la persona hizo públicas al compartirlas. */
+  sharedRatings: unknown[];
   social: {
     followers: { username: string | null; deactivated: boolean; status: string }[];
     following: { username: string | null; deactivated: boolean; status: string }[];
@@ -121,6 +124,7 @@ export async function buildDataExport(userId: string, now: Date = new Date()): P
     savedLists,
     pinnedLists,
     ratingHighlights,
+    sharedRatings,
     diaryHighlights,
     followers,
     following,
@@ -194,6 +198,7 @@ export async function buildDataExport(userId: string, now: Date = new Date()): P
     own(db.select().from(listSave).where(eq(listSave.saverId, userId)).orderBy(asc(listSave.createdAt))),
     own(db.select().from(userListPin).where(eq(userListPin.ownerId, userId))),
     own(db.select().from(ratingHighlight).where(eq(ratingHighlight.userId, userId))),
+    own(db.select().from(ratingShare).where(eq(ratingShare.userId, userId))),
     own(db.select().from(listenEntryHighlight).where(eq(listenEntryHighlight.userId, userId))),
     // Seguidores, seguidos y bloqueados: solo el usuario público de la otra persona.
     db
@@ -285,6 +290,7 @@ export async function buildDataExport(userId: string, now: Date = new Date()): P
       pinned: pinnedLists,
     },
     highlights: { ratings: ratingHighlights, diaryEntries: diaryHighlights },
+    sharedRatings,
     social: {
       followers: followers.map((row) => ({ ...person(row), status: row.status })),
       following: following.map((row) => ({ ...person(row), status: row.status })),

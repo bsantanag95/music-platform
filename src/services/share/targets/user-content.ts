@@ -1,7 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, userList } from "@/db/schema";
-import { ApiError } from "@/lib/api/errors";
 import { listHref, localeHref, reviewHref } from "@/lib/catalog-links";
 import type { ShareLocale } from "@/lib/share/kinds";
 import { isValidUuid } from "@/lib/validation";
@@ -20,7 +19,7 @@ import type { ShareImageRef, ShareMedia, ShareTarget } from "../types";
 import { loadAlbumTarget, loadArtistTarget, loadSongTarget } from "./catalog";
 import { mosaicCredits } from "./collections";
 import { loadProfileTargetByUsername, usernameOfAccount } from "./profile";
-import { clipDescription, downloadName, joinParts } from "./shared";
+import { clipDescription, downloadName, ifVisible, joinParts } from "./shared";
 
 // Objetivos de lo que publica una persona (spec share-images; openspec: add-share-user-actions-phase1). Cada uno
 // lee con el mismo servicio que su página y `viewerId = null`, así que hereda sus reglas de visibilidad: lo que un
@@ -28,16 +27,6 @@ import { clipDescription, downloadName, joinParts } from "./shared";
 
 const QUOTE_MAX = 200;
 const MOSAIC_SIZE = 4;
-
-/** Lee como anónimo: el "no existe / no se puede ver" del servicio (`ApiError`) es no tener objetivo. */
-async function ifVisible<T>(read: Promise<T>): Promise<T | null> {
-  try {
-    return await read;
-  } catch (error) {
-    if (error instanceof ApiError) return null;
-    throw error;
-  }
-}
 
 /** Hasta 4 carátulas sin repetir, primero las que tienen imagen (spec: mosaico de hasta 4). */
 function mosaicOf(items: Array<{ title: string; artistName: string | null; coverThumbUrl: string | null }>): ShareImageRef[] {
