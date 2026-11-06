@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -36,9 +36,10 @@ export function EditorPanel({ open, title, dirty, returnFocusTo, onClose, childr
   useEffect(() => setMounted(true), []);
 
   // Refs para que el listener de teclado (registrado una vez por apertura) vea
-  // siempre el estado vigente sin re-suscribirse en cada render.
+  // siempre el estado vigente sin re-suscribirse en cada render. En fase de
+  // layout para que una tecla pulsada justo tras el commit no vea `dirty` viejo.
   const confirmingRef = useRef(confirming);
-  useEffect(() => {
+  useLayoutEffect(() => {
     confirmingRef.current = confirming;
   });
 
@@ -55,7 +56,7 @@ export function EditorPanel({ open, title, dirty, returnFocusTo, onClose, childr
     onClose();
   }
   const requestCloseRef = useRef(requestClose);
-  useEffect(() => {
+  useLayoutEffect(() => {
     requestCloseRef.current = requestClose;
   });
 

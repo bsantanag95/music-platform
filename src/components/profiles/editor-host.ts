@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useId, useRef } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useRef } from "react";
 
 // Contrato opcional entre un editor del dueño y el anfitrión que lo monta (el
 // panel lateral de edición o una pantalla de ajustes). Sin anfitrión ni props
@@ -30,18 +30,23 @@ export const EditorHostContext = createContext<EditorHostContextValue | null>(nu
  * Guarda los callbacks en refs para que un anfitrión que los recrea en cada
  * render no dispare el efecto de nuevo; al desmontarse informa `false` para no
  * dejar el panel "sucio".
+ *
+ * En fase de layout, no en `useEffect`: el aviso de "Guardado" y el fin de los
+ * cambios pendientes salen del mismo render, y el anfitrión debe enterarse en ese
+ * commit. Con un efecto pasivo quedaba una ventana en la que Escape pedía confirmar
+ * el descarte de algo ya guardado. Las refs se actualizan antes, en el mismo orden.
  */
 export function useReportDirty(dirty: boolean, onDirtyChange?: (dirty: boolean) => void) {
   const host = useContext(EditorHostContext);
   const editorId = useId();
   const callback = useRef(onDirtyChange);
   const hostRef = useRef(host);
-  useEffect(() => {
+  useLayoutEffect(() => {
     callback.current = onDirtyChange;
     hostRef.current = host;
   });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     callback.current?.(dirty);
     hostRef.current?.setDirty(editorId, dirty);
   }, [dirty, editorId]);
