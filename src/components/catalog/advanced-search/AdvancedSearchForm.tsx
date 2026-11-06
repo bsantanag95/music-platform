@@ -24,7 +24,8 @@ import { GenrePicker } from "./GenrePicker";
 // Formulario de una pestaña de la búsqueda avanzada (openspec: redesign-advanced-search, refine-advanced-search-phase2),
 // al estilo de Metal Archives: el nombre o título es un campo más (opcional) con "¿Coincidencia exacta?". Los campos
 // van en grupos con nombre (Identidad · Origen · Época, o Identidad · Lanzamiento), todos del mismo ancho y alineados:
-// la etiqueta arriba y la ayuda debajo del control. Es un formulario GET con campos no controlados: sin JavaScript el navegador envía
+// la etiqueta arriba y la ayuda debajo del control; un grupo de tres campos usa tres columnas en pantallas anchas, para no dejar uno solo
+// con media fila vacía (openspec: polish-search-forms). Es un formulario GET con campos no controlados: sin JavaScript el navegador envía
 // todo (el servidor ignora los vacíos) y valida con `pattern`; con JavaScript valida en español, navega solo con lo que
 // tiene valor y la duración en segundos, y la fila de envío cuenta los criterios (fija al pie en móvil).
 
@@ -50,8 +51,12 @@ interface Props {
 const YEAR_PATTERN = "\\d{4}";
 const DURATION_PATTERN = "\\d{1,3}(:[0-5]\\d)?";
 
-const inputClass =
-  "h-10 w-full rounded border border-ink-border bg-ink-surface px-3 font-body text-sm text-paper placeholder:text-paper-muted focus:border-amber/70 focus:outline-none aria-invalid:border-danger";
+// Fondo más oscuro que la tarjeta: los campos vacíos se leen como campos.
+const fieldClass =
+  "h-10 w-full rounded border border-ink-border bg-ink font-body text-sm text-paper placeholder:text-paper-muted focus:border-amber/70 focus:outline-none aria-invalid:border-danger";
+const inputClass = `${fieldClass} px-3`;
+// El `<select>` nativo suma 4 px de margen propio. Sin elección, el texto va en gris como un texto de ejemplo.
+const selectClass = `filter-select ${fieldClass} pl-2 pr-2 has-[option[value='']:checked]:text-paper-muted`;
 const labelClass = "font-display text-sm text-paper-muted";
 const hintClass = "font-data text-[11px] text-paper-muted";
 
@@ -163,7 +168,7 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
           value="1"
           defaultChecked={exact}
           aria-label={t("exactMatchFor", { field: label })}
-          className="accent-amber"
+          className="form-check"
         />
         {t("exactMatch")}
       </label>
@@ -178,7 +183,8 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
     to: number | undefined,
     pattern: string,
     format: (value: number) => string = String,
-    placeholder = t("yearPlaceholder"),
+    /** Formato que hay que escribir, junto a "desde" y "hasta". Sin él (años), basta la palabra. */
+    placeholder?: string,
   ) => {
     const [fromName, toName] = RANGE_FIELDS[key];
     const error = errors[key];
@@ -200,7 +206,7 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
                 inputMode={pattern === YEAR_PATTERN ? "numeric" : undefined}
                 pattern={pattern}
                 title={pattern === DURATION_PATTERN ? t("durationInvalid") : undefined}
-                placeholder={`${(label as string).toLowerCase()} ${placeholder}`}
+                placeholder={placeholder ? `${(label as string).toLowerCase()} ${placeholder}` : (label as string)}
                 aria-invalid={error ? true : undefined}
                 onInput={() => onInput(name as string)}
                 className={inputClass}
@@ -229,7 +235,7 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
               name="category"
               value={value}
               defaultChecked={criteria.category?.includes(value) ?? false}
-              className="accent-amber"
+              className="form-check"
             />
             {tCategories(value)}
           </label>
@@ -252,7 +258,7 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
         name={name}
         defaultValue={value}
         onChange={onChange ? (event) => onChange(event.target.value) : undefined}
-        className={inputClass}
+        className={selectClass}
       >
         {options.map(([optionValue, optionLabel]) => (
           <option key={optionValue} value={optionValue}>
@@ -274,7 +280,7 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
         ...awards.map((award): [string, string] => [award.slug, awardName(award.slug)]),
       ])}
       <label className="inline-flex items-center gap-2 font-data text-xs text-paper-muted">
-        <input type="checkbox" name="awardWon" value="1" defaultChecked={criteria.awardWon ?? false} className="accent-amber" />
+        <input type="checkbox" name="awardWon" value="1" defaultChecked={criteria.awardWon ?? false} className="form-check" />
         {t("awardWon")}
       </label>
     </div>
@@ -289,12 +295,13 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
   );
   const beginLabel = artistType === "group" ? "beginGroup" : artistType ? "beginPerson" : "begin";
 
-  let groups: [string, ReactNode, string?][];
+  let groups: { legend: string; fields: ReactNode; hint?: string; wide?: boolean }[];
   if (type === "artist") {
     groups = [
-      [
-        t("groups.identity"),
-        <>
+      {
+        legend: t("groups.identity"),
+        wide: artistType === "other",
+        fields: <>
           {textField("q", "exact", t("name"), query, criteria.exact ?? false)}
           {select(
             "artistType",
@@ -317,10 +324,10 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
               ])
             : null}
         </>,
-      ],
-      [
-        t("groups.origin"),
-        <>
+      },
+      {
+        legend: t("groups.origin"),
+        fields: <>
           <CountryMultiPicker id={`${id}-country`} initial={criteria.country ?? []} inputClassName={inputClass} />
           <label className="flex flex-col gap-1.5">
             <span className={labelClass}>{t("area")}</span>
@@ -328,21 +335,23 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
             <span className={hintClass}>{t("areaHint")}</span>
           </label>
         </>,
-      ],
-      [
-        t("groups.period"),
-        <>
-          {range("begin", t(beginLabel), t(`${beginLabel}Hint`), criteria.beginFrom, criteria.beginTo, YEAR_PATTERN)}
+      },
+      {
+        legend: t("groups.period"),
+        fields: <>
+          {range("begin", t(beginLabel), null, criteria.beginFrom, criteria.beginTo, YEAR_PATTERN)}
           {select("ended", t("ended"), t("endedHint"), criteria.ended === undefined ? "" : criteria.ended ? "1" : "0", [
             ["", t("any")],
             ["0", t("endedActive")],
             ["1", t("endedInactive")],
           ])}
         </>,
-      ],
-      [
-        t("groups.catalog"),
-        <>
+      },
+      {
+        legend: t("groups.catalog"),
+        hint: t("groups.catalogHint"),
+        wide: artistType !== "other",
+        fields: <>
           {/* La actividad sale de los discos propios: no aplica a Otras personas. */}
           {artistType === "other"
             ? null
@@ -350,28 +359,29 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
           {genreField}
           {awardField}
         </>,
-        t("groups.catalogHint"),
-      ],
+      },
     ];
   } else if (type === "album") {
     groups = [
-      [
-        t("groups.identity"),
-        <>
+      {
+        legend: t("groups.identity"),
+        fields: <>
           {textField("q", "exact", t("title"), query, criteria.exact ?? false)}
           {textField("artist", "artistExact", t("artist"), criteria.artist ?? "", criteria.artistExact ?? false)}
         </>,
-      ],
-      [
-        t("groups.release"),
-        <>
+      },
+      {
+        legend: t("groups.release"),
+        fields: <>
           {range("year", t("releaseYear"), null, criteria.yearFrom, criteria.yearTo, YEAR_PATTERN)}
           {categories}
         </>,
-      ],
-      [
-        t("groups.catalog"),
-        <>
+      },
+      {
+        legend: t("groups.catalog"),
+        hint: t("groups.catalogHint"),
+        wide: true,
+        fields: <>
           {genreField}
           <CountryMultiPicker
             id={`${id}-artistCountry`}
@@ -382,22 +392,22 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
           />
           {awardField}
         </>,
-        t("groups.catalogHint"),
-      ],
+      },
     ];
   } else {
     groups = [
-      [
-        t("groups.identity"),
-        <>
+      {
+        legend: t("groups.identity"),
+        wide: true,
+        fields: <>
           {textField("q", "exact", t("songTitle"), query, criteria.exact ?? false)}
           {textField("artist", "artistExact", t("artist"), criteria.artist ?? "", criteria.artistExact ?? false)}
           {textField("album", "albumExact", t("album"), criteria.album ?? "", criteria.albumExact ?? false)}
         </>,
-      ],
-      [
-        t("groups.release"),
-        <>
+      },
+      {
+        legend: t("groups.release"),
+        fields: <>
           {categories}
           {range(
             "duration",
@@ -410,7 +420,7 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
             t("durationPlaceholder"),
           )}
         </>,
-      ],
+      },
     ];
   }
 
@@ -430,27 +440,30 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
     >
       <input type="hidden" name="type" value={type} />
       <p className={hintClass}>{t("intro")}</p>
-      {groups.map(([legend, fields, groupHint]) => (
+      {groups.map(({ legend, fields, hint: groupHint, wide }) => (
         <fieldset key={legend} className="flex flex-col gap-4 border-t border-ink-border pt-4 first-of-type:border-t-0 first-of-type:pt-0">
-          <legend className="float-left mb-4 w-full font-data text-[11px] uppercase tracking-wider text-amber">
+          <legend className="float-left mb-1 w-full font-data text-[11px] uppercase tracking-wider text-paper-muted">
             {legend}
           </legend>
           {/* El grupo del catálogo dice que sus campos no buscan en MusicBrainz (openspec: add-catalog-search-fields). */}
-          {groupHint ? <p className={`${hintClass} -mt-2`}>{groupHint}</p> : null}
-          <div className="grid gap-x-10 gap-y-5 md:grid-cols-2">{fields}</div>
+          {groupHint ? <p className={`${hintClass} -mt-3`}>{groupHint}</p> : null}
+          <div className={`grid gap-x-10 gap-y-5 md:grid-cols-2 ${wide ? "lg:grid-cols-3 lg:gap-x-6" : ""}`}>{fields}</div>
         </fieldset>
       ))}
       {/* Fija al pie en móvil: con el formulario largo, Buscar queda siempre a mano. */}
       <div className="sticky bottom-0 -mx-4 -mb-4 flex items-center gap-3 border-t border-ink-border bg-ink px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:-mx-6 sm:-mb-6 sm:px-6 md:static md:m-0 md:border-0 md:bg-transparent md:p-0">
-        <span className="font-data text-xs text-paper-muted" aria-live="polite">
+        {/* Sin criterios no hay cifra a la vista ni nada que limpiar; la región sigue montada para anunciar los cambios. */}
+        <span className={count === 0 ? "sr-only" : "font-data text-xs text-paper-muted"} aria-live="polite">
           {t("criteriaCount", { count })}
         </span>
-        <Link
-          href={advancedSearchHref(type, "")}
-          className="ml-auto font-data text-xs text-paper-muted underline-offset-4 hover:text-paper hover:underline md:order-last md:ml-0"
-        >
-          {t("clear")}
-        </Link>
+        {count > 0 ? (
+          <Link
+            href={advancedSearchHref(type, "")}
+            className="ml-auto font-data text-xs text-paper-muted underline-offset-4 hover:text-paper hover:underline md:order-last md:ml-0"
+          >
+            {t("clear")}
+          </Link>
+        ) : null}
         <button
           type="submit"
           disabled={isPending}

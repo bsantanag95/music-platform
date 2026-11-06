@@ -179,8 +179,8 @@
     "suggestions": {
       "listLabel": "Sugerencias",
       "count": "{count, plural, =0 {Sin sugerencias del catálogo} one {# sugerencia} other {# sugerencias}}",
-      "seeAll": "Ver todos los resultados de «{query}» en {type}",
-      "otherTypes": "Buscar en otro tipo",
+      "seeAll": "Buscar <q>«{query}»</q> en {type}",
+      "otherTypes": "Otro tipo",
       "fromCatalog": "En tu catálogo"
     },
     "recent": {
@@ -296,13 +296,13 @@
         "song": "Canciones"
       },
       "formLabel": "Buscar {type}",
-      "intro": "Llena uno o más campos. El nombre o el título es opcional.",
+      "intro": "Llena los campos que quieras; con uno basta.",
       "name": "Nombre",
       "title": "Título",
       "songTitle": "Título de la canción",
       "artist": "Artista",
       "album": "Álbum",
-      "exactMatch": "¿Coincidencia exacta?",
+      "exactMatch": "Coincidencia exacta",
       "exactMatchFor": "Coincidencia exacta en {field}",
       "artistType": "Tipo",
       "any": "Cualquiera",
@@ -321,10 +321,8 @@
       "area": "Ciudad o región",
       "areaHint": "Donde nació la persona o se formó el grupo",
       "begin": "Año de nacimiento o formación",
-      "beginHint": "Nacimiento de una persona o formación de un grupo",
       "from": "Desde",
       "to": "Hasta",
-      "yearPlaceholder": "aaaa",
       "ended": "Estado",
       "endedActive": "En actividad",
       "endedInactive": "Ya no en actividad",
@@ -388,7 +386,7 @@
         "period": "Época",
         "release": "Lanzamiento",
         "catalog": "Del catálogo",
-        "catalogHint": "Buscan solo en lo que ya está en el catálogo, no en MusicBrainz."
+        "catalogHint": "Solo buscan en lo que ya está en el catálogo."
       },
       "criteriaCount": "{count, plural, =0 {Ningún criterio} one {# criterio} other {# criterios}}",
       "errors": {
@@ -441,11 +439,9 @@
         }
       },
       "beginPerson": "Año de nacimiento",
-      "beginPersonHint": "Año en que nació",
       "beginGroup": "Año de formación",
-      "beginGroupHint": "Año en que se formó el grupo",
       "active": "Activo entre",
-      "activeHint": "Del primer al último disco propio, hasta hoy si sigue en actividad. Solo artistas con la discografía explorada.",
+      "activeHint": "Del primer al último disco propio, hasta hoy si sigue en actividad. Solo artistas con su discografía ya cargada.",
       "role": "Rol",
       "roleHint": "Qué hace en el catálogo",
       "roles": {

@@ -441,8 +441,13 @@ export function ScopedSearchField({
                           <line x1="21" y1="21" x2="16.65" y2="16.65" />
                         </svg>
                       </span>
-                      <span className="min-w-0 flex-1 truncate font-body text-sm text-paper">
-                        {t("suggestions.seeAll", { query: trimmed, type: typeLabel.toLowerCase() })}
+                      {/* Si no cabe se corta la consulta, nunca el tipo: es lo que distingue esta opción. */}
+                      <span className="flex min-w-0 flex-1 gap-[0.3em] whitespace-nowrap font-body text-sm text-paper">
+                        {t.rich("suggestions.seeAll", {
+                          query: trimmed,
+                          type: typeLabel.toLowerCase(),
+                          q: (chunks) => <span className="min-w-0 truncate">{chunks}</span>,
+                        })}
                       </span>
                       <kbd aria-hidden className="hidden shrink-0 font-data text-[11px] text-paper-muted sm:inline">Enter</kbd>
                     </>
@@ -458,29 +463,34 @@ export function ScopedSearchField({
               ))}
             </ul>
 
-            <div className="flex flex-wrap items-center gap-1.5 border-t border-ink-border px-3 py-2.5">
-              <span className="mr-1 font-data text-[11px] text-paper-muted">{t("suggestions.otherTypes")}</span>
-              {SEARCH_TYPES.filter((option) => option !== type).map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => changeType(option)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-ink-border px-2.5 py-1 font-data text-[11px] text-paper-muted transition-colors hover:border-amber/60 hover:text-paper"
-                >
-                  <SearchTypeIcon type={option} className="size-3" />
-                  {t(`types.${option}`)}
-                </button>
-              ))}
-              {/* En /search el enlace ya está junto al campo (openspec: redesign-advanced-search). */}
-              {compact && type !== "user" ? (
-                <button
-                  type="button"
-                  onClick={() => navigate(advancedSearchHref(type, trimmed))}
-                  className="ml-auto inline-flex items-center gap-1.5 font-data text-[11px] text-paper-muted underline-offset-4 transition-colors hover:text-paper hover:underline"
-                >
-                  {t("advanced.headerLink")}
-                </button>
-              ) : null}
+            <div className="flex flex-col gap-2 border-t border-ink-border px-3 py-2.5">
+              {/* La etiqueta comparte fila con el enlace: los tres tipos caben juntos en la fila de abajo. */}
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="font-data text-[11px] text-paper-muted">{t("suggestions.otherTypes")}</span>
+                {/* En /search el enlace ya está junto al campo (openspec: redesign-advanced-search). */}
+                {compact && type !== "user" ? (
+                  <button
+                    type="button"
+                    onClick={() => navigate(advancedSearchHref(type, trimmed))}
+                    className="inline-flex items-center gap-1.5 font-data text-[11px] text-paper-muted underline-offset-4 transition-colors hover:text-paper hover:underline"
+                  >
+                    {t("advanced.headerLink")} <span aria-hidden>→</span>
+                  </button>
+                ) : null}
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {SEARCH_TYPES.filter((option) => option !== type).map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => changeType(option)}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-ink-border px-2.5 py-1 font-data text-[11px] text-paper-muted transition-colors hover:border-amber/60 hover:text-paper"
+                  >
+                    <SearchTypeIcon type={option} className="size-3" />
+                    {t(`types.${option}`)}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         ) : null}

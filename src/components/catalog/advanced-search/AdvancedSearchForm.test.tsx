@@ -82,7 +82,7 @@ describe("AdvancedSearchForm", () => {
     expect(mockPush).toHaveBeenCalledWith("/search/advanced?type=song&q=hallelujah&album=Grace&durMin=210&durMax=420");
   });
 
-  it("sin JavaScript: formulario GET con los nombres de la URL; Limpiar vuelve a la pestaña vacía", () => {
+  it("sin JavaScript: formulario GET con los nombres de la URL; sin criterios no ofrece Limpiar", () => {
     renderForm(<AdvancedSearchForm type="song" query="" criteria={{}} />);
 
     const form = screen.getByRole("form", { name: "Buscar Canciones" });
@@ -91,6 +91,13 @@ describe("AdvancedSearchForm", () => {
     for (const name of ["type", "q", "exact", "artist", "artistExact", "album", "albumExact", "category", "durMin", "durMax"]) {
       expect(form.querySelector(`[name="${name}"]`), name).not.toBeNull();
     }
+    expect(screen.queryByRole("link", { name: labels.clear })).not.toBeInTheDocument();
+  });
+});
+
+describe("fila de envío (openspec: polish-search-forms)", () => {
+  it("con un criterio muestra la cifra y Limpiar vuelve a la pestaña vacía", () => {
+    renderForm(<AdvancedSearchForm type="song" query="hallelujah" criteria={{}} />);
     expect(screen.getByRole("link", { name: labels.clear })).toHaveAttribute("href", "/search/advanced?type=song");
   });
 });

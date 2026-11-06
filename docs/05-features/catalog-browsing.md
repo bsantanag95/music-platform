@@ -133,7 +133,7 @@ una lista simple, sin bloque de mejor coincidencia.
 
 **Formulario de la búsqueda avanzada (cambio `refine-advanced-search-phase2`).** Los campos van en
 grupos con nombre (Artistas: Identidad · Origen · Época; Álbumes y Canciones: Identidad · Lanzamiento),
-todos del mismo alto y alineados, con la coincidencia exacta y la ayuda bajo su control. La fila de envío cuenta los criterios como la barra ("3 criterios") y en móvil queda fija al
+todos del mismo alto y alineados, con la coincidencia exacta y la ayuda bajo su control. Un grupo de tres campos usa tres columnas en pantallas anchas; las casillas son oscuras (`.form-check`) y un selector sin elección va atenuado (`polish-search-forms`). La fila de envío cuenta los criterios como la barra ("3 criterios"), sin cifra ni "Limpiar" mientras no haya ninguno, y en móvil queda fija al
 pie. Con JavaScript el formulario valida en español antes de navegar (año de 4 dígitos, duración
 `m:ss`, "desde" no posterior a "hasta") y marca el campo; sin JavaScript sigue la validación del
 navegador y, por URL, un rango invertido se intercambia. Un valor de la URL que no se reconoce

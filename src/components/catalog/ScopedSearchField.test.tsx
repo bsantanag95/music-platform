@@ -225,7 +225,7 @@ describe("ScopedSearchField", () => {
     fireEvent.focus(field());
     fireEvent.change(field(), { target: { value: "farruko" } });
 
-    const seeAll = labels.suggestions.seeAll.replace("{query}", "farruko").replace("{type}", "artistas");
+    const seeAll = labels.suggestions.seeAll.replace(/<\/?q>/g, "").replace("{query}", "farruko").replace("{type}", "artistas");
     await waitFor(() => expect(getSearchSuggestions).toHaveBeenCalled());
     fireEvent.click(screen.getByRole("option", { name: seeAll }));
     expect(mockPush).toHaveBeenCalledWith("/search?type=artist&q=farruko");
