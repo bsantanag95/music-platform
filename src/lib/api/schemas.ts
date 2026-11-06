@@ -420,6 +420,7 @@ export const ErrorCodeSchema = z.enum([
   "EMAIL_NOT_VERIFIED",
   "INVALID_UNSUBSCRIBE_TOKEN",
   "PROFILE_PRIVATE",
+  "SHARE_TARGET_NOT_FOUND",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 
@@ -2133,6 +2134,8 @@ export type AddCaminoAlbumRequest = z.infer<typeof AddCaminoAlbumRequestSchema>;
 export const CaminoSummarySchema = z.object({
   id: z.uuid(),
   title: z.string(),
+  // Solo lo puebla el listado propio: el menú de la tarjeta ofrece Compartir si es público.
+  audience: z.string().optional(),
   state: CaminoStateSchema,
   progress: z.object({
     selectedCount: z.number().int().nonnegative(),

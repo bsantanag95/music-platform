@@ -63,6 +63,10 @@ referencia SHALL ser una cadena de 1 a 200 caracteres. Los tipos `review`, `comm
 - **WHEN** se envía un evento de tipo `comment` con canal `copy`
 - **THEN** la respuesta es `204` y el evento se guarda
 
+#### Scenario: Formato Historia
+- **WHEN** se envía un evento con formato `story`
+- **THEN** la respuesta es `204` y el evento se guarda
+
 ### Requirement: Límite de registros
 El endpoint SHALL limitar la cantidad de eventos por IP en una ventana de tiempo y responder `429` con
 `RATE_LIMITED` al superarla, sin guardar la IP.

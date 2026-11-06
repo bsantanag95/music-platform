@@ -1,8 +1,7 @@
 # Compartir
 
-**Estado:** 🟢 Dirección aprobada (2026-11-04). Bloque A en curso: `add-share-foundation` archivado (imagen del
-enlace, hoja de compartir y medición en catálogo y perfil); `add-share-user-actions` dividido en tres fases, con
-las Fases 1 y 2 implementadas (§9). Documento de dirección: reúne en un
+**Estado:** 🟢 Dirección aprobada (2026-11-04). Bloque A implementado: `add-share-foundation` y las tres fases de
+`add-share-user-actions` (§9). Sigue el bloque B. Documento de dirección: reúne en un
 solo lugar todo lo que abarca "Compartir" antes de abrir cualquier cambio de OpenSpec, para que cada
 cambio posterior parta del mismo contexto. Las decisiones de la §8 quedaron **adoptadas como punto de
 partida**; cada una se revisa en detalle, y se confirma o corrige, en el cambio que la implementa.
@@ -146,8 +145,8 @@ Un único componente (`ShareSheet`) para toda la app, para que el gesto sea siem
 - **Momentos con significado** — un enlace "Compartir" dentro del aviso de confirmación (toast), nunca un
   modal:
   - reseña publicada;
-  - lista hecha pública por primera vez;
-  - discografía completada (100 % de un recorrido) o lista para completar terminada;
+  - lista hecha pública (cada vez que pasa a pública: guardar si ya lo fue pediría una columna para un aviso descartable);
+  - lista para completar terminada, si es pública. La discografía completada espera a su página pública (`add-discography-lamina`);
   - lámina creada (bloque B).
   Valorar o registrar una escucha **no** ofrece compartir: son gestos frecuentes y el ofrecimiento sería
   ruido (principio 4).
@@ -412,7 +411,7 @@ qué medir y dónde se guarda es decisión aparte (§8 D13).
   entran; cambiar una nota cambia la URL de la imagen.
 - Límite de tasa por usuario para la generación a pedido; las imágenes OG solo se generan cuando un
   crawler las pide.
-- Presupuesto a medir en la primera fase: imagen OG < 300 ms en caliente, Historia < 800 ms.
+- Presupuesto a medir en la primera fase: imagen OG < 300 ms en caliente, Historia < 800 ms. Medido: Enlace 0,1–0,3 s; Historia 0,9–1 s en caliente, por encima del presupuesto (`add-share-user-actions-phase3`).
 
 ### 7.4 Datos y persistencia (a decidir, §8 D7)
 
@@ -442,7 +441,7 @@ hasta tener datos reales.
 |---|---|---|---|
 | D1 | Nombre visible de la familia de gráficos | Láminas · Postales · Carteles · Afiches · sin nombre propio | ✅ **Láminas** (es) / *Cards* (en), confirmada en `add-share-foundation` |
 | D2 | Orden de construcción | A completo y luego B · intercalar | **A primero** (§9): B necesita el renderizador, la hoja de compartir y las páginas de destino de A |
-| D3 | Formatos del bloque A | Solo enlace · enlace + historia · todos | ✅ **Enlace + Historia**: `add-share-foundation` trae el Enlace y la hoja; la Historia llega con `add-share-user-actions`; Publicación/Cuadrado con B |
+| D3 | Formatos del bloque A | Solo enlace · enlace + historia · todos | ✅ **Enlace + Historia**, esta en 1080×1920 con la carátula a 250 px sobre un vinilo dibujado (`add-share-user-actions-phase3`); Publicación/Cuadrado con B |
 | D4 | Página de relación persona ↔ disco | `/users/<u>/album/<id>` única · una página por acción | ✅ **Única por objeto** (álbum y canción en `add-share-user-actions-phase2`; el artista llega con la lámina de discografía, que es a la vez el progreso público) |
 | D5 | Compartir algo privado | Bloquear · pedir hacerlo público · permitir solo descarga | ✅ **Pedir "Hacer pública y compartir"**; sin ese gesto, solo el dueño descarga la imagen, generada con su sesión y sin caché pública (sirve también a perfiles privados). ADR 0050 |
 | D6 | Carátulas compuestas en imágenes descargables | Permitir con 250 px y atribución · solo carátula única · sin carátulas | ✅ **Hasta 4 carátulas de ≤250 px sin ampliar, con créditos y respetando retiros** — ADR 0049 (`add-share-foundation`) |
@@ -481,7 +480,7 @@ Cada cambio parte de este documento y abre con el repaso en detalle de las decis
    - **`add-share-user-actions-phase2`** ✅ implementado — páginas de relación de álbum y canción (D4), marca de valoración
      compartida (D15), imágenes de valoración y escucha, flujo "Hacer pública y compartir" y descarga privada
      del dueño (D5).
-   - **`add-share-user-actions-phase3`** — formato Historia (D3) en todo lo que tiene Enlace, ofrecimiento en
+   - **`add-share-user-actions-phase3`** ✅ implementado — formato Historia (D3) en todo lo que tiene Enlace, ofrecimiento en
      momentos con significado (§3.4) y acción Compartir en los menús ⋯ de las filas.
 
 **Bloque B**

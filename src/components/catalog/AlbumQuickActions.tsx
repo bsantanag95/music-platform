@@ -1,5 +1,7 @@
 "use client";
 
+import { LazyShareSheet } from "@/components/share/LazyShareSheet";
+import { ShareTrigger } from "@/components/share/ShareButton";
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -86,6 +88,7 @@ export function AlbumQuickActions({
   // Marcas pedidas al abrir (sin precarga): se conservan entre aperturas del mismo disco.
   const onDemand = preloaded === undefined;
   const [fetched, setFetched] = useState<DiscMarks | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
   const [loadState, setLoadState] = useState<"idle" | "loading" | "error">("idle");
   // Última versión del callback, para no reinstalar los listeners en cada render.
   const onOpenChangeRef = useRef(onOpenChange);
@@ -230,11 +233,21 @@ export function AlbumQuickActions({
             <MenuActions item={item} marks={marks ?? LOADING_MARKS} loading={marks === null} onMarksChange={updateMarks} />
           )}
           {extraActions && <div className="flex flex-col items-start gap-1.5 border-t border-ink-border pt-3">{extraActions}</div>}
-          <Link href={albumHref(null, item.title, item.id)} className="self-start font-data text-xs text-amber hover:underline">
-            {t("goToAlbum")} →
-          </Link>
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+            <Link href={albumHref(null, item.title, item.id)} className="font-data text-xs text-amber hover:underline">
+              {t("goToAlbum")} →
+            </Link>
+            <ShareTrigger
+              compact
+              onClick={() => {
+                setShareOpen(true);
+                onOpenChange(false);
+              }}
+            />
+          </div>
         </div>
       )}
+      {shareOpen ? <LazyShareSheet open onClose={() => setShareOpen(false)} kind="album" refId={item.id} /> : null}
     </div>
   );
 }

@@ -113,6 +113,7 @@ describe("MyListsTab", () => {
       "Desfijar",
       "Editar datos…",
       "Ver como la ven otros",
+      "Compartir",
       "Eliminar lista…",
     ]);
     await userEvent.click(within(menu).getByRole("menuitem", { name: "Ver como la ven otros" }));

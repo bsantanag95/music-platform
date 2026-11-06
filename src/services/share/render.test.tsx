@@ -157,6 +157,31 @@ describe("renderShareImage", () => {
     await keep("lista-artistas", bytes);
   });
 
+  describe("formato Historia", () => {
+    const render = (card: Partial<ShareTarget["card"]>, name: string) =>
+      renderShareImage(target(card), "es", { format: "story" })
+        .then(size)
+        .then(async ({ bytes, meta }) => {
+          expect([meta.width, meta.height]).toEqual([1080, 1920]);
+          await keep(`story-${name}`, bytes);
+        });
+    const cover = { url: "https://coverartarchive.org/x", fallbackTitle: "Disco", fallbackSubtitle: "Artista" };
+
+    it("álbum con carátula sobre el vinilo", () => render({}, "album"));
+    it("título largo", () => render({ title: "The Rise and Fall of Ziggy Stardust and the Spiders from Mars (Deluxe)" }, "titulo-largo"));
+    it("mosaico", () => render({ kicker: "Género", title: "Thrash metal", subtitle: null, meta: [], community: null, media: { type: "mosaic", covers: [cover, cover, cover, cover] } }, "mosaico"));
+    it("perfil", () => render({ kicker: "Perfil", title: "Ana Pérez", subtitle: "@ana", meta: ["120 seguidores"], community: null, media: { type: "identity", avatarUrl: null, monogram: "A", monogramVariant: 0, covers: [cover, cover, cover] } }, "perfil"));
+    it("reseña larga", () => render({ kicker: "Reseña", meta: [], community: null, quote: "Un disco que no envejece. ".repeat(8).trim(), stars: 4.5, byline: "@ana" }, "resena"));
+    it("valoración", () => render({ kicker: "Valoración", meta: [], community: null, stars: 4.5, detailedScore: 86, byline: "@ana" }, "valoracion"));
+    it("lista tipográfica", () => render({ kicker: "Lista", title: "Bandas de mi vida", subtitle: "@ana", meta: ["12 artistas"], community: null, media: { type: "typographic" } }, "lista"));
+
+    it("genérica", async () => {
+      const { bytes, meta } = await size(await renderShareImage(null, "es", { format: "story" }));
+      expect([meta.width, meta.height]).toEqual([1080, 1920]);
+      await keep("story-generica", bytes);
+    });
+  });
+
   it("pasa las cabeceras de caché pedidas", async () => {
     const response = await renderShareImage(target(), "es", { headers: { "Cache-Control": "public, max-age=300" } });
     expect(response.headers.get("Cache-Control")).toBe("public, max-age=300");

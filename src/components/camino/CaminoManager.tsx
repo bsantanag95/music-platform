@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ShareOfferToast } from "@/components/share/ShareOfferToast";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
@@ -55,6 +56,8 @@ export function CaminoManager({ initial }: CaminoManagerProps) {
   const t = useTranslations("camino");
   const router = useRouter();
   const [camino, setCamino] = useState(initial);
+  const [offer, setOffer] = useState(false);
+  const tShare = useTranslations("share");
   const [busyAlbumId, setBusyAlbumId] = useState<string | null>(null);
   const [busyArchive, setBusyArchive] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(false);
@@ -113,7 +116,9 @@ export function CaminoManager({ initial }: CaminoManagerProps) {
     try {
       const entry = await createListenEntry({ type: "release-group", id: albumId });
       setListenEntries((current) => ({ ...current, [albumId]: entry }));
-      setCamino(await getMyCamino(camino.id));
+      const updated = await getMyCamino(camino.id);
+      if (updated.state === "complete" && camino.state !== "complete" && updated.audience === "public") setOffer(true);
+      setCamino(updated);
     } catch {
       setErrorMessage(t("saveError"));
     }
@@ -235,6 +240,7 @@ export function CaminoManager({ initial }: CaminoManagerProps) {
           removingId={busyAlbumId}
         />
       )}
+      {offer ? <ShareOfferToast message={tShare("offer.camino")} kind="camino" refId={camino.id} onDone={() => setOffer(false)} /> : null}
     </section>
   );
 }

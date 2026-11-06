@@ -291,5 +291,12 @@
     "title": "Plantilla no encontrada",
     "description": "Esa plantilla de colecciones no existe."
   },
-  "PROFILE_PRIVATE": "Con el perfil privado nadie sin cuenta podría abrir el enlace."
+  "PROFILE_PRIVATE": {
+    "title": "Tu perfil es privado",
+    "description": "Con el perfil privado nadie sin cuenta podría abrir el enlace."
+  },
+  "SHARE_TARGET_NOT_FOUND": {
+    "title": "Este contenido ya no se puede compartir.",
+    "description": "Este contenido ya no se puede compartir."
+  }
 }

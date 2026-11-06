@@ -127,6 +127,9 @@ describe("ReviewComposer", () => {
     expect(mocks.saveReview).toHaveBeenCalledWith("release-group", RG, { body: "Un texto nuevo", title: "Mi título" });
     expect(await screen.findByText("Un texto nuevo")).toBeInTheDocument();
     expect(mocks.refresh).toHaveBeenCalled();
+    // Publicar por primera vez ofrece compartir, en un aviso y no en un diálogo.
+    expect(screen.getByText("Tu reseña está publicada.")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("sin valoración previa elige estrellas con el control de estrellas y las envía", async () => {
@@ -165,6 +168,7 @@ describe("ReviewComposer", () => {
 
     expect(mocks.updateReview).toHaveBeenCalledWith(ownReview.id, { body: "Texto corregido", title: "Mi título" });
     expect(await screen.findByText("Texto corregido")).toBeInTheDocument();
+    expect(screen.queryByText("Tu reseña está publicada.")).not.toBeInTheDocument();
   });
 
   // openspec: fix-review-rating-sync (D2). `router.refresh()` entrega `ownStars` nuevo pero el

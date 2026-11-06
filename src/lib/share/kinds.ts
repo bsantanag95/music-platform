@@ -46,8 +46,8 @@ export const SHARE_CHANNELS = [
 ] as const;
 export type ShareChannel = (typeof SHARE_CHANNELS)[number];
 
-/** Formatos de imagen. Este cambio solo trae el Enlace (1200×630); la Historia llega con add-share-user-actions. */
-export const SHARE_FORMATS = ["link"] as const;
+/** Formatos de imagen: Enlace (1200×630) e Historia (1080×1920). */
+export const SHARE_FORMATS = ["link", "story"] as const;
 export type ShareFormat = (typeof SHARE_FORMATS)[number];
 
 export const SHARE_LOCALES = ["es", "en"] as const;

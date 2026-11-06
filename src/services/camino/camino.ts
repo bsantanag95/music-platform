@@ -61,6 +61,7 @@ export interface CaminoDetail {
 export interface CaminoSummary {
   id: string;
   title: string;
+  audience?: Audience;
   state: JourneyState;
   progress: { selectedCount: number; listenedCount: number };
   coverThumbUrl: string | null;
@@ -321,6 +322,7 @@ export async function listMyCaminos(ownerId: string): Promise<CaminoSummary[]> {
     return {
       id: row.id,
       title: row.title,
+      audience: row.audience as Audience,
       state: deriveJourneyState(row.journeyArchivedAt, selectedCount, listenedCount),
       progress: { selectedCount, listenedCount },
       coverThumbUrl: enrichment.get(row.id)?.coverThumbs[0] ?? null,

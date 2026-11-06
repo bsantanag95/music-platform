@@ -337,6 +337,9 @@ el mismo umbral que el álbum, aplicado en el read-model (`artist-community.ts`)
 - Lo que se comparte (imagen y metadatos del enlace) se calcula **siempre como visitante anónimo**, aunque quien
   comparta sea el dueño o un seguidor: compartir nunca muestra más de lo que ve un anónimo. La única excepción es la
   imagen privada que el dueño descarga de su valoración o escucha: no se anuncia ni entra a una caché compartida.
+- Compartir nunca interrumpe: se ofrece en un aviso descartable, nunca en un modal, y solo al publicar una reseña, al pasar una
+  lista a pública o al completar un Camino público. Valorar o registrar una escucha no ofrece nada.
+- Solo el catálogo usa una caché inmutable. Lo que es de una persona lleva caché corta, porque su dueño o moderación pueden cerrarlo.
 - Nada se vuelve público por compartirlo sin un gesto explícito. **Hacer pública y compartir** abre solo esa valoración
   (con una marca) o esa escucha (con `audience = 'public'`). Con el perfil privado no se ofrece: nadie sin cuenta podría
   abrir el enlace. Una cuenta con suspensión social no puede hacerlo.

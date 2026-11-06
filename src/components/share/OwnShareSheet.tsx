@@ -5,7 +5,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { Dialog } from "@/components/ui/Dialog";
 import { getOwnShare, makeOwnShareable, postShareEvent, stopOwnShare, type OwnShareState } from "@/lib/api/share";
 import { downloadUrl } from "@/lib/share/channels";
-import { ShareSheet } from "./ShareSheet";
+import type { ShareFormat } from "@/lib/share/kinds";
+import { ShareFormatPicker, ShareImagePreview, ShareSheet, shareFileName } from "./ShareSheet";
 import { ShareTrigger } from "./ShareButton";
 
 // Hoja de lo propio (spec share-sheet, "Compartir algo propio que no es público"). Pide el estado al abrirse, así que
@@ -33,6 +34,8 @@ export function OwnShareSheet({
   const [data, setData] = useState<OwnShareState | null>(null);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [format, setFormat] = useState<ShareFormat>("link");
+  const imageUrl = format === "story" ? data?.payload.storyImageUrl : data?.payload.imageUrl;
 
   useEffect(() => {
     if (!open) return;
@@ -94,14 +97,8 @@ export function OwnShareSheet({
     <Dialog open title={t("title")} onClose={onClose} size="bottom">
       {data ? (
         <>
-          {/* eslint-disable-next-line @next/next/no-img-element -- PNG ya optimizado por la ruta de imágenes */}
-          <img
-            src={data.payload.imageUrl}
-            alt={data.payload.imageAlt}
-            width={1200}
-            height={630}
-            className="aspect-[1200/630] h-auto w-full rounded border border-ink-border bg-ink"
-          />
+          <ShareFormatPicker format={format} onChange={setFormat} />
+          <ShareImagePreview src={imageUrl ?? data.payload.imageUrl} alt={data.payload.imageAlt} format={format} />
           <p className="font-body text-sm text-paper">{t(`notice.${noticeKey}`)}</p>
           {data.state === "needs_gesture" ? (
             <button
@@ -114,9 +111,9 @@ export function OwnShareSheet({
             </button>
           ) : null}
           <a
-            href={downloadUrl(data.payload.imageUrl)}
-            download={`${data.payload.downloadName}.png`}
-            onClick={() => postShareEvent({ kind, ref: refId, channel: "download", format: "link" })}
+            href={downloadUrl(imageUrl ?? data.payload.imageUrl)}
+            download={shareFileName(data.payload.downloadName, format)}
+            onClick={() => postShareEvent({ kind, ref: refId, channel: "download", format })}
             className="self-start font-display text-sm text-paper-muted underline-offset-4 transition-colors hover:text-paper hover:underline"
           >
             {t("download")}

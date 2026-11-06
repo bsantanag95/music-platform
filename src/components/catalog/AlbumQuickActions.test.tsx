@@ -8,7 +8,7 @@ import { AlbumQuickActions } from "./AlbumQuickActions";
 // Marcas bajo demanda (openspec: extend-album-quick-actions): fuera de la discografía el menú
 // pide las marcas del disco al abrirse, una vez, con reintento ante un fallo, y nunca sin sesión.
 
-const mocks = vi.hoisted(() => ({ getReleaseGroupMarks: vi.fn(), toggleFavorite: vi.fn() }));
+const mocks = vi.hoisted(() => ({ getReleaseGroupMarks: vi.fn(), getSharePayload: vi.fn(), toggleFavorite: vi.fn() }));
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) => (
@@ -18,6 +18,7 @@ vi.mock("@/i18n/navigation", () => ({
   ),
 }));
 vi.mock("@/lib/api/catalog", () => ({ getReleaseGroupMarks: mocks.getReleaseGroupMarks }));
+vi.mock("@/lib/api/share", () => ({ getSharePayload: mocks.getSharePayload, postShareEvent: vi.fn() }));
 vi.mock("@/lib/api/diary", () => ({ createListenEntry: vi.fn() }));
 vi.mock("@/lib/api/favorites", () => ({ toggleFavorite: mocks.toggleFavorite }));
 vi.mock("@/lib/api/want-to-listen", () => ({ toggleWantToListen: vi.fn() }));
@@ -45,6 +46,27 @@ const openMenu = () => fireEvent.click(screen.getByRole("button", { name: a.open
 
 beforeEach(() => {
   vi.clearAllMocks();
+});
+
+describe("Compartir desde el menú", () => {
+  it("lo ofrece sin sesión, y los datos se piden al elegirlo", async () => {
+    mocks.getSharePayload.mockResolvedValue({
+      kind: "album",
+      ref: "rg1",
+      url: "https://ejemplo.app/es/album/motley-crue-dr-feelgood-abc",
+      title: "Dr. Feelgood",
+      imageUrl: "/api/share/image/album/rg1?format=link",
+      storyImageUrl: "/api/share/image/album/rg1?format=story",
+      imageAlt: "Dr. Feelgood",
+      downloadName: "dr-feelgood",
+    });
+    renderWithIntl(<Harness authenticated={false} />);
+    await act(async () => openMenu());
+    expect(mocks.getSharePayload).not.toHaveBeenCalled();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Compartir" })));
+    expect(mocks.getSharePayload).toHaveBeenCalledWith("album", "rg1", "es");
+    expect(await screen.findByRole("button", { name: "Copiar enlace" })).toBeInTheDocument();
+  });
 });
 
 describe("AlbumQuickActions con marcas bajo demanda", () => {

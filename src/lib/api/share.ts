@@ -21,21 +21,29 @@ export function postShareEvent(input: {
 }
 
 // Compartir lo propio (spec personal-share-image): el servidor decide el estado; la hoja solo lo muestra.
+const SharePayloadSchema = z.object({
+  kind: z.enum(SHARE_TARGET_KINDS),
+  ref: z.string(),
+  url: z.string(),
+  title: z.string(),
+  imageUrl: z.string(),
+  storyImageUrl: z.string(),
+  imageAlt: z.string(),
+  downloadName: z.string(),
+});
+
 const OwnShareStateSchema = z.object({
   state: z.enum(["public", "needs_gesture", "private_profile"]),
   canUnshare: z.boolean(),
   hasNote: z.boolean(),
-  payload: z.object({
-    kind: z.enum(SHARE_TARGET_KINDS),
-    ref: z.string(),
-    url: z.string(),
-    title: z.string(),
-    imageUrl: z.string(),
-    imageAlt: z.string(),
-    downloadName: z.string(),
-  }),
+  payload: SharePayloadSchema,
 });
 export type OwnShareState = z.infer<typeof OwnShareStateSchema>;
+
+/** Datos de la hoja de un objeto, como anónimo. Se pide al abrirla. */
+export function getSharePayload(kind: ShareTargetKind, ref: string, locale: string) {
+  return apiFetch(`/api/share/payload/${kind}/${encodeURIComponent(ref)}?locale=${locale}`, SharePayloadSchema);
+}
 
 const ownSharePath = (kind: "rating" | "listen", ref: string, locale: string) => `/api/me/share/${kind}/${ref}?locale=${locale}`;
 
