@@ -371,6 +371,8 @@ async function main() {
     await s.following.followUser(v.id, t.username);
     await s.following.followUser(t.id, v.username);
     const list = await s.listsSvc.createList({ ownerId: t.id, entityType: "release-group", title: "Lista ZZ smoke", audience: "public" });
+    // Con un ítem: una lista vacía no se descubre (spec list-discovery), y sin él los checks de descubrimiento no prueban nada.
+    await s.listsSvc.addItemToList(list.id, t.id, { type: "release-group", id: album.id });
     await s.savedLists.saveList(v.id, list.id);
     await s.socialSvc.upsertRating(target, t.id, 4, 80);
     await s.reviewsSvc.createOrReplaceReview(target, t.id, { title: "Reseña ZZ", body: "cuerpo zz smoke" } as never);

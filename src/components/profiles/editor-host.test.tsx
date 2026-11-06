@@ -49,7 +49,7 @@ describe("editores — contrato con el anfitrión", () => {
 
       await user.click(screen.getByRole("button", { name: "Guardar" }));
       await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
-      expect(onDirtyChange).toHaveBeenLastCalledWith(false);
+      await waitFor(() => expect(onDirtyChange).toHaveBeenLastCalledWith(false));
     });
 
     it("volver al valor original deja de contar como cambio", async () => {
@@ -104,7 +104,7 @@ describe("editores — contrato con el anfitrión", () => {
 
       await user.click(screen.getByRole("button", { name: "Guardar" }));
       await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
-      expect(onDirtyChange).toHaveBeenLastCalledWith(false);
+      await waitFor(() => expect(onDirtyChange).toHaveBeenLastCalledWith(false));
     });
   });
 
@@ -152,7 +152,7 @@ describe("editores — contrato con el anfitrión", () => {
 
       await user.click(screen.getByRole("button", { name: "Guardar recomendaciones" }));
       await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
-      expect(onDirtyChange).toHaveBeenLastCalledWith(false);
+      await waitFor(() => expect(onDirtyChange).toHaveBeenLastCalledWith(false));
     });
   });
 

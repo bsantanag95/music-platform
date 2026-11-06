@@ -144,6 +144,29 @@ describe("EditableBlock", () => {
     expect(mocks.refresh).toHaveBeenCalledTimes(1);
   });
 
+  // Escape en el mismo instante en que "Guardado" entra al DOM, sin esperar a React: el panel ya debe saber que no
+  // quedan cambios. Fija lo que antes solo se veía bajo carga, cuando el aviso de "limpio" llegaba tarde.
+  it("Escape justo al aparecer «Guardado» cierra sin pedir confirmar", async () => {
+    const user = userEvent.setup();
+    mocks.apiFetch.mockResolvedValue({ user: {} });
+    renderProfile();
+    await user.click(screen.getByRole("button", { name: "interruptor" }));
+    await user.click(screen.getByRole("button", { name: "Editar Placa" }));
+    await screen.findByRole("dialog", { name: "Placa" });
+    await user.type(screen.getByLabelText("Bio"), "Colecciono casetes");
+
+    const observer = new MutationObserver(() => {
+      if (!document.querySelector('[role="status"]')?.textContent?.includes("Guardado")) return;
+      observer.disconnect();
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    });
+    observer.observe(document.body, { subtree: true, childList: true, characterData: true });
+    await user.click(screen.getAllByRole("button", { name: "Guardar" })[0]!);
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(mocks.refresh).toHaveBeenCalledTimes(1);
+  });
+
   it("con cambios sin guardar pide confirmar el descarte antes de cerrar", async () => {
     const user = userEvent.setup();
     renderProfile();
