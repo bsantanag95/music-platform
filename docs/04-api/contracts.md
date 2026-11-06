@@ -2250,7 +2250,7 @@ ya no existe: no distingue). Sin token, o con uno alterado o firmado con otro se
 `400 INVALID_UNSUBSCRIBE_TOKEN` y no cambia nada. Un `GET` sobre esta ruta no existe: el enlace del
 cuerpo del correo abre la página de confirmación, que es quien hace el `POST`.
 
-## Compartir (cambio `add-share-foundation`, ADR 0049)
+## Compartir (cambios `add-share-foundation` y `add-share-user-actions-phase1`, ADR 0049)
 
 Diseño y decisiones en `docs/05-features/sharing.md`. Las dos rutas aceptan pedidos con y sin sesión y no guardan
 datos de quien las llama; el límite por IP vive en memoria.
@@ -2258,10 +2258,12 @@ datos de quien las llama; el límite por IP vive en memoria.
 ### `GET /api/share/image/[kind]/[ref]?locale=&format=&v=&download=`
 
 PNG para compartir de un objeto. `kind` es uno de `album`, `song`, `artist`, `genre`, `awards`, `ceremony`, `halls`,
-`hall_class`, `collections`, `collection`, `profile` (la lista de `src/lib/share/kinds.ts` incluye además `award` y
-`hall`, que no tienen imagen propia porque su ficha redirige a la última ceremonia o clase). `ref` es la referencia
-estable del objeto: el id interno (álbum, canción, artista, colección, cuenta), el slug del género, `<slug>:<año>`
-de una ceremonia o clase, o `-` en los índices.
+`hall_class`, `collections`, `collection`, `profile`, `review`, `comment`, `list`, `camino`, `user_collection`,
+`fingerprint` (la lista de `src/lib/share/kinds.ts` incluye además `award` y `hall`, que no tienen imagen propia porque
+su ficha redirige a la última ceremonia o clase). `ref` es la referencia estable del objeto: el id interno (álbum,
+canción, artista, colección, cuenta, reseña, comentario, lista, Camino), el id de la cuenta para `user_collection` y
+`fingerprint`, el slug del género, `<slug>:<año>` de una ceremonia o clase, o `-` en los índices. La referencia de una
+respuesta da la imagen de su comentario raíz.
 
 - `locale`: `es` (por defecto) o `en`; idioma de los textos de la imagen.
 - `format`: solo `link` (1200×630) en este cambio.
@@ -2278,7 +2280,8 @@ muestran nada útil ante un error). Errores: `VALIDATION_ERROR` (400) con `kind`
 una referencia vacía o de más de 200 caracteres; `RATE_LIMITED` (429) con más de 60 imágenes por minuto por IP.
 
 Los metadatos de las páginas de destino (álbum, artista, canción, género, premios e índice de premios, salones e
-índice de salones, colecciones e índice de colecciones, perfil) anuncian esta URL, absoluta y versionada, en
+índice de salones, colecciones e índice de colecciones, perfil, reseña, `/comment/<id>`, lista, Camino, colección y
+huella de un perfil) anuncian esta URL, absoluta y versionada, en
 `og:image` y `twitter:image`, junto con `og:title`, `og:description`, `og:url` (canónica, sin query),
 `og:locale`, `og:image:alt` y `twitter:card = summary_large_image`.
 

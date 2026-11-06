@@ -2,6 +2,8 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { collectionHref, listSegment } from "@/lib/catalog-links";
 import UserListDetailPage from "./page";
 
+vi.mock("@/services/share/metadata", () => ({ buildShareMetadata: vi.fn().mockResolvedValue({}), buildAccountShareMetadata: vi.fn().mockResolvedValue({}) }));
+vi.mock("@/components/share/ShareAction", () => ({ ShareAction: () => null }));
 vi.mock("@/services/profiles/renamed-redirect", () => ({
   redirectIfRenamed: (...a: unknown[]) => mocks.redirectIfRenamed(...a),
 }));

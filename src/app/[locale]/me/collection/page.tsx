@@ -8,6 +8,7 @@ import { CollectionShelf } from "@/components/collection/CollectionShelf";
 import { WantedShelf } from "@/components/collection/WantedShelf";
 import { CollectionTabs } from "@/components/collection/CollectionTabs";
 import { AddCopyButton } from "@/components/collection/AddCopyButton";
+import { ShareAction } from "@/components/share/ShareAction";
 import { withClientMessages } from "@/i18n/client-messages";
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -56,7 +57,12 @@ async function CollectionPage({
           <h1 className="font-display text-2xl text-paper">{t("title")}</h1>
           <p className="font-body text-sm text-paper-muted">{t("description")}</p>
         </div>
-        {tab === "own" ? <AddCopyButton /> : null}
+        {tab === "own" ? (
+          <div className="flex items-center gap-3">
+            <ShareAction kind="user_collection" refId={user.id} />
+            <AddCopyButton />
+          </div>
+        ) : null}
       </header>
 
       <CollectionTabs active={tab} initialTotals={totals}>

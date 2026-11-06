@@ -1379,7 +1379,12 @@
     "deactivatedAccount": "Deactivated account",
     "likeComment": "Like this comment",
     "unlikeComment": "Remove my like",
-    "likesCount": "{count} likes"
+    "likesCount": "{count} likes",
+    "commentPage": {
+      "title": "Comment",
+      "about": "Comment on {object}",
+      "viewConversation": "View the conversation"
+    }
   },
   "versionAttributes": {
     "live": "Live",

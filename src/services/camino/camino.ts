@@ -204,6 +204,8 @@ export async function getUserCaminoDetail(
         eq(userList.ownerId, ownerId),
         eq(userList.kind, "custom_journey"),
         inArray(userList.audience, audiences),
+        // Vista ajena: el dueño gestiona el suyo en `/me/caminos`, también si está oculto por moderación.
+        eq(userList.moderationStatus, "visible"),
       ),
     )
     .limit(1);

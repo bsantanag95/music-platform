@@ -2324,7 +2324,7 @@ export const shareEvent = pgTable(
     index("idx_share_event_target").on(t.targetKind, t.targetRef),
     check(
       "chk_share_event_target_kind",
-      sql`${t.targetKind} IN ('album', 'song', 'artist', 'genre', 'awards', 'award', 'ceremony', 'halls', 'hall', 'hall_class', 'collections', 'collection', 'profile')`,
+      sql`${t.targetKind} IN ('album', 'song', 'artist', 'genre', 'awards', 'award', 'ceremony', 'halls', 'hall', 'hall_class', 'collections', 'collection', 'profile', 'review', 'comment', 'list', 'camino', 'user_collection', 'fingerprint')`,
     ),
     check("chk_share_event_target_ref", sql`char_length(${t.targetRef}) BETWEEN 1 AND 200`),
     check(

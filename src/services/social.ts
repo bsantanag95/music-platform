@@ -4,6 +4,8 @@ import { appUser, artist, comment, COMMENT_TOPICS, DEFAULT_COMMENT_TOPIC, rating
 import type { CommentTopic } from "@/db/schema";
 import { maskAuthor } from "@/services/auth/account-status";
 import { ApiError } from "@/lib/api/errors";
+import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
+import { resolvePrimaryArtists, slugArtistName } from "@/services/catalog/primary-artists";
 import { COMMENT_LIKE_COUNT_SQL, likedByViewerSql, thresholdedLikeCount } from "@/services/social/comment-likes";
 import { COMMENT_EFFECTIVE_TOPIC_SQL, COMMENT_REPLY_COUNT_SQL, rootCommentsOnly } from "@/services/social/comment-roots";
 import { isBlockedBetween } from "@/services/social/relations";
@@ -204,6 +206,79 @@ export async function getRootComment(commentId: string, viewerId: string | null 
   const [row] = await db.select({ id: comment.id, body: comment.body, topic: COMMENT_EFFECTIVE_TOPIC_SQL, parentId: comment.parentId, replyCount: COMMENT_REPLY_COUNT_SQL, createdAt: comment.createdAt, likes: COMMENT_LIKE_COUNT_SQL, likedByMe: viewerId ? likedByViewerSql(viewerId) : sql<boolean>`false`, user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName, deactivatedAt: appUser.deactivatedAt } }).from(comment).innerJoin(appUser, eq(comment.userId, appUser.id)).where(eq(comment.id, root.id)).limit(1);
   if (!row) throw new ApiError("COMMENT_NOT_FOUND", 404, "Comentario no encontrado");
   return serializeComment(row, { likes: row.likes, likedByMe: row.likedByMe });
+}
+
+/** Lo que necesita la dirección propia de un comentario (spec comment-permalink). */
+export interface CommentPermalink {
+  comment: { id: string; body: string; createdAt: string };
+  author: { id: string; username: string; displayName: string | null };
+  /** El objeto comentado, con `href` canónico: una redirección de layout perdería `?thread=`. */
+  object: { type: SocialTargetType; id: string; title: string; href: string };
+}
+
+/**
+ * Un comentario para su dirección propia, con su autor y el objeto comentado. Una respuesta da su raíz (quien
+ * llama compara el id para redirigir). `null` si no existe, está oculto, es de una cuenta desactivada o el lector
+ * y el autor se bloquearon.
+ */
+export async function getCommentPermalink(commentId: string, viewerId: string | null): Promise<CommentPermalink | null> {
+  const root = await findVisibleRoot(commentId).catch((error: unknown) => {
+    if (error instanceof ApiError) return null;
+    throw error;
+  });
+  if (!root) return null;
+  const [row] = await db
+    .select({
+      id: comment.id,
+      body: comment.body,
+      createdAt: comment.createdAt,
+      artistId: comment.artistId,
+      releaseGroupId: comment.releaseGroupId,
+      recordingId: comment.recordingId,
+      artistName: artist.name,
+      albumTitle: releaseGroup.title,
+      songTitle: recording.title,
+      user: { id: appUser.id, username: appUser.username, displayName: appUser.displayName, deactivatedAt: appUser.deactivatedAt },
+    })
+    .from(comment)
+    .innerJoin(appUser, eq(comment.userId, appUser.id))
+    .leftJoin(artist, eq(comment.artistId, artist.id))
+    .leftJoin(releaseGroup, eq(comment.releaseGroupId, releaseGroup.id))
+    .leftJoin(recording, eq(comment.recordingId, recording.id))
+    .where(eq(comment.id, root.id))
+    .limit(1);
+  if (!row || row.user.deactivatedAt) return null;
+  if (viewerId && viewerId !== row.user.id && (await isBlockedBetween(viewerId, row.user.id))) return null;
+
+  const object = await commentObject(row);
+  if (!object) return null;
+  return {
+    comment: { id: row.id, body: row.body, createdAt: row.createdAt.toISOString() },
+    author: { id: row.user.id, username: row.user.username, displayName: row.user.displayName },
+    object,
+  };
+}
+
+async function commentObject(row: {
+  artistId: string | null;
+  releaseGroupId: string | null;
+  recordingId: string | null;
+  artistName: string | null;
+  albumTitle: string | null;
+  songTitle: string | null;
+}): Promise<CommentPermalink["object"] | null> {
+  if (row.artistId && row.artistName) {
+    return { type: "artist", id: row.artistId, title: row.artistName, href: artistHref(row.artistName, row.artistId) };
+  }
+  if (row.releaseGroupId && row.albumTitle) {
+    const primary = (await resolvePrimaryArtists({ releaseGroupIds: [row.releaseGroupId] })).releaseGroups.get(row.releaseGroupId);
+    return { type: "release-group", id: row.releaseGroupId, title: row.albumTitle, href: albumHref(slugArtistName(primary), row.albumTitle, row.releaseGroupId) };
+  }
+  if (row.recordingId && row.songTitle) {
+    const primary = (await resolvePrimaryArtists({ recordingIds: [row.recordingId] })).recordings.get(row.recordingId);
+    return { type: "recording", id: row.recordingId, title: row.songTitle, href: songHref(slugArtistName(primary), row.songTitle, row.recordingId) };
+  }
+  return null;
 }
 
 /**

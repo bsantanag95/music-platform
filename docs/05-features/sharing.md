@@ -1,7 +1,8 @@
 # Compartir
 
-**Estado:** 🟢 Dirección aprobada (2026-11-04). Bloque A en curso: `add-share-foundation` implementado
-(imagen del enlace, hoja de compartir y medición en catálogo y perfil). Documento de dirección: reúne en un
+**Estado:** 🟢 Dirección aprobada (2026-11-04). Bloque A en curso: `add-share-foundation` archivado (imagen del
+enlace, hoja de compartir y medición en catálogo y perfil); `add-share-user-actions` dividido en tres fases, con
+la Fase 1 implementada (§9). Documento de dirección: reúne en un
 solo lugar todo lo que abarca "Compartir" antes de abrir cualquier cambio de OpenSpec, para que cada
 cambio posterior parta del mismo contexto. Las decisiones de la §8 quedaron **adoptadas como punto de
 partida**; cada una se revisa en detalle, y se confirma o corrige, en el cambio que la implementa.
@@ -90,16 +91,16 @@ Principios que este feature no puede romper:
 |---|---|---|---|---|
 | Álbum, artista, canción | Su página de catálogo | Carátula/foto, título, artista, año; cifras de comunidad solo con umbral (≥5) | ✅ | Siempre (catálogo) |
 | Género, premio, ceremonia, salón, colección de Explorar | Su página | Mosaico de carátulas + título | ✅ | Siempre |
-| **Valoración** de álbum o canción | Página nueva de **relación** `/users/<u>/album/<id>` (y `/song/<id>`) | Carátula + "@ana" + 86/100 o 4.5★ | ❌ nueva | Valoración `public` (o perfil público + audiencia pública) |
+| **Valoración** de álbum o canción | Página nueva de **relación** `/users/<u>/album/<id>` (y `/song/<id>`) | Carátula + "@ana" + 86/100 o 4.5★ | ❌ nueva | Marca "compartida" de esa valoración (D15): `rating` no tiene audiencia |
 | **Escucha** (entrada del diario) | Misma página de relación, con la escucha destacada | Carátula + fecha + reacción | ❌ nueva | La escucha nace privada → la hoja ofrece "Hacer pública y compartir" |
-| **Reseña** | `/review/<id>` | Carátula + cita (≤200 caracteres) + puntaje | ✅ | Reseña visible y no oculta por moderación |
-| **Comentario** | Enlace directo al comentario en su hilo | Cita + objeto comentado | ❌ falta enlace directo | Comentario visible; las respuestas llevan a su raíz |
+| **Reseña** | `/review/<id>` | Carátula + cita (≤200 caracteres) + estrellas (el puntaje detallado solo lo ve su autor) | ✅ | Reseña visible y no oculta por moderación |
+| **Comentario** | Página propia `/comment/<id>` (D16) | Cita + objeto comentado | ❌ nueva | Comentario visible; las respuestas llevan a su raíz |
 | **Lista** | `/users/<u>/lists/<id>` | Mosaico de 4 carátulas + título + cantidad | ✅ | Lista pública |
-| **Lista para completar** (Camino) | `/users/<u>/caminos/<id>` | Mosaico + barra de progreso | ✅ | Pública |
+| **Lista para completar** (Camino) | `/users/<u>/caminos/<id>` | Mosaico + cantidad de discos (sin progreso: el del dueño sale de sus escuchas, que tienen audiencia propia, y la página solo muestra el de quien mira) | ✅ | Pública |
 | **Progreso de discografía** (Recorrido) | Página pública nueva — es la **gráfica de discografía** del bloque B (§4.2) | Barra de progreso + carátulas | ❌ nueva | Progreso público |
 | **Perfil** | `/users/<u>` | La Placa / Tarjeta de Identidad | ✅ | Perfil autorizado para anónimos |
-| Huella de gusto | `/users/<u>/fingerprint` | Resumen de la huella | ✅ | Ídem |
-| Colección física | `/users/<u>/collection` | Mosaico + cantidad por formato | ✅ | Colección pública |
+| Huella de gusto | `/users/<u>/fingerprint` | Identidad + década y familia más presentes (solo lo que ve un anónimo: sin valoraciones ni colección) | ✅ | Ídem, con favoritos o escuchas públicas |
+| Colección física | `/users/<u>/collection` | Mosaico + cantidad por formato, solo de las entradas públicas | ✅ | Alguna entrada pública |
 | Afinidad con otra persona | Perfil de la otra persona (vista de afinidad) | "Ana y Leo: 82 % de afinidad" + discos en común | ✅ parcial | Ambos perfiles visibles para anónimos (si no, solo imagen) |
 
 Las páginas de **relación** (`/users/<u>/album/<id>`) son la pieza nueva más importante del bloque: un
@@ -135,7 +136,7 @@ Un único componente (`ShareSheet`) para toda la app, para que el gesto sea siem
   4. **Descargar imagen** (nombre de archivo legible: `metallica-discografia-ana.png`).
 - **Aviso de audiencia** antes de compartir algo no público: "Esta valoración es privada. Para que el
   enlace se vea, hazla pública." con el botón explícito **"Hacer pública y compartir"**. Sin ese gesto,
-  solo se puede descargar la imagen (decisión §8 D5).
+  solo se puede descargar la imagen, generada para el dueño con su sesión y sin caché pública (decisión §8 D5).
 - **Nunca** Facebook SDK, píxeles ni scripts de terceros: los atajos son enlaces planos.
 
 ### 3.4 Dónde aparece
@@ -442,8 +443,8 @@ hasta tener datos reales.
 | D1 | Nombre visible de la familia de gráficos | Láminas · Postales · Carteles · Afiches · sin nombre propio | ✅ **Láminas** (es) / *Cards* (en), confirmada en `add-share-foundation` |
 | D2 | Orden de construcción | A completo y luego B · intercalar | **A primero** (§9): B necesita el renderizador, la hoja de compartir y las páginas de destino de A |
 | D3 | Formatos del bloque A | Solo enlace · enlace + historia · todos | ✅ **Enlace + Historia**: `add-share-foundation` trae el Enlace y la hoja; la Historia llega con `add-share-user-actions`; Publicación/Cuadrado con B |
-| D4 | Página de relación persona ↔ disco | `/users/<u>/album/<id>` única · una página por acción | **Única por objeto** (álbum, canción, artista); el artista es a la vez la lámina de discografía y el progreso público |
-| D5 | Compartir algo privado | Bloquear · pedir hacerlo público · permitir solo descarga | **Pedir "Hacer pública y compartir"**; sin ese gesto, solo descarga de la imagen (son datos propios) |
+| D4 | Página de relación persona ↔ disco | `/users/<u>/album/<id>` única · una página por acción | ✅ **Única por objeto** (álbum y canción en `add-share-user-actions-phase2`; el artista llega con la lámina de discografía, que es a la vez el progreso público) |
+| D5 | Compartir algo privado | Bloquear · pedir hacerlo público · permitir solo descarga | ✅ **Pedir "Hacer pública y compartir"**; sin ese gesto, solo el dueño descarga la imagen, generada con su sesión y sin caché pública (sirve también a perfiles privados) |
 | D6 | Carátulas compuestas en imágenes descargables | Permitir con 250 px y atribución · solo carátula única · sin carátulas | ✅ **Hasta 4 carátulas de ≤250 px sin ampliar, con créditos y respetando retiros** — ADR 0049 (`add-share-foundation`) |
 | D7 | Persistencia de láminas de autor | `user_list` con `kind` nuevos · tabla `lamina` | **`user_list`** salvo que la tier list distorsione el modelo; revisar en el propose |
 | D8 | ¿La tier list escribe valoraciones? | No · ofrecer "actualizar mis notas" | **No**; quizá un "¿actualizar tu nota?" puntual en una fase posterior |
@@ -453,6 +454,8 @@ hasta tener datos reales.
 | D12 | El editor de lámina como valoración en lote | Sí · no | **Sí, para la discografía**: "valora lo que falta" desde la grilla — baja la fricción del bucle viral |
 | D13 | Métricas de compartir | Contador propio (`share_event`) · solo `?via=` en logs · nada | ✅ **`share_event` (migración 0079, sin datos personales) + `?via=<canal>`** en los enlaces (`add-share-foundation`) |
 | D14 | ¿Las láminas de autor generan entrada en el feed? | Sí · no | **Sí**, como una lista nueva, con la audiencia de la lámina |
+| D15 | Cómo se hace pública una valoración (`rating` no tiene audiencia: la ven dueño y seguidores, salvo destacadas y la que acompaña a una reseña) | Marca por valoración · columna `audience` · reutilizar destacadas | ✅ **Marca por valoración en tabla aparte**, como `rating_highlight`: sin tope, reversible y sin tocar `rating.updated_at`. Las destacadas no sirven: tope de 6 y cambian la vitrina del perfil |
+| D16 | Dirección de un comentario (un ancla no llega al servidor y los metadatos del álbum viven en un layout sin `searchParams`) | Página `/comment/<id>` · solo `?thread=` | ✅ **Página propia**: lleva la cita en la vista previa; "Ver la conversación" abre `?thread=`, que pasa a funcionar también en álbum y canción |
 
 ---
 
@@ -463,15 +466,22 @@ Cada cambio parte de este documento y abre con el repaso en detalle de las decis
 
 **Bloque A**
 
-1. **`add-share-foundation`** ✅ implementado — renderizador (`next/og` + fuentes + carátulas), marco y
+1. **`add-share-foundation`** ✅ archivado — renderizador (`next/og` + fuentes + carátulas), marco y
    componentes de la §5.4, escala de la casa, `ShareSheet`, imágenes OG + `generateMetadata` en catálogo
    (álbum, artista, canción, género, premios, salones, colecciones) y perfil. Decisiones: D1, D3, D6, D13.
    Hallazgos: `next/og` no acepta WebP (se convierte con `sharp`); la ficha de un premio o de un salón
    redirige a su última ceremonia o clase, así que no tiene imagen propia; los glifos fuera del subconjunto
    latin los pide `next/og` a Google Fonts en el momento (ADR 0049, consecuencias).
-2. **`add-share-user-actions`** — páginas de relación (D4), enlace directo a comentarios, imágenes de
-   valoración, escucha, reseña, lista, lista para completar, colección, huella; flujo "Hacer pública y
-   compartir" (D5); ofrecimiento en momentos con significado (§3.4); formato Historia.
+2. **`add-share-user-actions`**, dividido en tres fases (2026-11-05):
+   - **`add-share-user-actions-phase1`** ✅ implementado — imagen, metadatos y botón en lo que ya es público y tiene página
+     (reseña, lista, Camino, colección, huella), también en las páginas de gestión del dueño; página
+     `/comment/<id>` y botón en cada comentario raíz (D16); `?thread=` en álbum y canción. Corrige de paso que
+     una lista o un Camino ocultos por moderación se leían con la URL directa.
+   - **`add-share-user-actions-phase2`** — páginas de relación de álbum y canción (D4), marca de valoración
+     compartida (D15), imágenes de valoración y escucha, flujo "Hacer pública y compartir" y descarga privada
+     del dueño (D5).
+   - **`add-share-user-actions-phase3`** — formato Historia (D3) en todo lo que tiene Enlace, ofrecimiento en
+     momentos con significado (§3.4) y acción Compartir en los menús ⋯ de las filas.
 
 **Bloque B**
 

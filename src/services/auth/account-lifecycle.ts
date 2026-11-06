@@ -1,4 +1,4 @@
-import { and, eq, isNotNull } from "drizzle-orm";
+import { and, eq, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, session, shareEvent } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
@@ -52,15 +52,28 @@ export async function reactivateAccount(userId: string): Promise<boolean> {
 }
 
 /**
+ * Los `share_event` de lo que era de una cuenta (spec share-events): `share_event` no tiene FK, la referencia es
+ * texto. Perfil, colección y huella llevan el id de la cuenta; el resto, el id de una fila suya.
+ */
+export function ownShareEvents(userId: string) {
+  return sql`
+    (target_kind IN ('profile', 'user_collection', 'fingerprint') AND target_ref = ${userId})
+    OR (target_kind = 'review' AND target_ref IN (SELECT id::text FROM review WHERE user_id = ${userId}::uuid))
+    OR (target_kind = 'comment' AND target_ref IN (SELECT id::text FROM comment WHERE user_id = ${userId}::uuid))
+    OR (target_kind IN ('list', 'camino') AND target_ref IN (SELECT id::text FROM user_list WHERE owner_id = ${userId}::uuid))
+  `;
+}
+
+/**
  * Elimina la cuenta de forma definitiva. Exige el usuario como confirmación (igual
  * al de la cuenta; solo se ignoran los espacios de los bordes) y el factor de identidad. `DELETE FROM app_user` borra en cascada todo lo
- * que la persona creó (la base ya lo declara con `ON DELETE CASCADE`). En la misma transacción borra los
- * `share_event` de su perfil: esa tabla no tiene FK y su referencia es el id de la persona.
+ * que la persona creó (la base ya lo declara con `ON DELETE CASCADE`). En la misma transacción, y antes, borra
+ * los `share_event` de lo que era suyo: esa tabla no tiene FK.
  *
  * Una cuenta con historial de moderación o editorial no se puede borrar: sus filas
  * de auditoría referencian a la persona con `RESTRICT`. La violación de clave
  * foránea (`23001`/`23503`) se traduce a `ACCOUNT_DELETION_BLOCKED` y, al ser una sola
- * sentencia, no cambia nada: se ofrece desactivar en su lugar.
+ * transacción, no cambia nada: se ofrece desactivar en su lugar.
  */
 export async function deleteAccount(
   current: ResolvedSession,
@@ -80,10 +93,9 @@ export async function deleteAccount(
 
   try {
     await db.transaction(async (tx) => {
+      // Antes que la cuenta: la cascada borra las filas por las que se reconocen sus eventos.
+      await tx.delete(shareEvent).where(ownShareEvents(current.user.id));
       await tx.delete(appUser).where(eq(appUser.id, current.user.id));
-      await tx
-        .delete(shareEvent)
-        .where(and(eq(shareEvent.targetKind, "profile"), eq(shareEvent.targetRef, current.user.id)));
     });
   } catch (error) {
     if (isForeignKeyViolation(error)) {

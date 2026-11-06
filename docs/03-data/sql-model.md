@@ -1221,7 +1221,7 @@ los empates existen.
 - **Origen del fan-out de lanzamientos:** la emisión lee `credit` (`role = 'primary'`) → `artist_follow` → `app_user` activo → `notification_preference` (con su defecto) en un `INSERT … SELECT … ON CONFLICT DO NOTHING` por tipo. No añade columnas a `artist_follow`.
 - **Origen del fan-out de premios (`0077`):** la emisión lee las nominaciones de las ceremonias escritas (sujeto `artist_id` o crédito `primary` del disco o la canción nominados) → `artist_follow` → `app_user` activo → `notification_preference` (`artist_award`, con su defecto) en un `INSERT … SELECT … ON CONFLICT DO NOTHING` por tipo. La fila no guarda a quién: la lectura recalcula, para esa ceremonia, los artistas seguidos, sus cifras y el más nombrado.
 
-## `share_event` (migración `0079`, openspec `add-share-foundation`)
+## `share_event` (migraciones `0079` y `0080`, openspec `add-share-foundation` y `add-share-user-actions-phase1`)
 
 Un registro por cada uso de la hoja de compartir (`docs/05-features/sharing.md`, D13): qué se compartió
 (`target_kind` + `target_ref`), por qué canal (`channel`) y en qué formato (`format`), con `created_at`.
@@ -1229,10 +1229,11 @@ Sirve solo para medir qué se comparte y por dónde.
 
 - **Sin datos personales:** no guarda quién comparte, su IP ni su agente de usuario. El endpoint acepta
   pedidos con y sin sesión.
-- **Sin FK:** `target_ref` es el id interno (álbum, canción, artista, colección, usuario) o el slug
-  (género, premio, salón; `<slug>:<año>` para ceremonia y clase; `-` en los índices). Un evento histórico
-  no impide borrar el objeto. La única referencia ligada a una persona es la del perfil: la eliminación
-  de cuenta borra esos eventos en la misma transacción.
+- **Sin FK:** `target_ref` es el id interno (álbum, canción, artista, colección, usuario, reseña, comentario,
+  lista, Camino; el id de la cuenta para `user_collection` y `fingerprint`) o el slug (género, premio, salón;
+  `<slug>:<año>` para ceremonia y clase; `-` en los índices). Un evento histórico no impide borrar el objeto. La
+  eliminación de cuenta borra en la misma transacción, antes de la cascada, los eventos de su perfil, su colección,
+  su huella y sus reseñas, comentarios, listas y Caminos.
 - **Listas cerradas** con `CHECK` (`chk_share_event_target_kind`, `chk_share_event_channel`,
   `chk_share_event_format`, `chk_share_event_target_ref` de 1 a 200 caracteres), espejo de
   `src/lib/share/kinds.ts`. Sumar un formato o un canal es una migración nueva.

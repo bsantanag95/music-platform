@@ -2,7 +2,10 @@
 // eventos, la ruta de imágenes y los `CHECK` de `share_event` (drizzle/0079_share_event.sql): si se
 // agrega un valor acá, va también en una migración nueva.
 
-/** Tipos de objeto que se pueden compartir. `awards`, `halls` y `collections` son los índices. */
+/**
+ * Tipos de objeto que se pueden compartir. `awards`, `halls` y `collections` son los índices; `collection` es una
+ * colección de Explorar y `user_collection`, la colección física de un perfil.
+ */
 export const SHARE_TARGET_KINDS = [
   "album",
   "song",
@@ -17,6 +20,12 @@ export const SHARE_TARGET_KINDS = [
   "collections",
   "collection",
   "profile",
+  "review",
+  "comment",
+  "list",
+  "camino",
+  "user_collection",
+  "fingerprint",
 ] as const;
 export type ShareTargetKind = (typeof SHARE_TARGET_KINDS)[number];
 

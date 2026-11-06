@@ -35,7 +35,13 @@
       "hall_class": "Hall of fame",
       "collections": "Collections",
       "collection": "Collection",
-      "profile": "Profile"
+      "profile": "Profile",
+      "review": "Review",
+      "comment": "Comment",
+      "list": "List",
+      "camino": "Path",
+      "user_collection": "Collection",
+      "fingerprint": "Taste fingerprint"
     },
     "category": {
       "studio": "Studio album",
@@ -69,6 +75,29 @@
       "collection": "A collection of albums to explore.",
       "profile": "{name}'s music profile.",
       "privateProfile": "{name} has a private profile."
+    },
+    "titles": {
+      "review": "Review of {album} by {author}",
+      "comment": "Comment by {author} on {object}",
+      "list": "{title}, by {author}",
+      "collection": "{name}'s collection",
+      "fingerprint": "{name}'s taste fingerprint"
+    },
+    "listItems": {
+      "artist": "{count, plural, one {# artist} other {# artists}}",
+      "release-group": "{count, plural, one {# album} other {# albums}}",
+      "recording": "{count, plural, one {# song} other {# songs}}"
+    },
+    "formats": {
+      "vinyl": "{count, plural, one {# vinyl} other {# vinyls}}",
+      "cd": "{count, plural, one {# CD} other {# CDs}}",
+      "cassette": "{count, plural, one {# cassette} other {# cassettes}}",
+      "other": "{count, plural, one {# in another format} other {# in other formats}}"
+    },
+    "fingerprint": {
+      "decade": "Mostly music from the {decade}",
+      "family": "Most present family: {family}"
     }
-  }
+  },
+  "commentTitle": "Comment by {author}"
 }

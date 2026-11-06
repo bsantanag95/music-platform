@@ -110,6 +110,29 @@ describe("renderShareImage", () => {
     await keep("generica-en", bytes);
   });
 
+  it("genera una reseña con cita, estrellas y firma", async () => {
+    const quote = "Un disco que no envejece. ".repeat(8).trim();
+    const { bytes, meta } = await size(
+      await renderShareImage(target({ kicker: "Reseña", meta: [], community: null, quote, stars: 4.5, byline: "@ana" }), "es"),
+    );
+    expect([meta.width, meta.height]).toEqual([1200, 630]);
+    await keep("resena", bytes);
+  });
+
+  it("genera un comentario sin nota", async () => {
+    const { bytes } = await size(
+      await renderShareImage(target({ kicker: "Comentario", meta: [], community: null, quote: "Qué disco.", byline: "@ana" }), "es"),
+    );
+    await keep("comentario", bytes);
+  });
+
+  it("genera una lista tipográfica", async () => {
+    const { bytes } = await size(
+      await renderShareImage(target({ kicker: "Lista", title: "Bandas de mi vida", subtitle: "@ana", meta: ["12 artistas"], community: null, media: { type: "typographic" } }), "es"),
+    );
+    await keep("lista-artistas", bytes);
+  });
+
   it("pasa las cabeceras de caché pedidas", async () => {
     const response = await renderShareImage(target(), "es", { headers: { "Cache-Control": "public, max-age=300" } });
     expect(response.headers.get("Cache-Control")).toBe("public, max-age=300");

@@ -5,6 +5,14 @@ import type { ShareTarget } from "../types";
 import { loadAlbumTarget, loadArtistTarget, loadSongTarget } from "./catalog";
 import { loadCeremonyTarget, loadCollectionTarget, loadGenreTarget, loadIndexTarget } from "./collections";
 import { loadProfileTarget } from "./profile";
+import {
+  loadCaminoTarget,
+  loadCommentTarget,
+  loadFingerprintTarget,
+  loadListTarget,
+  loadReviewTarget,
+  loadUserCollectionTarget,
+} from "./user-content";
 
 // Punto único de carga de los objetivos de compartir (design D3). La ruta de imágenes y los metadatos de cada
 // página pasan por acá, así que calculan la misma versión con los mismos datos. `cache` evita repetir las
@@ -28,6 +36,18 @@ export const loadShareTarget = cache(async (kind: ShareTargetKind, ref: string, 
       return loadCollectionTarget(ref, locale);
     case "profile":
       return loadProfileTarget(ref, locale);
+    case "review":
+      return loadReviewTarget(ref, locale);
+    case "comment":
+      return loadCommentTarget(ref, locale);
+    case "list":
+      return loadListTarget(ref, locale);
+    case "camino":
+      return loadCaminoTarget(ref, locale);
+    case "user_collection":
+      return loadUserCollectionTarget(ref, locale);
+    case "fingerprint":
+      return loadFingerprintTarget(ref, locale);
     case "awards":
     case "halls":
     case "collections":

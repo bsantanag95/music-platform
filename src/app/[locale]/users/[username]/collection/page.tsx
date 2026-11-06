@@ -1,5 +1,6 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { parseCollectionFilters } from "@/lib/api/collection-filters";
 import { resolveSession } from "@/services/auth/sessions";
@@ -7,7 +8,9 @@ import { getProfileByUsername } from "@/services/social/profiles";
 import { listProfileCollection } from "@/services/collection/collection";
 import type { CollectionFilters } from "@/services/collection/types";
 import { CollectionShelf } from "@/components/collection/CollectionShelf";
+import { ShareAction } from "@/components/share/ShareAction";
 import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
+import { buildAccountShareMetadata } from "@/services/share/metadata";
 import { withClientMessages } from "@/i18n/client-messages";
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -15,6 +18,11 @@ type SearchParams = Record<string, string | string[] | undefined>;
 interface PageProps {
   params: Promise<{ username: string }>;
   searchParams: Promise<SearchParams>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { username } = await params;
+  return buildAccountShareMetadata("user_collection", username, await getLocale());
 }
 
 // Los filtros llegan en la URL (el "Ver los N" de un artista en el estante del
@@ -68,7 +76,10 @@ async function ProfileCollectionPage({ params, searchParams }: PageProps) {
         <Link href={`/users/${profile.username}`} className="font-data text-xs text-paper-muted hover:text-paper">
           @{profile.username}
         </Link>
-        <h1 className="font-display text-2xl text-paper">{t("title")}</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="font-display text-2xl text-paper">{t("title")}</h1>
+          <ShareAction kind="user_collection" refId={profile.id} />
+        </div>
         {initial === null ? (
           <p className="font-body text-sm text-paper-muted">{tUsers("connections.privateNotice")}</p>
         ) : (

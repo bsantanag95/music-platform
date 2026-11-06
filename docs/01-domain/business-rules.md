@@ -177,9 +177,11 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - Una Lista es de un solo tipo de entidad (solo artistas, solo álbumes o solo canciones) y su
   `entityType` no es modificable después de crearla. Un mismo objetivo aparece a lo sumo una
   vez por lista.
-- Escucha, favorito, valoración, comentario y lista tienen audiencia propia
-  (`private`/`followers`/`public`), independiente entre sí; el usuario puede cambiar la
-  audiencia después de publicar.
+- Escucha, favorito y lista tienen audiencia propia (`private`/`followers`/`public`),
+  independiente entre sí; el usuario puede cambiar la audiencia después de publicar.
+- Valoraciones y comentarios **no** tienen audiencia propia. Una valoración la ven el dueño y sus
+  seguidores aceptados, salvo las destacadas y la que acompaña a una reseña (sus estrellas). Un
+  comentario es público, salvo oculto por moderación.
 - Un perfil privado no revela contenido no autorizado: las superficies ajenas devuelven lista
   vacía (o `404` en el detalle) sin indicar si el usuario tiene contenido.
 
@@ -343,4 +345,13 @@ el mismo umbral que el álbum, aplicado en el read-model (`artist-community.ts`)
 - Una imagen puede juntar hasta 4 carátulas de 250 px como máximo, sin ampliarlas, con la línea de créditos; una
   carátula retirada a pedido no aparece en ninguna imagen. La foto de un artista solo con su crédito de Commons.
 - La medición de lo compartido (`share_event`) guarda qué, por qué canal y en qué formato; nunca quién comparte ni
-  quién visita. Al eliminar una cuenta se borran los eventos de su perfil.
+  quién visita. Al eliminar una cuenta se borran los eventos de su perfil, su colección, su huella y sus reseñas,
+  comentarios, listas y Caminos.
+- Lo que escribió una persona se comparte con su firma, no la de quien comparte. La imagen de una reseña muestra sus
+  estrellas y nunca el puntaje detallado, que solo ve su autor.
+- Un comentario raíz tiene dirección propia (`/comment/<id>`); una respuesta lleva a su raíz. La dirección responde
+  `404` si está oculto, es de una cuenta desactivada o quien mira y el autor se bloquearon.
+- De una lista o un Camino solo se comparte lo público. La imagen de un Camino no muestra el progreso del dueño: sale
+  de sus escuchas, que tienen audiencia propia. La de una colección solo cuenta las entradas públicas, y la de una
+  huella, lo que un anónimo puede ver.
+- Una lista o un Camino ocultos por moderación solo los ve su dueño, también con la dirección directa.

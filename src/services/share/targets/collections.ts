@@ -20,7 +20,7 @@ import { catalogCredits, clipDescription, downloadName } from "./shared";
 
 const MOSAIC_SIZE = 4;
 
-function mosaicCredits(t: ShareTranslator, covers: ShareImageRef[]): string[] {
+export function mosaicCredits(t: ShareTranslator, covers: ShareImageRef[]): string[] {
   return catalogCredits(t, covers.some((c) => c.url !== null));
 }
 

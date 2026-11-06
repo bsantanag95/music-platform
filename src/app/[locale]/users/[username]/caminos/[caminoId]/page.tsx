@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { resolveSession } from "@/services/auth/sessions";
@@ -8,12 +9,19 @@ import { savedStateFor } from "@/services/lists/saved-lists";
 import { listenedReleaseGroupIds } from "@/services/journeys/progress";
 import { isValidUuid } from "@/lib/validation";
 import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
+import { buildShareMetadata } from "@/services/share/metadata";
 import { CaminoReadView } from "@/components/camino/CaminoReadView";
+import { ShareAction } from "@/components/share/ShareAction";
 import { ApiError } from "@/lib/api/errors";
 import { withClientMessages } from "@/i18n/client-messages";
 
 interface PageProps {
   params: Promise<{ username: string; caminoId: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { caminoId } = await params;
+  return isValidUuid(caminoId) ? buildShareMetadata("camino", caminoId, await getLocale(), { withTitle: true }) : {};
 }
 
 // Lectura de un Camino ajeno visible (openspec: add-camino). Ruta propia,
@@ -58,6 +66,7 @@ async function UserCaminoDetailPage({ params }: PageProps) {
 
   return (
     <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-12">
+      <ShareAction kind="camino" refId={caminoId} wrapperClassName="flex w-full max-w-3xl justify-end" />
       <CaminoReadView
         camino={camino}
         owner={{ username: profile.username, displayName: profile.displayName }}

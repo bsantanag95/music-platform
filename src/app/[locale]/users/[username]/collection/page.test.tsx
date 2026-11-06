@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "@testing-library/react";
 import ProfileCollectionPage from "./page";
+vi.mock("@/services/share/metadata", () => ({ buildShareMetadata: vi.fn().mockResolvedValue({}), buildAccountShareMetadata: vi.fn().mockResolvedValue({}) }));
+vi.mock("@/components/share/ShareAction", () => ({ ShareAction: () => null }));
 vi.mock("@/services/profiles/renamed-redirect", () => ({ redirectIfRenamed: vi.fn().mockResolvedValue(undefined) }));
 
 vi.mock("next-intl/server", () => ({

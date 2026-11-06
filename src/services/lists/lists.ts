@@ -544,6 +544,8 @@ export async function getUserListDetail(
         eq(userList.ownerId, profile.id),
         inArray(userList.audience, audiences),
         eq(userList.kind, "standard"),
+        // Oculta por moderación: solo la sigue viendo su dueño.
+        profile.relation === "self" ? undefined : eq(userList.moderationStatus, "visible"),
       ),
     )
     .limit(1);
