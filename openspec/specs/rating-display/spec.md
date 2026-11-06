@@ -67,7 +67,7 @@ El puntaje detallado (1–100) SHALL ser secundario a las estrellas y SHALL most
 estrellas (`4,5`), junto a la fila de estrellas, y nunca ambos; sin puntaje (o en una
 superficie que no lo muestra) SHALL mostrarse el número de estrellas. El puntaje SHALL
 mostrarse solo en: el panel "Tu relación" del álbum y de la canción, la reseña propia, las
-valoraciones destacadas del perfil, la biblioteca propia "Mis valoraciones", el feed de actividad
+valoraciones destacadas del perfil, la página de relación y la imagen de una valoración compartida, la biblioteca propia "Mis valoraciones", el feed de actividad
 (la fila de una entrada, la fila fusionada de opinión y, como `★ 86/100`, la corrida plegada;
 también el rastro propio de Inicio, que comparte esa presentación), la actividad de la comunidad
 (bloque de Inicio y sección "Recientes" de `/activity`, como `★ 86/100`), la valoración del
@@ -106,6 +106,10 @@ formato antiguo `4,5 · 87` NO SHALL usarse en ninguna superficie.
 - **WHEN** el feed muestra una valoración de 4,5 estrellas con puntaje 86
 - **THEN** la fila muestra la fila de estrellas y `86/100`, sin `4,5`, y su etiqueta accesible
   incluye el puntaje
+
+#### Scenario: Valoración compartida
+- **WHEN** la página de relación muestra una valoración marcada de 4,5 estrellas con puntaje 86
+- **THEN** muestra la fila de estrellas y `86/100`, sin `4,5`
 
 ### Requirement: La nota no se codifica con color
 Ninguna superficie SHALL colorear la nota ni su puntaje según su valor (semáforo, gradiente
