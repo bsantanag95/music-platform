@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { appDomain } from "@/lib/share/app-url";
 import { BRAND_COLORS, BRAND_MONOGRAM } from "@/lib/share/brand-tokens";
 import type { ShareLocale } from "@/lib/share/kinds";
-import { CommunityScore, CoverTile, IdentityBadge, LINK_FORMAT, LaminaFrame, SleeveWithRecord } from "./frame/LaminaFrame";
+import { AuthorNote, CommunityScore, CoverTile, IdentityBadge, LINK_FORMAT, LaminaFrame, SleeveWithRecord } from "./frame/LaminaFrame";
 import { loadShareFonts } from "./fonts";
 import { shareAppName, shareTranslator } from "./i18n";
 import { MAX_COVER_SIDE, loadEmbeddedCover, loadEmbeddedImage } from "./images";
@@ -162,7 +162,10 @@ async function buildElement(target: ShareTarget | null, locale: ShareLocale): Pr
   const t = shareTranslator(locale);
   const { card } = target;
   const media = await renderMedia(card.media);
-  const extra = card.community ? (
+  const authored = Boolean(card.quote || card.byline);
+  const extra = authored ? (
+    <AuthorNote quote={card.quote ?? null} stars={card.stars ?? null} byline={card.byline ?? null} />
+  ) : card.community ? (
     <CommunityScore
       score={card.community}
       countLabel={t("share.image.communityAverage", { count: card.community.count })}
@@ -178,6 +181,7 @@ async function buildElement(target: ShareTarget | null, locale: ShareLocale): Pr
       meta={card.meta}
       media={media.node}
       extra={extra}
+      compact={authored}
       credits={card.credits}
       appName={appName}
       domain={domain}

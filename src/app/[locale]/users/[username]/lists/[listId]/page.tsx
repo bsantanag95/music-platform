@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { resolveSession } from "@/services/auth/sessions";
@@ -8,16 +9,24 @@ import { countsByListId } from "@/services/journeys/progress";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListDetailHeader } from "@/components/lists/ListDetailHeader";
 import { ListItemsView } from "@/components/lists/ListItemsView";
+import { ShareAction } from "@/components/share/ShareAction";
 import { collectionHref, listSegment } from "@/lib/catalog-links";
 import { resolveCatalogRoute } from "@/lib/catalog-route";
 import { parseCatalogSegment } from "@/lib/slug";
 import { generatedRefsFor } from "@/services/discovery/collections/generated";
 import { collectionTitle } from "@/services/discovery/collections/titles";
 import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
+import { buildShareMetadata } from "@/services/share/metadata";
 import { withClientMessages } from "@/i18n/client-messages";
 
 interface PageProps {
   params: Promise<{ username: string; listId: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { listId } = await params;
+  const parsed = parseCatalogSegment(listId);
+  return parsed ? buildShareMetadata("list", parsed.id, await getLocale(), { withTitle: true }) : {};
 }
 
 // Detalle en modo lectura de una lista ajena visible. Mismo cuerpo de tres
@@ -88,6 +97,7 @@ async function UserListDetailPage({ params }: PageProps) {
   return (
     <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-12">
       <div className="flex w-full max-w-3xl flex-col gap-6">
+        <ShareAction kind="list" refId={list.id} wrapperClassName="flex justify-end" />
         <ListDetailHeader
           list={list}
           canManage={false}

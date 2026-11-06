@@ -35,7 +35,13 @@
       "hall_class": "Salón de la fama",
       "collections": "Colecciones",
       "collection": "Colección",
-      "profile": "Perfil"
+      "profile": "Perfil",
+      "review": "Reseña",
+      "comment": "Comentario",
+      "list": "Lista",
+      "camino": "Camino",
+      "user_collection": "Colección",
+      "fingerprint": "Huella de gusto"
     },
     "category": {
       "studio": "Álbum de estudio",
@@ -69,6 +75,29 @@
       "collection": "Una colección de discos para explorar.",
       "profile": "Perfil musical de {name}.",
       "privateProfile": "{name} tiene un perfil privado."
+    },
+    "titles": {
+      "review": "Reseña de {album} por {author}",
+      "comment": "Comentario de {author} sobre {object}",
+      "list": "{title}, de {author}",
+      "collection": "Colección de {name}",
+      "fingerprint": "Huella de gusto de {name}"
+    },
+    "listItems": {
+      "artist": "{count, plural, one {# artista} other {# artistas}}",
+      "release-group": "{count, plural, one {# disco} other {# discos}}",
+      "recording": "{count, plural, one {# canción} other {# canciones}}"
+    },
+    "formats": {
+      "vinyl": "{count, plural, one {# vinilo} other {# vinilos}}",
+      "cd": "{count, plural, one {# CD} other {# CD}}",
+      "cassette": "{count, plural, one {# casete} other {# casetes}}",
+      "other": "{count, plural, one {# en otro formato} other {# en otros formatos}}"
+    },
+    "fingerprint": {
+      "decade": "Sobre todo, música de los {decade}",
+      "family": "Su familia más presente: {family}"
     }
-  }
+  },
+  "commentTitle": "Comentario de {author}"
 }

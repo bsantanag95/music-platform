@@ -91,6 +91,25 @@ describe("Comments con temas (artista)", () => {
     expect(items[0]).toHaveTextContent("el tema viejo");
   });
 
+  it("?thread= en un álbum trae el comentario, lo pone primero y lo lleva a la vista, sin hilo", async () => {
+    window.history.replaceState(null, "", `/?thread=${ROOT}`);
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    mocks.getRootComment.mockResolvedValue(comment(ROOT, null, "lejos en la lista"));
+    renderWithIntl(<Comments target="release-group" targetId="00000000-0000-4000-8000-000000000002" authenticated userId="me" initial={page([comment("a", null)])} />);
+    await waitFor(() => expect(screen.getAllByRole("listitem")[0]?.textContent).toContain("lejos en la lista"));
+    await waitFor(() => expect(scrollIntoView).toHaveBeenCalled());
+    expect(mocks.getReplies).not.toHaveBeenCalled();
+  });
+
+  it("cada comentario raíz ofrece Compartir, salvo el de una cuenta desactivada", () => {
+    const gone = { ...comment("b", null), user: { id: "u-b", username: null, displayName: null, deactivated: true } };
+    renderWithIntl(<Comments target="release-group" targetId="00000000-0000-4000-8000-000000000002" authenticated={false} initial={page([comment("a", null), gone as never])} />);
+    const [first, second] = screen.getAllByRole("listitem");
+    expect(within(first!).getByRole("button", { name: "Compartir" })).toBeTruthy();
+    expect(within(second!).queryByRole("button", { name: "Compartir" })).toBeNull();
+  });
+
   it("?thread= de una raíz que ya no existe deja la página como estaba", async () => {
     window.history.replaceState(null, "", `/?thread=${ROOT}`);
     mocks.getRootComment.mockRejectedValue(new mocks.ApiError("COMMENT_NOT_FOUND", 404, "no"));

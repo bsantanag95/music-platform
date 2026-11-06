@@ -74,7 +74,7 @@ describe("deleteAccount: limpieza de avatar", () => {
     h.state.avatarImageId = "img-avatar-123";
     await deleteAccount(current, { username: "ana" });
 
-    expect(h.state.deletes).toEqual(["app_user", "share_event"]);
+    expect(h.state.deletes).toEqual(["share_event", "app_user"]);
     expect(h.imageService.deleteImage).toHaveBeenCalledWith("img-avatar-123");
   });
 
@@ -82,7 +82,7 @@ describe("deleteAccount: limpieza de avatar", () => {
     h.state.avatarImageId = null;
     await deleteAccount(current, { username: "ana" });
 
-    expect(h.state.deletes).toEqual(["app_user", "share_event"]);
+    expect(h.state.deletes).toEqual(["share_event", "app_user"]);
     expect(h.imageService.deleteImage).not.toHaveBeenCalled();
   });
 
@@ -91,7 +91,7 @@ describe("deleteAccount: limpieza de avatar", () => {
     h.imageService.deleteImage.mockRejectedValue(new Error("fallo de red"));
 
     await expect(deleteAccount(current, { username: "ana" })).resolves.toBeUndefined();
-    expect(h.state.deletes).toEqual(["app_user", "share_event"]);
+    expect(h.state.deletes).toEqual(["share_event", "app_user"]);
     expect(h.imageService.deleteImage).toHaveBeenCalledWith("img-avatar-123");
   });
 });

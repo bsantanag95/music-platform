@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { BRAND_COLORS, BRAND_MONOGRAM } from "@/lib/share/brand-tokens";
-import { bandForStars, bandRangeLabel, SCORE_BANDS } from "@/lib/share/score-scale";
+import { bandForStars, bandRangeLabel, scaleScore, SCORE_BANDS } from "@/lib/share/score-scale";
 import { SHARE_FONT_FAMILIES } from "../fonts";
 import type { ShareCommunityScore } from "../types";
 
@@ -16,8 +16,11 @@ const GRID = 8;
 const MARGIN = GRID * 8;
 const FOOTER_HEIGHT = GRID * 9;
 
+const COMPACT_TITLE = 44;
+
 const display = SHARE_FONT_FAMILIES.display;
 const data = SHARE_FONT_FAMILIES.data;
+const body = SHARE_FONT_FAMILIES.body;
 
 /** Recorta un texto a `max` caracteres con elipsis, en un límite de palabra si lo hay cerca. */
 export function clip(text: string, max: number): string {
@@ -43,15 +46,17 @@ export interface LaminaFrameProps {
   subtitle: string | null;
   meta: string[];
   media: ReactNode;
-  /** Contenido extra bajo los textos (cifra de la comunidad, carátulas del perfil). */
+  /** Contenido extra bajo los textos (cifra de la comunidad, carátulas del perfil, cita). */
   extra?: ReactNode;
+  /** Título acotado para dejarle lugar a una cita. */
+  compact?: boolean;
   credits: string[];
   appName: string;
   domain: string;
 }
 
-export function LaminaFrame({ kicker, title, subtitle, meta, media, extra, credits, appName, domain }: LaminaFrameProps) {
-  const shownTitle = clip(title, 90);
+export function LaminaFrame({ kicker, title, subtitle, meta, media, extra, compact = false, credits, appName, domain }: LaminaFrameProps) {
+  const shownTitle = clip(title, compact ? 60 : 90);
   return (
     <div
       style={{
@@ -83,7 +88,7 @@ export function LaminaFrame({ kicker, title, subtitle, meta, media, extra, credi
               {kicker}
             </div>
           ) : null}
-          <div style={{ display: "flex", fontSize: titleSize(shownTitle), fontWeight: 700, lineHeight: 1.05 }}>
+          <div style={{ display: "flex", fontSize: compact ? COMPACT_TITLE : titleSize(shownTitle), fontWeight: 700, lineHeight: 1.05 }}>
             {shownTitle}
           </div>
           {subtitle ? (
@@ -195,6 +200,26 @@ export function CommunityScore({ score, countLabel }: { score: ShareCommunitySco
     <div style={{ display: "flex", alignItems: "center", gap: GRID * 2, marginTop: GRID }}>
       <ScoreChip label={`${score.averageStars.toFixed(1)}★`} background={band.background} foreground={band.foreground} />
       <div style={{ display: "flex", fontFamily: data, fontSize: 22, color: BRAND_COLORS.paperMuted }}>{countLabel}</div>
+    </div>
+  );
+}
+
+/** Cita de una persona con su firma y sus estrellas (reseña, comentario). */
+export function AuthorNote({ quote, stars, byline }: { quote: string | null; stars: number | null; byline: string | null }) {
+  const score = stars !== null ? scaleScore({ stars, detailedScore: null }) : null;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: GRID * 2, marginTop: GRID / 2 }}>
+      {quote ? (
+        <div style={{ display: "flex", fontFamily: body, fontSize: 28, lineHeight: 1.35, color: BRAND_COLORS.paper }}>
+          {`“${quote}”`}
+        </div>
+      ) : null}
+      <div style={{ display: "flex", alignItems: "center", gap: GRID * 2 }}>
+        {score ? <ScoreChip label={score.label} background={score.band.background} foreground={score.band.foreground} size={24} /> : null}
+        {byline ? (
+          <div style={{ display: "flex", fontFamily: data, fontSize: 24, color: BRAND_COLORS.paperMuted }}>{byline}</div>
+        ) : null}
+      </div>
     </div>
   );
 }

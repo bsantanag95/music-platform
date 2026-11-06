@@ -20,6 +20,8 @@ vi.mock("@/services/reviews", () => ({
   resolveSocialTarget: vi.fn().mockResolvedValue({ type: "release-group", id: "rg", column: "releaseGroupId" }),
 }));
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: vi.fn().mockResolvedValue(null) }));
+vi.mock("@/services/share/metadata", () => ({ buildShareMetadata: vi.fn().mockResolvedValue({}) }));
+vi.mock("@/components/share/ShareAction", () => ({ ShareAction: () => null }));
 vi.mock("@/services/auth/authorization", () => ({ getUserPermissions: vi.fn().mockResolvedValue([]) }));
 vi.mock("@/app/[locale]/(catalog)/album/[id]/album-data", () => ({
   loadSession: vi.fn().mockResolvedValue(null),

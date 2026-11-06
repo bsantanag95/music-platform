@@ -79,12 +79,18 @@ export const loadProfileTargetByUsername = cache(async (username: string, locale
 });
 
 /** Objetivo por id de la cuenta (la referencia de la ruta de imágenes y de `share_event`). */
-export async function loadProfileTarget(userId: string, locale: ShareLocale): Promise<ShareTarget | null> {
+/** Usuario de una cuenta activa, o `null`. Los objetivos de una persona se piden por el id de su cuenta. */
+export async function usernameOfAccount(userId: string): Promise<string | null> {
   if (!isValidUuid(userId)) return null;
   const [row] = await db
     .select({ username: appUser.username })
     .from(appUser)
     .where(and(eq(appUser.id, userId), activeUserCondition()))
     .limit(1);
-  return row ? loadProfileTargetByUsername(row.username, locale) : null;
+  return row?.username ?? null;
+}
+
+export async function loadProfileTarget(userId: string, locale: ShareLocale): Promise<ShareTarget | null> {
+  const username = await usernameOfAccount(userId);
+  return username ? loadProfileTargetByUsername(username, locale) : null;
 }

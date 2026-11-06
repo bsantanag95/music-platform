@@ -122,6 +122,14 @@ de cuál de las filas con el mismo título haya en la BD.
 >   tema por defecto y los rechazos `INVALID_TOPIC`, el filtro con paginación, que editar no cambia el tema
 >   y que el feed, la actividad de la comunidad, "Comentarios populares" y la exportación de datos traen el
 >   tema.
+> - `smoke-test-share-user-content.ts` crea un artista, un álbum y una edición sintéticos (MBID
+>   `5e0ce000-0000-4000-8000-00000000c0a*`) y usuarios `smoke_share_*`, y los borra al terminar (también si falla). Si se
+>   interrumpió, limpiar con `DELETE FROM app_user WHERE username LIKE 'smoke_share_%'; DELETE FROM release_group WHERE
+>   mbid::text LIKE '5e0ce000-0000-4000-8000-00000000c0a%'; DELETE FROM artist WHERE mbid::text LIKE
+>   '5e0ce000-0000-4000-8000-00000000c0a%';`. Necesita las migraciones `0079` y `0080`. Verifica los objetivos de reseña,
+>   comentario, lista, Camino, colección y huella como anónimo, la dirección de un comentario (respuesta a su raíz, oculto,
+>   cuenta desactivada, bloqueo), que una lista o un Camino ocultos no se leen desde la vista ajena y qué eventos de
+>   compartir se borran al eliminar una cuenta.
 > - `smoke-test-comment-replies.ts` crea un artista y un álbum sintéticos (MBID
 >   `5e0ce000-0000-4000-8000-0000000009b0` / `...09b1`) y usuarios `smoke_reply_*`, y los borra al terminar
 >   (también si falla; el `ON DELETE CASCADE` limpia comentarios, respuestas, likes y bloqueos). Si se

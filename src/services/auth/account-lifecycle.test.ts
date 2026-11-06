@@ -133,13 +133,13 @@ describe("deleteAccount", () => {
   it("con el usuario correcto y el factor, borra la cuenta (la base borra el resto en cascada)", async () => {
     await deleteAccount(current, { username: "ana", password: "secreta" });
     expect(h.requireRecentAuth).toHaveBeenCalledWith(current, "secreta");
-    // `share_event` no tiene FK: los eventos de su perfil se borran en la misma transacción.
-    expect(h.state.deletes).toEqual(["app_user", "share_event"]);
+    // `share_event` no tiene FK: sus eventos se borran en la misma transacción, antes de la cascada.
+    expect(h.state.deletes).toEqual(["share_event", "app_user"]);
   });
 
   it("ignora los espacios de los bordes del usuario de confirmación", async () => {
     await deleteAccount(current, { username: "  ana  " });
-    expect(h.state.deletes).toEqual(["app_user", "share_event"]);
+    expect(h.state.deletes).toEqual(["share_event", "app_user"]);
   });
 
   it.each(["ANA", "otra", ""])("un usuario de confirmación incorrecto (%j) no borra nada ni gasta un intento de contraseña", async (username) => {

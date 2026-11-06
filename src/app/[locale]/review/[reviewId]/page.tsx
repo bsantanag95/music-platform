@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { ReviewArticle } from "@/components/album/ReviewArticle";
+import { ShareAction } from "@/components/share/ShareAction";
 import { reviewHeadline } from "@/components/album/album-format";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { albumHref, reviewSegment } from "@/lib/catalog-links";
 import { resolveCatalogRoute } from "@/lib/catalog-route";
 import { parseCatalogSegment } from "@/lib/slug";
 import { getReviewDetail } from "@/services/reviews";
+import { buildShareMetadata } from "@/services/share/metadata";
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
 import { withClientMessages } from "@/i18n/client-messages";
@@ -24,10 +26,10 @@ export async function generateMetadata({ params }: ReviewPageProps): Promise<Met
   const { reviewId } = await params;
   const parsed = parseCatalogSegment(reviewId);
   if (!parsed) return {};
-  const detail = await getReviewDetail(parsed.id);
-  if (!detail) return {};
+  const [detail, share] = await Promise.all([getReviewDetail(parsed.id), buildShareMetadata("review", parsed.id, await getLocale())]);
+  if (!detail) return share;
   const t = await getTranslations("catalog.album.reviewPage");
-  return { title: `${reviewHeadline(detail.review)} · ${t("reviewOf", { album: detail.album.title })}` };
+  return { ...share, title: `${reviewHeadline(detail.review)} · ${t("reviewOf", { album: detail.album.title })}` };
 }
 
 async function ReviewPage({ params }: ReviewPageProps) {
@@ -62,6 +64,7 @@ async function ReviewPage({ params }: ReviewPageProps) {
           { label: tTabs("reviews"), href: `${albumHrefValue}/reviews` },
           { label: reviewHeadline(detail.review) },
         ]}
+        action={<ShareAction kind="review" refId={detail.review.id} />}
       />
       <ReviewArticle detail={detail} viewerId={userId} canModerate={canModerate} />
     </main>

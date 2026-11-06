@@ -61,11 +61,21 @@ export function genericShareMetadata(kind: ShareTargetKind, ref: string, locale:
   };
 }
 
-/** Carga el objetivo como anónimo y arma sus metadatos (o los genéricos). */
-export async function buildShareMetadata(kind: ShareTargetKind, ref: string, locale: string): Promise<Metadata> {
+/**
+ * Carga el objetivo como anónimo y arma sus metadatos (o los genéricos). `withTitle` usa su título también como título
+ * de la página, para las que no definen uno propio.
+ */
+export async function buildShareMetadata(
+  kind: ShareTargetKind,
+  ref: string,
+  locale: string,
+  options: { withTitle?: boolean } = {},
+): Promise<Metadata> {
   const shareLocale: ShareLocale = locale === "en" ? "en" : "es";
   const target = await loadShareTarget(kind, ref, shareLocale);
-  return target ? shareMetadataFor(target) : genericShareMetadata(kind, ref, shareLocale);
+  if (!target) return genericShareMetadata(kind, ref, shareLocale);
+  const metadata = shareMetadataFor(target);
+  return options.withTitle ? { ...metadata, title: target.title } : metadata;
 }
 
 /**
@@ -76,6 +86,13 @@ export async function buildProfileShareMetadata(username: string, locale: string
   const shareLocale: ShareLocale = locale === "en" ? "en" : "es";
   const target = await loadProfileTargetByUsername(username, shareLocale);
   return target ? shareMetadataFor(target) : genericShareMetadata("profile", "-", shareLocale);
+}
+
+/** Metadatos de lo que se pide por la cuenta (colección, huella) a partir del usuario de la ruta. */
+export async function buildAccountShareMetadata(kind: "user_collection" | "fingerprint", username: string, locale: string): Promise<Metadata> {
+  const shareLocale: ShareLocale = locale === "en" ? "en" : "es";
+  const profile = await loadProfileTargetByUsername(username, shareLocale);
+  return profile ? buildShareMetadata(kind, profile.ref, locale, { withTitle: true }) : genericShareMetadata(kind, "-", shareLocale);
 }
 
 /** Datos de la hoja de compartir de un objetivo (los mismos de sus metadatos). */

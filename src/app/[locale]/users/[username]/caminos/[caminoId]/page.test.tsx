@@ -1,6 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import UserCaminoDetailPage from "./page";
 
+vi.mock("@/services/share/metadata", () => ({ buildShareMetadata: vi.fn().mockResolvedValue({}), buildAccountShareMetadata: vi.fn().mockResolvedValue({}) }));
+vi.mock("@/components/share/ShareAction", () => ({ ShareAction: () => null }));
 vi.mock("@/services/profiles/renamed-redirect", () => ({ redirectIfRenamed: vi.fn().mockResolvedValue(undefined) }));
 
 vi.mock("next-intl/server", () => ({

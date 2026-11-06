@@ -3,6 +3,7 @@ import { requirePageUser } from "@/services/auth/page-auth";
 import { getOwnedList } from "@/services/lists/lists";
 import { saveCountsFor } from "@/services/lists/saved-lists";
 import { ListDetail } from "@/components/lists/ListDetail";
+import { ShareAction } from "@/components/share/ShareAction";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { withClientMessages } from "@/i18n/client-messages";
@@ -24,6 +25,7 @@ async function ListDetailPage({ params }: { params: Promise<{ listId: string }> 
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-4 py-12">
+      <ShareAction kind="list" refId={listId} wrapperClassName="flex justify-end" />
       <ListDetail initial={list} saveCount={saveCount} />
       <span className="sr-only">{t("title")}</span>
     </main>

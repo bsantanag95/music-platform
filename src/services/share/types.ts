@@ -40,6 +40,12 @@ export interface ShareCard {
   media: ShareMedia;
   community: ShareCommunityScore | null;
   credits: string[];
+  /** Cita de lo que escribió una persona (reseña, comentario), ya recortada. */
+  quote?: string | null;
+  /** Estrellas de quien escribió; nunca un número derivado de ellas. */
+  stars?: number | null;
+  /** Firma de quien escribió (`@usuario`), que no es quien comparte. */
+  byline?: string | null;
 }
 
 export interface ShareTarget {
