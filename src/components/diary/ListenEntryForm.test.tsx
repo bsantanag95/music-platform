@@ -216,7 +216,8 @@ describe("ListenEntryForm", () => {
       renderWithIntl(<ListenEntryForm entryId={entryId} target={target} initial={{ ...initial, body: null }} />);
       expect(screen.getByText("0/500")).toHaveAttribute("aria-live", "off");
 
-      await user.type(screen.getByLabelText(/Impresión/), "x".repeat(120));
+      await user.click(screen.getByLabelText(/Impresión/));
+      await user.paste("x".repeat(120));
       expect(screen.getByText("120/500")).toBeInTheDocument();
 
       await user.click(screen.getByLabelText(/Impresión/));
