@@ -142,6 +142,31 @@
   color: var(--color-ink);
 }
 
+/* Casilla propia: la nativa sin marcar sale blanca y era lo que más brillaba en los formularios oscuros. */
+.form-check {
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  border: 1px solid color-mix(in srgb, var(--color-paper-muted) 50%, transparent);
+  border-radius: 3px;
+  background-color: var(--color-ink);
+  cursor: pointer;
+  transition: border-color 150ms, background-color 150ms;
+}
+
+.form-check:hover {
+  border-color: var(--color-paper-muted);
+}
+
+.form-check:checked {
+  border-color: var(--color-amber);
+  background-color: var(--color-amber);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2314120f' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
 @layer base {
   /* La identidad del proyecto es oscura sin alternativa clara: le decimos al
      navegador que renderice sus controles nativos (el popup de <select>,

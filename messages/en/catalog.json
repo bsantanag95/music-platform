@@ -179,8 +179,8 @@
     "suggestions": {
       "listLabel": "Suggestions",
       "count": "{count, plural, =0 {No catalog suggestions} one {# suggestion} other {# suggestions}}",
-      "seeAll": "See all results for “{query}” in {type}",
-      "otherTypes": "Search another type",
+      "seeAll": "Search <q>“{query}”</q> in {type}",
+      "otherTypes": "Other type",
       "fromCatalog": "In your catalog"
     },
     "recent": {
@@ -296,13 +296,13 @@
         "song": "Songs"
       },
       "formLabel": "Search {type}",
-      "intro": "Fill in one or more fields. The name or title is optional.",
+      "intro": "Fill in any fields you like; one is enough.",
       "name": "Name",
       "title": "Title",
       "songTitle": "Song title",
       "artist": "Artist",
       "album": "Album",
-      "exactMatch": "Exact match?",
+      "exactMatch": "Exact match",
       "exactMatchFor": "Exact match on {field}",
       "artistType": "Type",
       "any": "Any",
@@ -321,10 +321,8 @@
       "area": "City or region",
       "areaHint": "Where the person was born or the group was formed",
       "begin": "Year of birth or formation",
-      "beginHint": "Birth of a person or formation of a group",
       "from": "From",
       "to": "To",
-      "yearPlaceholder": "yyyy",
       "ended": "Status",
       "endedActive": "Active",
       "endedInactive": "No longer active",
@@ -388,7 +386,7 @@
         "period": "Period",
         "release": "Release",
         "catalog": "From the catalog",
-        "catalogHint": "They only search what's already in the catalog, not MusicBrainz."
+        "catalogHint": "They only search what's already in the catalog."
       },
       "criteriaCount": "{count, plural, =0 {No criteria} one {# criterion} other {# criteria}}",
       "errors": {
@@ -441,11 +439,9 @@
         }
       },
       "beginPerson": "Year of birth",
-      "beginPersonHint": "Year they were born",
       "beginGroup": "Year of formation",
-      "beginGroupHint": "Year the group formed",
       "active": "Active between",
-      "activeHint": "From their first to their last own release, up to today if still active. Only artists with an explored discography.",
+      "activeHint": "From their first to their last own release, up to today if still active. Only artists whose discography is already loaded.",
       "role": "Role",
       "roleHint": "What they do in the catalog",
       "roles": {
