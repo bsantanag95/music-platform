@@ -9,6 +9,7 @@ import { CollectionAlbumAction } from "@/components/collection/CollectionAlbumAc
 import { REVIEW_COMPOSER_ANCHOR, revealReviewComposer } from "@/components/album/ReviewComposer";
 import { AlbumListPicker, type PickerMembership } from "@/components/album/AlbumListPicker";
 import { RatingDetailDialog } from "@/components/album/RatingDetailDialog";
+import { OwnShareButton } from "@/components/share/OwnShareSheet";
 import { GenreVotePanel } from "@/components/genres/GenreVotePanel";
 import { StarRatingInput } from "@/components/social/StarRatingInput";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -325,6 +326,7 @@ function AuthenticatedPanel({
               {t("clearRating")}
             </button>
           )}
+          {own && <OwnShareButton kind="rating" refId={own.id} />}
         </Row>
         {ratingNotice && (
           <p role="status" className="font-data text-xs text-paper-muted">

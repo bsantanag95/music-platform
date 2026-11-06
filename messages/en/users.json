@@ -921,5 +921,14 @@
     "blocked": "You blocked {name}.",
     "followedByYourFollows": "{count, plural, one {followed by # person you follow} other {followed by # people you follow}}",
     "tabShort": "Requests"
+  },
+  "relation": {
+    "title": "Their take",
+    "ownedBy": "By {name}",
+    "rating": "Rating",
+    "review": "Review",
+    "listens": "Listens",
+    "favorite": "Favorite",
+    "readReview": "Read the review"
   }
 }

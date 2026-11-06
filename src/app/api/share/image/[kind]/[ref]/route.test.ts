@@ -3,10 +3,15 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { clearAuthAttempts } from "@/services/auth/rate-limit";
 
-const mocks = vi.hoisted(() => ({ load: vi.fn(), render: vi.fn(), version: vi.fn() }));
+const mocks = vi.hoisted(() => ({ load: vi.fn(), render: vi.fn(), version: vi.fn(), session: vi.fn(), own: vi.fn() }));
 
 vi.mock("@/services/share/targets", () => ({ loadShareTarget: mocks.load, shareTargetVersion: mocks.version }));
 vi.mock("@/services/share/render", () => ({ renderShareImage: mocks.render }));
+vi.mock("@/services/auth/sessions", () => ({ resolveSession: mocks.session }));
+vi.mock("@/services/share/own", () => ({
+  isOwnShareKind: (value: string) => value === "rating" || value === "listen",
+  loadOwnTarget: mocks.own,
+}));
 
 import { GET } from "./route";
 
@@ -51,6 +56,40 @@ describe("GET /api/share/image/[kind]/[ref]", () => {
     const res = await call("profile", "u1", "?locale=en");
     expect(res.status).toBe(200);
     expect(mocks.render).toHaveBeenCalledWith(null, "en", expect.anything());
+  });
+
+  it("una valoración o una escucha nunca es inmutable: su dueño puede cerrarla", async () => {
+    const res = await call("rating", "r1", "?v=abc123def456");
+    expect(res.headers.get("Cache-Control")).toBe("public, max-age=300");
+  });
+
+  describe("imagen privada del dueño", () => {
+    it("con su sesión usa su objetivo y nunca una caché compartida", async () => {
+      mocks.session.mockResolvedValue({ user: { id: "u1" } });
+      mocks.own.mockResolvedValue(target);
+      const res = await call("rating", "r1", "?personal=1");
+      expect(mocks.own).toHaveBeenCalledWith("rating", "r1", "es", "u1");
+      expect(mocks.load).not.toHaveBeenCalled();
+      expect(res.headers.get("Cache-Control")).toBe("private, no-store");
+      expect(mocks.render).toHaveBeenCalledWith(target, "es", expect.anything());
+    });
+
+    it("a otra persona o sin sesión le da la genérica", async () => {
+      mocks.session.mockResolvedValue({ user: { id: "otra" } });
+      mocks.own.mockResolvedValue(null);
+      await call("rating", "r1", "?personal=1");
+      expect(mocks.render).toHaveBeenLastCalledWith(null, "es", expect.anything());
+      mocks.session.mockResolvedValue(null);
+      const res = await call("rating", "r1", "?personal=1");
+      expect(mocks.render).toHaveBeenLastCalledWith(null, "es", expect.anything());
+      expect(res.headers.get("Cache-Control")).toBe("private, no-store");
+    });
+
+    it("no aplica a otros tipos", async () => {
+      await call("album", "rg1", "?personal=1");
+      expect(mocks.session).not.toHaveBeenCalled();
+      expect(mocks.render).toHaveBeenCalledWith(null, "es", expect.anything());
+    });
   });
 
   it("descarga con nombre legible", async () => {

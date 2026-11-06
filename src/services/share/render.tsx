@@ -164,7 +164,7 @@ async function buildElement(target: ShareTarget | null, locale: ShareLocale): Pr
   const media = await renderMedia(card.media);
   const authored = Boolean(card.quote || card.byline);
   const extra = authored ? (
-    <AuthorNote quote={card.quote ?? null} stars={card.stars ?? null} byline={card.byline ?? null} />
+    <AuthorNote quote={card.quote ?? null} stars={card.stars ?? null} detailedScore={card.detailedScore ?? null} byline={card.byline ?? null} />
   ) : card.community ? (
     <CommunityScore
       score={card.community}
@@ -181,7 +181,7 @@ async function buildElement(target: ShareTarget | null, locale: ShareLocale): Pr
       meta={card.meta}
       media={media.node}
       extra={extra}
-      compact={authored}
+      compact={Boolean(card.quote)}
       credits={card.credits}
       appName={appName}
       domain={domain}

@@ -41,7 +41,9 @@
       "list": "Lista",
       "camino": "Camino",
       "user_collection": "Colección",
-      "fingerprint": "Huella de gusto"
+      "fingerprint": "Huella de gusto",
+      "rating": "Valoración",
+      "listen": "Escucha"
     },
     "category": {
       "studio": "Álbum de estudio",
@@ -81,7 +83,9 @@
       "comment": "Comentario de {author} sobre {object}",
       "list": "{title}, de {author}",
       "collection": "Colección de {name}",
-      "fingerprint": "Huella de gusto de {name}"
+      "fingerprint": "Huella de gusto de {name}",
+      "rating": "{author}: {score} a {object}",
+      "listen": "{author} escuchó {object}"
     },
     "listItems": {
       "artist": "{count, plural, one {# artista} other {# artistas}}",
@@ -99,5 +103,19 @@
       "family": "Su familia más presente: {family}"
     }
   },
-  "commentTitle": "Comentario de {author}"
+  "commentTitle": "Comentario de {author}",
+  "own": {
+    "title": "Compartir",
+    "loading": "Cargando…",
+    "failed": "No se pudo completar. Inténtalo de nuevo.",
+    "makePublic": "Hacer pública y compartir",
+    "download": "Descargar imagen",
+    "stop": "Dejar de compartir",
+    "notice": {
+      "rating": "Esta valoración no es pública. Para que el enlace se vea, hazla pública: mostrará tu nota vigente, también si la cambias.",
+      "listen": "Esta escucha no es pública. Para que el enlace se vea, hazla pública.",
+      "listenNote": "Esta escucha no es pública. Para que el enlace se vea, hazla pública: tu impresión también se verá.",
+      "privateProfile": "Tu perfil es privado: nadie sin cuenta podría abrir un enlace. Puedes descargar la imagen."
+    }
+  }
 }

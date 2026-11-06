@@ -5,6 +5,7 @@ import type { ShareTarget } from "../types";
 import { loadAlbumTarget, loadArtistTarget, loadSongTarget } from "./catalog";
 import { loadCeremonyTarget, loadCollectionTarget, loadGenreTarget, loadIndexTarget } from "./collections";
 import { loadProfileTarget } from "./profile";
+import { loadListenTarget, loadRatingTarget } from "./relation";
 import {
   loadCaminoTarget,
   loadCommentTarget,
@@ -48,6 +49,10 @@ export const loadShareTarget = cache(async (kind: ShareTargetKind, ref: string, 
       return loadUserCollectionTarget(ref, locale);
     case "fingerprint":
       return loadFingerprintTarget(ref, locale);
+    case "rating":
+      return loadRatingTarget(ref, locale);
+    case "listen":
+      return loadListenTarget(ref, locale);
     case "awards":
     case "halls":
     case "collections":

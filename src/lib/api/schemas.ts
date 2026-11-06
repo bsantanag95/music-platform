@@ -419,6 +419,7 @@ export const ErrorCodeSchema = z.enum([
   "TEMPLATE_NOT_FOUND",
   "EMAIL_NOT_VERIFIED",
   "INVALID_UNSUBSCRIBE_TOKEN",
+  "PROFILE_PRIVATE",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 

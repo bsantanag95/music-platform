@@ -26,6 +26,8 @@ export const SHARE_TARGET_KINDS = [
   "camino",
   "user_collection",
   "fingerprint",
+  "rating",
+  "listen",
 ] as const;
 export type ShareTargetKind = (typeof SHARE_TARGET_KINDS)[number];
 

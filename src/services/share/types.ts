@@ -44,6 +44,8 @@ export interface ShareCard {
   quote?: string | null;
   /** Estrellas de quien escribió; nunca un número derivado de ellas. */
   stars?: number | null;
+  /** Puntaje detallado, solo en lo que su dueño hizo público: la reseña no lo lleva. */
+  detailedScore?: number | null;
   /** Firma de quien escribió (`@usuario`), que no es quien comparte. */
   byline?: string | null;
 }

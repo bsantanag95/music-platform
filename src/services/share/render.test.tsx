@@ -119,6 +119,30 @@ describe("renderShareImage", () => {
     await keep("resena", bytes);
   });
 
+  it("genera una valoración con puntaje, en grande y sin cita", async () => {
+    const { bytes } = await size(
+      await renderShareImage(target({ kicker: "Valoración", meta: [], community: null, stars: 4.5, detailedScore: 86, byline: "@ana" }), "es"),
+    );
+    await keep("valoracion", bytes);
+  });
+
+  it("genera una valoración solo con estrellas", async () => {
+    const { bytes } = await size(
+      await renderShareImage(target({ kicker: "Valoración", meta: [], community: null, stars: 3.5, byline: "@ana" }), "es"),
+    );
+    await keep("valoracion-estrellas", bytes);
+  });
+
+  it("genera una escucha con impresión y reacción", async () => {
+    const { bytes } = await size(
+      await renderShareImage(
+        target({ kicker: "Escucha", meta: ["noviembre de 2026", "Me encantó"], community: null, quote: "Lo escuché de corrido, dos veces.", byline: "@ana" }),
+        "es",
+      ),
+    );
+    await keep("escucha", bytes);
+  });
+
   it("genera un comentario sin nota", async () => {
     const { bytes } = await size(
       await renderShareImage(target({ kicker: "Comentario", meta: [], community: null, quote: "Qué disco.", byline: "@ana" }), "es"),

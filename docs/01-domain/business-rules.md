@@ -180,8 +180,8 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - Escucha, favorito y lista tienen audiencia propia (`private`/`followers`/`public`),
   independiente entre sí; el usuario puede cambiar la audiencia después de publicar.
 - Valoraciones y comentarios **no** tienen audiencia propia. Una valoración la ven el dueño y sus
-  seguidores aceptados, salvo las destacadas y la que acompaña a una reseña (sus estrellas). Un
-  comentario es público, salvo oculto por moderación.
+  seguidores aceptados, salvo las destacadas, las compartidas (marca del dueño, ADR 0050) y la que
+  acompaña a una reseña (sus estrellas). Un comentario es público, salvo oculto por moderación.
 - Un perfil privado no revela contenido no autorizado: las superficies ajenas devuelven lista
   vacía (o `404` en el detalle) sin indicar si el usuario tiene contenido.
 
@@ -335,7 +335,15 @@ el mismo umbral que el álbum, aplicado en el read-model (`artist-community.ts`)
 ## Compartir (`add-share-foundation`, ADR 0049)
 
 - Lo que se comparte (imagen y metadatos del enlace) se calcula **siempre como visitante anónimo**, aunque quien
-  comparta sea el dueño o un seguidor: compartir nunca muestra más de lo que ve un anónimo.
+  comparta sea el dueño o un seguidor: compartir nunca muestra más de lo que ve un anónimo. La única excepción es la
+  imagen privada que el dueño descarga de su valoración o escucha: no se anuncia ni entra a una caché compartida.
+- Nada se vuelve público por compartirlo sin un gesto explícito. **Hacer pública y compartir** abre solo esa valoración
+  (con una marca) o esa escucha (con `audience = 'public'`). Con el perfil privado no se ofrece: nadie sin cuenta podría
+  abrir el enlace. Una cuenta con suspensión social no puede hacerlo.
+- Una valoración compartida muestra su puntaje detallado, como una destacada. La marca sigue al editar la valoración, con
+  la nota vigente, y se borra con ella. No cambia feed, huella ni afinidad.
+- La página de relación (`/users/<u>/album/<id>` y `/song/<id>`) muestra cada dato según quién mira, y responde `404` si no
+  hay nada visible. Las valoraciones y escuchas de artistas no se comparten: no tienen página de relación.
 - Un objeto que un anónimo no puede ver (inexistente, oculto por moderación, de una cuenta desactivada) se comparte
   con la imagen genérica de la marca, sin nombrarlo. Un perfil privado comparte solo su identidad pública (foto o
   monograma, nombre, usuario y contadores), sin la bio ni la Tarjeta de Identidad.
@@ -346,7 +354,7 @@ el mismo umbral que el álbum, aplicado en el read-model (`artist-community.ts`)
   carátula retirada a pedido no aparece en ninguna imagen. La foto de un artista solo con su crédito de Commons.
 - La medición de lo compartido (`share_event`) guarda qué, por qué canal y en qué formato; nunca quién comparte ni
   quién visita. Al eliminar una cuenta se borran los eventos de su perfil, su colección, su huella y sus reseñas,
-  comentarios, listas y Caminos.
+  comentarios, listas, Caminos, valoraciones y escuchas.
 - Lo que escribió una persona se comparte con su firma, no la de quien comparte. La imagen de una reseña muestra sus
   estrellas y nunca el puntaje detallado, que solo ve su autor.
 - Un comentario raíz tiene dirección propia (`/comment/<id>`); una respuesta lleva a su raíz. La dirección responde

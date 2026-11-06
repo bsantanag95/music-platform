@@ -205,8 +205,18 @@ export function CommunityScore({ score, countLabel }: { score: ShareCommunitySco
 }
 
 /** Cita de una persona con su firma y sus estrellas (reseña, comentario). */
-export function AuthorNote({ quote, stars, byline }: { quote: string | null; stars: number | null; byline: string | null }) {
-  const score = stars !== null ? scaleScore({ stars, detailedScore: null }) : null;
+export function AuthorNote({
+  quote,
+  stars,
+  detailedScore = null,
+  byline,
+}: {
+  quote: string | null;
+  stars: number | null;
+  detailedScore?: number | null;
+  byline: string | null;
+}) {
+  const score = stars !== null ? scaleScore({ stars, detailedScore }) : null;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: GRID * 2, marginTop: GRID / 2 }}>
       {quote ? (
@@ -215,7 +225,7 @@ export function AuthorNote({ quote, stars, byline }: { quote: string | null; sta
         </div>
       ) : null}
       <div style={{ display: "flex", alignItems: "center", gap: GRID * 2 }}>
-        {score ? <ScoreChip label={score.label} background={score.band.background} foreground={score.band.foreground} size={24} /> : null}
+        {score ? <ScoreChip label={score.label} background={score.band.background} foreground={score.band.foreground} size={quote ? 24 : 44} /> : null}
         {byline ? (
           <div style={{ display: "flex", fontFamily: data, fontSize: 24, color: BRAND_COLORS.paperMuted }}>{byline}</div>
         ) : null}
