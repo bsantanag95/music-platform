@@ -21,8 +21,8 @@ el formulario y SHALL NOT consultar MusicBrainz ni la base.
 
 ### Requirement: Formulario por entidad que escribe la URL
 
-Cada pestaña SHALL tener su propio formulario `GET` hacia `/search/advanced`, con los campos de su entidad y los botones
-**Buscar** y **Limpiar**. Al buscar, la página SHALL navegar a una URL con solo los campos que tienen valor; los campos
+Cada pestaña SHALL tener su propio formulario `GET` hacia `/search/advanced`, con los campos de su entidad, el botón
+**Buscar** y, cuando hay al menos un criterio, **Limpiar**. Al buscar, la página SHALL navegar a una URL con solo los campos que tienen valor; los campos
 múltiples SHALL ir como parámetros repetidos. Sin JavaScript el formulario SHALL seguir funcionando y el servidor SHALL
 tratar un parámetro vacío como ausente. **Limpiar** SHALL navegar a `/search/advanced?type=<tipo>`. El formulario SHALL
 mostrar siempre los valores de la URL.
@@ -37,7 +37,7 @@ mostrar siempre los valores de la URL.
 
 ### Requirement: Campos de Artistas
 
-La pestaña Artistas SHALL ofrecer: **Nombre** (`q`) con **¿Coincidencia exacta?** (`exact=1`), **Tipo** (cualquiera,
+La pestaña Artistas SHALL ofrecer: **Nombre** (`q`) con **Coincidencia exacta** (`exact=1`), **Tipo** (cualquiera,
 grupo, solista u otras personas: `artistType=group|solo|other`, con la ayuda "Integrantes, producción, músicos de
 sesión" en Otras personas), **País** (uno o varios: `country`), **Ciudad o región** (`area`, lugar de nacimiento o
 formación), **Año de nacimiento o formación** desde/hasta (`beginFrom`, `beginTo`) y **Estado** (`ended=0` en actividad,
@@ -67,8 +67,8 @@ MusicBrainz. Además SHALL ofrecer los campos del catálogo de "Período de acti
 
 ### Requirement: Campos de Álbumes
 
-La pestaña Álbumes SHALL ofrecer: **Título** (`q`) con **¿Coincidencia exacta?** (`exact=1`), **Artista** (`artist`) con
-**¿Coincidencia exacta?** (`artistExact=1`), **Año** desde/hasta (`yearFrom`, `yearTo`) y **Tipo de lanzamiento** (una o
+La pestaña Álbumes SHALL ofrecer: **Título** (`q`) con **Coincidencia exacta** (`exact=1`), **Artista** (`artist`) con
+**Coincidencia exacta** (`artistExact=1`), **Año** desde/hasta (`yearFrom`, `yearTo`) y **Tipo de lanzamiento** (una o
 varias categorías: `category`). Cada uno de estos campos SHALL aplicarse a las coincidencias locales y a la consulta a
 MusicBrainz. Además SHALL ofrecer los campos del catálogo de "Género", "Premios" y "País del artista en Álbumes".
 
@@ -87,8 +87,8 @@ MusicBrainz. Además SHALL ofrecer los campos del catálogo de "Género", "Premi
 
 ### Requirement: Campos de Canciones
 
-La pestaña Canciones SHALL ofrecer: **Título** (`q`) con **¿Coincidencia exacta?** (`exact=1`), **Artista** (`artist`) con
-**¿Coincidencia exacta?** (`artistExact=1`), **Álbum** (`album`) con **¿Coincidencia exacta?** (`albumExact=1`), **Tipo de
+La pestaña Canciones SHALL ofrecer: **Título** (`q`) con **Coincidencia exacta** (`exact=1`), **Artista** (`artist`) con
+**Coincidencia exacta** (`artistExact=1`), **Álbum** (`album`) con **Coincidencia exacta** (`albumExact=1`), **Tipo de
 lanzamiento** (`category`, una o varias, sobre los álbumes donde aparece) y **Duración** mínima/máxima (`durMin`,
 `durMax`). Con `artist`, la búsqueda SHALL tomar ese artista como intérprete sin detectar la interpretación. Sin título,
 SHALL NOT aplicarse el filtro de relevancia del título.
@@ -259,7 +259,9 @@ duración). El grupo **Del catálogo** SHALL llevar una ayuda que diga que esos 
 catálogo. Los campos de texto, selectores y el selector de países SHALL tener el mismo alto y tipografía; la casilla de
 coincidencia exacta SHALL ir debajo de su campo; la etiqueta SHALL ir arriba y la ayuda debajo del control, de modo que
 los controles de una misma fila queden alineados. En los rangos, "desde" y "hasta" SHALL ir en el texto de ejemplo de
-cada control.
+cada control. Un grupo con tres campos SHALL usar tres columnas en pantallas anchas. Los campos SHALL tener un fondo más
+oscuro que la tarjeta, las casillas SHALL ser oscuras hasta marcarlas y un selector sin elección SHALL mostrar su texto
+atenuado, como un texto de ejemplo. Los títulos de grupo SHALL NOT usar el color de acento.
 
 #### Scenario: Grupos de Artistas
 - **WHEN** una persona abre la pestaña Artistas
@@ -267,18 +269,27 @@ cada control.
 
 #### Scenario: Ayuda del grupo del catálogo
 - **WHEN** una persona abre la pestaña Álbumes
-- **THEN** ve el grupo Del catálogo con Género, País del artista y Premios, y la ayuda que explica que no buscan en
-  MusicBrainz
+- **THEN** ve el grupo Del catálogo con Género, País del artista y Premios, y la ayuda que explica que solo buscan en
+  lo que ya está en el catálogo
+
+#### Scenario: Grupo de tres campos
+- **WHEN** una persona abre la pestaña Canciones en una pantalla ancha
+- **THEN** Título, Artista y Álbum quedan en una sola fila, sin una celda vacía
 
 ### Requirement: Envío fijo en móvil con cantidad de criterios
 
 La fila de envío SHALL mostrar cuántos criterios tiene el formulario, contados como en la barra de criterios, y SHALL
-actualizarse al cambiar cualquier campo. En pantallas angostas SHALL quedar fija al pie de la pantalla mientras el
+actualizarse al cambiar cualquier campo. Sin criterios, la cifra SHALL NOT verse (solo la anuncian los lectores de
+pantalla) y la fila SHALL NOT ofrecer **Limpiar**. En pantallas angostas SHALL quedar fija al pie de la pantalla mientras el
 formulario está visible.
 
 #### Scenario: Contar criterios
 - **WHEN** una persona en Artistas elige Grupo, agrega Chile y escribe 1980 en "desde"
 - **THEN** la fila de envío dice "3 criterios"
+
+#### Scenario: Sin criterios
+- **WHEN** una persona abre una pestaña con el formulario vacío
+- **THEN** la fila de envío muestra solo **Buscar**
 
 ### Requirement: Validación en español
 
