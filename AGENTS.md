@@ -178,7 +178,10 @@ de cuál de las filas con el mismo título haya en la BD.
 >   cuenta y la lectura bajo 150 ms con 50 discos. Desde `add-tier-list-lamina-phase2` también crea un disco con su edición y canciones con el mismo
 >   prefijo (si se interrumpió, sumar `DELETE FROM recording WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000e0%';` después de borrar los discos) y
 >   verifica las tier lists de canciones de un disco (orden, grabación repetida, disco sin pistas), lo elegido en la vista previa (tipo, inexistente,
->   ubicación por la nota), la vista previa de hasta 50 y el alta a mano (nivel, bandeja, repetido, tope con pedidos en paralelo).
+>   ubicación por la nota), la vista previa de hasta 50 y el alta a mano (nivel, bandeja, repetido, tope con pedidos en paralelo). Desde
+>   `add-tier-list-lamina-phase3` también crea un tercer usuario `smoke_tier_*` (lo cubre la misma limpieza) y verifica "Arma la tuya" desde una tier list
+>   ajena (mismos ítems por la nota propia, sin bandeja ni notas, etiquetas con y sin copia, para seguidores, oculta, bloqueo, propia y de otro tipo) y el
+>   resumen para el formulario (`getTierInspiration`).
 > - `smoke-test-comment-replies.ts` crea un artista y un álbum sintéticos (MBID
 >   `5e0ce000-0000-4000-8000-0000000009b0` / `...09b1`) y usuarios `smoke_reply_*`, y los borra al terminar
 >   (también si falla; el `ON DELETE CASCADE` limpia comentarios, respuestas, likes y bloqueos). Si se

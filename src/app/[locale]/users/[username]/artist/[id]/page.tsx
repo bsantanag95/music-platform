@@ -6,6 +6,7 @@ import { DiscographyCurve } from "@/components/laminas/DiscographyCurve";
 import { DiscographySettings } from "@/components/laminas/DiscographySettings";
 import { LaminaCta } from "@/components/laminas/LaminaCta";
 import { RateInline } from "@/components/laminas/RateInline";
+import { TierFromDiscographyButton } from "@/components/laminas/TierFromDiscographyButton";
 import { ScoreBadge } from "@/components/laminas/ScoreBadge";
 import { ProgressBar } from "@/components/progress/ProgressBar";
 import { OwnShareButton } from "@/components/share/OwnShareSheet";
@@ -215,6 +216,11 @@ async function UserDiscographyPage({ params, searchParams }: PageProps) {
       ) : null}
 
       {lamina.isOwner && !rating ? <DiscographySettings artistId={lamina.artist.id} initial={lamina.preference} /> : null}
+
+      {/* Su tier list de este artista en un toque (add-tier-list-lamina-phase3); quien mira la ajena ve "Arma la tuya" abajo. */}
+      {lamina.isOwner && !rating && lamina.ownerDiscs.length > 0 ? (
+        <TierFromDiscographyButton artistId={lamina.artist.id} artistName={lamina.artist.name} />
+      ) : null}
 
       {rating ? null : lamina.missing > 0 ? (
         <p className="font-body text-sm text-paper-muted">{t("missing", { count: lamina.missing })}</p>

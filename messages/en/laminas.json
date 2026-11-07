@@ -204,7 +204,8 @@
       "discography": "An artist’s discography",
       "album": "Songs from an album",
       "ratings": "My ratings",
-      "list": "A list"
+      "list": "A list",
+      "lamina": "Like @{username}’s"
     },
     "titles": {
       "discography": "{artist} tier list",
@@ -228,6 +229,21 @@
       "recording": "Add a song"
     },
     "added": "{title}: added to {group}",
-    "full": "It already has {max}. Remove one to add another."
+    "full": "It already has {max}. Remove one to add another.",
+    "inspired": {
+      "summary": {
+        "release-group": "{count, plural, one {# album} other {# albums}} from their tier list. Each lands in the tier of your rating; what you haven’t rated goes to the tray.",
+        "recording": "{count, plural, one {# song} other {# songs}} from their tier list. Each lands in the tier of your rating; what you haven’t rated goes to the tray."
+      },
+      "copyLabels": "Use their labels"
+    },
+    "cta": {
+      "title": "How would you rank them?",
+      "description": {
+        "release-group": "The same albums, each in the tier of your rating.",
+        "recording": "The same songs, each in the tier of your rating."
+      }
+    },
+    "fromDiscography": "Build tier list"
   }
 }

@@ -8,15 +8,18 @@ import { parseLaminaIntent } from "@/lib/laminas/intent";
 import { requirePageUser } from "@/services/auth/page-auth";
 import { listDiscographyEntries } from "@/services/laminas/discography";
 import { getLaminaInspiration, listMyLaminas } from "@/services/laminas/laminas";
+import { getTierInspiration } from "@/services/laminas/tiers";
 
 // Láminas propias (spec top-laminas): un ranking armado a mano para mostrar y compartir.
 async function LaminasPage({ searchParams }: { searchParams?: Promise<{ desde?: string }> }) {
   const t = await getTranslations("laminas");
   const user = await requirePageUser();
   const inspirationId = parseLaminaIntent((await searchParams)?.desde);
-  const [laminas, inspiration, discographies] = await Promise.all([
+  // `desde` puede ser un Top N o una tier list: cada lectura devuelve `null` si no es de su tipo, no se puede ver o es propia.
+  const [laminas, inspiration, tierInspiration, discographies] = await Promise.all([
     listMyLaminas(user.id),
     inspirationId ? getLaminaInspiration(inspirationId, user.id) : null,
+    inspirationId ? getTierInspiration(inspirationId, user.id) : null,
     listDiscographyEntries(user.id),
   ]);
   const currentYear = Number(new Intl.DateTimeFormat("en", { year: "numeric", timeZone: await getTimeZone() }).format(new Date()));
@@ -27,8 +30,10 @@ async function LaminasPage({ searchParams }: { searchParams?: Promise<{ desde?: 
         <h1 className="font-display text-2xl text-paper">{t("title")}</h1>
         <p className="font-body text-sm text-paper-muted">{t("description")}</p>
       </header>
+      {/* Quien llega desde una tier list quiere armar la suya: su formulario va primero. */}
+      {tierInspiration ? <TierListCreateForm inspiration={tierInspiration} /> : null}
       <LaminaCreateForm currentYear={currentYear} inspiration={inspiration} />
-      <TierListCreateForm />
+      {tierInspiration ? null : <TierListCreateForm />}
       {laminas.length === 0 ? (
         <p className="font-body text-sm text-paper-muted">{t("noLaminas")}</p>
       ) : (

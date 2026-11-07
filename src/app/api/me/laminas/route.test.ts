@@ -210,4 +210,13 @@ describe("tier list", () => {
     expect((await addItem(req("POST", { targetIds: [ID] }), context)).status).toBe(400);
     expect(mocks.addMany).not.toHaveBeenCalled();
   });
+
+  it("crea desde otra tier list; copiar etiquetas es opcional y nace apagado", async () => {
+    const body = { ...tierBody, source: { type: "lamina", id: ID } };
+    expect((await POST(req("POST", body))).status).toBe(201);
+    expect(mocks.createTier).toHaveBeenLastCalledWith("u1", expect.objectContaining({ source: { type: "lamina", id: ID, copyLabels: false } }));
+    expect((await POST(req("POST", { ...tierBody, source: { type: "lamina", id: ID, copyLabels: true } }))).status).toBe(201);
+    expect(mocks.createTier).toHaveBeenLastCalledWith("u1", expect.objectContaining({ source: { type: "lamina", id: ID, copyLabels: true } }));
+    expect((await POST(req("POST", { ...tierBody, source: { type: "lamina", id: "x" } }))).status).toBe(400);
+  });
 });

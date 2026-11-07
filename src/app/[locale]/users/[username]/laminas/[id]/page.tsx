@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return buildShareMetadata((await laminaKindById(id)) === "tier" ? "tier" : "top", id, await getLocale(), { withTitle: true });
 }
 
-/** Tier list (spec tier-laminas): los seis niveles, sin la bandeja. "Arma la tuya" llega en la Fase 3. */
+/** Tier list (spec tier-laminas): los seis niveles, sin la bandeja, y "Arma la tuya" para quien no es su dueño (add-tier-list-lamina-phase3). */
 async function tierListPage(username: string, id: string, viewerId: string | null, viewerUsername: string | null) {
   const tierList = await getUserTierList(username, id, viewerId).catch((error: unknown) => {
     if (error instanceof ApiError) return null;
@@ -58,6 +58,14 @@ async function tierListPage(username: string, id: string, viewerId: string | nul
         <h1 className="font-display text-3xl text-paper">{tierList.title}</h1>
       </header>
       <TierListView tierList={tierList} tierItemsLabel={(label, count) => t("tier.tierItems", { group: label, count, kind: tierList.entityType })} />
+      {owner ? null : (
+        <LaminaCta
+          intent={{ kind: "lamina", id: tierList.id }}
+          signedInHref={viewerId ? laminaBuildHref(tierList.id) : null}
+          title={t("tier.cta.title")}
+          description={t(`tier.cta.description.${tierList.entityType}`)}
+        />
+      )}
     </main>
   );
 }

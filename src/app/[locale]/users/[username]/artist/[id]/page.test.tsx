@@ -23,6 +23,9 @@ vi.mock("next-intl/server", async () => {
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: mocks.session }));
 vi.mock("@/services/laminas/discography", () => ({ getDiscographyLamina: mocks.lamina, getDiscographyAlbum: mocks.album }));
 vi.mock("@/components/laminas/DiscographySettings", () => ({ DiscographySettings: () => <div>ajustes</div> }));
+vi.mock("@/components/laminas/TierFromDiscographyButton", () => ({
+  TierFromDiscographyButton: ({ artistName }: { artistName: string }) => <button>{`tier list de ${artistName}`}</button>,
+}));
 vi.mock("@/components/laminas/RateInline", () => ({ RateInline: ({ target, title }: { target: string; title: string }) => <span>{`valorar:${target}:${title}`}</span> }));
 vi.mock("@/services/share/metadata", () => ({ buildShareMetadata: vi.fn() }));
 vi.mock("@/services/share/targets/discography", () => ({
@@ -199,6 +202,26 @@ describe("discografía de una persona", () => {
       mocks.lamina.mockResolvedValue(lamina({ isOwner: true }));
       await render();
       expect(screen.queryByRole("link", { name: "Arma la tuya" })).toBeNull();
+    });
+  });
+
+  describe("armar tier list", () => {
+    it("el dueño tiene el botón con discos a la vista", async () => {
+      mocks.lamina.mockResolvedValue(lamina({ isOwner: true, ownerDiscs: [disc(1, 4)] }));
+      await render();
+      expect(screen.getByRole("button", { name: "tier list de Banda" })).toBeInTheDocument();
+    });
+
+    it("sin discos, no", async () => {
+      mocks.lamina.mockResolvedValue(lamina({ isOwner: true, ownerDiscs: [] }));
+      await render();
+      expect(screen.queryByRole("button", { name: "tier list de Banda" })).toBeNull();
+    });
+
+    it("quien mira la ajena no lo ve", async () => {
+      mocks.lamina.mockResolvedValue(lamina({ ownerDiscs: [disc(1, 4)] }));
+      await render();
+      expect(screen.queryByRole("button", { name: "tier list de Banda" })).toBeNull();
     });
   });
 

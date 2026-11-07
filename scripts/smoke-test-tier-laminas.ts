@@ -15,6 +15,9 @@ export {};
 // lo elegido en la vista previa (validación, tipo, ubicación por la nota que lee el servidor), el alta a mano (nivel, bandeja, repetido, tope con
 // pedidos en paralelo) y la vista previa de hasta 50 candidatos. Crea además un disco con su edición y canciones con el mismo prefijo de MBID;
 // limpiar también con `DELETE FROM recording WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000e0%';` (después de borrar los discos).
+// Desde add-tier-list-lamina-phase3 también verifica "Arma la tuya" desde la tier list de otra persona: mismos ítems en niveles y en su orden, por la
+// nota de quien la arma, sin la bandeja ni sus notas, etiquetas con y sin copia, privada, para seguidores, oculta, bloqueo, propia y de otro tipo, y el
+// resumen para el formulario (`getTierInspiration`). Crea un tercer usuario `smoke_tier_*` (lo cubre la misma limpieza).
 // Correr contra una BD de scratch:
 //   ALLOW_SMOKE_ON_REAL_DB=1 npx tsx --env-file=.env scripts/smoke-test-tier-laminas.ts
 
@@ -23,7 +26,7 @@ import { createRequire } from "node:module";
 import { and, eq, inArray, like, sql } from "drizzle-orm";
 import { assertSmokeAllowed } from "./assert-smoke-allowed";
 import { db } from "../src/db";
-import { appUser, artist, credit, rating, recording, release, releaseGroup, shareEvent, track, userFollow, userList, userListItem } from "../src/db/schema";
+import { appUser, artist, credit, rating, recording, release, releaseGroup, shareEvent, track, userBlock, userFollow, userList, userListItem } from "../src/db/schema";
 
 assertSmokeAllowed();
 
@@ -184,6 +187,51 @@ async function checkOverCap(s: Services, ownerId: string): Promise<{ tierListId:
   const elapsed = performance.now() - started;
   check(elapsed < READ_BUDGET_MS, `la lectura de 50 discos tarda ${elapsed.toFixed(1)} ms (< ${READ_BUDGET_MS})`);
   return { tierListId: tierList.id, artistId: many!.id, discIds: discs.map((disc) => disc.id) };
+}
+
+/** Fase 3: "Arma la tuya" desde la tier list de otra persona (la del dueño, para seguidores, con una disco en la bandeja y etiquetas propias). */
+async function checkPhase3(s: Services, owner: { id: string; username: string }, follower: { id: string }, inspiringId: string, rated: string) {
+  console.log("Arma la tuya");
+  const stranger = newUser("stranger");
+  await db.insert(appUser).values(stranger);
+  const source = (copyLabels: boolean) => ({ type: "lamina" as const, id: inspiringId, copyLabels });
+  const inspiring = await s.tiers.getOwnedTierList(inspiringId, owner.id);
+  const visible = inspiring.tiers.flat().map((item) => item.target.id);
+  const hiddenInTray = inspiring.tray.map((item) => item.target.id);
+  check(hiddenInTray.length > 0 && inspiring.labels[0] !== "S", "la tier list ajena tiene bandeja y etiquetas propias");
+
+  // La seguidora valoró uno de esos discos con 72: en la suya cae en B.
+  await db.insert(rating).values({ userId: follower.id, releaseGroupId: rated, stars: "4", detailedScore: 72 });
+  const built = await s.tiers.createTierList(follower.id, { title: "La mía", entityType: "release-group", source: source(false) });
+  check(JSON.stringify(ids(built.tiers[2]!)) === JSON.stringify([rated]), "un disco que valoró con 72 queda en B, por su nota");
+  check(JSON.stringify(ids(built.tray)) === JSON.stringify(visible.filter((id) => id !== rated)), "los demás, en su bandeja, en el orden de la otra");
+  check(hiddenInTray.every((id) => !JSON.stringify(built).includes(id)), "no hereda la bandeja ajena");
+  check(built.audience === "private" && built.showScores === false, "nace privada y sin notas");
+  check(JSON.stringify(built.labels) === JSON.stringify(["S", "A", "B", "C", "D", "E"]), "sin copiar, nace con S a E");
+  const copied = await s.tiers.createTierList(follower.id, { title: "Con etiquetas", entityType: "release-group", source: source(true) });
+  check(JSON.stringify(copied.labels) === JSON.stringify(inspiring.labels), "copiando, trae sus etiquetas");
+  await s.tiers.updateTierList(copied.id, follower.id, { tierLabels: ["Mía", "A", "B", "C", "D", "E"] });
+  check((await s.tiers.getOwnedTierList(inspiringId, owner.id)).labels[0] === inspiring.labels[0], "cambiar las copiadas no toca las de la otra");
+  check(JSON.stringify((await s.tiers.getOwnedTierList(inspiringId, owner.id)).tiers.map(ids)) === JSON.stringify(inspiring.tiers.map(ids)), "y la otra no cambia");
+
+  const code = (viewer: string, entityType: "release-group" | "recording" = "release-group") =>
+    codeOf(() => s.tiers.createTierList(viewer, { title: "x", entityType, source: source(false) }));
+  check((await code(stranger.id)) === "LAMINA_NOT_FOUND", "para seguidores: alguien que no sigue no la puede usar");
+  check((await code(owner.id)) === "LAMINA_NOT_FOUND", "la propia tampoco");
+  check((await code(follower.id, "recording")) === "VALIDATION_ERROR", "de otro tipo se rechaza");
+  await db.update(userList).set({ moderationStatus: "hidden" }).where(eq(userList.id, inspiringId));
+  check((await code(follower.id)) === "LAMINA_NOT_FOUND", "oculta por moderación, no presta nada");
+  await db.update(userList).set({ moderationStatus: "visible" }).where(eq(userList.id, inspiringId));
+
+  console.log("Resumen para el formulario");
+  const summary = await s.tiers.getTierInspiration(inspiringId, follower.id);
+  check(summary?.itemCount === visible.length && summary.customLabels && summary.ownerUsername === owner.username, "cuenta lo que hay en niveles y avisa las etiquetas propias");
+  check(!JSON.stringify(summary).includes(visible[0]!) && !JSON.stringify(summary).includes("score"), "sin ítems ni notas");
+  check((await s.tiers.getTierInspiration(inspiringId, owner.id)) === null, "de la propia, nada");
+  check((await s.tiers.getTierInspiration(inspiringId, stranger.id)) === null, "de una que no puede ver, nada");
+  await db.insert(userBlock).values({ blockerId: owner.id, blockedId: follower.id });
+  check((await s.tiers.getTierInspiration(inspiringId, follower.id)) === null && (await code(follower.id)) === "LAMINA_NOT_FOUND", "con un bloqueo, nada");
+  await db.delete(userBlock).where(and(eq(userBlock.blockerId, owner.id), eq(userBlock.blockedId, follower.id)));
 }
 
 /** Fase 2: canciones de un disco, lo elegido en la vista previa, alta a mano y vista previa de hasta 50. */
@@ -420,6 +468,7 @@ async function main() {
     await s.tiers.updateTierList(trayOnly.id, owner.id, { audience: "public" });
     check(!(await feedHas(trayOnly.id)), "una con todo en la bandeja no");
 
+    await checkPhase3(s, owner, follower, created.id, main[1]!.id);
     const many = await checkOverCap(s, owner.id);
     await checkPhase2(s, owner.id, band.id, many);
 

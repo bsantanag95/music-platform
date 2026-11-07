@@ -14,7 +14,18 @@ import { useLaminaSource } from "./use-lamina-source";
 // valoraciones con filtros o una lista propia. Cada ítem cae en el nivel de tu nota y lo que no valoraste, en la bandeja. Nace privada.
 
 type EntityType = "release-group" | "recording";
-type TierSource = "discography" | "album" | "ratings" | "list";
+type TierSource = "discography" | "album" | "ratings" | "list" | "lamina";
+
+/** Resumen de una tier list ajena para "Arma la tuya" (add-tier-list-lamina-phase3): nunca sus ítems, notas ni bandeja. */
+export interface TierFormInspiration {
+  id: string;
+  title: string;
+  entityType: EntityType;
+  itemCount: number;
+  labels: string[];
+  customLabels: boolean;
+  ownerUsername: string;
+}
 
 const SOURCES: Record<EntityType, readonly TierSource[]> = {
   "release-group": ["discography", "ratings", "list"],
@@ -24,11 +35,13 @@ const field = "rounded border border-ink-border bg-ink px-3 py-2 font-body text-
 const segment = (active: boolean) =>
   `min-h-9 flex-1 rounded px-3 py-1 font-data text-xs transition-colors ${active ? "bg-ink-border text-paper" : "text-paper-muted hover:text-paper"}`;
 
-export function TierListCreateForm() {
+export function TierListCreateForm({ inspiration = null }: { inspiration?: TierFormInspiration | null }) {
   const t = useTranslations("laminas.tier");
   const router = useRouter();
-  const [entityType, setEntityType] = useState<EntityType>("release-group");
-  const [source, setSourceChoice] = useState<TierSource>("discography");
+  const [entityType, setEntityType] = useState<EntityType>(inspiration?.entityType ?? "release-group");
+  const [source, setSourceChoice] = useState<TierSource>(inspiration ? "lamina" : "discography");
+  // Copiar las etiquetas de la otra persona es una elección, apagada por defecto.
+  const [copyLabels, setCopyLabels] = useState(false);
   const [query, setQuery] = useState("");
   // El artista o el disco elegido en el buscador, para las fuentes que lo piden.
   const [picked, setPicked] = useState<{ id: string; name: string } | null>(null);
@@ -51,21 +64,31 @@ export function TierListCreateForm() {
   function chooseType(next: EntityType) {
     if (next === entityType) return;
     setEntityType(next);
-    chooseSource(SOURCES[next][0]!);
+    chooseSource(sourcesFor(next)[0]!);
+  }
+
+  // "Como la de @usuario" solo existe para el tipo de esa tier list.
+  function sourcesFor(type: EntityType): readonly TierSource[] {
+    return inspiration?.entityType === type ? ["lamina", ...SOURCES[type]] : SOURCES[type];
   }
 
   const titleSource: TierTitleSource | null =
-    source === "discography"
+    source === "lamina"
+      ? null
+      : source === "discography"
       ? picked && { type: "discography", artist: picked.name }
       : source === "album"
         ? picked && { type: "album", album: picked.name }
         : source === "list"
           ? { type: "list", listTitle: preview.labels.listTitle }
           : { type: "ratings", kind: entityType, ...preview.labels };
-  const suggestion = titleSource ? suggestTierTitle(t as unknown as TierTitleTranslator, titleSource) : "";
+  const suggestion =
+    source === "lamina" && inspiration ? inspiration.title : titleSource ? suggestTierTitle(t as unknown as TierTitleTranslator, titleSource) : "";
   const title = editedTitle ?? suggestion;
   const sourceInput: TierListSourceInput | null =
-    source === "discography"
+    source === "lamina" && inspiration
+      ? { type: "lamina", id: inspiration.id, copyLabels: inspiration.customLabels && copyLabels }
+      : source === "discography"
       ? picked && { type: "discography", artistId: picked.id }
       : source === "album"
         ? picked && { type: "album", releaseGroupId: picked.id }
@@ -109,15 +132,28 @@ export function TierListCreateForm() {
       <fieldset className="flex flex-col gap-1">
         <legend className="font-data text-xs text-paper-muted">{t("create.source")}</legend>
         <div className="flex flex-wrap gap-1 rounded border border-ink-border p-0.5">
-          {SOURCES[entityType].map((option) => (
+          {sourcesFor(entityType).map((option) => (
             <button key={option} type="button" aria-pressed={source === option} onClick={() => chooseSource(option)} className={segment(source === option)}>
-              {t(`sources.${option}`)}
+              {option === "lamina" && inspiration ? t("sources.lamina", { username: inspiration.ownerUsername }) : t(`sources.${option}`)}
             </button>
           ))}
         </div>
       </fieldset>
 
-      {searches ? (
+      {source === "lamina" && inspiration ? (
+        <div className="flex flex-col gap-2">
+          <p className="font-body text-sm text-paper">{t(`inspired.summary.${entityType}`, { count: inspiration.itemCount })}</p>
+          {inspiration.customLabels ? (
+            <label className="flex items-start gap-2 font-data text-xs text-paper">
+              <input type="checkbox" checked={copyLabels} onChange={(event) => setCopyLabels(event.target.checked)} className="mt-0.5" />
+              <span className="flex flex-col gap-0.5">
+                {t("inspired.copyLabels")}
+                <span className="text-paper-muted">{inspiration.labels.join(" · ")}</span>
+              </span>
+            </label>
+          ) : null}
+        </div>
+      ) : searches ? (
         picked ? (
           <div className="flex flex-wrap items-center gap-3">
             <span className="font-display text-sm text-paper">{picked.name}</span>
