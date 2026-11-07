@@ -27,7 +27,8 @@ ver ese contenido. Si no puede, ninguna de estas páginas SHALL mostrar el botó
 - **THEN** no ve el botón Compartir
 
 ### Requirement: Contenido de la hoja
-La hoja SHALL ofrecer los formatos **Enlace** (por defecto) e **Historia**, mostrar la vista previa del elegido y estas acciones, en este
+La hoja SHALL ofrecer los formatos que el objeto declara, con el primero por defecto: **Enlace** e **Historia** en general, y además **Publicación** o
+**Cuadrado** en una Lámina, que los pone primero, mostrar la vista previa del elegido y estas acciones, en este
 orden:
 **Compartir…** (menú nativo, solo si el navegador ofrece `navigator.share`), **Copiar enlace**, atajos a
 X, WhatsApp, Threads, Bluesky, Facebook, Telegram y Reddit, y **Descargar imagen**. Los atajos SHALL ser
@@ -46,6 +47,12 @@ que no es público".
 #### Scenario: Elegir Historia
 - **WHEN** se elige Historia en la hoja
 - **THEN** la vista previa y "Descargar imagen" pasan a ese formato y los atajos siguen compartiendo el enlace
+
+Con un formato que no es Enlace, **Compartir…** SHALL mandar la imagen como archivo si el navegador lo permite.
+
+#### Scenario: Lámina
+- **WHEN** se abre la hoja de un Top 5
+- **THEN** ofrece Publicación, Enlace e Historia, con Publicación elegida
 
 ### Requirement: Enlace compartido con canal
 Cada acción SHALL compartir la URL canónica absoluta del objeto en el idioma actual, con el parámetro
