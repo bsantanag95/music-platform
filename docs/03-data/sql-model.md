@@ -1239,6 +1239,13 @@ la conserva. Índice por `rating_id`. Entra en la exportación de datos como `sh
 Una fila abre a quien pueda ver el perfil la página y la imagen de lo que esa persona valoró de un artista. Se mantiene al día con sus notas y no toca
 `rating`. PK `(user_id, artist_id)`, `ON DELETE CASCADE` en ambas. Índice por `artist_id`. Entra en la exportación de datos como `sharedDiscographies`.
 
+## `discography_preference` (migración `0085`, openspec `add-discography-lamina-phase2`)
+
+Qué muestra la discografía de una persona con un artista: `sections` (`text[]`, solo `live` y `compilations`, sumadas a la principal) y `default_view`
+(`disc` o `song`). PK `(user_id, artist_id)`, `ON DELETE CASCADE` en ambas, índice por `artist_id` y `updated_at` con `trg_discography_preference_touch`.
+Aparte de `discography_share`: se elige también sin compartir y quitar la marca no la borra. Sin fila, solo la sección principal y la vista Por disco.
+Entra en la exportación de datos como `discographyPreferences`.
+
 ## `share_event` (migraciones `0079` a `0084`, openspec `add-share-foundation` y `add-share-user-actions`)
 
 Un registro por cada uso de la hoja de compartir (`docs/05-features/sharing.md`, D13): qué se compartió

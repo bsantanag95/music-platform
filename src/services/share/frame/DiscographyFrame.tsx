@@ -2,11 +2,11 @@ import { curvePoints } from "@/lib/laminas/discography";
 import { BRAND_COLORS } from "@/lib/share/brand-tokens";
 import { scaleScore } from "@/lib/share/score-scale";
 import { SHARE_FONT_FAMILIES } from "../fonts";
-import { CoverTile, ScaleLegend, ScoreChip, clip } from "./LaminaFrame";
+import { CoverTile, ScaleLegend, ScoreChip, StarGlyph, clip } from "./LaminaFrame";
 import { TopShell, type TopShellProps } from "./TopFrame";
 
-// Lámina de discografía, vista Por disco (docs/05-features/sharing.md §4.1): la curva de la carrera y la grilla de discos, en
-// el marco de las Láminas. Las carátulas nunca pasan de 250 px ni se amplían: todas las medidas de este archivo quedan debajo.
+// Lámina de discografía (docs/05-features/sharing.md §4.1): vista Por disco (curva y grilla de discos), vista Por canción y Lámina
+// de un álbum, en el marco de las Láminas. Las carátulas nunca pasan de 250 px ni se amplían: todas las medidas de este archivo quedan debajo.
 
 const data = SHARE_FONT_FAMILIES.data;
 const COLUMNS = 5;
@@ -105,5 +105,191 @@ function Grid({ discs, more, rated, progressPercent }: Pick<ChartProps, "discs" 
         {more > 0 ? <div style={{ display: "flex", fontFamily: data, fontSize: 24, color: BRAND_COLORS.paperMuted }}>{`+${more}`}</div> : null}
       </div>
     </div>
+  );
+}
+
+export interface SongGridColumn {
+  src: string | null;
+  title: string;
+  year: number | null;
+  score: { stars: number; detailedScore: number | null } | null;
+}
+
+type Cell = { stars: number; detailedScore: number | null } | null;
+
+interface SongGridProps extends Omit<TopShellProps, "children"> {
+  columns: SongGridColumn[];
+  rows: Cell[][];
+  moreDiscs: number;
+  moreTracks: number;
+  rated: string;
+  progressPercent: number | null;
+}
+
+/** Celda de la escala: el número o las estrellas escritos, el color solo refuerza. Vacía con borde si no hay nota. */
+function ScoreCell({ score, width, height, font }: { score: Cell; width: number; height: number; font: number }) {
+  if (!score) {
+    return <div style={{ display: "flex", width, height, borderRadius: 3, border: `1px solid ${BRAND_COLORS.inkBorder}` }} />;
+  }
+  const scaled = scaleScore(score);
+  const stars = scaled.label.endsWith("★");
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 2,
+        width,
+        height,
+        borderRadius: 3,
+        backgroundColor: scaled.band.background,
+        color: scaled.band.foreground,
+        fontFamily: data,
+        fontSize: font,
+      }}
+    >
+      <div style={{ display: "flex" }}>{stars ? scaled.label.slice(0, -1) : scaled.label}</div>
+      {stars ? <StarGlyph size={Math.round(font * 0.8)} color={scaled.band.foreground} /> : null}
+    </div>
+  );
+}
+
+/** Vista Por canción: una columna por disco y una fila por pista, como SeriesGraph, en el marco de las Láminas. */
+export function SongGrid({ columns, rows, moreDiscs, moreTracks, rated, progressPercent, ...frame }: SongGridProps) {
+  const link = frame.canvas === "link";
+  const width = link ? 1072 : 952;
+  const visibleColumns = link ? columns.slice(0, 12) : columns;
+  const visibleRows = link ? rows.slice(0, 5) : rows;
+  const label = 44;
+  const gap = 4;
+  const cellWidth = Math.min(72, Math.floor((width - label - gap * visibleColumns.length) / Math.max(visibleColumns.length, 1)));
+  const available = link ? 230 : frame.canvas === "story" ? 1000 : 700;
+  const cellHeight = Math.max(20, Math.min(40, Math.floor((available - cellWidth - 40) / Math.max(visibleRows.length + 1, 1)) - gap));
+  const font = Math.max(12, Math.min(18, Math.floor(Math.min(cellWidth, cellHeight * 1.6) / 3.2)));
+  const extraDiscs = moreDiscs + (columns.length - visibleColumns.length);
+  const extraTracks = moreTracks + (rows.length - visibleRows.length);
+  const rowLabel = (text: string) => (
+    <div style={{ display: "flex", width: label, justifyContent: "flex-end", paddingRight: 6, fontFamily: data, fontSize: 14, color: BRAND_COLORS.paperMuted }}>{text}</div>
+  );
+  return (
+    <TopShell {...frame}>
+      <div style={{ display: "flex", flexDirection: "column", gap: link ? 8 : 14 }}>
+        {link ? null : <Progress percent={progressPercent} rated={rated} />}
+        <div style={{ display: "flex", flexDirection: "column", alignSelf: "center", gap }}>
+          <div style={{ display: "flex", alignItems: "flex-end", gap }}>
+            {rowLabel("")}
+            {visibleColumns.map((column, index) => (
+              <div key={index} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: cellWidth, gap: 3 }}>
+                <CoverTile src={column.src} size={cellWidth} title={clip(column.title, 14)} subtitle={null} />
+                <div style={{ display: "flex", fontFamily: data, fontSize: 12, color: BRAND_COLORS.paperMuted }}>{column.year ?? "—"}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap }}>
+            {rowLabel("")}
+            {visibleColumns.map((column, index) => (
+              <ScoreCell key={index} score={column.score} width={cellWidth} height={cellHeight} font={font} />
+            ))}
+          </div>
+          {visibleRows.map((row, rowIndex) => (
+            <div key={rowIndex} style={{ display: "flex", alignItems: "center", gap }}>
+              {rowLabel(String(rowIndex + 1))}
+              {row.slice(0, visibleColumns.length).map((cell, index) => (
+                <ScoreCell key={index} score={cell} width={cellWidth} height={cellHeight} font={font} />
+              ))}
+            </div>
+          ))}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          {link ? <Progress percent={progressPercent} rated={rated} /> : <ScaleLegend />}
+          <div style={{ display: "flex", gap: 16, fontFamily: data, fontSize: 20, color: BRAND_COLORS.paperMuted }}>
+            {extraDiscs > 0 ? <div style={{ display: "flex" }}>{`+${extraDiscs} →`}</div> : null}
+            {extraTracks > 0 ? <div style={{ display: "flex" }}>{`+${extraTracks} ↓`}</div> : null}
+          </div>
+        </div>
+      </div>
+    </TopShell>
+  );
+}
+
+export interface AlbumBar {
+  number: number;
+  title: string;
+  score: Cell;
+}
+
+interface AlbumBarsProps extends Omit<TopShellProps, "children"> {
+  src: string | null;
+  albumTitle: string;
+  year: number | null;
+  tracks: AlbumBar[];
+  more: number;
+  rated: string;
+}
+
+/** Lámina de un álbum: cada pista es una barra con la altura de su nota, como un ecualizador. Sin nota, una marca baja con borde. */
+export function AlbumBars({ src, albumTitle, year, tracks, more, rated, ...frame }: AlbumBarsProps) {
+  const link = frame.canvas === "link";
+  const width = link ? 560 : 952;
+  const height = link ? 260 : frame.canvas === "story" ? 620 : 460;
+  const gap = tracks.length > 16 ? 3 : 8;
+  const barWidth = Math.max(14, Math.floor((width - gap * (tracks.length - 1)) / Math.max(tracks.length, 1)));
+  const font = Math.max(11, Math.min(18, Math.floor(barWidth / 3)));
+  const bars = (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <div style={{ display: "flex", alignItems: "flex-end", gap, height }}>
+        {tracks.map((track, index) => {
+          if (!track.score) {
+            return <div key={index} style={{ display: "flex", width: barWidth, height: 12, borderRadius: 3, border: `1px solid ${BRAND_COLORS.inkBorder}` }} />;
+          }
+          const scaled = scaleScore(track.score);
+          const stars = scaled.label.endsWith("★");
+          const value = track.score.detailedScore ?? track.score.stars * 20;
+          return (
+            <div key={index} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: barWidth, gap: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 1, fontFamily: data, fontSize: font, color: BRAND_COLORS.paper }}>
+                <div style={{ display: "flex" }}>{stars ? scaled.label.slice(0, -1) : scaled.label}</div>
+                {stars ? <StarGlyph size={Math.round(font * 0.8)} color={BRAND_COLORS.paperMuted} /> : null}
+              </div>
+              <div style={{ display: "flex", width: barWidth, height: Math.max(8, Math.round((height - 60) * (value / 100))), borderRadius: 3, backgroundColor: scaled.band.background }} />
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ display: "flex", gap }}>
+        {tracks.map((track, index) => (
+          <div key={index} style={{ display: "flex", width: barWidth, justifyContent: "center", fontFamily: data, fontSize: 13, color: BRAND_COLORS.paperMuted }}>
+            {String(track.number)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+  const heading = (
+    <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+      <CoverTile src={src} size={link ? 120 : 180} title={albumTitle} subtitle={null} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {year !== null ? <div style={{ display: "flex", fontFamily: data, fontSize: 24, color: BRAND_COLORS.paperMuted }}>{String(year)}</div> : null}
+        <div style={{ display: "flex", fontFamily: data, fontSize: 24, color: BRAND_COLORS.paperMuted }}>{rated}</div>
+        {more > 0 ? <div style={{ display: "flex", fontFamily: data, fontSize: 20, color: BRAND_COLORS.paperMuted }}>{`+${more}`}</div> : null}
+      </div>
+    </div>
+  );
+  return (
+    <TopShell {...frame}>
+      {link ? (
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 24 }}>
+          {heading}
+          {bars}
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+          {heading}
+          {bars}
+          <ScaleLegend />
+        </div>
+      )}
+    </TopShell>
   );
 }

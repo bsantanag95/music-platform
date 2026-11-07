@@ -110,6 +110,34 @@
     "missing": "{count, plural, one {Te falta # disco valorado para ver esta Lámina.} other {Te faltan # discos valorados para ver esta Lámina.}}",
     "noYear": "Sin año",
     "sectionTitle": "Tus discografías",
-    "sectionDescription": "Tu lectura de la carrera de un artista, disco por disco."
+    "sectionDescription": "Tu lectura de la carrera de un artista, disco por disco.",
+    "views": {
+      "label": "Vista",
+      "disc": "Por disco",
+      "song": "Por canción"
+    },
+    "settings": {
+      "title": "Qué muestra tu Lámina",
+      "sections": "Suma a la discografía principal",
+      "section": {
+        "live": "En vivo",
+        "compilations": "Recopilatorios"
+      },
+      "defaultView": "Vista que se comparte",
+      "hint": "Lo que elijas se ve en la página y en la imagen. Por canción aparece desde 10 canciones valoradas en 2 discos.",
+      "save": "Guardar",
+      "saved": "Guardado.",
+      "failed": "No se pudo guardar. Inténtalo de nuevo."
+    },
+    "grid": {
+      "caption": "Notas por canción de {artist}",
+      "track": "Pista",
+      "disc": "Disco",
+      "empty": "Sin nota"
+    },
+    "album": {
+      "back": "← {artist}",
+      "missing": "{count, plural, one {Te falta # canción valorada para la Lámina de este álbum.} other {Te faltan # canciones valoradas para la Lámina de este álbum.}}"
+    }
   }
 }

@@ -110,6 +110,34 @@
     "missing": "{count, plural, one {Rate # more album to see this Card.} other {Rate # more albums to see this Card.}}",
     "noYear": "No year",
     "sectionTitle": "Your discographies",
-    "sectionDescription": "Your take on an artist's career, album by album."
+    "sectionDescription": "Your take on an artist's career, album by album.",
+    "views": {
+      "label": "View",
+      "disc": "By album",
+      "song": "By song"
+    },
+    "settings": {
+      "title": "What your Card shows",
+      "sections": "Add to the main discography",
+      "section": {
+        "live": "Live",
+        "compilations": "Compilations"
+      },
+      "defaultView": "View you share",
+      "hint": "What you choose shows on the page and in the image. By song appears from 10 rated songs across 2 albums.",
+      "save": "Save",
+      "saved": "Saved.",
+      "failed": "Couldn't save. Try again."
+    },
+    "grid": {
+      "caption": "Ratings by song for {artist}",
+      "track": "Track",
+      "disc": "Album",
+      "empty": "Not rated"
+    },
+    "album": {
+      "back": "← {artist}",
+      "missing": "{count, plural, one {Rate # more song to see this album Card.} other {Rate # more songs to see this album Card.}}"
+    }
   }
 }

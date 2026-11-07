@@ -351,6 +351,9 @@ el mismo umbral que el álbum, aplicado en el read-model (`artist-community.ts`)
 - Una discografía es una Lámina derivada: los discos de la sección principal de un artista que una persona valoró, desde 3. La ven el dueño y
   sus seguidores. La marca por artista la abre a quien pueda ver el perfil, se mantiene al día con las notas nuevas, es reversible y no vuelve
   públicas esas valoraciones en otro lugar. Su progreso es discreto: nunca "X de Y" (`product_philosophy.md` §6.4.1).
+- La vista Por canción de una discografía se ofrece desde 10 canciones valoradas en al menos 2 discos; una pista sin valorar es una celda vacía,
+  nunca un 0. Qué secciones suma (En vivo, Recopilatorios) y qué vista se comparte lo decide el dueño, por artista. La Lámina de un álbum existe
+  desde 3 canciones valoradas y la abre la misma marca que la discografía.
 - El año de escucha de una fuente exige una escucha del mismo objetivo en ese año, contado en la zona horaria de la persona: una
   escucha de una canción no cuenta para su álbum.
 - Solo el catálogo usa una caché inmutable. Lo que es de una persona lleva caché corta, porque su dueño o moderación pueden cerrarlo.

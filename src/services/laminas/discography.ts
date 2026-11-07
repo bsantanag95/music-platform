@@ -1,16 +1,26 @@
-// Lámina de discografía (openspec: add-discography-lamina-phase1, docs/05-features/sharing.md §4.1, ADR 0053): lo que una
-// persona valoró de la discografía principal de un artista. Es derivada: se calcula en cada lectura y no tiene editor.
-// `rating` no tiene audiencia, así que la ven el dueño y sus seguidores; a cualquier otro visitante se la abre solo la marca
-// de `discography_share`, y esa marca no vuelve públicas las valoraciones en otro lugar.
+// Lámina de discografía (openspec: add-discography-lamina-phase1 y phase2, docs/05-features/sharing.md §4.1, ADR 0053): lo que
+// una persona valoró de la discografía de un artista, por disco y por canción. Es derivada: se calcula en cada lectura y no tiene
+// editor. `rating` no tiene audiencia, así que la ven el dueño y sus seguidores; a cualquier otro visitante se la abre solo la
+// marca de `discography_share`, y esa marca no vuelve públicas las valoraciones en otro lugar. Qué secciones suma y qué vista
+// muestra por defecto lo elige el dueño (`discography_preference`); la imagen compartida muestra lo mismo.
 
 import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { artist, credit, discographyShare, rating, releaseGroup, userList } from "@/db/schema";
+import { artist, credit, discographyPreference, discographyShare, rating, releaseGroup, userList } from "@/db/schema";
 import type { ReleaseGroupCategory } from "@/lib/api/schemas";
-import { DISCOGRAPHY_MIN_DISCS, discographyValue } from "@/lib/laminas/discography";
+import {
+  DISCOGRAPHY_ALBUM_MIN_SONGS,
+  DISCOGRAPHY_EXTRA_SECTIONS,
+  DISCOGRAPHY_MIN_DISCS,
+  discographyValue,
+  effectiveView,
+  songViewAvailable,
+  type DiscographyExtraSection,
+  type DiscographyView,
+} from "@/lib/laminas/discography";
 import { isValidUuid } from "@/lib/validation";
 import { compareByYear } from "@/services/catalog/artist-discography-view";
-import { discographySection } from "@/services/catalog/discography-sections";
+import { discographySection, type DiscographySection } from "@/services/catalog/discography-sections";
 import { readArtistDiscography, type DiscographyRow } from "@/services/catalog/ingest-discography";
 import { countsByListId } from "@/services/journeys/progress";
 import { ifVisible } from "@/services/share/targets/shared";
@@ -19,13 +29,40 @@ import { audiencesForProfile } from "@/services/social/visibility";
 
 const ENTRY_LIMIT = 12;
 
-export interface DiscographyDisc {
+export interface DiscographyScore {
+  stars: number;
+  detailedScore: number | null;
+}
+
+/** Disco con su nota: lo que usa la vista Por disco. */
+export interface DiscographyDisc extends DiscographyScore {
   id: string;
   title: string;
   year: number | null;
   coverThumbUrl: string | null;
-  stars: number;
-  detailedScore: number | null;
+}
+
+export interface DiscographyTrack {
+  /** Número correlativo en la edición representativa, contando todos sus medios. */
+  number: number;
+  recordingId: string;
+  title: string;
+  score: DiscographyScore | null;
+}
+
+/** Disco con alguna valoración, del disco o de sus canciones: lo que usa la vista Por canción. */
+export interface DiscographySongDisc {
+  id: string;
+  title: string;
+  year: number | null;
+  coverThumbUrl: string | null;
+  score: DiscographyScore | null;
+  tracks: DiscographyTrack[];
+}
+
+export interface DiscographyPreference {
+  sections: DiscographyExtraSection[];
+  view: DiscographyView;
 }
 
 /**
@@ -38,34 +75,119 @@ export interface DiscographyLamina {
   owner: { id: string; username: string; displayName: string | null };
   artist: { id: string; name: string };
   discs: DiscographyDisc[];
+  songDiscs: DiscographySongDisc[];
+  available: Record<DiscographyView, boolean>;
+  preference: DiscographyPreference;
+  /** La vista del dueño, o la otra si la suya no está disponible. */
+  view: DiscographyView;
   progress: DiscographyProgress;
-  /** Cuántos discos valorados faltan para que exista; 0 si ya existe. */
+  /** Cuántos discos valorados faltan para la vista Por disco; 0 si ya existe. */
   missing: number;
   isOwner: boolean;
   shared: boolean;
 }
 
-function isMainDisc(row: Pick<DiscographyRow, "primaryType" | "secondaryTypes" | "category" | "creditRole">): boolean {
+const DEFAULT_PREFERENCE: DiscographyPreference = { sections: [], view: "disc" };
+
+function sectionOf(row: Pick<DiscographyRow, "primaryType" | "secondaryTypes" | "category" | "creditRole">): DiscographySection {
   const { primaryType, secondaryTypes, creditRole } = row;
-  return discographySection({ primaryType, secondaryTypes, creditRole, category: row.category as ReleaseGroupCategory }) === "main";
+  return discographySection({ primaryType, secondaryTypes, creditRole, category: row.category as ReleaseGroupCategory });
 }
 
-async function readRatedDiscs(ownerId: string, artistId: string): Promise<DiscographyDisc[]> {
-  const main = (await readArtistDiscography(artistId)).filter(isMainDisc);
-  if (main.length === 0) return [];
-  const ratings = await db
-    .select({ id: rating.releaseGroupId, stars: rating.stars, detailedScore: rating.detailedScore })
-    .from(rating)
-    .where(and(eq(rating.userId, ownerId), inArray(rating.releaseGroupId, main.map((row) => row.id))));
-  const byDisc = new Map(ratings.map((row) => [row.id, row]));
-  return main
+function isMainDisc(row: Pick<DiscographyRow, "primaryType" | "secondaryTypes" | "category" | "creditRole">): boolean {
+  return sectionOf(row) === "main";
+}
+
+export async function readDiscographyPreference(ownerId: string, artistId: string): Promise<DiscographyPreference> {
+  const [row] = await db
+    .select({ sections: discographyPreference.sections, view: discographyPreference.defaultView })
+    .from(discographyPreference)
+    .where(and(eq(discographyPreference.userId, ownerId), eq(discographyPreference.artistId, artistId)))
+    .limit(1);
+  if (!row) return DEFAULT_PREFERENCE;
+  return {
+    sections: DISCOGRAPHY_EXTRA_SECTIONS.filter((section) => row.sections.includes(section)),
+    view: row.view === "song" ? "song" : "disc",
+  };
+}
+
+export async function saveDiscographyPreference(ownerId: string, artistId: string, preference: DiscographyPreference): Promise<DiscographyPreference> {
+  const sections = DISCOGRAPHY_EXTRA_SECTIONS.filter((section) => preference.sections.includes(section));
+  await db
+    .insert(discographyPreference)
+    .values({ userId: ownerId, artistId, sections, defaultView: preference.view })
+    .onConflictDoUpdate({
+      target: [discographyPreference.userId, discographyPreference.artistId],
+      set: { sections, defaultView: preference.view },
+    });
+  return { sections, view: preference.view };
+}
+
+type TrackRow = {
+  release_group_id: string;
+  disc_number: number;
+  position: number;
+  recording_id: string;
+  title: string;
+  stars: string | null;
+  detailed_score: number | null;
+};
+
+/** Pistas de la edición representativa de cada disco, con la nota del dueño, en una sola consulta. */
+async function readTracks(ownerId: string, discIds: string[]): Promise<Map<string, DiscographyTrack[]>> {
+  const byDisc = new Map<string, DiscographyTrack[]>();
+  if (discIds.length === 0) return byDisc;
+  const rows = await db.execute<TrackRow>(sql`
+    SELECT rel.release_group_id, t.disc_number, t.position, t.recording_id, rec.title, r.stars, r.detailed_score
+    FROM release rel
+    JOIN track t ON t.release_id = rel.id
+    JOIN recording rec ON rec.id = t.recording_id
+    LEFT JOIN rating r ON r.recording_id = t.recording_id AND r.user_id = ${ownerId}::uuid
+    WHERE rel.is_representative AND rel.release_group_id IN (${sql.join(
+      discIds.map((id) => sql`${id}::uuid`),
+      sql`, `,
+    )})
+    ORDER BY rel.release_group_id, t.disc_number, t.position`);
+  for (const row of rows) {
+    const tracks = byDisc.get(row.release_group_id) ?? [];
+    tracks.push({
+      number: tracks.length + 1,
+      recordingId: row.recording_id,
+      title: row.title,
+      score: row.stars === null ? null : { stars: Number(row.stars), detailedScore: row.detailed_score },
+    });
+    byDisc.set(row.release_group_id, tracks);
+  }
+  return byDisc;
+}
+
+/** Discos de las secciones elegidas, con la nota del disco y las de sus canciones. */
+async function readDiscs(ownerId: string, artistId: string, sections: readonly DiscographyExtraSection[]) {
+  const shown = new Set<DiscographySection>(["main", ...sections]);
+  const rows = (await readArtistDiscography(artistId)).filter((row) => shown.has(sectionOf(row)));
+  if (rows.length === 0) return { discs: [], songDiscs: [] };
+  const ids = rows.map((row) => row.id);
+  const [ratings, tracks] = await Promise.all([
+    db
+      .select({ id: rating.releaseGroupId, stars: rating.stars, detailedScore: rating.detailedScore })
+      .from(rating)
+      .where(and(eq(rating.userId, ownerId), inArray(rating.releaseGroupId, ids))),
+    readTracks(ownerId, ids),
+  ]);
+  const scores = new Map(ratings.map((row) => [row.id, { stars: Number(row.stars), detailedScore: row.detailedScore }]));
+
+  const songDiscs: DiscographySongDisc[] = rows
     .flatMap((row) => {
-      const score = byDisc.get(row.id);
-      if (!score) return [];
-      const { id, title, firstReleaseYear: year, coverThumbUrl } = row;
-      return [{ id, title, year, coverThumbUrl, stars: Number(score.stars), detailedScore: score.detailedScore }];
+      const score = scores.get(row.id) ?? null;
+      const discTracks = tracks.get(row.id) ?? [];
+      if (!score && !discTracks.some((track) => track.score)) return [];
+      return [{ id: row.id, title: row.title, year: row.firstReleaseYear, coverThumbUrl: row.coverThumbUrl, score, tracks: discTracks }];
     })
     .sort(compareByYear);
+  const discs: DiscographyDisc[] = songDiscs.flatMap((disc) =>
+    disc.score ? [{ id: disc.id, title: disc.title, year: disc.year, coverThumbUrl: disc.coverThumbUrl, ...disc.score }] : [],
+  );
+  return { discs, songDiscs };
 }
 
 async function readProgress(ownerId: string, artistId: string, ratedCount: number): Promise<DiscographyProgress> {
@@ -86,12 +208,22 @@ async function readProgress(ownerId: string, artistId: string, ratedCount: numbe
   return { kind: "journey", percent: Math.round((counts.listened / counts.selected) * 100) };
 }
 
-/** Discos y progreso, sin decidir quién mira. */
+/** Discos, vistas y progreso, sin decidir quién mira. */
 async function readDiscography(ownerId: string, artistId: string) {
   const [row] = await db.select({ id: artist.id, name: artist.name }).from(artist).where(eq(artist.id, artistId)).limit(1);
   if (!row) return null;
-  const discs = await readRatedDiscs(ownerId, artistId);
-  return { artist: row, discs, progress: await readProgress(ownerId, artistId, discs.length) };
+  const preference = await readDiscographyPreference(ownerId, artistId);
+  const { discs, songDiscs } = await readDiscs(ownerId, artistId, preference.sections);
+  const available = { disc: discs.length >= DISCOGRAPHY_MIN_DISCS, song: songViewAvailable(songDiscs) };
+  return {
+    artist: row,
+    discs,
+    songDiscs,
+    preference,
+    available,
+    view: effectiveView(preference.view, available),
+    progress: await readProgress(ownerId, artistId, discs.length),
+  };
 }
 
 export async function isDiscographyShared(ownerId: string, artistId: string): Promise<boolean> {
@@ -103,7 +235,7 @@ export async function isDiscographyShared(ownerId: string, artistId: string): Pr
   return rows.length > 0;
 }
 
-/** La discografía para quien mira, o `null` sin revelar el motivo. */
+/** La discografía para quien mira, o `null` sin revelar el motivo. Existe con una de sus dos vistas. */
 export async function getDiscographyLamina(username: string, artistId: string, viewerId: string | null): Promise<DiscographyLamina | null> {
   if (!isValidUuid(artistId)) return null;
   const profile = await ifVisible(getProfileByUsername(username, viewerId));
@@ -114,20 +246,44 @@ export async function getDiscographyLamina(username: string, artistId: string, v
 
   const discography = await readDiscography(profile.id, artistId);
   if (!discography) return null;
-  const missing = Math.max(DISCOGRAPHY_MIN_DISCS - discography.discs.length, 0);
-  if (missing > 0 && !isOwner) return null;
+  const exists = discography.available.disc || discography.available.song;
+  if (!exists && !isOwner) return null;
   return {
     ...discography,
     owner: { id: profile.id, username: profile.username, displayName: profile.displayName },
-    missing,
+    missing: exists ? 0 : DISCOGRAPHY_MIN_DISCS - discography.discs.length,
     isOwner,
     shared,
   };
 }
 
+export interface DiscographyAlbum {
+  lamina: DiscographyLamina;
+  disc: DiscographySongDisc;
+  /** Canciones valoradas que faltan para que exista; 0 si ya existe. */
+  missing: number;
+}
+
+/** La Lámina de un álbum: un disco de la discografía mostrada, con las mismas reglas de quién mira. */
+export async function getDiscographyAlbum(
+  username: string,
+  artistId: string,
+  albumId: string,
+  viewerId: string | null,
+): Promise<DiscographyAlbum | null> {
+  if (!isValidUuid(albumId)) return null;
+  const lamina = await getDiscographyLamina(username, artistId, viewerId);
+  const disc = lamina?.songDiscs.find((candidate) => candidate.id === albumId);
+  if (!lamina || !disc || lamina.missing > 0) return null;
+  const rated = disc.tracks.filter((track) => track.score).length;
+  const missing = Math.max(DISCOGRAPHY_ALBUM_MIN_SONGS - rated, 0);
+  if (missing > 0 && !lamina.isOwner) return null;
+  return { lamina, disc, missing };
+}
+
 /** Cuántos discos de la discografía principal valoró: decide si la página del artista ofrece el enlace. */
 export async function countRatedMainDiscs(ownerId: string, artistId: string): Promise<number> {
-  return (await readRatedDiscs(ownerId, artistId)).length;
+  return (await readDiscs(ownerId, artistId, [])).discs.length;
 }
 
 export interface DiscographyEntry {

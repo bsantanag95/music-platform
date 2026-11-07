@@ -46,6 +46,30 @@ export interface ShareDiscographyCard {
   discs: Array<{ cover: ShareImageRef; title: string; year: number | null; stars: number; detailedScore: number | null }>;
   more: number;
   progressPercent: number | null;
+  /** Vista Por canción, cuando es la del dueño y está disponible: columnas = discos, filas = pistas. */
+  songs?: ShareSongGrid;
+}
+
+export interface ShareScore {
+  stars: number;
+  detailedScore: number | null;
+}
+
+export interface ShareSongGrid {
+  columns: Array<{ cover: ShareImageRef; title: string; year: number | null; score: ShareScore | null }>;
+  /** Una fila por número de pista; `null` es una pista sin valorar o que el disco no tiene. */
+  rows: Array<Array<ShareScore | null>>;
+  moreDiscs: number;
+  moreTracks: number;
+}
+
+/** Lámina de un álbum: sus pistas como barras con la nota. */
+export interface ShareDiscographyAlbumCard {
+  byline: string;
+  cover: ShareImageRef;
+  year: number | null;
+  tracks: Array<{ number: number; title: string; score: ShareScore | null }>;
+  more: number;
 }
 
 export interface ShareCard {
@@ -66,6 +90,7 @@ export interface ShareCard {
   byline?: string | null;
   top?: ShareTopCard;
   discography?: ShareDiscographyCard;
+  discographyAlbum?: ShareDiscographyAlbumCard;
 }
 
 export interface ShareTarget {

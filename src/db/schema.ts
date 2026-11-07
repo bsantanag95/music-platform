@@ -1860,6 +1860,31 @@ export const discographyShare = pgTable(
 
 export type DiscographyShareRow = typeof discographyShare.$inferSelect;
 
+// Preferencias del dueño en su discografía (migración 0085, openspec: add-discography-lamina-phase2): secciones que suma a la
+// principal y vista por defecto. Aparte de la marca: se elige también sin compartir. `updated_at` lo mantiene un trigger.
+export const discographyPreference = pgTable(
+  "discography_preference",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    artistId: uuid("artist_id")
+      .notNull()
+      .references(() => artist.id, { onDelete: "cascade" }),
+    sections: text("sections").array().notNull().default(sql`'{}'::text[]`),
+    defaultView: text("default_view").notNull().default("disc"),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.artistId] }),
+    index("idx_discography_preference_artist").on(t.artistId),
+    check("chk_discography_preference_sections", sql`${t.sections} <@ ARRAY['live', 'compilations']::text[]`),
+    check("chk_discography_preference_view", sql`${t.defaultView} IN ('disc', 'song')`),
+  ],
+);
+
+export type DiscographyPreferenceRow = typeof discographyPreference.$inferSelect;
+
 // Entradas de diario destacadas del perfil (openspec: rework-user-profile).
 // Misma razón de tabla aparte que rating_highlight: no tocar
 // listen_entry.updated_at. Una entrada destacada anula la matriz de

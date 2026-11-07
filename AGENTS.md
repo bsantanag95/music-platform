@@ -160,7 +160,11 @@ de cuál de las filas con el mismo título haya en la BD.
 >   mbid::text LIKE '5e0ce000-0000-4000-8000-00000000d%'; DELETE FROM artist WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000d%';`. Necesita la migración
 >   `0084`. Verifica el umbral de 3 discos de la sección principal, el dato real de cada disco, la visibilidad por visitante con y sin marca (seguidor, anónimo,
 >   bloqueo, perfil privado), que la marca no abre la página de relación, que se mantiene al día, el progreso sin conteos con y sin Recorrido, quitar la marca, las
->   entradas, los eventos y las cascadas, y la lectura bajo 100 ms con 200 discos.
+>   entradas, los eventos y las cascadas, y la lectura bajo 100 ms con 200 discos. Desde `add-discography-lamina-phase2` también crea artistas, discos,
+>   ediciones y canciones `Smoke Canción Disc *` (con el mismo prefijo de MBID; las canciones se borran por título: si se interrumpió, sumar
+>   `DELETE FROM recording WHERE title LIKE 'Smoke Canción Disc%';` después de borrar los discos) y verifica el umbral D9, los discos solo con canciones, la
+>   numeración entre medios, las preferencias (`CHECK` de `0085`, secciones, vista, que sobreviven a quitar la marca), la Lámina de álbum por visitante y la
+>   lectura bajo 150 ms con 50 discos de 15 pistas. Necesita la migración `0085`.
 > - `smoke-test-comment-replies.ts` crea un artista y un álbum sintéticos (MBID
 >   `5e0ce000-0000-4000-8000-0000000009b0` / `...09b1`) y usuarios `smoke_reply_*`, y los borra al terminar
 >   (también si falla; el `ON DELETE CASCADE` limpia comentarios, respuestas, likes y bloqueos). Si se

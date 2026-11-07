@@ -1896,6 +1896,13 @@ export type LaminaSource = z.infer<typeof LaminaSourceSchema>;
 
 const LaminaYearParam = z.coerce.number().int().min(1000).max(2200);
 
+// Preferencias del dueño en su discografía (openspec: add-discography-lamina-phase2).
+export const DiscographyPreferenceRequestSchema = z.object({
+  sections: z.array(z.enum(["live", "compilations"])).max(2),
+  view: z.enum(["disc", "song"]),
+});
+export const DiscographyPreferenceResponseSchema = z.object({ preference: DiscographyPreferenceRequestSchema });
+
 export const LaminaSourceQuerySchema = z.object({ source: LaminaSourceSchema, entityType: LaminaEntityTypeSchema });
 
 export const LaminaCandidatesQuerySchema = LaminaSourceQuerySchema.extend({

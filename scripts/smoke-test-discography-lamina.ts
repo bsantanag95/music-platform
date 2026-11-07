@@ -22,8 +22,11 @@ import {
   discographyShare,
   listenEntry,
   rating,
+  recording,
+  release,
   releaseGroup,
   shareEvent,
+  track,
   userBlock,
   userFollow,
   userList,
@@ -236,12 +239,131 @@ async function main() {
     check(big?.card.discography?.discs.length === 20 && big.card.discography.more === 180, "la imagen corta en 20 y dice cuántos quedan");
     check(big?.card.discography?.discs.filter((disc) => disc.cover.url).length === 0, "sin carátulas, todos tipográficos");
 
+    await checkSongs(s, owner, follower);
+
     console.log("\nSmoke test de la Lámina de discografía: OK");
   } finally {
     await db.delete(appUser).where(like(appUser.username, "smoke_disc_%"));
     await db.delete(releaseGroup).where(like(sql`${releaseGroup.mbid}::text`, PREFIX));
+    await db.delete(recording).where(like(recording.title, `${SONG_PREFIX}%`));
     await db.delete(artist).where(like(sql`${artist.mbid}::text`, PREFIX));
   }
+}
+
+const SONG_PREFIX = "Smoke Canción Disc";
+
+/** Desde add-discography-lamina-phase2: vista Por canción, preferencias del dueño y Lámina de álbum. */
+async function checkSongs(s: Awaited<ReturnType<typeof loadServices>>, owner: { id: string; username: string }, follower: { id: string }) {
+  const [band] = await db.insert(artist).values({ mbid: mbid(0xf05), type: "group", name: `Smoke Canciones ${suffix}` }).returning();
+  const [other] = await db.insert(artist).values({ mbid: mbid(0xf06), type: "group", name: `Smoke Ajeno ${suffix}` }).returning();
+  const make = async (n: number, title: string, year: number, secondaryTypes: string[], tracks: number, artistId: string) => {
+    const [disc] = await db
+      .insert(releaseGroup)
+      .values({ mbid: mbid(0xa00 + n), title, category: secondaryTypes.includes("Live") ? "live_other" : "studio", primaryType: "Album", secondaryTypes, firstReleaseYear: year })
+      .returning();
+    await db.insert(credit).values({ artistId, releaseGroupId: disc!.id, role: "primary", position: 0 });
+    const [edition] = await db.insert(release).values({ releaseGroupId: disc!.id, isRepresentative: true }).returning();
+    const songs = await db
+      .insert(recording)
+      .values(Array.from({ length: tracks }, (_, i) => ({ title: `${SONG_PREFIX} ${n}-${i + 1} ${suffix}` })))
+      .returning({ id: recording.id });
+    // Dos medios: las pistas siguen numerándose de corrido.
+    await db.insert(track).values(songs.map((song, i) => ({ releaseId: edition!.id, recordingId: song.id, discNumber: i < 4 ? 1 : 2, position: i < 4 ? i + 1 : i - 3 })));
+    return { disc: disc!, songs };
+  };
+  const a = await make(1, "Smoke Uno", 1980, [], 8, band!.id);
+  const b = await make(2, "Smoke Dos", 1982, [], 6, band!.id);
+  const c = await make(3, "Smoke Tres", 1984, [], 5, band!.id);
+  const live = await make(4, "Smoke En vivo", 1986, ["Live"], 4, band!.id);
+  const foreign = await make(5, "Smoke Ajeno", 1990, [], 4, other!.id);
+  const rateSong = (id: string, stars: number, detailed?: number) =>
+    db.insert(rating).values({ userId: owner.id, recordingId: id, stars: stars.toFixed(1), detailedScore: detailed ?? null });
+  const read = (viewer: string | null) => s.discography.getDiscographyLamina(owner.username, band!.id, viewer);
+
+  console.log("Vista Por canción");
+  for (const song of a.songs.slice(0, 6)) await rateSong(song.id, 4);
+  await rateSong(b.songs[0]!.id, 5, 96);
+  await rateSong(b.songs[1]!.id, 3);
+  check((await read(owner.id))?.available.song === false, "con 8 canciones no se ofrece");
+  check(((await read(owner.id))?.missing ?? 0) > 0, "sin ninguna vista, al dueño le falta");
+  check((await read(follower.id)) === null, "y una seguidora no la ve");
+  await rateSong(b.songs[2]!.id, 3.5);
+  await rateSong(b.songs[3]!.id, 2.5);
+  const lamina = await read(owner.id);
+  check(lamina?.available.song === true && lamina.available.disc === false, "con 10 en 2 discos, sí; sin 3 discos valorados, Por disco no");
+  check((await read(follower.id)) !== null, "la página existe por sus canciones y una seguidora la ve");
+  check(lamina?.view === "song", "y la vista cae en Por canción");
+  check(lamina?.discs.length === 0 && lamina.songDiscs.length === 2, "discos solo con canciones: en la grilla y no en Por disco");
+  const first = lamina!.songDiscs[0]!;
+  check(first.tracks.map((t) => t.number).join() === "1,2,3,4,5,6,7,8", "las pistas se numeran de corrido entre medios");
+  check(first.tracks[6]!.score === null && first.tracks[0]!.score?.stars === 4, "una pista sin valorar queda vacía");
+  check(lamina!.songDiscs[1]!.tracks[0]!.score?.detailedScore === 96, "el dato real de cada canción");
+
+  console.log("Preferencias");
+  const ownerRef = s.target.discographyRef(owner.id, band!.id);
+  for (const disc of [a, b, c]) await s.social.upsertRating(await s.social.resolveSocialTarget("release-group", disc.disc.id), owner.id, 4);
+  await db.insert(rating).values({ userId: owner.id, releaseGroupId: live.disc.id, stars: "5.0" });
+  check((await read(owner.id))?.view === "disc", "sin preferencia, Por disco");
+  check(!(await read(owner.id))?.discs.some((d) => d.id === live.disc.id), "En vivo no entra por defecto");
+  await s.discography.saveDiscographyPreference(owner.id, band!.id, { sections: ["live"], view: "song" });
+  const preferred = await read(owner.id);
+  check(preferred?.discs.some((d) => d.id === live.disc.id) === true, "sumar En vivo lo incluye");
+  check(preferred?.view === "song", "la vista del dueño");
+  const image = await s.target.loadDiscographyTarget(ownerRef, "es", { owner: owner.id });
+  check(image?.card.discography?.songs?.columns.length === preferred!.songDiscs.length, "la imagen muestra la grilla");
+  check(image?.card.discography?.songs?.rows.length === 8, "con tantas filas como la pista más larga");
+  check((await codeOf(() => db.execute(sql`INSERT INTO discography_preference (user_id, artist_id, sections) VALUES (${follower.id}::uuid, ${band!.id}::uuid, ARRAY['singles'])`))) === "23514", "CHECK de secciones");
+  check((await codeOf(() => db.execute(sql`INSERT INTO discography_preference (user_id, artist_id, default_view) VALUES (${follower.id}::uuid, ${band!.id}::uuid, 'grid')`))) === "23514", "CHECK de vista");
+
+  console.log("Lámina de álbum");
+  const album = (viewer: string | null, disc = b.disc.id) => s.discography.getDiscographyAlbum(owner.username, band!.id, disc, viewer);
+  check((await album(follower.id))?.disc.tracks.length === 6, "una seguidora ve el álbum con 4 canciones valoradas");
+  check((await album(follower.id, c.disc.id)) === null, "un disco con menos de 3 canciones, no");
+  check((await album(owner.id, c.disc.id))?.missing === 3, "el dueño ve cuántas le faltan");
+  check((await album(owner.id, foreign.disc.id)) === null, "un disco de otro artista responde null");
+  check((await album(null)) === null, "un anónimo sin marca, no");
+  const albumRef = s.target.discographyRef(owner.id, band!.id, b.disc.id);
+  check((await s.target.loadDiscographyTarget(albumRef, "es")) === null, "ni su imagen");
+  await s.own.makeOwnPublic("discography", albumRef, "es", owner.id);
+  check((await album(null)) !== null, "la misma marca del artista lo abre");
+  const albumImage = await s.target.loadDiscographyTarget(albumRef, "es");
+  check(albumImage?.card.discographyAlbum?.tracks.length === 6 && albumImage.card.discographyAlbum.tracks[0]!.score?.detailedScore === 96, "y su imagen trae las barras");
+  check((await s.target.loadDiscographyTarget(s.target.discographyRef(owner.id, band!.id, foreign.disc.id), "es")) === null, "un disco ajeno no tiene imagen");
+  await db.insert(shareEvent).values({ targetKind: "discography", targetRef: albumRef, channel: "copy", format: "post" });
+  const removed = await db.delete(shareEvent).where(s.lifecycle.ownShareEvents(owner.id)).returning();
+  check(removed.some((event) => event.targetRef === albumRef), "los eventos del álbum se borran con la cuenta");
+  await s.own.stopSharing("discography", ownerRef, "es", owner.id);
+  check((await s.discography.readDiscographyPreference(owner.id, band!.id)).view === "song", "quitar la marca conserva las preferencias");
+
+  console.log("Tiempo con 50 discos de 15 pistas valoradas");
+  const perf = newUser("perfsongs");
+  await db.insert(appUser).values(perf);
+  const [many] = await db.insert(artist).values({ mbid: mbid(0xf07), type: "group", name: `Smoke Muchas ${suffix}` }).returning();
+  for (let n = 0; n < 50; n += 1) {
+    const [disc] = await db
+      .insert(releaseGroup)
+      .values({ mbid: mbid(0x600 + n), title: `Smoke Muchas ${n}`, category: "studio", primaryType: "Album", secondaryTypes: [], firstReleaseYear: 1950 + n })
+      .returning();
+    await db.insert(credit).values({ artistId: many!.id, releaseGroupId: disc!.id, role: "primary", position: 0 });
+    const [edition] = await db.insert(release).values({ releaseGroupId: disc!.id, isRepresentative: true }).returning();
+    const songs = await db.insert(recording).values(Array.from({ length: 15 }, (_, i) => ({ title: `${SONG_PREFIX} p${n}-${i}` }))).returning({ id: recording.id });
+    await db.insert(track).values(songs.map((song, i) => ({ releaseId: edition!.id, recordingId: song.id, position: i + 1 })));
+    await db.insert(rating).values(songs.map((song, i) => ({ userId: perf.id, recordingId: song.id, stars: String(1 + (i % 9) / 2) })));
+    await db.insert(rating).values({ userId: perf.id, releaseGroupId: disc!.id, stars: "4.0" });
+  }
+  await s.discography.getDiscographyLamina(perf.username, many!.id, perf.id);
+  const times: number[] = [];
+  for (let run = 0; run < 5; run += 1) {
+    const start = performance.now();
+    await s.discography.getDiscographyLamina(perf.username, many!.id, perf.id);
+    times.push(performance.now() - start);
+  }
+  const median = [...times].sort((x, y) => x - y)[2]!;
+  check(median < 150, `lectura con 750 pistas: ${median.toFixed(1)} ms`);
+  await s.discography.saveDiscographyPreference(perf.id, many!.id, { sections: [], view: "song" });
+  const grid = await s.target.loadDiscographyTarget(s.target.discographyRef(perf.id, many!.id), "es", { owner: perf.id });
+  check(grid?.card.discography?.songs?.columns.length === 20 && grid.card.discography.songs.moreDiscs === 30, "la grilla corta en 20 discos y dice cuántos quedan");
+  check(grid?.card.discography?.songs?.rows.length === 15, "y en las pistas que hay");
 }
 
 main()
