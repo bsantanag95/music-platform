@@ -33,6 +33,18 @@ describe("AuthForm", () => {
     expect(mocks.hardNavigate).toHaveBeenCalledTimes(1);
   });
 
+  it("con intención de Lámina, el alta va a armarla y no a /welcome", async () => {
+    const user = userEvent.setup();
+    mocks.hardNavigate.mockClear();
+    mocks.apiFetch.mockResolvedValueOnce({ user: { id: "u1", username: "ana", email: "a@b.c", displayName: null } });
+    renderWithIntl(<AuthForm mode="register" laminaId="8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f" />);
+    await user.type(screen.getByLabelText("Nombre de usuario"), "ana");
+    await user.type(screen.getByLabelText("Email"), "ana@example.com");
+    await user.type(screen.getByLabelText("Contraseña"), "unaClaveLarga1");
+    await user.click(screen.getByRole("button", { name: "Crear cuenta" }));
+    expect(mocks.hardNavigate).toHaveBeenCalledWith("/es/me/laminas?desde=8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f");
+  });
+
   async function submitLogin(user: ReturnType<typeof userEvent.setup>) {
     renderWithIntl(<AuthForm mode="login" />);
     await user.type(screen.getByLabelText("Email o nombre de usuario"), "ana");

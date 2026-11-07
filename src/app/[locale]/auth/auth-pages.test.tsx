@@ -61,6 +61,34 @@ describe("páginas de autenticación", () => {
     expect(screen.getByRole("link", { name: "register" })).toHaveAttribute("href", "/auth/register");
   });
 
+  it("los enlaces cruzados conservan la intención de Lámina", async () => {
+    const searchParams = Promise.resolve({ lamina: "8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f" });
+    mocks.resolveSession.mockResolvedValue(null);
+
+    const login = render(await LoginPage({ params: Promise.resolve({ locale: "es" }), searchParams }));
+    expect(screen.getByRole("link", { name: "register" })).toHaveAttribute("href", "/auth/register?lamina=8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f");
+    login.unmount();
+
+    render(await RegisterPage({ params: Promise.resolve({ locale: "es" }), searchParams }));
+    expect(screen.getByRole("link", { name: "login" })).toHaveAttribute("href", "/auth/login?lamina=8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f");
+    mocks.resolveSession.mockReset();
+  });
+
+  it("una intención inválida se descarta", async () => {
+    mocks.resolveSession.mockResolvedValueOnce(null);
+
+    render(await RegisterPage({ params: Promise.resolve({ locale: "es" }), searchParams: Promise.resolve({ lamina: "https://otro.example" }) }));
+    expect(screen.getByRole("link", { name: "login" })).toHaveAttribute("href", "/auth/login");
+  });
+
+  it("con sesión y la intención va directo a armarla", async () => {
+    mocks.resolveSession.mockResolvedValueOnce({ user: { id: "u1" } });
+
+    await expect(
+      RegisterPage({ params: Promise.resolve({ locale: "es" }), searchParams: Promise.resolve({ lamina: "8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f" }) }),
+    ).rejects.toThrow('REDIRECT:{"href":"/me/laminas?desde=8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f","locale":"es"}');
+  });
+
   it("enlaza al flujo de olvido de contraseña", async () => {
     mocks.resolveSession.mockResolvedValueOnce(null);
 

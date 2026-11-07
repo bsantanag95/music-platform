@@ -119,12 +119,12 @@ describe("GET /api/auth/google/start", () => {
   it("persiste el locale del query en el estado del flujo", async () => {
     await startGet(startRequest("en"));
 
-    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("en", undefined, true);
+    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("en", undefined, true, null);
   });
 
   it("remember=0 guarda en el estado del flujo que la sesión no se mantiene", async () => {
     await startGet(startRequest("es", undefined, "0"));
-    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", undefined, false);
+    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", undefined, false, null);
   });
 
   it("remember=1, sin remember o con un valor raro mantienen la sesión", async () => {
@@ -140,13 +140,13 @@ describe("GET /api/auth/google/start", () => {
     const response = await startGet(startRequest("es", "link"));
 
     expect(response.status).toBe(307);
-    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", { intent: "link", userId: "u1" }, true);
+    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", { intent: "link", userId: "u1" }, true, null);
   });
 
   it("para confirmar la identidad guarda la intención reauth", async () => {
     mocks.resolveSession.mockResolvedValue({ user: { id: "u1" } });
     await startGet(startRequest("es", "reauth"));
-    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", { intent: "reauth", userId: "u1" }, true);
+    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", { intent: "reauth", userId: "u1" }, true, null);
   });
 
   it("vincular sin sesión se rechaza sin redirigir a Google", async () => {
@@ -160,13 +160,24 @@ describe("GET /api/auth/google/start", () => {
     expect(mocks.buildAuthUrl).not.toHaveBeenCalled();
   });
 
+  it("guarda la intención de Lámina en el estado del flujo", async () => {
+    await startGet(new NextRequest("http://localhost:3000/api/auth/google/start?locale=es&lamina=8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f"));
+    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", undefined, true, "8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f");
+  });
+
+  it("una intención de Lámina inválida se descarta sin cortar el flujo", async () => {
+    const response = await startGet(new NextRequest("http://localhost:3000/api/auth/google/start?locale=es&lamina=https://otro.example"));
+    expect(response.status).toBe(307);
+    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", undefined, true, null);
+  });
+
   it("una intención desconocida se trata como login, sin exigir sesión", async () => {
     mocks.resolveSession.mockResolvedValue(null);
 
     const response = await startGet(startRequest("es", "admin"));
 
     expect(response.status).toBe(307);
-    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", undefined, true);
+    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", undefined, true, null);
   });
 
   it("falla si la configuración de Google está ausente", async () => {
@@ -321,6 +332,33 @@ describe("GET /api/auth/google/callback", () => {
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toContain("/en/welcome");
     expect(mocks.createSession).toHaveBeenCalledWith("new-user", { remember: true });
+  });
+
+  it.each([
+    ["nuevo", null],
+    ["ya onboardeado", new Date()],
+  ])("con intención de Lámina, un usuario %s va a armarla", async (_label, onboardedAt) => {
+    mocks.consumeOAuthFlowCookies.mockResolvedValue({ state: "valid-state", codeVerifier: "verifier", nonce: "nonce", locale: "en", laminaId: "8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f" });
+    mocks.exchangeCode.mockResolvedValue({ idToken: "id-token", accessToken: "at", tokenType: "Bearer", expiresIn: 3600 });
+    mocks.validateIdToken.mockResolvedValue({ sub: "sub-123", email: "new@gmail.com", emailVerified: true, nonce: "nonce" });
+    mocks.toIdentity.mockReturnValue({ provider: "google", providerAccountId: "sub-123", email: "new@gmail.com", emailVerified: true });
+    mocks.resolveOrCreateOAuthUser.mockResolvedValue({ id: "u", username: "new", email: "new@gmail.com", displayName: null, onboardedAt });
+
+    const response = await callbackGet(new NextRequest("http://localhost:3000/api/auth/google/callback?code=auth-code&state=valid-state"));
+
+    expect(response.headers.get("location")).toMatch(/\/en\/me\/laminas\?desde=8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f$/);
+  });
+
+  it("la intención no se lee del query del callback", async () => {
+    mocks.consumeOAuthFlowCookies.mockResolvedValue({ state: "valid-state", codeVerifier: "verifier", nonce: "nonce", locale: "en" });
+    mocks.exchangeCode.mockResolvedValue({ idToken: "id-token", accessToken: "at", tokenType: "Bearer", expiresIn: 3600 });
+    mocks.validateIdToken.mockResolvedValue({ sub: "sub-123", email: "new@gmail.com", emailVerified: true, nonce: "nonce" });
+    mocks.toIdentity.mockReturnValue({ provider: "google", providerAccountId: "sub-123", email: "new@gmail.com", emailVerified: true });
+    mocks.resolveOrCreateOAuthUser.mockResolvedValue({ id: "u", username: "new", email: "new@gmail.com", displayName: null, onboardedAt: null });
+
+    const response = await callbackGet(new NextRequest("http://localhost:3000/api/auth/google/callback?code=auth-code&state=valid-state&lamina=8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f"));
+
+    expect(response.headers.get("location")).toContain("/en/welcome");
   });
 
   it("un usuario YA onboardeado no pasa por /welcome", async () => {

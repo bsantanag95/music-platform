@@ -5,7 +5,7 @@
 
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { rating, userList, userListItem } from "@/db/schema";
+import { appUser, rating, userList, userListItem } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { enrichLists, listItems, normalizeTitle, resolveListTarget, type UserListItemEntry } from "@/services/lists/lists";
 import { resolveNewContentAudience } from "@/services/social/default-audience";
@@ -168,6 +168,35 @@ export async function getUserLamina(username: string, id: string, viewerId: stri
     .limit(1);
   if (!row) throw notFound();
   return buildDetail(row, { forOwner: profile.relation === "self" });
+}
+
+export interface LaminaInspiration {
+  id: string;
+  title: string;
+  format: LaminaFormat;
+  entityType: LaminaEntityType;
+  ownerUsername: string;
+}
+
+/**
+ * Lo que "Arma la tuya" hereda de una Lámina ajena, con las reglas de su página pública. `null` si no existe, no se puede ver o
+ * es propia: el formulario queda como siempre y no revela nada. Nunca trae ítems ni notas.
+ */
+export async function getLaminaInspiration(id: string, viewerId: string): Promise<LaminaInspiration | null> {
+  const [owner] = await db
+    .select({ id: appUser.id, username: appUser.username })
+    .from(userList)
+    .innerJoin(appUser, eq(appUser.id, userList.ownerId))
+    .where(and(eq(userList.id, id), eq(userList.kind, "top")))
+    .limit(1);
+  if (!owner || owner.id === viewerId) return null;
+  try {
+    const { title, format, entityType } = await getUserLamina(owner.username, id, viewerId);
+    return { id, title, format, entityType, ownerUsername: owner.username };
+  } catch (error) {
+    if (error instanceof ApiError) return null;
+    throw error;
+  }
 }
 
 export async function updateLamina(

@@ -1,3 +1,4 @@
+import { laminaBuildHref } from "@/lib/laminas/intent";
 import { NextRequest, NextResponse } from "next/server";
 import { withErrorHandling } from "@/lib/with-error-handling";
 import { GoogleOAuthAdapter, getGoogleOAuthConfig } from "@/services/auth/providers";
@@ -155,7 +156,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   // La preferencia de idioma guardada en la cuenta manda sobre el idioma desde el
   // que se inició el flujo (spec account-preferences).
   const destinationLocale = resolveLocale(user.locale ?? locale);
-  const destination = user.onboardedAt ? `/${destinationLocale}` : `/${destinationLocale}/welcome`;
+  // La intención "Arma la tuya" sale del estado del flujo y la ruta es fija (ADR 0052).
+  const home = user.onboardedAt ? `/${destinationLocale}` : `/${destinationLocale}/welcome`;
+  const destination = flowState.laminaId ? `/${destinationLocale}${laminaBuildHref(flowState.laminaId)}` : home;
   const response = NextResponse.redirect(
     new URL(destination, process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   );

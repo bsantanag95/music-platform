@@ -16,7 +16,9 @@ una entrada de diario, sin favorito ni rating) — con aviso de audiencia y un r
 Cada usuario SHALL tener una marca `onboarded_at` (fecha, o nula si está pendiente). Al
 **completar o saltar** el flujo de `/welcome`, el sistema SHALL fijar `onboarded_at`.
 Mientras `onboarded_at` sea nula, la redirección posterior al alta SHALL llevar a
-`/welcome`. Una vez fijada, `/welcome` SHALL redirigir a Inicio y el alta ya no SHALL
+`/welcome`, salvo que la persona llegue con una intención de Lámina (ver `top-laminas`): en ese caso
+SHALL ir a armarla y `onboarded_at` SHALL seguir nula, de modo que Inicio siga ofreciendo la
+bienvenida. Una vez fijada, `/welcome` SHALL redirigir a Inicio y el alta ya no SHALL
 desviar hacia el onboarding. Los usuarios que ya existían cuando se introduce esta
 capacidad SHALL considerarse onboardeados (no ven `/welcome`).
 
@@ -27,8 +29,13 @@ capacidad SHALL considerarse onboardeados (no ven `/welcome`).
 
 #### Scenario: Redirección tras registrarse
 
-- **WHEN** un usuario se registra (formulario local o Google) y su `onboarded_at` es nula
+- **WHEN** un usuario se registra (formulario local o Google) sin intención de Lámina y su `onboarded_at` es nula
 - **THEN** aterriza en `/welcome`, no en Inicio
+
+#### Scenario: Registro desde una Lámina
+
+- **WHEN** un usuario se registra con una intención de Lámina
+- **THEN** aterriza en `/me/laminas?desde=<id>`, su `onboarded_at` sigue nula e Inicio le ofrece la bienvenida
 
 #### Scenario: Usuario preexistente
 

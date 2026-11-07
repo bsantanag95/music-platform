@@ -369,9 +369,9 @@ solo un "cuerpo" distinto dentro del mismo marco.
 
 1. Ana publica su lámina de Metallica en una historia con el enlace.
 2. Leo (sin cuenta) abre el enlace: ve la lámina interactiva completa, sin muro de registro.
-3. Llamado principal: **"Arma la tuya"** → registro → el flujo de bienvenida arranca **con ese
-   artista/formato preseleccionado** (`/welcome` recibe la intención en `next=`), en vez del onboarding
-   genérico.
+3. Llamado principal: **"Arma la tuya"** → registro → va **directo a armarla, con el formato y el tipo
+   preseleccionados** y el título de la otra lámina como sugerencia para tocar. La bienvenida queda pendiente e
+   Inicio la sigue ofreciendo. La intención es el id de la lámina (`lamina=<uuid>`), nunca una URL (ADR 0052).
 4. Leo valora la discografía (el editor de la lámina es también una forma rápida de valorar en lote,
    §8 D12) y publica la suya.
 5. Si Leo ya tenía cuenta: **"Compárala con la tuya"** → lámina "Tú vs. Ana" (§4.4.2), que se comparte de
@@ -493,8 +493,8 @@ Cada cambio parte de este documento y abre con el repaso en detalle de las decis
 3. **`add-top-n-lamina`**, dividido en tres fases (2026-11-06). Primera versión con álbumes y canciones; los artistas quedan para después,
    porque cada foto exige su crédito. Notas apagadas por defecto.
    - **`add-top-n-lamina-phase1`** ✅ implementado — modelo, editor a mano, página pública, formatos Publicación y Cuadrado, feed (D6, D7, D10, D14).
-   - **`add-top-n-lamina-phase2`** — armar desde valoraciones, favoritos y listas, con filtros y títulos sugeridos.
-   - **`add-top-n-lamina-phase3`** — "Arma la tuya" con registro dirigido (§6).
+   - **`add-top-n-lamina-phase2`** ✅ implementado — armar desde valoraciones, favoritos y listas, con filtros y títulos sugeridos (D18).
+   - **`add-top-n-lamina-phase3`** ✅ implementado — "Arma la tuya" con registro dirigido (§6, ADR 0052).
 4. **`add-discography-lamina`** — gráfica de discografía (por disco / por canción), lámina de álbum,
    página pública del progreso, valoración en lote (D9, D12), "Compárala con la tuya".
 5. **`add-tier-list-lamina`** — tier list con prellenado desde valoraciones, editor accesible (D8).

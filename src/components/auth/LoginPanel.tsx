@@ -12,21 +12,24 @@ export function LoginPanel({
   googleLabel,
   separator,
   passwordAside,
+  laminaId = null,
 }: {
   locale: string;
   googleLabel: string;
   separator: string;
   passwordAside?: ReactNode;
+  laminaId?: string | null;
 }) {
   const [remember, setRemember] = useState(true);
   return (
     <>
-      <SocialSignIn locale={locale} label={googleLabel} separator={separator} remember={remember} />
+      <SocialSignIn locale={locale} label={googleLabel} separator={separator} remember={remember} laminaId={laminaId} />
       <AuthForm
         mode="login"
         passwordAside={passwordAside}
         remember={remember}
         onRememberChange={setRemember}
+        laminaId={laminaId}
       />
     </>
   );
