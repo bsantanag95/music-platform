@@ -158,17 +158,25 @@
     }
   },
   "tier": {
-    "discCount": "{count, plural, one {# album} other {# albums}}",
     "create": {
       "heading": "New tier list",
-      "description": "Pick an artist: their albums land in a tier according to your rating, and the ones you haven’t rated go to the tray. Then move them as you like.",
-      "artist": "Artist",
-      "changeArtist": "Change",
+      "description": "Your albums or songs sorted into tiers by your rating; what you haven’t rated goes to the tray. Then move them as you like.",
       "suggestedTitle": "{artist} tier list",
       "privateNote": "Only you can see it at first. You decide later whether to publish it. Moving albums never changes your ratings.",
       "submit": "Build tier list",
       "pending": "Building…",
-      "failed": "Couldn’t build it. Please try again."
+      "failed": "Couldn’t build it. Please try again.",
+      "type": "What you rank",
+      "types": {
+        "release-group": "Albums",
+        "recording": "Songs"
+      },
+      "source": "Where they come from",
+      "change": "Change",
+      "search": {
+        "discography": "Artist",
+        "album": "Album"
+      }
     },
     "fields": {
       "title": "Title"
@@ -177,7 +185,7 @@
     "showScoresHint": "Anyone who can see the tier list will see your rating for each album, in the image too.",
     "labelField": "Tier {n} label",
     "labelInvalid": "Each tier label must be 1 to {max} characters.",
-    "tierItems": "{group}: {count, plural, =0 {empty} one {# album} other {# albums}}",
+    "tierItems": "{group}: {count, plural, =0 {empty} other {{kind, select, recording {{count, plural, one {# song} other {# songs}}} other {{count, plural, one {# album} other {# albums}}}}}}",
     "itemLabel": "{title}, in {group}. Move to…",
     "menuLabel": "Move {title}",
     "moveTo": "Move to",
@@ -191,6 +199,35 @@
     "unrated": "Not rated",
     "moved": "{title}: moved to {group}",
     "shifted": "{title}: position {position} in {group}",
-    "removed": "{title}: removed"
+    "removed": "{title}: removed",
+    "sources": {
+      "discography": "An artist’s discography",
+      "album": "Songs from an album",
+      "ratings": "My ratings",
+      "list": "A list"
+    },
+    "titles": {
+      "discography": "{artist} tier list",
+      "album": "The songs of {album}",
+      "list": "{list} tier list",
+      "artist": "{kind, select, recording {My {artist} songs} other {My {artist} albums}}",
+      "listenYear": "What I listened to in {year}",
+      "genre": "{kind, select, recording {My {genre} songs} other {My {genre} albums}}",
+      "year": "{kind, select, recording {My songs} other {My albums}} from {year}",
+      "decade": "{kind, select, recording {My songs} other {My albums}} from the {decade}",
+      "ratings": "{kind, select, recording {My songs} other {My albums}}",
+      "genreYear": "{kind, select, recording {My {genre} songs} other {My {genre} albums}} from {year}",
+      "genreDecade": "{kind, select, recording {My {genre} songs} other {My {genre} albums}} from the {decade}"
+    },
+    "itemCount": {
+      "release-group": "{count, plural, one {# album} other {# albums}}",
+      "recording": "{count, plural, one {# song} other {# songs}}"
+    },
+    "addSearch": {
+      "release-group": "Add an album",
+      "recording": "Add a song"
+    },
+    "added": "{title}: added to {group}",
+    "full": "It already has {max}. Remove one to add another."
   }
 }

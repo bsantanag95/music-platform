@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
   fetch: vi.fn(),
   del: vi.fn(),
   push: vi.fn(),
+  add: vi.fn(),
+  search: vi.fn(),
 }));
 
 vi.mock("@/i18n/navigation", () => ({
@@ -23,13 +25,16 @@ vi.mock("@/lib/api/laminas", () => ({
   removeTierListItem: mocks.remove,
   fetchTierList: mocks.fetch,
   deleteLamina: mocks.del,
+  addTierListItem: mocks.add,
 }));
+vi.mock("@/components/quick-actions/use-target-search", () => ({ useTargetSearch: mocks.search }));
 vi.mock("@/components/share/OwnShareSheet", () => ({ OwnShareButton: () => null }));
 vi.mock("@/components/catalog/CoverThumb", () => ({ CoverThumb: () => <span /> }));
 
 import { TierListEditor } from "./TierListEditor";
 
 const ID = "20000000-0000-4000-8000-000000000001";
+const NEW = "10000000-0000-4000-8000-000000000009";
 const item = (n: number, score: { stars: string; detailedScore: number | null } | null = null) => ({
   id: `00000000-0000-4000-8000-00000000000${n}`,
   position: n,
@@ -56,6 +61,10 @@ const disc = (n: number) => screen.getByRole("button", { name: new RegExp(`^Disc
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.search.mockImplementation((_type: string, query: string) => ({
+    candidates: query ? [{ type: "release-group", id: item(1).target.id, title: "Disco 1" }, { type: "release-group", id: NEW, title: "Disco nuevo", subtitle: "Banda", year: 1999 }] : [],
+    searchable: query.length >= 2,
+  }));
   mocks.arrange.mockImplementation(async (_id: string, arrangement: { tiers: string[][]; tray: string[] }) => {
     const all = new Map([...tierList().tiers.flat(), ...tierList().tray].map((i) => [i.id, i]));
     const pick = (ids: string[]) => ids.map((id) => all.get(id)!);
@@ -174,5 +183,33 @@ describe("TierListEditor", () => {
     await userEvent.click(disc(4));
     await userEvent.click(within(screen.getByRole("menu")).getByRole("menuitem", { name: "Quitar de la tier list" }));
     expect(mocks.remove).toHaveBeenCalledWith(ID, item(4).id);
+  });
+
+  it("agrega a mano: el servidor lo ubica y se anuncia dónde quedó", async () => {
+    const added = { ...item(9), target: { ...item(9).target, id: NEW, title: "Disco nuevo" } };
+    mocks.add.mockResolvedValue(tierList({ tiers: [[item(1)], [item(2), item(3)], [added], [], [], []] }));
+    render();
+    await userEvent.type(screen.getByRole("searchbox", { name: "Agregar un disco" }), "nuevo");
+    expect(mocks.search).toHaveBeenLastCalledWith("album", "nuevo");
+    // Lo que ya está no se ofrece.
+    expect(screen.queryByRole("button", { name: /^Disco 1$/ })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /Disco nuevo/ }));
+    await waitFor(() => expect(mocks.add).toHaveBeenCalledWith(ID, NEW));
+    expect(await screen.findByText("Disco nuevo: agregado en B")).toBeInTheDocument();
+    expect(screen.getByRole("searchbox", { name: "Agregar un disco" })).toHaveValue("");
+  });
+
+  it("una tier list de canciones busca canciones", () => {
+    render(tierList({ entityType: "recording" }));
+    expect(screen.getByRole("list", { name: "A: 2 canciones" })).toBeInTheDocument();
+    expect(screen.getByRole("searchbox", { name: "Agregar una canción" })).toBeInTheDocument();
+    expect(mocks.search).toHaveBeenLastCalledWith("song", "");
+  });
+
+  it("llena, no ofrece agregar", () => {
+    const many = Array.from({ length: 50 }, (_, n) => ({ ...item(1), id: `00000000-0000-4000-8000-${String(n).padStart(12, "0")}` }));
+    render(tierList({ tiers: [many, [], [], [], [], []], tray: [] }));
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    expect(screen.getByText("Ya tiene 50. Quita algo para agregar otro.")).toBeInTheDocument();
   });
 });

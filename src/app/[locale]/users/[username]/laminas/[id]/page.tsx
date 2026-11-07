@@ -57,7 +57,7 @@ async function tierListPage(username: string, id: string, viewerId: string | nul
         <p className="font-data text-xs uppercase tracking-wider text-paper-muted">{t("formats.tier")}</p>
         <h1 className="font-display text-3xl text-paper">{tierList.title}</h1>
       </header>
-      <TierListView tierList={tierList} tierItemsLabel={(label, count) => t("tier.tierItems", { group: label, count })} />
+      <TierListView tierList={tierList} tierItemsLabel={(label, count) => t("tier.tierItems", { group: label, count, kind: tierList.entityType })} />
     </main>
   );
 }

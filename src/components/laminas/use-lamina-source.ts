@@ -64,11 +64,14 @@ export function useLaminaSource({
   slots,
   exclude,
   initialSource = "manual",
+  limit,
 }: {
   entityType: LaminaDetail["entityType"];
   slots: number;
   exclude?: ReadonlySet<string>;
   initialSource?: LaminaSourceChoice;
+  /** Cuántos candidatos pedir: la tier list ve hasta 50 (add-tier-list-lamina-phase2); sin él, los 30 de siempre. */
+  limit?: number;
 }): LaminaSourceState {
   const locale = useLocale();
   const timeZone = useTimeZone() ?? "UTC";
@@ -90,7 +93,7 @@ export function useLaminaSource({
     [source, period, listenYear, genre, artist, list],
   );
   const ready = source !== "manual" && (source !== "list" || Boolean(filters.list));
-  const candidatesKey = `${scope}:${JSON.stringify(request)}`;
+  const candidatesKey = `${scope}:${limit ?? ""}:${JSON.stringify(request)}`;
 
   useEffect(() => {
     if (source === "manual") return;
@@ -107,14 +110,14 @@ export function useLaminaSource({
   useEffect(() => {
     if (source === "manual" || !ready || !request) return;
     const controller = new AbortController();
-    fetchLaminaCandidates({ source, entityType, timeZone }, request, controller.signal).then(
+    fetchLaminaCandidates({ source, entityType, timeZone, limit }, request, controller.signal).then(
       (value) => setLoadedCandidates({ key: candidatesKey, value, failed: false }),
       () => {
         if (!controller.signal.aborted) setLoadedCandidates({ key: candidatesKey, value: null, failed: true });
       },
     );
     return () => controller.abort();
-  }, [source, entityType, timeZone, ready, request, candidatesKey]);
+  }, [source, entityType, timeZone, limit, ready, request, candidatesKey]);
 
   const current = loadedCandidates?.key === candidatesKey ? loadedCandidates : null;
   const candidates = useMemo(

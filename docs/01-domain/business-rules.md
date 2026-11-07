@@ -359,6 +359,9 @@ el mismo umbral que el álbum, aplicado en el read-model (`artist-community.ts`)
 - Una tier list reparte discos en seis niveles fijos, S a E, que son los tramos de la escala de la casa: el color de cada nivel no cambia
   aunque su etiqueta (de 1 a 12 caracteres) sí. Lo que no se ubica queda en la bandeja "Sin escuchar / sin valorar", que solo ve su dueño: no
   sale en la página ni en la imagen. Hasta 50 discos, contando la bandeja.
+- Una tier list es de discos o de canciones, nunca de los dos. Todo lo que entra, venga de donde venga o agregado a mano, cae en el nivel de la
+  nota vigente de su dueño, y sin nota en la bandeja; el servidor lee esa nota. Puede nacer de la discografía de un artista (discos), de las
+  canciones de un disco, de tus valoraciones con filtros o de una lista propia.
 - Una tier list puede nacer de la discografía de un artista: cada disco de la sección principal cae en el nivel de la nota del dueño y los sin
   valorar, en la bandeja. Es una foto: nace privada, nunca escribe valoraciones al mover un disco y no se mueve si después cambia una nota (D8).
   Sus notas nacen apagadas, como las del Top N. Entra al feed con al menos un disco en un nivel.

@@ -34,7 +34,7 @@ async function LaminasPage({ searchParams }: { searchParams?: Promise<{ desde?: 
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2">
           {laminas.map((lamina) => (
-            <li key={lamina.id}>
+            <li key={lamina.id} className="min-w-0">
               <Link
                 href={`/me/laminas/${lamina.id}`}
                 className="flex items-center gap-3 rounded border border-ink-border bg-ink-surface p-3 transition-colors hover:border-amber"
@@ -44,7 +44,7 @@ async function LaminasPage({ searchParams }: { searchParams?: Promise<{ desde?: 
                   <span className="truncate font-display text-sm text-paper">{lamina.title}</span>
                   <span className="font-data text-xs text-paper-muted">
                     {lamina.format ? t(`formats.${lamina.format}`) : t("formats.tier")} · {t(`audience.${lamina.audience}`)} ·{" "}
-                    {lamina.kind === "tier" ? t("tier.discCount", { count: lamina.itemCount }) : t("itemCount", { count: lamina.itemCount })}
+                    {lamina.kind === "tier" ? t(`tier.itemCount.${lamina.entityType}`, { count: lamina.itemCount }) : t("itemCount", { count: lamina.itemCount })}
                   </span>
                 </span>
               </Link>
@@ -60,7 +60,7 @@ async function LaminasPage({ searchParams }: { searchParams?: Promise<{ desde?: 
           </header>
           <ul className="grid gap-3 sm:grid-cols-2">
             {discographies.map((entry) => (
-              <li key={entry.artistId}>
+              <li key={entry.artistId} className="min-w-0">
                 <Link
                   href={`/users/${encodeURIComponent(user.username)}/artist/${entry.artistId}`}
                   className="flex flex-col gap-0.5 rounded border border-ink-border bg-ink-surface p-3 transition-colors hover:border-amber"

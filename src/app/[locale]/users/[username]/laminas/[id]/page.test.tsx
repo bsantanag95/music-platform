@@ -95,6 +95,12 @@ describe("página pública de una tier list", () => {
     expect(within(screen.getByRole("list", { name: "Dios: 1 disco" })).getByText("96")).toBeInTheDocument();
   });
 
+  it("una de canciones enlaza a cada canción", async () => {
+    mocks.tier.mockResolvedValue(tierList({ entityType: "recording" }));
+    await render();
+    expect(screen.getByTitle("Disco 1")).toHaveAttribute("href", expect.stringMatching(/^\/song\//));
+  });
+
   it("el dueño llega a su editor", async () => {
     mocks.session.mockResolvedValue({ user: { id: "u1", username: "ana" } });
     await render();

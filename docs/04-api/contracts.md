@@ -2250,7 +2250,7 @@ ya no existe: no distingue). Sin token, o con uno alterado o firmado con otro se
 `400 INVALID_UNSUBSCRIBE_TOKEN` y no cambia nada. Un `GET` sobre esta ruta no existe: el enlace del
 cuerpo del correo abre la página de confirmación, que es quien hace el `POST`.
 
-## Láminas (cambios `add-top-n-lamina-phase1`, `add-top-n-lamina-phase2` y `add-tier-list-lamina-phase1`)
+## Láminas (cambios `add-top-n-lamina-phase1`, `add-top-n-lamina-phase2`, `add-tier-list-lamina-phase1` y `add-tier-list-lamina-phase2`)
 
 Todas con sesión. `LAMINA_NOT_FOUND` (404) si no existe o no es propia. Hacer pública exige que no haya suspensión social
 (`SOCIAL_SUSPENSION_ACTIVE`).
@@ -2267,7 +2267,8 @@ Todas con sesión. `LAMINA_NOT_FOUND` (404) si no existe o no es propia. Hacer p
 - `GET /api/me/laminas/sources?source=&entityType=&tz=` → `{ years, decades, listenYears, genres, artists, lists }`. `source`: `ratings`, `favorites`,
   `list`. Solo lo que la fuente tiene: hasta 20 géneros (con sus ancestros) y 200 artistas, de mayor a menor presencia; `source=list` trae solo `lists`,
   las propias del tipo y con ítems.
-- `GET /api/me/laminas/candidates?source=&entityType=&tz=&year=&decade=&listenYear=&genre=&artist=&list=` → `{ candidates }`, hasta 30, cada uno con
+- `GET /api/me/laminas/candidates?source=&entityType=&tz=&year=&decade=&listenYear=&genre=&artist=&list=&limit=` → `{ candidates }`, hasta `limit` (de 1 a
+  50, 30 por defecto; la tier list pide 50), cada uno con
   `{ target, score }`. Orden: valoraciones, de mejor a peor; favoritos, por la nota propia y después del más reciente; lista, por su orden.
   `VALIDATION_ERROR` con `year` y `decade` juntos, sin `list` en esa fuente o con filtros en ella. `list` ajena: `LIST_NOT_FOUND`; de otro tipo:
   `VALIDATION_ERROR`. Un `genre` desconocido devuelve una lista vacía.
@@ -2276,15 +2277,21 @@ Todas con sesión. `LAMINA_NOT_FOUND` (404) si no existe o no es propia. Hacer p
 `{ id, kind: 'tier', title, entityType, audience, updatedAt, showScores, labels, tiers, tray }`: seis etiquetas, seis niveles de S a E (cada uno, ítems en
 orden con `{ id, position, target, score }`) y la bandeja, que solo llega a su dueño.
 
-- `POST /api/me/laminas` con `{ kind: 'tier', title, entityType: 'release-group', source: { type: 'discography', artistId } }` → `201 { tierList }`. Toma los
-  discos de la sección principal del artista y pone cada uno en el nivel del tramo de la nota del dueño; los sin valorar, en la bandeja. Hasta 50, primero
-  los valorados. Nace `private`. `VALIDATION_ERROR` con canciones, un artista que no existe o sin discos principales.
+- `POST /api/me/laminas` con `{ kind: 'tier', title, entityType, source }` → `201 { tierList }`. `entityType`: `release-group` o `recording`. `source`:
+  - `{ type: 'discography', artistId }` (discos): la sección principal del artista, hasta 50, primero los valorados.
+  - `{ type: 'album', releaseGroupId }` (canciones): las pistas de la edición representativa en orden, sin repetir una grabación, hasta 50.
+  - `{ type: 'picked', targetIds }` (los dos tipos): de 1 a 50 objetivos elegidos en la vista previa de valoraciones o de una lista.
+
+  Cada ítem cae en el nivel del tramo de la nota del dueño, que lee el servidor; sin nota, en la bandeja. Nace `private`. `VALIDATION_ERROR` con una fuente que
+  no corresponde al tipo, un objetivo que no existe o de otro tipo, un artista sin discos principales o un disco sin pistas.
 - `GET /api/me/laminas` lista las dos clases, con `kind` (`top` o `tier`) y `format` nulo en una tier list.
 - `GET|PATCH /api/me/laminas/[id]` de una tier list: `PATCH` con `{ title?, audience?, showScores?, tierLabels? }`; `tierLabels` son seis etiquetas de 1 a
   12 caracteres (`VALIDATION_ERROR` si no). `format` no aplica. `DELETE` es el mismo para las dos clases.
 - `PUT /api/me/laminas/[id]/tiers` con `{ tiers: string[][6], tray: string[] }` (ids de ítem) → `{ tierList }`. Debe traer exactamente los ítems de la tier
   list; si no, `VALIDATION_ERROR` sin cambiar nada. Nunca toca valoraciones. En un Top N, `LAMINA_NOT_FOUND`.
-- `DELETE /api/me/laminas/[id]/items/[itemId]` de una tier list → `{ tierList }`. `POST` y `PUT` de `/items` son solo del Top N (`LAMINA_NOT_FOUND`).
+- `POST /api/me/laminas/[id]/items` con `{ targetId }` en una tier list → `{ tierList }`: lo agrega al final del nivel de la nota del dueño, o de la bandeja.
+  Un repetido no cambia nada; pasar de 50, un objetivo inexistente o de otro tipo, o `{ targetIds }` responden `VALIDATION_ERROR`.
+- `DELETE /api/me/laminas/[id]/items/[itemId]` de una tier list → `{ tierList }`. `PUT /items` es solo del Top N (`LAMINA_NOT_FOUND`).
 
 ## Discografía compartida (cambio `add-discography-lamina-phase1`, ADR 0053)
 

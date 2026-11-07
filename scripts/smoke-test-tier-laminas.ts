@@ -11,6 +11,10 @@ export {};
 //   DELETE FROM artist WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000e0%';
 // (el `ON DELETE CASCADE` limpia lo demás). Necesita las migraciones 0079 a 0086. No sale a MusicBrainz: los artistas nacen con la
 // discografía sincronizada.
+// Desde add-tier-list-lamina-phase2 también verifica las tier lists de canciones (las de un disco: orden, grabación repetida, disco sin pistas),
+// lo elegido en la vista previa (validación, tipo, ubicación por la nota que lee el servidor), el alta a mano (nivel, bandeja, repetido, tope con
+// pedidos en paralelo) y la vista previa de hasta 50 candidatos. Crea además un disco con su edición y canciones con el mismo prefijo de MBID;
+// limpiar también con `DELETE FROM recording WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000e0%';` (después de borrar los discos).
 // Correr contra una BD de scratch:
 //   ALLOW_SMOKE_ON_REAL_DB=1 npx tsx --env-file=.env scripts/smoke-test-tier-laminas.ts
 
@@ -19,7 +23,7 @@ import { createRequire } from "node:module";
 import { and, eq, inArray, like, sql } from "drizzle-orm";
 import { assertSmokeAllowed } from "./assert-smoke-allowed";
 import { db } from "../src/db";
-import { appUser, artist, credit, rating, releaseGroup, shareEvent, userFollow, userList, userListItem } from "../src/db/schema";
+import { appUser, artist, credit, rating, recording, release, releaseGroup, shareEvent, track, userFollow, userList, userListItem } from "../src/db/schema";
 
 assertSmokeAllowed();
 
@@ -58,8 +62,9 @@ async function loadServices() {
     }
     return originalLoad.call(this, request, parent, isMain);
   };
-  const [tiers, laminas, lists, social, feed, target, own, lifecycle, dataExport] = await Promise.all([
+  const [tiers, sources, laminas, lists, social, feed, target, own, lifecycle, dataExport] = await Promise.all([
     import("../src/services/laminas/tiers"),
+    import("../src/services/laminas/sources"),
     import("../src/services/laminas/laminas"),
     import("../src/services/lists/lists"),
     import("../src/services/social"),
@@ -69,7 +74,7 @@ async function loadServices() {
     import("../src/services/auth/account-lifecycle"),
     import("../src/services/profiles/data-export"),
   ]);
-  return { tiers, laminas, lists, social, feed, target, own, lifecycle, dataExport };
+  return { tiers, sources, laminas, lists, social, feed, target, own, lifecycle, dataExport };
 }
 
 type Services = Awaited<ReturnType<typeof loadServices>>;
@@ -158,7 +163,7 @@ async function checkMigration(ownerId: string, listItemOf: (listId: string) => P
   await db.delete(userList).where(eq(userList.id, ok!.id));
 }
 
-async function checkOverCap(s: Services, ownerId: string) {
+async function checkOverCap(s: Services, ownerId: string): Promise<{ tierListId: string; artistId: string; discIds: string[] }> {
   console.log("Tope de 50");
   const [many] = await db.insert(artist).values({ mbid: mbid(0x02), type: "group", name: `Smoke Tier Muchos ${suffix}`, discographySyncedAt: new Date() }).returning();
   const discs = await db
@@ -178,6 +183,113 @@ async function checkOverCap(s: Services, ownerId: string) {
   await s.tiers.getOwnedTierList(tierList.id, ownerId);
   const elapsed = performance.now() - started;
   check(elapsed < READ_BUDGET_MS, `la lectura de 50 discos tarda ${elapsed.toFixed(1)} ms (< ${READ_BUDGET_MS})`);
+  return { tierListId: tierList.id, artistId: many!.id, discIds: discs.map((disc) => disc.id) };
+}
+
+/** Fase 2: canciones de un disco, lo elegido en la vista previa, alta a mano y vista previa de hasta 50. */
+async function checkPhase2(s: Services, ownerId: string, bandId: string, many: { tierListId: string; artistId: string; discIds: string[] }) {
+  const ratingsOf = () =>
+    db
+      .select({ id: rating.id, stars: rating.stars, detailedScore: rating.detailedScore, updatedAt: rating.updatedAt })
+      .from(rating)
+      .where(eq(rating.userId, ownerId))
+      .orderBy(rating.id)
+      .then((rows) => JSON.stringify(rows));
+
+  console.log("Canciones de un disco");
+  const [album, empty] = await db
+    .insert(releaseGroup)
+    .values([
+      { mbid: mbid(0x80), title: "Smoke Tier Con Canciones", category: "studio", primaryType: "Album", secondaryTypes: [], firstReleaseYear: 1990 },
+      { mbid: mbid(0x82), title: "Smoke Tier Sin Canciones", category: "studio", primaryType: "Album", secondaryTypes: [], firstReleaseYear: 1991 },
+    ])
+    .returning();
+  const songs = await db
+    .insert(recording)
+    .values(Array.from({ length: 8 }, (_, n) => ({ mbid: mbid(0x90 + n), title: `Smoke Tier Canción ${n + 1}` })))
+    .returning();
+  await db.insert(credit).values(songs.map((song) => ({ artistId: bandId, recordingId: song.id, role: "primary", position: 0 })));
+  const [edition] = await db.insert(release).values({ mbid: mbid(0x81), releaseGroupId: album!.id, isRepresentative: true }).returning();
+  await db.insert(release).values({ mbid: mbid(0x83), releaseGroupId: empty!.id, isRepresentative: true });
+  // Ocho pistas en el disco 1 y la tercera repetida en el disco 2.
+  await db.insert(track).values([
+    ...songs.map((song, n) => ({ releaseId: edition!.id, recordingId: song.id, discNumber: 1, position: n + 1 })),
+    { releaseId: edition!.id, recordingId: songs[2]!.id, discNumber: 2, position: 1 },
+  ]);
+  await db.insert(rating).values([
+    { userId: ownerId, recordingId: songs[0]!.id, stars: "5", detailedScore: 95 },
+    { userId: ownerId, recordingId: songs[4]!.id, stars: "3", detailedScore: null },
+  ]);
+  const before = await ratingsOf();
+  const fromAlbum = await s.tiers.createTierList(ownerId, { title: "Canciones", entityType: "recording", source: { type: "album", releaseGroupId: album!.id } });
+  check(fromAlbum.entityType === "recording" && fromAlbum.audience === "private", "una tier list de canciones nace privada");
+  check(JSON.stringify(ids(fromAlbum.tiers[0]!)) === JSON.stringify([songs[0]!.id]) && JSON.stringify(ids(fromAlbum.tiers[4]!)) === JSON.stringify([songs[4]!.id]), "las valoradas caen en su nivel");
+  check(JSON.stringify(ids(fromAlbum.tray)) === JSON.stringify([1, 2, 3, 5, 6, 7].map((n) => songs[n]!.id)), "las demás en la bandeja, en el orden del disco");
+  check([...fromAlbum.tiers.flat(), ...fromAlbum.tray].length === 8, "la grabación repetida queda una vez");
+  check(
+    (await codeOf(() => s.tiers.createTierList(ownerId, { title: "x", entityType: "recording", source: { type: "album", releaseGroupId: empty!.id } }))) === "VALIDATION_ERROR",
+    "un disco sin pistas se rechaza",
+  );
+  check(
+    (await codeOf(() => s.tiers.createTierList(ownerId, { title: "x", entityType: "release-group", source: { type: "album", releaseGroupId: album!.id } }))) === "VALIDATION_ERROR",
+    "las canciones de un disco no arman una de discos",
+  );
+  check(
+    (await codeOf(() => s.tiers.createTierList(ownerId, { title: "x", entityType: "recording", source: { type: "discography", artistId: bandId } }))) === "VALIDATION_ERROR",
+    "una discografía no arma una de canciones",
+  );
+  const target = await s.target.loadTierTarget(fromAlbum.id, "es", { owner: ownerId });
+  check(target?.card.meta[0] === "2 canciones", "la imagen cuenta canciones");
+
+  console.log("Lo elegido en la vista previa");
+  const rated = many.discIds.slice(-3);
+  const unrated = many.discIds[0]!;
+  const picked = await s.tiers.createTierList(ownerId, {
+    title: "Elegidos",
+    entityType: "release-group",
+    source: { type: "picked", targetIds: [unrated, ...rated, rated[0]!] },
+  });
+  check(JSON.stringify(ids(picked.tiers[2]!)) === JSON.stringify(rated) && JSON.stringify(ids(picked.tray)) === JSON.stringify([unrated]), "cada uno en el nivel de su nota, sin repetir, en el orden recibido");
+  check(
+    (await codeOf(() => s.tiers.createTierList(ownerId, { title: "x", entityType: "release-group", source: { type: "picked", targetIds: [songs[0]!.id] } }))) === "VALIDATION_ERROR",
+    "un objetivo de otro tipo se rechaza",
+  );
+  check(
+    (await codeOf(() => s.tiers.createTierList(ownerId, { title: "x", entityType: "recording", source: { type: "picked", targetIds: [randomUUID()] } }))) === "VALIDATION_ERROR",
+    "uno que no existe también",
+  );
+
+  console.log("Vista previa de hasta 50");
+  // 40 discos valorados del artista "Muchos": el Top N ve 30 y la tier list, los 40.
+  await db.insert(rating).values(many.discIds.slice(0, 37).map((id) => ({ userId: ownerId, releaseGroupId: id, stars: "3.5", detailedScore: null })));
+  const query = { source: "ratings" as const, entityType: "release-group" as const, artist: many.artistId };
+  check((await s.sources.listLaminaCandidates(ownerId, query)).length === 30, "sin límite, 30 candidatos");
+  check((await s.sources.listLaminaCandidates(ownerId, { ...query, limit: 50 })).length === 40, "con límite 50, los 40");
+  check((await codeOf(() => s.sources.listLaminaCandidates(ownerId, { ...query, limit: 51 }))) === "VALIDATION_ERROR", "más de 50 se rechaza");
+  const songCandidates = await s.sources.listLaminaCandidates(ownerId, { source: "ratings", entityType: "recording", artist: bandId, limit: 50 });
+  check(songCandidates.length === 2 && songCandidates[0]!.target.id === songs[0]!.id, "las canciones valoradas de un artista, de mejor a peor");
+
+  console.log("Agregar a mano");
+  const [extra] = await db.insert(recording).values({ mbid: mbid(0x9a), title: "Smoke Tier Canción Extra" }).returning();
+  await db.insert(rating).values({ userId: ownerId, recordingId: extra!.id, stars: "4", detailedScore: null });
+  const withExtra = await s.tiers.addTierListItem(fromAlbum.id, ownerId, extra!.id);
+  check(JSON.stringify(ids(withExtra.tiers[2]!)) === JSON.stringify([extra!.id]), "una valorada con 4 estrellas cae en B");
+  const withUnrated = await s.tiers.addTierListItem(picked.id, ownerId, many.discIds[45]!);
+  check(ids(withUnrated.tray).at(-1) === many.discIds[45], "una sin nota, al final de la bandeja");
+  check([...(await s.tiers.addTierListItem(fromAlbum.id, ownerId, extra!.id)).tiers.flat()].length === 3, "un repetido no cambia nada");
+  check((await codeOf(() => s.tiers.addTierListItem(fromAlbum.id, ownerId, album!.id))) === "VALIDATION_ERROR", "un disco no entra en una de canciones");
+  check((await codeOf(() => s.tiers.addTierListItem(fromAlbum.id, randomUUID(), extra!.id))) === "LAMINA_NOT_FOUND", "lo ajeno responde 404");
+  const full = await s.tiers.getOwnedTierList(many.tierListId, ownerId);
+  const outside = many.discIds.filter((id) => ![...full.tiers.flat(), ...full.tray].some((item) => item.target.id === id));
+  check((await codeOf(() => s.tiers.addTierListItem(many.tierListId, ownerId, outside[0]!))) === "VALIDATION_ERROR", "una llena no admite otro");
+  await s.tiers.removeTierListItem(many.tierListId, ownerId, full.tray[0]!.id);
+  outside.push(full.tray[0]!.target.id);
+  const raced = await Promise.allSettled(outside.slice(0, 3).map((id) => s.tiers.addTierListItem(many.tierListId, ownerId, id)));
+  const after = await s.tiers.getOwnedTierList(many.tierListId, ownerId);
+  check(raced.filter((r) => r.status === "fulfilled").length === 1 && [...after.tiers.flat(), ...after.tray].length === 50, "con pedidos en paralelo el tope de 50 se respeta");
+  const previous = new Set((JSON.parse(before) as Array<{ id: string }>).map((row) => row.id));
+  const unchanged = (JSON.parse(await ratingsOf()) as Array<{ id: string }>).filter((row) => previous.has(row.id));
+  check(JSON.stringify(unchanged) === before, "armar y agregar no tocaron ninguna valoración (ni su updated_at)");
 }
 
 async function main() {
@@ -308,7 +420,8 @@ async function main() {
     await s.tiers.updateTierList(trayOnly.id, owner.id, { audience: "public" });
     check(!(await feedHas(trayOnly.id)), "una con todo en la bandeja no");
 
-    await checkOverCap(s, owner.id);
+    const many = await checkOverCap(s, owner.id);
+    await checkPhase2(s, owner.id, band.id, many);
 
     console.log("Exportación, quitar, eventos y borrado");
     const exported = await s.dataExport.buildDataExport(owner.id);
@@ -329,6 +442,7 @@ async function main() {
   } finally {
     await db.delete(appUser).where(like(appUser.username, "smoke_tier_%"));
     await db.delete(releaseGroup).where(like(sql`${releaseGroup.mbid}::text`, `${PREFIX}%`));
+    await db.delete(recording).where(like(sql`${recording.mbid}::text`, `${PREFIX}%`));
     await db.delete(artist).where(like(sql`${artist.mbid}::text`, `${PREFIX}%`));
   }
 }

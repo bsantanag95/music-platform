@@ -53,7 +53,7 @@ export async function loadTierTarget(id: string, locale: ShareLocale, options: {
     }),
   );
   const placed = tiers.flat();
-  const count = t("share.image.listItems.release-group", { count: placed.length });
+  const count = t(`share.image.listItems.${tierList.entityType}`, { count: placed.length });
   const title = t("share.image.titles.list", { title: tierList.title, author: handle });
   const description = tiers
     .flatMap((items, index) => (items.length > 0 ? [`${tierList.labels[index]}: ${items.map((item) => item.title).join(", ")}`] : []))

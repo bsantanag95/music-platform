@@ -264,8 +264,10 @@ Un ranking corto, numerado, con carátulas grandes. Formato propio, no la grilla
   Prellenada desde la discografía, la tier list es una foto: no se mueve si después cambia una nota.
 - **Imagen:** Publicación, Enlace (los tres primeros niveles con discos) e Historia. Carátulas para los primeros 10 discos
   desde S (ADR 0051), el resto como fichas de texto; las fichas se achican con el nivel más lleno, hasta 50 discos.
-- **Fuentes de ítems:** discografía de un artista, una lista, un género/década, o a mano. Ítems:
-  álbumes primero; canciones y artistas después.
+- **Fuentes de ítems:** discografía de un artista, las canciones de un disco, tus valoraciones (con los
+  filtros del Top N: año o década, año de escucha, género, artista), una lista propia, o a mano. Ítems: discos o
+  canciones; artistas después. De un género o una década entran tus valorados, no el catálogo: la bandeja no se
+  llena de cosas ajenas.
 - **Editor:** arrastrar y soltar con alternativa de teclado y de toque (mover con "Mover a…" desde el
   menú del ítem) — requisito de accesibilidad, no un extra.
 
@@ -516,7 +518,9 @@ Cada cambio parte de este documento y abre con el repaso en detalle de las decis
    dependencias; la bandeja se guarda pero no se publica; el prellenado es una foto.
    - **`add-tier-list-lamina-phase1`** ✅ implementado — modelo (`kind = 'tier'`, `0086`), prellenado desde la discografía de un artista, editor
      accesible, página pública e imagen (Publicación, Enlace, Historia), con 10 carátulas y el resto en texto (D7, D8).
-   - **`add-tier-list-lamina-phase2`** — más fuentes (una lista, género o década), agregar discos a mano y tier lists de canciones.
+   - **`add-tier-list-lamina-phase2`** ✅ implementado — tier lists de canciones (las de un disco, tus valoraciones con filtros, una lista), discos desde
+     tus valoraciones con filtros o una lista, vista previa de hasta 50 y agregar a mano, todo ubicado por tu nota. De un género o una década entran tus
+     valorados, no el catálogo.
    - **`add-tier-list-lamina-phase3`** — "Arma la tuya" desde la tier list de otra persona y el llamado en la discografía.
 6. **Siguientes** (§4.4) — "Tu año en discos" (objetivo: antes de diciembre), "Tú vs. otra persona",
    décadas/géneros, mes en discos, pared de la colección.
