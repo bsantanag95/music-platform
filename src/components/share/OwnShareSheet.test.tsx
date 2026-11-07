@@ -51,13 +51,26 @@ describe("hoja de lo propio", () => {
     expect(changed).toHaveBeenCalled();
   });
 
+  it("una discografía avisa qué se abre y quita su propia marca", async () => {
+    mocks.get.mockResolvedValue(state());
+    const first = renderWithIntl(<OwnShareSheet open onClose={vi.fn()} kind="discography" refId="u.a" />);
+    expect(await screen.findByText(/también las que pongas después, y tu avance/)).toBeTruthy();
+    first.unmount();
+
+    mocks.get.mockResolvedValue(state({ state: "public", canUnshare: true }));
+    mocks.stop.mockResolvedValue(state());
+    renderWithIntl(<OwnShareSheet open onClose={vi.fn()} kind="discography" refId="u.a" />);
+    await userEvent.click(await screen.findByRole("button", { name: "Dejar de compartir" }));
+    expect(mocks.stop).toHaveBeenCalledWith("discography", "u.a", "es");
+  });
+
   it("dejar de compartir vuelve al aviso", async () => {
     mocks.get.mockResolvedValue(state({ state: "public", canUnshare: true }));
     mocks.stop.mockResolvedValue(state());
     renderWithIntl(<OwnShareSheet open onClose={vi.fn()} kind="rating" refId="r1" />);
     await userEvent.click(await screen.findByRole("button", { name: "Dejar de compartir" }));
     expect(await screen.findByRole("button", { name: "Hacer pública y compartir" })).toBeTruthy();
-    expect(mocks.stop).toHaveBeenCalledWith("r1", "es");
+    expect(mocks.stop).toHaveBeenCalledWith("rating", "r1", "es");
   });
 
   it("con el perfil privado solo ofrece descargar", async () => {

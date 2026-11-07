@@ -302,5 +302,9 @@
   "LAMINA_NOT_FOUND": {
     "title": "Card not found",
     "description": "We could not find this Card."
+  },
+  "DISCOGRAPHY_NOT_FOUND": {
+    "title": "Discography not found",
+    "description": "We could not find this discography."
   }
 }

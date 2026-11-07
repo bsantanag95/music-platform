@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { withClientMessages } from "@/i18n/client-messages";
 import { parseLaminaIntent } from "@/lib/laminas/intent";
 import { requirePageUser } from "@/services/auth/page-auth";
+import { listDiscographyEntries } from "@/services/laminas/discography";
 import { getLaminaInspiration, listMyLaminas } from "@/services/laminas/laminas";
 
 // Láminas propias (spec top-laminas): un ranking armado a mano para mostrar y compartir.
@@ -12,9 +13,10 @@ async function LaminasPage({ searchParams }: { searchParams?: Promise<{ desde?: 
   const t = await getTranslations("laminas");
   const user = await requirePageUser();
   const inspirationId = parseLaminaIntent((await searchParams)?.desde);
-  const [laminas, inspiration] = await Promise.all([
+  const [laminas, inspiration, discographies] = await Promise.all([
     listMyLaminas(user.id),
     inspirationId ? getLaminaInspiration(inspirationId, user.id) : null,
+    listDiscographyEntries(user.id),
   ]);
   const currentYear = Number(new Intl.DateTimeFormat("en", { year: "numeric", timeZone: await getTimeZone() }).format(new Date()));
 
@@ -47,6 +49,27 @@ async function LaminasPage({ searchParams }: { searchParams?: Promise<{ desde?: 
           ))}
         </ul>
       )}
+      {discographies.length > 0 ? (
+        <section className="flex flex-col gap-3">
+          <header className="flex flex-col gap-1">
+            <h2 className="font-display text-lg text-paper">{t("discography.sectionTitle")}</h2>
+            <p className="font-body text-sm text-paper-muted">{t("discography.sectionDescription")}</p>
+          </header>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {discographies.map((entry) => (
+              <li key={entry.artistId}>
+                <Link
+                  href={`/users/${encodeURIComponent(user.username)}/artist/${entry.artistId}`}
+                  className="flex flex-col gap-0.5 rounded border border-ink-border bg-ink-surface p-3 transition-colors hover:border-amber"
+                >
+                  <span className="truncate font-display text-sm text-paper">{entry.artistName}</span>
+                  <span className="font-data text-xs text-paper-muted">{t("discography.rated", { count: entry.discCount })}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </main>
   );
 }

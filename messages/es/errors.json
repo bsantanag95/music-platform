@@ -302,5 +302,9 @@
   "LAMINA_NOT_FOUND": {
     "title": "Lámina no encontrada",
     "description": "No encontramos esta Lámina."
+  },
+  "DISCOGRAPHY_NOT_FOUND": {
+    "title": "Discografía no encontrada",
+    "description": "No encontramos esta discografía."
   }
 }

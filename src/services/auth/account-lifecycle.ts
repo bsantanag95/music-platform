@@ -63,6 +63,7 @@ export function ownShareEvents(userId: string) {
     OR (target_kind IN ('list', 'camino', 'top') AND target_ref IN (SELECT id::text FROM user_list WHERE owner_id = ${userId}::uuid))
     OR (target_kind = 'rating' AND target_ref IN (SELECT id::text FROM rating WHERE user_id = ${userId}::uuid))
     OR (target_kind = 'listen' AND target_ref IN (SELECT id::text FROM listen_entry WHERE user_id = ${userId}::uuid))
+    OR (target_kind = 'discography' AND target_ref LIKE ${`${userId}.%`})
   `;
 }
 

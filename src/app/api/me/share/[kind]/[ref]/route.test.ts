@@ -10,7 +10,8 @@ vi.mock("@/services/share/own", () => ({
   isOwnShareKind: (value: string) => value === "rating" || value === "listen",
   ownShareState: mocks.state,
   makeOwnPublic: mocks.make,
-  stopSharingRating: mocks.stop,
+  STOPPABLE_KINDS: ["rating", "discography"],
+  stopSharing: mocks.stop,
 }));
 
 import { DELETE, GET, POST } from "./route";
@@ -61,7 +62,7 @@ describe("/api/me/share/[kind]/[ref]", () => {
   it("DELETE quita la marca, también a una cuenta suspendida", async () => {
     mocks.allowed.mockRejectedValue(new ApiError("SOCIAL_SUSPENSION_ACTIVE", 403, "x"));
     expect((await DELETE(request("DELETE"), context("rating"))).status).toBe(200);
-    expect(mocks.stop).toHaveBeenCalledWith("r1", "en", "u1");
+    expect(mocks.stop).toHaveBeenCalledWith("rating", "r1", "en", "u1");
   });
 
   it("DELETE no aplica a una escucha", async () => {

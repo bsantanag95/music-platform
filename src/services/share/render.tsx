@@ -5,11 +5,12 @@ import { BRAND_COLORS, BRAND_MONOGRAM } from "@/lib/share/brand-tokens";
 import type { ShareFormat, ShareLocale } from "@/lib/share/kinds";
 import { AuthorNote, CommunityScore, CoverTile, IdentityBadge, LINK_FORMAT, LaminaFrame, SleeveWithRecord } from "./frame/LaminaFrame";
 import { STORY_FORMAT, STORY_RECORD, STORY_RECORD_COMPACT, StoryFrame, StoryRecord } from "./frame/StoryFrame";
+import { DiscographyChart } from "./frame/DiscographyFrame";
 import { POST_FORMAT, SQUARE_FORMAT, TopFive, TopGrid, TopTen, type TopCanvas } from "./frame/TopFrame";
 import { loadShareFonts } from "./fonts";
 import { shareAppName, shareTranslator } from "./i18n";
 import { MAX_COVER_SIDE, loadEmbeddedCover, loadEmbeddedImage } from "./images";
-import type { ShareImageRef, ShareMedia, ShareTarget, ShareTopCard } from "./types";
+import type { ShareDiscographyCard, ShareImageRef, ShareMedia, ShareTarget, ShareTopCard } from "./types";
 
 // Renderizador único de las imágenes de compartir (spec share-images; design D1). Resuelve las imágenes del
 // medio (en paralelo, cada una con su recuadro tipográfico si falla), arma el marco y devuelve el PNG. Sin
@@ -221,6 +222,26 @@ async function renderTop(top: ShareTopCard, canvas: TopCanvas, target: ShareTarg
   return { element: <Body {...frame} />, degraded: isDegraded(embedded) };
 }
 
+/** Una discografía usa el mismo cuerpo en todos sus formatos, Enlace incluido. */
+async function renderDiscography(card: ShareDiscographyCard, canvas: TopCanvas | "link", target: ShareTarget, appName: string, domain: string) {
+  const embedded = await Promise.all(card.discs.map((disc) => embed(disc.cover)));
+  const element = (
+    <DiscographyChart
+      canvas={canvas}
+      title={target.card.title}
+      byline={card.byline}
+      credits={target.card.credits}
+      appName={appName}
+      domain={domain}
+      discs={card.discs.map((disc, index) => ({ ...disc, src: embedded[index]!.src }))}
+      more={card.more}
+      rated={card.rated}
+      progressPercent={card.progressPercent}
+    />
+  );
+  return { element, degraded: isDegraded(embedded) };
+}
+
 async function buildElement(
   target: ShareTarget | null,
   locale: ShareLocale,
@@ -249,6 +270,7 @@ async function buildElement(
 
   const t = shareTranslator(locale);
   const { card } = target;
+  if (card.discography) return renderDiscography(card.discography, format, target, appName, domain);
   if (card.top && format !== "link") return renderTop(card.top, format, target, appName, domain);
   const media = story
     ? await renderStoryMedia(card.media, card.quote ? STORY_RECORD_COMPACT : STORY_RECORD)

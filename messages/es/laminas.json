@@ -103,5 +103,13 @@
     "description": "Arma tu propio ranking y compártelo.",
     "action": "Arma la tuya",
     "haveAccount": "Ya tengo cuenta"
+  },
+  "discography": {
+    "kicker": "Discografía",
+    "rated": "{count, plural, one {# disco valorado} other {# discos valorados}}",
+    "missing": "{count, plural, one {Te falta # disco valorado para ver esta Lámina.} other {Te faltan # discos valorados para ver esta Lámina.}}",
+    "noYear": "Sin año",
+    "sectionTitle": "Tus discografías",
+    "sectionDescription": "Tu lectura de la carrera de un artista, disco por disco."
   }
 }

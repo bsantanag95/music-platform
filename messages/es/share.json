@@ -53,7 +53,8 @@
       "listen": "Escucha",
       "top5": "Top 5",
       "top10": "Top 10",
-      "grid9": "Top 9"
+      "grid9": "Top 9",
+      "discography": "Discografía"
     },
     "category": {
       "studio": "Álbum de estudio",
@@ -95,7 +96,8 @@
       "collection": "Colección de {name}",
       "fingerprint": "Huella de gusto de {name}",
       "rating": "{author}: {score} a {object}",
-      "listen": "{author} escuchó {object}"
+      "listen": "{author} escuchó {object}",
+      "discography": "{artist}, según {author}"
     },
     "listItems": {
       "artist": "{count, plural, one {# artista} other {# artistas}}",
@@ -111,7 +113,8 @@
     "fingerprint": {
       "decade": "Sobre todo, música de los {decade}",
       "family": "Su familia más presente: {family}"
-    }
+    },
+    "discographyRated": "{count, plural, one {# disco valorado} other {# discos valorados}}"
   },
   "commentTitle": "Comentario de {author}",
   "own": {
@@ -126,7 +129,8 @@
       "listen": "Esta escucha no es pública. Para que el enlace se vea, hazla pública.",
       "listenNote": "Esta escucha no es pública. Para que el enlace se vea, hazla pública: tu impresión también se verá.",
       "privateProfile": "Tu perfil es privado: nadie sin cuenta podría abrir un enlace. Puedes descargar la imagen.",
-      "top": "Esta Lámina no es pública. Para que el enlace se vea, hazla pública."
+      "top": "Esta Lámina no es pública. Para que el enlace se vea, hazla pública.",
+      "discography": "Esta discografía no es pública. Si la haces pública se verán tus notas de este artista, también las que pongas después, y tu avance. Puedes dejar de compartirla cuando quieras."
     },
     "unavailable": "Este contenido ya no se puede compartir."
   },

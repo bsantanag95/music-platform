@@ -39,6 +39,15 @@ export interface ShareTopCard {
   items: Array<{ cover: ShareImageRef; title: string; subtitle: string | null; stars: number | null; detailedScore: number | null }>;
 }
 
+/** Lámina de discografía: todos sus formatos dibujan esto. Sin números de avance: solo la proporción de la barra. */
+export interface ShareDiscographyCard {
+  byline: string;
+  rated: string;
+  discs: Array<{ cover: ShareImageRef; title: string; year: number | null; stars: number; detailedScore: number | null }>;
+  more: number;
+  progressPercent: number | null;
+}
+
 export interface ShareCard {
   kicker: string;
   title: string;
@@ -56,6 +65,7 @@ export interface ShareCard {
   /** Firma de quien escribió (`@usuario`), que no es quien comparte. */
   byline?: string | null;
   top?: ShareTopCard;
+  discography?: ShareDiscographyCard;
 }
 
 export interface ShareTarget {

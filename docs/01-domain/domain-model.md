@@ -184,3 +184,5 @@ contenido o su cuenta, un **hito** de su comentario o de su lista, un **lanzamie
 ## Lámina
 
 Gráfico del gusto de una persona pensado para compartir (`docs/05-features/sharing.md` §4). La Lámina Top N es de autor: un ranking armado a mano de álbumes o canciones, con formato, audiencia y notas opcionales. Se guarda como una `user_list` con `kind = 'top'`, sin ser una Lista: no aparece en sus superficies.
+
+La Lámina de discografía es derivada: no se guarda, se calcula de lo que una persona valoró de un artista. Lo único persistente es la marca `DiscographyShare`, por persona y artista, que la abre a quien pueda ver el perfil (ADR 0053).

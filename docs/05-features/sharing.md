@@ -201,17 +201,19 @@ columna, la carátula y tu nota del disco.
 - **Qué discos entran:** por defecto los de estudio de la discografía propia (los mismos tipos que la
   página del artista); interruptores para EP, en vivo y compilados. Discos sin ninguna valoración
   (ni del disco ni de sus pistas) se omiten de la imagen.
+- **Quién la ve:** el dueño y sus seguidores, como cualquier valoración. A los demás se la abre una marca por artista, con el gesto
+  "Hacer pública y compartir": reversible, y se mantiene al día con las notas nuevas (§8 D19). No abre esas valoraciones en otro lugar.
 - **Dos vistas**, porque la mayoría valora discos y no cada pista:
   - **Por canción** (la grilla de arriba). Se ofrece cuando hay suficientes pistas valoradas (umbral a
     definir; §8 D9).
   - **Por disco** — una fila de carátulas con su nota y una curva de la carrera (la nota de cada disco en
     el tiempo). Siempre disponible con ≥3 discos valorados.
-- **Límites de imagen:** hasta ~20 columnas y ~20 filas en Publicación/Cuadrado; más que eso pasa a
-  formato Historia o se recorta con "+n" (pistas extra de ediciones de lujo quedan fuera: se usa la
-  tracklist de la edición representativa).
-- **Página:** `/users/<u>/artist/<id>` (o `/users/<u>/discography/<artista>`, §8 D4) — la misma página
-  pública que le falta hoy al **progreso de discografía**: la barra de progreso del recorrido vive en la
-  cabecera de la lámina. Un destino, dos usos.
+- **Límites de imagen:** hasta 20 discos en Publicación e Historia, con "+n" si hay más, y 5 en Enlace (pistas extra de ediciones
+  de lujo quedan fuera: se usa la tracklist de la edición representativa).
+- **Página:** `/users/<u>/artist/<id>` (§8 D4) — la misma página pública que le faltaba al **progreso de
+  discografía**: la barra discreta del recorrido vive en la cabecera de la lámina, sin números (nunca "X de Y" fuera de la
+  página de gestión, `product_philosophy.md` §6.4.1); sin recorrido, cuántos discos valoró, sin total. Un destino, dos usos.
+- **Carátulas:** hasta 10, las de los mejor valorados; los demás, recuadro tipográfico (ADR 0053).
 - **Lectura:** celda con tooltip (canción, nota, fecha), clic lleva a la canción. Visitante con cuenta:
   **"Compárala con la tuya"** (§4.4.2).
 
@@ -460,6 +462,7 @@ hasta tener datos reales.
 | D15 | Cómo se hace pública una valoración (`rating` no tiene audiencia: la ven dueño y seguidores, salvo destacadas y la que acompaña a una reseña) | Marca por valoración · columna `audience` · reutilizar destacadas | ✅ **Marca por valoración en tabla aparte**, como `rating_highlight`: sin tope, reversible y sin tocar `rating.updated_at`. Las destacadas no sirven: tope de 6 y cambian la vitrina del perfil |
 | D17 | ¿Una valoración compartida muestra el puntaje detallado? | Sí, como las destacadas · solo estrellas | ✅ **Sí**: compartir es una decisión explícita del dueño. La marca sigue al editar (muestra la nota vigente) y se borra con la valoración |
 | D18 | Audiencia de una Lámina armada desde una fuente | Nace privada · audiencia por defecto | ✅ **Nace "Solo yo"**, y lo hace cumplir el servidor: favoritos, listas o escuchas privadas pueden terminar en ella (`add-top-n-lamina-phase2`). Se publica con "Hacer pública y compartir". Completar una Lámina existente no cambia su audiencia, pero avisa |
+| D19 | Cómo se hace pública una discografía, si `rating` no tiene audiencia | Marca por artista · foto fija · nunca pública | ✅ **Marca por artista** (`discography_share`, `add-discography-lamina-phase1`): reversible y al día con las notas nuevas. La hoja lo avisa antes del gesto |
 | D16 | Dirección de un comentario (un ancla no llega al servidor y los metadatos del álbum viven en un layout sin `searchParams`) | Página `/comment/<id>` · solo `?thread=` | ✅ **Página propia**: lleva la cita en la vista previa; "Ver la conversación" abre `?thread=`, que pasa a funcionar también en álbum y canción |
 
 ---
@@ -495,8 +498,10 @@ Cada cambio parte de este documento y abre con el repaso en detalle de las decis
    - **`add-top-n-lamina-phase1`** ✅ implementado — modelo, editor a mano, página pública, formatos Publicación y Cuadrado, feed (D6, D7, D10, D14).
    - **`add-top-n-lamina-phase2`** ✅ implementado — armar desde valoraciones, favoritos y listas, con filtros y títulos sugeridos (D18).
    - **`add-top-n-lamina-phase3`** ✅ implementado — "Arma la tuya" con registro dirigido (§6, ADR 0052).
-4. **`add-discography-lamina`** — gráfica de discografía (por disco / por canción), lámina de álbum,
-   página pública del progreso, valoración en lote (D9, D12), "Compárala con la tuya".
+4. **`add-discography-lamina`**, dividido en tres fases (2026-11-07). "Compárala con la tuya" pasa a "Tú vs. otra persona" (§4.4).
+   - **`add-discography-lamina-phase1`** ✅ implementado — página, marca por artista, vista Por disco, progreso discreto (D4, D19, ADR 0053).
+   - **`add-discography-lamina-phase2`** — vista Por canción (D9), Lámina de álbum e interruptores de EP, en vivo y compilados.
+   - **`add-discography-lamina-phase3`** — "Valora lo que falta" (D12) y "Arma la tuya" en esta página.
 5. **`add-tier-list-lamina`** — tier list con prellenado desde valoraciones, editor accesible (D8).
 6. **Siguientes** (§4.4) — "Tu año en discos" (objetivo: antes de diciembre), "Tú vs. otra persona",
    décadas/géneros, mes en discos, pared de la colección.

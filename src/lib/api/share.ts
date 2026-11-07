@@ -44,7 +44,7 @@ export function getSharePayload(kind: ShareTargetKind, ref: string, locale: stri
   return apiFetch(`/api/share/payload/${kind}/${encodeURIComponent(ref)}?locale=${locale}`, SharePayloadSchema);
 }
 
-type OwnKind = "rating" | "listen" | "top";
+type OwnKind = "rating" | "listen" | "top" | "discography";
 
 const ownSharePath = (kind: OwnKind, ref: string, locale: string) => `/api/me/share/${kind}/${ref}?locale=${locale}`;
 
@@ -56,6 +56,6 @@ export function makeOwnShareable(kind: OwnKind, ref: string, locale: string): Pr
   return apiFetch(ownSharePath(kind, ref, locale), OwnShareStateSchema, { method: "POST" });
 }
 
-export function stopOwnShare(ref: string, locale: string): Promise<OwnShareState> {
-  return apiFetch(ownSharePath("rating", ref, locale), OwnShareStateSchema, { method: "DELETE" });
+export function stopOwnShare(kind: "rating" | "discography", ref: string, locale: string): Promise<OwnShareState> {
+  return apiFetch(ownSharePath(kind, ref, locale), OwnShareStateSchema, { method: "DELETE" });
 }

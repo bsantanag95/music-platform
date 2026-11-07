@@ -617,7 +617,8 @@
         "archived": "Archived"
       },
       "saveError": "Couldn't save. Try again.",
-      "journeyLoadError": "Couldn't load their records. Try again."
+      "journeyLoadError": "Couldn't load their records. Try again.",
+      "discographyLamina": "See your Card"
     },
     "community": {
       "heading": "Community",

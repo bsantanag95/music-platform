@@ -129,7 +129,7 @@ async function main() {
     await s.social.upsertRating(albumTarget, owner.id, 5, 95);
     const edited = await s.targets.loadRatingTarget(own.id, "es");
     check(edited?.card.detailedScore === 95 && version(edited) !== v1, "editar conserva la marca, muestra la nota nueva y cambia la versión");
-    await s.own.stopSharingRating(own.id, "es", owner.id);
+    await s.own.stopSharing("rating", own.id, "es", owner.id);
     check((await view(null)) === null, "dejar de compartir la vuelve a su regla general");
     await s.highlights.highlightRating(owner.id, own.id);
     check((await s.targets.loadRatingTarget(own.id, "es")) !== null, "una destacada cuenta como pública");

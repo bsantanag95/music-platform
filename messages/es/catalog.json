@@ -617,7 +617,8 @@
         "archived": "Archivado"
       },
       "saveError": "No pudimos guardar el cambio. Intenta de nuevo.",
-      "journeyLoadError": "No pudimos cargar sus discos. Intenta de nuevo."
+      "journeyLoadError": "No pudimos cargar sus discos. Intenta de nuevo.",
+      "discographyLamina": "Ver tu Lámina"
     },
     "community": {
       "heading": "Comunidad",
