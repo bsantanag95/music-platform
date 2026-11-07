@@ -138,6 +138,13 @@ de cuál de las filas con el mismo título haya en la BD.
 >   compartida (sin tocar `rating.updated_at`, idempotente, cascada, valoración de artista), los objetivos de valoración y
 >   escucha como anónimo y como dueño, la página de relación por visitante, `?escucha=`, el estado para la hoja, el perfil
 >   privado y los eventos que se borran con la cuenta.
+> - `smoke-test-top-laminas.ts` crea un artista y once álbumes sintéticos (MBID `5e0ce000-0000-4000-8000-00000000c0c*`) y
+>   usuarios `smoke_lam_*`, y los borra al terminar (también si falla). Si se interrumpió, limpiar con `DELETE FROM app_user
+>   WHERE username LIKE 'smoke_lam_%'; DELETE FROM release_group WHERE mbid::text LIKE
+>   '5e0ce000-0000-4000-8000-00000000c0c%'; DELETE FROM artist WHERE mbid::text LIKE
+>   '5e0ce000-0000-4000-8000-00000000c0c%';`. Necesita las migraciones `0079` a `0083`. Verifica los `CHECK` de `0083`, el tope
+>   con pedidos en paralelo, el orden, que una Lámina no aparece en las superficies de listas, las notas por visitante, la
+>   moderación, el feed, el gesto de hacer pública y los eventos con la cuenta.
 > - `smoke-test-comment-replies.ts` crea un artista y un álbum sintéticos (MBID
 >   `5e0ce000-0000-4000-8000-0000000009b0` / `...09b1`) y usuarios `smoke_reply_*`, y los borra al terminar
 >   (también si falla; el `ON DELETE CASCADE` limpia comentarios, respuestas, likes y bloqueos). Si se

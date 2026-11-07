@@ -42,6 +42,7 @@ describe("user-menu-items", () => {
       "wantToListen",
       "collection",
       "lists",
+      "laminas",
       "progress",
     ]);
     expect(idsOf("social")).toEqual(["feed", "artists", "followers", "following", "followRequests"]);

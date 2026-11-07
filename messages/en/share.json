@@ -22,7 +22,9 @@
     "formats": {
       "label": "Format",
       "link": "Link",
-      "story": "Story"
+      "story": "Story",
+      "post": "Post",
+      "square": "Square"
     }
   },
   "image": {
@@ -48,7 +50,10 @@
       "user_collection": "Collection",
       "fingerprint": "Taste fingerprint",
       "rating": "Rating",
-      "listen": "Listen"
+      "listen": "Listen",
+      "top5": "Top 5",
+      "top10": "Top 10",
+      "grid9": "Top 9"
     },
     "category": {
       "studio": "Studio album",
@@ -120,7 +125,8 @@
       "rating": "This rating is not public. To make the link work, make it public: it will show your current score, even if you change it.",
       "listen": "This listen is not public. To make the link work, make it public.",
       "listenNote": "This listen is not public. To make the link work, make it public: your note will be visible too.",
-      "privateProfile": "Your profile is private: nobody without an account could open a link. You can download the image."
+      "privateProfile": "Your profile is private: nobody without an account could open a link. You can download the image.",
+      "top": "This Card is not public. To make the link work, make it public."
     },
     "unavailable": "This content can no longer be shared."
   },

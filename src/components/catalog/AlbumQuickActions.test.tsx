@@ -55,8 +55,10 @@ describe("Compartir desde el menú", () => {
       ref: "rg1",
       url: "https://ejemplo.app/es/album/motley-crue-dr-feelgood-abc",
       title: "Dr. Feelgood",
-      imageUrl: "/api/share/image/album/rg1?format=link",
-      storyImageUrl: "/api/share/image/album/rg1?format=story",
+      images: [
+        { format: "link", url: "/api/share/image/album/rg1?format=link" },
+        { format: "story", url: "/api/share/image/album/rg1?format=story" },
+      ],
       imageAlt: "Dr. Feelgood",
       downloadName: "dr-feelgood",
     });

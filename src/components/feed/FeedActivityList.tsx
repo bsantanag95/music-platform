@@ -514,7 +514,7 @@ function actionLabel(entry: FeedEntry, t: FeedT): string {
       // El título ya no va acá: pasa a ser su propio titular (ver `ReviewKicker`).
       return t("reviewVerb");
     case "list":
-      return t(`list.${entry.event}`);
+      return entry.list.lamina ? t(`lamina.${entry.event}`) : t(`list.${entry.event}`);
     case "follow":
       return t("followVerb");
     case "follow-artist":
@@ -625,7 +625,9 @@ function targetLink(
 ): { href: string; label: string; artist: string | null; artistHref: string | null } {
   if (entry.kind === "list") {
     return {
-      href: listHref(entry.author.username, entry.list.title, entry.list.id),
+      href: entry.list.lamina
+        ? `/users/${encodeURIComponent(entry.author.username)}/laminas/${entry.list.id}`
+        : listHref(entry.author.username, entry.list.title, entry.list.id),
       label: entry.list.title,
       artist: null,
       artistHref: null,

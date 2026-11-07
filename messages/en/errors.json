@@ -298,5 +298,9 @@
   "SHARE_TARGET_NOT_FOUND": {
     "title": "This content can no longer be shared.",
     "description": "This content can no longer be shared."
+  },
+  "LAMINA_NOT_FOUND": {
+    "title": "Card not found",
+    "description": "We could not find this Card."
   }
 }

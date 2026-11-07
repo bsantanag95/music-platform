@@ -44,6 +44,7 @@ export type UserMenuLabelKey =
   | "followRequests"
   | "followers"
   | "following"
+  | "laminas"
   | "lists"
   | "moderation"
   | "profile"
@@ -85,6 +86,7 @@ export const USER_MENU_ITEMS: readonly UserMenuItemDef[] = [
   { id: "wantToListen", href: "/me/want-to-listen", labelKey: "wantToListen", group: "music", surfaces: BOTH },
   { id: "collection", href: "/me/collection", labelKey: "collection", group: "music", surfaces: BOTH },
   { id: "lists", href: "/me/lists", labelKey: "lists", group: "music", surfaces: BOTH },
+  { id: "laminas", href: "/me/laminas", labelKey: "laminas", group: "music", surfaces: BOTH },
   // Un solo acceso para recorridos de artista, Caminos y listas seguidas (panel con pestañas).
   { id: "progress", href: "/me/progress", labelKey: "progress", group: "music", surfaces: BOTH },
 

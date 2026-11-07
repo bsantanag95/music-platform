@@ -104,7 +104,7 @@ async function main() {
     check((await s.targets.loadRatingTarget(own.id, "es", { owner: owner.id }))?.card.detailedScore === 86, "el dueño sí tiene su imagen");
     check((await s.targets.loadRatingTarget(own.id, "es", { owner: stranger.id })) === null, "otra persona no");
     const before = await s.own.ownShareState("rating", own.id, "es", owner.id);
-    check(before.state === "needs_gesture" && before.payload.imageUrl.includes("personal=1"), "el estado pide el gesto, con la imagen personal");
+    check(before.state === "needs_gesture" && before.payload.images[0]!.url.includes("personal=1"), "el estado pide el gesto, con la imagen personal");
     check((await codeOf(() => s.own.ownShareState("rating", own.id, "es", stranger.id))) === "RATING_NOT_FOUND", "lo ajeno responde 404");
 
     console.log("Con marca");
@@ -112,7 +112,7 @@ async function main() {
     const after = await s.own.makeOwnPublic("rating", own.id, "es", owner.id);
     await s.own.makeOwnPublic("rating", own.id, "es", owner.id);
     check(after.state === "public" && after.canUnshare, "queda pública y se puede dejar de compartir");
-    check(!after.payload.imageUrl.includes("personal"), "la imagen pasa a ser la pública");
+    check(!after.payload.images[0]!.url.includes("personal"), "la imagen pasa a ser la pública");
     check((await db.select().from(ratingShare).where(eq(ratingShare.ratingId, own.id))).length === 1, "marcar dos veces no duplica");
     const [touched] = await db.select().from(rating).where(eq(rating.id, own.id));
     check(touched?.updatedAt.toISOString() === updatedBefore, "`rating.updated_at` no cambia");

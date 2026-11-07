@@ -655,7 +655,7 @@ export async function reorderListItems(
   return getOwnedList(listId, ownerId);
 }
 
-async function listItems(listId: string): Promise<UserListItemEntry[]> {
+export async function listItems(listId: string): Promise<UserListItemEntry[]> {
   const rows = await db
     .select({
       id: userListItem.id,

@@ -4,6 +4,7 @@ import type { ShareLocale, ShareTargetKind } from "@/lib/share/kinds";
 import type { ShareTarget } from "../types";
 import { loadAlbumTarget, loadArtistTarget, loadSongTarget } from "./catalog";
 import { loadCeremonyTarget, loadCollectionTarget, loadGenreTarget, loadIndexTarget } from "./collections";
+import { loadLaminaTarget } from "./lamina";
 import { loadProfileTarget } from "./profile";
 import { loadListenTarget, loadRatingTarget } from "./relation";
 import {
@@ -53,6 +54,8 @@ export const loadShareTarget = cache(async (kind: ShareTargetKind, ref: string, 
       return loadRatingTarget(ref, locale);
     case "listen":
       return loadListenTarget(ref, locale);
+    case "top":
+      return loadLaminaTarget(ref, locale);
     case "awards":
     case "halls":
     case "collections":

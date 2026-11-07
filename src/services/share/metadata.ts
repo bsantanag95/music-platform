@@ -102,6 +102,11 @@ export async function buildAccountShareMetadata(kind: "user_collection" | "finge
   return profile ? buildShareMetadata(kind, profile.ref, locale, { withTitle: true }) : genericShareMetadata(kind, "-", shareLocale);
 }
 
+/** Formatos de un objetivo, con el primero por defecto. */
+export function shareFormatsOf(target: ShareTarget): ShareFormat[] {
+  return target.formats ?? ["link", "story"];
+}
+
 /** Datos de la hoja de compartir de un objetivo (los mismos de sus metadatos). */
 export function sharePayloadFor(target: ShareTarget) {
   return {
@@ -109,8 +114,10 @@ export function sharePayloadFor(target: ShareTarget) {
     ref: target.ref,
     url: absoluteUrl(target.canonicalPath),
     title: target.title,
-    imageUrl: shareImagePath(target.kind, target.ref, target.locale, target),
-    storyImageUrl: shareImagePath(target.kind, target.ref, target.locale, target, false, "story"),
+    images: shareFormatsOf(target).map((format) => ({
+      format,
+      url: shareImagePath(target.kind, target.ref, target.locale, target, false, format),
+    })),
     imageAlt: target.imageAlt,
     downloadName: target.downloadName,
   };

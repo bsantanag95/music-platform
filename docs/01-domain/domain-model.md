@@ -180,3 +180,7 @@ contenido o su cuenta, un **hito** de su comentario o de su lista, un **lanzamie
   Usuario — el catálogo no modela soporte físico.
 - **Actividad**: registro de lo que un Usuario fue valorando/comentando recientemente, visible para
   quienes lo siguen — la función inspirada en el "qué estás escuchando" de MSN.
+
+## Lámina
+
+Gráfico del gusto de una persona pensado para compartir (`docs/05-features/sharing.md` §4). La Lámina Top N es de autor: un ranking armado a mano de álbumes o canciones, con formato, audiencia y notas opcionales. Se guarda como una `user_list` con `kind = 'top'`, sin ser una Lista: no aparece en sus superficies.

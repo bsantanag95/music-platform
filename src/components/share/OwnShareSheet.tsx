@@ -13,7 +13,7 @@ import { ShareTrigger } from "./ShareButton";
 // mostrar el botón no cuesta ninguna consulta. Lo público usa la hoja normal; lo que no lo es, un aviso con el gesto
 // explícito y la descarga privada. Nada cambia de audiencia sin ese gesto.
 
-type OwnKind = "rating" | "listen";
+type OwnKind = "rating" | "listen" | "top";
 
 export function OwnShareSheet({
   open,
@@ -34,8 +34,10 @@ export function OwnShareSheet({
   const [data, setData] = useState<OwnShareState | null>(null);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
-  const [format, setFormat] = useState<ShareFormat>("link");
-  const imageUrl = format === "story" ? data?.payload.storyImageUrl : data?.payload.imageUrl;
+  const [picked, setPicked] = useState<ShareFormat | null>(null);
+  const images = data?.payload.images ?? [];
+  const current = images.find((image) => image.format === picked) ?? images[0];
+  const format = current?.format ?? "link";
 
   useEffect(() => {
     if (!open) return;
@@ -91,14 +93,15 @@ export function OwnShareSheet({
     );
   }
 
-  const noticeKey = data?.state === "private_profile" ? "privateProfile" : kind === "rating" ? "rating" : data?.hasNote ? "listenNote" : "listen";
+  const noticeKey =
+    data?.state === "private_profile" ? "privateProfile" : kind === "listen" ? (data?.hasNote ? "listenNote" : "listen") : kind;
 
   return (
     <Dialog open title={t("title")} onClose={onClose} size="bottom">
       {data ? (
         <>
-          <ShareFormatPicker format={format} onChange={setFormat} />
-          <ShareImagePreview src={imageUrl ?? data.payload.imageUrl} alt={data.payload.imageAlt} format={format} />
+          <ShareFormatPicker formats={images.map((image) => image.format)} format={format} onChange={setPicked} />
+          <ShareImagePreview src={current!.url} alt={data.payload.imageAlt} format={format} />
           <p className="font-body text-sm text-paper">{t(`notice.${noticeKey}`)}</p>
           {data.state === "needs_gesture" ? (
             <button
@@ -111,7 +114,7 @@ export function OwnShareSheet({
             </button>
           ) : null}
           <a
-            href={downloadUrl(imageUrl ?? data.payload.imageUrl)}
+            href={downloadUrl(current!.url)}
             download={shareFileName(data.payload.downloadName, format)}
             onClick={() => postShareEvent({ kind, ref: refId, channel: "download", format })}
             className="self-start font-display text-sm text-paper-muted underline-offset-4 transition-colors hover:text-paper hover:underline"

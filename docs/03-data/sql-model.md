@@ -1221,13 +1221,20 @@ los empates existen.
 - **Origen del fan-out de lanzamientos:** la emisión lee `credit` (`role = 'primary'`) → `artist_follow` → `app_user` activo → `notification_preference` (con su defecto) en un `INSERT … SELECT … ON CONFLICT DO NOTHING` por tipo. No añade columnas a `artist_follow`.
 - **Origen del fan-out de premios (`0077`):** la emisión lee las nominaciones de las ceremonias escritas (sujeto `artist_id` o crédito `primary` del disco o la canción nominados) → `artist_follow` → `app_user` activo → `notification_preference` (`artist_award`, con su defecto) en un `INSERT … SELECT … ON CONFLICT DO NOTHING` por tipo. La fila no guarda a quién: la lectura recalcula, para esa ceremonia, los artistas seguidos, sus cifras y el más nombrado.
 
+## Láminas Top N en `user_list` (migración `0083`, openspec `add-top-n-lamina-phase1`)
+
+Una Lámina es una fila de `user_list` con `kind = 'top'`, como Camino: hereda audiencia, ítems ordenados, moderación y exportación, y queda
+fuera de las superficies de listas, que filtran por `standard`. Suma `lamina_format` (`top5`, `top10`, `grid9`) y `lamina_show_scores`
+(`false` por defecto). `CHECK`: `kind = 'top'` si y solo si hay formato, y solo álbumes o canciones. El tope de ítems (5, 10 o 9) es una regla
+entre filas: la aplica el servicio con la fila de la lista bloqueada.
+
 ## `rating_share` (migración `0081`, openspec `add-share-user-actions-phase2`, ADR 0050)
 
 Una fila hace pública esa valoración para su página de relación y su imagen; sin tope. Tabla aparte, como `rating_highlight`, para
 no disparar `trg_rating_touch`. PK `(user_id, rating_id)`, `ON DELETE CASCADE` en ambas: borrar la valoración borra la marca, editarla
 la conserva. Índice por `rating_id`. Entra en la exportación de datos como `sharedRatings`.
 
-## `share_event` (migraciones `0079` a `0082`, openspec `add-share-foundation` y `add-share-user-actions`)
+## `share_event` (migraciones `0079` a `0083`, openspec `add-share-foundation` y `add-share-user-actions`)
 
 Un registro por cada uso de la hoja de compartir (`docs/05-features/sharing.md`, D13): qué se compartió
 (`target_kind` + `target_ref`), por qué canal (`channel`) y en qué formato (`format`), con `created_at`.

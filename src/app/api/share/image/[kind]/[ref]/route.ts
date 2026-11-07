@@ -1,12 +1,14 @@
 import type { NextRequest } from "next/server";
 import { ApiError } from "@/lib/api/errors";
-import { isShareFormat, isShareLocale, isShareTargetKind, type ShareTargetKind } from "@/lib/share/kinds";
+import { isShareFormat, isShareLocale, isShareTargetKind, type ShareFormat, type ShareTargetKind } from "@/lib/share/kinds";
 import { withErrorHandling } from "@/lib/with-error-handling";
 import { consumeAuthAttempt, getAuthClientIp } from "@/services/auth/rate-limit";
 import { resolveSession } from "@/services/auth/sessions";
 import { isOwnShareKind, loadOwnTarget } from "@/services/share/own";
 import { renderShareImage } from "@/services/share/render";
+import { shareFormatsOf } from "@/services/share/metadata";
 import { loadShareTarget, shareTargetVersion } from "@/services/share/targets";
+import type { ShareTarget } from "@/services/share/types";
 
 // Imagen para compartir de un objeto (spec share-images; design D2). Una sola puerta para todos los tipos y
 // formatos: valida, limita por IP, carga el objetivo como anónimo y responde el PNG. Un objeto inexistente u
@@ -41,6 +43,11 @@ const PERSONAL = "private, no-store";
 
 type Params = { params: Promise<{ kind: string; ref: string }> };
 
+/** Enlace e Historia los tiene todo objeto; los demás, solo el que los declara. Sin objetivo sale la imagen genérica. */
+function assertFormat(target: ShareTarget | null, format: ShareFormat): void {
+  if (target && !shareFormatsOf(target).includes(format)) throw new ApiError("VALIDATION_ERROR", 400, "Formato no disponible");
+}
+
 export const GET = withErrorHandling(async (request: NextRequest, { params }: Params) => {
   const { kind, ref } = await params;
   const search = request.nextUrl.searchParams;
@@ -59,6 +66,7 @@ export const GET = withErrorHandling(async (request: NextRequest, { params }: Pa
   if (search.get("personal") === "1") {
     const session = isOwnShareKind(kind) ? await resolveSession() : null;
     const own = session && isOwnShareKind(kind) ? await loadOwnTarget(kind, ref, locale, session.user.id) : null;
+    assertFormat(own, format);
     const headers: Record<string, string> = { "Cache-Control": PERSONAL };
     if (search.get("download") === "1") {
       headers["Content-Disposition"] = `attachment; filename="${own?.downloadName ?? "compartir"}${suffix}.png"`;
@@ -67,6 +75,7 @@ export const GET = withErrorHandling(async (request: NextRequest, { params }: Pa
   }
 
   const target = await loadShareTarget(kind, ref, locale);
+  assertFormat(target, format);
   const requested = search.get("v");
   const current = target ? shareTargetVersion(target) : null;
   const headers: Record<string, string> = {

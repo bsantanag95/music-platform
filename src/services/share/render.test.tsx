@@ -157,6 +157,51 @@ describe("renderShareImage", () => {
     await keep("lista-artistas", bytes);
   });
 
+  describe("Láminas", () => {
+    const cover = { url: "https://coverartarchive.org/x", fallbackTitle: "Disco", fallbackSubtitle: "Artista" };
+    const item = (i: number) => ({
+      cover: i === 2 ? { ...cover, url: null } : cover,
+      title: i === 1 ? "The Rise and Fall of Ziggy Stardust and the Spiders from Mars" : `Disco ${i}`,
+      subtitle: "Artista",
+      stars: i % 2 ? 4.5 : null,
+      detailedScore: i % 2 ? 86 : null,
+    });
+    const top = (format: "top5" | "top10" | "grid9", count: number) => ({
+      kicker: "Top",
+      title: "Mis discos del año",
+      subtitle: "@ana",
+      meta: [],
+      community: null,
+      top: { format, byline: "Ana · @ana", items: Array.from({ length: count }, (_, i) => item(i)) },
+    });
+
+    it.each([
+      ["top5", 5, "post", 1080, 1350],
+      ["top10", 10, "post", 1080, 1350],
+      ["top10", 7, "post", 1080, 1350],
+      ["grid9", 9, "square", 1080, 1080],
+      ["top5", 5, "story", 1080, 1920],
+      ["top10", 10, "story", 1080, 1920],
+      ["grid9", 9, "story", 1080, 1920],
+    ] as const)("%s con %i ítems en %s", async (format, count, canvas, width, height) => {
+      const { bytes, meta } = await size(await renderShareImage(target(top(format, count)), "es", { format: canvas }));
+      expect([meta.width, meta.height]).toEqual([width, height]);
+      await keep(`top-${format}-${count}-${canvas}`, bytes);
+    });
+
+    it("el Enlace de una Lámina usa el marco común", async () => {
+      const { meta } = await size(await renderShareImage(target(top("top5", 5)), "es"));
+      expect([meta.width, meta.height]).toEqual([1200, 630]);
+    });
+
+    it("una carátula que no llega degrada la caché", async () => {
+      images.cover.mockResolvedValue(null);
+      const options = { format: "post" as const, headers: { "Cache-Control": "immutable" }, degradedCacheControl: "public, max-age=300" };
+      const response = await renderShareImage(target(top("top5", 5)), "es", options);
+      expect(response.headers.get("Cache-Control")).toBe("public, max-age=300");
+    });
+  });
+
   describe("formato Historia", () => {
     const render = (card: Partial<ShareTarget["card"]>, name: string) =>
       renderShareImage(target(card), "es", { format: "story" })

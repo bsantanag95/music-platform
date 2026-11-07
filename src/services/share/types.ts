@@ -1,4 +1,4 @@
-import type { ShareLocale, ShareTargetKind } from "@/lib/share/kinds";
+import type { ShareFormat, ShareLocale, ShareTargetKind } from "@/lib/share/kinds";
 
 // Objetivo de compartir (design D3 de add-share-foundation): todo lo que la imagen y los metadatos necesitan,
 // calculado SIEMPRE como visitante anónimo y con los textos ya localizados. La versión de la imagen es un hash
@@ -32,6 +32,13 @@ export interface ShareCommunityScore {
   count: number;
 }
 
+/** Ranking de una Lámina: los formatos que no son Enlace dibujan esto en lugar del medio. */
+export interface ShareTopCard {
+  format: "top5" | "top10" | "grid9";
+  byline: string;
+  items: Array<{ cover: ShareImageRef; title: string; subtitle: string | null; stars: number | null; detailedScore: number | null }>;
+}
+
 export interface ShareCard {
   kicker: string;
   title: string;
@@ -48,6 +55,7 @@ export interface ShareCard {
   detailedScore?: number | null;
   /** Firma de quien escribió (`@usuario`), que no es quien comparte. */
   byline?: string | null;
+  top?: ShareTopCard;
 }
 
 export interface ShareTarget {
@@ -62,5 +70,7 @@ export interface ShareTarget {
   imageAlt: string;
   /** Nombre del PNG descargado, sin extensión. */
   downloadName: string;
+  /** Formatos que ofrece, con el primero por defecto. Sin esto, Enlace e Historia. */
+  formats?: ShareFormat[];
   card: ShareCard;
 }

@@ -22,7 +22,9 @@
     "formats": {
       "label": "Formato",
       "link": "Enlace",
-      "story": "Historia"
+      "story": "Historia",
+      "post": "Publicación",
+      "square": "Cuadrado"
     }
   },
   "image": {
@@ -48,7 +50,10 @@
       "user_collection": "Colección",
       "fingerprint": "Huella de gusto",
       "rating": "Valoración",
-      "listen": "Escucha"
+      "listen": "Escucha",
+      "top5": "Top 5",
+      "top10": "Top 10",
+      "grid9": "Top 9"
     },
     "category": {
       "studio": "Álbum de estudio",
@@ -120,7 +125,8 @@
       "rating": "Esta valoración no es pública. Para que el enlace se vea, hazla pública: mostrará tu nota vigente, también si la cambias.",
       "listen": "Esta escucha no es pública. Para que el enlace se vea, hazla pública.",
       "listenNote": "Esta escucha no es pública. Para que el enlace se vea, hazla pública: tu impresión también se verá.",
-      "privateProfile": "Tu perfil es privado: nadie sin cuenta podría abrir un enlace. Puedes descargar la imagen."
+      "privateProfile": "Tu perfil es privado: nadie sin cuenta podría abrir un enlace. Puedes descargar la imagen.",
+      "top": "Esta Lámina no es pública. Para que el enlace se vea, hazla pública."
     },
     "unavailable": "Este contenido ya no se puede compartir."
   },

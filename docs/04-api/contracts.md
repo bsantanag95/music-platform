@@ -2250,6 +2250,19 @@ ya no existe: no distingue). Sin token, o con uno alterado o firmado con otro se
 `400 INVALID_UNSUBSCRIBE_TOKEN` y no cambia nada. Un `GET` sobre esta ruta no existe: el enlace del
 cuerpo del correo abre la página de confirmación, que es quien hace el `POST`.
 
+## Láminas (cambio `add-top-n-lamina-phase1`)
+
+Todas con sesión. `LAMINA_NOT_FOUND` (404) si no existe o no es propia. Hacer pública exige que no haya suspensión social
+(`SOCIAL_SUSPENSION_ACTIVE`).
+
+- `GET /api/me/laminas` → `{ laminas }`. `POST` con `{ title, format, entityType, audience? }` → `201 { lamina }`. `format`: `top5`, `top10`,
+  `grid9`. `entityType`: `release-group`, `recording`.
+- `GET|PATCH|DELETE /api/me/laminas/[id]`. `PATCH` con `{ title?, format?, audience?, showScores? }`. Un formato con menos lugares quita los
+  últimos ítems.
+- `POST /api/me/laminas/[id]/items` con `{ targetId }`: agrega al final, idempotente; `VALIDATION_ERROR` si está completa o el objetivo no existe.
+- `PUT /api/me/laminas/[id]/items` con `{ itemIds }`: reordena; debe traer exactamente los ítems de la Lámina.
+- `DELETE /api/me/laminas/[id]/items/[itemId]`.
+
 ## Compartir (cambios `add-share-foundation` y `add-share-user-actions`, ADR 0049 y 0050)
 
 Diseño y decisiones en `docs/05-features/sharing.md`. Las dos rutas aceptan pedidos con y sin sesión y no guardan
@@ -2257,13 +2270,14 @@ datos de quien las llama; el límite por IP vive en memoria.
 
 ### `GET /api/share/payload/[kind]/[ref]?locale=`
 
-Datos de la hoja de un objeto, calculados como anónimo: `{ kind, ref, url, title, imageUrl, storyImageUrl, imageAlt, downloadName }`.
+Datos de la hoja de un objeto, calculados como anónimo: `{ kind, ref, url, title, images: [{ format, url }], imageAlt, downloadName }`, con el
+formato por defecto primero.
 La hoja los pide al abrirse, para que un menú no cueste consultas. `SHARE_TARGET_NOT_FOUND` (404) si un anónimo no puede verlo,
 `VALIDATION_ERROR` (400) con tipo o idioma desconocidos, `RATE_LIMITED` (429) con más de 60 pedidos por minuto por IP.
 
 ### `GET|POST|DELETE /api/me/share/[kind]/[ref]?locale=`
 
-Compartir lo propio, con sesión. `kind` es `rating` o `listen`. Lo ajeno o inexistente responde `404` (`RATING_NOT_FOUND`,
+Compartir lo propio, con sesión. `kind` es `rating`, `listen` o `top`. Lo ajeno o inexistente responde `404` (`RATING_NOT_FOUND`,
 `LISTEN_ENTRY_NOT_FOUND`), igual que una valoración o escucha de un artista.
 
 - `GET`: `{ state, canUnshare, hasNote, payload }`. `state` es `public`, `needs_gesture` o `private_profile`. `payload` son los
@@ -2276,14 +2290,15 @@ Compartir lo propio, con sesión. `kind` es `rating` o `listen`. Lo ajeno o inex
 
 PNG para compartir de un objeto. `kind` es uno de `album`, `song`, `artist`, `genre`, `awards`, `ceremony`, `halls`,
 `hall_class`, `collections`, `collection`, `profile`, `review`, `comment`, `list`, `camino`, `user_collection`,
-`fingerprint`, `rating`, `listen` (la lista de `src/lib/share/kinds.ts` incluye además `award` y `hall`, que no tienen imagen propia porque
+`fingerprint`, `rating`, `listen`, `top` (la lista de `src/lib/share/kinds.ts` incluye además `award` y `hall`, que no tienen imagen propia porque
 su ficha redirige a la última ceremonia o clase). `ref` es la referencia estable del objeto: el id interno (álbum,
 canción, artista, colección, cuenta, reseña, comentario, lista, Camino), el id de la cuenta para `user_collection` y
 `fingerprint`, el slug del género, `<slug>:<año>` de una ceremonia o clase, o `-` en los índices. La referencia de una
 respuesta da la imagen de su comentario raíz.
 
 - `locale`: `es` (por defecto) o `en`; idioma de los textos de la imagen.
-- `format`: `link` (1200×630) o `story` (1080×1920). Mismos datos y misma versión; la carátula sigue en 250 px como máximo.
+- `format`: `link` (1200×630) o `story` (1080×1920), y en una Lámina `post` (1080×1350) o `square` (1080×1080). Mismos datos y misma versión;
+  la carátula sigue en 250 px como máximo. Un formato que el objeto no declara responde `VALIDATION_ERROR`.
 - `v`: versión de contenido que anuncian los metadatos de la página. Si coincide con la vigente y es un objeto de catálogo, la
   respuesta lleva `Cache-Control: public, max-age=31536000, immutable`; lo que es de una persona lleva siempre la caché corta. Si no viene o no coincide, se genera con los datos actuales y
   `public, max-age=300`. Si alguna carátula, foto o avatar con URL no se pudo obtener (fuente lenta o caída), la

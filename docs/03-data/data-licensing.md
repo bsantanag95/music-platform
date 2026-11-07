@@ -60,7 +60,8 @@ acompañan un enlace compartido usan las mismas miniaturas, bajo estas condicion
 
 - a lo sumo **4 carátulas por imagen**, cada una a **≤250 px y nunca ampliada**, identificando su
   disco dentro de un objeto concreto (un álbum, un género, una ceremonia, una clase de salón, una
-  colección); es la única excepción a "sin exposición como colección";
+  colección); es la única excepción a "sin exposición como colección". Una Lámina armada por una persona puede juntar hasta 10
+  (ADR 0051);
 - la imagen lleva su **línea de créditos** (Cover Art Archive y MusicBrainz; la foto de un artista,
   con su autor y licencia de Commons), porque sale de la app sin el bloque de atribución del footer;
 - la respuesta **no expone** las URL ni las claves de las carátulas que contiene;

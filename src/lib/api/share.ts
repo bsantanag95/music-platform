@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { apiFetch } from "./client";
 import { NoContentResponseSchema } from "./schemas";
-import { SHARE_TARGET_KINDS } from "@/lib/share/kinds";
+import { SHARE_FORMATS, SHARE_TARGET_KINDS } from "@/lib/share/kinds";
 import type { ShareChannel, ShareFormat, ShareTargetKind } from "@/lib/share/kinds";
 
 // Registro de un uso de la hoja de compartir (spec share-events). Se dispara sin esperar la respuesta: un fallo
@@ -26,8 +26,7 @@ const SharePayloadSchema = z.object({
   ref: z.string(),
   url: z.string(),
   title: z.string(),
-  imageUrl: z.string(),
-  storyImageUrl: z.string(),
+  images: z.array(z.object({ format: z.enum(SHARE_FORMATS), url: z.string() })).min(1),
   imageAlt: z.string(),
   downloadName: z.string(),
 });
@@ -45,13 +44,15 @@ export function getSharePayload(kind: ShareTargetKind, ref: string, locale: stri
   return apiFetch(`/api/share/payload/${kind}/${encodeURIComponent(ref)}?locale=${locale}`, SharePayloadSchema);
 }
 
-const ownSharePath = (kind: "rating" | "listen", ref: string, locale: string) => `/api/me/share/${kind}/${ref}?locale=${locale}`;
+type OwnKind = "rating" | "listen" | "top";
 
-export function getOwnShare(kind: "rating" | "listen", ref: string, locale: string): Promise<OwnShareState> {
+const ownSharePath = (kind: OwnKind, ref: string, locale: string) => `/api/me/share/${kind}/${ref}?locale=${locale}`;
+
+export function getOwnShare(kind: OwnKind, ref: string, locale: string): Promise<OwnShareState> {
   return apiFetch(ownSharePath(kind, ref, locale), OwnShareStateSchema);
 }
 
-export function makeOwnShareable(kind: "rating" | "listen", ref: string, locale: string): Promise<OwnShareState> {
+export function makeOwnShareable(kind: OwnKind, ref: string, locale: string): Promise<OwnShareState> {
   return apiFetch(ownSharePath(kind, ref, locale), OwnShareStateSchema, { method: "POST" });
 }
 

@@ -1,0 +1,54 @@
+{
+  "title": "Cards",
+  "description": "Your taste as an image: a ranking you build, ready to share.",
+  "noLaminas": "You don't have any Cards yet.",
+  "back": "← Cards",
+  "viewPage": "View page",
+  "edit": "Edit",
+  "itemCount": "{count, plural, one {# item} other {# items}}",
+  "itemsHeading": "{count} of {capacity}",
+  "empty": "Search below for the first thing to add.",
+  "full": "It's full. Remove something to add another.",
+  "saveError": "That could not be saved. Please try again.",
+  "moveUp": "Move {title} up",
+  "moveDown": "Move {title} down",
+  "remove": "Remove {title}",
+  "delete": "Delete Card",
+  "deleteTitle": "Delete this Card?",
+  "deleteMessage": "This can't be undone.",
+  "cancel": "Cancel",
+  "formatLossTitle": "Some items will be removed",
+  "formatLossMessage": "This format has fewer spots. These will be removed: {titles}.",
+  "formatLossConfirm": "Change and remove",
+  "showScoresHint": "Anyone who can see the Card will see your score for each item, also on the image.",
+  "create": {
+    "heading": "New Card",
+    "titlePlaceholder": "My 10 albums of 2026",
+    "submit": "Create"
+  },
+  "fields": {
+    "title": "Title",
+    "format": "Format",
+    "entityType": "What you rank",
+    "audience": "Who can see it",
+    "showScores": "Show my scores"
+  },
+  "formats": {
+    "top5": "Top 5",
+    "top10": "Top 10",
+    "grid9": "3×3 grid"
+  },
+  "entityTypes": {
+    "release-group": "Albums",
+    "recording": "Songs"
+  },
+  "audience": {
+    "private": "Only me",
+    "followers": "Followers",
+    "public": "Public"
+  },
+  "search": {
+    "release-group": "Search for an album",
+    "recording": "Search for a song"
+  }
+}

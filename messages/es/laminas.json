@@ -1,0 +1,54 @@
+{
+  "title": "Láminas",
+  "description": "Tu gusto como imagen: un ranking armado por ti, listo para compartir.",
+  "noLaminas": "Todavía no tienes Láminas.",
+  "back": "← Láminas",
+  "viewPage": "Ver página",
+  "edit": "Editar",
+  "itemCount": "{count, plural, one {# ítem} other {# ítems}}",
+  "itemsHeading": "{count} de {capacity}",
+  "empty": "Busca abajo lo primero que quieres poner.",
+  "full": "Ya está completa. Quita algo para agregar otro.",
+  "saveError": "No se pudo guardar. Inténtalo de nuevo.",
+  "moveUp": "Subir {title}",
+  "moveDown": "Bajar {title}",
+  "remove": "Quitar {title}",
+  "delete": "Eliminar Lámina",
+  "deleteTitle": "¿Eliminar esta Lámina?",
+  "deleteMessage": "No se puede deshacer.",
+  "cancel": "Cancelar",
+  "formatLossTitle": "Se quitarán algunos ítems",
+  "formatLossMessage": "Este formato tiene menos lugares. Se quitarán: {titles}.",
+  "formatLossConfirm": "Cambiar y quitar",
+  "showScoresHint": "Quien vea la Lámina verá tu nota de cada ítem, también en la imagen.",
+  "create": {
+    "heading": "Nueva Lámina",
+    "titlePlaceholder": "Mis 10 discos de 2026",
+    "submit": "Crear"
+  },
+  "fields": {
+    "title": "Título",
+    "format": "Formato",
+    "entityType": "Qué rankeas",
+    "audience": "Quién la ve",
+    "showScores": "Mostrar mis notas"
+  },
+  "formats": {
+    "top5": "Top 5",
+    "top10": "Top 10",
+    "grid9": "Grilla 3×3"
+  },
+  "entityTypes": {
+    "release-group": "Álbumes",
+    "recording": "Canciones"
+  },
+  "audience": {
+    "private": "Solo yo",
+    "followers": "Seguidores",
+    "public": "Pública"
+  },
+  "search": {
+    "release-group": "Buscar un álbum",
+    "recording": "Buscar una canción"
+  }
+}

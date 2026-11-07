@@ -13,7 +13,7 @@ const payload = {
   ref: "r1",
   url: "https://ejemplo.app/es/users/ana/album/x",
   title: "@ana: 86/100 a Disco",
-  imageUrl: "/api/share/image/rating/r1?locale=es&format=link&personal=1",
+  images: [{ format: "link" as const, url: "/api/share/image/rating/r1?locale=es&format=link&personal=1" }],
   imageAlt: "Disco",
   downloadName: "disco-ana",
 };
@@ -43,7 +43,7 @@ describe("hoja de lo propio", () => {
 
   it("tras el gesto pasa a las acciones normales sin cerrarse", async () => {
     const changed = vi.fn();
-    mocks.make.mockResolvedValue(state({ state: "public", canUnshare: true, payload: { ...payload, imageUrl: "/api/share/image/rating/r1?v=abc" } }));
+    mocks.make.mockResolvedValue(state({ state: "public", canUnshare: true, payload: { ...payload, images: [{ format: "link" as const, url: "/api/share/image/rating/r1?v=abc" }] } }));
     renderWithIntl(<OwnShareSheet open onClose={vi.fn()} kind="rating" refId="r1" onChanged={changed} />);
     await userEvent.click(await screen.findByRole("button", { name: "Hacer pública y compartir" }));
     expect(await screen.findByRole("button", { name: "Copiar enlace" })).toBeTruthy();

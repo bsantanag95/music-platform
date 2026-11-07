@@ -7,6 +7,9 @@ const mocks = vi.hoisted(() => ({ load: vi.fn(), render: vi.fn(), version: vi.fn
 
 vi.mock("@/services/share/targets", () => ({ loadShareTarget: mocks.load, shareTargetVersion: mocks.version }));
 vi.mock("@/services/share/render", () => ({ renderShareImage: mocks.render }));
+vi.mock("@/services/share/metadata", () => ({
+  shareFormatsOf: (target: { formats?: string[] }) => target.formats ?? ["link", "story"],
+}));
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: mocks.session }));
 vi.mock("@/services/share/own", () => ({
   isOwnShareKind: (value: string) => value === "rating" || value === "listen",
@@ -69,6 +72,18 @@ describe("GET /api/share/image/[kind]/[ref]", () => {
   it.each(["album", "song", "artist", "genre", "ceremony", "hall_class", "collection"])("el catálogo (%s) sí", async (kind) => {
     const res = await call(kind, "x", "?v=abc123def456");
     expect(res.headers.get("Cache-Control")).toBe("public, max-age=31536000, immutable");
+  });
+
+  it("un formato que el objeto no declara responde 400", async () => {
+    const res = await call("album", "rg1", "?format=square");
+    expect(res.status).toBe(400);
+    expect((await res.json()).code).toBe("VALIDATION_ERROR");
+  });
+
+  it("una Lámina sirve los formatos que declara", async () => {
+    mocks.load.mockResolvedValue({ ...target, formats: ["post", "link", "story"] });
+    expect((await call("top", "t1", "?format=post")).status).toBe(200);
+    expect((await call("top", "t1", "?format=square")).status).toBe(400);
   });
 
   it("pasa el formato al renderizador y nombra la descarga", async () => {
