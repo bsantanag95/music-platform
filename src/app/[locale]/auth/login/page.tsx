@@ -4,19 +4,20 @@ import { redirect } from "@/i18n/navigation";
 import { LoginPanel } from "@/components/auth/LoginPanel";
 import { resolveSession } from "@/services/auth/sessions";
 import { withClientMessages } from "@/i18n/client-messages";
-import { laminaAuthHref, laminaBuildHref, parseLaminaIntent } from "@/lib/laminas/intent";
+import { buildIntentAuthHref, buildIntentDestination, parseBuildIntent } from "@/lib/laminas/intent";
 
 async function LoginPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams?: Promise<{ reset?: string; lamina?: string }>;
+  searchParams?: Promise<{ reset?: string; lamina?: string; discografia?: string }>;
 }) {
   const { locale } = await params;
-  const { reset, lamina } = (await searchParams) ?? {};
-  const laminaId = parseLaminaIntent(lamina);
-  if (await resolveSession()) redirect({ href: laminaId ? laminaBuildHref(laminaId) : "/", locale });
+  const { reset, lamina, discografia } = (await searchParams) ?? {};
+  const intent = parseBuildIntent({ lamina, discografia });
+  const session = await resolveSession();
+  if (session) redirect({ href: intent ? buildIntentDestination(intent, session.user.username) : "/", locale });
   const t = await getTranslations("auth");
   return (
     <main className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center gap-8 px-4 py-12">
@@ -34,7 +35,7 @@ async function LoginPage({
           locale={locale}
           googleLabel={t("continueWithGoogle")}
           separator={t("orSeparator")}
-          laminaId={laminaId}
+          intent={intent}
           passwordAside={
             <Link
               href="/auth/forgot-password"
@@ -48,7 +49,7 @@ async function LoginPage({
       <p className="border-t border-ink-border pt-6 font-data text-sm text-paper-muted">
         {t("noAccount")}{" "}
         <Link
-          href={laminaAuthHref("/auth/register", laminaId)}
+          href={buildIntentAuthHref("/auth/register", intent)}
           className="text-accent underline-offset-4 transition-colors duration-150 hover:text-accent-hover hover:underline"
         >
           {t("register")}

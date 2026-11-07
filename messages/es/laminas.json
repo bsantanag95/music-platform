@@ -138,6 +138,22 @@
     "album": {
       "back": "← {artist}",
       "missing": "{count, plural, one {Te falta # canción valorada para la Lámina de este álbum.} other {Te faltan # canciones valoradas para la Lámina de este álbum.}}"
+    },
+    "rateMissing": "Valora lo que falta ({count})",
+    "rate": {
+      "title": "Valora lo que falta",
+      "description": "Los discos sin tu nota. Cada nota se guarda al tocarla.",
+      "done": "Ver mi discografía",
+      "none": "Ya valoraste todos los discos que se muestran.",
+      "legend": "Tu nota para {title}",
+      "value": "{value} estrellas",
+      "saved": "Guardada",
+      "failed": "No se pudo guardar",
+      "songs": "Canciones"
+    },
+    "cta": {
+      "title": "¿Y tu discografía de {artist}?",
+      "description": "Valora sus discos y compártela como esta."
     }
   }
 }

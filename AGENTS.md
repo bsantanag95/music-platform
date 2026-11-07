@@ -81,7 +81,8 @@ de cuál de las filas con el mismo título haya en la BD.
 >   Verifica la duración y la renovación por uso de las sesiones mantenidas, que las no mantenidas no se
 >   renuevan y caducan, la rotación que conserva la elección y que una sesión anterior a la columna
 >   queda como mantenida. `smoke-test-google-oauth.ts` además cubre `remember=0`, la reautenticación y la intención de Lámina
->   (alta nueva y cuenta existente van a armarla, un valor inválido se descarta y el callback no la lee de su query).
+>   (alta nueva y cuenta existente van a armarla, un valor inválido se descarta y el callback no la lee de su query) y la de discografía
+>   (alta nueva y cuenta existente van a la propia con su usuario, con las dos manda la Lámina, un valor inválido se descarta).
 > - `smoke-test-account-settings.ts` crea usuarios `smoke_acct_*` y los borra al terminar (el `ON
 >   DELETE CASCADE` limpia alias, tokens y sesiones). Si se interrumpió, limpiar con
 >   `DELETE FROM user_role_action WHERE actor_id IN (SELECT id FROM app_user WHERE username LIKE
@@ -164,7 +165,9 @@ de cuál de las filas con el mismo título haya en la BD.
 >   ediciones y canciones `Smoke Canción Disc *` (con el mismo prefijo de MBID; las canciones se borran por título: si se interrumpió, sumar
 >   `DELETE FROM recording WHERE title LIKE 'Smoke Canción Disc%';` después de borrar los discos) y verifica el umbral D9, los discos solo con canciones, la
 >   numeración entre medios, las preferencias (`CHECK` de `0085`, secciones, vista, que sobreviven a quitar la marca), la Lámina de álbum por visitante y la
->   lectura bajo 150 ms con 50 discos de 15 pistas. Necesita la migración `0085`.
+>   lectura bajo 150 ms con 50 discos de 15 pistas. Necesita la migración `0085`. Desde `add-discography-lamina-phase3` también verifica que la
+>   discografía del dueño existe sin valoraciones, con sus discos por valorar, que la Lámina de un álbum sin valorar existe solo para él y que una seguidora
+>   no recibe esa lista.
 > - `smoke-test-comment-replies.ts` crea un artista y un álbum sintéticos (MBID
 >   `5e0ce000-0000-4000-8000-0000000009b0` / `...09b1`) y usuarios `smoke_reply_*`, y los borra al terminar
 >   (también si falla; el `ON DELETE CASCADE` limpia comentarios, respuestas, likes y bloqueos). Si se

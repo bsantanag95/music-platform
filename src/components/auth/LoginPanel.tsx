@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import type { BuildIntent } from "@/lib/laminas/intent";
 import { AuthForm } from "./AuthForm";
 import { SocialSignIn } from "./SocialSignIn";
 
@@ -12,24 +13,24 @@ export function LoginPanel({
   googleLabel,
   separator,
   passwordAside,
-  laminaId = null,
+  intent = null,
 }: {
   locale: string;
   googleLabel: string;
   separator: string;
   passwordAside?: ReactNode;
-  laminaId?: string | null;
+  intent?: BuildIntent | null;
 }) {
   const [remember, setRemember] = useState(true);
   return (
     <>
-      <SocialSignIn locale={locale} label={googleLabel} separator={separator} remember={remember} laminaId={laminaId} />
+      <SocialSignIn locale={locale} label={googleLabel} separator={separator} remember={remember} intent={intent} />
       <AuthForm
         mode="login"
         passwordAside={passwordAside}
         remember={remember}
         onRememberChange={setRemember}
-        laminaId={laminaId}
+        intent={intent}
       />
     </>
   );

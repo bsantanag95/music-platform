@@ -23,6 +23,7 @@ vi.mock("next-intl/server", async () => {
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: mocks.session }));
 vi.mock("@/services/laminas/discography", () => ({ getDiscographyLamina: mocks.lamina, getDiscographyAlbum: mocks.album }));
 vi.mock("@/components/laminas/DiscographySettings", () => ({ DiscographySettings: () => <div>ajustes</div> }));
+vi.mock("@/components/laminas/RateInline", () => ({ RateInline: ({ target, title }: { target: string; title: string }) => <span>{`valorar:${target}:${title}`}</span> }));
 vi.mock("@/services/share/metadata", () => ({ buildShareMetadata: vi.fn() }));
 vi.mock("@/services/share/targets/discography", () => ({
   discographyRef: (userId: string, artistId: string, albumId?: string) => [userId, artistId, albumId].filter(Boolean).join("."),
@@ -51,6 +52,7 @@ const lamina = (over = {}) => ({
   artist: { id: ARTIST, name: "Banda" },
   discs: [disc(1, 4.5, 86), disc(2, 4), disc(3, 3)],
   songDiscs: [songDisc(1, [track(1, { stars: 5, detailedScore: 97 }), track(2, null)]), songDisc(2, [track(1, { stars: 3.5, detailedScore: null })])],
+  ownerDiscs: [],
   available: { disc: true, song: false },
   preference: { sections: [], view: "disc" },
   view: "disc",
@@ -61,7 +63,7 @@ const lamina = (over = {}) => ({
   ...over,
 });
 
-const render = async (search: { vista?: string; disco?: string } = {}) =>
+const render = async (search: { vista?: string; disco?: string; valorar?: string } = {}) =>
   renderWithIntl(await UserDiscographyPage({ params: Promise.resolve({ username: "ana", id: ARTIST }), searchParams: Promise.resolve(search) }));
 
 beforeEach(() => {
@@ -151,6 +153,53 @@ describe("discografía de una persona", () => {
   it("un álbum que no se puede ver responde 404", async () => {
     mocks.album.mockResolvedValue(null);
     await expect(render({ disco: "d9" })).rejects.toThrow("NOT_FOUND");
+  });
+
+  describe("valora lo que falta", () => {
+    const unratedDisc = { id: "d9", title: "Sin nota", year: 1999, coverThumbUrl: null, score: null, tracks: [] };
+
+    it("el dueño ve la entrada y, en el modo, cada disco sin nota con sus estrellas", async () => {
+      mocks.lamina.mockResolvedValue(lamina({ isOwner: true, ownerDiscs: [unratedDisc] }));
+      await render();
+      expect(screen.getByRole("link", { name: "Valora lo que falta (1)" })).toHaveAttribute("href", `/users/ana/artist/${ARTIST}?valorar=1`);
+      await render({ valorar: "1" });
+      expect(screen.getByText("valorar:release-group:Sin nota")).toBeTruthy();
+      expect(screen.getByRole("link", { name: "Canciones" })).toHaveAttribute("href", `/users/ana/artist/${ARTIST}?disco=d9`);
+    });
+
+    it("una visitante ignora el modo y no ve controles", async () => {
+      await render({ valorar: "1" });
+      expect(screen.queryByText(/valorar:/)).toBeNull();
+      expect(screen.getByText("86")).toBeTruthy();
+    });
+
+    it("en el álbum, el dueño valora las canciones sin nota", async () => {
+      const base = lamina({ isOwner: true });
+      mocks.album.mockResolvedValue({ lamina: base, disc: base.songDiscs[0], missing: 0 });
+      await render({ disco: "d1" });
+      expect(screen.getByText("valorar:recording:Canción 2")).toBeTruthy();
+    });
+  });
+
+  describe("arma la tuya", () => {
+    it("sin sesión lleva al registro con la intención de discografía", async () => {
+      mocks.lamina.mockResolvedValue(lamina({ shared: true }));
+      await render();
+      expect(screen.getByRole("link", { name: "Arma la tuya" })).toHaveAttribute("href", `/auth/register?discografia=${ARTIST}`);
+      expect(screen.getByText("¿Y tu discografía de Banda?")).toBeTruthy();
+    });
+
+    it("con sesión lleva a la propia, en el modo para valorar", async () => {
+      mocks.session.mockResolvedValue({ user: { id: "u2", username: "leo" } });
+      await render();
+      expect(screen.getByRole("link", { name: "Arma la tuya" })).toHaveAttribute("href", `/users/leo/artist/${ARTIST}?valorar=1`);
+    });
+
+    it("el dueño no lo ve", async () => {
+      mocks.lamina.mockResolvedValue(lamina({ isOwner: true }));
+      await render();
+      expect(screen.queryByRole("link", { name: "Arma la tuya" })).toBeNull();
+    });
   });
 
   it("al dueño le dice cuánto falta y no ofrece compartir", async () => {

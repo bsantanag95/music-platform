@@ -240,6 +240,7 @@ async function main() {
     check(big?.card.discography?.discs.filter((disc) => disc.cover.url).length === 0, "sin carátulas, todos tipográficos");
 
     await checkSongs(s, owner, follower);
+    await checkRateMissing(s, follower);
 
     console.log("\nSmoke test de la Lámina de discografía: OK");
   } finally {
@@ -372,3 +373,31 @@ main()
     console.error(error);
     process.exit(1);
   });
+
+/** Desde add-discography-lamina-phase3: la discografía del dueño existe siempre y lista lo que falta valorar. */
+async function checkRateMissing(s: Awaited<ReturnType<typeof loadServices>>, follower: { id: string }) {
+  console.log("Valora lo que falta");
+  const person = newUser("rate");
+  await db.insert(appUser).values(person);
+  await db.insert(userFollow).values({ followerId: follower.id, followedId: person.id, status: "accepted" });
+  const [band] = await db.insert(artist).values({ mbid: mbid(0xf08), type: "group", name: `Smoke Por Valorar ${suffix}` }).returning();
+  const discs = await db
+    .insert(releaseGroup)
+    .values([1975, 1977, 1979].map((year, n) => ({ mbid: mbid(0xa80 + n), title: `Smoke Por Valorar ${n + 1}`, category: "studio", primaryType: "Album", secondaryTypes: [], firstReleaseYear: year })))
+    .returning();
+  await db.insert(credit).values(discs.map((disc) => ({ artistId: band!.id, releaseGroupId: disc.id, role: "primary", position: 0 })));
+  const read = (viewer: string | null) => s.discography.getDiscographyLamina(person.username, band!.id, viewer);
+
+  const empty = await read(person.id);
+  check(empty !== null && empty.missing === 3 && empty.ownerDiscs.length === 3, "sin valoraciones, el dueño tiene su página con los 3 discos por valorar");
+  check(empty?.ownerDiscs.every((disc) => disc.score === null) === true, "todos sin nota");
+  check((await read(follower.id)) === null, "una seguidora no la ve todavía");
+  const album = await s.discography.getDiscographyAlbum(person.username, band!.id, discs[0]!.id, person.id);
+  check(album?.missing === 3, "el dueño abre la Lámina de un álbum sin valorar, con lo que falta");
+  check((await s.discography.getDiscographyAlbum(person.username, band!.id, discs[0]!.id, follower.id)) === null, "una seguidora, no");
+
+  for (const disc of discs) await s.social.upsertRating(await s.social.resolveSocialTarget("release-group", disc.id), person.id, 4);
+  const full = await read(person.id);
+  check(full?.missing === 0 && full.ownerDiscs.every((disc) => disc.score !== null), "valorados los 3, existe y no queda nada por valorar");
+  check((await read(follower.id))?.ownerDiscs.length === 0, "una seguidora no recibe la lista del dueño");
+}

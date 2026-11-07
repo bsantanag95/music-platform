@@ -354,6 +354,8 @@ el mismo umbral que el álbum, aplicado en el read-model (`artist-community.ts`)
 - La vista Por canción de una discografía se ofrece desde 10 canciones valoradas en al menos 2 discos; una pista sin valorar es una celda vacía,
   nunca un 0. Qué secciones suma (En vivo, Recopilatorios) y qué vista se comparte lo decide el dueño, por artista. La Lámina de un álbum existe
   desde 3 canciones valoradas y la abre la misma marca que la discografía.
+- La discografía propia existe siempre para su dueño, también sin valoraciones, para valorar lo que falta disco por disco o canción por canción.
+  Cada valoración se guarda como cualquier otra; la discografía no tiene un envío aparte.
 - El año de escucha de una fuente exige una escucha del mismo objetivo en ese año, contado en la zona horaria de la persona: una
   escucha de una canción no cuenta para su álbum.
 - Solo el catálogo usa una caché inmutable. Lo que es de una persona lleva caché corta, porque su dueño o moderación pueden cerrarlo.

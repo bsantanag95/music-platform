@@ -185,9 +185,10 @@ sigue prohibida.
 **Retorno post-autenticación.** El destino tras un login o alta exitosa vía Google es fijo:
 `/<locale>/search`, usando el locale validado y persistido en el estado del flujo. No se acepta un
 parámetro `returnTo` dinámico ni ninguna URL de retorno controlada por el cliente, para evitar
-abrir una redirección abierta. La única intención que cambia el destino es cerrada: el id validado de una
-Lámina (`lamina=<uuid>`, "Arma la tuya"), con el que el código arma `/<locale>/me/laminas?desde=<uuid>`,
-tanto en el alta local y el login como en Google, donde viaja en el estado del flujo (ADR 0052).
+abrir una redirección abierta. Las únicas intenciones que cambian el destino son cerradas: el id validado de una Lámina
+(`lamina=<uuid>`) o de un artista (`discografia=<uuid>`), de "Arma la tuya". Con ellas el código arma
+`/<locale>/me/laminas?desde=<uuid>` o `/<locale>/users/<usuario>/artist/<uuid>?valorar=1`, con el usuario ya
+autenticado, tanto en el alta local y el login como en Google, donde viajan en el estado del flujo (ADR 0052 y 0054).
 
 **Dependencia `jose`.** Se aprueba `jose` como dependencia para la validación de ID tokens y JWKS
 del flujo OIDC, en lugar de implementar esa criptografía manualmente. Ver `package.json` /

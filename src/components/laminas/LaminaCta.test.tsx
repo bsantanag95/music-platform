@@ -12,13 +12,13 @@ const ID = "8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f";
 
 describe("LaminaCta", () => {
   it("sin sesión lleva al registro y ofrece entrar, con la intención", () => {
-    renderWithIntl(<LaminaCta laminaId={ID} signedIn={false} />);
+    renderWithIntl(<LaminaCta intent={{ kind: "lamina", id: ID }} signedInHref={null} />);
     expect(screen.getByRole("link", { name: "Arma la tuya" })).toHaveAttribute("href", `/auth/register?lamina=${ID}`);
     expect(screen.getByRole("link", { name: "Ya tengo cuenta" })).toHaveAttribute("href", `/auth/login?lamina=${ID}`);
   });
 
   it("con sesión lleva directo al formulario", () => {
-    renderWithIntl(<LaminaCta laminaId={ID} signedIn />);
+    renderWithIntl(<LaminaCta intent={{ kind: "lamina", id: ID }} signedInHref={`/me/laminas?desde=${ID}`} />);
     expect(screen.getByRole("link", { name: "Arma la tuya" })).toHaveAttribute("href", `/me/laminas?desde=${ID}`);
     expect(screen.queryByRole("link", { name: "Ya tengo cuenta" })).toBeNull();
   });

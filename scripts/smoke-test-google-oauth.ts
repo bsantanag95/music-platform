@@ -423,6 +423,24 @@ async function main() {
     if (!injected.endsWith("/es/welcome")) throw new Error(`Lámina (query del callback): ${injected}`);
     console.log("OK 7 intención de Lámina -> alta y cuenta existente van a armarla; inválida y query del callback se ignoran");
 
+    // --- 8) Intención de discografía (ADR 0054) -------------------------------------
+    const artistId = randomUUID();
+    const emailDisco = `smoke-oauth-disco-${runId}@example.test`;
+    const subDisco = `smoke-sub-disco-${runId}`;
+    const ipDisco = `10.10.${runId.slice(0, 2)}.8`;
+    const fresh = await flowWith(ipDisco, "auth-code-d1", `&discografia=${artistId}`, subDisco, emailDisco);
+    const [discoUser] = await db.select().from(appUser).where(eq(appUser.email, emailDisco));
+    if (discoUser) createdUserIds.push(discoUser.id);
+    if (!discoUser || !fresh.endsWith(`/es/users/${discoUser.username}/artist/${artistId}?valorar=1`)) throw new Error(`Discografía (alta nueva): ${fresh}`);
+    if (discoUser.onboardedAt !== null) throw new Error("Discografía (alta nueva): el onboarding debe seguir pendiente");
+    const again = await flowWith(ipDisco, "auth-code-d2", `&discografia=${artistId}`, subDisco, emailDisco);
+    if (!again.endsWith(`/es/users/${discoUser.username}/artist/${artistId}?valorar=1`)) throw new Error(`Discografía (cuenta existente): ${again}`);
+    const both = await flowWith(ipDisco, "auth-code-d3", `&discografia=${artistId}&lamina=${laminaId}`, subDisco, emailDisco);
+    if (!both.endsWith(`/es/me/laminas?desde=${laminaId}`)) throw new Error(`Discografía y Lámina juntas: ${both}`);
+    const bad = await flowWith(ipDisco, "auth-code-d4", "&discografia=..%2F..%2Fadmin", subDisco, emailDisco);
+    if (!bad.endsWith("/es/welcome")) throw new Error(`Discografía (inválida): ${bad}`);
+    console.log("OK 8 intención de discografía -> alta y cuenta existente van a la propia, con su usuario; con las dos manda la Lámina; inválida se ignora");
+
     console.log("Smoke Google OAuth OK: flujo completo contra BD real.");
   } finally {
     for (const userId of createdUserIds) {

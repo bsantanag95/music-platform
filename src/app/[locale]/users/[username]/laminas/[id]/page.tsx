@@ -8,6 +8,7 @@ import { Link } from "@/i18n/navigation";
 import { withClientMessages } from "@/i18n/client-messages";
 import { ApiError } from "@/lib/api/errors";
 import { albumHref, songHref } from "@/lib/catalog-links";
+import { laminaBuildHref } from "@/lib/laminas/intent";
 import { isValidUuid } from "@/lib/validation";
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserLamina } from "@/services/laminas/laminas";
@@ -84,7 +85,7 @@ async function UserLaminaPage({ params }: PageProps) {
           </li>
         ))}
       </ol>
-      {owner ? null : <LaminaCta laminaId={lamina.id} signedIn={Boolean(session)} />}
+      {owner ? null : <LaminaCta intent={{ kind: "lamina", id: lamina.id }} signedInHref={session ? laminaBuildHref(lamina.id) : null} />}
     </main>
   );
 }
