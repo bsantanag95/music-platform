@@ -2250,18 +2250,27 @@ ya no existe: no distingue). Sin token, o con uno alterado o firmado con otro se
 `400 INVALID_UNSUBSCRIBE_TOKEN` y no cambia nada. Un `GET` sobre esta ruta no existe: el enlace del
 cuerpo del correo abre la página de confirmación, que es quien hace el `POST`.
 
-## Láminas (cambio `add-top-n-lamina-phase1`)
+## Láminas (cambios `add-top-n-lamina-phase1` y `add-top-n-lamina-phase2`)
 
 Todas con sesión. `LAMINA_NOT_FOUND` (404) si no existe o no es propia. Hacer pública exige que no haya suspensión social
 (`SOCIAL_SUSPENSION_ACTIVE`).
 
-- `GET /api/me/laminas` → `{ laminas }`. `POST` con `{ title, format, entityType, audience? }` → `201 { lamina }`. `format`: `top5`, `top10`,
-  `grid9`. `entityType`: `release-group`, `recording`.
+- `GET /api/me/laminas` → `{ laminas }`. `POST` con `{ title, format, entityType, audience?, targetIds? }` → `201 { lamina }`. `format`: `top5`,
+  `top10`, `grid9`. `entityType`: `release-group`, `recording`. `targetIds` (de 1 a 10, en orden) son los ítems elegidos desde una fuente: la
+  Lámina nace `private` y mandar además `audience` es `VALIDATION_ERROR`, igual que pasar del tope del formato.
 - `GET|PATCH|DELETE /api/me/laminas/[id]`. `PATCH` con `{ title?, format?, audience?, showScores? }`. Un formato con menos lugares quita los
   últimos ítems.
-- `POST /api/me/laminas/[id]/items` con `{ targetId }`: agrega al final, idempotente; `VALIDATION_ERROR` si está completa o el objetivo no existe.
+- `POST /api/me/laminas/[id]/items` con `{ targetId }` o `{ targetIds }` (de 1 a 10): agrega al final, en orden, omite lo que ya está y no cambia la
+  audiencia. `VALIDATION_ERROR` si no entra (un lote se agrega entero o no se agrega); `LIST_TARGET_INVALID` (404) si un objetivo no existe.
 - `PUT /api/me/laminas/[id]/items` con `{ itemIds }`: reordena; debe traer exactamente los ítems de la Lámina.
 - `DELETE /api/me/laminas/[id]/items/[itemId]`.
+- `GET /api/me/laminas/sources?source=&entityType=&tz=` → `{ years, decades, listenYears, genres, artists, lists }`. `source`: `ratings`, `favorites`,
+  `list`. Solo lo que la fuente tiene: hasta 20 géneros (con sus ancestros) y 200 artistas, de mayor a menor presencia; `source=list` trae solo `lists`,
+  las propias del tipo y con ítems.
+- `GET /api/me/laminas/candidates?source=&entityType=&tz=&year=&decade=&listenYear=&genre=&artist=&list=` → `{ candidates }`, hasta 30, cada uno con
+  `{ target, score }`. Orden: valoraciones, de mejor a peor; favoritos, por la nota propia y después del más reciente; lista, por su orden.
+  `VALIDATION_ERROR` con `year` y `decade` juntos, sin `list` en esa fuente o con filtros en ella. `list` ajena: `LIST_NOT_FOUND`; de otro tipo:
+  `VALIDATION_ERROR`. Un `genre` desconocido devuelve una lista vacía.
 
 ## Compartir (cambios `add-share-foundation` y `add-share-user-actions`, ADR 0049 y 0050)
 

@@ -232,7 +232,11 @@ Un ranking corto, numerado, con carátulas grandes. Formato propio, no la grilla
   - **desde tus valoraciones**: "tus 10 mejor valorados" con filtros por año de lanzamiento, año de
     escucha, década, género o artista;
   - desde favoritos o desde una lista existente.
-- **Mostrar nota:** opcional por lámina (hay quien quiere rankear sin exponer números).
+  Una fuente copia los ítems **una vez**: después la Lámina es del autor y no cambia si cambian las valoraciones, los
+  favoritos o la lista. Se elige al crear y, en una Lámina existente, completa solo los lugares libres. Lo armado desde una
+  fuente **nace "Solo yo"** (§8 D18). El "año de escucha" exige una escucha de ese mismo disco o canción en el diario, en la
+  zona horaria de la persona.
+- **Mostrar nota:** opcional por lámina (hay quien quiere rankear sin exponer números). Armar desde valoraciones no la enciende.
 - **Títulos sugeridos** que empujan rituales: "Mis 10 discos de 2026", "Top 5 de los 90", "Lo mejor de
   Iron Maiden". Encaja con el pilar "rituales anuales con opinión" — el fin de año es el momento de mayor
   viralidad de estos formatos.
@@ -455,6 +459,7 @@ hasta tener datos reales.
 | D14 | ¿Las láminas de autor generan entrada en el feed? | Sí · no | **Sí**, como una lista nueva, con la audiencia de la lámina |
 | D15 | Cómo se hace pública una valoración (`rating` no tiene audiencia: la ven dueño y seguidores, salvo destacadas y la que acompaña a una reseña) | Marca por valoración · columna `audience` · reutilizar destacadas | ✅ **Marca por valoración en tabla aparte**, como `rating_highlight`: sin tope, reversible y sin tocar `rating.updated_at`. Las destacadas no sirven: tope de 6 y cambian la vitrina del perfil |
 | D17 | ¿Una valoración compartida muestra el puntaje detallado? | Sí, como las destacadas · solo estrellas | ✅ **Sí**: compartir es una decisión explícita del dueño. La marca sigue al editar (muestra la nota vigente) y se borra con la valoración |
+| D18 | Audiencia de una Lámina armada desde una fuente | Nace privada · audiencia por defecto | ✅ **Nace "Solo yo"**, y lo hace cumplir el servidor: favoritos, listas o escuchas privadas pueden terminar en ella (`add-top-n-lamina-phase2`). Se publica con "Hacer pública y compartir". Completar una Lámina existente no cambia su audiencia, pero avisa |
 | D16 | Dirección de un comentario (un ancla no llega al servidor y los metadatos del álbum viven en un layout sin `searchParams`) | Página `/comment/<id>` · solo `?thread=` | ✅ **Página propia**: lleva la cita en la vista previa; "Ver la conversación" abre `?thread=`, que pasa a funcionar también en álbum y canción |
 
 ---

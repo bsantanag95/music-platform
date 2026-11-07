@@ -19,7 +19,7 @@ import {
 export const MY_RATING_SORTS = ["best", "worst", "recent", "title"] as const;
 export type MyRatingSort = (typeof MY_RATING_SORTS)[number];
 
-const RECORDING_YEAR_SQL = (recordingIdCol: AnyColumn) =>
+export const RECORDING_YEAR_SQL = (recordingIdCol: AnyColumn) =>
   sql<number | null>`(
     SELECT min(rg.first_release_year)::int
     FROM track t

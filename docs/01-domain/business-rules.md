@@ -344,6 +344,10 @@ el mismo umbral que el álbum, aplicado en el read-model (`artist-community.ts`)
 - Las notas de una Lámina nacen apagadas. Encenderlas es la decisión del dueño de mostrar su nota vigente de cada ítem, con su puntaje,
   a quien pueda ver la Lámina. Apagadas, no salen ni en la página ni en la imagen.
 - Una Lámina puede juntar hasta 10 carátulas (ADR 0051); lo que compone el sistema, hasta 4.
+- Una Lámina se puede llenar desde las valoraciones, los favoritos o una lista propia. La fuente copia los ítems una sola vez: la
+  Lámina no cambia si la fuente cambia. Creada así, nace privada aunque la audiencia por defecto sea otra, y sus notas siguen apagadas.
+- El año de escucha de una fuente exige una escucha del mismo objetivo en ese año, contado en la zona horaria de la persona: una
+  escucha de una canción no cuenta para su álbum.
 - Solo el catálogo usa una caché inmutable. Lo que es de una persona lleva caché corta, porque su dueño o moderación pueden cerrarlo.
 - Nada se vuelve público por compartirlo sin un gesto explícito. **Hacer pública y compartir** abre solo esa valoración
   (con una marca) o esa escucha (con `audience = 'public'`). Con el perfil privado no se ofrece: nadie sin cuenta podría

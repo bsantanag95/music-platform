@@ -89,6 +89,26 @@ export function albumInGenreTreeOnce(genreId: string): SQL {
   )`;
 }
 
+/**
+ * De las canciones de `candidates` (subconsulta), las que están en un álbum del subárbol. Es una lectura aparte y no una
+ * condición: dentro de un `IN`, el planificador estima pocas filas para quien tiene muchas valoraciones y repite el cruce por
+ * cada una (medido con 2.000 canciones: 170–360 ms).
+ */
+export async function recordingsInGenreTree(genreId: string, candidates: SQL): Promise<string[]> {
+  const rows = await db.execute<{ recording_id: string }>(sql`
+    WITH tree_albums AS MATERIALIZED (
+      SELECT e.release_group_id
+      FROM release_group_effective_genre e
+      WHERE e.genre_id IN ${genreWithDescendants(genreId)}
+    )
+    SELECT DISTINCT t.recording_id
+    FROM track t
+    JOIN release r ON r.id = t.release_id
+    JOIN tree_albums a ON a.release_group_id = r.release_group_id
+    WHERE t.recording_id IN (${candidates})`);
+  return rows.map((row) => row.recording_id);
+}
+
 /** Condición: el álbum de la consulta exterior tiene exactamente ese género efectivo (sin subgéneros). */
 export function albumHasGenre(genreId: string): SQL {
   return sql`EXISTS (

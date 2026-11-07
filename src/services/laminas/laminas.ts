@@ -3,7 +3,7 @@
 // filtran por kind = 'standard', y tienen sus propias rutas. Las notas nacen apagadas: `rating` no tiene audiencia, así
 // que mostrarlas es una decisión explícita del dueño.
 
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { rating, userList, userListItem } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
@@ -88,6 +88,18 @@ async function buildDetail(row: LaminaRow, { forOwner }: { forOwner: boolean }):
   };
 }
 
+async function assertTargets(entityType: LaminaEntityType, targetIds: string[]): Promise<void> {
+  for (const targetId of targetIds) await resolveListTarget(entityType, targetId);
+}
+
+function itemRows(listId: string, entityType: LaminaEntityType, targetIds: string[], lastPosition: number) {
+  return targetIds.map((targetId, index) => ({
+    listId,
+    position: lastPosition + index + 1,
+    ...(entityType === "recording" ? { recordingId: targetId } : { releaseGroupId: targetId }),
+  }));
+}
+
 export async function listMyLaminas(ownerId: string): Promise<LaminaSummary[]> {
   const rows = await db
     .select()
@@ -109,20 +121,26 @@ export async function listMyLaminas(ownerId: string): Promise<LaminaSummary[]> {
 
 export async function createLamina(
   ownerId: string,
-  params: { title: string; format: LaminaFormat; entityType: LaminaEntityType; audience?: Audience },
+  params: { title: string; format: LaminaFormat; entityType: LaminaEntityType; audience?: Audience; targetIds?: string[] },
 ): Promise<LaminaDetail> {
-  const [created] = await db
-    .insert(userList)
-    .values({
-      ownerId,
-      entityType: params.entityType,
-      title: normalizeTitle(params.title),
-      audience: await resolveNewContentAudience(ownerId, "list", params.audience),
-      kind: "top",
-      laminaFormat: params.format,
-    })
-    .returning();
-  if (!created) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo crear la Lámina");
+  const targetIds = [...new Set(params.targetIds ?? [])];
+  const fromSource = targetIds.length > 0;
+  if (fromSource && params.audience) throw new ApiError("VALIDATION_ERROR", 400, "Una Lámina armada desde una fuente nace privada");
+  if (targetIds.length > LAMINA_CAPACITY[params.format]) throw new ApiError("VALIDATION_ERROR", 400, "No entran en la Lámina");
+  // Fuera de la transacción: mismo motivo que en `addLaminaItems`.
+  await assertTargets(params.entityType, targetIds);
+  // Una fuente puede traer favoritos, listas o escuchas privadas: publicarla es una decisión aparte, y no depende del defecto.
+  const audience = fromSource ? "private" : await resolveNewContentAudience(ownerId, "list", params.audience);
+
+  const created = await db.transaction(async (tx) => {
+    const [row] = await tx
+      .insert(userList)
+      .values({ ownerId, entityType: params.entityType, title: normalizeTitle(params.title), audience, kind: "top", laminaFormat: params.format })
+      .returning();
+    if (!row) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo crear la Lámina");
+    if (fromSource) await tx.insert(userListItem).values(itemRows(row.id, params.entityType, targetIds, 0));
+    return row;
+  });
   return buildDetail(created, { forOwner: true });
 }
 
@@ -193,12 +211,18 @@ export async function deleteLamina(id: string, ownerId: string): Promise<void> {
   await db.delete(userList).where(and(eq(userList.id, id), eq(userList.ownerId, ownerId), eq(userList.kind, "top")));
 }
 
-/** Agrega al final. Idempotente: un repetido no cambia nada. El tope se cuenta con la lista bloqueada. */
-export async function addLaminaItem(id: string, ownerId: string, targetId: string): Promise<LaminaDetail> {
+/** Agrega al final. Idempotente: un repetido no cambia nada. */
+export function addLaminaItem(id: string, ownerId: string, targetId: string): Promise<LaminaDetail> {
+  return addLaminaItems(id, ownerId, [targetId]);
+}
+
+/** Agrega en orden, entero o nada: los repetidos se omiten y el tope se cuenta con la lista bloqueada. */
+export async function addLaminaItems(id: string, ownerId: string, targetIds: string[]): Promise<LaminaDetail> {
   // Fuera de la transacción: leer con otra conexión mientras se espera el bloqueo agotaría el pool con pedidos en paralelo.
   const { entityType: rawEntityType } = await requireOwned(id, ownerId);
   const entityType = rawEntityType as LaminaEntityType;
-  await resolveListTarget(entityType, targetId);
+  const requested = [...new Set(targetIds)];
+  await assertTargets(entityType, requested);
 
   await db.transaction(async (tx) => {
     const [row] = await tx
@@ -210,23 +234,15 @@ export async function addLaminaItem(id: string, ownerId: string, targetId: strin
     if (!row) throw notFound();
 
     const column = entityType === "recording" ? userListItem.recordingId : userListItem.releaseGroupId;
-    const [stats] = await tx
-      .select({
-        total: sql<number>`count(*)::int`,
-        last: sql<number>`coalesce(max(${userListItem.position}), 0)::int`,
-        repeated: sql<number>`count(*) FILTER (WHERE ${column} = ${targetId}::uuid)::int`,
-      })
-      .from(userListItem)
-      .where(eq(userListItem.listId, id));
-    if (stats && stats.repeated > 0) return;
-    if ((stats?.total ?? 0) >= LAMINA_CAPACITY[row.laminaFormat as LaminaFormat]) {
+    const current = await tx.select({ target: column, position: userListItem.position }).from(userListItem).where(eq(userListItem.listId, id));
+    const known = new Set(current.map((item) => item.target));
+    const fresh = requested.filter((targetId) => !known.has(targetId));
+    if (fresh.length === 0) return;
+    if (current.length + fresh.length > LAMINA_CAPACITY[row.laminaFormat as LaminaFormat]) {
       throw new ApiError("VALIDATION_ERROR", 400, "La Lámina ya está completa");
     }
-    await tx.insert(userListItem).values({
-      listId: id,
-      position: (stats?.last ?? 0) + 1,
-      ...(entityType === "recording" ? { recordingId: targetId } : { releaseGroupId: targetId }),
-    });
+    const last = current.reduce((max, item) => Math.max(max, item.position), 0);
+    await tx.insert(userListItem).values(itemRows(id, entityType, fresh, last));
     // Toca `updated_at` por el trigger: el feed y el listado la muestran como actualizada.
     await tx.update(userList).set({ title: row.title }).where(eq(userList.id, id));
   });
