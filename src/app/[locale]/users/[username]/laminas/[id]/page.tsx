@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { LaminaCta } from "@/components/laminas/LaminaCta";
+import { TierListView } from "@/components/laminas/TierListView";
 import { ShareAction } from "@/components/share/ShareAction";
 import { Link } from "@/i18n/navigation";
 import { withClientMessages } from "@/i18n/client-messages";
@@ -11,7 +12,8 @@ import { albumHref, songHref } from "@/lib/catalog-links";
 import { laminaBuildHref } from "@/lib/laminas/intent";
 import { isValidUuid } from "@/lib/validation";
 import { resolveSession } from "@/services/auth/sessions";
-import { getUserLamina } from "@/services/laminas/laminas";
+import { getUserLamina, laminaKindById } from "@/services/laminas/laminas";
+import { getUserTierList } from "@/services/laminas/tiers";
 import { buildShareMetadata } from "@/services/share/metadata";
 
 // Página pública de una Lámina (spec top-laminas): el destino de lo que se comparte. Cada ítem lleva a su disco o su
@@ -23,13 +25,50 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  return isValidUuid(id) ? buildShareMetadata("top", id, await getLocale(), { withTitle: true }) : {};
+  if (!isValidUuid(id)) return {};
+  return buildShareMetadata((await laminaKindById(id)) === "tier" ? "tier" : "top", id, await getLocale(), { withTitle: true });
+}
+
+/** Tier list (spec tier-laminas): los seis niveles, sin la bandeja. "Arma la tuya" llega en la Fase 3. */
+async function tierListPage(username: string, id: string, viewerId: string | null, viewerUsername: string | null) {
+  const tierList = await getUserTierList(username, id, viewerId).catch((error: unknown) => {
+    if (error instanceof ApiError) return null;
+    throw error;
+  });
+  if (!tierList) notFound();
+  const t = await getTranslations("laminas");
+  const owner = viewerUsername === username;
+  return (
+    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-12">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link href={`/users/${encodeURIComponent(username)}`} className="font-data text-xs text-paper-muted hover:text-paper">
+          @{username}
+        </Link>
+        <div className="flex items-center gap-4">
+          {owner ? (
+            <Link href={`/me/laminas/${tierList.id}`} className="font-data text-xs text-paper-muted hover:text-paper">
+              {t("edit")}
+            </Link>
+          ) : null}
+          <ShareAction kind="tier" refId={tierList.id} />
+        </div>
+      </div>
+      <header className="flex flex-col gap-1">
+        <p className="font-data text-xs uppercase tracking-wider text-paper-muted">{t("formats.tier")}</p>
+        <h1 className="font-display text-3xl text-paper">{tierList.title}</h1>
+      </header>
+      <TierListView tierList={tierList} tierItemsLabel={(label, count) => t("tier.tierItems", { group: label, count })} />
+    </main>
+  );
 }
 
 async function UserLaminaPage({ params }: PageProps) {
   const { username, id } = await params;
   if (!isValidUuid(id)) notFound();
   const session = await resolveSession();
+  if ((await laminaKindById(id)) === "tier") {
+    return tierListPage(username, id, session?.user.id ?? null, session?.user.username ?? null);
+  }
   const lamina = await getUserLamina(username, id, session?.user.id ?? null).catch((error: unknown) => {
     if (error instanceof ApiError) return null;
     throw error;

@@ -96,7 +96,8 @@ function sectionOf(row: Pick<DiscographyRow, "primaryType" | "secondaryTypes" | 
   return discographySection({ primaryType, secondaryTypes, creditRole, category: row.category as ReleaseGroupCategory });
 }
 
-function isMainDisc(row: Pick<DiscographyRow, "primaryType" | "secondaryTypes" | "category" | "creditRole">): boolean {
+/** Disco de la sección principal (la de la Lámina de discografía y el prellenado de la tier list). */
+export function isMainDisc(row: Pick<DiscographyRow, "primaryType" | "secondaryTypes" | "category" | "creditRole">): boolean {
   return sectionOf(row) === "main";
 }
 

@@ -55,7 +55,8 @@
       "top10": "Top 10",
       "grid9": "Top 9",
       "discography": "Discography",
-      "discographyAlbum": "Album"
+      "discographyAlbum": "Album",
+      "tier": "Tier list"
     },
     "category": {
       "studio": "Studio album",
@@ -133,7 +134,8 @@
       "listenNote": "This listen is not public. To make the link work, make it public: your note will be visible too.",
       "privateProfile": "Your profile is private: nobody without an account could open a link. You can download the image.",
       "top": "This Card is not public. To make the link work, make it public.",
-      "discography": "This discography isn't public. If you make it public, your ratings for this artist will be visible, including future ones, and so will your progress. You can stop sharing it at any time."
+      "discography": "This discography isn't public. If you make it public, your ratings for this artist will be visible, including future ones, and so will your progress. You can stop sharing it at any time.",
+      "tier": "This tier list isn’t public. To make the link work, make it public: its tiers will be visible, not the tray. Your ratings only if you show them."
     },
     "unavailable": "This content can no longer be shared."
   },

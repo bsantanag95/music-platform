@@ -193,6 +193,10 @@ export async function buildDataExport(userId: string, now: Date = new Date()): P
           description: userList.description,
           audience: userList.audience,
           kind: userList.kind,
+          // Láminas: formato y notas del Top N (0083), etiquetas de la tier list (0086). El nivel de cada disco va en sus ítems.
+          laminaFormat: userList.laminaFormat,
+          laminaShowScores: userList.laminaShowScores,
+          tierLabels: userList.tierLabels,
           journeyArtistId: userList.journeyArtistId,
           createdAt: userList.createdAt,
           updatedAt: userList.updatedAt,

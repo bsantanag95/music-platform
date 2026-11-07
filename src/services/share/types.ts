@@ -72,6 +72,16 @@ export interface ShareDiscographyAlbumCard {
   more: number;
 }
 
+/**
+ * Tier list: seis niveles de S a E, vacíos incluidos, sin la bandeja. Solo los primeros 10 discos llevan carátula (ADR 0051); el resto
+ * va con `cover.url` nula, como ficha de texto. Las notas, solo si la tier list las muestra.
+ */
+export interface ShareTierCard {
+  byline: string;
+  labels: string[];
+  tiers: Array<Array<{ cover: ShareImageRef; title: string; stars: number | null; detailedScore: number | null }>>;
+}
+
 export interface ShareCard {
   kicker: string;
   title: string;
@@ -91,6 +101,7 @@ export interface ShareCard {
   top?: ShareTopCard;
   discography?: ShareDiscographyCard;
   discographyAlbum?: ShareDiscographyAlbumCard;
+  tier?: ShareTierCard;
 }
 
 export interface ShareTarget {

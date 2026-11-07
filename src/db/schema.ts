@@ -1189,6 +1189,8 @@ isOfficial: boolean("is_official").notNull().default(false),
     // Lámina Top N (migración 0083): `kind = 'top'` reutiliza la tabla, como Camino. Las notas nacen apagadas.
     laminaFormat: text("lamina_format"),
     laminaShowScores: boolean("lamina_show_scores").notNull().default(false),
+    // Tier list (migración 0086): `kind = 'tier'`, las seis etiquetas de S a E. El color de cada nivel no se guarda.
+    tierLabels: text("tier_labels").array(),
     journeyArtistId: uuid("journey_artist_id").references(() => artist.id, { onDelete: "cascade" }),
     journeyArchivedAt: timestamp("journey_archived_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -1208,10 +1210,14 @@ isOfficial: boolean("is_official").notNull().default(false),
     check("chk_user_list_title", sql`length(${t.title}) <= 100`),
     check("chk_user_list_description", sql`${t.description} IS NULL OR length(${t.description}) <= 500`),
     check("chk_user_list_moderation_status", sql`${t.moderationStatus} IN ('visible', 'hidden')`),
-    check("chk_user_list_kind", sql`${t.kind} IN ('standard', 'artist_journey', 'custom_journey', 'top')`),
+    check("chk_user_list_kind", sql`${t.kind} IN ('standard', 'artist_journey', 'custom_journey', 'top', 'tier')`),
     check("chk_user_list_lamina_format", sql`${t.laminaFormat} IS NULL OR ${t.laminaFormat} IN ('top5', 'top10', 'grid9')`),
     check("chk_user_list_lamina_kind", sql`(${t.kind} = 'top') = (${t.laminaFormat} IS NOT NULL)`),
     check("chk_user_list_lamina_entity", sql`${t.kind} <> 'top' OR ${t.entityType} IN ('release-group', 'recording')`),
+    // fn_tier_labels_valid (0086): seis etiquetas de 1 a 12 caracteres, sin espacios a los costados.
+    check("chk_user_list_tier_labels", sql`${t.tierLabels} IS NULL OR fn_tier_labels_valid(${t.tierLabels})`),
+    check("chk_user_list_tier_kind", sql`(${t.kind} = 'tier') = (${t.tierLabels} IS NOT NULL)`),
+    check("chk_user_list_tier_entity", sql`${t.kind} <> 'tier' OR ${t.entityType} IN ('release-group', 'recording')`),
   ],
 );
 
@@ -1228,10 +1234,13 @@ export const userListItem = pgTable(
     }),
     recordingId: uuid("recording_id").references(() => recording.id, { onDelete: "cascade" }),
     position: integer("position").notNull(),
+    // Nivel en una tier list (0086): 0 = S … 5 = E; NULL = bandeja. Solo lo escribe el servicio de tier lists.
+    tier: smallint("tier"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     index("idx_user_list_item_list").on(t.listId, t.position),
+    check("chk_user_list_item_tier", sql`${t.tier} IS NULL OR ${t.tier} BETWEEN 0 AND 5`),
     check(
       "chk_user_list_item_single_target",
       sql`num_nonnulls(${t.artistId}, ${t.releaseGroupId}, ${t.recordingId}) = 1`,
@@ -2392,7 +2401,7 @@ export const shareEvent = pgTable(
     index("idx_share_event_target").on(t.targetKind, t.targetRef),
     check(
       "chk_share_event_target_kind",
-      sql`${t.targetKind} IN ('album', 'song', 'artist', 'genre', 'awards', 'award', 'ceremony', 'halls', 'hall', 'hall_class', 'collections', 'collection', 'profile', 'review', 'comment', 'list', 'camino', 'user_collection', 'fingerprint', 'rating', 'listen', 'top', 'discography')`,
+      sql`${t.targetKind} IN ('album', 'song', 'artist', 'genre', 'awards', 'award', 'ceremony', 'halls', 'hall', 'hall_class', 'collections', 'collection', 'profile', 'review', 'comment', 'list', 'camino', 'user_collection', 'fingerprint', 'rating', 'listen', 'top', 'discography', 'tier')`,
     ),
     check("chk_share_event_target_ref", sql`char_length(${t.targetRef}) BETWEEN 1 AND 200`),
     check(

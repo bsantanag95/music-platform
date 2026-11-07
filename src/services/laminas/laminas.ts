@@ -21,6 +21,10 @@ export type LaminaEntityType = (typeof LAMINA_ENTITY_TYPES)[number];
 
 export const LAMINA_CAPACITY: Record<LaminaFormat, number> = { top5: 5, top10: 10, grid9: 9 };
 
+/** Láminas de autor guardadas en `user_list`: el Top N (0083) y la tier list (0086, `src/services/laminas/tiers.ts`). */
+export const LAMINA_KINDS = ["top", "tier"] as const;
+export type LaminaKind = (typeof LAMINA_KINDS)[number];
+
 export interface LaminaScore {
   stars: string;
   detailedScore: number | null;
@@ -30,8 +34,10 @@ export type LaminaItem = UserListItemEntry & { score: LaminaScore | null };
 
 export interface LaminaSummary {
   id: string;
+  kind: LaminaKind;
   title: string;
-  format: LaminaFormat;
+  /** Formato del Top N; `null` en una tier list, que tiene uno solo. */
+  format: LaminaFormat | null;
   entityType: LaminaEntityType;
   audience: Audience;
   updatedAt: string;
@@ -39,15 +45,69 @@ export interface LaminaSummary {
   coverThumbs: string[];
 }
 
-export interface LaminaDetail extends Omit<LaminaSummary, "itemCount" | "coverThumbs"> {
+export interface LaminaDetail extends Omit<LaminaSummary, "itemCount" | "coverThumbs" | "kind" | "format"> {
+  format: LaminaFormat;
   showScores: boolean;
   items: LaminaItem[];
 }
 
-type LaminaRow = typeof userList.$inferSelect;
+export type LaminaRow = typeof userList.$inferSelect;
 
-function notFound(): ApiError {
+export function notFound(): ApiError {
   return new ApiError("LAMINA_NOT_FOUND", 404, "La Lámina no existe");
+}
+
+/** Tipo de una Lámina propia; `LAMINA_NOT_FOUND` si no existe o es de otra persona. Sirve para despachar rutas y páginas. */
+export async function ownedLaminaKind(id: string, ownerId: string): Promise<LaminaKind> {
+  const [row] = await db
+    .select({ kind: userList.kind })
+    .from(userList)
+    .where(and(eq(userList.id, id), eq(userList.ownerId, ownerId), inArray(userList.kind, [...LAMINA_KINDS])))
+    .limit(1);
+  if (!row) throw notFound();
+  return row.kind as LaminaKind;
+}
+
+/**
+ * Tipo de una Lámina por su id, sin mirar quién la ve: solo despacha la página pública y sus metadatos, que después aplican las reglas de
+ * visibilidad de cada tipo. `null` si no es una Lámina.
+ */
+export async function laminaKindById(id: string): Promise<LaminaKind | null> {
+  const [row] = await db
+    .select({ kind: userList.kind })
+    .from(userList)
+    .where(and(eq(userList.id, id), inArray(userList.kind, [...LAMINA_KINDS])))
+    .limit(1);
+  return (row?.kind as LaminaKind | undefined) ?? null;
+}
+
+/**
+ * Fila de una Lámina ajena con las reglas de su página pública: audiencia del perfil y, salvo para el dueño, sin lo oculto por
+ * moderación. `LAMINA_NOT_FOUND` si no se puede ver.
+ */
+export async function findVisibleLamina(
+  username: string,
+  id: string,
+  viewerId: string | null,
+): Promise<{ row: LaminaRow; forOwner: boolean }> {
+  const profile = await getProfileByUsername(username, viewerId);
+  const audiences = audiencesForProfile(profile);
+  if (audiences.length === 0) throw notFound();
+  const [row] = await db
+    .select()
+    .from(userList)
+    .where(
+      and(
+        eq(userList.id, id),
+        eq(userList.ownerId, profile.id),
+        inArray(userList.kind, [...LAMINA_KINDS]),
+        inArray(userList.audience, audiences),
+        profile.relation === "self" ? undefined : eq(userList.moderationStatus, "visible"),
+      ),
+    )
+    .limit(1);
+  if (!row) throw notFound();
+  return { row, forOwner: profile.relation === "self" };
 }
 
 async function requireOwned(id: string, ownerId: string): Promise<LaminaRow> {
@@ -61,7 +121,7 @@ async function requireOwned(id: string, ownerId: string): Promise<LaminaRow> {
 }
 
 /** Notas vigentes del dueño para los ítems, por id del objetivo. */
-async function ownerScores(row: LaminaRow, items: UserListItemEntry[]): Promise<Map<string, LaminaScore>> {
+export async function ownerScores(row: LaminaRow, items: UserListItemEntry[]): Promise<Map<string, LaminaScore>> {
   const ids = items.map((item) => item.target.id);
   if (ids.length === 0) return new Map();
   const column = row.entityType === "recording" ? rating.recordingId : rating.releaseGroupId;
@@ -104,13 +164,14 @@ export async function listMyLaminas(ownerId: string): Promise<LaminaSummary[]> {
   const rows = await db
     .select()
     .from(userList)
-    .where(and(eq(userList.ownerId, ownerId), eq(userList.kind, "top")))
+    .where(and(eq(userList.ownerId, ownerId), inArray(userList.kind, [...LAMINA_KINDS])))
     .orderBy(desc(userList.updatedAt), desc(userList.id));
   const enrichment = await enrichLists(rows.map((row) => row.id));
   return rows.map((row) => ({
     id: row.id,
+    kind: row.kind as LaminaKind,
     title: row.title,
-    format: row.laminaFormat as LaminaFormat,
+    format: (row.laminaFormat as LaminaFormat | null) ?? null,
     entityType: row.entityType as LaminaEntityType,
     audience: row.audience as Audience,
     updatedAt: row.updatedAt.toISOString(),
@@ -148,26 +209,11 @@ export async function getOwnedLamina(id: string, ownerId: string): Promise<Lamin
   return buildDetail(await requireOwned(id, ownerId), { forOwner: true });
 }
 
-/** Lectura ajena: audiencia del perfil y, salvo para el dueño, sin lo oculto por moderación. */
+/** Lectura ajena de un Top N, con las reglas de `findVisibleLamina`. */
 export async function getUserLamina(username: string, id: string, viewerId: string | null): Promise<LaminaDetail> {
-  const profile = await getProfileByUsername(username, viewerId);
-  const audiences = audiencesForProfile(profile);
-  if (audiences.length === 0) throw notFound();
-  const [row] = await db
-    .select()
-    .from(userList)
-    .where(
-      and(
-        eq(userList.id, id),
-        eq(userList.ownerId, profile.id),
-        eq(userList.kind, "top"),
-        inArray(userList.audience, audiences),
-        profile.relation === "self" ? undefined : eq(userList.moderationStatus, "visible"),
-      ),
-    )
-    .limit(1);
-  if (!row) throw notFound();
-  return buildDetail(row, { forOwner: profile.relation === "self" });
+  const { row, forOwner } = await findVisibleLamina(username, id, viewerId);
+  if (row.kind !== "top") throw notFound();
+  return buildDetail(row, { forOwner });
 }
 
 export interface LaminaInspiration {
@@ -235,9 +281,10 @@ export async function updateLamina(
   return getOwnedLamina(id, ownerId);
 }
 
+/** Borra una Lámina propia de cualquier tipo. */
 export async function deleteLamina(id: string, ownerId: string): Promise<void> {
-  await requireOwned(id, ownerId);
-  await db.delete(userList).where(and(eq(userList.id, id), eq(userList.ownerId, ownerId), eq(userList.kind, "top")));
+  await ownedLaminaKind(id, ownerId);
+  await db.delete(userList).where(and(eq(userList.id, id), eq(userList.ownerId, ownerId), inArray(userList.kind, [...LAMINA_KINDS])));
 }
 
 /** Agrega al final. Idempotente: un repetido no cambia nada. */
