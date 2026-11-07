@@ -36,6 +36,7 @@ import {
   releaseGroupGenreSeed,
   shareEvent,
   track,
+  userBlock,
   userFollow,
   userList,
   userListItem,
@@ -250,6 +251,36 @@ async function checkSources(s: Services) {
   check((await s.laminas.addLaminaItems(built.id, person.id, [a5.id])).audience === "public", "completar no cambia la audiencia");
 }
 
+async function checkInspiration(s: Services) {
+  console.log("Arma la tuya");
+  const author = newUser("insp");
+  const visitor = newUser("visit");
+  const blocked = newUser("blocked");
+  await db.insert(appUser).values([author, visitor, blocked]);
+  await db.insert(userBlock).values({ blockerId: author.id, blockedId: blocked.id });
+  const params = { title: "Mi año", format: "top10" as const, entityType: "recording" as const };
+  const lamina = await s.laminas.createLamina(author.id, { ...params, audience: "public" });
+
+  const read = await s.laminas.getLaminaInspiration(lamina.id, visitor.id);
+  check(read?.format === "top10" && read.entityType === "recording" && read.title === "Mi año" && read.ownerUsername === author.username, "hereda formato, tipo y título");
+  check(!("items" in (read ?? {})), "sin ítems");
+  check((await s.laminas.getLaminaInspiration(lamina.id, author.id)) === null, "la propia no inspira");
+  check((await s.laminas.getLaminaInspiration(randomUUID(), visitor.id)) === null, "una inexistente no falla");
+  check((await s.laminas.getLaminaInspiration(lamina.id, blocked.id)) === null, "un bloqueo la oculta");
+
+  await s.laminas.updateLamina(lamina.id, author.id, { audience: "followers" });
+  check((await s.laminas.getLaminaInspiration(lamina.id, visitor.id)) === null, "para seguidores, quien no sigue no hereda");
+  await db.insert(userFollow).values({ followerId: visitor.id, followedId: author.id, status: "accepted" });
+  check((await s.laminas.getLaminaInspiration(lamina.id, visitor.id)) !== null, "un seguidor sí");
+  await s.laminas.updateLamina(lamina.id, author.id, { audience: "private" });
+  check((await s.laminas.getLaminaInspiration(lamina.id, visitor.id)) === null, "privada, nadie");
+  await s.laminas.updateLamina(lamina.id, author.id, { audience: "public" });
+  await db.update(userList).set({ moderationStatus: "hidden" }).where(eq(userList.id, lamina.id));
+  check((await s.laminas.getLaminaInspiration(lamina.id, visitor.id)) === null, "oculta por moderación, nadie");
+  await db.update(userList).set({ moderationStatus: "visible", kind: "standard", laminaFormat: null }).where(eq(userList.id, lamina.id));
+  check((await s.laminas.getLaminaInspiration(lamina.id, visitor.id)) === null, "una lista común no inspira");
+}
+
 async function measure(label: string, read: () => Promise<unknown>) {
   await read();
   const times: number[] = [];
@@ -395,6 +426,7 @@ async function main() {
     const orphans = await db.select({ n: sql<number>`count(*)::int` }).from(userListItem).where(eq(userListItem.listId, top.id));
     check(orphans[0]?.n === 0, "borrarla borra sus ítems");
 
+    await checkInspiration(s);
     await checkSources(s);
     await checkSourcePerformance(s);
 

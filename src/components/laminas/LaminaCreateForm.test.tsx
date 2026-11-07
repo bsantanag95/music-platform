@@ -5,7 +5,10 @@ import { renderWithIntl } from "@/test/i18n-test-utils";
 
 const mocks = vi.hoisted(() => ({ create: vi.fn(), push: vi.fn(), options: vi.fn(), candidates: vi.fn() }));
 
-vi.mock("@/i18n/navigation", () => ({ useRouter: () => ({ push: mocks.push }) }));
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>,
+  useRouter: () => ({ push: mocks.push }),
+}));
 vi.mock("@/lib/api/laminas", () => ({
   createLamina: mocks.create,
   fetchLaminaSourceOptions: mocks.options,
@@ -111,6 +114,34 @@ describe("LaminaCreateForm", () => {
     await screen.findByRole("checkbox", { name: /Disco 1/ });
     expect(mocks.candidates).toHaveBeenCalledWith(expect.objectContaining({ source: "list" }), { list: list.id }, expect.anything());
     expect(screen.getByRole("textbox", { name: "Título" })).toHaveValue("Top 5 de Viaje");
+  });
+
+  describe("inspirada en otra Lámina", () => {
+    const inspiration = { id: "50000000-0000-4000-8000-000000000001", title: "Mi año", format: "top10", entityType: "recording", ownerUsername: "ana" } as const;
+    const renderInspired = () => renderWithIntl(<LaminaCreateForm currentYear={2026} inspiration={inspiration} />);
+
+    it("trae formato y tipo, y el título solo como sugerencia", () => {
+      renderInspired();
+      expect(screen.getByRole("combobox", { name: "Formato" })).toHaveValue("top10");
+      expect(screen.getByRole("combobox", { name: "Qué rankeas" })).toHaveValue("recording");
+      expect(screen.getByRole("textbox", { name: "Título" })).toHaveValue("");
+      expect(screen.getByRole("link", { name: "Como la de @ana" })).toHaveAttribute("href", `/users/ana/laminas/${inspiration.id}`);
+    });
+
+    it("tocar la sugerencia la deja en el campo, sin ítems ajenos", async () => {
+      renderInspired();
+      await userEvent.click(screen.getByRole("button", { name: "Mi año" }));
+      expect(screen.getByRole("textbox", { name: "Título" })).toHaveValue("Mi año");
+      await userEvent.click(screen.getByRole("button", { name: "Crear" }));
+      expect(mocks.create).toHaveBeenCalledWith({ title: "Mi año", format: "top10", entityType: "recording", targetIds: undefined });
+    });
+
+    it("la sugerencia sigue con una fuente", async () => {
+      renderInspired();
+      await userEvent.click(screen.getByRole("button", { name: "Mis valoraciones" }));
+      await screen.findByRole("checkbox", { name: /Disco 1/ });
+      expect(screen.getByRole("button", { name: "Mi año" })).toBeTruthy();
+    });
   });
 
   it("un fallo al cargar se muestra", async () => {

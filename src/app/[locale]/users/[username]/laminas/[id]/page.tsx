@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
+import { LaminaCta } from "@/components/laminas/LaminaCta";
 import { ShareAction } from "@/components/share/ShareAction";
 import { Link } from "@/i18n/navigation";
 import { withClientMessages } from "@/i18n/client-messages";
@@ -83,6 +84,7 @@ async function UserLaminaPage({ params }: PageProps) {
           </li>
         ))}
       </ol>
+      {owner ? null : <LaminaCta laminaId={lamina.id} signedIn={Boolean(session)} />}
     </main>
   );
 }

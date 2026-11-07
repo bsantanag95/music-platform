@@ -3,14 +3,19 @@ import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { LaminaCreateForm } from "@/components/laminas/LaminaCreateForm";
 import { Link } from "@/i18n/navigation";
 import { withClientMessages } from "@/i18n/client-messages";
+import { parseLaminaIntent } from "@/lib/laminas/intent";
 import { requirePageUser } from "@/services/auth/page-auth";
-import { listMyLaminas } from "@/services/laminas/laminas";
+import { getLaminaInspiration, listMyLaminas } from "@/services/laminas/laminas";
 
 // Láminas propias (spec top-laminas): un ranking armado a mano para mostrar y compartir.
-async function LaminasPage() {
+async function LaminasPage({ searchParams }: { searchParams?: Promise<{ desde?: string }> }) {
   const t = await getTranslations("laminas");
   const user = await requirePageUser();
-  const laminas = await listMyLaminas(user.id);
+  const inspirationId = parseLaminaIntent((await searchParams)?.desde);
+  const [laminas, inspiration] = await Promise.all([
+    listMyLaminas(user.id),
+    inspirationId ? getLaminaInspiration(inspirationId, user.id) : null,
+  ]);
   const currentYear = Number(new Intl.DateTimeFormat("en", { year: "numeric", timeZone: await getTimeZone() }).format(new Date()));
 
   return (
@@ -19,7 +24,7 @@ async function LaminasPage() {
         <h1 className="font-display text-2xl text-paper">{t("title")}</h1>
         <p className="font-body text-sm text-paper-muted">{t("description")}</p>
       </header>
-      <LaminaCreateForm currentYear={currentYear} />
+      <LaminaCreateForm currentYear={currentYear} inspiration={inspiration} />
       {laminas.length === 0 ? (
         <p className="font-body text-sm text-paper-muted">{t("noLaminas")}</p>
       ) : (

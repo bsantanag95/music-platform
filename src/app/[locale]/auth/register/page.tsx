@@ -5,10 +5,18 @@ import { AuthForm } from "@/components/auth/AuthForm";
 import { SocialSignIn } from "@/components/auth/SocialSignIn";
 import { resolveSession } from "@/services/auth/sessions";
 import { withClientMessages } from "@/i18n/client-messages";
+import { laminaAuthHref, laminaBuildHref, parseLaminaIntent } from "@/lib/laminas/intent";
 
-async function RegisterPage({ params }: { params: Promise<{ locale: string }> }) {
+async function RegisterPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams?: Promise<{ lamina?: string }>;
+}) {
   const { locale } = await params;
-  if (await resolveSession()) redirect({ href: "/", locale });
+  const laminaId = parseLaminaIntent((await searchParams)?.lamina);
+  if (await resolveSession()) redirect({ href: laminaId ? laminaBuildHref(laminaId) : "/", locale });
   const t = await getTranslations("auth");
   return (
     <main className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center gap-8 px-4 py-12">
@@ -21,13 +29,14 @@ async function RegisterPage({ params }: { params: Promise<{ locale: string }> })
           locale={locale}
           label={t("continueWithGoogle")}
           separator={t("orSeparator")}
+          laminaId={laminaId}
         />
-        <AuthForm mode="register" />
+        <AuthForm mode="register" laminaId={laminaId} />
       </div>
       <p className="border-t border-ink-border pt-6 font-data text-sm text-paper-muted">
         {t("hasAccount")}{" "}
         <Link
-          href="/auth/login"
+          href={laminaAuthHref("/auth/login", laminaId)}
           className="text-accent underline-offset-4 transition-colors duration-150 hover:text-accent-hover hover:underline"
         >
           {t("login")}

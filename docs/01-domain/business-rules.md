@@ -346,6 +346,8 @@ el mismo umbral que el álbum, aplicado en el read-model (`artist-community.ts`)
 - Una Lámina puede juntar hasta 10 carátulas (ADR 0051); lo que compone el sistema, hasta 4.
 - Una Lámina se puede llenar desde las valoraciones, los favoritos o una lista propia. La fuente copia los ítems una sola vez: la
   Lámina no cambia si la fuente cambia. Creada así, nace privada aunque la audiencia por defecto sea otra, y sus notas siguen apagadas.
+- "Arma la tuya" hereda de una Lámina ajena su formato y su tipo, y ofrece su título como sugerencia; nunca sus ítems ni sus notas. Si
+  la persona no la puede ver, no hereda nada. Quien se registra por ese camino va a armarla y su bienvenida queda pendiente.
 - El año de escucha de una fuente exige una escucha del mismo objetivo en ese año, contado en la zona horaria de la persona: una
   escucha de una canción no cuenta para su álbum.
 - Solo el catálogo usa una caché inmutable. Lo que es de una persona lleva caché corta, porque su dueño o moderación pueden cerrarlo.

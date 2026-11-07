@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { createHash, randomBytes } from "node:crypto";
 import { routing } from "@/i18n/routing";
+import { parseLaminaIntent } from "@/lib/laminas/intent";
 
 export const OAUTH_STATE_COOKIE = "oauth_state";
 export const OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
@@ -32,6 +33,8 @@ export interface OAuthFlowState {
   userId?: string;
   /** Mantener la sesión en el dispositivo (change add-keep-signed-in); por defecto sí. */
   remember: boolean;
+  /** Intención "Arma la tuya" (ADR 0052): solo en un flujo `login`; el callback la lee de aquí, nunca de su query. */
+  laminaId?: string;
 }
 
 export function resolveLocale(value: string | null | undefined): string {
@@ -61,6 +64,7 @@ export function generateOAuthFlowState(
   locale?: string,
   account?: { intent: OAuthIntent; userId: string },
   remember = true,
+  laminaId: string | null = null,
 ): OAuthFlowState {
   const state = generateState();
   const nonce = generateNonce();
@@ -75,6 +79,7 @@ export function generateOAuthFlowState(
     intent: account?.intent ?? "login",
     remember,
     ...(account ? { userId: account.userId } : {}),
+    ...(laminaId && !account ? { laminaId } : {}),
   };
 }
 
@@ -111,6 +116,7 @@ export async function consumeOAuthFlowCookies(): Promise<OAuthFlowState | null> 
       locale: resolveLocale(parsed.locale),
       intent: resolveIntent(parsed.intent),
       remember: parsed.remember !== false,
+      laminaId: parseLaminaIntent(parsed.laminaId) ?? undefined,
     };
   } catch {
     return null;

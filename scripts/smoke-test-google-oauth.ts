@@ -1,6 +1,6 @@
 export {};
 
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { createRequire } from "node:module";
 import { SignJWT, exportJWK } from "jose";
 import { and, eq, inArray } from "drizzle-orm";
@@ -393,6 +393,35 @@ async function main() {
     if (await rowFor(ephemeralCookie.token)) throw new Error("reauth: la sesión reemplazada sigue existiendo");
     cookieJar.delete("music_session");
     console.log("OK 6/6 reauth desde una sesión no mantenida -> rotada, sigue sin mantenerse");
+
+    // --- 7) Intención de Lámina ("Arma la tuya", ADR 0052) -------------------------
+    const laminaId = randomUUID();
+    const flowWith = async (ip: string, code: string, query: string, sub: string, email: string, callbackExtra = "") => {
+      await startGet(makeStartRequest(NextRequest, ip, "es", query));
+      const flow = readFlowState();
+      currentIdToken = await signIdToken(privateKey, { sub, email, emailVerified: true, nonce: flow.nonce });
+      const request = callbackExtra
+        ? (new NextRequest(`http://localhost:3000/api/auth/google/callback?code=${code}&state=${encodeURIComponent(flow.state)}${callbackExtra}`, {
+            headers: { "x-forwarded-for": ip },
+          }) as NextRequestT)
+        : makeCallbackRequest(NextRequest, ip, code, flow.state);
+      return (await callbackGet(request)).headers.get("location") ?? "";
+    };
+    const emailLamina = `smoke-oauth-lamina-${runId}@example.test`;
+    const subLamina = `smoke-sub-lamina-${runId}`;
+    const ipL = `10.10.${runId.slice(0, 2)}.7`;
+    const created = await flowWith(ipL, "auth-code-l1", `&lamina=${laminaId}`, subLamina, emailLamina);
+    const [laminaUser] = await db.select().from(appUser).where(eq(appUser.email, emailLamina));
+    if (laminaUser) createdUserIds.push(laminaUser.id);
+    if (!created.endsWith(`/es/me/laminas?desde=${laminaId}`)) throw new Error(`Lámina (alta nueva): ${created}`);
+    if (!laminaUser || laminaUser.onboardedAt !== null) throw new Error("Lámina (alta nueva): el onboarding debe seguir pendiente");
+    const existing = await flowWith(ipL, "auth-code-l2", `&lamina=${laminaId}`, subLamina, emailLamina);
+    if (!existing.endsWith(`/es/me/laminas?desde=${laminaId}`)) throw new Error(`Lámina (cuenta existente): ${existing}`);
+    const invalid = await flowWith(ipL, "auth-code-l3", "&lamina=https%3A%2F%2Fotro.example", subLamina, emailLamina);
+    if (!invalid.endsWith("/es/welcome")) throw new Error(`Lámina (inválida): ${invalid}`);
+    const injected = await flowWith(ipL, "auth-code-l4", "", subLamina, emailLamina, `&lamina=${laminaId}`);
+    if (!injected.endsWith("/es/welcome")) throw new Error(`Lámina (query del callback): ${injected}`);
+    console.log("OK 7 intención de Lámina -> alta y cuenta existente van a armarla; inválida y query del callback se ignoran");
 
     console.log("Smoke Google OAuth OK: flujo completo contra BD real.");
   } finally {

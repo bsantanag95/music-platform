@@ -24,7 +24,8 @@
   "create": {
     "heading": "Nueva Lámina",
     "titlePlaceholder": "Mis 10 discos de 2026",
-    "submit": "Crear"
+    "submit": "Crear",
+    "inspired": "Como la de @{username}"
   },
   "fields": {
     "title": "Título",
@@ -96,5 +97,11 @@
     "ratings": "Mis {n} {kind, select, recording {canciones mejor valoradas} other {discos mejor valorados}}",
     "list": "Top {n} de {list}",
     "allTime": "Mis {n} {kind, select, recording {canciones} other {discos}} de siempre"
+  },
+  "cta": {
+    "title": "¿Cuál sería la tuya?",
+    "description": "Arma tu propio ranking y compártelo.",
+    "action": "Arma la tuya",
+    "haveAccount": "Ya tengo cuenta"
   }
 }

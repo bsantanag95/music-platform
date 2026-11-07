@@ -2,7 +2,7 @@
 
 import { useState, type SubmitEventHandler } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { createLamina } from "@/lib/api/laminas";
 import { manualTitleSuggestions, suggestLaminaTitle, type TitleTranslator } from "@/lib/laminas/suggested-title";
 import { LaminaSourcePanel, LaminaSourceTabs } from "./LaminaSourcePanel";
@@ -16,13 +16,22 @@ const SOURCES = ["manual", "ratings", "favorites", "list"] as const;
 const CAPACITY = { top5: 5, top10: 10, grid9: 9 } as const;
 const field = "rounded border border-ink-border bg-ink px-3 py-2 font-body text-sm text-paper";
 
-export function LaminaCreateForm({ currentYear }: { currentYear: number }) {
+/** Lo que hereda de una Lámina ajena con "Arma la tuya": nunca sus ítems, y el título solo como sugerencia. */
+export interface LaminaFormInspiration {
+  id: string;
+  title: string;
+  format: (typeof FORMATS)[number];
+  entityType: (typeof ENTITY_TYPES)[number];
+  ownerUsername: string;
+}
+
+export function LaminaCreateForm({ currentYear, inspiration = null }: { currentYear: number; inspiration?: LaminaFormInspiration | null }) {
   const t = useTranslations("laminas");
   const router = useRouter();
   // `null` mientras la persona no lo toca: hasta entonces el título sigue a los filtros.
   const [editedTitle, setEditedTitle] = useState<string | null>(null);
-  const [format, setFormat] = useState<(typeof FORMATS)[number]>("top5");
-  const [entityType, setEntityType] = useState<(typeof ENTITY_TYPES)[number]>("release-group");
+  const [format, setFormat] = useState<(typeof FORMATS)[number]>(inspiration?.format ?? "top5");
+  const [entityType, setEntityType] = useState<(typeof ENTITY_TYPES)[number]>(inspiration?.entityType ?? "release-group");
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
   const source = useLaminaSource({ entityType, slots: CAPACITY[format] });
@@ -33,6 +42,9 @@ export function LaminaCreateForm({ currentYear }: { currentYear: number }) {
   const suggestion = chosenSource === "manual" ? "" : suggestLaminaTitle(translate, { format, entityType, source: chosenSource, ...source.labels });
   const title = editedTitle ?? suggestion;
   const ready = Boolean(title.trim()) && (manual || source.selected.length > 0);
+  const chips = [
+    ...new Set([...(inspiration ? [inspiration.title] : []), ...(manual ? manualTitleSuggestions(translate, { format, entityType, year: currentYear }) : [])]),
+  ];
 
   const submit: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
@@ -52,6 +64,14 @@ export function LaminaCreateForm({ currentYear }: { currentYear: number }) {
   return (
     <form onSubmit={submit} className="flex flex-col gap-3 rounded border border-ink-border bg-ink-surface p-4">
       <h2 className="font-display text-base text-paper">{t("create.heading")}</h2>
+      {inspiration ? (
+        <Link
+          href={`/users/${encodeURIComponent(inspiration.ownerUsername)}/laminas/${inspiration.id}`}
+          className="self-start font-data text-xs text-paper-muted transition-colors hover:text-paper"
+        >
+          {t("create.inspired", { username: inspiration.ownerUsername })}
+        </Link>
+      ) : null}
       <div className="flex flex-wrap gap-3">
         <label className="flex flex-col gap-1 font-data text-xs text-paper-muted">
           {t("fields.format")}
@@ -80,9 +100,9 @@ export function LaminaCreateForm({ currentYear }: { currentYear: number }) {
         {t("fields.title")}
         <input value={title} onChange={(event) => setEditedTitle(event.target.value)} maxLength={100} placeholder={t("create.titlePlaceholder")} className={field} />
       </label>
-      {manual ? (
+      {chips.length > 0 ? (
         <div className="flex flex-wrap gap-2">
-          {manualTitleSuggestions(translate, { format, entityType, year: currentYear }).map((suggested) => (
+          {chips.map((suggested) => (
             <button
               key={suggested}
               type="button"
@@ -93,9 +113,8 @@ export function LaminaCreateForm({ currentYear }: { currentYear: number }) {
             </button>
           ))}
         </div>
-      ) : (
-        <p className="font-data text-xs text-paper-muted">{t("source.privateNote")}</p>
-      )}
+      ) : null}
+      {manual ? null : <p className="font-data text-xs text-paper-muted">{t("source.privateNote")}</p>}
       {failed ? (
         <p role="alert" className="font-data text-xs text-danger">
           {t("saveError")}

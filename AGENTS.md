@@ -80,7 +80,8 @@ de cuál de las filas con el mismo título haya en la BD.
 >   `DELETE FROM app_user WHERE username LIKE 'smoke_keep_%';`. Necesita la migración `0058` aplicada.
 >   Verifica la duración y la renovación por uso de las sesiones mantenidas, que las no mantenidas no se
 >   renuevan y caducan, la rotación que conserva la elección y que una sesión anterior a la columna
->   queda como mantenida. `smoke-test-google-oauth.ts` además cubre `remember=0` y la reautenticación.
+>   queda como mantenida. `smoke-test-google-oauth.ts` además cubre `remember=0`, la reautenticación y la intención de Lámina
+>   (alta nueva y cuenta existente van a armarla, un valor inválido se descarta y el callback no la lee de su query).
 > - `smoke-test-account-settings.ts` crea usuarios `smoke_acct_*` y los borra al terminar (el `ON
 >   DELETE CASCADE` limpia alias, tokens y sesiones). Si se interrumpió, limpiar con
 >   `DELETE FROM user_role_action WHERE actor_id IN (SELECT id FROM app_user WHERE username LIKE
@@ -151,7 +152,9 @@ de cuál de las filas con el mismo título haya en la BD.
 >   'Smoke Tiempos %' OR mbid::text LIKE '5e0ce000-0000-4000-8000-0000000c1%'; DELETE FROM artist WHERE mbid::text LIKE
 >   '5e0ce000-0000-4000-8000-0000000c1%';`). Necesita la taxonomía de géneros cargada. Verifica el orden de cada fuente, cada
 >   filtro, la zona del año de escucha, la lista ajena, las opciones, el alta y el lote atómicos, que lo armado nace privado y
->   que cada lectura queda bajo 150 ms con 2.000 valoraciones de discos y 2.000 de canciones.
+>   que cada lectura queda bajo 150 ms con 2.000 valoraciones de discos y 2.000 de canciones. Desde `add-top-n-lamina-phase3`
+>   también verifica la lectura de inspiración de "Arma la tuya" (pública, privada, para seguidores, oculta, propia, inexistente y
+>   de un bloqueo).
 > - `smoke-test-comment-replies.ts` crea un artista y un álbum sintéticos (MBID
 >   `5e0ce000-0000-4000-8000-0000000009b0` / `...09b1`) y usuarios `smoke_reply_*`, y los borra al terminar
 >   (también si falla; el `ON DELETE CASCADE` limpia comentarios, respuestas, likes y bloqueos). Si se
