@@ -166,5 +166,9 @@
     "label": "Contexto de tu red",
     "mostActive": "Quiénes más se movieron",
     "mostActiveHint": "Esta semana, entre la gente que sigues."
+  },
+  "lamina": {
+    "created": "Publicó una Lámina",
+    "updated": "Actualizó una Lámina"
   }
 }

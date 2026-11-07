@@ -339,6 +339,11 @@ el mismo umbral que el álbum, aplicado en el read-model (`artist-community.ts`)
   imagen privada que el dueño descarga de su valoración o escucha: no se anuncia ni entra a una caché compartida.
 - Compartir nunca interrumpe: se ofrece en un aviso descartable, nunca en un modal, y solo al publicar una reseña, al pasar una
   lista a pública o al completar un Camino público. Valorar o registrar una escucha no ofrece nada.
+- Una Lámina Top N es un ranking armado a mano de álbumes o canciones: Top 5, Top 10 o Grilla 3×3, con un solo tipo de ítem, sin
+  repetidos y con el tope de su formato. Bajar a un formato con menos lugares quita los últimos, con aviso previo.
+- Las notas de una Lámina nacen apagadas. Encenderlas es la decisión del dueño de mostrar su nota vigente de cada ítem, con su puntaje,
+  a quien pueda ver la Lámina. Apagadas, no salen ni en la página ni en la imagen.
+- Una Lámina puede juntar hasta 10 carátulas (ADR 0051); lo que compone el sistema, hasta 4.
 - Solo el catálogo usa una caché inmutable. Lo que es de una persona lleva caché corta, porque su dueño o moderación pueden cerrarlo.
 - Nada se vuelve público por compartirlo sin un gesto explícito. **Hacer pública y compartir** abre solo esa valoración
   (con una marca) o esa escucha (con `audience = 'public'`). Con el perfil privado no se ofrece: nadie sin cuenta podría

@@ -14,8 +14,10 @@ const payload: SharePayload = {
   ref: "rg1",
   url: "https://ejemplo.app/es/album/metallica-master-of-puppets-abc",
   title: "Master of Puppets · Metallica",
-  storyImageUrl: "/api/share/image/album/rg1?locale=es&format=story&v=abc",
-  imageUrl: "/api/share/image/album/rg1?locale=es&format=link&v=abc",
+  images: [
+    { format: "link", url: "/api/share/image/album/rg1?locale=es&format=link&v=abc" },
+    { format: "story", url: "/api/share/image/album/rg1?locale=es&format=story&v=abc" },
+  ],
   imageAlt: "Master of Puppets · Metallica · 1986",
   downloadName: "metallica-master-of-puppets",
 };
@@ -47,7 +49,7 @@ describe("hoja de compartir", () => {
     await openSheet();
     const dialog = screen.getByRole("dialog", { name: "Compartir" });
     expect(dialog).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: `Vista previa: ${payload.imageAlt}` })).toHaveAttribute("src", payload.imageUrl);
+    expect(screen.getByRole("img", { name: `Vista previa: ${payload.imageAlt}` })).toHaveAttribute("src", payload.images[0]!.url);
     expect(screen.queryByRole("button", { name: "Compartir…" })).not.toBeInTheDocument();
     const labels = screen.getAllByRole("link").map((a) => a.textContent);
     expect(labels).toEqual(["X", "WhatsApp", "Threads", "Bluesky", "Facebook", "Telegram", "Reddit", "Descargar imagen"]);
@@ -95,7 +97,7 @@ describe("hoja de compartir", () => {
   it("la descarga es la imagen versionada como adjunto con nombre legible", async () => {
     await openSheet();
     const download = screen.getByRole("link", { name: "Descargar imagen" });
-    expect(download).toHaveAttribute("href", `${payload.imageUrl}&download=1`);
+    expect(download).toHaveAttribute("href", `${payload.images[0]!.url}&download=1`);
     expect(download).toHaveAttribute("download", "metallica-master-of-puppets.png");
   });
 

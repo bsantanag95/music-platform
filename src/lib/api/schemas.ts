@@ -421,6 +421,7 @@ export const ErrorCodeSchema = z.enum([
   "INVALID_UNSUBSCRIBE_TOKEN",
   "PROFILE_PRIVATE",
   "SHARE_TARGET_NOT_FOUND",
+  "LAMINA_NOT_FOUND",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 
@@ -1837,6 +1838,52 @@ export const UserListDetailSchema = UserListSummarySchema.extend({
 });
 export type UserListDetail = z.infer<typeof UserListDetailSchema>;
 
+// Láminas Top N (openspec: add-top-n-lamina-phase1).
+export const LaminaFormatSchema = z.enum(["top5", "top10", "grid9"]);
+export const LaminaEntityTypeSchema = z.enum(["release-group", "recording"]);
+
+export const LaminaItemSchema = z.object({
+  id: z.uuid(),
+  position: z.number().int(),
+  target: z.object({ id: z.uuid(), title: z.string(), artistName: z.string().nullable(), coverThumbUrl: z.string().nullable() }),
+  score: z.object({ stars: z.string(), detailedScore: z.number().int().nullable() }).nullable(),
+});
+
+export const LaminaDetailSchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  format: LaminaFormatSchema,
+  entityType: LaminaEntityTypeSchema,
+  audience: DiaryAudienceSchema,
+  updatedAt: z.string(),
+  showScores: z.boolean(),
+  items: z.array(LaminaItemSchema),
+});
+export type LaminaDetail = z.infer<typeof LaminaDetailSchema>;
+export type LaminaItem = z.infer<typeof LaminaItemSchema>;
+
+export const LaminaMutationResponseSchema = z.object({ lamina: LaminaDetailSchema });
+
+export const CreateLaminaRequestSchema = z.object({
+  title: z.string().trim().min(1).max(100),
+  format: LaminaFormatSchema,
+  entityType: LaminaEntityTypeSchema,
+  audience: DiaryAudienceSchema.optional(),
+});
+
+export const UpdateLaminaRequestSchema = z
+  .object({
+    title: z.string().trim().min(1).max(100).optional(),
+    format: LaminaFormatSchema.optional(),
+    audience: DiaryAudienceSchema.optional(),
+    showScores: z.boolean().optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0);
+export type UpdateLaminaRequest = z.infer<typeof UpdateLaminaRequestSchema>;
+
+export const AddLaminaItemRequestSchema = z.object({ targetId: z.uuid() });
+export const ReorderLaminaRequestSchema = z.object({ itemIds: z.array(z.uuid()).max(10) });
+
 export const CreateListRequestSchema = z.object({
   entityType: ListEntityTypeSchema,
   title: z.string().trim().min(1).max(100),
@@ -2278,6 +2325,8 @@ export const FeedListEventSchema = z.object({
     id: z.uuid(),
     title: z.string(),
     entityType: ListEntityTypeSchema,
+    // Una Lámina va en la misma fuente que una lista, con su verbo y su destino.
+    lamina: z.boolean().optional(),
   }),
   author: AuthorSummarySchema,
 });

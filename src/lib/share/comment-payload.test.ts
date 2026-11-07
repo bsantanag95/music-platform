@@ -10,6 +10,6 @@ describe("commentSharePayload", () => {
   });
 
   it("pide la imagen sin versión: la ruta responde con caché corta", () => {
-    expect(payload.imageUrl).toBe("/api/share/image/comment/c1?locale=en&format=link");
+    expect(payload.images[0]?.url).toBe("/api/share/image/comment/c1?locale=en&format=link");
   });
 });

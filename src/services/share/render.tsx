@@ -5,10 +5,11 @@ import { BRAND_COLORS, BRAND_MONOGRAM } from "@/lib/share/brand-tokens";
 import type { ShareFormat, ShareLocale } from "@/lib/share/kinds";
 import { AuthorNote, CommunityScore, CoverTile, IdentityBadge, LINK_FORMAT, LaminaFrame, SleeveWithRecord } from "./frame/LaminaFrame";
 import { STORY_FORMAT, STORY_RECORD, STORY_RECORD_COMPACT, StoryFrame, StoryRecord } from "./frame/StoryFrame";
+import { POST_FORMAT, SQUARE_FORMAT, TopFive, TopGrid, TopTen, type TopCanvas } from "./frame/TopFrame";
 import { loadShareFonts } from "./fonts";
 import { shareAppName, shareTranslator } from "./i18n";
 import { MAX_COVER_SIDE, loadEmbeddedCover, loadEmbeddedImage } from "./images";
-import type { ShareImageRef, ShareMedia, ShareTarget } from "./types";
+import type { ShareImageRef, ShareMedia, ShareTarget, ShareTopCard } from "./types";
 
 // Renderizador único de las imágenes de compartir (spec share-images; design D1). Resuelve las imágenes del
 // medio (en paralelo, cada una con su recuadro tipográfico si falla), arma el marco y devuelve el PNG. Sin
@@ -209,6 +210,17 @@ function ProfileCovers({ covers }: { covers: EmbeddedImage[] }) {
   );
 }
 
+const FORMAT_SIZE = { link: LINK_FORMAT, story: STORY_FORMAT, post: POST_FORMAT, square: SQUARE_FORMAT } as const;
+
+/** Cuerpo de una Lámina en un formato que no es Enlace. */
+async function renderTop(top: ShareTopCard, canvas: TopCanvas, target: ShareTarget, appName: string, domain: string) {
+  const embedded = await Promise.all(top.items.map((item) => embed(item.cover)));
+  const items = top.items.map((item, index) => ({ ...item, src: embedded[index]!.src }));
+  const frame = { canvas, title: target.card.title, byline: top.byline, credits: target.card.credits, appName, domain, items };
+  const Body = top.format === "top5" ? TopFive : top.format === "top10" ? TopTen : TopGrid;
+  return { element: <Body {...frame} />, degraded: isDegraded(embedded) };
+}
+
 async function buildElement(
   target: ShareTarget | null,
   locale: ShareLocale,
@@ -237,6 +249,7 @@ async function buildElement(
 
   const t = shareTranslator(locale);
   const { card } = target;
+  if (card.top && format !== "link") return renderTop(card.top, format, target, appName, domain);
   const media = story
     ? await renderStoryMedia(card.media, card.quote ? STORY_RECORD_COMPACT : STORY_RECORD)
     : await renderMedia(card.media);
@@ -278,5 +291,5 @@ export async function renderShareImage(
   const [{ element, degraded }, fonts] = await Promise.all([buildElement(target, locale, format), loadShareFonts()]);
   const headers = { ...options.headers };
   if (degraded && options.degradedCacheControl) headers["Cache-Control"] = options.degradedCacheControl;
-  return new ImageResponse(element as React.ReactElement, { ...(format === "story" ? STORY_FORMAT : LINK_FORMAT), fonts, headers });
+  return new ImageResponse(element as React.ReactElement, { ...FORMAT_SIZE[target ? format : format === "story" ? "story" : "link"], fonts, headers });
 }

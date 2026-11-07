@@ -298,5 +298,9 @@
   "SHARE_TARGET_NOT_FOUND": {
     "title": "Este contenido ya no se puede compartir.",
     "description": "Este contenido ya no se puede compartir."
+  },
+  "LAMINA_NOT_FOUND": {
+    "title": "Lámina no encontrada",
+    "description": "No encontramos esta Lámina."
   }
 }

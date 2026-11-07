@@ -12,8 +12,10 @@ export function commentSharePayload(input: { commentId: string; locale: string; 
     ref: commentId,
     url: absoluteUrl(`/${locale}/comment/${commentId}`),
     title,
-    imageUrl: image("link"),
-    storyImageUrl: image("story"),
+    images: [
+      { format: "link" as const, url: image("link") },
+      { format: "story" as const, url: image("story") },
+    ],
     imageAlt: title,
     downloadName: `comment-${username}`,
   };

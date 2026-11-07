@@ -4,7 +4,9 @@ import { appUser, ratingShare } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import type { ShareFormat, ShareLocale } from "@/lib/share/kinds";
 import { updateListenEntry } from "@/services/diary/diary";
-import { sharePayloadFor } from "./metadata";
+import { updateLamina } from "@/services/laminas/laminas";
+import { shareFormatsOf, sharePayloadFor } from "./metadata";
+import { loadLaminaTarget } from "./targets/lamina";
 import { loadListenTarget, loadRatingTarget } from "./targets/relation";
 import type { ShareTarget } from "./types";
 
@@ -12,7 +14,7 @@ import type { ShareTarget } from "./types";
 // una escucha. Lo decide el servidor: la hoja solo muestra el estado. Lo único que vuelve público algo es
 // `makeOwnPublic`, y solo esa fila.
 
-export const OWN_SHARE_KINDS = ["rating", "listen"] as const;
+export const OWN_SHARE_KINDS = ["rating", "listen", "top"] as const;
 export type OwnShareKind = (typeof OWN_SHARE_KINDS)[number];
 
 export function isOwnShareKind(value: string): value is OwnShareKind {
@@ -20,6 +22,7 @@ export function isOwnShareKind(value: string): value is OwnShareKind {
 }
 
 function loadTarget(kind: OwnShareKind, ref: string, locale: ShareLocale, owner?: string): Promise<ShareTarget | null> {
+  if (kind === "top") return loadLaminaTarget(ref, locale, { owner });
   return kind === "rating" ? loadRatingTarget(ref, locale, { owner }) : loadListenTarget(ref, locale, { owner });
 }
 
@@ -29,6 +32,7 @@ export function loadOwnTarget(kind: OwnShareKind, ref: string, locale: ShareLoca
 }
 
 function notFound(kind: OwnShareKind): ApiError {
+  if (kind === "top") return new ApiError("LAMINA_NOT_FOUND", 404, "La Lámina no existe");
   return kind === "rating"
     ? new ApiError("RATING_NOT_FOUND", 404, "La valoración no existe")
     : new ApiError("LISTEN_ENTRY_NOT_FOUND", 404, "La escucha no existe");
@@ -65,8 +69,7 @@ export async function ownShareState(kind: OwnShareKind, ref: string, locale: Sha
     ...common,
     payload: {
       ...sharePayloadFor(own),
-      imageUrl: personalImagePath(kind, ref, locale, "link"),
-      storyImageUrl: personalImagePath(kind, ref, locale, "story"),
+      images: shareFormatsOf(own).map((format) => ({ format, url: personalImagePath(kind, ref, locale, format) })),
     },
   };
 }
@@ -79,6 +82,8 @@ export async function makeOwnPublic(kind: OwnShareKind, ref: string, locale: Sha
   }
   if (kind === "rating") {
     await db.insert(ratingShare).values({ userId, ratingId: ref }).onConflictDoNothing();
+  } else if (kind === "top") {
+    await updateLamina(ref, userId, { audience: "public" });
   } else {
     await updateListenEntry(ref, userId, { audience: "public" });
   }

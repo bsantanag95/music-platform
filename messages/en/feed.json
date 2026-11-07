@@ -166,5 +166,9 @@
     "label": "Your network",
     "mostActive": "Most active this week",
     "mostActiveHint": "Among the people you follow."
+  },
+  "lamina": {
+    "created": "Published a Card",
+    "updated": "Updated a Card"
   }
 }

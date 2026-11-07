@@ -1,7 +1,7 @@
 # Compartir
 
 **Estado:** 🟢 Dirección aprobada (2026-11-04). Bloque A implementado: `add-share-foundation` y las tres fases de
-`add-share-user-actions` (§9). Sigue el bloque B. Documento de dirección: reúne en un
+`add-share-user-actions` (§9). Bloque B en curso: `add-top-n-lamina-phase1` implementado. Documento de dirección: reúne en un
 solo lugar todo lo que abarca "Compartir" antes de abrir cualquier cambio de OpenSpec, para que cada
 cambio posterior parta del mismo contexto. Las decisiones de la §8 quedaron **adoptadas como punto de
 partida**; cada una se revisa en detalle, y se confirma o corrige, en el cambio que la implementa.
@@ -444,11 +444,11 @@ hasta tener datos reales.
 | D3 | Formatos del bloque A | Solo enlace · enlace + historia · todos | ✅ **Enlace + Historia**, esta en 1080×1920 con la carátula a 250 px sobre un vinilo dibujado (`add-share-user-actions-phase3`); Publicación/Cuadrado con B |
 | D4 | Página de relación persona ↔ disco | `/users/<u>/album/<id>` única · una página por acción | ✅ **Única por objeto** (álbum y canción en `add-share-user-actions-phase2`; el artista llega con la lámina de discografía, que es a la vez el progreso público) |
 | D5 | Compartir algo privado | Bloquear · pedir hacerlo público · permitir solo descarga | ✅ **Pedir "Hacer pública y compartir"**; sin ese gesto, solo el dueño descarga la imagen, generada con su sesión y sin caché pública (sirve también a perfiles privados). ADR 0050 |
-| D6 | Carátulas compuestas en imágenes descargables | Permitir con 250 px y atribución · solo carátula única · sin carátulas | ✅ **Hasta 4 carátulas de ≤250 px sin ampliar, con créditos y respetando retiros** — ADR 0049 (`add-share-foundation`) |
-| D7 | Persistencia de láminas de autor | `user_list` con `kind` nuevos · tabla `lamina` | **`user_list`** salvo que la tier list distorsione el modelo; revisar en el propose |
+| D6 | Carátulas compuestas en imágenes descargables | Permitir con 250 px y atribución · solo carátula única · sin carátulas | ✅ **Hasta 4 carátulas de ≤250 px sin ampliar, con créditos y respetando retiros** — ADR 0049 (`add-share-foundation`). **Hasta 10 en una Lámina armada por una persona** (`add-top-n-lamina`) |
+| D7 | Persistencia de láminas de autor | `user_list` con `kind` nuevos · tabla `lamina` | ✅ **`user_list` con `kind = 'top'`**: las superficies de listas ya filtran por `standard`. La tier list lo revisa al llegar |
 | D8 | ¿La tier list escribe valoraciones? | No · ofrecer "actualizar mis notas" | **No**; quizá un "¿actualizar tu nota?" puntual en una fase posterior |
 | D9 | Umbral para la vista "Por canción" | ≥ x % de pistas valoradas · ≥ N pistas | A definir con datos reales de cuántas canciones se valoran |
-| D10 | Grilla 3×3 sin números | Incluir · solo Top 5/10 | **Incluir como estilo del Cuadrado** (es el formato que la gente ya conoce) |
+| D10 | Grilla 3×3 sin números | Incluir · solo Top 5/10 | ✅ **Incluir como formato del Cuadrado** (es el que la gente ya conoce) |
 | D11 | Etiquetas de la escala | Solo rangos numéricos · nombres de marca | **Rangos numéricos** por defecto |
 | D12 | El editor de lámina como valoración en lote | Sí · no | **Sí, para la discografía**: "valora lo que falta" desde la grilla — baja la fricción del bucle viral |
 | D13 | Métricas de compartir | Contador propio (`share_event`) · solo `?via=` en logs · nada | ✅ **`share_event` (migración 0079, sin datos personales) + `?via=<canal>`** en los enlaces (`add-share-foundation`) |
@@ -485,8 +485,11 @@ Cada cambio parte de este documento y abre con el repaso en detalle de las decis
 
 **Bloque B**
 
-3. **`add-top-n-lamina`** — Top 5/10 (+ grilla 3×3), fuentes de ítems, persistencia (D7, D10, D14) y el
-   llamado "Arma la tuya" con registro dirigido (§6).
+3. **`add-top-n-lamina`**, dividido en tres fases (2026-11-06). Primera versión con álbumes y canciones; los artistas quedan para después,
+   porque cada foto exige su crédito. Notas apagadas por defecto.
+   - **`add-top-n-lamina-phase1`** ✅ implementado — modelo, editor a mano, página pública, formatos Publicación y Cuadrado, feed (D6, D7, D10, D14).
+   - **`add-top-n-lamina-phase2`** — armar desde valoraciones, favoritos y listas, con filtros y títulos sugeridos.
+   - **`add-top-n-lamina-phase3`** — "Arma la tuya" con registro dirigido (§6).
 4. **`add-discography-lamina`** — gráfica de discografía (por disco / por canción), lámina de álbum,
    página pública del progreso, valoración en lote (D9, D12), "Compárala con la tuya".
 5. **`add-tier-list-lamina`** — tier list con prellenado desde valoraciones, editor accesible (D8).

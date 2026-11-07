@@ -1186,6 +1186,9 @@ isOfficial: boolean("is_official").notNull().default(false),
     // lectura contra `listen_entry` (ver src/services/journeys/progress.ts),
     // así nunca queda desincronizado al agregar o quitar un ítem.
     kind: text("kind").notNull().default("standard"),
+    // Lámina Top N (migración 0083): `kind = 'top'` reutiliza la tabla, como Camino. Las notas nacen apagadas.
+    laminaFormat: text("lamina_format"),
+    laminaShowScores: boolean("lamina_show_scores").notNull().default(false),
     journeyArtistId: uuid("journey_artist_id").references(() => artist.id, { onDelete: "cascade" }),
     journeyArchivedAt: timestamp("journey_archived_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -1205,7 +1208,10 @@ isOfficial: boolean("is_official").notNull().default(false),
     check("chk_user_list_title", sql`length(${t.title}) <= 100`),
     check("chk_user_list_description", sql`${t.description} IS NULL OR length(${t.description}) <= 500`),
     check("chk_user_list_moderation_status", sql`${t.moderationStatus} IN ('visible', 'hidden')`),
-    check("chk_user_list_kind", sql`${t.kind} IN ('standard', 'artist_journey', 'custom_journey')`),
+    check("chk_user_list_kind", sql`${t.kind} IN ('standard', 'artist_journey', 'custom_journey', 'top')`),
+    check("chk_user_list_lamina_format", sql`${t.laminaFormat} IS NULL OR ${t.laminaFormat} IN ('top5', 'top10', 'grid9')`),
+    check("chk_user_list_lamina_kind", sql`(${t.kind} = 'top') = (${t.laminaFormat} IS NOT NULL)`),
+    check("chk_user_list_lamina_entity", sql`${t.kind} <> 'top' OR ${t.entityType} IN ('release-group', 'recording')`),
   ],
 );
 
@@ -2343,14 +2349,14 @@ export const shareEvent = pgTable(
     index("idx_share_event_target").on(t.targetKind, t.targetRef),
     check(
       "chk_share_event_target_kind",
-      sql`${t.targetKind} IN ('album', 'song', 'artist', 'genre', 'awards', 'award', 'ceremony', 'halls', 'hall', 'hall_class', 'collections', 'collection', 'profile', 'review', 'comment', 'list', 'camino', 'user_collection', 'fingerprint', 'rating', 'listen')`,
+      sql`${t.targetKind} IN ('album', 'song', 'artist', 'genre', 'awards', 'award', 'ceremony', 'halls', 'hall', 'hall_class', 'collections', 'collection', 'profile', 'review', 'comment', 'list', 'camino', 'user_collection', 'fingerprint', 'rating', 'listen', 'top')`,
     ),
     check("chk_share_event_target_ref", sql`char_length(${t.targetRef}) BETWEEN 1 AND 200`),
     check(
       "chk_share_event_channel",
       sql`${t.channel} IN ('native', 'copy', 'x', 'whatsapp', 'threads', 'bluesky', 'facebook', 'telegram', 'reddit', 'download')`,
     ),
-    check("chk_share_event_format", sql`${t.format} IN ('link', 'story')`),
+    check("chk_share_event_format", sql`${t.format} IN ('link', 'story', 'post', 'square')`),
   ],
 );
 

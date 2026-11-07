@@ -81,7 +81,7 @@ export interface FeedListEvent {
   event: "created" | "updated";
   audience: Audience;
   createdAt: string;
-  list: { id: string; title: string; entityType: "artist" | "release-group" | "recording" };
+  list: { id: string; title: string; entityType: "artist" | "release-group" | "recording"; lamina?: boolean };
   author: FeedAuthor;
 }
 
@@ -868,6 +868,7 @@ export async function listFeed(
             id: userList.id,
             entityType: userList.entityType,
             title: userList.title,
+            kind: userList.kind,
             audience: userList.audience,
             createdAt: userList.createdAt,
             updatedAt: userList.updatedAt,
@@ -881,7 +882,11 @@ export async function listFeed(
             and(
               inArray(userList.ownerId, authorIds),
               inArray(userList.audience, ["followers", "public"]),
-              eq(userList.kind, "standard"),
+              // Una Lámina se anuncia como una lista nueva, con al menos un ítem (add-top-n-lamina-phase1).
+              or(
+                eq(userList.kind, "standard"),
+                and(eq(userList.kind, "top"), sql`EXISTS (SELECT 1 FROM user_list_item i WHERE i.list_id = "user_list"."id")`),
+              ),
               // Una lista oculta por moderación no se anuncia (expand-feed-coverage).
               eq(userList.moderationStatus, "visible"),
               // Las colecciones generadas de /explore no son actividad de nadie (automate-explore-collections).
@@ -1189,6 +1194,7 @@ export async function listFeed(
       id: row.id,
       title: row.title,
       entityType: row.entityType as "artist" | "release-group" | "recording",
+      ...(row.kind === "top" ? { lamina: true } : {}),
     },
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
   }));

@@ -16,8 +16,10 @@ const payload = {
   ref: "r1",
   url: "https://ejemplo.app/es/review/x",
   title: "Reseña",
-  imageUrl: "/api/share/image/review/r1?format=link",
-  storyImageUrl: "/api/share/image/review/r1?format=story",
+  images: [
+    { format: "link" as const, url: "/api/share/image/review/r1?format=link" },
+    { format: "story" as const, url: "/api/share/image/review/r1?format=story" },
+  ],
   imageAlt: "Reseña",
   downloadName: "resena",
 };

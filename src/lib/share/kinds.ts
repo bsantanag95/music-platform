@@ -28,6 +28,7 @@ export const SHARE_TARGET_KINDS = [
   "fingerprint",
   "rating",
   "listen",
+  "top",
 ] as const;
 export type ShareTargetKind = (typeof SHARE_TARGET_KINDS)[number];
 
@@ -46,8 +47,8 @@ export const SHARE_CHANNELS = [
 ] as const;
 export type ShareChannel = (typeof SHARE_CHANNELS)[number];
 
-/** Formatos de imagen: Enlace (1200×630) e Historia (1080×1920). */
-export const SHARE_FORMATS = ["link", "story"] as const;
+/** Formatos de imagen: Enlace (1200×630), Historia (1080×1920), Publicación (1080×1350) y Cuadrado (1080×1080). */
+export const SHARE_FORMATS = ["link", "story", "post", "square"] as const;
 export type ShareFormat = (typeof SHARE_FORMATS)[number];
 
 export const SHARE_LOCALES = ["es", "en"] as const;
