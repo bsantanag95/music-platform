@@ -7,7 +7,7 @@
 
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { artist, rating, recording, releaseGroup, userList, userListItem } from "@/db/schema";
+import { appUser, artist, rating, recording, releaseGroup, userList, userListItem } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { DEFAULT_TIER_LABELS, TIER_COUNT, TIER_LABEL_MAX, TIER_LIST_MAX_ITEMS, tierForScore } from "@/lib/laminas/tiers";
 import { compareByYear } from "@/services/catalog/artist-discography-view";
@@ -51,7 +51,9 @@ export interface TierListDetail {
 export type TierListSource =
   | { type: "discography"; artistId: string }
   | { type: "album"; releaseGroupId: string }
-  | { type: "picked"; targetIds: string[] };
+  | { type: "picked"; targetIds: string[] }
+  // "Arma la tuya" desde la tier list de otra persona (add-tier-list-lamina-phase3): el servidor la vuelve a leer con las reglas de su página pública.
+  | { type: "lamina"; id: string; copyLabels: boolean };
 
 async function requireOwnedTier(id: string, ownerId: string): Promise<LaminaRow> {
   const [row] = await db
@@ -192,6 +194,36 @@ async function placementsFromPicked(ownerId: string, entityType: TierListEntityT
   return placeTargets(ownerId, entityType, ids);
 }
 
+/** Dueño de una tier list por su id, sin mirar quién la ve: la lectura que sigue aplica las reglas de visibilidad. */
+async function tierOwner(id: string): Promise<{ id: string; username: string } | null> {
+  const [row] = await db
+    .select({ id: appUser.id, username: appUser.username })
+    .from(userList)
+    .innerJoin(appUser, eq(appUser.id, userList.ownerId))
+    .where(and(eq(userList.id, id), eq(userList.kind, "tier")))
+    .limit(1);
+  return row ?? null;
+}
+
+/**
+ * Lo que "Arma la tuya" toma de una tier list ajena: lo que su página pública muestra en niveles (nunca la bandeja), en orden, y sus etiquetas. Una
+ * propia, que no se puede ver o que no es una tier list responde `LAMINA_NOT_FOUND`, sin revelar cuál de esos casos es.
+ */
+async function readInspiringTierList(viewerId: string, id: string): Promise<TierListDetail> {
+  const owner = await tierOwner(id);
+  if (!owner || owner.id === viewerId) throw notFound();
+  return getUserTierList(owner.username, id, viewerId);
+}
+
+async function placementsFromLamina(ownerId: string, entityType: TierListEntityType, id: string): Promise<Placement[]> {
+  const inspiring = await readInspiringTierList(ownerId, id);
+  if (inspiring.entityType !== entityType) throw invalid("La tier list es de otro tipo");
+  const targetIds = [...new Set(inspiring.tiers.flat().map((item) => item.target.id))].slice(0, TIER_LIST_MAX_ITEMS);
+  if (targetIds.length === 0) throw invalid("La tier list no tiene ítems en sus niveles");
+  // Por la nota de quien la arma: nunca las notas, el orden dentro de un nivel ni la bandeja de la otra persona.
+  return placeTargets(ownerId, entityType, targetIds);
+}
+
 function placementsFor(ownerId: string, entityType: TierListEntityType, source: TierListSource): Promise<Placement[]> {
   switch (source.type) {
     case "discography":
@@ -202,6 +234,8 @@ function placementsFor(ownerId: string, entityType: TierListEntityType, source: 
       return placementsFromAlbum(ownerId, source.releaseGroupId);
     case "picked":
       return placementsFromPicked(ownerId, entityType, source.targetIds);
+    case "lamina":
+      return placementsFromLamina(ownerId, entityType, source.id);
   }
 }
 
@@ -222,11 +256,16 @@ export async function createTierList(
   const title = normalizeTitle(params.title);
   // Fuera de la transacción: puede sincronizar la discografía con MusicBrainz.
   const placements = orderedPlacements(await placementsFor(ownerId, params.entityType, params.source));
+  // Copiar las etiquetas de la otra persona es una elección de quien la arma; sin ella, S a E. Ya leída arriba con las reglas públicas.
+  const labels =
+    params.source.type === "lamina" && params.source.copyLabels
+      ? (await readInspiringTierList(ownerId, params.source.id)).labels
+      : [...DEFAULT_TIER_LABELS];
   const created = await db.transaction(async (tx) => {
     // Armada desde una fuente: nace privada, como un Top N desde una fuente. Publicarla es un gesto aparte.
     const [row] = await tx
       .insert(userList)
-      .values({ ownerId, entityType: params.entityType, title, audience: "private", kind: "tier", tierLabels: [...DEFAULT_TIER_LABELS] })
+      .values({ ownerId, entityType: params.entityType, title, audience: "private", kind: "tier", tierLabels: labels })
       .returning();
     if (!row) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo crear la tier list");
     await tx
@@ -346,4 +385,39 @@ export async function addTierListItem(id: string, ownerId: string, targetId: str
     await tx.update(userList).set({ title: locked.title }).where(eq(userList.id, id));
   });
   return getOwnedTierList(id, ownerId);
+}
+
+export interface TierInspiration {
+  id: string;
+  title: string;
+  entityType: TierListEntityType;
+  /** Ítems en sus niveles: lo que la nueva traerá. */
+  itemCount: number;
+  labels: string[];
+  /** Si renombró algún nivel: solo entonces se ofrece copiarlas. */
+  customLabels: boolean;
+  ownerUsername: string;
+}
+
+/**
+ * Resumen de una tier list ajena para el formulario de "Arma la tuya", con las reglas de su página pública. `null` si no existe, no se puede ver o es
+ * propia: el formulario queda como siempre y no revela nada. Nunca trae ítems, notas ni bandeja.
+ */
+export async function getTierInspiration(id: string, viewerId: string): Promise<TierInspiration | null> {
+  try {
+    const owner = await tierOwner(id);
+    const inspiring = await readInspiringTierList(viewerId, id);
+    return {
+      id,
+      title: inspiring.title,
+      entityType: inspiring.entityType,
+      itemCount: inspiring.tiers.flat().length,
+      labels: inspiring.labels,
+      customLabels: inspiring.labels.some((label, index) => label !== DEFAULT_TIER_LABELS[index]),
+      ownerUsername: owner!.username,
+    };
+  } catch (error) {
+    if (error instanceof ApiError) return null;
+    throw error;
+  }
 }

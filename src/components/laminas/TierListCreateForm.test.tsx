@@ -104,4 +104,52 @@ describe("TierListCreateForm", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo armar");
     expect(screen.getByRole("button", { name: "Armar tier list" })).toBeEnabled();
   });
+
+  describe("Arma la tuya", () => {
+    const inspiration = (over = {}) => ({
+      id: "60000000-0000-4000-8000-000000000001",
+      title: "Lo mejor de Sabbath",
+      entityType: "release-group" as const,
+      itemCount: 12,
+      labels: ["Obra maestra", "A", "B", "C", "D", "E"],
+      customLabels: true,
+      ownerUsername: "ana",
+      ...over,
+    });
+
+    it("arranca con la fuente de esa tier list, su título y un resumen, sin sus ítems", async () => {
+      renderWithIntl(<TierListCreateForm inspiration={inspiration()} />);
+      expect(screen.getByRole("button", { name: "Como la de @ana" })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByText(/^12 discos de su tier list/)).toBeInTheDocument();
+      expect(screen.getByRole("textbox", { name: "Título" })).toHaveValue("Lo mejor de Sabbath");
+      const copy = screen.getByRole("checkbox", { name: /Usar sus etiquetas/ });
+      expect(copy).not.toBeChecked();
+      await userEvent.click(screen.getByRole("button", { name: "Armar tier list" }));
+      expect(mocks.create).toHaveBeenCalledWith({
+        title: "Lo mejor de Sabbath",
+        entityType: "release-group",
+        source: { type: "lamina", id: inspiration().id, copyLabels: false },
+      });
+    });
+
+    it("copia sus etiquetas solo si se marca", async () => {
+      renderWithIntl(<TierListCreateForm inspiration={inspiration()} />);
+      await userEvent.click(screen.getByRole("checkbox", { name: /Usar sus etiquetas/ }));
+      await userEvent.click(screen.getByRole("button", { name: "Armar tier list" }));
+      expect(mocks.create).toHaveBeenCalledWith(expect.objectContaining({ source: expect.objectContaining({ copyLabels: true }) }));
+    });
+
+    it("sin etiquetas propias no ofrece copiarlas", () => {
+      renderWithIntl(<TierListCreateForm inspiration={inspiration({ customLabels: false, labels: ["S", "A", "B", "C", "D", "E"] })} />);
+      expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    });
+
+    it("de canciones, cuenta canciones; con el otro tipo, la fuente no aparece", async () => {
+      renderWithIntl(<TierListCreateForm inspiration={inspiration({ entityType: "recording" })} />);
+      expect(screen.getByText(/^12 canciones de su tier list/)).toBeInTheDocument();
+      await userEvent.click(screen.getByRole("button", { name: "Discos" }));
+      expect(screen.queryByRole("button", { name: "Como la de @ana" })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Discografía de un artista" })).toHaveAttribute("aria-pressed", "true");
+    });
+  });
 });

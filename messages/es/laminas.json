@@ -204,7 +204,8 @@
       "discography": "Discografía de un artista",
       "album": "Canciones de un disco",
       "ratings": "Mis valoraciones",
-      "list": "Una lista"
+      "list": "Una lista",
+      "lamina": "Como la de @{username}"
     },
     "titles": {
       "discography": "Tier list de {artist}",
@@ -228,6 +229,21 @@
       "recording": "Agregar una canción"
     },
     "added": "{title}: agregado en {group}",
-    "full": "Ya tiene {max}. Quita algo para agregar otro."
+    "full": "Ya tiene {max}. Quita algo para agregar otro.",
+    "inspired": {
+      "summary": {
+        "release-group": "{count, plural, one {# disco} other {# discos}} de su tier list. Cada uno caerá en el nivel de tu nota; lo que no valoraste, en la bandeja.",
+        "recording": "{count, plural, one {# canción} other {# canciones}} de su tier list. Cada una caerá en el nivel de tu nota; lo que no valoraste, en la bandeja."
+      },
+      "copyLabels": "Usar sus etiquetas"
+    },
+    "cta": {
+      "title": "¿Cómo la armarías tú?",
+      "description": {
+        "release-group": "Los mismos discos, cada uno en el nivel de tu nota.",
+        "recording": "Las mismas canciones, cada una en el nivel de tu nota."
+      }
+    },
+    "fromDiscography": "Armar tier list"
   }
 }

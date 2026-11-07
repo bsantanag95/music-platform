@@ -2250,7 +2250,7 @@ ya no existe: no distingue). Sin token, o con uno alterado o firmado con otro se
 `400 INVALID_UNSUBSCRIBE_TOKEN` y no cambia nada. Un `GET` sobre esta ruta no existe: el enlace del
 cuerpo del correo abre la página de confirmación, que es quien hace el `POST`.
 
-## Láminas (cambios `add-top-n-lamina-phase1`, `add-top-n-lamina-phase2`, `add-tier-list-lamina-phase1` y `add-tier-list-lamina-phase2`)
+## Láminas (cambios `add-top-n-lamina-phase1`, `add-top-n-lamina-phase2` y `add-tier-list-lamina-phase1` a `phase3`)
 
 Todas con sesión. `LAMINA_NOT_FOUND` (404) si no existe o no es propia. Hacer pública exige que no haya suspensión social
 (`SOCIAL_SUSPENSION_ACTIVE`).
@@ -2281,6 +2281,9 @@ orden con `{ id, position, target, score }`) y la bandeja, que solo llega a su d
   - `{ type: 'discography', artistId }` (discos): la sección principal del artista, hasta 50, primero los valorados.
   - `{ type: 'album', releaseGroupId }` (canciones): las pistas de la edición representativa en orden, sin repetir una grabación, hasta 50.
   - `{ type: 'picked', targetIds }` (los dos tipos): de 1 a 50 objetivos elegidos en la vista previa de valoraciones o de una lista.
+  - `{ type: 'lamina', id, copyLabels? }` ("Arma la tuya", `add-tier-list-lamina-phase3`): los ítems en niveles de otra tier list, en su orden, leída con
+    las reglas de su página pública (nunca su bandeja ni sus notas). `copyLabels` (`false` por defecto) copia sus seis etiquetas. Propia, que no se puede
+    ver o que no es una tier list: `LAMINA_NOT_FOUND`; de otro tipo: `VALIDATION_ERROR`.
 
   Cada ítem cae en el nivel del tramo de la nota del dueño, que lee el servidor; sin nota, en la bandeja. Nace `private`. `VALIDATION_ERROR` con una fuente que
   no corresponde al tipo, un objetivo que no existe o de otro tipo, un artista sin discos principales o un disco sin pistas.

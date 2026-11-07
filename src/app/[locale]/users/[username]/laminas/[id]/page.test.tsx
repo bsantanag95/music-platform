@@ -36,7 +36,11 @@ vi.mock("@/i18n/navigation", () => ({
   ),
 }));
 vi.mock("@/components/catalog/CoverThumb", () => ({ CoverThumb: ({ label }: { label: string }) => <span>{label}</span> }));
-vi.mock("@/components/laminas/LaminaCta", () => ({ LaminaCta: () => <div>arma la tuya</div> }));
+vi.mock("@/components/laminas/LaminaCta", () => ({
+  LaminaCta: ({ intent, signedInHref, title, description }: { intent: { id: string }; signedInHref: string | null; title: string; description: string }) => (
+    <div>{`arma la tuya:${intent.id}:${signedInHref ?? "sin sesión"}:${title}:${description}`}</div>
+  ),
+}));
 vi.mock("@/components/share/ShareAction", () => ({ ShareAction: ({ kind, refId }: { kind: string; refId: string }) => <button>{`compartir:${kind}:${refId}`}</button> }));
 
 import UserLaminaPage, { generateMetadata } from "./page";
@@ -72,16 +76,32 @@ beforeEach(() => {
 });
 
 describe("página pública de una tier list", () => {
-  it("muestra los seis niveles con sus etiquetas, sin la bandeja ni Arma la tuya", async () => {
+  it("muestra los seis niveles con sus etiquetas y sin la bandeja", async () => {
     await render();
     expect(screen.getByRole("heading", { name: "Tier list de Banda" })).toBeInTheDocument();
     expect(screen.getByRole("list", { name: "Dios: 1 disco" })).toBeInTheDocument();
     expect(screen.getByRole("list", { name: "E: vacío" })).toBeInTheDocument();
     expect(screen.queryByText("Sin escuchar / sin valorar")).not.toBeInTheDocument();
-    expect(screen.queryByText("arma la tuya")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: `compartir:tier:${ID}` })).toBeInTheDocument();
     expect(mocks.tier).toHaveBeenCalledWith("ana", ID, null);
     expect(mocks.top).not.toHaveBeenCalled();
+  });
+
+  it("sin sesión ofrece Arma la tuya con la intención de Lámina", async () => {
+    await render();
+    expect(screen.getByText(`arma la tuya:${ID}:sin sesión:¿Cómo la armarías tú?:Los mismos discos, cada uno en el nivel de tu nota.`)).toBeInTheDocument();
+  });
+
+  it("con sesión lleva al formulario inspirado", async () => {
+    mocks.session.mockResolvedValue({ user: { id: "u2", username: "beto" } });
+    await render();
+    expect(screen.getByText(new RegExp(`arma la tuya:${ID}:/me/laminas\\?desde=${ID}:`))).toBeInTheDocument();
+  });
+
+  it("su dueño no ve Arma la tuya", async () => {
+    mocks.session.mockResolvedValue({ user: { id: "u1", username: "ana" } });
+    await render();
+    expect(screen.queryByText(/arma la tuya/)).not.toBeInTheDocument();
   });
 
   it("con las notas apagadas no muestra ninguna", async () => {

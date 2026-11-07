@@ -53,7 +53,8 @@ const tierList = (path: string, init: RequestInit = {}): Promise<TierListDetail>
 export type TierListSourceInput =
   | { type: "discography"; artistId: string }
   | { type: "album"; releaseGroupId: string }
-  | { type: "picked"; targetIds: string[] };
+  | { type: "picked"; targetIds: string[] }
+  | { type: "lamina"; id: string; copyLabels: boolean };
 
 export function createTierList(input: { title: string; entityType: "release-group" | "recording"; source: TierListSourceInput }) {
   const body = { kind: "tier", ...input };

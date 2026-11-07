@@ -1919,6 +1919,8 @@ export const CreateTierListRequestSchema = z.object({
     z.object({ type: z.literal("album"), releaseGroupId: z.uuid() }),
     // Lo elegido en la vista previa de tus valoraciones o de una lista; la nota la lee el servidor.
     z.object({ type: z.literal("picked"), targetIds: z.array(z.uuid()).min(1).max(50) }),
+    // "Arma la tuya" desde otra tier list (add-tier-list-lamina-phase3): el servidor la lee con las reglas de su página pública.
+    z.object({ type: z.literal("lamina"), id: z.uuid(), copyLabels: z.boolean().default(false) }),
   ]),
 });
 

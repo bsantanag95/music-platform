@@ -363,7 +363,10 @@ el mismo umbral que el álbum, aplicado en el read-model (`artist-community.ts`)
   nota vigente de su dueño, y sin nota en la bandeja; el servidor lee esa nota. Puede nacer de la discografía de un artista (discos), de las
   canciones de un disco, de tus valoraciones con filtros o de una lista propia.
 - Una tier list puede nacer de la discografía de un artista: cada disco de la sección principal cae en el nivel de la nota del dueño y los sin
-  valorar, en la bandeja. Es una foto: nace privada, nunca escribe valoraciones al mover un disco y no se mueve si después cambia una nota (D8).
+  valorar, en la bandeja.
+- "Arma la tuya" desde la tier list de otra persona toma lo que su página muestra en niveles, en su orden, y lo ubica por la nota de quien la arma;
+  nunca hereda su bandeja, sus notas ni su audiencia. Copiar sus etiquetas es una elección, apagada por defecto, y lo copiado pasa a ser propio. Si
+  esa tier list no se puede ver, es propia o no es una tier list, no presta nada. Es una foto: nace privada, nunca escribe valoraciones al mover un disco y no se mueve si después cambia una nota (D8).
   Sus notas nacen apagadas, como las del Top N. Entra al feed con al menos un disco en un nivel.
 - El año de escucha de una fuente exige una escucha del mismo objetivo en ese año, contado en la zona horaria de la persona: una
   escucha de una canción no cuenta para su álbum.

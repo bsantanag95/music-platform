@@ -386,6 +386,8 @@ solo un "cuerpo" distinto dentro del mismo marco.
 3. Llamado principal: **"Arma la tuya"** → registro → va **directo a armarla, con el formato y el tipo
    preseleccionados** y el título de la otra lámina como sugerencia para tocar. La bienvenida queda pendiente e
    Inicio la sigue ofreciendo. La intención es el id de la lámina (`lamina=<uuid>`), nunca una URL (ADR 0052).
+   En una tier list, la suya arranca con los mismos ítems que Ana tiene en sus niveles, cada uno en el nivel de la nota
+   de Leo (lo que no valoró, a la bandeja), y copiar las etiquetas de Ana es una elección de Leo; la intención es la misma.
 4. Leo valora la discografía (el editor de la lámina es también una forma rápida de valorar en lote,
    §8 D12) y publica la suya.
 5. Si Leo ya tenía cuenta: **"Compárala con la tuya"** → lámina "Tú vs. Ana" (§4.4.2), que se comparte de
@@ -521,7 +523,8 @@ Cada cambio parte de este documento y abre con el repaso en detalle de las decis
    - **`add-tier-list-lamina-phase2`** ✅ implementado — tier lists de canciones (las de un disco, tus valoraciones con filtros, una lista), discos desde
      tus valoraciones con filtros o una lista, vista previa de hasta 50 y agregar a mano, todo ubicado por tu nota. De un género o una década entran tus
      valorados, no el catálogo.
-   - **`add-tier-list-lamina-phase3`** — "Arma la tuya" desde la tier list de otra persona y el llamado en la discografía.
+   - **`add-tier-list-lamina-phase3`** ✅ implementado — "Arma la tuya" desde la tier list de otra persona (los mismos ítems por tu nota, etiquetas a
+     elección, registro dirigido con la intención de Lámina de ADR 0052) y "Armar tier list" en un toque en la discografía propia.
 6. **Siguientes** (§4.4) — "Tu año en discos" (objetivo: antes de diciembre), "Tú vs. otra persona",
    décadas/géneros, mes en discos, pared de la colección.
 
