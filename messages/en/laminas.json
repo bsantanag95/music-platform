@@ -50,5 +50,51 @@
   "search": {
     "release-group": "Search for an album",
     "recording": "Search for a song"
+  },
+  "source": {
+    "legend": "Where they come from",
+    "manual": "By hand",
+    "ratings": "My ratings",
+    "favorites": "My favorites",
+    "list": "A list",
+    "loading": "Searching…",
+    "loadError": "Couldn't load this. Try again.",
+    "empty": {
+      "ratings": "You don't have ratings of this type yet.",
+      "favorites": "You don't have favorites of this type yet.",
+      "list": "You don't have lists of this type with items."
+    },
+    "noResults": "Nothing with these filters. Try others.",
+    "nothingLeft": "All of it is already in the Card.",
+    "selected": "{count} of {slots} chosen",
+    "privateNote": "It starts visible only to you. You decide later whether to publish it.",
+    "completeOpen": "Fill in from your ratings, favorites or a list",
+    "audienceNotice": "Whoever sees this Card ({audience}) will also see what you add.",
+    "add": "{count, plural, one {Add # item} other {Add # items}}"
+  },
+  "filters": {
+    "period": "Year or decade",
+    "listenYear": "Year listened",
+    "genre": "Genre",
+    "artist": "Artist",
+    "list": "List",
+    "any": "Any",
+    "decades": "Decades",
+    "years": "Years",
+    "listOption": "{title} ({count})"
+  },
+  "titles": {
+    "artistDecade": "The best of {artist} in the {decade}",
+    "artistYear": "The best of {artist} in {year}",
+    "artist": "The best of {artist}",
+    "listenYear": "The best I heard in {year}",
+    "year": "My {n} {kind, select, recording {songs} other {albums}} of {year}",
+    "genreDecade": "Top {n} {genre} of the {decade}",
+    "decade": "Top {n} of the {decade}",
+    "genre": "My {n} {genre} {kind, select, recording {songs} other {albums}}",
+    "favorites": "My {n} favorite {kind, select, recording {songs} other {albums}}",
+    "ratings": "My {n} top rated {kind, select, recording {songs} other {albums}}",
+    "list": "Top {n} from {list}",
+    "allTime": "My all-time {n} {kind, select, recording {songs} other {albums}}"
   }
 }

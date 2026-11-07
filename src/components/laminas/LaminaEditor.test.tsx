@@ -4,7 +4,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { LaminaDetail } from "@/lib/api/schemas";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 
-const mocks = vi.hoisted(() => ({ update: vi.fn(), add: vi.fn(), remove: vi.fn(), reorder: vi.fn(), del: vi.fn(), push: vi.fn(), search: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  update: vi.fn(),
+  add: vi.fn(),
+  addMany: vi.fn(),
+  remove: vi.fn(),
+  reorder: vi.fn(),
+  del: vi.fn(),
+  push: vi.fn(),
+  search: vi.fn(),
+  options: vi.fn(),
+  candidates: vi.fn(),
+}));
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>,
@@ -13,6 +24,9 @@ vi.mock("@/i18n/navigation", () => ({
 vi.mock("@/lib/api/laminas", () => ({
   updateLamina: mocks.update,
   addLaminaItem: mocks.add,
+  addLaminaItems: mocks.addMany,
+  fetchLaminaSourceOptions: mocks.options,
+  fetchLaminaCandidates: mocks.candidates,
   removeLaminaItem: mocks.remove,
   reorderLamina: mocks.reorder,
   deleteLamina: mocks.del,
@@ -107,6 +121,55 @@ describe("LaminaEditor", () => {
     render();
     await userEvent.click(screen.getByRole("checkbox", { name: /Mostrar mis notas/ }));
     expect(mocks.update).toHaveBeenCalledWith(lamina().id, { showScores: true });
+  });
+
+  describe("completar desde una fuente", () => {
+    const candidate = (n: number) => ({ target: { ...item(n).target, title: `Fuente ${n}` }, score: null });
+
+    beforeEach(() => {
+      mocks.options.mockResolvedValue({
+        years: [1999],
+        decades: [1990],
+        listenYears: [],
+        genres: [],
+        artists: [{ id: "40000000-0000-4000-8000-000000000001", name: "Banda", itemCount: 3 }],
+        lists: [],
+      });
+      mocks.candidates.mockResolvedValue([candidate(1), candidate(4), candidate(5), candidate(6)]);
+    });
+
+    it("no ofrece lo que ya está, llena los lugares libres y numera desde el siguiente puesto", async () => {
+      render();
+      await userEvent.click(screen.getByRole("button", { name: /Completar desde/ }));
+      expect(await screen.findByRole("checkbox", { name: /Fuente 4/ })).toBeChecked();
+      expect(screen.queryByRole("checkbox", { name: /Fuente 1/ })).toBeNull();
+      expect(screen.getByRole("checkbox", { name: /Fuente 5/ })).toBeChecked();
+      expect(screen.getByRole("checkbox", { name: /Fuente 6/ })).toBeDisabled();
+      expect(screen.getByRole("checkbox", { name: /Fuente 4/ }).closest("label")).toHaveTextContent("4");
+    });
+
+    it("agrega lo elegido y cierra el panel", async () => {
+      mocks.addMany.mockResolvedValue(lamina({ items: [1, 2, 3, 4, 5].map(item) }));
+      render();
+      await userEvent.click(screen.getByRole("button", { name: /Completar desde/ }));
+      await screen.findByRole("checkbox", { name: /Fuente 4/ });
+      await userEvent.click(screen.getByRole("button", { name: "Agregar 2 ítems" }));
+      expect(mocks.addMany).toHaveBeenCalledWith(lamina().id, [item(4).target.id, item(5).target.id]);
+      await waitFor(() => expect(screen.queryByRole("checkbox", { name: /Fuente 4/ })).toBeNull());
+    });
+
+    it("avisa quién verá lo agregado si la Lámina no es privada", async () => {
+      render(lamina({ audience: "public" }));
+      await userEvent.click(screen.getByRole("button", { name: /Completar desde/ }));
+      expect(await screen.findByText(/también verá lo que agregues/)).toBeTruthy();
+    });
+
+    it("en una privada no avisa", async () => {
+      render();
+      await userEvent.click(screen.getByRole("button", { name: /Completar desde/ }));
+      await screen.findByRole("checkbox", { name: /Fuente 4/ });
+      expect(screen.queryByText(/también verá lo que agregues/)).toBeNull();
+    });
   });
 
   it("un fallo se muestra", async () => {

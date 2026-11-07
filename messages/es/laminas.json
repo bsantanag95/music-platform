@@ -50,5 +50,51 @@
   "search": {
     "release-group": "Buscar un álbum",
     "recording": "Buscar una canción"
+  },
+  "source": {
+    "legend": "De dónde salen",
+    "manual": "A mano",
+    "ratings": "Mis valoraciones",
+    "favorites": "Mis favoritos",
+    "list": "Una lista",
+    "loading": "Buscando…",
+    "loadError": "No se pudo cargar. Inténtalo de nuevo.",
+    "empty": {
+      "ratings": "Todavía no tienes valoraciones de este tipo.",
+      "favorites": "Todavía no tienes favoritos de este tipo.",
+      "list": "No tienes listas de este tipo con ítems."
+    },
+    "noResults": "Nada con estos filtros. Prueba con otros.",
+    "nothingLeft": "Ya está todo en la Lámina.",
+    "selected": "{count} de {slots} elegidos",
+    "privateNote": "Nace solo para ti. Después decides si la publicas.",
+    "completeOpen": "Completar desde tus valoraciones, favoritos o una lista",
+    "audienceNotice": "Quien ve esta Lámina ({audience}) también verá lo que agregues.",
+    "add": "{count, plural, one {Agregar # ítem} other {Agregar # ítems}}"
+  },
+  "filters": {
+    "period": "Año o década",
+    "listenYear": "Año de escucha",
+    "genre": "Género",
+    "artist": "Artista",
+    "list": "Lista",
+    "any": "Cualquiera",
+    "decades": "Décadas",
+    "years": "Años",
+    "listOption": "{title} ({count})"
+  },
+  "titles": {
+    "artistDecade": "Lo mejor de {artist} en los {decade}",
+    "artistYear": "Lo mejor de {artist} en {year}",
+    "artist": "Lo mejor de {artist}",
+    "listenYear": "Lo mejor que escuché en {year}",
+    "year": "Mis {n} {kind, select, recording {canciones} other {discos}} de {year}",
+    "genreDecade": "Top {n} de {genre} de los {decade}",
+    "decade": "Top {n} de los {decade}",
+    "genre": "Mis {n} {kind, select, recording {canciones} other {discos}} de {genre}",
+    "favorites": "Mis {n} {kind, select, recording {canciones favoritas} other {discos favoritos}}",
+    "ratings": "Mis {n} {kind, select, recording {canciones mejor valoradas} other {discos mejor valorados}}",
+    "list": "Top {n} de {list}",
+    "allTime": "Mis {n} {kind, select, recording {canciones} other {discos}} de siempre"
   }
 }

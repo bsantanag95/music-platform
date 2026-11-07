@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   create: vi.fn(),
   update: vi.fn(),
   add: vi.fn(),
+  addMany: vi.fn(),
   reorder: vi.fn(),
 }));
 
@@ -23,6 +24,7 @@ vi.mock("@/services/laminas/laminas", () => ({
   getOwnedLamina: vi.fn(),
   deleteLamina: vi.fn(),
   addLaminaItem: mocks.add,
+  addLaminaItems: mocks.addMany,
   reorderLamina: mocks.reorder,
 }));
 
@@ -41,6 +43,7 @@ beforeEach(() => {
   mocks.create.mockResolvedValue({ id: ID });
   mocks.update.mockResolvedValue({ id: ID });
   mocks.add.mockResolvedValue({ id: ID });
+  mocks.addMany.mockResolvedValue({ id: ID });
   mocks.reorder.mockResolvedValue({ id: ID });
 });
 
@@ -80,6 +83,24 @@ describe("/api/me/laminas", () => {
     expect(mocks.add).toHaveBeenCalledWith(ID, "u1", ID);
     await reorder(req("PUT", { itemIds: [ID] }), context);
     expect(mocks.reorder).toHaveBeenCalledWith(ID, "u1", [ID]);
+  });
+
+  it("un alta desde una fuente no pide la comprobación social: nace privada", async () => {
+    mocks.allowed.mockRejectedValue(new ApiError("SOCIAL_SUSPENSION_ACTIVE", 403, "x"));
+    const res = await POST(req("POST", { title: "Mis discos", format: "top5", entityType: "release-group", targetIds: [ID] }));
+    expect(res.status).toBe(201);
+    expect(mocks.create).toHaveBeenCalledWith("u1", expect.objectContaining({ targetIds: [ID] }));
+  });
+
+  it("agrega un lote", async () => {
+    await addItem(req("POST", { targetIds: [ID] }), context);
+    expect(mocks.addMany).toHaveBeenCalledWith(ID, "u1", [ID]);
+    expect(mocks.add).not.toHaveBeenCalled();
+  });
+
+  it("un lote vacío o de más de 10 se rechaza", async () => {
+    expect((await addItem(req("POST", { targetIds: [] }), context)).status).toBe(400);
+    expect((await addItem(req("POST", { targetIds: Array(11).fill(ID) }), context)).status).toBe(400);
   });
 
   it("un id inválido responde 404", async () => {

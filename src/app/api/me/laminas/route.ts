@@ -14,6 +14,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const parsed = CreateLaminaRequestSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) throw new ApiError("VALIDATION_ERROR", 400, "La Lámina no es válida");
   const user = await requireUser();
-  if (parsed.data.audience !== "private") await requireSocialActivityAllowed(user.id);
+  // Desde una fuente nace privada: no abre nada, igual que elegir "Solo yo".
+  if (parsed.data.audience !== "private" && !parsed.data.targetIds) await requireSocialActivityAllowed(user.id);
   return NextResponse.json({ lamina: await createLamina(user.id, parsed.data) }, { status: 201 });
 });

@@ -5,7 +5,7 @@ import { AddLaminaItemRequestSchema, ReorderLaminaRequestSchema } from "@/lib/ap
 import { isValidUuid } from "@/lib/validation";
 import { withErrorHandling } from "@/lib/with-error-handling";
 import { requireUser } from "@/services/auth/authorization";
-import { addLaminaItem, reorderLamina } from "@/services/laminas/laminas";
+import { addLaminaItem, addLaminaItems, reorderLamina } from "@/services/laminas/laminas";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -20,7 +20,8 @@ async function parse<T>(request: NextRequest, context: Params, schema: z.ZodType
 export const POST = withErrorHandling(async (request: NextRequest, context: Params) => {
   const { id, body } = await parse(request, context, AddLaminaItemRequestSchema);
   const user = await requireUser();
-  return NextResponse.json({ lamina: await addLaminaItem(id, user.id, body.targetId) });
+  const lamina = "targetIds" in body ? await addLaminaItems(id, user.id, body.targetIds) : await addLaminaItem(id, user.id, body.targetId);
+  return NextResponse.json({ lamina });
 });
 
 export const PUT = withErrorHandling(async (request: NextRequest, context: Params) => {

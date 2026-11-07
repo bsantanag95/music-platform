@@ -1,20 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { useTargetSearch } from "@/components/quick-actions/use-target-search";
 import { OwnShareButton } from "@/components/share/OwnShareSheet";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Link, useRouter } from "@/i18n/navigation";
-import { addLaminaItem, deleteLamina, removeLaminaItem, reorderLamina, updateLamina } from "@/lib/api/laminas";
+import { addLaminaItem, addLaminaItems, deleteLamina, removeLaminaItem, reorderLamina, updateLamina } from "@/lib/api/laminas";
 import type { LaminaDetail, UpdateLaminaRequest } from "@/lib/api/schemas";
+import { LaminaSourcePanel, LaminaSourceTabs } from "./LaminaSourcePanel";
+import { useLaminaSource } from "./use-lamina-source";
 
 // Editor de una Lámina (spec top-laminas): el orden es el ranking, así que se mueve con botones operables con teclado y
 // toque. Bajar a un formato con menos lugares avisa qué se pierde antes de guardar.
 
 const CAPACITY = { top5: 5, top10: 10, grid9: 9 } as const;
 const FORMATS = ["top5", "top10", "grid9"] as const;
+const SOURCES = ["ratings", "favorites", "list"] as const;
 const AUDIENCES = ["private", "followers", "public"] as const;
 const iconButton =
   "grid size-9 place-items-center rounded border border-ink-border font-data text-sm text-paper-muted transition-colors hover:text-paper disabled:opacity-40 [@media(pointer:coarse)]:size-11";
@@ -34,21 +37,29 @@ export function LaminaEditor({ initial, ownerUsername }: { initial: LaminaDetail
   const full = lamina.items.length >= capacity;
   const pickerType = lamina.entityType === "recording" ? "song" : "album";
   const { candidates, searchable } = useTargetSearch(pickerType, query);
-  const chosen = new Set(lamina.items.map((item) => item.target.id));
+  const chosen = useMemo(() => new Set(lamina.items.map((item) => item.target.id)), [lamina.items]);
+  const source = useLaminaSource({ entityType: lamina.entityType, slots: capacity - lamina.items.length, exclude: chosen });
 
-  async function run(action: () => Promise<LaminaDetail>) {
+  async function run(action: () => Promise<LaminaDetail>): Promise<boolean> {
     setBusy(true);
     setFailed(false);
     try {
       setLamina(await action());
+      return true;
     } catch {
       setFailed(true);
+      return false;
     } finally {
       setBusy(false);
     }
   }
 
   const save = (changes: UpdateLaminaRequest) => run(() => updateLamina(lamina.id, changes));
+
+  async function complete() {
+    const targetIds = source.selected.map((candidate) => candidate.target.id);
+    if (await run(() => addLaminaItems(lamina.id, targetIds))) source.setSource("manual");
+  }
 
   function move(index: number, delta: number) {
     const ids = lamina.items.map((item) => item.id);
@@ -224,6 +235,36 @@ export function LaminaEditor({ initial, ownerUsername }: { initial: LaminaDetail
                 ))}
             </ul>
           ) : null}
+          {source.source === "manual" ? (
+            <button
+              type="button"
+              onClick={() => source.setSource("ratings")}
+              className="min-h-9 self-start font-data text-xs text-amber underline-offset-2 hover:underline"
+            >
+              {t("source.completeOpen")}
+            </button>
+          ) : (
+            <div className="flex flex-col gap-3 rounded border border-ink-border bg-ink-surface p-3">
+              <LaminaSourceTabs source={source.source} options={SOURCES} onChange={source.setSource} />
+              <LaminaSourcePanel state={source} rankStart={lamina.format === "grid9" ? null : lamina.items.length + 1} />
+              {lamina.audience !== "private" ? (
+                <p className="font-data text-xs text-paper-muted">{t("source.audienceNotice", { audience: t(`audience.${lamina.audience}`) })}</p>
+              ) : null}
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  disabled={busy || source.selected.length === 0}
+                  onClick={() => void complete()}
+                  className="rounded bg-amber px-4 py-2 font-display text-sm text-ink transition-colors hover:bg-amber-hover disabled:opacity-50"
+                >
+                  {t("source.add", { count: source.selected.length })}
+                </button>
+                <button type="button" onClick={() => source.setSource("manual")} className="font-data text-xs text-paper-muted transition-colors hover:text-paper">
+                  {t("cancel")}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

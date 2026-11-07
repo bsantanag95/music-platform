@@ -1869,6 +1869,8 @@ export const CreateLaminaRequestSchema = z.object({
   format: LaminaFormatSchema,
   entityType: LaminaEntityTypeSchema,
   audience: DiaryAudienceSchema.optional(),
+  // Ítems que eligió desde una fuente (openspec: add-top-n-lamina-phase2): una Lámina así nace privada.
+  targetIds: z.array(z.uuid()).min(1).max(10).optional(),
 });
 
 export const UpdateLaminaRequestSchema = z
@@ -1881,8 +1883,42 @@ export const UpdateLaminaRequestSchema = z
   .refine((value) => Object.keys(value).length > 0);
 export type UpdateLaminaRequest = z.infer<typeof UpdateLaminaRequestSchema>;
 
-export const AddLaminaItemRequestSchema = z.object({ targetId: z.uuid() });
+export const AddLaminaItemRequestSchema = z.union([
+  z.object({ targetId: z.uuid() }),
+  z.object({ targetIds: z.array(z.uuid()).min(1).max(10) }),
+]);
 export const ReorderLaminaRequestSchema = z.object({ itemIds: z.array(z.uuid()).max(10) });
+
+// Fuentes de una Lámina (openspec: add-top-n-lamina-phase2).
+export const LaminaSourceSchema = z.enum(["ratings", "favorites", "list"]);
+export type LaminaSource = z.infer<typeof LaminaSourceSchema>;
+
+const LaminaYearParam = z.coerce.number().int().min(1000).max(2200);
+
+export const LaminaSourceQuerySchema = z.object({ source: LaminaSourceSchema, entityType: LaminaEntityTypeSchema });
+
+export const LaminaCandidatesQuerySchema = LaminaSourceQuerySchema.extend({
+  year: LaminaYearParam.optional(),
+  decade: LaminaYearParam.optional(),
+  listenYear: LaminaYearParam.optional(),
+  genre: z.string().min(1).max(120).optional(),
+  artist: z.uuid().optional(),
+  list: z.uuid().optional(),
+});
+
+export const LaminaCandidateSchema = LaminaItemSchema.pick({ target: true, score: true });
+export type LaminaCandidate = z.infer<typeof LaminaCandidateSchema>;
+export const LaminaCandidatesResponseSchema = z.object({ candidates: z.array(LaminaCandidateSchema) });
+
+export const LaminaSourceOptionsSchema = z.object({
+  years: z.array(z.number().int()),
+  decades: z.array(z.number().int()),
+  listenYears: z.array(z.number().int()),
+  genres: z.array(z.object({ slug: z.string(), name: z.string(), nameEs: z.string().nullable(), itemCount: z.number().int() })),
+  artists: z.array(z.object({ id: z.uuid(), name: z.string(), itemCount: z.number().int() })),
+  lists: z.array(z.object({ id: z.uuid(), title: z.string(), itemCount: z.number().int() })),
+});
+export type LaminaSourceOptions = z.infer<typeof LaminaSourceOptionsSchema>;
 
 export const CreateListRequestSchema = z.object({
   entityType: ListEntityTypeSchema,
