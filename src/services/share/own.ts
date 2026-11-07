@@ -6,9 +6,11 @@ import type { ShareFormat, ShareLocale } from "@/lib/share/kinds";
 import { updateListenEntry } from "@/services/diary/diary";
 import { isDiscographyShared } from "@/services/laminas/discography";
 import { updateLamina } from "@/services/laminas/laminas";
+import { updateTierList } from "@/services/laminas/tiers";
 import { shareFormatsOf, sharePayloadFor } from "./metadata";
 import { loadDiscographyTarget } from "./targets/discography";
 import { loadLaminaTarget } from "./targets/lamina";
+import { loadTierTarget } from "./targets/tier";
 import { loadListenTarget, loadRatingTarget } from "./targets/relation";
 import type { ShareTarget } from "./types";
 
@@ -16,7 +18,7 @@ import type { ShareTarget } from "./types";
 // una escucha. Lo decide el servidor: la hoja solo muestra el estado. Lo único que vuelve público algo es
 // `makeOwnPublic`, y solo esa fila.
 
-export const OWN_SHARE_KINDS = ["rating", "listen", "top", "discography"] as const;
+export const OWN_SHARE_KINDS = ["rating", "listen", "top", "discography", "tier"] as const;
 export type OwnShareKind = (typeof OWN_SHARE_KINDS)[number];
 
 export function isOwnShareKind(value: string): value is OwnShareKind {
@@ -30,6 +32,7 @@ function artistOf(ref: string): string {
 
 function loadTarget(kind: OwnShareKind, ref: string, locale: ShareLocale, owner?: string): Promise<ShareTarget | null> {
   if (kind === "top") return loadLaminaTarget(ref, locale, { owner });
+  if (kind === "tier") return loadTierTarget(ref, locale, { owner });
   if (kind === "discography") return loadDiscographyTarget(ref, locale, { owner });
   return kind === "rating" ? loadRatingTarget(ref, locale, { owner }) : loadListenTarget(ref, locale, { owner });
 }
@@ -40,7 +43,7 @@ export function loadOwnTarget(kind: OwnShareKind, ref: string, locale: ShareLoca
 }
 
 function notFound(kind: OwnShareKind): ApiError {
-  if (kind === "top") return new ApiError("LAMINA_NOT_FOUND", 404, "La Lámina no existe");
+  if (kind === "top" || kind === "tier") return new ApiError("LAMINA_NOT_FOUND", 404, "La Lámina no existe");
   if (kind === "discography") return new ApiError("DISCOGRAPHY_NOT_FOUND", 404, "La discografía no existe");
   return kind === "rating"
     ? new ApiError("RATING_NOT_FOUND", 404, "La valoración no existe")
@@ -97,6 +100,8 @@ export async function makeOwnPublic(kind: OwnShareKind, ref: string, locale: Sha
     await db.insert(discographyShare).values({ userId, artistId: artistOf(ref) }).onConflictDoNothing();
   } else if (kind === "top") {
     await updateLamina(ref, userId, { audience: "public" });
+  } else if (kind === "tier") {
+    await updateTierList(ref, userId, { audience: "public" });
   } else {
     await updateListenEntry(ref, userId, { audience: "public" });
   }

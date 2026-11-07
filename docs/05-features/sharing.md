@@ -257,8 +257,13 @@ Un ranking corto, numerado, con carátulas grandes. Formato propio, no la grilla
   eliges "Discografía de Metallica" y los discos caen solos en su nivel según tu nota; los no valorados
   quedan en la bandeja **"Sin escuchar / sin valorar"**. Después se arrastra a gusto.
 - **La tier list no escribe valoraciones.** Mover un disco de A a S no cambia tu nota (es una lámina,
-  no un formulario de valoración; §8 D8). La página puede mostrar, discreta, la nota real al pasar el
-  cursor.
+  no un formulario de valoración; §8 D8). Con las notas encendidas, la página muestra la nota real de cada disco
+  como una insignia chica sobre la carátula (tocar el disco lleva a su página, así que no puede depender de tocarlo);
+  el dueño la ve en el menú de cada disco del editor.
+- **La bandeja se guarda, pero no se publica:** sirve para seguir armándola; ni la página ni la imagen la muestran.
+  Prellenada desde la discografía, la tier list es una foto: no se mueve si después cambia una nota.
+- **Imagen:** Publicación, Enlace (los tres primeros niveles con discos) e Historia. Carátulas para los primeros 10 discos
+  desde S (ADR 0051), el resto como fichas de texto; las fichas se achican con el nivel más lleno, hasta 50 discos.
 - **Fuentes de ítems:** discografía de un artista, una lista, un género/década, o a mano. Ítems:
   álbumes primero; canciones y artistas después.
 - **Editor:** arrastrar y soltar con alternativa de teclado y de toque (mover con "Mover a…" desde el
@@ -456,7 +461,7 @@ hasta tener datos reales.
 | D4 | Página de relación persona ↔ disco | `/users/<u>/album/<id>` única · una página por acción | ✅ **Única por objeto** (álbum y canción en `add-share-user-actions-phase2`; el artista llega con la lámina de discografía, que es a la vez el progreso público) |
 | D5 | Compartir algo privado | Bloquear · pedir hacerlo público · permitir solo descarga | ✅ **Pedir "Hacer pública y compartir"**; sin ese gesto, solo el dueño descarga la imagen, generada con su sesión y sin caché pública (sirve también a perfiles privados). ADR 0050 |
 | D6 | Carátulas compuestas en imágenes descargables | Permitir con 250 px y atribución · solo carátula única · sin carátulas | ✅ **Hasta 4 carátulas de ≤250 px sin ampliar, con créditos y respetando retiros** — ADR 0049 (`add-share-foundation`). **Hasta 10 en una Lámina armada por una persona** (`add-top-n-lamina`) |
-| D7 | Persistencia de láminas de autor | `user_list` con `kind` nuevos · tabla `lamina` | ✅ **`user_list` con `kind = 'top'`**: las superficies de listas ya filtran por `standard`. La tier list lo revisa al llegar |
+| D7 | Persistencia de láminas de autor | `user_list` con `kind` nuevos · tabla `lamina` | ✅ **`user_list` con `kind = 'top'`**: las superficies de listas ya filtran por `standard`. ✅ La tier list, igual: `kind = 'tier'`, etiquetas en la lista y nivel en el ítem (`0086`) |
 | D8 | ¿La tier list escribe valoraciones? | No · ofrecer "actualizar mis notas" | **No**; quizá un "¿actualizar tu nota?" puntual en una fase posterior |
 | D9 | Umbral para la vista "Por canción" | ≥ x % de pistas valoradas · ≥ N pistas | ✅ **10 canciones valoradas en al menos 2 discos** (`add-discography-lamina-phase2`), en una constante (`DISCOGRAPHY_SONG_MIN`). Sin datos reales todavía: la BD de scratch tenía 49 valoraciones de canciones. Revisar cuando la BD real las tenga |
 | D10 | Grilla 3×3 sin números | Incluir · solo Top 5/10 | ✅ **Incluir como formato del Cuadrado** (es el que la gente ya conoce) |
@@ -507,7 +512,12 @@ Cada cambio parte de este documento y abre con el repaso en detalle de las decis
    - **`add-discography-lamina-phase1`** ✅ implementado — página, marca por artista, vista Por disco, progreso discreto (D4, D19, ADR 0053).
    - **`add-discography-lamina-phase2`** ✅ implementado — vista Por canción (D9), preferencias del dueño (En vivo, Recopilatorios y vista por defecto) y Lámina de álbum en `?disco=`, abierta por la misma marca.
    - **`add-discography-lamina-phase3`** ✅ implementado — "Valora lo que falta" (D12) en discos y canciones, y "Arma la tuya" en esta página (ADR 0054).
-5. **`add-tier-list-lamina`** — tier list con prellenado desde valoraciones, editor accesible (D8).
+5. **`add-tier-list-lamina`**, dividido en tres fases (2026-11-07). Arrastrar nativo más un menú "Mover a…" para teclado y toque, sin
+   dependencias; la bandeja se guarda pero no se publica; el prellenado es una foto.
+   - **`add-tier-list-lamina-phase1`** ✅ implementado — modelo (`kind = 'tier'`, `0086`), prellenado desde la discografía de un artista, editor
+     accesible, página pública e imagen (Publicación, Enlace, Historia), con 10 carátulas y el resto en texto (D7, D8).
+   - **`add-tier-list-lamina-phase2`** — más fuentes (una lista, género o década), agregar discos a mano y tier lists de canciones.
+   - **`add-tier-list-lamina-phase3`** — "Arma la tuya" desde la tier list de otra persona y el llamado en la discografía.
 6. **Siguientes** (§4.4) — "Tu año en discos" (objetivo: antes de diciembre), "Tú vs. otra persona",
    décadas/géneros, mes en discos, pared de la colección.
 

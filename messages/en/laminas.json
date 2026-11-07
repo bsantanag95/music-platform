@@ -37,7 +37,8 @@
   "formats": {
     "top5": "Top 5",
     "top10": "Top 10",
-    "grid9": "3×3 grid"
+    "grid9": "3×3 grid",
+    "tier": "Tier list"
   },
   "entityTypes": {
     "release-group": "Albums",
@@ -155,5 +156,41 @@
       "title": "What about your {artist} discography?",
       "description": "Rate their albums and share it like this one."
     }
+  },
+  "tier": {
+    "discCount": "{count, plural, one {# album} other {# albums}}",
+    "create": {
+      "heading": "New tier list",
+      "description": "Pick an artist: their albums land in a tier according to your rating, and the ones you haven’t rated go to the tray. Then move them as you like.",
+      "artist": "Artist",
+      "changeArtist": "Change",
+      "suggestedTitle": "{artist} tier list",
+      "privateNote": "Only you can see it at first. You decide later whether to publish it. Moving albums never changes your ratings.",
+      "submit": "Build tier list",
+      "pending": "Building…",
+      "failed": "Couldn’t build it. Please try again."
+    },
+    "fields": {
+      "title": "Title"
+    },
+    "howTo": "Drag albums between tiers, or tap them and choose where they go. Moving them doesn’t change your ratings.",
+    "showScoresHint": "Anyone who can see the tier list will see your rating for each album, in the image too.",
+    "labelField": "Tier {n} label",
+    "labelInvalid": "Each tier label must be 1 to {max} characters.",
+    "tierItems": "{group}: {count, plural, =0 {empty} one {# album} other {# albums}}",
+    "itemLabel": "{title}, in {group}. Move to…",
+    "menuLabel": "Move {title}",
+    "moveTo": "Move to",
+    "tray": "Not heard / not rated",
+    "trayHint": "Albums here don’t appear on the page or in the image.",
+    "trayEmpty": "Empty.",
+    "left": "Move left",
+    "right": "Move right",
+    "remove": "Remove from tier list",
+    "yourScore": "Your rating: {score}",
+    "unrated": "Not rated",
+    "moved": "{title}: moved to {group}",
+    "shifted": "{title}: position {position} in {group}",
+    "removed": "{title}: removed"
   }
 }

@@ -55,7 +55,8 @@
       "top10": "Top 10",
       "grid9": "Top 9",
       "discography": "Discografía",
-      "discographyAlbum": "Álbum"
+      "discographyAlbum": "Álbum",
+      "tier": "Tier list"
     },
     "category": {
       "studio": "Álbum de estudio",
@@ -133,7 +134,8 @@
       "listenNote": "Esta escucha no es pública. Para que el enlace se vea, hazla pública: tu impresión también se verá.",
       "privateProfile": "Tu perfil es privado: nadie sin cuenta podría abrir un enlace. Puedes descargar la imagen.",
       "top": "Esta Lámina no es pública. Para que el enlace se vea, hazla pública.",
-      "discography": "Esta discografía no es pública. Si la haces pública se verán tus notas de este artista, también las que pongas después, y tu avance. Puedes dejar de compartirla cuando quieras."
+      "discography": "Esta discografía no es pública. Si la haces pública se verán tus notas de este artista, también las que pongas después, y tu avance. Puedes dejar de compartirla cuando quieras.",
+      "tier": "Esta tier list no es pública. Para que el enlace se vea, hazla pública: se verán sus niveles, no la bandeja. Tus notas solo si las muestras."
     },
     "unavailable": "Este contenido ya no se puede compartir."
   },

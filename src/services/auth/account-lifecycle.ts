@@ -60,7 +60,7 @@ export function ownShareEvents(userId: string) {
     (target_kind IN ('profile', 'user_collection', 'fingerprint') AND target_ref = ${userId})
     OR (target_kind = 'review' AND target_ref IN (SELECT id::text FROM review WHERE user_id = ${userId}::uuid))
     OR (target_kind = 'comment' AND target_ref IN (SELECT id::text FROM comment WHERE user_id = ${userId}::uuid))
-    OR (target_kind IN ('list', 'camino', 'top') AND target_ref IN (SELECT id::text FROM user_list WHERE owner_id = ${userId}::uuid))
+    OR (target_kind IN ('list', 'camino', 'top', 'tier') AND target_ref IN (SELECT id::text FROM user_list WHERE owner_id = ${userId}::uuid))
     OR (target_kind = 'rating' AND target_ref IN (SELECT id::text FROM rating WHERE user_id = ${userId}::uuid))
     OR (target_kind = 'listen' AND target_ref IN (SELECT id::text FROM listen_entry WHERE user_id = ${userId}::uuid))
     OR (target_kind = 'discography' AND target_ref LIKE ${`${userId}.%`})

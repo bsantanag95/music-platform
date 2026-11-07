@@ -886,6 +886,11 @@ export async function listFeed(
               or(
                 eq(userList.kind, "standard"),
                 and(eq(userList.kind, "top"), sql`EXISTS (SELECT 1 FROM user_list_item i WHERE i.list_id = "user_list"."id")`),
+                // Una tier list, con al menos un disco en un nivel: la bandeja no se muestra (add-tier-list-lamina-phase1).
+                and(
+                  eq(userList.kind, "tier"),
+                  sql`EXISTS (SELECT 1 FROM user_list_item i WHERE i.list_id = "user_list"."id" AND i.tier IS NOT NULL)`,
+                ),
               ),
               // Una lista oculta por moderación no se anuncia (expand-feed-coverage).
               eq(userList.moderationStatus, "visible"),
@@ -1194,7 +1199,7 @@ export async function listFeed(
       id: row.id,
       title: row.title,
       entityType: row.entityType as "artist" | "release-group" | "recording",
-      ...(row.kind === "top" ? { lamina: true } : {}),
+      ...(row.kind === "top" || row.kind === "tier" ? { lamina: true } : {}),
     },
     author: author(row.authorId, row.authorUsername, row.authorDisplayName),
   }));

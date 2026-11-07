@@ -37,7 +37,8 @@
   "formats": {
     "top5": "Top 5",
     "top10": "Top 10",
-    "grid9": "Grilla 3×3"
+    "grid9": "Grilla 3×3",
+    "tier": "Tier list"
   },
   "entityTypes": {
     "release-group": "Álbumes",
@@ -155,5 +156,41 @@
       "title": "¿Y tu discografía de {artist}?",
       "description": "Valora sus discos y compártela como esta."
     }
+  },
+  "tier": {
+    "discCount": "{count, plural, one {# disco} other {# discos}}",
+    "create": {
+      "heading": "Nueva tier list",
+      "description": "Elige un artista: sus discos caen solos en su nivel según tu nota, y los que no valoraste quedan en la bandeja. Después los mueves a gusto.",
+      "artist": "Artista",
+      "changeArtist": "Cambiar",
+      "suggestedTitle": "Tier list de {artist}",
+      "privateNote": "Nace solo para ti. Después decides si la publicas. Moverla nunca cambia tus notas.",
+      "submit": "Armar tier list",
+      "pending": "Armando…",
+      "failed": "No se pudo armar. Inténtalo de nuevo."
+    },
+    "fields": {
+      "title": "Título"
+    },
+    "howTo": "Arrastra los discos entre niveles, o tócalos y elige a dónde van. Moverlos no cambia tus notas.",
+    "showScoresHint": "Quien vea la tier list verá tu nota de cada disco, también en la imagen.",
+    "labelField": "Etiqueta del nivel {n}",
+    "labelInvalid": "Cada nivel lleva entre 1 y {max} caracteres.",
+    "tierItems": "{group}: {count, plural, =0 {vacío} one {# disco} other {# discos}}",
+    "itemLabel": "{title}, en {group}. Mover a…",
+    "menuLabel": "Mover {title}",
+    "moveTo": "Mover a",
+    "tray": "Sin escuchar / sin valorar",
+    "trayHint": "Lo que está aquí no sale en la página ni en la imagen.",
+    "trayEmpty": "Vacía.",
+    "left": "A la izquierda",
+    "right": "A la derecha",
+    "remove": "Quitar de la tier list",
+    "yourScore": "Tu nota: {score}",
+    "unrated": "Sin valorar",
+    "moved": "{title}: movido a {group}",
+    "shifted": "{title}: lugar {position} en {group}",
+    "removed": "{title}: quitado"
   }
 }

@@ -5,9 +5,13 @@ import {
   LaminaMutationResponseSchema,
   LaminaSourceOptionsSchema,
   NoContentResponseSchema,
+  TierListMutationResponseSchema,
+  type ArrangeTierListRequest,
   type LaminaDetail,
   type LaminaSource,
+  type TierListDetail,
   type UpdateLaminaRequest,
+  type UpdateTierListRequest,
 } from "./schemas";
 
 const json = { "Content-Type": "application/json" };
@@ -40,6 +44,31 @@ export function removeLaminaItem(id: string, itemId: string) {
 
 export function reorderLamina(id: string, itemIds: string[]) {
   return lamina(`/api/me/laminas/${id}/items`, { method: "PUT", headers: json, body: JSON.stringify({ itemIds }) });
+}
+
+// Tier list (openspec: add-tier-list-lamina-phase1): mismas rutas que el Top N, con su propia respuesta.
+const tierList = (path: string, init: RequestInit = {}): Promise<TierListDetail> =>
+  apiFetch(path, TierListMutationResponseSchema, init).then((response) => response.tierList);
+
+export function createTierListFromDiscography(input: { title: string; artistId: string }) {
+  const body = { kind: "tier", title: input.title, entityType: "release-group", source: { type: "discography", artistId: input.artistId } };
+  return tierList("/api/me/laminas", { method: "POST", headers: json, body: JSON.stringify(body) });
+}
+
+export function fetchTierList(id: string) {
+  return tierList(`/api/me/laminas/${id}`);
+}
+
+export function updateTierList(id: string, input: UpdateTierListRequest) {
+  return tierList(`/api/me/laminas/${id}`, { method: "PATCH", headers: json, body: JSON.stringify(input) });
+}
+
+export function arrangeTierList(id: string, arrangement: ArrangeTierListRequest) {
+  return tierList(`/api/me/laminas/${id}/tiers`, { method: "PUT", headers: json, body: JSON.stringify(arrangement) });
+}
+
+export function removeTierListItem(id: string, itemId: string) {
+  return tierList(`/api/me/laminas/${id}/items/${itemId}`, { method: "DELETE" });
 }
 
 export interface LaminaSourceParams {

@@ -6,11 +6,12 @@ import type { ShareFormat, ShareLocale } from "@/lib/share/kinds";
 import { AuthorNote, CommunityScore, CoverTile, IdentityBadge, LINK_FORMAT, LaminaFrame, SleeveWithRecord } from "./frame/LaminaFrame";
 import { STORY_FORMAT, STORY_RECORD, STORY_RECORD_COMPACT, StoryFrame, StoryRecord } from "./frame/StoryFrame";
 import { AlbumBars, DiscographyChart, SongGrid } from "./frame/DiscographyFrame";
+import { TierChart } from "./frame/TierFrame";
 import { POST_FORMAT, SQUARE_FORMAT, TopFive, TopGrid, TopTen, type TopCanvas } from "./frame/TopFrame";
 import { loadShareFonts } from "./fonts";
 import { shareAppName, shareTranslator } from "./i18n";
 import { MAX_COVER_SIDE, loadEmbeddedCover, loadEmbeddedImage } from "./images";
-import type { ShareDiscographyAlbumCard, ShareDiscographyCard, ShareImageRef, ShareMedia, ShareTarget, ShareTopCard } from "./types";
+import type { ShareDiscographyAlbumCard, ShareDiscographyCard, ShareImageRef, ShareMedia, ShareTarget, ShareTierCard, ShareTopCard } from "./types";
 
 // Renderizador único de las imágenes de compartir (spec share-images; design D1). Resuelve las imágenes del
 // medio (en paralelo, cada una con su recuadro tipográfico si falla), arma el marco y devuelve el PNG. Sin
@@ -258,6 +259,20 @@ async function renderDiscography(card: ShareDiscographyCard, canvas: TopCanvas |
   return { element, degraded: isDegraded(embedded) };
 }
 
+/** Tier list: el mismo cuerpo en todos sus formatos, Enlace incluido. */
+async function renderTier(card: ShareTierCard, canvas: TopCanvas | "link", target: ShareTarget, appName: string, domain: string) {
+  const embedded = await Promise.all(card.tiers.map((items) => Promise.all(items.map((item) => embed(item.cover)))));
+  const rows = card.tiers.map((items, tier) => ({
+    tier,
+    label: card.labels[tier] ?? "",
+    items: items.map((item, index) => ({ src: embedded[tier]![index]!.src, title: item.title, stars: item.stars, detailedScore: item.detailedScore })),
+  }));
+  const element = (
+    <TierChart canvas={canvas} title={target.card.title} byline={card.byline} credits={target.card.credits} appName={appName} domain={domain} rows={rows} />
+  );
+  return { element, degraded: isDegraded(embedded.flat()) };
+}
+
 /** Lámina de un álbum: el mismo cuerpo en todos sus formatos. */
 async function renderDiscographyAlbum(card: ShareDiscographyAlbumCard, canvas: TopCanvas | "link", target: ShareTarget, appName: string, domain: string) {
   const cover = await embed(card.cover);
@@ -310,6 +325,7 @@ async function buildElement(
   const { card } = target;
   if (card.discography) return renderDiscography(card.discography, format, target, appName, domain);
   if (card.discographyAlbum) return renderDiscographyAlbum(card.discographyAlbum, format, target, appName, domain);
+  if (card.tier) return renderTier(card.tier, format, target, appName, domain);
   if (card.top && format !== "link") return renderTop(card.top, format, target, appName, domain);
   const media = story
     ? await renderStoryMedia(card.media, card.quote ? STORY_RECORD_COMPACT : STORY_RECORD)

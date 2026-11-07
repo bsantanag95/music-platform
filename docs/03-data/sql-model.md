@@ -1228,6 +1228,15 @@ fuera de las superficies de listas, que filtran por `standard`. Suma `lamina_for
 (`false` por defecto). `CHECK`: `kind = 'top'` si y solo si hay formato, y solo álbumes o canciones. El tope de ítems (5, 10 o 9) es una regla
 entre filas: la aplica el servicio con la fila de la lista bloqueada.
 
+## Tier list en `user_list` (migración `0086`, openspec `add-tier-list-lamina-phase1`)
+
+Una tier list es una fila de `user_list` con `kind = 'tier'`, con las mismas herencias y exclusiones que el Top N. Suma `tier_labels` (`text[]`, las
+seis etiquetas de S a E) y `user_list_item.tier` (`smallint`, `0` = S … `5` = E; `NULL` = bandeja). `CHECK`: `kind = 'tier'` si y solo si hay
+etiquetas; seis etiquetas de 1 a 12 caracteres sin espacios a los costados (`fn_tier_labels_valid`, inmutable, porque un `CHECK` no admite
+subconsultas); nivel entre 0 y 5; solo álbumes o canciones. `lamina_format` queda `NULL` y `lamina_show_scores` sirve igual que en el Top N. Que solo
+una tier list tenga niveles es una regla entre tablas: la impone el servicio, único que escribe `tier`. El orden dentro de un nivel es `position`; guardar
+la disposición reescribe las posiciones (S … E y al final la bandeja) con la fila de la lista bloqueada. Tope de 50 ítems, en el servicio.
+
 ## `rating_share` (migración `0081`, openspec `add-share-user-actions-phase2`, ADR 0050)
 
 Una fila hace pública esa valoración para su página de relación y su imagen; sin tope. Tabla aparte, como `rating_highlight`, para
@@ -1246,7 +1255,7 @@ Qué muestra la discografía de una persona con un artista: `sections` (`text[]`
 Aparte de `discography_share`: se elige también sin compartir y quitar la marca no la borra. Sin fila, solo la sección principal y la vista Por disco.
 Entra en la exportación de datos como `discographyPreferences`.
 
-## `share_event` (migraciones `0079` a `0084`, openspec `add-share-foundation` y `add-share-user-actions`)
+## `share_event` (migraciones `0079` a `0086`, openspec `add-share-foundation` y `add-share-user-actions`)
 
 Un registro por cada uso de la hoja de compartir (`docs/05-features/sharing.md`, D13): qué se compartió
 (`target_kind` + `target_ref`), por qué canal (`channel`) y en qué formato (`format`), con `created_at`.

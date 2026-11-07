@@ -202,6 +202,57 @@ describe("renderShareImage", () => {
     });
   });
 
+  describe("tier list", () => {
+    const cover = { url: "https://coverartarchive.org/x", fallbackTitle: "Disco", fallbackSubtitle: "Artista" };
+    // Como el cargador real: sin URL no hay imagen, y el disco va como ficha de texto.
+    beforeEach(async () => {
+      const uri = await coverDataUri({ r: 180, g: 40, b: 30 });
+      images.cover.mockImplementation(async (url: string | null) => (url ? uri : null));
+    });
+    // Como el objetivo: carátula para los primeros 10, el resto como ficha de texto.
+    const tiers = (counts: number[], scores = false) => {
+      let n = 0;
+      return counts.map((count) =>
+        Array.from({ length: count }, () => {
+          n += 1;
+          return {
+            cover: n <= 10 ? cover : { ...cover, url: null },
+            title: n === 3 ? "The Rise and Fall of Ziggy Stardust and the Spiders from Mars" : `Disco ${n}`,
+            stars: scores ? 4.5 : null,
+            detailedScore: scores ? 86 : null,
+          };
+        }),
+      );
+    };
+    const tier = (counts: number[], labels = ["S", "A", "B", "C", "D", "E"], scores = false) => ({
+      kicker: "Tier list",
+      title: "Tier list de Metallica",
+      subtitle: "@ana",
+      meta: [],
+      community: null,
+      tier: { byline: "Ana · @ana", labels, tiers: tiers(counts, scores) },
+    });
+
+    it.each([
+      ["pocos", [2, 3, 1, 0, 1, 0], "post", 1080, 1350],
+      ["50 discos", [12, 10, 10, 8, 6, 4], "post", 1080, 1350],
+      ["50 en un nivel", [50, 0, 0, 0, 0, 0], "post", 1080, 1350],
+      ["Historia", [3, 4, 3, 2, 1, 1], "story", 1080, 1920],
+      ["Enlace", [3, 0, 4, 3, 2, 1], "link", 1200, 630],
+    ] as const)("%s en %s", async (name, counts, canvas, width, height) => {
+      const { bytes, meta } = await size(await renderShareImage(target(tier([...counts])), "es", { format: canvas }));
+      expect([meta.width, meta.height]).toEqual([width, height]);
+      await keep(`tier-${name.replace(/ /g, "-")}-${canvas}`, bytes);
+    });
+
+    it("con etiquetas largas y notas", async () => {
+      const labels = ["Obra maestra", "Muy bueno", "Bueno", "Pasable", "Flojo", "Nunca más"];
+      const { bytes, meta } = await size(await renderShareImage(target(tier([2, 3, 3, 2, 1, 1], labels, true)), "es", { format: "post" }));
+      expect([meta.width, meta.height]).toEqual([1080, 1350]);
+      await keep("tier-etiquetas-largas-post", bytes);
+    });
+  });
+
   describe("formato Historia", () => {
     const render = (card: Partial<ShareTarget["card"]>, name: string) =>
       renderShareImage(target(card), "es", { format: "story" })

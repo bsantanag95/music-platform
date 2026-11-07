@@ -1,6 +1,7 @@
 import { getTimeZone, getTranslations } from "next-intl/server";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { LaminaCreateForm } from "@/components/laminas/LaminaCreateForm";
+import { TierListCreateForm } from "@/components/laminas/TierListCreateForm";
 import { Link } from "@/i18n/navigation";
 import { withClientMessages } from "@/i18n/client-messages";
 import { parseLaminaIntent } from "@/lib/laminas/intent";
@@ -27,6 +28,7 @@ async function LaminasPage({ searchParams }: { searchParams?: Promise<{ desde?: 
         <p className="font-body text-sm text-paper-muted">{t("description")}</p>
       </header>
       <LaminaCreateForm currentYear={currentYear} inspiration={inspiration} />
+      <TierListCreateForm />
       {laminas.length === 0 ? (
         <p className="font-body text-sm text-paper-muted">{t("noLaminas")}</p>
       ) : (
@@ -41,7 +43,8 @@ async function LaminasPage({ searchParams }: { searchParams?: Promise<{ desde?: 
                 <span className="flex min-w-0 flex-col gap-0.5">
                   <span className="truncate font-display text-sm text-paper">{lamina.title}</span>
                   <span className="font-data text-xs text-paper-muted">
-                    {t(`formats.${lamina.format}`)} · {t(`audience.${lamina.audience}`)} · {t("itemCount", { count: lamina.itemCount })}
+                    {lamina.format ? t(`formats.${lamina.format}`) : t("formats.tier")} · {t(`audience.${lamina.audience}`)} ·{" "}
+                    {lamina.kind === "tier" ? t("tier.discCount", { count: lamina.itemCount }) : t("itemCount", { count: lamina.itemCount })}
                   </span>
                 </span>
               </Link>

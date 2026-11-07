@@ -168,6 +168,14 @@ de cuál de las filas con el mismo título haya en la BD.
 >   lectura bajo 150 ms con 50 discos de 15 pistas. Necesita la migración `0085`. Desde `add-discography-lamina-phase3` también verifica que la
 >   discografía del dueño existe sin valoraciones, con sus discos por valorar, que la Lámina de un álbum sin valorar existe solo para él y que una seguidora
 >   no recibe esa lista.
+> - `smoke-test-tier-laminas.ts` crea tres artistas y sus discos sintéticos (MBID `5e0ce000-0000-4000-8000-00000000e0*`, con la discografía ya
+>   sincronizada: no sale a MusicBrainz) y usuarios `smoke_tier_*`, y los borra al terminar (también si falla). Si se interrumpió, limpiar con
+>   `DELETE FROM app_user WHERE username LIKE 'smoke_tier_%'; DELETE FROM release_group WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000e0%';
+>   DELETE FROM artist WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000e0%';`. Necesita las migraciones `0079` a `0086`. Verifica los `CHECK` de
+>   `0086`, el prellenado por tramos (sin En vivo ni discos de invitado), la bandeja, el tope de 50, la disposición atómica y su rechazo con pedidos en
+>   paralelo, que no toca valoraciones ni se mueve con ellas, las etiquetas, que no aparece en las superficies de listas ni se lee como Top N, la bandeja y
+>   las notas por visitante, la moderación, el objetivo de imagen (10 carátulas y el resto en texto), el gesto, el feed, la exportación, los eventos con la
+>   cuenta y la lectura bajo 150 ms con 50 discos.
 > - `smoke-test-comment-replies.ts` crea un artista y un álbum sintéticos (MBID
 >   `5e0ce000-0000-4000-8000-0000000009b0` / `...09b1`) y usuarios `smoke_reply_*`, y los borra al terminar
 >   (también si falla; el `ON DELETE CASCADE` limpia comentarios, respuestas, likes y bloqueos). Si se

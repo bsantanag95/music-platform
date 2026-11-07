@@ -14,6 +14,12 @@ const mocks = vi.hoisted(() => ({
   add: vi.fn(),
   addMany: vi.fn(),
   reorder: vi.fn(),
+  kind: vi.fn(),
+  createTier: vi.fn(),
+  updateTier: vi.fn(),
+  arrange: vi.fn(),
+  removeTier: vi.fn(),
+  removeTop: vi.fn(),
 }));
 
 vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.user, requireSocialActivityAllowed: mocks.allowed }));
@@ -26,10 +32,21 @@ vi.mock("@/services/laminas/laminas", () => ({
   addLaminaItem: mocks.add,
   addLaminaItems: mocks.addMany,
   reorderLamina: mocks.reorder,
+  ownedLaminaKind: mocks.kind,
+  removeLaminaItem: mocks.removeTop,
+}));
+vi.mock("@/services/laminas/tiers", () => ({
+  createTierList: mocks.createTier,
+  updateTierList: mocks.updateTier,
+  getOwnedTierList: vi.fn(),
+  arrangeTierList: mocks.arrange,
+  removeTierListItem: mocks.removeTier,
 }));
 
 import { PATCH } from "./[id]/route";
 import { POST as addItem, PUT as reorder } from "./[id]/items/route";
+import { DELETE as removeItem } from "./[id]/items/[itemId]/route";
+import { PUT as arrange } from "./[id]/tiers/route";
 import { POST } from "./route";
 
 const req = (method: string, body: unknown) =>
@@ -45,6 +62,12 @@ beforeEach(() => {
   mocks.add.mockResolvedValue({ id: ID });
   mocks.addMany.mockResolvedValue({ id: ID });
   mocks.reorder.mockResolvedValue({ id: ID });
+  mocks.kind.mockResolvedValue("top");
+  mocks.createTier.mockResolvedValue({ id: ID });
+  mocks.updateTier.mockResolvedValue({ id: ID });
+  mocks.arrange.mockResolvedValue({ id: ID });
+  mocks.removeTier.mockResolvedValue({ id: ID });
+  mocks.removeTop.mockResolvedValue({ id: ID });
 });
 
 describe("/api/me/laminas", () => {
@@ -106,5 +129,60 @@ describe("/api/me/laminas", () => {
   it("un id inválido responde 404", async () => {
     const res = await addItem(req("POST", { targetId: ID }), { params: Promise.resolve({ id: "x" }) });
     expect(res.status).toBe(404);
+  });
+});
+
+describe("tier list", () => {
+  const tierBody = { kind: "tier", title: "Metallica", entityType: "release-group", source: { type: "discography", artistId: ID } };
+
+  it("crea desde una discografía sin pedir la comprobación social: nace privada", async () => {
+    mocks.allowed.mockRejectedValue(new ApiError("SOCIAL_SUSPENSION_ACTIVE", 403, "x"));
+    const res = await POST(req("POST", tierBody));
+    expect(res.status).toBe(201);
+    expect(await res.json()).toEqual({ tierList: { id: ID } });
+    expect(mocks.createTier).toHaveBeenCalledWith("u1", expect.objectContaining({ source: { type: "discography", artistId: ID } }));
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["de canciones", { ...tierBody, entityType: "recording" }],
+    ["sin fuente", { ...tierBody, source: undefined }],
+    ["con un artista inválido", { ...tierBody, source: { type: "discography", artistId: "x" } }],
+  ])("rechaza una %s", async (_label, body) => {
+    expect((await POST(req("POST", body))).status).toBe(400);
+    expect(mocks.createTier).not.toHaveBeenCalled();
+  });
+
+  it("el PATCH de una tier list acepta etiquetas y no el formato", async () => {
+    mocks.kind.mockResolvedValue("tier");
+    const labels = ["Dios", "A", "B", "C", "D", "E"];
+    expect((await PATCH(req("PATCH", { tierLabels: labels }), context)).status).toBe(200);
+    expect(mocks.updateTier).toHaveBeenCalledWith(ID, "u1", { tierLabels: labels });
+    expect((await PATCH(req("PATCH", { tierLabels: ["S", "", "B", "C", "D", "E"] }), context)).status).toBe(400);
+    expect((await PATCH(req("PATCH", { tierLabels: ["S", "A"] }), context)).status).toBe(400);
+    expect((await PATCH(req("PATCH", { tierLabels: ["S", "A", "B", "C", "D", "Trece letras!"] }), context)).status).toBe(400);
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+
+  it("ampliar la audiencia de una tier list respeta la suspensión", async () => {
+    mocks.kind.mockResolvedValue("tier");
+    mocks.allowed.mockRejectedValue(new ApiError("SOCIAL_SUSPENSION_ACTIVE", 403, "x"));
+    expect((await PATCH(req("PATCH", { audience: "public" }), context)).status).toBe(403);
+    expect(mocks.updateTier).not.toHaveBeenCalled();
+  });
+
+  it("guarda la disposición con seis niveles", async () => {
+    const tiers = [[ID], [], [], [], [], []];
+    expect((await arrange(req("PUT", { tiers, tray: [] }), context)).status).toBe(200);
+    expect(mocks.arrange).toHaveBeenCalledWith(ID, "u1", { tiers, tray: [] });
+    expect((await arrange(req("PUT", { tiers: [[ID]], tray: [] }), context)).status).toBe(400);
+    expect((await arrange(req("PUT", { tiers, tray: [] }), { params: Promise.resolve({ id: "x" }) })).status).toBe(404);
+  });
+
+  it("quitar un disco despacha por tipo", async () => {
+    mocks.kind.mockResolvedValue("tier");
+    const res = await removeItem(req("DELETE", null), { params: Promise.resolve({ id: ID, itemId: ID }) });
+    expect(await res.json()).toEqual({ tierList: { id: ID } });
+    expect(mocks.removeTop).not.toHaveBeenCalled();
   });
 });

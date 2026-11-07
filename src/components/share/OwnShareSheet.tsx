@@ -13,7 +13,7 @@ import { ShareTrigger } from "./ShareButton";
 // mostrar el botón no cuesta ninguna consulta. Lo público usa la hoja normal; lo que no lo es, un aviso con el gesto
 // explícito y la descarga privada. Nada cambia de audiencia sin ese gesto.
 
-type OwnKind = "rating" | "listen" | "top" | "discography";
+type OwnKind = "rating" | "listen" | "top" | "discography" | "tier";
 
 export function OwnShareSheet({
   open,

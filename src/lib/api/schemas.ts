@@ -1890,6 +1890,49 @@ export const AddLaminaItemRequestSchema = z.union([
 ]);
 export const ReorderLaminaRequestSchema = z.object({ itemIds: z.array(z.uuid()).max(10) });
 
+// Tier list (openspec: add-tier-list-lamina-phase1). Seis niveles de S a E y la bandeja, que solo recibe el dueño.
+const TierLabelSchema = z.string().trim().min(1).max(12);
+export const TierListDetailSchema = z.object({
+  id: z.uuid(),
+  kind: z.literal("tier"),
+  title: z.string(),
+  entityType: z.literal("release-group"),
+  audience: DiaryAudienceSchema,
+  updatedAt: z.string(),
+  showScores: z.boolean(),
+  labels: z.array(z.string()).length(6),
+  tiers: z.array(z.array(LaminaItemSchema)).length(6),
+  tray: z.array(LaminaItemSchema),
+});
+export type TierListDetail = z.infer<typeof TierListDetailSchema>;
+export type TierListItem = LaminaItem;
+
+export const TierListMutationResponseSchema = z.object({ tierList: TierListDetailSchema });
+
+export const CreateTierListRequestSchema = z.object({
+  kind: z.literal("tier"),
+  title: z.string().trim().min(1).max(100),
+  // Álbumes en esta fase; las canciones llegan en la Fase 2.
+  entityType: z.literal("release-group"),
+  source: z.object({ type: z.literal("discography"), artistId: z.uuid() }),
+});
+
+export const UpdateTierListRequestSchema = z
+  .object({
+    title: z.string().trim().min(1).max(100).optional(),
+    audience: DiaryAudienceSchema.optional(),
+    showScores: z.boolean().optional(),
+    tierLabels: z.array(TierLabelSchema).length(6).optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0);
+export type UpdateTierListRequest = z.infer<typeof UpdateTierListRequestSchema>;
+
+export const ArrangeTierListRequestSchema = z.object({
+  tiers: z.array(z.array(z.uuid()).max(50)).length(6),
+  tray: z.array(z.uuid()).max(50),
+});
+export type ArrangeTierListRequest = z.infer<typeof ArrangeTierListRequestSchema>;
+
 // Fuentes de una Lámina (openspec: add-top-n-lamina-phase2).
 export const LaminaSourceSchema = z.enum(["ratings", "favorites", "list"]);
 export type LaminaSource = z.infer<typeof LaminaSourceSchema>;
