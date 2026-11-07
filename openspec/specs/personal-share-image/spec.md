@@ -4,7 +4,7 @@
 Permitir que el dueño comparta lo suyo sin publicarlo: la imagen privada de una valoración o escucha, que nunca entra a una caché compartida, el estado que recibe la hoja de compartir y el gesto explícito que hace pública una sola fila. Es la única excepción a que lo compartido se calcula como anónimo (ADR 0050).
 ## Requirements
 ### Requirement: Imagen privada del dueño
-Con `?personal=1`, la ruta de imágenes SHALL generar la imagen de una valoración o una escucha para su dueño aunque no sea pública.
+Con `?personal=1`, la ruta de imágenes SHALL generar la imagen de una valoración, una escucha, una Lámina o una discografía para su dueño aunque no sea pública.
 SHALL exigir su sesión; a cualquier otro visitante SHALL responderle la imagen genérica. La respuesta SHALL llevar `Cache-Control:
 private, no-store` y SHALL NOT anunciarse en metadatos.
 
@@ -38,9 +38,9 @@ ajeno o inexistente SHALL responder `404`.
 - **THEN** la respuesta es `needs_gesture` y la imagen de los datos es la personal
 
 ### Requirement: Hacer público
-`POST /api/me/share/<tipo>/<ref>` SHALL hacer pública solo esa valoración (con la marca), esa escucha o esa Lámina (con `audience = 'public'`) y
+`POST /api/me/share/<tipo>/<ref>` SHALL hacer pública solo esa valoración (con la marca), esa escucha o esa Lámina (con `audience = 'public'`), o esa discografía (con su marca), y
 responder su nuevo estado. Con el perfil privado SHALL responder `409` con `PROFILE_PRIVATE` sin cambiar nada. `DELETE` SHALL quitar la
-marca de una valoración.
+marca de una valoración o de una discografía. Hacer pública una discografía SHALL exigir que no haya suspensión social.
 
 #### Scenario: Hacer pública una escucha
 - **WHEN** el dueño hace pública una escucha privada
@@ -53,4 +53,12 @@ marca de una valoración.
 #### Scenario: Hacer pública una Lámina
 - **WHEN** el dueño hace pública una Lámina privada
 - **THEN** su audiencia pasa a `public` y el estado es `public`
+
+#### Scenario: Hacer pública una discografía
+- **WHEN** el dueño hace pública su discografía de un artista
+- **THEN** se crea la marca de ese artista, las de otros artistas no cambian y el estado es `public`
+
+#### Scenario: Quitar la marca de una discografía
+- **WHEN** el dueño pide `DELETE` sobre su discografía con marca
+- **THEN** la marca se borra y el estado vuelve a pedir el gesto
 

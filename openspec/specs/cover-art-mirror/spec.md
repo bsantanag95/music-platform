@@ -138,8 +138,8 @@ del origen de la imagen y SHALL NOT poder sobrescribirla el componente que la re
 El sistema SHALL NOT exponer ningún endpoint ni superficie que liste, enumere o permita descargar
 en bloque las carátulas espejadas. Las carátulas SHALL servirse solo por su URL exacta, en el
 contexto de su álbum. Como única excepción, una imagen para compartir (ver `share-images`) SHALL poder
-componer hasta 4 miniaturas (hasta 10 en una Lámina armada por una persona), cada una a no más de 250 px de lado e identificando su disco dentro de un
-objeto concreto (un género, una ceremonia, una clase de salón, una colección o una Lámina), con la línea de créditos
+componer hasta 4 miniaturas (hasta 10 en una Lámina armada por una persona o en una discografía), cada una a no más de 250 px de lado e identificando su disco dentro de un
+objeto concreto (un género, una ceremonia, una clase de salón, una colección, una Lámina o una discografía), con la línea de créditos
 y respetando los retiros; esa imagen SHALL NOT exponer las URL ni las claves de las carátulas que
 contiene.
 
