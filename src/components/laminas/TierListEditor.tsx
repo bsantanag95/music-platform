@@ -3,13 +3,14 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type DragEvent, type KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
+import { useTargetSearch } from "@/components/quick-actions/use-target-search";
 import { OwnShareButton } from "@/components/share/OwnShareSheet";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Link, useRouter } from "@/i18n/navigation";
-import { arrangeTierList, deleteLamina, fetchTierList, removeTierListItem, updateTierList } from "@/lib/api/laminas";
+import { addTierListItem, arrangeTierList, deleteLamina, fetchTierList, removeTierListItem, updateTierList } from "@/lib/api/laminas";
 import type { TierListDetail, TierListItem, UpdateTierListRequest } from "@/lib/api/schemas";
 import { TRAY_GROUP, locateItem, moveItem, removeFromArrangement, shiftItem, type TierArrangement } from "@/lib/laminas/tier-arrangement";
-import { TIER_COUNT, TIER_LABEL_MAX, tierBand } from "@/lib/laminas/tiers";
+import { TIER_COUNT, TIER_LABEL_MAX, TIER_LIST_MAX_ITEMS, tierBand } from "@/lib/laminas/tiers";
 import { scaleScore } from "@/lib/share/score-scale";
 
 // Editor de una tier list (spec tier-laminas): cada disco se mueve arrastrándolo (escritorio) o con su menú "Mover a…", que funciona con
@@ -58,6 +59,7 @@ export function TierListEditor({ initial, ownerUsername }: { initial: TierListDe
   const [menu, setMenu] = useState<MenuState | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [query, setQuery] = useState("");
   const focusAfter = useRef<string | null>(null);
   const seq = useRef(0);
   const chain = useRef<Promise<unknown>>(Promise.resolve());
@@ -121,6 +123,24 @@ export function TierListEditor({ initial, ownerUsername }: { initial: TierListDe
   }
 
   const save = (changes: UpdateTierListRequest) => run(() => updateTierList(tierList.id, changes));
+
+  /**
+   * Agrega a mano (add-tier-list-lamina-phase2): el servidor lo ubica por la nota del dueño. Va en la misma cola que la disposición, así una
+   * disposición vieja no lo pisa.
+   */
+  function add(targetId: string, title: string) {
+    setQuery("");
+    setFailed(false);
+    const mine = ++seq.current;
+    chain.current = chain.current
+      .then(() => addTierListItem(tierList.id, targetId))
+      .then((detail) => {
+        if (mine === seq.current) setTierList(detail);
+        const tier = detail.tiers.findIndex((items) => items.some((item) => item.target.id === targetId));
+        setAnnouncement(tt("added", { title, group: tier >= 0 ? (detail.labels[tier] ?? "") : tt("tray") }));
+      })
+      .catch(() => setFailed(true));
+  }
 
   function remove(itemId: string) {
     const item = itemsById.get(itemId);
@@ -189,6 +209,10 @@ export function TierListEditor({ initial, ownerUsername }: { initial: TierListDe
       </li>
     );
   }
+
+  const present = new Set([...itemsById.values()].map((item) => item.target.id));
+  const full = itemsById.size >= TIER_LIST_MAX_ITEMS;
+  const { candidates, searchable } = useTargetSearch(tierList.entityType === "recording" ? "song" : "album", full ? "" : query);
 
   const menuItem = menu ? itemsById.get(menu.itemId) : undefined;
   const menuFrom = menu ? locateItem(arrangementOf(tierList), menu.itemId) : null;
@@ -281,7 +305,7 @@ export function TierListEditor({ initial, ownerUsername }: { initial: TierListDe
                   className={`w-full resize-none overflow-hidden bg-transparent px-1 text-center font-display font-bold leading-tight text-inherit outline-offset-2 ${labelSize(labels[group] ?? "")}`}
                 />
               </label>
-              <ul className="flex flex-1 flex-wrap content-start gap-1.5" aria-label={tt("tierItems", { group: groupLabel(group), count: items.length })}>
+              <ul className="flex flex-1 flex-wrap content-start gap-1.5" aria-label={tt("tierItems", { group: groupLabel(group), count: items.length, kind: tierList.entityType })}>
                 {items.map((item) => renderTile(item, group))}
               </ul>
             </div>
@@ -294,6 +318,41 @@ export function TierListEditor({ initial, ownerUsername }: { initial: TierListDe
         </p>
       ) : null}
 
+      {full ? (
+        <p className="font-data text-xs text-paper-muted">{tt("full", { max: TIER_LIST_MAX_ITEMS })}</p>
+      ) : (
+        <div className="flex flex-col gap-2">
+          <label className="flex flex-col gap-1 font-data text-xs text-paper-muted">
+            {tt(`addSearch.${tierList.entityType}`)}
+            <input
+              type="search"
+              autoComplete="off"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              className="rounded border border-ink-border bg-ink px-3 py-2 font-data text-sm text-paper"
+            />
+          </label>
+          {searchable ? (
+            <ul className="flex max-h-64 flex-col gap-0.5 overflow-y-auto">
+              {candidates
+                .filter((candidate) => !present.has(candidate.id))
+                .map((candidate) => (
+                  <li key={candidate.id}>
+                    <button
+                      type="button"
+                      onClick={() => add(candidate.id, candidate.title)}
+                      className="flex min-h-11 w-full flex-col justify-center rounded px-2 py-1.5 text-left transition-colors hover:bg-ink-surface"
+                    >
+                      <span className="truncate font-display text-sm text-paper">{candidate.title}</span>
+                      <span className="truncate font-data text-xs text-paper-muted">{[candidate.subtitle, candidate.year].filter(Boolean).join(" · ")}</span>
+                    </button>
+                  </li>
+                ))}
+            </ul>
+          ) : null}
+        </div>
+      )}
+
       <div {...dropZone(TRAY_GROUP)} className={`flex flex-col gap-2 rounded border border-dashed p-3 transition-colors ${dragOver === TRAY_GROUP ? "border-amber" : "border-ink-border"}`}>
         <div className="flex flex-col gap-0.5">
           <h2 className="font-display text-sm text-paper">{tt("tray")}</h2>
@@ -302,7 +361,7 @@ export function TierListEditor({ initial, ownerUsername }: { initial: TierListDe
         {tierList.tray.length === 0 ? (
           <p className="font-data text-xs text-paper-muted">{tt("trayEmpty")}</p>
         ) : (
-          <ul className="flex flex-wrap gap-1.5" aria-label={tt("tierItems", { group: tt("tray"), count: tierList.tray.length })}>
+          <ul className="flex flex-wrap gap-1.5" aria-label={tt("tierItems", { group: tt("tray"), count: tierList.tray.length, kind: tierList.entityType })}>
             {tierList.tray.map((item) => renderTile(item, TRAY_GROUP))}
           </ul>
         )}

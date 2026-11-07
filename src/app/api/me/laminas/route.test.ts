@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => ({
   arrange: vi.fn(),
   removeTier: vi.fn(),
   removeTop: vi.fn(),
+  addTier: vi.fn(),
 }));
 
 vi.mock("@/services/auth/authorization", () => ({ requireUser: mocks.user, requireSocialActivityAllowed: mocks.allowed }));
@@ -41,6 +42,7 @@ vi.mock("@/services/laminas/tiers", () => ({
   getOwnedTierList: vi.fn(),
   arrangeTierList: mocks.arrange,
   removeTierListItem: mocks.removeTier,
+  addTierListItem: mocks.addTier,
 }));
 
 import { PATCH } from "./[id]/route";
@@ -68,6 +70,7 @@ beforeEach(() => {
   mocks.arrange.mockResolvedValue({ id: ID });
   mocks.removeTier.mockResolvedValue({ id: ID });
   mocks.removeTop.mockResolvedValue({ id: ID });
+  mocks.addTier.mockResolvedValue({ id: ID });
 });
 
 describe("/api/me/laminas", () => {
@@ -145,7 +148,10 @@ describe("tier list", () => {
   });
 
   it.each([
-    ["de canciones", { ...tierBody, entityType: "recording" }],
+    ["de artistas", { ...tierBody, entityType: "artist" }],
+    ["con una fuente desconocida", { ...tierBody, source: { type: "genre", slug: "rock" } }],
+    ["con más de 50 elegidos", { ...tierBody, source: { type: "picked", targetIds: Array(51).fill(ID) } }],
+    ["sin elegidos", { ...tierBody, source: { type: "picked", targetIds: [] } }],
     ["sin fuente", { ...tierBody, source: undefined }],
     ["con un artista inválido", { ...tierBody, source: { type: "discography", artistId: "x" } }],
   ])("rechaza una %s", async (_label, body) => {
@@ -184,5 +190,24 @@ describe("tier list", () => {
     const res = await removeItem(req("DELETE", null), { params: Promise.resolve({ id: ID, itemId: ID }) });
     expect(await res.json()).toEqual({ tierList: { id: ID } });
     expect(mocks.removeTop).not.toHaveBeenCalled();
+  });
+
+  it("crea de canciones desde un disco y desde lo elegido", async () => {
+    const album = { ...tierBody, entityType: "recording", source: { type: "album", releaseGroupId: ID } };
+    expect((await POST(req("POST", album))).status).toBe(201);
+    expect(mocks.createTier).toHaveBeenLastCalledWith("u1", expect.objectContaining({ entityType: "recording", source: { type: "album", releaseGroupId: ID } }));
+    const picked = { ...tierBody, source: { type: "picked", targetIds: [ID] } };
+    expect((await POST(req("POST", picked))).status).toBe(201);
+    expect(mocks.createTier).toHaveBeenLastCalledWith("u1", expect.objectContaining({ source: { type: "picked", targetIds: [ID] } }));
+  });
+
+  it("agrega a mano de a un ítem, por tipo", async () => {
+    mocks.kind.mockResolvedValue("tier");
+    const res = await addItem(req("POST", { targetId: ID }), context);
+    expect(await res.json()).toEqual({ tierList: { id: ID } });
+    expect(mocks.addTier).toHaveBeenCalledWith(ID, "u1", ID);
+    expect(mocks.add).not.toHaveBeenCalled();
+    expect((await addItem(req("POST", { targetIds: [ID] }), context)).status).toBe(400);
+    expect(mocks.addMany).not.toHaveBeenCalled();
   });
 });

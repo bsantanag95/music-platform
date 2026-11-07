@@ -50,9 +50,18 @@ export function reorderLamina(id: string, itemIds: string[]) {
 const tierList = (path: string, init: RequestInit = {}): Promise<TierListDetail> =>
   apiFetch(path, TierListMutationResponseSchema, init).then((response) => response.tierList);
 
-export function createTierListFromDiscography(input: { title: string; artistId: string }) {
-  const body = { kind: "tier", title: input.title, entityType: "release-group", source: { type: "discography", artistId: input.artistId } };
+export type TierListSourceInput =
+  | { type: "discography"; artistId: string }
+  | { type: "album"; releaseGroupId: string }
+  | { type: "picked"; targetIds: string[] };
+
+export function createTierList(input: { title: string; entityType: "release-group" | "recording"; source: TierListSourceInput }) {
+  const body = { kind: "tier", ...input };
   return tierList("/api/me/laminas", { method: "POST", headers: json, body: JSON.stringify(body) });
+}
+
+export function addTierListItem(id: string, targetId: string) {
+  return tierList(`/api/me/laminas/${id}/items`, { method: "POST", headers: json, body: JSON.stringify({ targetId }) });
 }
 
 export function fetchTierList(id: string) {
@@ -75,6 +84,8 @@ export interface LaminaSourceParams {
   source: LaminaSource;
   entityType: string;
   timeZone: string;
+  /** Cuántos candidatos (la tier list pide 50); sin él, los 30 de siempre. */
+  limit?: number;
 }
 
 export interface LaminaCandidateFilters {
@@ -86,8 +97,9 @@ export interface LaminaCandidateFilters {
   list?: string;
 }
 
-function sourceQuery({ source, entityType, timeZone }: LaminaSourceParams, filters: LaminaCandidateFilters = {}): string {
+function sourceQuery({ source, entityType, timeZone, limit }: LaminaSourceParams, filters: LaminaCandidateFilters = {}): string {
   const params = new URLSearchParams({ source, entityType, tz: timeZone });
+  if (limit !== undefined) params.set("limit", String(limit));
   for (const [key, value] of Object.entries(filters)) {
     if (value !== undefined) params.set(key, String(value));
   }

@@ -44,6 +44,13 @@ describe("/api/me/laminas/candidates", () => {
     expect(mocks.candidates).toHaveBeenCalledWith("u1", expect.objectContaining({ source: "favorites", year: 1999, listenYear: 2026, genre: "metal" }));
   });
 
+  it("pasa el límite de la tier list, hasta 50", async () => {
+    await candidates(req(`candidates?source=ratings&entityType=recording&limit=50`));
+    expect(mocks.candidates).toHaveBeenCalledWith("u1", expect.objectContaining({ limit: 50 }));
+    expect((await candidates(req(`candidates?source=ratings&entityType=recording&limit=51`))).status).toBe(400);
+    expect((await candidates(req(`candidates?source=ratings&entityType=recording&limit=0`))).status).toBe(400);
+  });
+
   it("pasa la lista", async () => {
     await candidates(req(`candidates?source=list&entityType=release-group&list=${LIST}`));
     expect(mocks.candidates).toHaveBeenCalledWith("u1", expect.objectContaining({ list: LIST }));

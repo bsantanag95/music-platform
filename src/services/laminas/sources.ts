@@ -17,6 +17,8 @@ export const LAMINA_SOURCES = ["ratings", "favorites", "list"] as const;
 export type LaminaSource = (typeof LAMINA_SOURCES)[number];
 
 export const LAMINA_CANDIDATE_LIMIT = 30;
+/** Tope de candidatos que se puede pedir: la tier list ve hasta 50 (openspec: add-tier-list-lamina-phase2). */
+export const LAMINA_CANDIDATE_MAX = 50;
 const GENRE_OPTIONS_LIMIT = 20;
 const ARTIST_OPTIONS_LIMIT = 200;
 
@@ -33,6 +35,8 @@ export interface LaminaCandidateQuery extends LaminaSourceFilters {
   entityType: LaminaEntityType;
   list?: string;
   timeZone?: string;
+  /** Cuántos candidatos, de 1 a `LAMINA_CANDIDATE_MAX`; por defecto `LAMINA_CANDIDATE_LIMIT`. */
+  limit?: number;
 }
 
 export interface LaminaCandidate {
@@ -55,6 +59,9 @@ function invalid(message: string): ApiError {
 
 function assertQuery(query: LaminaCandidateQuery): void {
   if (query.year !== undefined && query.decade !== undefined) throw invalid("El año y la década no se combinan");
+  if (query.limit !== undefined && (!Number.isInteger(query.limit) || query.limit < 1 || query.limit > LAMINA_CANDIDATE_MAX)) {
+    throw invalid(`Se piden de 1 a ${LAMINA_CANDIDATE_MAX} candidatos`);
+  }
   if (query.decade !== undefined && query.decade % 10 !== 0) throw invalid("La década no es válida");
   const filtered = [query.year, query.decade, query.listenYear, query.genre, query.artist].some((value) => value !== undefined);
   if (query.source === "list") {
@@ -150,7 +157,7 @@ async function fromRatings(userId: string, query: LaminaCandidateQuery): Promise
     .leftJoin(recording, eq(rating.recordingId, recording.id))
     .where(and(eq(rating.userId, userId), isNotNull(target), ...filters))
     .orderBy(STARS_DESC, DETAILED_DESC, desc(rating.updatedAt), asc(rating.id))
-    .limit(LAMINA_CANDIDATE_LIMIT);
+    .limit(query.limit ?? LAMINA_CANDIDATE_LIMIT);
 }
 
 async function fromFavorites(userId: string, query: LaminaCandidateQuery): Promise<CandidateRow[]> {
@@ -167,7 +174,7 @@ async function fromFavorites(userId: string, query: LaminaCandidateQuery): Promi
     .leftJoin(rating, and(eq(rating.userId, favorite.userId), eq(songs ? rating.recordingId : rating.releaseGroupId, target)))
     .where(and(eq(favorite.userId, userId), isNotNull(target), ...filters))
     .orderBy(STARS_DESC, DETAILED_DESC, desc(favorite.createdAt), desc(favorite.id))
-    .limit(LAMINA_CANDIDATE_LIMIT);
+    .limit(query.limit ?? LAMINA_CANDIDATE_LIMIT);
 }
 
 async function fromList(userId: string, query: LaminaCandidateQuery): Promise<CandidateRow[]> {
@@ -190,7 +197,7 @@ async function fromList(userId: string, query: LaminaCandidateQuery): Promise<Ca
     .leftJoin(rating, and(eq(rating.userId, userId), eq(songs ? rating.recordingId : rating.releaseGroupId, target)))
     .where(and(eq(userListItem.listId, listId), isNotNull(target)))
     .orderBy(asc(userListItem.position), asc(userListItem.id))
-    .limit(LAMINA_CANDIDATE_LIMIT);
+    .limit(query.limit ?? LAMINA_CANDIDATE_LIMIT);
 }
 
 /** Candidatos en el orden en que entrarían a la Lámina, hasta `LAMINA_CANDIDATE_LIMIT`. */

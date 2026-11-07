@@ -1896,7 +1896,7 @@ export const TierListDetailSchema = z.object({
   id: z.uuid(),
   kind: z.literal("tier"),
   title: z.string(),
-  entityType: z.literal("release-group"),
+  entityType: LaminaEntityTypeSchema,
   audience: DiaryAudienceSchema,
   updatedAt: z.string(),
   showScores: z.boolean(),
@@ -1912,9 +1912,14 @@ export const TierListMutationResponseSchema = z.object({ tierList: TierListDetai
 export const CreateTierListRequestSchema = z.object({
   kind: z.literal("tier"),
   title: z.string().trim().min(1).max(100),
-  // Álbumes en esta fase; las canciones llegan en la Fase 2.
-  entityType: z.literal("release-group"),
-  source: z.object({ type: z.literal("discography"), artistId: z.uuid() }),
+  // Discos o canciones (add-tier-list-lamina-phase2). El servicio rechaza una fuente que no corresponde al tipo.
+  entityType: LaminaEntityTypeSchema,
+  source: z.discriminatedUnion("type", [
+    z.object({ type: z.literal("discography"), artistId: z.uuid() }),
+    z.object({ type: z.literal("album"), releaseGroupId: z.uuid() }),
+    // Lo elegido en la vista previa de tus valoraciones o de una lista; la nota la lee el servidor.
+    z.object({ type: z.literal("picked"), targetIds: z.array(z.uuid()).min(1).max(50) }),
+  ]),
 });
 
 export const UpdateTierListRequestSchema = z
@@ -1955,6 +1960,8 @@ export const LaminaCandidatesQuerySchema = LaminaSourceQuerySchema.extend({
   genre: z.string().min(1).max(120).optional(),
   artist: z.uuid().optional(),
   list: z.uuid().optional(),
+  // La tier list ve hasta 50 (add-tier-list-lamina-phase2); el Top N sigue con 30 por defecto.
+  limit: z.coerce.number().int().min(1).max(50).optional(),
 });
 
 export const LaminaCandidateSchema = LaminaItemSchema.pick({ target: true, score: true });

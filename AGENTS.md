@@ -175,7 +175,10 @@ de cuál de las filas con el mismo título haya en la BD.
 >   `0086`, el prellenado por tramos (sin En vivo ni discos de invitado), la bandeja, el tope de 50, la disposición atómica y su rechazo con pedidos en
 >   paralelo, que no toca valoraciones ni se mueve con ellas, las etiquetas, que no aparece en las superficies de listas ni se lee como Top N, la bandeja y
 >   las notas por visitante, la moderación, el objetivo de imagen (10 carátulas y el resto en texto), el gesto, el feed, la exportación, los eventos con la
->   cuenta y la lectura bajo 150 ms con 50 discos.
+>   cuenta y la lectura bajo 150 ms con 50 discos. Desde `add-tier-list-lamina-phase2` también crea un disco con su edición y canciones con el mismo
+>   prefijo (si se interrumpió, sumar `DELETE FROM recording WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000e0%';` después de borrar los discos) y
+>   verifica las tier lists de canciones de un disco (orden, grabación repetida, disco sin pistas), lo elegido en la vista previa (tipo, inexistente,
+>   ubicación por la nota), la vista previa de hasta 50 y el alta a mano (nivel, bandeja, repetido, tope con pedidos en paralelo).
 > - `smoke-test-comment-replies.ts` crea un artista y un álbum sintéticos (MBID
 >   `5e0ce000-0000-4000-8000-0000000009b0` / `...09b1`) y usuarios `smoke_reply_*`, y los borra al terminar
 >   (también si falla; el `ON DELETE CASCADE` limpia comentarios, respuestas, likes y bloqueos). Si se

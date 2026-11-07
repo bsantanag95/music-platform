@@ -1,7 +1,7 @@
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { Link } from "@/i18n/navigation";
 import type { TierListDetail } from "@/lib/api/schemas";
-import { albumHref } from "@/lib/catalog-links";
+import { albumHref, songHref } from "@/lib/catalog-links";
 import { tierBand } from "@/lib/laminas/tiers";
 import { ScoreBadge } from "./ScoreBadge";
 
@@ -10,6 +10,9 @@ import { ScoreBadge } from "./ScoreBadge";
 // tocarlo.
 
 export function TierListView({ tierList, tierItemsLabel }: { tierList: TierListDetail; tierItemsLabel: (label: string, count: number) => string }) {
+  // Una canción lleva a su página; un disco, a la suya.
+  const hrefOf = (target: { id: string; title: string }) =>
+    tierList.entityType === "recording" ? songHref(null, target.title, target.id) : albumHref(null, target.title, target.id);
   return (
     <div className="flex flex-col gap-1.5">
       {tierList.tiers.map((items, tier) => {
@@ -28,7 +31,7 @@ export function TierListView({ tierList, tierItemsLabel }: { tierList: TierListD
                 const score = tierList.showScores && item.score ? { stars: Number(item.score.stars), detailedScore: item.score.detailedScore } : null;
                 return (
                   <li key={item.id}>
-                    <Link href={albumHref(null, item.target.title, item.target.id)} title={item.target.title} className="relative block size-14 rounded transition-opacity hover:opacity-80 sm:size-16">
+                    <Link href={hrefOf(item.target)} title={item.target.title} className="relative block size-14 rounded transition-opacity hover:opacity-80 sm:size-16">
                       <CoverThumb cover={item.target.coverThumbUrl} label={item.target.title} className="size-14 rounded sm:size-16" />
                       {score ? <ScoreBadge score={score} className="absolute right-0.5 top-0.5 px-1 py-0 text-[0.625rem]" /> : null}
                     </Link>

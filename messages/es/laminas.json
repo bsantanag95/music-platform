@@ -158,17 +158,25 @@
     }
   },
   "tier": {
-    "discCount": "{count, plural, one {# disco} other {# discos}}",
     "create": {
       "heading": "Nueva tier list",
-      "description": "Elige un artista: sus discos caen solos en su nivel según tu nota, y los que no valoraste quedan en la bandeja. Después los mueves a gusto.",
-      "artist": "Artista",
-      "changeArtist": "Cambiar",
+      "description": "Tus discos o canciones repartidos en niveles según tu nota; lo que no valoraste queda en la bandeja. Después los mueves a gusto.",
       "suggestedTitle": "Tier list de {artist}",
       "privateNote": "Nace solo para ti. Después decides si la publicas. Moverla nunca cambia tus notas.",
       "submit": "Armar tier list",
       "pending": "Armando…",
-      "failed": "No se pudo armar. Inténtalo de nuevo."
+      "failed": "No se pudo armar. Inténtalo de nuevo.",
+      "type": "Qué ordenas",
+      "types": {
+        "release-group": "Discos",
+        "recording": "Canciones"
+      },
+      "source": "De dónde salen",
+      "change": "Cambiar",
+      "search": {
+        "discography": "Artista",
+        "album": "Disco"
+      }
     },
     "fields": {
       "title": "Título"
@@ -177,7 +185,7 @@
     "showScoresHint": "Quien vea la tier list verá tu nota de cada disco, también en la imagen.",
     "labelField": "Etiqueta del nivel {n}",
     "labelInvalid": "Cada nivel lleva entre 1 y {max} caracteres.",
-    "tierItems": "{group}: {count, plural, =0 {vacío} one {# disco} other {# discos}}",
+    "tierItems": "{group}: {count, plural, =0 {vacío} other {{kind, select, recording {{count, plural, one {# canción} other {# canciones}}} other {{count, plural, one {# disco} other {# discos}}}}}}",
     "itemLabel": "{title}, en {group}. Mover a…",
     "menuLabel": "Mover {title}",
     "moveTo": "Mover a",
@@ -191,6 +199,35 @@
     "unrated": "Sin valorar",
     "moved": "{title}: movido a {group}",
     "shifted": "{title}: lugar {position} en {group}",
-    "removed": "{title}: quitado"
+    "removed": "{title}: quitado",
+    "sources": {
+      "discography": "Discografía de un artista",
+      "album": "Canciones de un disco",
+      "ratings": "Mis valoraciones",
+      "list": "Una lista"
+    },
+    "titles": {
+      "discography": "Tier list de {artist}",
+      "album": "Las canciones de {album}",
+      "list": "Tier list de {list}",
+      "artist": "{kind, select, recording {Mis canciones de {artist}} other {Mis discos de {artist}}}",
+      "listenYear": "Lo que escuché en {year}",
+      "genre": "{kind, select, recording {Mis canciones} other {Mis discos}} de {genre}",
+      "year": "{kind, select, recording {Mis canciones} other {Mis discos}} de {year}",
+      "decade": "{kind, select, recording {Mis canciones} other {Mis discos}} de los {decade}",
+      "ratings": "{kind, select, recording {Mis canciones} other {Mis discos}}",
+      "genreYear": "{kind, select, recording {Mis canciones} other {Mis discos}} de {genre} de {year}",
+      "genreDecade": "{kind, select, recording {Mis canciones} other {Mis discos}} de {genre} de los {decade}"
+    },
+    "itemCount": {
+      "release-group": "{count, plural, one {# disco} other {# discos}}",
+      "recording": "{count, plural, one {# canción} other {# canciones}}"
+    },
+    "addSearch": {
+      "release-group": "Agregar un disco",
+      "recording": "Agregar una canción"
+    },
+    "added": "{title}: agregado en {group}",
+    "full": "Ya tiene {max}. Quita algo para agregar otro."
   }
 }
