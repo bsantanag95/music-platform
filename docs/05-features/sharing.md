@@ -214,6 +214,8 @@ columna, la carátula y tu nota del disco.
   discografía**: la barra discreta del recorrido vive en la cabecera de la lámina, sin números (nunca "X de Y" fuera de la
   página de gestión, `product_philosophy.md` §6.4.1); sin recorrido, cuántos discos valoró, sin total. Un destino, dos usos.
 - **Carátulas:** hasta 10, las de los mejor valorados; los demás, recuadro tipográfico (ADR 0053).
+- **Qué se muestra lo decide el dueño:** suma En vivo y Recopilatorios (los EP ya están en la principal) y elige la vista por defecto. La imagen
+  compartida muestra eso; un visitante puede cambiar de vista en la página. La Lámina de un álbum vive en `?disco=` y la abre la misma marca.
 - **Lectura:** celda con tooltip (canción, nota, fecha), clic lleva a la canción. Visitante con cuenta:
   **"Compárala con la tuya"** (§4.4.2).
 
@@ -453,7 +455,7 @@ hasta tener datos reales.
 | D6 | Carátulas compuestas en imágenes descargables | Permitir con 250 px y atribución · solo carátula única · sin carátulas | ✅ **Hasta 4 carátulas de ≤250 px sin ampliar, con créditos y respetando retiros** — ADR 0049 (`add-share-foundation`). **Hasta 10 en una Lámina armada por una persona** (`add-top-n-lamina`) |
 | D7 | Persistencia de láminas de autor | `user_list` con `kind` nuevos · tabla `lamina` | ✅ **`user_list` con `kind = 'top'`**: las superficies de listas ya filtran por `standard`. La tier list lo revisa al llegar |
 | D8 | ¿La tier list escribe valoraciones? | No · ofrecer "actualizar mis notas" | **No**; quizá un "¿actualizar tu nota?" puntual en una fase posterior |
-| D9 | Umbral para la vista "Por canción" | ≥ x % de pistas valoradas · ≥ N pistas | A definir con datos reales de cuántas canciones se valoran |
+| D9 | Umbral para la vista "Por canción" | ≥ x % de pistas valoradas · ≥ N pistas | ✅ **10 canciones valoradas en al menos 2 discos** (`add-discography-lamina-phase2`), en una constante (`DISCOGRAPHY_SONG_MIN`). Sin datos reales todavía: la BD de scratch tenía 49 valoraciones de canciones. Revisar cuando la BD real las tenga |
 | D10 | Grilla 3×3 sin números | Incluir · solo Top 5/10 | ✅ **Incluir como formato del Cuadrado** (es el que la gente ya conoce) |
 | D11 | Etiquetas de la escala | Solo rangos numéricos · nombres de marca | **Rangos numéricos** por defecto |
 | D12 | El editor de lámina como valoración en lote | Sí · no | **Sí, para la discografía**: "valora lo que falta" desde la grilla — baja la fricción del bucle viral |
@@ -500,7 +502,7 @@ Cada cambio parte de este documento y abre con el repaso en detalle de las decis
    - **`add-top-n-lamina-phase3`** ✅ implementado — "Arma la tuya" con registro dirigido (§6, ADR 0052).
 4. **`add-discography-lamina`**, dividido en tres fases (2026-11-07). "Compárala con la tuya" pasa a "Tú vs. otra persona" (§4.4).
    - **`add-discography-lamina-phase1`** ✅ implementado — página, marca por artista, vista Por disco, progreso discreto (D4, D19, ADR 0053).
-   - **`add-discography-lamina-phase2`** — vista Por canción (D9), Lámina de álbum e interruptores de EP, en vivo y compilados.
+   - **`add-discography-lamina-phase2`** ✅ implementado — vista Por canción (D9), preferencias del dueño (En vivo, Recopilatorios y vista por defecto) y Lámina de álbum en `?disco=`, abierta por la misma marca.
    - **`add-discography-lamina-phase3`** — "Valora lo que falta" (D12) y "Arma la tuya" en esta página.
 5. **`add-tier-list-lamina`** — tier list con prellenado desde valoraciones, editor accesible (D8).
 6. **Siguientes** (§4.4) — "Tu año en discos" (objetivo: antes de diciembre), "Tú vs. otra persona",

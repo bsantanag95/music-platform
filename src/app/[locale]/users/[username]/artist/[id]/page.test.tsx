@@ -5,6 +5,7 @@ import { renderWithIntl } from "@/test/i18n-test-utils";
 const mocks = vi.hoisted(() => ({
   session: vi.fn(),
   lamina: vi.fn(),
+  album: vi.fn(),
   notFound: vi.fn(() => {
     throw new Error("NOT_FOUND");
   }),
@@ -20,14 +21,21 @@ vi.mock("next-intl/server", async () => {
   };
 });
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: mocks.session }));
-vi.mock("@/services/laminas/discography", () => ({ getDiscographyLamina: mocks.lamina }));
+vi.mock("@/services/laminas/discography", () => ({ getDiscographyLamina: mocks.lamina, getDiscographyAlbum: mocks.album }));
+vi.mock("@/components/laminas/DiscographySettings", () => ({ DiscographySettings: () => <div>ajustes</div> }));
 vi.mock("@/services/share/metadata", () => ({ buildShareMetadata: vi.fn() }));
 vi.mock("@/services/share/targets/discography", () => ({
-  discographyRef: (userId: string, artistId: string) => `${userId}.${artistId}`,
+  discographyRef: (userId: string, artistId: string, albumId?: string) => [userId, artistId, albumId].filter(Boolean).join("."),
   discographyRefFor: vi.fn(),
 }));
 vi.mock("@/i18n/client-messages", () => ({ withClientMessages: (_route: string, page: unknown) => page }));
-vi.mock("@/i18n/navigation", () => ({ Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a> }));
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
+}));
 vi.mock("@/components/catalog/CoverThumb", () => ({ CoverThumb: () => <span /> }));
 vi.mock("@/components/share/OwnShareSheet", () => ({ OwnShareButton: ({ refId }: { refId: string }) => <button>{`propio:${refId}`}</button> }));
 vi.mock("@/components/share/ShareAction", () => ({ ShareAction: ({ refId }: { refId: string }) => <button>{`publico:${refId}`}</button> }));
@@ -36,10 +44,16 @@ import UserDiscographyPage from "./page";
 
 const ARTIST = "10000000-0000-4000-8000-000000000001";
 const disc = (n: number, stars: number, detailedScore: number | null = null) => ({ id: `d${n}`, title: `Disco ${n}`, year: 1980 + n, coverThumbUrl: null, stars, detailedScore });
+const track = (number: number, score: { stars: number; detailedScore: number | null } | null) => ({ number, recordingId: `r${number}`, title: `Canción ${number}`, score });
+const songDisc = (n: number, tracks: ReturnType<typeof track>[]) => ({ ...disc(n, 4), score: { stars: 4, detailedScore: null }, tracks });
 const lamina = (over = {}) => ({
   owner: { id: "u1", username: "ana", displayName: null },
   artist: { id: ARTIST, name: "Banda" },
   discs: [disc(1, 4.5, 86), disc(2, 4), disc(3, 3)],
+  songDiscs: [songDisc(1, [track(1, { stars: 5, detailedScore: 97 }), track(2, null)]), songDisc(2, [track(1, { stars: 3.5, detailedScore: null })])],
+  available: { disc: true, song: false },
+  preference: { sections: [], view: "disc" },
+  view: "disc",
   progress: { kind: "rated", count: 3 },
   missing: 0,
   isOwner: false,
@@ -47,8 +61,8 @@ const lamina = (over = {}) => ({
   ...over,
 });
 
-const render = async () =>
-  renderWithIntl(await UserDiscographyPage({ params: Promise.resolve({ username: "ana", id: ARTIST }) }));
+const render = async (search: { vista?: string; disco?: string } = {}) =>
+  renderWithIntl(await UserDiscographyPage({ params: Promise.resolve({ username: "ana", id: ARTIST }), searchParams: Promise.resolve(search) }));
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -92,6 +106,51 @@ describe("discografía de una persona", () => {
     mocks.lamina.mockResolvedValue(lamina({ shared: true }));
     await render();
     expect(screen.getByRole("button", { name: `publico:u1.${ARTIST}` })).toBeTruthy();
+  });
+
+  it("sin las dos vistas no ofrece el selector", async () => {
+    await render();
+    expect(screen.queryByRole("navigation", { name: "Vista" })).toBeNull();
+  });
+
+  it("con las dos vistas, la pedida se muestra como tabla", async () => {
+    mocks.lamina.mockResolvedValue(lamina({ available: { disc: true, song: true } }));
+    await render({ vista: "canciones" });
+    expect(screen.getByRole("link", { name: "Por canción" })).toHaveAttribute("aria-current", "page");
+    const table = screen.getByRole("table", { name: "Notas por canción de Banda" });
+    expect(table).toBeTruthy();
+    expect(screen.getByText("97")).toBeTruthy();
+    expect(screen.getAllByText("Sin nota").length).toBeGreaterThan(0);
+  });
+
+  it("una vista que no está disponible cae a la otra", async () => {
+    await render({ vista: "canciones" });
+    expect(screen.queryByRole("table")).toBeNull();
+    expect(screen.getByText("86")).toBeTruthy();
+  });
+
+  it("los ajustes son solo del dueño", async () => {
+    await render();
+    expect(screen.queryByText("ajustes")).toBeNull();
+    mocks.lamina.mockResolvedValue(lamina({ isOwner: true }));
+    await render();
+    expect(screen.getByText("ajustes")).toBeTruthy();
+  });
+
+  it("la Lámina de álbum muestra cada pista con su nota", async () => {
+    const base = lamina({ shared: true });
+    mocks.album.mockResolvedValue({ lamina: base, disc: base.songDiscs[0], missing: 0 });
+    await render({ disco: "d1" });
+    expect(mocks.album).toHaveBeenCalledWith("ana", ARTIST, "d1", null);
+    expect(screen.getByRole("link", { name: "Canción 1" })).toBeTruthy();
+    expect(screen.getByText("97")).toBeTruthy();
+    expect(screen.getByText("Sin nota")).toBeTruthy();
+    expect(screen.getByRole("button", { name: `publico:u1.${ARTIST}.d1` })).toBeTruthy();
+  });
+
+  it("un álbum que no se puede ver responde 404", async () => {
+    mocks.album.mockResolvedValue(null);
+    await expect(render({ disco: "d9" })).rejects.toThrow("NOT_FOUND");
   });
 
   it("al dueño le dice cuánto falta y no ofrece compartir", async () => {

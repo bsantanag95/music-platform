@@ -1,5 +1,6 @@
 import { apiFetch } from "./client";
 import {
+  DiscographyPreferenceResponseSchema,
   LaminaCandidatesResponseSchema,
   LaminaMutationResponseSchema,
   LaminaSourceOptionsSchema,
@@ -72,4 +73,12 @@ export function fetchLaminaCandidates(params: LaminaSourceParams, filters: Lamin
   return apiFetch(`/api/me/laminas/candidates?${sourceQuery(params, filters)}`, LaminaCandidatesResponseSchema, { signal }).then(
     (response) => response.candidates,
   );
+}
+
+export function saveDiscographyPreference(artistId: string, preference: { sections: string[]; view: string }) {
+  return apiFetch(`/api/me/discography/${artistId}`, DiscographyPreferenceResponseSchema, {
+    method: "PUT",
+    headers: json,
+    body: JSON.stringify(preference),
+  }).then((response) => response.preference);
 }

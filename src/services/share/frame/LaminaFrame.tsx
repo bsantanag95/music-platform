@@ -163,7 +163,7 @@ const STAR_POLYGON = "polygon(50% 10.4%, 62.1% 35.8%, 89.6% 39.2%, 69.2% 58.3%, 
  * Estrella dibujada: las fuentes de la marca no traen el glifo "★". Va con `clipPath` y no como `<svg>`: cada `<svg>` se rasteriza
  * aparte y cuesta unos 170 ms, y una discografía lleva hasta 20 (medido: 2,5 s contra 0,6 s con 12 notas).
  */
-function StarGlyph({ size, color }: { size: number; color: string }) {
+export function StarGlyph({ size, color }: { size: number; color: string }) {
   return <div style={{ display: "flex", width: size, height: size, backgroundColor: color, clipPath: STAR_POLYGON }} />;
 }
 

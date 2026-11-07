@@ -54,7 +54,8 @@
       "top5": "Top 5",
       "top10": "Top 10",
       "grid9": "Top 9",
-      "discography": "Discography"
+      "discography": "Discography",
+      "discographyAlbum": "Album"
     },
     "category": {
       "studio": "Studio album",
@@ -97,7 +98,8 @@
       "fingerprint": "{name}'s taste fingerprint",
       "rating": "{author}: {score} for {object}",
       "listen": "{author} listened to {object}",
-      "discography": "{artist}, by {author}"
+      "discography": "{artist}, by {author}",
+      "discographyAlbum": "{album}, by {author}"
     },
     "listItems": {
       "artist": "{count, plural, one {# artist} other {# artists}}",
@@ -114,7 +116,8 @@
       "decade": "Mostly music from the {decade}",
       "family": "Most present family: {family}"
     },
-    "discographyRated": "{count, plural, one {# album rated} other {# albums rated}}"
+    "discographyRated": "{count, plural, one {# album rated} other {# albums rated}}",
+    "discographySongsRated": "{count, plural, one {# song rated} other {# songs rated}}"
   },
   "commentTitle": "Comment by {author}",
   "own": {

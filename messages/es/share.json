@@ -54,7 +54,8 @@
       "top5": "Top 5",
       "top10": "Top 10",
       "grid9": "Top 9",
-      "discography": "Discografía"
+      "discography": "Discografía",
+      "discographyAlbum": "Álbum"
     },
     "category": {
       "studio": "Álbum de estudio",
@@ -97,7 +98,8 @@
       "fingerprint": "Huella de gusto de {name}",
       "rating": "{author}: {score} a {object}",
       "listen": "{author} escuchó {object}",
-      "discography": "{artist}, según {author}"
+      "discography": "{artist}, según {author}",
+      "discographyAlbum": "{album}, según {author}"
     },
     "listItems": {
       "artist": "{count, plural, one {# artista} other {# artistas}}",
@@ -114,7 +116,8 @@
       "decade": "Sobre todo, música de los {decade}",
       "family": "Su familia más presente: {family}"
     },
-    "discographyRated": "{count, plural, one {# disco valorado} other {# discos valorados}}"
+    "discographyRated": "{count, plural, one {# disco valorado} other {# discos valorados}}",
+    "discographySongsRated": "{count, plural, one {# canción valorada} other {# canciones valoradas}}"
   },
   "commentTitle": "Comentario de {author}",
   "own": {
