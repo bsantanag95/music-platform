@@ -1842,6 +1842,24 @@ export const ratingShare = pgTable(
 
 export type RatingShareRow = typeof ratingShare.$inferSelect;
 
+// Discografía compartida (migración 0084, openspec: add-discography-lamina-phase1, ADR 0053): abre a quien pueda ver el perfil la
+// página y la imagen de lo que una persona valoró de un artista. Se mantiene al día con sus notas; no toca `rating`.
+export const discographyShare = pgTable(
+  "discography_share",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    artistId: uuid("artist_id")
+      .notNull()
+      .references(() => artist.id, { onDelete: "cascade" }),
+    sharedAt: timestamp("shared_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.artistId] }), index("idx_discography_share_artist").on(t.artistId)],
+);
+
+export type DiscographyShareRow = typeof discographyShare.$inferSelect;
+
 // Entradas de diario destacadas del perfil (openspec: rework-user-profile).
 // Misma razón de tabla aparte que rating_highlight: no tocar
 // listen_entry.updated_at. Una entrada destacada anula la matriz de
@@ -2349,7 +2367,7 @@ export const shareEvent = pgTable(
     index("idx_share_event_target").on(t.targetKind, t.targetRef),
     check(
       "chk_share_event_target_kind",
-      sql`${t.targetKind} IN ('album', 'song', 'artist', 'genre', 'awards', 'award', 'ceremony', 'halls', 'hall', 'hall_class', 'collections', 'collection', 'profile', 'review', 'comment', 'list', 'camino', 'user_collection', 'fingerprint', 'rating', 'listen', 'top')`,
+      sql`${t.targetKind} IN ('album', 'song', 'artist', 'genre', 'awards', 'award', 'ceremony', 'halls', 'hall', 'hall_class', 'collections', 'collection', 'profile', 'review', 'comment', 'list', 'camino', 'user_collection', 'fingerprint', 'rating', 'listen', 'top', 'discography')`,
     ),
     check("chk_share_event_target_ref", sql`char_length(${t.targetRef}) BETWEEN 1 AND 200`),
     check(

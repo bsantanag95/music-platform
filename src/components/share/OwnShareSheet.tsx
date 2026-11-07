@@ -13,7 +13,7 @@ import { ShareTrigger } from "./ShareButton";
 // mostrar el botón no cuesta ninguna consulta. Lo público usa la hoja normal; lo que no lo es, un aviso con el gesto
 // explícito y la descarga privada. Nada cambia de audiencia sin ese gesto.
 
-type OwnKind = "rating" | "listen" | "top";
+type OwnKind = "rating" | "listen" | "top" | "discography";
 
 export function OwnShareSheet({
   open,
@@ -82,7 +82,7 @@ export function OwnShareSheet({
             <button
               type="button"
               disabled={busy}
-              onClick={() => void run(() => stopOwnShare(refId, locale))}
+              onClick={() => void run(() => stopOwnShare(kind === "discography" ? "discography" : "rating", refId, locale))}
               className="self-start font-display text-sm text-paper-muted underline-offset-4 transition-colors hover:text-paper hover:underline disabled:opacity-50"
             >
               {t("stop")}

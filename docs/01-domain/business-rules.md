@@ -348,6 +348,9 @@ el mismo umbral que el álbum, aplicado en el read-model (`artist-community.ts`)
   Lámina no cambia si la fuente cambia. Creada así, nace privada aunque la audiencia por defecto sea otra, y sus notas siguen apagadas.
 - "Arma la tuya" hereda de una Lámina ajena su formato y su tipo, y ofrece su título como sugerencia; nunca sus ítems ni sus notas. Si
   la persona no la puede ver, no hereda nada. Quien se registra por ese camino va a armarla y su bienvenida queda pendiente.
+- Una discografía es una Lámina derivada: los discos de la sección principal de un artista que una persona valoró, desde 3. La ven el dueño y
+  sus seguidores. La marca por artista la abre a quien pueda ver el perfil, se mantiene al día con las notas nuevas, es reversible y no vuelve
+  públicas esas valoraciones en otro lugar. Su progreso es discreto: nunca "X de Y" (`product_philosophy.md` §6.4.1).
 - El año de escucha de una fuente exige una escucha del mismo objetivo en ese año, contado en la zona horaria de la persona: una
   escucha de una canción no cuenta para su álbum.
 - Solo el catálogo usa una caché inmutable. Lo que es de una persona lleva caché corta, porque su dueño o moderación pueden cerrarlo.

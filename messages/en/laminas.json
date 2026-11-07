@@ -103,5 +103,13 @@
     "description": "Build your own ranking and share it.",
     "action": "Make yours",
     "haveAccount": "I already have an account"
+  },
+  "discography": {
+    "kicker": "Discography",
+    "rated": "{count, plural, one {# album rated} other {# albums rated}}",
+    "missing": "{count, plural, one {Rate # more album to see this Card.} other {Rate # more albums to see this Card.}}",
+    "noYear": "No year",
+    "sectionTitle": "Your discographies",
+    "sectionDescription": "Your take on an artist's career, album by album."
   }
 }

@@ -6,8 +6,10 @@ import { getArtistCommunityStats } from "@/services/catalog/artist-community";
 import { getArtistPersonalState } from "@/services/catalog/artist-personal";
 import { getArtistProfile, type ProfileLocale } from "@/services/catalog/artist-profile-read";
 import { getArtistLineup } from "@/services/catalog/artist-lineup";
+import { DISCOGRAPHY_MIN_DISCS } from "@/lib/laminas/discography";
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
+import { countRatedMainDiscs } from "@/services/laminas/discography";
 
 // Cargas de la página de artista compartidas entre el layout de pestañas, cada pestaña y
 // `generateMetadata` (openspec: redesign-artist-page, design D1). `cache()` deduplica por
@@ -59,6 +61,11 @@ export const loadCommunityStats = cache(async (id: string) =>
 
 export const loadPersonalState = cache(async (userId: string, id: string) =>
   getArtistPersonalState(userId, id, await loadOwnReleaseGroupIds(id)),
+);
+
+/** Enlace a la discografía propia, si ya existe (spec discography-laminas). */
+export const loadDiscographyLaminaHref = cache(async (username: string, userId: string, id: string) =>
+  (await countRatedMainDiscs(userId, id)) >= DISCOGRAPHY_MIN_DISCS ? `/users/${encodeURIComponent(username)}/artist/${id}` : null,
 );
 
 export const loadDiscographyMarks = cache(async (userId: string, id: string) => {

@@ -2272,6 +2272,12 @@ Todas con sesión. `LAMINA_NOT_FOUND` (404) si no existe o no es propia. Hacer p
   `VALIDATION_ERROR` con `year` y `decade` juntos, sin `list` en esa fuente o con filtros en ella. `list` ajena: `LIST_NOT_FOUND`; de otro tipo:
   `VALIDATION_ERROR`. Un `genre` desconocido devuelve una lista vacía.
 
+## Discografía compartida (cambio `add-discography-lamina-phase1`, ADR 0053)
+
+`/api/me/share/discography/<ref>` usa las rutas de lo propio, con `ref` = `<userId>.<artistId>`: `GET` da el estado, `POST` crea la marca y `DELETE` la quita.
+`DISCOGRAPHY_NOT_FOUND` (404) si no es propia o aún no llega a 3 discos valorados; `PROFILE_PRIVATE` (409) con el perfil privado. `POST` exige que no haya
+suspensión social. La imagen es `/api/share/image/discography/<ref>`, en `post`, `link` y `story`.
+
 ## Compartir (cambios `add-share-foundation` y `add-share-user-actions`, ADR 0049 y 0050)
 
 Diseño y decisiones en `docs/05-features/sharing.md`. Las dos rutas aceptan pedidos con y sin sesión y no guardan

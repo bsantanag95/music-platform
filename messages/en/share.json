@@ -53,7 +53,8 @@
       "listen": "Listen",
       "top5": "Top 5",
       "top10": "Top 10",
-      "grid9": "Top 9"
+      "grid9": "Top 9",
+      "discography": "Discography"
     },
     "category": {
       "studio": "Studio album",
@@ -95,7 +96,8 @@
       "collection": "{name}'s collection",
       "fingerprint": "{name}'s taste fingerprint",
       "rating": "{author}: {score} for {object}",
-      "listen": "{author} listened to {object}"
+      "listen": "{author} listened to {object}",
+      "discography": "{artist}, by {author}"
     },
     "listItems": {
       "artist": "{count, plural, one {# artist} other {# artists}}",
@@ -111,7 +113,8 @@
     "fingerprint": {
       "decade": "Mostly music from the {decade}",
       "family": "Most present family: {family}"
-    }
+    },
+    "discographyRated": "{count, plural, one {# album rated} other {# albums rated}}"
   },
   "commentTitle": "Comment by {author}",
   "own": {
@@ -126,7 +129,8 @@
       "listen": "This listen is not public. To make the link work, make it public.",
       "listenNote": "This listen is not public. To make the link work, make it public: your note will be visible too.",
       "privateProfile": "Your profile is private: nobody without an account could open a link. You can download the image.",
-      "top": "This Card is not public. To make the link work, make it public."
+      "top": "This Card is not public. To make the link work, make it public.",
+      "discography": "This discography isn't public. If you make it public, your ratings for this artist will be visible, including future ones, and so will your progress. You can stop sharing it at any time."
     },
     "unavailable": "This content can no longer be shared."
   },

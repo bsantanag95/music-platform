@@ -41,6 +41,8 @@ interface ArtistRelationPanelProps {
   /** `null` para visitantes anónimos. */
   state: ArtistRelationState | null;
   categoryLabels: Record<ReleaseGroupCategory, string>;
+  /** Enlace a la discografía propia, cuando ya existe. */
+  discographyHref?: string | null;
 }
 
 const panelClass = "flex h-full flex-col gap-3 rounded border border-ink-border bg-ink-surface p-4";
@@ -92,6 +94,7 @@ function AuthenticatedPanel({
   artistName,
   state,
   categoryLabels,
+  discographyHref = null,
 }: ArtistRelationPanelProps & { state: ArtistRelationState }) {
   const t = useTranslations("catalog.artist.relation");
   const format = useFormatter();
@@ -282,6 +285,11 @@ function AuthenticatedPanel({
             </Value>
           </Field>
         )}
+        {discographyHref ? (
+          <Link href={discographyHref} className={`${linkButton} self-start`}>
+            {t("discographyLamina")} →
+          </Link>
+        ) : null}
       </div>
 
       <div className={`flex flex-col gap-3 pt-3 ${divider}`}>

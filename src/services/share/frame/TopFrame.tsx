@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { BRAND_COLORS } from "@/lib/share/brand-tokens";
 import { scaleScore } from "@/lib/share/score-scale";
 import { SHARE_FONT_FAMILIES } from "../fonts";
-import { BrandSignature, CoverTile, ScoreChip, clip } from "./LaminaFrame";
+import { BrandSignature, CoverTile, LINK_FORMAT, ScoreChip, clip } from "./LaminaFrame";
 import { STORY_FORMAT } from "./StoryFrame";
 
 // Láminas Top N (docs/05-features/sharing.md §4.2): mismo marco, tipografías y escala que el resto de las imágenes,
@@ -29,14 +29,15 @@ export interface TopItem {
 /** Formatos de una Lámina: el cuerpo es el mismo, el lienzo no. En Historia todo vive dentro de los márgenes seguros. */
 export type TopCanvas = "post" | "square" | "story";
 
-const CANVAS: Record<TopCanvas, { width: number; height: number; top: number }> = {
+const CANVAS: Record<TopCanvas | "link", { width: number; height: number; top: number }> = {
+  link: { ...LINK_FORMAT, top: 40 },
   post: { ...POST_FORMAT, top: MARGIN },
   square: { ...SQUARE_FORMAT, top: MARGIN },
   story: { ...STORY_FORMAT, top: 250 },
 };
 
-interface FrameProps {
-  canvas: TopCanvas;
+export interface TopShellProps {
+  canvas: TopCanvas | "link";
   title: string;
   byline: string;
   children: ReactNode;
@@ -45,7 +46,7 @@ interface FrameProps {
   domain: string;
 }
 
-function TopShell({ canvas, title, byline, children, credits, appName, domain }: FrameProps) {
+export function TopShell({ canvas, title, byline, children, credits, appName, domain }: TopShellProps) {
   const { width, height, top } = CANVAS[canvas];
   return (
     <div
@@ -99,7 +100,7 @@ function Rank({ value, size, gold = false }: { value: number; size: number; gold
 }
 
 /** Top 5: el primero destacado con su carátula entera y los otros cuatro en filas. */
-export function TopFive({ items, ...frame }: Omit<FrameProps, "children"> & { items: TopItem[] }) {
+export function TopFive({ items, ...frame }: Omit<TopShellProps, "children"> & { items: TopItem[] }) {
   const [first, ...rest] = items;
   return (
     <TopShell {...frame}>
@@ -136,7 +137,7 @@ export function TopFive({ items, ...frame }: Omit<FrameProps, "children"> & { it
 }
 
 /** Top 10: dos filas de cinco, con el puesto sobre cada carátula. */
-export function TopTen({ items, ...frame }: Omit<FrameProps, "children"> & { items: TopItem[] }) {
+export function TopTen({ items, ...frame }: Omit<TopShellProps, "children"> & { items: TopItem[] }) {
   const tile = 176;
   const row = (start: number) => (
     <div style={{ display: "flex", gap: 18 }}>
@@ -164,7 +165,7 @@ export function TopTen({ items, ...frame }: Omit<FrameProps, "children"> & { ite
 }
 
 /** Grilla 3×3 sin números, el formato que la gente ya conoce (D10). */
-export function TopGrid({ items, ...frame }: Omit<FrameProps, "children"> & { items: TopItem[] }) {
+export function TopGrid({ items, ...frame }: Omit<TopShellProps, "children"> & { items: TopItem[] }) {
   return (
     <TopShell {...frame}>
       <div style={{ display: "flex", justifyContent: "center" }}>

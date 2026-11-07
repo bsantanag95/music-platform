@@ -15,6 +15,7 @@ import { itemListsHref } from "@/components/lists/lists-shared";
 import { Comments } from "@/components/social/Comments";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ShareAction } from "@/components/share/ShareAction";
+import { DISCOGRAPHY_MIN_DISCS } from "@/lib/laminas/discography";
 import { parseCatalogSegment } from "@/lib/slug";
 import type { ReleaseGroupCategory } from "@/lib/api/schemas";
 import { scheduleArtistProfileRefresh } from "@/services/catalog/artist-profile-sync";
@@ -25,6 +26,7 @@ import {
   loadCanModerate,
   loadCommunityStats,
   loadDiscography,
+  loadDiscographyLaminaHref,
   loadLineup,
   loadPersonalState,
   loadProfile,
@@ -95,6 +97,8 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
           href: `${artistHref(artist.name, artist.id)}/awards`,
         }
       : null;
+  const discographyHref =
+    session && (personal?.rated?.count ?? 0) >= DISCOGRAPHY_MIN_DISCS ? await loadDiscographyLaminaHref(session.user.username, session.user.id, artist.id) : null;
   const categoryLabels = {
     studio: t("categories.studio"),
     single_ep: t("categories.single_ep"),
@@ -148,6 +152,7 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
           artistId={artist.id}
           artistName={artist.name}
           state={personal}
+          discographyHref={discographyHref}
           categoryLabels={categoryLabels}
         />
         <div className="lg:hidden">
