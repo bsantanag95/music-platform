@@ -214,6 +214,9 @@ columna, la carátula y tu nota del disco.
   discografía**: la barra discreta del recorrido vive en la cabecera de la lámina, sin números (nunca "X de Y" fuera de la
   página de gestión, `product_philosophy.md` §6.4.1); sin recorrido, cuántos discos valoró, sin total. Un destino, dos usos.
 - **Carátulas:** hasta 10, las de los mejor valorados; los demás, recuadro tipográfico (ADR 0053).
+- **Valora lo que falta y Arma la tuya:** la discografía propia existe siempre, también sin valoraciones, y `?valorar=1` lista lo que falta con sus
+  estrellas. En la de otra persona, "Arma la tuya" lleva a la propia de ese artista en ese modo, también después de registrarse (`discografia=<id>`,
+  ADR 0054).
 - **Qué se muestra lo decide el dueño:** suma En vivo y Recopilatorios (los EP ya están en la principal) y elige la vista por defecto. La imagen
   compartida muestra eso; un visitante puede cambiar de vista en la página. La Lámina de un álbum vive en `?disco=` y la abre la misma marca.
 - **Lectura:** celda con tooltip (canción, nota, fecha), clic lleva a la canción. Visitante con cuenta:
@@ -458,7 +461,7 @@ hasta tener datos reales.
 | D9 | Umbral para la vista "Por canción" | ≥ x % de pistas valoradas · ≥ N pistas | ✅ **10 canciones valoradas en al menos 2 discos** (`add-discography-lamina-phase2`), en una constante (`DISCOGRAPHY_SONG_MIN`). Sin datos reales todavía: la BD de scratch tenía 49 valoraciones de canciones. Revisar cuando la BD real las tenga |
 | D10 | Grilla 3×3 sin números | Incluir · solo Top 5/10 | ✅ **Incluir como formato del Cuadrado** (es el que la gente ya conoce) |
 | D11 | Etiquetas de la escala | Solo rangos numéricos · nombres de marca | **Rangos numéricos** por defecto |
-| D12 | El editor de lámina como valoración en lote | Sí · no | **Sí, para la discografía**: "valora lo que falta" desde la grilla — baja la fricción del bucle viral |
+| D12 | El editor de lámina como valoración en lote | Sí · no | ✅ **Sí, para la discografía** (`add-discography-lamina-phase3`): `?valorar=1` lista los discos sin nota con sus estrellas, y la Lámina de cada álbum, sus canciones. Guarda al tocar, con la API de siempre. No desde las celdas de la grilla: a 375 px son chicas |
 | D13 | Métricas de compartir | Contador propio (`share_event`) · solo `?via=` en logs · nada | ✅ **`share_event` (migración 0079, sin datos personales) + `?via=<canal>`** en los enlaces (`add-share-foundation`) |
 | D14 | ¿Las láminas de autor generan entrada en el feed? | Sí · no | **Sí**, como una lista nueva, con la audiencia de la lámina |
 | D15 | Cómo se hace pública una valoración (`rating` no tiene audiencia: la ven dueño y seguidores, salvo destacadas y la que acompaña a una reseña) | Marca por valoración · columna `audience` · reutilizar destacadas | ✅ **Marca por valoración en tabla aparte**, como `rating_highlight`: sin tope, reversible y sin tocar `rating.updated_at`. Las destacadas no sirven: tope de 6 y cambian la vitrina del perfil |
@@ -503,7 +506,7 @@ Cada cambio parte de este documento y abre con el repaso en detalle de las decis
 4. **`add-discography-lamina`**, dividido en tres fases (2026-11-07). "Compárala con la tuya" pasa a "Tú vs. otra persona" (§4.4).
    - **`add-discography-lamina-phase1`** ✅ implementado — página, marca por artista, vista Por disco, progreso discreto (D4, D19, ADR 0053).
    - **`add-discography-lamina-phase2`** ✅ implementado — vista Por canción (D9), preferencias del dueño (En vivo, Recopilatorios y vista por defecto) y Lámina de álbum en `?disco=`, abierta por la misma marca.
-   - **`add-discography-lamina-phase3`** — "Valora lo que falta" (D12) y "Arma la tuya" en esta página.
+   - **`add-discography-lamina-phase3`** ✅ implementado — "Valora lo que falta" (D12) en discos y canciones, y "Arma la tuya" en esta página (ADR 0054).
 5. **`add-tier-list-lamina`** — tier list con prellenado desde valoraciones, editor accesible (D8).
 6. **Siguientes** (§4.4) — "Tu año en discos" (objetivo: antes de diciembre), "Tú vs. otra persona",
    décadas/géneros, mes en discos, pared de la colección.

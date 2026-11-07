@@ -162,7 +162,14 @@ describe("GET /api/auth/google/start", () => {
 
   it("guarda la intención de Lámina en el estado del flujo", async () => {
     await startGet(new NextRequest("http://localhost:3000/api/auth/google/start?locale=es&lamina=8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f"));
-    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", undefined, true, "8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f");
+    expect(mocks.generateOAuthFlowState).toHaveBeenCalledWith("es", undefined, true, { kind: "lamina", id: "8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f" });
+  });
+
+  it("guarda la intención de discografía y, con las dos, se queda con la Lámina", async () => {
+    await startGet(new NextRequest("http://localhost:3000/api/auth/google/start?locale=es&discografia=10000000-0000-4000-8000-000000000001"));
+    expect(mocks.generateOAuthFlowState).toHaveBeenLastCalledWith("es", undefined, true, { kind: "discography", artistId: "10000000-0000-4000-8000-000000000001" });
+    await startGet(new NextRequest("http://localhost:3000/api/auth/google/start?locale=es&discografia=10000000-0000-4000-8000-000000000001&lamina=8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f"));
+    expect(mocks.generateOAuthFlowState).toHaveBeenLastCalledWith("es", undefined, true, { kind: "lamina", id: "8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f" });
   });
 
   it("una intención de Lámina inválida se descarta sin cortar el flujo", async () => {
@@ -338,7 +345,7 @@ describe("GET /api/auth/google/callback", () => {
     ["nuevo", null],
     ["ya onboardeado", new Date()],
   ])("con intención de Lámina, un usuario %s va a armarla", async (_label, onboardedAt) => {
-    mocks.consumeOAuthFlowCookies.mockResolvedValue({ state: "valid-state", codeVerifier: "verifier", nonce: "nonce", locale: "en", laminaId: "8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f" });
+    mocks.consumeOAuthFlowCookies.mockResolvedValue({ state: "valid-state", codeVerifier: "verifier", nonce: "nonce", locale: "en", buildIntent: { kind: "lamina", id: "8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f" } });
     mocks.exchangeCode.mockResolvedValue({ idToken: "id-token", accessToken: "at", tokenType: "Bearer", expiresIn: 3600 });
     mocks.validateIdToken.mockResolvedValue({ sub: "sub-123", email: "new@gmail.com", emailVerified: true, nonce: "nonce" });
     mocks.toIdentity.mockReturnValue({ provider: "google", providerAccountId: "sub-123", email: "new@gmail.com", emailVerified: true });
@@ -347,6 +354,18 @@ describe("GET /api/auth/google/callback", () => {
     const response = await callbackGet(new NextRequest("http://localhost:3000/api/auth/google/callback?code=auth-code&state=valid-state"));
 
     expect(response.headers.get("location")).toMatch(/\/en\/me\/laminas\?desde=8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f$/);
+  });
+
+  it("con intención de discografía va a la propia, armada con el usuario autenticado", async () => {
+    mocks.consumeOAuthFlowCookies.mockResolvedValue({ state: "valid-state", codeVerifier: "verifier", nonce: "nonce", locale: "en", buildIntent: { kind: "discography", artistId: "10000000-0000-4000-8000-000000000001" } });
+    mocks.exchangeCode.mockResolvedValue({ idToken: "id-token", accessToken: "at", tokenType: "Bearer", expiresIn: 3600 });
+    mocks.validateIdToken.mockResolvedValue({ sub: "sub-123", email: "new@gmail.com", emailVerified: true, nonce: "nonce" });
+    mocks.toIdentity.mockReturnValue({ provider: "google", providerAccountId: "sub-123", email: "new@gmail.com", emailVerified: true });
+    mocks.resolveOrCreateOAuthUser.mockResolvedValue({ id: "u", username: "nueva", email: "new@gmail.com", displayName: null, onboardedAt: null });
+
+    const response = await callbackGet(new NextRequest("http://localhost:3000/api/auth/google/callback?code=auth-code&state=valid-state"));
+
+    expect(response.headers.get("location")).toMatch(/\/en\/users\/nueva\/artist\/10000000-0000-4000-8000-000000000001\?valorar=1$/);
   });
 
   it("la intención no se lee del query del callback", async () => {

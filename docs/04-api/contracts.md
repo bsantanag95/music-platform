@@ -2278,6 +2278,9 @@ Todas con sesión. `LAMINA_NOT_FOUND` (404) si no existe o no es propia. Hacer p
 `DISCOGRAPHY_NOT_FOUND` (404) si no es propia o aún no llega a 3 discos valorados; `PROFILE_PRIVATE` (409) con el perfil privado. `POST` exige que no haya
 suspensión social. La imagen es `/api/share/image/discography/<ref>`, en `post`, `link` y `story`.
 
+Las páginas de registro y login y `GET /api/auth/google/start` aceptan `lamina=<uuid>` o `discografia=<uuid>` (ADR 0052 y 0054); con las dos manda `lamina`.
+El destino lo arma el servidor con el usuario autenticado.
+
 `PUT /api/me/discography/<artistId>` con `{ sections, view }` → `{ preference }` guarda qué muestra la discografía propia (`add-discography-lamina-phase2`):
 `sections` solo `live` y `compilations`, `view` `disc` o `song`. No pide marca ni la comprobación social. `VALIDATION_ERROR` (400) con otro valor;
 `ARTIST_NOT_FOUND` (404) si el artista no existe. La Lámina de un álbum usa la referencia `<userId>.<artistId>.<albumId>` en las mismas rutas de imagen y de lo propio.

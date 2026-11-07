@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { ReactNode, SubmitEventHandler, SyntheticEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { hardNavigate } from "@/lib/hard-navigate";
-import { laminaBuildHref } from "@/lib/laminas/intent";
+import { buildIntentDestination, type BuildIntent } from "@/lib/laminas/intent";
 import { apiFetch, ApiError } from "@/lib/api/client";
 import {
   AuthResponseSchema,
@@ -40,7 +40,7 @@ export function AuthForm({
   passwordAside,
   remember: rememberProp,
   onRememberChange,
-  laminaId = null,
+  intent = null,
 }: {
   mode: "login" | "register";
   // Enlace junto a la etiqueta de contraseña (login: "¿Olvidaste tu contraseña?").
@@ -49,8 +49,8 @@ export function AuthForm({
   // cuando el botón de Google debe reflejarla (LoginPanel); sola, vive aquí.
   remember?: boolean;
   onRememberChange?: (remember: boolean) => void;
-  // Intención "Arma la tuya" (ADR 0052): ya validada por la página, y manda sobre el destino habitual.
-  laminaId?: string | null;
+  // Intención "Arma la tuya" (ADR 0052 y 0054): ya validada por la página, y manda sobre el destino habitual.
+  intent?: BuildIntent | null;
 }) {
   const t = useTranslations("auth");
   const tErrors = useTranslations("errors");
@@ -121,7 +121,7 @@ export function AuthForm({
         headers: { "content-type": "application/json" },
         body: JSON.stringify(parsed.data),
       });
-      const destination = laminaId ? laminaBuildHref(laminaId) : mode === "register" ? "/welcome" : "/";
+      const destination = intent ? buildIntentDestination(intent, user.username) : mode === "register" ? "/welcome" : "/";
       const preferred = mode === "login" ? user.locale : null;
       // Navegación completa: el Header (en el layout) tiene que renderizarse ya con la sesión.
       // Se mantiene `pending` hasta que el navegador cambie de página.

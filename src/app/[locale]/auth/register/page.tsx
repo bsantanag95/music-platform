@@ -5,18 +5,19 @@ import { AuthForm } from "@/components/auth/AuthForm";
 import { SocialSignIn } from "@/components/auth/SocialSignIn";
 import { resolveSession } from "@/services/auth/sessions";
 import { withClientMessages } from "@/i18n/client-messages";
-import { laminaAuthHref, laminaBuildHref, parseLaminaIntent } from "@/lib/laminas/intent";
+import { buildIntentAuthHref, buildIntentDestination, parseBuildIntent } from "@/lib/laminas/intent";
 
 async function RegisterPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams?: Promise<{ lamina?: string }>;
+  searchParams?: Promise<{ lamina?: string; discografia?: string }>;
 }) {
   const { locale } = await params;
-  const laminaId = parseLaminaIntent((await searchParams)?.lamina);
-  if (await resolveSession()) redirect({ href: laminaId ? laminaBuildHref(laminaId) : "/", locale });
+  const intent = parseBuildIntent((await searchParams) ?? {});
+  const session = await resolveSession();
+  if (session) redirect({ href: intent ? buildIntentDestination(intent, session.user.username) : "/", locale });
   const t = await getTranslations("auth");
   return (
     <main className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center gap-8 px-4 py-12">
@@ -29,14 +30,14 @@ async function RegisterPage({
           locale={locale}
           label={t("continueWithGoogle")}
           separator={t("orSeparator")}
-          laminaId={laminaId}
+          intent={intent}
         />
-        <AuthForm mode="register" laminaId={laminaId} />
+        <AuthForm mode="register" intent={intent} />
       </div>
       <p className="border-t border-ink-border pt-6 font-data text-sm text-paper-muted">
         {t("hasAccount")}{" "}
         <Link
-          href={laminaAuthHref("/auth/login", laminaId)}
+          href={buildIntentAuthHref("/auth/login", intent)}
           className="text-accent underline-offset-4 transition-colors duration-150 hover:text-accent-hover hover:underline"
         >
           {t("login")}

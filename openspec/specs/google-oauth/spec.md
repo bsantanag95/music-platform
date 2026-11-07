@@ -142,8 +142,9 @@ locale validado y persistido en el estado del flujo (salvo que la cuenta tenga u
 guardado, que prevalece; ver `account-preferences`), y SHALL decidirse según el estado de
 onboarding del usuario: si `onboarded_at` es nula SHALL redirigir a `/<locale>/welcome`; en
 caso contrario SHALL redirigir a `/<locale>/search` de forma fija. Si el estado del flujo guarda una
-intención de Lámina (ver "Acceso desde login y registro"), SHALL redirigir a
-`/<locale>/me/laminas?desde=<id>` en ambos casos: el identificador sale del estado guardado y la ruta
+intención (ver "Acceso desde login y registro"), SHALL redirigir en ambos casos a su destino:
+`/<locale>/me/laminas?desde=<id>` para una Lámina y `/<locale>/users/<usuario>/artist/<id>?valorar=1`
+para una discografía, con el usuario autenticado. El identificador sale del estado guardado y la ruta
 es fija. Las intenciones de vincular una
 cuenta de Google y de confirmar la identidad (ver "Intenciones del flujo con retorno fijo") SHALL
 redirigir siempre a `/<locale>/me/settings/account`, un destino fijo que no depende de ningún
@@ -177,6 +178,10 @@ parámetro del cliente.
 - **WHEN** una persona agrega `lamina=<id>` a la URL del callback
 - **THEN** la redirección ignora ese parámetro
 
+#### Scenario: Retorno con intención de discografía
+- **WHEN** el flujo con `login` y una intención de discografía completa con éxito
+- **THEN** el navegador es redirigido a la discografía de ese artista del usuario autenticado, en el modo para valorar
+
 ### Requirement: No almacenamiento de tokens OAuth
 El flujo SHALL NOT persistir access tokens ni refresh tokens de Google. Los secretos y
 credenciales del proveedor SHALL vivir únicamente en variables de entorno del servidor y
@@ -192,10 +197,10 @@ Las páginas de login y registro SHALL ofrecer un botón "Continuar con Google" 
 estados localizados para cancelación, error del flujo, email no verificado y email ya existente
 como cuenta local. En el login el botón SHALL reflejar la casilla "Mantener la sesión iniciada en
 este dispositivo" (ver `keep-signed-in`): con la casilla desmarcada SHALL navegar con `remember=0`.
-Si la página recibió una intención de Lámina (ver `top-laminas`), el botón SHALL navegar con
-`lamina=<id>`. `GET /api/auth/google/start` SHALL guardarla en el estado del flujo solo si es un
-identificador válido y la intención del flujo es `login`; cualquier otro valor SHALL descartarse sin
-interrumpir el flujo.
+Si la página recibió una intención cerrada (ver `top-laminas` y `discography-laminas`), el botón SHALL
+navegar con `lamina=<id>` o `discografia=<id>`. `GET /api/auth/google/start` SHALL guardarla en el estado
+del flujo solo si es un identificador válido y la intención del flujo es `login`; si llegan las dos, SHALL
+quedarse con la de Lámina, y cualquier otro valor SHALL descartarse sin interrumpir el flujo.
 El flujo OAuth (estado, PKCE, intercambio del código y validación del token) SHALL permanecer en el
 servidor; el botón solo compone la URL de inicio.
 
@@ -226,6 +231,10 @@ servidor; el botón solo compone la URL de inicio.
 #### Scenario: Intención de cuenta
 - **WHEN** el flujo con intención `link` o `reauth` recibe `lamina`
 - **THEN** el valor se ignora y el retorno sigue siendo a Ajustes
+
+#### Scenario: Botón con intención de discografía
+- **WHEN** una persona abre el registro con `discografia=<id>`
+- **THEN** el botón "Continuar con Google" enlaza al inicio del flujo con esa intención
 
 ### Requirement: Rate limiting del flujo OAuth
 `GET /api/auth/google/start` y `GET /api/auth/google/callback` SHALL aplicar el limitador en

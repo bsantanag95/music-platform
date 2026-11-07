@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { createHash, randomBytes } from "node:crypto";
 import { routing } from "@/i18n/routing";
-import { parseLaminaIntent } from "@/lib/laminas/intent";
+import { normalizeBuildIntent, parseLaminaIntent, type BuildIntent } from "@/lib/laminas/intent";
 
 export const OAUTH_STATE_COOKIE = "oauth_state";
 export const OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
@@ -33,7 +33,9 @@ export interface OAuthFlowState {
   userId?: string;
   /** Mantener la sesión en el dispositivo (change add-keep-signed-in); por defecto sí. */
   remember: boolean;
-  /** Intención "Arma la tuya" (ADR 0052): solo en un flujo `login`; el callback la lee de aquí, nunca de su query. */
+  /** Intención "Arma la tuya" (ADR 0052 y 0054): solo en un flujo `login`; el callback la lee de aquí, nunca de su query. */
+  buildIntent?: BuildIntent;
+  /** Campo anterior a ADR 0054: una cookie en curso al desplegar todavía puede traerlo. */
   laminaId?: string;
 }
 
@@ -64,7 +66,7 @@ export function generateOAuthFlowState(
   locale?: string,
   account?: { intent: OAuthIntent; userId: string },
   remember = true,
-  laminaId: string | null = null,
+  buildIntent: BuildIntent | null = null,
 ): OAuthFlowState {
   const state = generateState();
   const nonce = generateNonce();
@@ -79,7 +81,7 @@ export function generateOAuthFlowState(
     intent: account?.intent ?? "login",
     remember,
     ...(account ? { userId: account.userId } : {}),
-    ...(laminaId && !account ? { laminaId } : {}),
+    ...(buildIntent && !account ? { buildIntent } : {}),
   };
 }
 
@@ -93,6 +95,13 @@ export async function setOAuthFlowCookies(flowState: OAuthFlowState): Promise<vo
   };
   const store = await cookies();
   store.set(OAUTH_STATE_COOKIE, JSON.stringify(flowState), cookieOpts);
+}
+
+function legacyOrCurrentIntent(parsed: OAuthFlowState): BuildIntent | null {
+  const current = normalizeBuildIntent(parsed.buildIntent);
+  if (current) return current;
+  const legacy = parseLaminaIntent(parsed.laminaId);
+  return legacy ? { kind: "lamina", id: legacy } : null;
 }
 
 export async function consumeOAuthFlowCookies(): Promise<OAuthFlowState | null> {
@@ -116,7 +125,8 @@ export async function consumeOAuthFlowCookies(): Promise<OAuthFlowState | null> 
       locale: resolveLocale(parsed.locale),
       intent: resolveIntent(parsed.intent),
       remember: parsed.remember !== false,
-      laminaId: parseLaminaIntent(parsed.laminaId) ?? undefined,
+      buildIntent: legacyOrCurrentIntent(parsed) ?? undefined,
+      laminaId: undefined,
     };
   } catch {
     return null;

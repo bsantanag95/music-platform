@@ -16,8 +16,8 @@ una entrada de diario, sin favorito ni rating) — con aviso de audiencia y un r
 Cada usuario SHALL tener una marca `onboarded_at` (fecha, o nula si está pendiente). Al
 **completar o saltar** el flujo de `/welcome`, el sistema SHALL fijar `onboarded_at`.
 Mientras `onboarded_at` sea nula, la redirección posterior al alta SHALL llevar a
-`/welcome`, salvo que la persona llegue con una intención de Lámina (ver `top-laminas`): en ese caso
-SHALL ir a armarla y `onboarded_at` SHALL seguir nula, de modo que Inicio siga ofreciendo la
+`/welcome`, salvo que la persona llegue con una intención de Lámina o de discografía (ver `top-laminas` y
+`discography-laminas`): en ese caso SHALL ir a su destino y `onboarded_at` SHALL seguir nula, de modo que Inicio siga ofreciendo la
 bienvenida. Una vez fijada, `/welcome` SHALL redirigir a Inicio y el alta ya no SHALL
 desviar hacia el onboarding. Los usuarios que ya existían cuando se introduce esta
 capacidad SHALL considerarse onboardeados (no ven `/welcome`).
@@ -41,6 +41,11 @@ capacidad SHALL considerarse onboardeados (no ven `/welcome`).
 
 - **WHEN** un usuario creado antes de esta capacidad inicia sesión
 - **THEN** no es enviado a `/welcome` en ningún momento
+
+#### Scenario: Registro desde una discografía
+
+- **WHEN** un usuario se registra con una intención de discografía
+- **THEN** aterriza en su discografía de ese artista, en el modo para valorar, y su `onboarded_at` sigue nula
 
 ### Requirement: Puerta 2 — registrar lo que estás escuchando
 

@@ -4,6 +4,8 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { DiscographyCurve } from "@/components/laminas/DiscographyCurve";
 import { DiscographySettings } from "@/components/laminas/DiscographySettings";
+import { LaminaCta } from "@/components/laminas/LaminaCta";
+import { RateInline } from "@/components/laminas/RateInline";
 import { ScoreBadge } from "@/components/laminas/ScoreBadge";
 import { ProgressBar } from "@/components/progress/ProgressBar";
 import { OwnShareButton } from "@/components/share/OwnShareSheet";
@@ -12,6 +14,7 @@ import { Link } from "@/i18n/navigation";
 import { withClientMessages } from "@/i18n/client-messages";
 import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 import { DISCOGRAPHY_ALBUM_MIN_SONGS, effectiveView, type DiscographyView } from "@/lib/laminas/discography";
+import { discographyBuildHref } from "@/lib/laminas/intent";
 import { scaleScore } from "@/lib/share/score-scale";
 import { isValidUuid } from "@/lib/validation";
 import { resolveSession } from "@/services/auth/sessions";
@@ -24,7 +27,7 @@ import { discographyRef, discographyRefFor } from "@/services/share/targets/disc
 
 interface PageProps {
   params: Promise<{ username: string; id: string }>;
-  searchParams?: Promise<{ vista?: string; disco?: string }>;
+  searchParams?: Promise<{ vista?: string; disco?: string; valorar?: string }>;
 }
 
 const VIEW_PARAM: Record<string, DiscographyView> = { disco: "disc", canciones: "song" };
@@ -46,7 +49,7 @@ function ShareButtonFor({ lamina, refId }: { lamina: DiscographyLamina; refId: s
 
 async function UserDiscographyPage({ params, searchParams }: PageProps) {
   const { username, id } = await params;
-  const { vista, disco } = (await searchParams) ?? {};
+  const { vista, disco, valorar } = (await searchParams) ?? {};
   const session = await resolveSession();
   const viewer = session?.user.id ?? null;
   const t = await getTranslations("laminas.discography");
@@ -97,7 +100,7 @@ async function UserDiscographyPage({ params, searchParams }: PageProps) {
         )}
         <ol className="flex flex-col divide-y divide-ink-border rounded border border-ink-border">
           {disc.tracks.map((track) => (
-            <li key={track.number} className="flex items-center gap-3 px-3 py-2">
+            <li key={track.number} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2">
               <span className="w-6 text-right font-data text-xs text-paper-muted">{track.number}</span>
               <Link
                 href={songHref(lamina.artist.name, track.title, track.recordingId)}
@@ -105,7 +108,15 @@ async function UserDiscographyPage({ params, searchParams }: PageProps) {
               >
                 {track.title}
               </Link>
-              {track.score ? <ScoreBadge score={track.score} /> : <span className="font-data text-xs text-paper-muted">{t("grid.empty")}</span>}
+              {track.score ? (
+                <ScoreBadge score={track.score} />
+              ) : lamina.isOwner ? (
+                <div className="basis-full pl-9">
+                  <RateInline target="recording" id={track.recordingId} title={track.title} />
+                </div>
+              ) : (
+                <span className="font-data text-xs text-paper-muted">{t("grid.empty")}</span>
+              )}
             </li>
           ))}
         </ol>
@@ -120,6 +131,8 @@ async function UserDiscographyPage({ params, searchParams }: PageProps) {
   const view = requested ? effectiveView(requested, lamina.available) : lamina.view;
   const { progress } = lamina;
   const longest = Math.max(0, ...lamina.songDiscs.map((disc) => disc.tracks.length));
+  const unrated = lamina.ownerDiscs.filter((disc) => !disc.score);
+  const rating = lamina.isOwner && valorar === "1";
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-12">
@@ -143,7 +156,50 @@ async function UserDiscographyPage({ params, searchParams }: PageProps) {
         )}
       </header>
 
-      {lamina.available.disc && lamina.available.song ? (
+      {rating ? (
+        <section className="flex flex-col gap-3">
+          <header className="flex flex-wrap items-end justify-between gap-2">
+            <div className="flex flex-col gap-1">
+              <h2 className="font-display text-lg text-paper">{t("rate.title")}</h2>
+              <p className="font-body text-sm text-paper-muted">{t("rate.description")}</p>
+            </div>
+            <Link href={base} className="font-data text-xs text-amber hover:underline">
+              {t("rate.done")}
+            </Link>
+          </header>
+          {unrated.length === 0 ? (
+            <p className="font-body text-sm text-paper-muted">{t("rate.none")}</p>
+          ) : (
+            <ul className="flex flex-col divide-y divide-ink-border rounded border border-ink-border">
+              {unrated.map((disc) => (
+                <li key={disc.id} className="flex flex-col gap-2 px-3 py-3">
+                  <div className="flex items-center gap-3">
+                    <CoverThumb cover={disc.coverThumbUrl} label="" className="size-12 shrink-0 rounded" />
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate font-display text-sm text-paper">{disc.title}</span>
+                      <span className="font-data text-xs text-paper-muted">
+                        {disc.year ?? t("noYear")} ·{" "}
+                        <Link href={`${base}?disco=${disc.id}`} className="hover:text-amber">
+                          {t("rate.songs")}
+                        </Link>
+                      </span>
+                    </span>
+                  </div>
+                  <RateInline target="release-group" id={disc.id} title={disc.title} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : null}
+
+      {!rating && lamina.isOwner && unrated.length > 0 ? (
+        <Link href={`${base}?valorar=1`} className="self-start rounded border border-amber px-3 py-1.5 font-display text-sm text-amber transition-colors hover:bg-amber hover:text-ink">
+          {t("rateMissing", { count: unrated.length })}
+        </Link>
+      ) : null}
+
+      {rating ? null : lamina.available.disc && lamina.available.song ? (
         <nav aria-label={t("views.label")} className="flex gap-1 self-start rounded border border-ink-border p-0.5">
           {(["disc", "song"] as const).map((option) => (
             <Link
@@ -158,9 +214,9 @@ async function UserDiscographyPage({ params, searchParams }: PageProps) {
         </nav>
       ) : null}
 
-      {lamina.isOwner ? <DiscographySettings artistId={lamina.artist.id} initial={lamina.preference} /> : null}
+      {lamina.isOwner && !rating ? <DiscographySettings artistId={lamina.artist.id} initial={lamina.preference} /> : null}
 
-      {lamina.missing > 0 ? (
+      {rating ? null : lamina.missing > 0 ? (
         <p className="font-body text-sm text-paper-muted">{t("missing", { count: lamina.missing })}</p>
       ) : view === "song" ? (
         <div className="overflow-x-auto">
@@ -232,6 +288,14 @@ async function UserDiscographyPage({ params, searchParams }: PageProps) {
             ))}
           </ol>
         </>
+      )}
+      {lamina.isOwner ? null : (
+        <LaminaCta
+          intent={{ kind: "discography", artistId: lamina.artist.id }}
+          signedInHref={session ? discographyBuildHref(session.user.username, lamina.artist.id) : null}
+          title={t("cta.title", { artist: lamina.artist.name })}
+          description={t("cta.description")}
+        />
       )}
     </main>
   );

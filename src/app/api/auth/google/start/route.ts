@@ -9,7 +9,7 @@ import {
   resolveLocale,
   setOAuthFlowCookies,
 } from "@/services/auth/oauth-flow";
-import { parseLaminaIntent } from "@/lib/laminas/intent";
+import { parseBuildIntent } from "@/lib/laminas/intent";
 import { resolveSession } from "@/services/auth/sessions";
 import { consumeAuthAttempt, getAuthClientIp } from "@/services/auth/rate-limit";
 
@@ -49,7 +49,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   const remember = url.searchParams.get("remember") !== "0";
 
   const adapter = new GoogleOAuthAdapter();
-  const flowState = generateOAuthFlowState(locale, account, remember, parseLaminaIntent(url.searchParams.get("lamina")));
+  const buildIntent = parseBuildIntent({ lamina: url.searchParams.get("lamina"), discografia: url.searchParams.get("discografia") });
+  const flowState = generateOAuthFlowState(locale, account, remember, buildIntent);
   await setOAuthFlowCookies(flowState);
 
   const authUrl = adapter.buildAuthUrl({

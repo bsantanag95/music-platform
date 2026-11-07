@@ -76,6 +76,8 @@ export interface DiscographyLamina {
   artist: { id: string; name: string };
   discs: DiscographyDisc[];
   songDiscs: DiscographySongDisc[];
+  /** Todos los discos de las secciones mostradas, también sin valorar: solo para el dueño, que valora lo que falta. */
+  ownerDiscs: DiscographySongDisc[];
   available: Record<DiscographyView, boolean>;
   preference: DiscographyPreference;
   /** La vista del dueño, o la otra si la suya no está disponible. */
@@ -165,7 +167,7 @@ async function readTracks(ownerId: string, discIds: string[]): Promise<Map<strin
 async function readDiscs(ownerId: string, artistId: string, sections: readonly DiscographyExtraSection[]) {
   const shown = new Set<DiscographySection>(["main", ...sections]);
   const rows = (await readArtistDiscography(artistId)).filter((row) => shown.has(sectionOf(row)));
-  if (rows.length === 0) return { discs: [], songDiscs: [] };
+  if (rows.length === 0) return { discs: [], songDiscs: [], allDiscs: [] };
   const ids = rows.map((row) => row.id);
   const [ratings, tracks] = await Promise.all([
     db
@@ -176,18 +178,21 @@ async function readDiscs(ownerId: string, artistId: string, sections: readonly D
   ]);
   const scores = new Map(ratings.map((row) => [row.id, { stars: Number(row.stars), detailedScore: row.detailedScore }]));
 
-  const songDiscs: DiscographySongDisc[] = rows
-    .flatMap((row) => {
-      const score = scores.get(row.id) ?? null;
-      const discTracks = tracks.get(row.id) ?? [];
-      if (!score && !discTracks.some((track) => track.score)) return [];
-      return [{ id: row.id, title: row.title, year: row.firstReleaseYear, coverThumbUrl: row.coverThumbUrl, score, tracks: discTracks }];
-    })
+  const allDiscs: DiscographySongDisc[] = rows
+    .map((row) => ({
+      id: row.id,
+      title: row.title,
+      year: row.firstReleaseYear,
+      coverThumbUrl: row.coverThumbUrl,
+      score: scores.get(row.id) ?? null,
+      tracks: tracks.get(row.id) ?? [],
+    }))
     .sort(compareByYear);
+  const songDiscs = allDiscs.filter((disc) => disc.score || disc.tracks.some((track) => track.score));
   const discs: DiscographyDisc[] = songDiscs.flatMap((disc) =>
     disc.score ? [{ id: disc.id, title: disc.title, year: disc.year, coverThumbUrl: disc.coverThumbUrl, ...disc.score }] : [],
   );
-  return { discs, songDiscs };
+  return { discs, songDiscs, allDiscs };
 }
 
 async function readProgress(ownerId: string, artistId: string, ratedCount: number): Promise<DiscographyProgress> {
@@ -213,12 +218,13 @@ async function readDiscography(ownerId: string, artistId: string) {
   const [row] = await db.select({ id: artist.id, name: artist.name }).from(artist).where(eq(artist.id, artistId)).limit(1);
   if (!row) return null;
   const preference = await readDiscographyPreference(ownerId, artistId);
-  const { discs, songDiscs } = await readDiscs(ownerId, artistId, preference.sections);
+  const { discs, songDiscs, allDiscs } = await readDiscs(ownerId, artistId, preference.sections);
   const available = { disc: discs.length >= DISCOGRAPHY_MIN_DISCS, song: songViewAvailable(songDiscs) };
   return {
     artist: row,
     discs,
     songDiscs,
+    allDiscs,
     preference,
     available,
     view: effectiveView(preference.view, available),
@@ -247,9 +253,12 @@ export async function getDiscographyLamina(username: string, artistId: string, v
   const discography = await readDiscography(profile.id, artistId);
   if (!discography) return null;
   const exists = discography.available.disc || discography.available.song;
+  // Para el dueño existe siempre, también sin valoraciones: es donde valora lo que falta.
   if (!exists && !isOwner) return null;
+  const { allDiscs, ...rest } = discography;
   return {
-    ...discography,
+    ...rest,
+    ownerDiscs: isOwner ? allDiscs : [],
     owner: { id: profile.id, username: profile.username, displayName: profile.displayName },
     missing: exists ? 0 : DISCOGRAPHY_MIN_DISCS - discography.discs.length,
     isOwner,
@@ -264,7 +273,7 @@ export interface DiscographyAlbum {
   missing: number;
 }
 
-/** La Lámina de un álbum: un disco de la discografía mostrada, con las mismas reglas de quién mira. */
+/** La Lámina de un álbum: un disco de la discografía mostrada, con las mismas reglas de quién mira. El dueño la ve siempre, para valorar. */
 export async function getDiscographyAlbum(
   username: string,
   artistId: string,
@@ -273,8 +282,9 @@ export async function getDiscographyAlbum(
 ): Promise<DiscographyAlbum | null> {
   if (!isValidUuid(albumId)) return null;
   const lamina = await getDiscographyLamina(username, artistId, viewerId);
-  const disc = lamina?.songDiscs.find((candidate) => candidate.id === albumId);
-  if (!lamina || !disc || lamina.missing > 0) return null;
+  if (!lamina) return null;
+  const disc = (lamina.isOwner ? lamina.ownerDiscs : lamina.songDiscs).find((candidate) => candidate.id === albumId);
+  if (!disc || (lamina.missing > 0 && !lamina.isOwner)) return null;
   const rated = disc.tracks.filter((track) => track.score).length;
   const missing = Math.max(DISCOGRAPHY_ALBUM_MIN_SONGS - rated, 0);
   if (missing > 0 && !lamina.isOwner) return null;
