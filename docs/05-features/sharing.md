@@ -525,8 +525,13 @@ Cada cambio parte de este documento y abre con el repaso en detalle de las decis
      valorados, no el catálogo.
    - **`add-tier-list-lamina-phase3`** ✅ implementado — "Arma la tuya" desde la tier list de otra persona (los mismos ítems por tu nota, etiquetas a
      elección, registro dirigido con la intención de Lámina de ADR 0052) y "Armar tier list" en un toque en la discografía propia.
-6. **Siguientes** (§4.4) — "Tu año en discos" (objetivo: antes de diciembre), "Tú vs. otra persona",
-   décadas/géneros, mes en discos, pared de la colección.
+6. **`add-year-in-discs`** ("Tu año en discos", §4.4.1), dividido en tres fases (2026-11-07). Derivado del diario con curaduría, marca por año como la
+   discografía, el año en curso existe siempre ("hasta ahora").
+   - **`add-year-in-discs-phase1`** ✅ implementado — página por mes, cifras, marca por año con la zona del dueño (`0087`), imagen Enlace e Historia en
+     el marco común (cifras y hasta 4 carátulas, ADR 0049), entradas desde el diario y `/me/laminas`.
+   - **`add-year-in-discs-phase2`** — Top 5 del año, ocultar discos, imagen Publicación con el calendario completo (decide sus carátulas).
+   - **`add-year-in-discs-phase3`** — invitación de diciembre y "Arma la tuya".
+7. **Siguientes** (§4.4) — "Tú vs. otra persona", décadas/géneros, mes en discos, pared de la colección.
 
 Documentos a actualizar en cada cambio: `business-rules.md` (visibilidad de lo compartido),
 `domain-model.md` (lámina si se vuelve entidad), `04-api/contracts.md` (rutas de imagen),

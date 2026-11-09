@@ -8,6 +8,8 @@ import { LogListenButton } from "@/components/diary/LogListenButton";
 import { listMyWantToListen } from "@/services/want-to-listen/want-to-listen";
 import { filtersFromSearchParams, toApiFilters } from "@/components/diary/diary-filters";
 import { withClientMessages } from "@/i18n/client-messages";
+import { Link } from "@/i18n/navigation";
+import { currentYearIn, listYearsWithListens } from "@/services/laminas/year";
 
 const RAIL_TO_LOG = 4;
 
@@ -24,11 +26,15 @@ async function DiaryPage({
   // Los filtros de la URL siembran la primera página (D7); los valores
   // inválidos se ignoran en vez de propagar el 400 de la API.
   const initialFilters = filtersFromSearchParams(await searchParams);
-  const [initial, wanted] = await Promise.all([
+  const [initial, wanted, years] = await Promise.all([
     listMyDiary(user.id, 1, 20, { ...toApiFilters(initialFilters), timeZone }),
     // «Para anotar» del riel (D10): los Pendientes más recientes.
     listMyWantToListen(user.id, 1, RAIL_TO_LOG),
+    listYearsWithListens(user.id, timeZone),
   ]);
+  // "Tu año en discos" del año que se mira (openspec: add-year-in-discs-phase1): el del filtro o el actual, si tiene escuchas.
+  const yearInView = initialFilters.year ? Number(initialFilters.year) : currentYearIn(timeZone);
+  const yearHref = years.includes(yearInView) ? `/users/${encodeURIComponent(user.username)}/year/${yearInView}` : null;
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-10 sm:py-12 lg:max-w-6xl">
@@ -38,7 +44,14 @@ async function DiaryPage({
           <h1 className="font-display text-2xl text-paper">{t("title")}</h1>
           <p className="mt-1 font-body text-sm text-paper-muted">{t("subtitle")}</p>
         </div>
-        <LogListenButton />
+        <div className="flex flex-wrap items-center gap-3">
+          {yearHref ? (
+            <Link href={yearHref} className="min-h-9 font-data text-xs text-amber underline-offset-2 hover:underline">
+              {t("yearInDiscs", { year: yearInView })}
+            </Link>
+          ) : null}
+          <LogListenButton />
+        </div>
       </header>
       {/* Desde 1024px, la lista junto a un riel fijo (D10). Por debajo no hay
           riel: la fecha ya está en el filtro y una lista con carga continua no

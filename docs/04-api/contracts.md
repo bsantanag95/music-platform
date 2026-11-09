@@ -2323,8 +2323,13 @@ La hoja los pide al abrirse, para que un menú no cueste consultas. `SHARE_TARGE
 
 ### `GET|POST|DELETE /api/me/share/[kind]/[ref]?locale=`
 
-Compartir lo propio, con sesión. `kind` es `rating`, `listen` o `top`. Lo ajeno o inexistente responde `404` (`RATING_NOT_FOUND`,
-`LISTEN_ENTRY_NOT_FOUND`), igual que una valoración o escucha de un artista.
+Compartir lo propio, con sesión. `kind` es `rating`, `listen`, `top`, `discography`, `tier` o `year`. Lo ajeno o inexistente responde `404`
+(`RATING_NOT_FOUND`, `LISTEN_ENTRY_NOT_FOUND`, `LAMINA_NOT_FOUND`, `DISCOGRAPHY_NOT_FOUND`, `YEAR_NOT_FOUND`), igual que una valoración o escucha de un
+artista.
+
+**Tu año en discos** (`add-year-in-discs-phase1`): `kind = year` con `ref` = `<userId>.<año>` (2000 a 2100). `POST` crea la marca del año y guarda la
+zona horaria del dueño (cookie `tz`; UTC si no hay); repetirlo desde otra zona la actualiza. `DELETE` quita la marca. Un año sin escuchas responde
+`YEAR_NOT_FOUND`. La página es `/users/<usuario>/year/<año>` y no tiene API de lectura propia.
 
 - `GET`: `{ state, canUnshare, hasNote, payload }`. `state` es `public`, `needs_gesture` o `private_profile`. `payload` son los
   datos de la hoja; fuera de `public`, su imagen es la personal.

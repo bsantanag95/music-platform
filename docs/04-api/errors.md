@@ -49,6 +49,7 @@ además del `error` legible:
 | `PROFILE_PRIVATE` | 409 | Compartir: con el perfil privado no se puede hacer pública una valoración o escucha, porque nadie sin cuenta podría abrir el enlace. |
 | `LAMINA_NOT_FOUND` | 404 | La Lámina no existe, no es propia o quien mira no puede verla. |
 | `DISCOGRAPHY_NOT_FOUND` | 404 | La discografía no existe todavía o no es propia. |
+| `YEAR_NOT_FOUND` | 404 | Compartir lo propio: el año en discos no es propio, no es válido o no tiene escuchas. |
 | `SHARE_TARGET_NOT_FOUND` | 404 | Compartir: el objeto no existe o un anónimo no puede verlo. |
 | `SOCIAL_SUSPENSION_ACTIVE` | 403 | La cuenta tiene una restricción social temporal activa y la mutación produciría nueva actividad pública o social. |
 | `GENRE_NOT_FOUND` | 404 | El género (slug) no existe en la taxonomía. Votos de género de un álbum (`add-genre-votes`). |

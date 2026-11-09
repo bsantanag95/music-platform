@@ -245,5 +245,22 @@
       }
     },
     "fromDiscography": "Build tier list"
+  },
+  "year": {
+    "kicker": "Your year in albums",
+    "title": "{year} in albums",
+    "titleInProgress": "{year} in albums, so far",
+    "stats": {
+      "listens": "Listens",
+      "discs": "Albums",
+      "newDiscs": "New albums",
+      "artistsDiscovered": "Artists discovered"
+    },
+    "statsNote": "From the diary. A new album is one with a first listen that year; an artist discovered, one listened to for the first time that year.",
+    "emptyMonth": "No albums this month.",
+    "monthDiscs": "{month}: {count, plural, one {# album} other {# albums}}",
+    "sectionTitle": "Your years",
+    "sectionDescription": "Your year in albums, month by month, from your diary.",
+    "inProgressShort": "{year}, so far"
   }
 }

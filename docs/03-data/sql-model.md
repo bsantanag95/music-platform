@@ -1248,6 +1248,13 @@ la conserva. Índice por `rating_id`. Entra en la exportación de datos como `sh
 Una fila abre a quien pueda ver el perfil la página y la imagen de lo que esa persona valoró de un artista. Se mantiene al día con sus notas y no toca
 `rating`. PK `(user_id, artist_id)`, `ON DELETE CASCADE` en ambas. Índice por `artist_id`. Entra en la exportación de datos como `sharedDiscographies`.
 
+## `year_share` (migración `0087`, openspec `add-year-in-discs-phase1`)
+
+Una fila abre "Tu año en discos" de una persona en un año (sus discos y sus cifras, nunca las escuchas) a quien pueda ver su perfil. No cambia la audiencia
+de ninguna escucha. PK `(user_id, year)`, `ON DELETE CASCADE` desde `app_user`; `CHECK` `year` entre 2000 y 2100 y `time_zone` de 1 a 64 caracteres.
+`time_zone` es la zona IANA del dueño al compartir: con ella se cuentan los meses para cualquier otra persona (no hay una zona guardada por cuenta).
+Entra en la exportación de datos como `sharedYears`.
+
 ## `discography_preference` (migración `0085`, openspec `add-discography-lamina-phase2`)
 
 Qué muestra la discografía de una persona con un artista: `sections` (`text[]`, solo `live` y `compilations`, sumadas a la principal) y `default_view`
@@ -1255,7 +1262,7 @@ Qué muestra la discografía de una persona con un artista: `sections` (`text[]`
 Aparte de `discography_share`: se elige también sin compartir y quitar la marca no la borra. Sin fila, solo la sección principal y la vista Por disco.
 Entra en la exportación de datos como `discographyPreferences`.
 
-## `share_event` (migraciones `0079` a `0086`, openspec `add-share-foundation` y `add-share-user-actions`)
+## `share_event` (migraciones `0079` a `0087`, openspec `add-share-foundation` y `add-share-user-actions`)
 
 Un registro por cada uso de la hoja de compartir (`docs/05-features/sharing.md`, D13): qué se compartió
 (`target_kind` + `target_ref`), por qué canal (`channel`) y en qué formato (`format`), con `created_at`.
