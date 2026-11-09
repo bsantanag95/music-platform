@@ -1892,6 +1892,46 @@ export const yearShare = pgTable(
 
 export type YearShareRow = typeof yearShare.$inferSelect;
 
+/**
+ * Top 5 elegido de un año en discos (migración 0088, openspec: add-year-in-discs-phase2). Sin filas, el Top 5 se prellena en cada lectura. Que cada disco
+ * se haya escuchado ese año y no esté oculto lo aplica el servicio al guardar; la lectura descarta lo que dejó de cumplirlo.
+ */
+export const yearTop = pgTable(
+  "year_top",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    year: smallint("year").notNull(),
+    position: smallint("position").notNull(),
+    releaseGroupId: uuid("release_group_id")
+      .notNull()
+      .references(() => releaseGroup.id, { onDelete: "cascade" }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.year, t.position] }),
+    unique("uq_year_top_disc").on(t.userId, t.year, t.releaseGroupId),
+    check("chk_year_top_year", sql`${t.year} BETWEEN 2000 AND 2100`),
+    check("chk_year_top_position", sql`${t.position} BETWEEN 1 AND 5`),
+  ],
+);
+
+/** Discos ocultos de un año en discos (migración 0088): fuera del calendario, el Top 5, la imagen y las cifras. No toca el diario. */
+export const yearHidden = pgTable(
+  "year_hidden",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    year: smallint("year").notNull(),
+    releaseGroupId: uuid("release_group_id")
+      .notNull()
+      .references(() => releaseGroup.id, { onDelete: "cascade" }),
+    hiddenAt: timestamp("hidden_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.year, t.releaseGroupId] }), check("chk_year_hidden_year", sql`${t.year} BETWEEN 2000 AND 2100`)],
+);
+
 // Preferencias del dueño en su discografía (migración 0085, openspec: add-discography-lamina-phase2): secciones que suma a la
 // principal y vista por defecto. Aparte de la marca: se elige también sin compartir. `updated_at` lo mantiene un trigger.
 export const discographyPreference = pgTable(

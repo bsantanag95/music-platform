@@ -529,7 +529,8 @@ Cada cambio parte de este documento y abre con el repaso en detalle de las decis
    discografía, el año en curso existe siempre ("hasta ahora").
    - **`add-year-in-discs-phase1`** ✅ implementado — página por mes, cifras, marca por año con la zona del dueño (`0087`), imagen Enlace e Historia en
      el marco común (cifras y hasta 4 carátulas, ADR 0049), entradas desde el diario y `/me/laminas`.
-   - **`add-year-in-discs-phase2`** — Top 5 del año, ocultar discos, imagen Publicación con el calendario completo (decide sus carátulas).
+   - **`add-year-in-discs-phase2`** ✅ implementado — Top 5 del año prellenado por la nota y editable, ocultar discos (fuera también de las cifras),
+     imagen Publicación e Historia con el Top 5 y los doce meses, hasta 10 carátulas por ADR 0051 (`0088`).
    - **`add-year-in-discs-phase3`** — invitación de diciembre y "Arma la tuya".
 7. **Siguientes** (§4.4) — "Tú vs. otra persona", décadas/géneros, mes en discos, pared de la colección.
 

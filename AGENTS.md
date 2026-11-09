@@ -188,7 +188,10 @@ de cuál de las filas con el mismo título haya en la BD.
 >   DELETE FROM artist WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000f0%';`. Necesita las migraciones `0079` a `0087`. Verifica los `CHECK` de `0087`,
 >   los meses de "Tu año en discos" en la zona horaria (una escucha de fin de mes), el orden por mes, las cifras (disco nuevo, artista descubierto y no), que
 >   canciones y artistas no entran en el calendario, la visibilidad con y sin la marca por año (anónimo, seguidora, perfil privado, bloqueo), la zona guardada en
->   la marca, el gesto y dejar de compartir, la exportación, los eventos con la cuenta y la lectura bajo 100 ms con 1.000 escuchas.
+>   la marca, el gesto y dejar de compartir, la exportación, los eventos con la cuenta y la lectura bajo 100 ms con 1.000 escuchas. Desde
+>   `add-year-in-discs-phase2` (migración `0088`) también verifica el Top 5 (prellenado por nota, guardado y su validación, lo elegido que deja de valer,
+>   volver al automático), ocultar y mostrar (calendario, cifras, Top 5, anónimo, ocultos y notas solo para el dueño, el diario intacto), los `CHECK` de
+>   `0088` y la imagen con hasta 10 carátulas.
 > - `smoke-test-comment-replies.ts` crea un artista y un álbum sintéticos (MBID
 >   `5e0ce000-0000-4000-8000-0000000009b0` / `...09b1`) y usuarios `smoke_reply_*`, y los borra al terminar
 >   (también si falla; el `ON DELETE CASCADE` limpia comentarios, respuestas, likes y bloqueos). Si se

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getLocale, getTimeZone, getTranslations } from "next-intl/server";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
+import { YearHiddenList, YearHideButton, YearTopEditor } from "@/components/laminas/YearCuration";
 import { OwnShareButton } from "@/components/share/OwnShareSheet";
 import { ShareAction } from "@/components/share/ShareAction";
 import { Link } from "@/i18n/navigation";
@@ -69,6 +70,30 @@ async function UserYearPage({ params }: PageProps) {
       </dl>
       <p className="font-data text-xs text-paper-muted">{t("statsNote")}</p>
 
+      {/* Top 5 del año (add-year-in-discs-phase2): el dueño lo elige; los demás lo ven, sin notas. */}
+      {data.top.length > 0 ? (
+        <section className="flex flex-col gap-3">
+          <h2 className="font-display text-lg text-paper">{t("topTitle")}</h2>
+          {data.isOwner ? (
+            <YearTopEditor year={data.year} top={data.top} custom={data.topIsCustom} choices={data.choices} />
+          ) : (
+            <ol className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+              {data.top.map((disc, index) => (
+                <li key={disc.id} className="flex min-w-0 flex-col gap-1">
+                  <Link href={albumHref(disc.artistName, disc.title, disc.id)} className="block aspect-square w-full rounded transition-opacity hover:opacity-80">
+                    <CoverThumb cover={disc.coverThumbUrl} label={disc.title} className="aspect-square w-full rounded" />
+                  </Link>
+                  <span className="flex gap-1.5 font-display text-sm text-paper">
+                    <span className={`font-data ${index === 0 ? "text-amber" : "text-paper-muted"}`}>{index + 1}</span>
+                    <span className="min-w-0 truncate">{disc.title}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+      ) : null}
+
       <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {data.months.map((month) => {
           const name = monthName.format(new Date(Date.UTC(data.year, month.month - 1, 1)));
@@ -80,10 +105,11 @@ async function UserYearPage({ params }: PageProps) {
               ) : (
                 <ul className="flex flex-wrap gap-1.5" aria-label={t("monthDiscs", { month: name, count: month.discs.length })}>
                   {month.discs.map((disc) => (
-                    <li key={disc.id}>
+                    <li key={disc.id} className="relative">
                       <Link href={albumHref(disc.artistName, disc.title, disc.id)} title={disc.artistName ? `${disc.title} · ${disc.artistName}` : disc.title} className="block size-14 rounded transition-opacity hover:opacity-80">
                         <CoverThumb cover={disc.coverThumbUrl} label={disc.title} className="size-14 rounded" />
                       </Link>
+                      {data.isOwner ? <YearHideButton year={data.year} disc={disc} /> : null}
                     </li>
                   ))}
                 </ul>
@@ -92,6 +118,8 @@ async function UserYearPage({ params }: PageProps) {
           );
         })}
       </ol>
+
+      {data.isOwner ? <YearHiddenList year={data.year} hidden={data.hidden} /> : null}
     </main>
   );
 }

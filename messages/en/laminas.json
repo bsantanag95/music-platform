@@ -261,6 +261,24 @@
     "monthDiscs": "{month}: {count, plural, one {# album} other {# albums}}",
     "sectionTitle": "Your years",
     "sectionDescription": "Your year in albums, month by month, from your diary.",
-    "inProgressShort": "{year}, so far"
+    "inProgressShort": "{year}, so far",
+    "topTitle": "My Top 5",
+    "edit": {
+      "moveUp": "Move {title} up",
+      "moveDown": "Move {title} down",
+      "custom": "Chosen by you.",
+      "prefilled": "Built from your best-rated albums of the year. Change it any time.",
+      "change": "Change",
+      "reset": "Back to automatic",
+      "pickLegend": "Choose up to {max} ({count} chosen)",
+      "listens": "{count, plural, one {# listen} other {# listens}}",
+      "save": "Save",
+      "cancel": "Cancel",
+      "failed": "Couldn’t save. Please try again.",
+      "hide": "Hide {title} from the year",
+      "hiddenTitle": "{count, plural, one {# hidden album} other {# hidden albums}}",
+      "hiddenHint": "They don’t appear in your year or count in the figures. Only you see them here; your diary doesn’t change.",
+      "show": "Show"
+    }
   }
 }

@@ -127,7 +127,8 @@
       "listens": "{count, plural, one {# escucha} other {# escuchas}}",
       "discs": "{count, plural, one {# disco} other {# discos}}",
       "newDiscs": "{count, plural, one {# disco nuevo} other {# discos nuevos}}",
-      "artistsDiscovered": "{count, plural, one {# artista descubierto} other {# artistas descubiertos}}"
+      "artistsDiscovered": "{count, plural, one {# artista descubierto} other {# artistas descubiertos}}",
+      "top": "Mi Top 5"
     }
   },
   "commentTitle": "Comentario de {author}",

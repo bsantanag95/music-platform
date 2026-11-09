@@ -38,6 +38,11 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 vi.mock("@/components/catalog/CoverThumb", () => ({ CoverThumb: ({ label }: { label: string }) => <span>{label}</span> }));
 vi.mock("@/components/share/OwnShareSheet", () => ({ OwnShareButton: ({ refId }: { refId: string }) => <button>{`propio:${refId}`}</button> }));
+vi.mock("@/components/laminas/YearCuration", () => ({
+  YearTopEditor: ({ top }: { top: { title: string }[] }) => <div>{`editor:${top.map((disc) => disc.title).join(",")}`}</div>,
+  YearHideButton: ({ disc }: { disc: { title: string } }) => <button>{`ocultar:${disc.title}`}</button>,
+  YearHiddenList: ({ hidden }: { hidden: { title: string }[] }) => <div>{`ocultos:${hidden.length}`}</div>,
+}));
 vi.mock("@/components/share/ShareAction", () => ({ ShareAction: ({ refId }: { refId: string }) => <button>{`publico:${refId}`}</button> }));
 
 import UserYearPage, { generateMetadata } from "./page";
@@ -48,7 +53,10 @@ const data = (over = {}) => ({
   year: 2026,
   months: months(),
   stats: { listens: 14, discs: 2, newDiscs: 1, artistsDiscovered: 1 },
-  topDiscs: [disc(1, 2), disc(2)],
+  top: [disc(1, 2), disc(2)],
+  topIsCustom: false,
+  choices: [],
+  hidden: [],
   owner: { id: "u1", username: "ana", displayName: null },
   isOwner: false,
   shared: true,
@@ -69,7 +77,8 @@ describe("Tu año en discos", () => {
   it("muestra los doce meses, los discos de cada uno y las cifras, sin escuchas", async () => {
     await render();
     expect(screen.getByRole("heading", { level: 1, name: "2026 en discos" })).toBeInTheDocument();
-    expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(12);
+    // Doce meses más "Mi Top 5".
+    expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(13);
     const march = screen.getByRole("list", { name: "marzo: 2 discos" });
     expect(within(march).getAllByRole("link").map((link) => link.getAttribute("title"))).toEqual(["Disco 1 · Banda", "Disco 2 · Banda"]);
     expect(screen.getAllByText("Sin discos este mes.")).toHaveLength(11);
@@ -100,5 +109,18 @@ describe("Tu año en discos", () => {
   it("los metadatos son los del año", async () => {
     await generateMetadata({ params: Promise.resolve({ username: "ana", year: "2026" }) });
     expect(mocks.metadata).toHaveBeenCalledWith("year", "u1.2026", "es", { withTitle: true });
+  });
+
+  it("los demás ven el Top 5 sin controles; el dueño, su editor, ocultar y sus ocultos", async () => {
+    await render();
+    expect(screen.getByRole("heading", { level: 2, name: "Mi Top 5" })).toBeInTheDocument();
+    expect(screen.queryByText(/^editor:/)).toBeNull();
+    expect(screen.queryByRole("button", { name: /^ocultar:/ })).toBeNull();
+    mocks.session.mockResolvedValue({ user: { id: "u1", username: "ana" } });
+    mocks.year.mockResolvedValue(data({ isOwner: true, hidden: [disc(9)] }));
+    await render();
+    expect(screen.getByText("editor:Disco 1,Disco 2")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /^ocultar:/ })).toHaveLength(2);
+    expect(screen.getByText("ocultos:1")).toBeInTheDocument();
   });
 });

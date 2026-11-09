@@ -187,6 +187,6 @@ Gráfico del gusto de una persona pensado para compartir (`docs/05-features/shar
 
 La tier list también es de autor: discos repartidos en seis niveles (S a E, con etiquetas editables y el color de su tramo de la escala de la casa) y una bandeja "Sin escuchar / sin valorar" que solo ve su dueño. Se guarda como una `user_list` con `kind = 'tier'`; el nivel es un dato del ítem. Puede nacer de las valoraciones de una discografía, pero es una foto: no escribe valoraciones ni se mueve con ellas.
 
-"Tu año en discos" también es derivado: se calcula de las escuchas del diario de una persona en un año. Lo único persistente es la marca `YearShare`, por persona y año, que lo abre a quien pueda ver el perfil y guarda la zona horaria con la que se cuentan sus meses.
+"Tu año en discos" también es derivado: se calcula de las escuchas del diario de una persona en un año. Lo único persistente es la marca `YearShare`, por persona y año, que lo abre a quien pueda ver el perfil y guarda la zona horaria con la que se cuentan sus meses, y la curaduría del dueño: su Top 5 elegido (`YearTop`) y los discos que ocultó (`YearHidden`).
 
 La Lámina de discografía es derivada: no se guarda, se calcula de lo que una persona valoró de un artista. Lo único persistente es la marca `DiscographyShare`, por persona y artista, que la abre a quien pueda ver el perfil (ADR 0053). Las preferencias del dueño, `DiscographyPreference`, dicen qué secciones suma y qué vista se comparte.

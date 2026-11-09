@@ -16,6 +16,8 @@ import {
   ratingShare,
   discographyShare,
   yearShare,
+  yearTop,
+  yearHidden,
   discographyPreference,
   recording,
   releaseGroup,
@@ -75,6 +77,9 @@ export interface DataExport {
   discographyPreferences: unknown[];
   /** Años en discos compartidos, con la zona guardada al compartir (0087). */
   sharedYears: unknown[];
+  /** Curaduría de los años en discos (0088): Top 5 elegido y discos ocultos. */
+  yearTops: unknown[];
+  yearHidden: unknown[];
   social: {
     followers: { username: string | null; deactivated: boolean; status: string }[];
     following: { username: string | null; deactivated: boolean; status: string }[];
@@ -135,6 +140,8 @@ export async function buildDataExport(userId: string, now: Date = new Date()): P
     sharedDiscographies,
     discographyPreferences,
     sharedYears,
+    yearTops,
+    yearHiddenRows,
     diaryHighlights,
     followers,
     following,
@@ -216,6 +223,8 @@ export async function buildDataExport(userId: string, now: Date = new Date()): P
     own(db.select().from(discographyShare).where(eq(discographyShare.userId, userId))),
     own(db.select().from(discographyPreference).where(eq(discographyPreference.userId, userId))),
     own(db.select().from(yearShare).where(eq(yearShare.userId, userId))),
+    own(db.select().from(yearTop).where(eq(yearTop.userId, userId))),
+    own(db.select().from(yearHidden).where(eq(yearHidden.userId, userId))),
     own(db.select().from(listenEntryHighlight).where(eq(listenEntryHighlight.userId, userId))),
     // Seguidores, seguidos y bloqueados: solo el usuario público de la otra persona.
     db
@@ -311,6 +320,8 @@ export async function buildDataExport(userId: string, now: Date = new Date()): P
     sharedDiscographies,
     discographyPreferences,
     sharedYears,
+    yearTops,
+    yearHidden: yearHiddenRows,
     social: {
       followers: followers.map((row) => ({ ...person(row), status: row.status })),
       following: following.map((row) => ({ ...person(row), status: row.status })),
