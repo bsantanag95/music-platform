@@ -353,6 +353,11 @@ el mismo umbral que el álbum, aplicado en el read-model (`artist-community.ts`)
   primera escucha del año; el año en curso es "hasta ahora". Lo ve su dueño; la marca de ese año lo abre a quien pueda ver el perfil, sin cambiar la
   audiencia de ninguna escucha, y se puede quitar. Los meses se cuentan en la zona del dueño: la suya al mirarlo, la guardada en la marca para cualquier
   otra persona.
+- El Top 5 del año sale de los discos escuchados ese año: sin elección, los mejor valorados por el dueño (a igual nota, los más escuchados; si faltan, los
+  más escuchados sin nota). El dueño lo puede elegir y ordenar; lo elegido que deja de valer (sin escuchas ese año u oculto) sale y se completa con el
+  prellenado. Las notas solo ordenan: nunca se muestran a otros.
+- Un disco oculto del año desaparece para los demás del calendario, del Top 5, de la imagen y de las cifras (sus escuchas no cuentan). Solo su dueño lo ve,
+  aparte, y lo puede volver a mostrar. Ocultar no toca el diario.
 - Una discografía es una Lámina derivada: los discos de la sección principal de un artista que una persona valoró, desde 3. La ven el dueño y
   sus seguidores. La marca por artista la abre a quien pueda ver el perfil, se mantiene al día con las notas nuevas, es reversible y no vuelve
   públicas esas valoraciones en otro lugar. Su progreso es discreto: nunca "X de Y" (`product_philosophy.md` §6.4.1).

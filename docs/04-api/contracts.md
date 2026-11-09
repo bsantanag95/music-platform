@@ -2331,6 +2331,14 @@ artista.
 zona horaria del dueño (cookie `tz`; UTC si no hay); repetirlo desde otra zona la actualiza. `DELETE` quita la marca. Un año sin escuchas responde
 `YEAR_NOT_FOUND`. La página es `/users/<usuario>/year/<año>` y no tiene API de lectura propia.
 
+**Curaduría del año** (`add-year-in-discs-phase2`), con sesión y sobre el año propio, en la zona del pedido (cookie `tz`):
+
+- `PUT /api/me/year/<año>/top` con `{ releaseGroupIds }` (de 1 a 5, sin repetir) → `204`: guarda el Top 5 elegido, en ese orden. Cada disco debe tener
+  escuchas ese año y no estar oculto (`VALIDATION_ERROR`). `DELETE` → `204`: vuelve al prellenado.
+- `POST /api/me/year/<año>/hidden/<releaseGroupId>` → `204`: oculta el disco del año (`VALIDATION_ERROR` si no tiene escuchas ese año) y lo saca del Top 5
+  elegido. `DELETE` → `204`: lo vuelve a mostrar. No tocan el diario.
+- Un año fuera de 2000 a 2100 responde `YEAR_NOT_FOUND`.
+
 - `GET`: `{ state, canUnshare, hasNote, payload }`. `state` es `public`, `needs_gesture` o `private_profile`. `payload` son los
   datos de la hoja; fuera de `public`, su imagen es la personal.
 - `POST`: hace pública solo esa fila y responde lo mismo que `GET`. Idempotente. `PROFILE_PRIVATE` (409) con el perfil privado y

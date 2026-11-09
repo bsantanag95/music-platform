@@ -7,11 +7,12 @@ import { AuthorNote, CommunityScore, CoverTile, IdentityBadge, LINK_FORMAT, Lami
 import { STORY_FORMAT, STORY_RECORD, STORY_RECORD_COMPACT, StoryFrame, StoryRecord } from "./frame/StoryFrame";
 import { AlbumBars, DiscographyChart, SongGrid } from "./frame/DiscographyFrame";
 import { TierChart } from "./frame/TierFrame";
+import { YearChart } from "./frame/YearFrame";
 import { POST_FORMAT, SQUARE_FORMAT, TopFive, TopGrid, TopTen, type TopCanvas } from "./frame/TopFrame";
 import { loadShareFonts } from "./fonts";
 import { shareAppName, shareTranslator } from "./i18n";
 import { MAX_COVER_SIDE, loadEmbeddedCover, loadEmbeddedImage } from "./images";
-import type { ShareDiscographyAlbumCard, ShareDiscographyCard, ShareImageRef, ShareMedia, ShareTarget, ShareTierCard, ShareTopCard } from "./types";
+import type { ShareDiscographyAlbumCard, ShareDiscographyCard, ShareImageRef, ShareMedia, ShareTarget, ShareTierCard, ShareTopCard, ShareYearCard } from "./types";
 
 // Renderizador único de las imágenes de compartir (spec share-images; design D1). Resuelve las imágenes del
 // medio (en paralelo, cada una con su recuadro tipográfico si falla), arma el marco y devuelve el PNG. Sin
@@ -259,6 +260,27 @@ async function renderDiscography(card: ShareDiscographyCard, canvas: TopCanvas |
   return { element, degraded: isDegraded(embedded) };
 }
 
+/** Año en discos en Publicación e Historia: Top 5, doce meses y cifras. */
+async function renderYear(card: ShareYearCard, canvas: TopCanvas, target: ShareTarget, appName: string, domain: string) {
+  const top = await Promise.all(card.top.map((item) => embed(item.cover)));
+  const months = await Promise.all(card.months.map((month) => (month.disc ? embed(month.disc.cover) : Promise.resolve(null))));
+  const element = (
+    <YearChart
+      canvas={canvas}
+      title={target.card.title}
+      byline={card.byline}
+      credits={target.card.credits}
+      appName={appName}
+      domain={domain}
+      topLabel={card.topLabel}
+      top={card.top.map((item, index) => ({ src: top[index]!.src, title: item.title }))}
+      months={card.months.map((month, index) => ({ label: month.label, disc: month.disc ? { src: months[index]!.src, title: month.disc.title } : null }))}
+      stats={card.stats}
+    />
+  );
+  return { element, degraded: isDegraded([...top, ...months.flatMap((image) => (image ? [image] : []))]) };
+}
+
 /** Tier list: el mismo cuerpo en todos sus formatos, Enlace incluido. */
 async function renderTier(card: ShareTierCard, canvas: TopCanvas | "link", target: ShareTarget, appName: string, domain: string) {
   const embedded = await Promise.all(card.tiers.map((items) => Promise.all(items.map((item) => embed(item.cover)))));
@@ -326,6 +348,8 @@ async function buildElement(
   if (card.discography) return renderDiscography(card.discography, format, target, appName, domain);
   if (card.discographyAlbum) return renderDiscographyAlbum(card.discographyAlbum, format, target, appName, domain);
   if (card.tier) return renderTier(card.tier, format, target, appName, domain);
+  // Enlace sigue en el marco común; Publicación e Historia dibujan el año completo.
+  if (card.year && format !== "link") return renderYear(card.year, format, target, appName, domain);
   if (card.top && format !== "link") return renderTop(card.top, format, target, appName, domain);
   const media = story
     ? await renderStoryMedia(card.media, card.quote ? STORY_RECORD_COMPACT : STORY_RECORD)

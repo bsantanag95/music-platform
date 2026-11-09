@@ -1255,6 +1255,14 @@ de ninguna escucha. PK `(user_id, year)`, `ON DELETE CASCADE` desde `app_user`; 
 `time_zone` es la zona IANA del dueño al compartir: con ella se cuentan los meses para cualquier otra persona (no hay una zona guardada por cuenta).
 Entra en la exportación de datos como `sharedYears`.
 
+## `year_top` y `year_hidden` (migración `0088`, openspec `add-year-in-discs-phase2`)
+
+Curaduría de "Tu año en discos". `year_top` guarda el Top 5 que el dueño eligió para un año: PK `(user_id, year, position)`, único
+`(user_id, year, release_group_id)`, `position` entre 1 y 5; sin filas, el Top 5 se prellena en cada lectura. `year_hidden` guarda los discos ocultos de un
+año: PK `(user_id, year, release_group_id)`. Las dos con `year` entre 2000 y 2100 y `ON DELETE CASCADE` desde `app_user` y `release_group`. Que un disco
+se haya escuchado ese año y no esté oculto es una regla entre tablas: la aplica el servicio al guardar y la lectura descarta lo que dejó de cumplirla. Entran
+en la exportación como `yearTops` y `yearHidden`.
+
 ## `discography_preference` (migración `0085`, openspec `add-discography-lamina-phase2`)
 
 Qué muestra la discografía de una persona con un artista: `sections` (`text[]`, solo `live` y `compilations`, sumadas a la principal) y `default_view`

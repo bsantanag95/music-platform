@@ -82,6 +82,18 @@ export interface ShareTierCard {
   tiers: Array<Array<{ cover: ShareImageRef; title: string; stars: number | null; detailedScore: number | null }>>;
 }
 
+/**
+ * Año en discos (add-year-in-discs-phase2): Top 5, doce meses con su disco más escuchado y cifras. Hasta 10 carátulas distintas (ADR 0051); el resto va con
+ * `url` nula y se dibuja con su título.
+ */
+export interface ShareYearCard {
+  byline: string;
+  topLabel: string;
+  top: Array<{ cover: ShareImageRef; title: string }>;
+  months: Array<{ label: string; disc: { cover: ShareImageRef; title: string } | null }>;
+  stats: string[];
+}
+
 export interface ShareCard {
   kicker: string;
   title: string;
@@ -102,6 +114,7 @@ export interface ShareCard {
   discography?: ShareDiscographyCard;
   discographyAlbum?: ShareDiscographyAlbumCard;
   tier?: ShareTierCard;
+  year?: ShareYearCard;
 }
 
 export interface ShareTarget {

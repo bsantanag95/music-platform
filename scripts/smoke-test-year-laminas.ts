@@ -11,6 +11,8 @@ export {};
 //   DELETE FROM recording WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000f0%';
 //   DELETE FROM artist WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000f0%';
 // (el `ON DELETE CASCADE` limpia escuchas, marcas y eventos de la cuenta). Necesita las migraciones 0079 a 0087.
+// Desde add-year-in-discs-phase2 también verifica el Top 5 (prellenado por nota, guardado y su validación, envejecimiento, volver al automático), ocultar
+// y mostrar (calendario, cifras, Top 5, anónimo, ocultos solo para el dueño), los `CHECK` de `0088` y la imagen con hasta 10 carátulas.
 // Correr contra una BD de scratch:
 //   ALLOW_SMOKE_ON_REAL_DB=1 npx tsx --env-file=.env scripts/smoke-test-year-laminas.ts
 
@@ -19,7 +21,7 @@ import { createRequire } from "node:module";
 import { and, eq, like, sql } from "drizzle-orm";
 import { assertSmokeAllowed } from "./assert-smoke-allowed";
 import { db } from "../src/db";
-import { appUser, artist, credit, listenEntry, recording, releaseGroup, shareEvent, userBlock, userFollow, yearShare } from "../src/db/schema";
+import { appUser, artist, credit, listenEntry, rating, recording, releaseGroup, shareEvent, userBlock, userFollow, yearHidden, yearShare, yearTop } from "../src/db/schema";
 
 assertSmokeAllowed();
 
@@ -142,7 +144,7 @@ async function main() {
       JSON.stringify(santiago!.stats) === JSON.stringify({ listens: 7, discs: 4, newDiscs: 1, artistsDiscovered: 1 }),
       "cifras: 7 escuchas, 4 discos, 1 disco nuevo y 1 artista descubierto (el ya escuchado en 2025 no)",
     );
-    check(santiago!.topDiscs[0]!.id === A.id && santiago!.topDiscs.length === 4, "el más escuchado del año va primero");
+    check(santiago!.top[0]!.id === A.id && santiago!.top.length === 4 && !santiago!.topIsCustom, "sin notas, el Top 5 va por escuchas: el más escuchado primero");
     check((await s.year.readYearInDiscs(owner.id, 2019, SANTIAGO)) === null, "un año sin escuchas no existe");
     check(JSON.stringify(await s.year.listYearsWithListens(owner.id, SANTIAGO)) === JSON.stringify([2026, 2025]), "tus años, del más reciente");
 
@@ -151,7 +153,7 @@ async function main() {
     check((await s.year.getYearInDiscs(owner.username, 2026, follower.id, SANTIAGO)) === null, "sin marca, una seguidora no");
     check((await s.target.loadYearTarget(s.target.yearRef(owner.id, 2026), "es")) === null, "sin marca, no hay objetivo anónimo");
     const state = await s.own.ownShareState("year", s.target.yearRef(owner.id, 2026), "es", owner.id);
-    check(state.state === "needs_gesture" && !state.canUnshare && state.payload.images[0]!.format === "link", "la hoja pide el gesto, con Enlace");
+    check(state.state === "needs_gesture" && !state.canUnshare && state.payload.images[0]!.format === "post", "la hoja pide el gesto, con Publicación primero");
     await s.year.markYearShared(owner.id, 2026, SANTIAGO);
     const shared = await s.year.getYearInDiscs(owner.username, 2026, null, "UTC");
     check(shared !== null && shared.timeZone === SANTIAGO && ids(shared.months[2]!).includes(C.id), "con marca, un anónimo lo ve en la zona guardada, no en la suya");
@@ -178,6 +180,48 @@ async function main() {
     check((await s.year.getYearInDiscs(owner.username, 2025, null, "UTC")) === null, "dejar de compartir lo cierra");
     check((await codeOf(() => s.own.ownShareState("year", s.target.yearRef(owner.id, 2019), "es", owner.id))) === "YEAR_NOT_FOUND", "un año sin escuchas no se comparte");
     check((await codeOf(() => s.own.ownShareState("year", s.target.yearRef(owner.id, 2026), "es", follower.id))) === "YEAR_NOT_FOUND", "lo ajeno tampoco");
+
+    console.log("Top 5 y ocultos");
+    const ref26 = s.target.yearRef(owner.id, 2026);
+    check((await codeOf(() => db.insert(yearTop).values({ userId: owner.id, year: 2026, position: 6, releaseGroupId: A.id }))) === "23514", "una posición 6 se rechaza");
+    check((await codeOf(() => db.insert(yearHidden).values({ userId: owner.id, year: 1999, releaseGroupId: A.id }))) === "23514", "un oculto de un año fuera de rango también");
+    await db.insert(rating).values([
+      { userId: owner.id, releaseGroupId: E.id, stars: "5", detailedScore: 95 },
+      { userId: owner.id, releaseGroupId: B.id, stars: "4", detailedScore: null },
+    ]);
+    const discIds = (discs: { id: string }[]) => discs.map((disc) => disc.id);
+    let year26 = await s.year.readYearInDiscs(owner.id, 2026, SANTIAGO);
+    check(JSON.stringify(discIds(year26!.top)) === JSON.stringify([E.id, B.id, A.id, C.id]), "prellenado: por nota (95, 4★) y después por escuchas");
+    check(!JSON.stringify(year26!.top).includes("score"), "el Top 5 no lleva notas");
+    check((await codeOf(() => s.year.saveYearTop(owner.id, 2026, [D.id], SANTIAGO))) === "VALIDATION_ERROR", "un disco que no se escuchó ese año no entra");
+    check((await codeOf(() => s.year.saveYearTop(owner.id, 2026, [A.id, A.id], SANTIAGO))) === "VALIDATION_ERROR", "ni uno repetido");
+    await s.year.saveYearTop(owner.id, 2026, [C.id, A.id], SANTIAGO);
+    year26 = await s.year.readYearInDiscs(owner.id, 2026, SANTIAGO);
+    check(year26!.topIsCustom && JSON.stringify(discIds(year26!.top)) === JSON.stringify([C.id, A.id, E.id, B.id]), "lo elegido en su orden, completado con el prellenado");
+
+    await s.year.hideYearDisc(owner.id, 2026, A.id, SANTIAGO);
+    year26 = await s.year.readYearInDiscs(owner.id, 2026, SANTIAGO);
+    check(!JSON.stringify(year26!.months).includes(A.id) && !discIds(year26!.top).includes(A.id), "oculto: fuera del calendario y del Top 5");
+    check(
+      JSON.stringify(year26!.stats) === JSON.stringify({ listens: 5, discs: 3, newDiscs: 0, artistsDiscovered: 1 }),
+      "y de las cifras: sus 2 escuchas y su primera escucha ya no cuentan",
+    );
+    const savedTop = await db.select({ id: yearTop.releaseGroupId }).from(yearTop).where(eq(yearTop.userId, owner.id));
+    check(!savedTop.some((row) => row.id === A.id), "ocultar lo saca del Top 5 guardado");
+    const anon = await s.year.getYearInDiscs(owner.username, 2026, null, "UTC");
+    check(anon !== null && !JSON.stringify(anon).includes(A.id) && anon.hidden.length === 0 && anon.choices.length === 0, "un anónimo no ve ni el disco ni que hay ocultos");
+    const mine = await s.year.getYearInDiscs(owner.username, 2026, owner.id, SANTIAGO);
+    check(discIds(mine!.hidden).includes(A.id) && mine!.choices.some((choice) => choice.id === E.id && choice.score?.detailedScore === 95), "el dueño ve sus ocultos y sus notas para elegir");
+    check((await db.select().from(listenEntry).where(and(eq(listenEntry.userId, owner.id), eq(listenEntry.releaseGroupId, A.id)))).length === 2, "el diario no cambia");
+    check((await codeOf(() => s.year.hideYearDisc(owner.id, 2026, D.id, SANTIAGO))) === "VALIDATION_ERROR", "no se oculta un disco sin escuchas ese año");
+    check((await codeOf(() => s.year.saveYearTop(owner.id, 2026, [A.id], SANTIAGO))) === "VALIDATION_ERROR", "un oculto no entra al Top 5");
+    await s.year.showYearDisc(owner.id, 2026, A.id);
+    check((await s.year.readYearInDiscs(owner.id, 2026, SANTIAGO))!.stats.listens === 7, "mostrarlo lo devuelve a las cifras");
+    await s.year.clearYearTop(owner.id, 2026);
+    check(!(await s.year.readYearInDiscs(owner.id, 2026, SANTIAGO))!.topIsCustom, "volver al automático");
+    const image = await s.target.loadYearTarget(ref26, "es");
+    const covered = [...image!.card.year!.top, ...image!.card.year!.months.flatMap((month) => (month.disc ? [month.disc] : []))].filter((item) => item.cover.url);
+    check(image!.formats?.[0] === "post" && image!.card.year!.top.length === 4 && new Set(covered.map((item) => item.title)).size <= 10, "la imagen: Publicación primero, Top 5 y hasta 10 carátulas");
 
     console.log("Rendimiento");
     const perf = newUser("perf");

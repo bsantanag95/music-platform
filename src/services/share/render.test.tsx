@@ -253,6 +253,42 @@ describe("renderShareImage", () => {
     });
   });
 
+  describe("año en discos", () => {
+    const cover = (n: number, withCover: boolean) => ({ url: withCover ? "https://coverartarchive.org/x" : null, fallbackTitle: `Disco ${n}`, fallbackSubtitle: "Banda" });
+    beforeEach(async () => {
+      const uri = await coverDataUri({ r: 40, g: 90, b: 160 });
+      images.cover.mockImplementation(async (url: string | null) => (url ? uri : null));
+    });
+    const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sept", "oct", "nov", "dic"];
+    const year = (filled: number) => ({
+      kicker: "Tu año en discos",
+      title: "2026 en discos, hasta ahora",
+      subtitle: "@ana",
+      meta: [],
+      community: null,
+      year: {
+        byline: "@ana",
+        topLabel: "Mi Top 5",
+        top: [1, 2, 3, 4, 5].map((n) => ({ cover: cover(n, true), title: n === 2 ? "The Rise and Fall of Ziggy Stardust and the Spiders from Mars" : `Disco ${n}` })),
+        months: MONTHS.map((label, index) => ({
+          label,
+          disc: index < filled ? { cover: cover(10 + index, index < 5), title: index === 3 ? "Sabbath Bloody Sabbath (Deluxe Edition)" : `Disco ${10 + index}` } : null,
+        })),
+        stats: ["412 escuchas", "87 discos", "23 discos nuevos", "9 artistas descubiertos"],
+      },
+    });
+
+    it.each([
+      ["doce meses", 12, "post", 1080, 1350],
+      ["meses vacíos", 7, "post", 1080, 1350],
+      ["Historia", 12, "story", 1080, 1920],
+    ] as const)("%s en %s", async (name, filled, canvas, width, height) => {
+      const { bytes, meta } = await size(await renderShareImage(target(year(filled)), "es", { format: canvas }));
+      expect([meta.width, meta.height]).toEqual([width, height]);
+      await keep(`year-${name.replace(/ /g, "-")}-${canvas}`, bytes);
+    });
+  });
+
   describe("formato Historia", () => {
     const render = (card: Partial<ShareTarget["card"]>, name: string) =>
       renderShareImage(target(card), "es", { format: "story" })

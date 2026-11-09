@@ -261,6 +261,24 @@
     "monthDiscs": "{month}: {count, plural, one {# disco} other {# discos}}",
     "sectionTitle": "Tus años",
     "sectionDescription": "Tu año en discos, mes por mes, desde tu diario.",
-    "inProgressShort": "{year}, hasta ahora"
+    "inProgressShort": "{year}, hasta ahora",
+    "topTitle": "Mi Top 5",
+    "edit": {
+      "moveUp": "Subir {title}",
+      "moveDown": "Bajar {title}",
+      "custom": "Elegido por ti.",
+      "prefilled": "Armado con tus discos del año mejor valorados. Cámbialo cuando quieras.",
+      "change": "Cambiar",
+      "reset": "Volver al automático",
+      "pickLegend": "Elige hasta {max} ({count} elegidos)",
+      "listens": "{count, plural, one {# escucha} other {# escuchas}}",
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "failed": "No se pudo guardar. Inténtalo de nuevo.",
+      "hide": "Ocultar {title} del año",
+      "hiddenTitle": "{count, plural, one {# disco oculto} other {# discos ocultos}}",
+      "hiddenHint": "No salen en tu año ni cuentan en las cifras. Solo tú los ves acá; tu diario no cambia.",
+      "show": "Mostrar"
+    }
   }
 }
