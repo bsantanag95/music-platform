@@ -10,6 +10,8 @@ import { ResumeList } from "@/components/home/ResumeList";
 import { HomeReleases } from "@/components/home/HomeReleases";
 import { PopularComments } from "@/components/home/PopularComments";
 import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
+import { YearInvitationCard } from "@/components/laminas/YearInvitationCard";
+import { yearInvitationForRequest } from "@/lib/year-invitation-request";
 import { listFollowing } from "@/services/social/following";
 import { listFeed } from "@/services/feed/feed";
 import {
@@ -51,7 +53,7 @@ export async function AuthenticatedHome({ user, onboardingPending, emailVerified
   // propio), en el mismo layout compacto que el Inicio anónimo — top-N corto.
   const previewLimit = 6;
 
-  const [following, recentActivity, resumeList, communityActivity, publicLists, popularComments, homeReleases, personalReleases] =
+  const [following, recentActivity, resumeList, communityActivity, publicLists, popularComments, homeReleases, personalReleases, , yearInvitation] =
     await Promise.all([
       listFollowing(user.id, 1, 1),
       listMyRecentActivity(user.id, 1, PREVIEW_PAGE_SIZE),
@@ -62,6 +64,8 @@ export async function AuthenticatedHome({ user, onboardingPending, emailVerified
       listHomeReleases(),
       listPersonalHomeReleases(user.id),
       ensureReleaseCalendarFresh(),
+      // Invitación de diciembre a "Tu año en discos" (add-year-in-discs-phase3).
+      yearInvitationForRequest(user.id),
     ]);
 
   const hasFollows = following.users.length > 0;
@@ -94,6 +98,10 @@ export async function AuthenticatedHome({ user, onboardingPending, emailVerified
       />
 
       <EmailVerificationNotice verified={emailVerified ?? false} variant="home" />
+
+      {yearInvitation ? (
+        <YearInvitationCard username={user.username} year={yearInvitation.year} inProgress={yearInvitation.inProgress} />
+      ) : null}
 
       {onboardingPending && <WelcomeLink />}
 

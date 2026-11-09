@@ -62,3 +62,26 @@ describe("rutas", () => {
     expect(buildIntentQuery(null)).toBe("");
   });
 });
+
+describe("intención de año (ADR 0055)", () => {
+  it("acepta un año entre 2000 y 2100 y lleva al año propio", () => {
+    expect(parseBuildIntent({ anio: "2026" })).toEqual({ kind: "year", year: 2026 });
+    expect(buildIntentDestination({ kind: "year", year: 2026 }, "ana b")).toBe("/users/ana%20b/year/2026");
+    expect(buildIntentAuthHref("/auth/register", { kind: "year", year: 2026 })).toBe("/auth/register?anio=2026");
+  });
+
+  it.each(["1850", "2101", "abc", "2026.5", "", "20260", "/users/otra/year/2026"])("descarta %s", (anio) => {
+    expect(parseBuildIntent({ anio })).toBeNull();
+  });
+
+  it("manda la de Lámina y después la de discografía", () => {
+    expect(parseBuildIntent({ lamina: ID, anio: "2026" })).toEqual({ kind: "lamina", id: ID });
+    expect(parseBuildIntent({ discografia: ARTIST, anio: "2026" })).toEqual({ kind: "discography", artistId: ARTIST });
+  });
+
+  it("se revalida al volver de Google", () => {
+    expect(normalizeBuildIntent({ kind: "year", year: 2026 })).toEqual({ kind: "year", year: 2026 });
+    expect(normalizeBuildIntent({ kind: "year", year: 1999 })).toBeNull();
+    expect(normalizeBuildIntent({ kind: "year", year: "x" })).toBeNull();
+  });
+});

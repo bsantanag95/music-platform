@@ -200,6 +200,7 @@ function LeadingVisual({ group, actor, actorName }: LeadingVisualProps) {
   if (group.kind === "list_save_milestone") return <MilestoneIcon kind="save" />;
   if (group.target?.type === "release") return <ReleaseCover target={group.target} />;
   if (group.target?.type === "award") return <AwardIcon won={group.kind === "artist_award_win"} />;
+  if (group.kind === "year_in_discs") return <YearIcon />;
   if (actor) {
     return (
       <UserAvatar
@@ -259,7 +260,23 @@ function targetHref(group: NotificationGroupValue): string | null {
       ? hallClassHref(target.awardSlug, target.year)
       : ceremonyHref(target.awardSlug, target.year);
   }
+  if (target.type === "year") return `/users/${encodeURIComponent(target.username)}/year/${target.year}`;
   return null;
+}
+
+/** Calendario: la invitación a "Tu año en discos". */
+function YearIcon() {
+  return (
+    <span
+      aria-hidden="true"
+      className="flex size-9 shrink-0 items-center justify-center rounded-full bg-amber/15 text-amber"
+    >
+      <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="5" width="18" height="16" rx="2" />
+        <path d="M3 10h18M8 3v4M16 3v4" />
+      </svg>
+    </span>
+  );
 }
 
 function MilestoneIcon({ kind }: { kind: "like" | "save" }) {

@@ -13,6 +13,9 @@ export {};
 // (el `ON DELETE CASCADE` limpia escuchas, marcas y eventos de la cuenta). Necesita las migraciones 0079 a 0087.
 // Desde add-year-in-discs-phase2 también verifica el Top 5 (prellenado por nota, guardado y su validación, envejecimiento, volver al automático), ocultar
 // y mostrar (calendario, cifras, Top 5, anónimo, ocultos solo para el dueño), los `CHECK` de `0088` y la imagen con hasta 10 carátulas.
+// Desde add-year-in-discs-phase3 también verifica los `CHECK` de `0089`, el aviso de diciembre (fuera y dentro de la ventana, repetido, preferencia apagada,
+// cuenta desactivada, sin escuchas, `--dry-run`, en "Novedades" sin contador y con su enlace) y la tarjeta (año en curso y cerrado, descartada, ya
+// compartido, discos ocultos, sin escuchas). El envío se acota a las cuentas del smoke: no toca al resto de la BD.
 // Correr contra una BD de scratch:
 //   ALLOW_SMOKE_ON_REAL_DB=1 npx tsx --env-file=.env scripts/smoke-test-year-laminas.ts
 
@@ -21,7 +24,7 @@ import { createRequire } from "node:module";
 import { and, eq, like, sql } from "drizzle-orm";
 import { assertSmokeAllowed } from "./assert-smoke-allowed";
 import { db } from "../src/db";
-import { appUser, artist, credit, listenEntry, rating, recording, releaseGroup, shareEvent, userBlock, userFollow, yearHidden, yearShare, yearTop } from "../src/db/schema";
+import { appUser, artist, credit, listenEntry, notification, notificationPreference, rating, recording, releaseGroup, shareEvent, userBlock, userFollow, yearHidden, yearShare, yearTop } from "../src/db/schema";
 
 assertSmokeAllowed();
 
@@ -55,14 +58,16 @@ async function loadServices() {
     }
     return originalLoad.call(this, request, parent, isMain);
   };
-  const [year, target, own, lifecycle, dataExport] = await Promise.all([
+  const [year, target, own, lifecycle, dataExport, invitation, notifications] = await Promise.all([
     import("../src/services/laminas/year"),
     import("../src/services/share/targets/year"),
     import("../src/services/share/own"),
     import("../src/services/auth/account-lifecycle"),
     import("../src/services/profiles/data-export"),
+    import("../src/services/laminas/year-invitation"),
+    import("../src/services/notifications/read"),
   ]);
-  return { year, target, own, lifecycle, dataExport };
+  return { year, target, own, lifecycle, dataExport, invitation, notifications };
 }
 
 const newUser = (label: string, profileVisibility: "public" | "private" = "public") => ({
@@ -222,6 +227,56 @@ async function main() {
     const image = await s.target.loadYearTarget(ref26, "es");
     const covered = [...image!.card.year!.top, ...image!.card.year!.months.flatMap((month) => (month.disc ? [month.disc] : []))].filter((item) => item.cover.url);
     check(image!.formats?.[0] === "post" && image!.card.year!.top.length === 4 && new Set(covered.map((item) => item.title)).size <= 10, "la imagen: Publicación primero, Top 5 y hasta 10 carátulas");
+
+    console.log("Invitación de diciembre");
+    const invitee = newUser("invitee");
+    const quiet = newUser("quiet");
+    const muted = newUser("muted");
+    const gone = newUser("gone");
+    await db.insert(appUser).values([invitee, quiet, muted, gone]);
+    await db.update(appUser).set({ deactivatedAt: new Date() }).where(eq(appUser.id, gone.id));
+    for (const user of [invitee, muted, gone]) await listen(user.id, [{ target: { releaseGroupId: A.id }, at: "2026-05-05T15:00:00Z" }]);
+    await db.insert(notificationPreference).values({ userId: muted.id, kind: "year_in_discs", enabled: false });
+    check(
+      (await codeOf(() => db.insert(notification).values({ recipientId: invitee.id, kind: "year_in_discs", groupKey: "year:x" }))) === "23514",
+      "0089: el aviso del año exige su año",
+    );
+    check(
+      (await codeOf(() => db.insert(notification).values({ recipientId: invitee.id, kind: "year_in_discs", year: 1999, groupKey: "year:1999" }))) === "23514",
+      "y un año entre 2000 y 2100",
+    );
+    check(
+      (await codeOf(() => db.insert(notification).values({ recipientId: invitee.id, kind: "artist_release", releaseGroupId: A.id, year: 2026, groupKey: "x" }))) === "23514",
+      "ningún otro tipo lleva año",
+    );
+    const accounts: string[] = [invitee.id, quiet.id, muted.id, gone.id];
+    check((await s.invitation.sendYearInvitations({ now: new Date("2026-11-20T12:00:00Z"), onlyUserIds: accounts })).year === null, "el 20 de noviembre no avisa");
+    check((await s.invitation.sendYearInvitations({ now: new Date("2027-01-20T12:00:00Z"), onlyUserIds: accounts })).year === null, "ni el 20 de enero");
+    const december = new Date("2026-12-02T12:00:00Z");
+    const dry = await s.invitation.sendYearInvitations({ now: december, onlyUserIds: accounts, dryRun: true });
+    check(dry.year === 2026 && dry.sent === 1, "la simulación cuenta solo a quien escuchó, está activa y no lo apagó");
+    check((await db.select().from(notification).where(eq(notification.kind, "year_in_discs"))).every((row) => !accounts.includes(row.recipientId)), "y no escribe");
+    check((await s.invitation.sendYearInvitations({ now: december, onlyUserIds: accounts })).sent === 1, "el 2 de diciembre avisa a una sola cuenta");
+    check((await s.invitation.sendYearInvitations({ now: new Date("2027-01-10T12:00:00Z"), onlyUserIds: accounts })).sent === 0, "repetirlo no duplica");
+    const [notice] = await db.select().from(notification).where(and(eq(notification.recipientId, invitee.id), eq(notification.kind, "year_in_discs")));
+    check(notice?.year === 2026 && notice.actorId === null && notice.groupKey === "year:2026", "un aviso sin actor, con su año");
+    const releasesTab = await s.notifications.listNotificationGroups(invitee.id, { tab: "releases" });
+    check(
+      JSON.stringify(releasesTab.groups[0]?.target) === JSON.stringify({ type: "year", year: 2026, username: invitee.username }),
+      "en Novedades, con enlace al año propio",
+    );
+    check((await s.notifications.countUnseen(invitee.id)) === 0, "sin sumar al contador de la campana");
+
+    const jan = new Date("2027-01-10T15:00:00Z");
+    const dec = new Date("2026-12-03T15:00:00Z");
+    check(JSON.stringify(await s.invitation.readYearInvitation(invitee.id, SANTIAGO, null, dec)) === JSON.stringify({ year: 2026, inProgress: true }), "la tarjeta en diciembre: hasta ahora");
+    check(JSON.stringify(await s.invitation.readYearInvitation(invitee.id, SANTIAGO, null, jan)) === JSON.stringify({ year: 2026, inProgress: false }), "en enero, el año cerrado");
+    check((await s.invitation.readYearInvitation(invitee.id, SANTIAGO, 2026, dec)) === null, "descartada, no");
+    check((await s.invitation.readYearInvitation(owner.id, SANTIAGO, null, dec)) === null, "ya compartido, no");
+    check((await s.invitation.readYearInvitation(quiet.id, SANTIAGO, null, dec)) === null, "sin escuchas, no");
+    await s.year.hideYearDisc(invitee.id, 2026, A.id, SANTIAGO);
+    check((await s.invitation.readYearInvitation(invitee.id, SANTIAGO, null, dec)) === null, "con todo oculto, tampoco");
+    check((await s.invitation.readYearInvitation(invitee.id, SANTIAGO, null, new Date("2027-01-20T15:00:00Z"))) === null, "fuera de la ventana, nunca");
 
     console.log("Rendimiento");
     const perf = newUser("perf");

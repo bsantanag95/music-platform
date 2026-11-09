@@ -155,6 +155,8 @@ contenido o su cuenta, un **hito** de su comentario o de su lista, un **lanzamie
   ceremonia y tipo; a quién nombra se recalcula al leer.
 - Cada evento tiene un estado **leído / no leído**; el conjunto tiene además un estado de **visto** por Usuario y por
   pestaña ("Para ti" / "Novedades"), que es lo que pone el contador o el punto a cero.
+- La **invitación a "Tu año en discos"** (`year_in_discs`) tampoco tiene actor: su objeto es el año del propio destinatario. Nace del envío diario de
+  diciembre, una sola vez por persona y año, y vive en "Novedades".
 - Un mismo Usuario tiene **preferencias por tipo**, con un **defecto por tipo** (no todas activadas): la ausencia de
   preferencia significa el defecto. Solicitudes de seguimiento y moderación no son desactivables. Las dos clases de
   premio comparten **una sola preferencia** (`artist_award`).

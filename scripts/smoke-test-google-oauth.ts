@@ -441,6 +441,23 @@ async function main() {
     if (!bad.endsWith("/es/welcome")) throw new Error(`Discografía (inválida): ${bad}`);
     console.log("OK 8 intención de discografía -> alta y cuenta existente van a la propia, con su usuario; con las dos manda la Lámina; inválida se ignora");
 
+    // --- 9) Intención de año (ADR 0055) ----------------------------------------------
+    const emailYear = `smoke-oauth-year-${runId}@example.test`;
+    const subYear = `smoke-sub-year-${runId}`;
+    const ipYear = `10.10.${runId.slice(0, 2)}.9`;
+    const freshYear = await flowWith(ipYear, "auth-code-y1", "&anio=2025", subYear, emailYear);
+    const [yearUser] = await db.select().from(appUser).where(eq(appUser.email, emailYear));
+    if (yearUser) createdUserIds.push(yearUser.id);
+    if (!yearUser || !freshYear.endsWith(`/es/users/${yearUser.username}/year/2025`)) throw new Error(`Año (alta nueva): ${freshYear}`);
+    if (yearUser.onboardedAt !== null) throw new Error("Año (alta nueva): el onboarding debe seguir pendiente");
+    const againYear = await flowWith(ipYear, "auth-code-y2", "&anio=2025", subYear, emailYear);
+    if (!againYear.endsWith(`/es/users/${yearUser.username}/year/2025`)) throw new Error(`Año (cuenta existente): ${againYear}`);
+    const withDisco = await flowWith(ipYear, "auth-code-y3", `&anio=2025&discografia=${artistId}`, subYear, emailYear);
+    if (!withDisco.endsWith(`/es/users/${yearUser.username}/artist/${artistId}?valorar=1`)) throw new Error(`Año y discografía juntas: ${withDisco}`);
+    const badYear = await flowWith(ipYear, "auth-code-y4", "&anio=1850", subYear, emailYear);
+    if (!badYear.endsWith("/es/welcome")) throw new Error(`Año (inválido): ${badYear}`);
+    console.log("OK 9 intención de año -> alta y cuenta existente van a su año; con discografía manda la discografía; inválida se ignora");
+
     console.log("Smoke Google OAuth OK: flujo completo contra BD real.");
   } finally {
     for (const userId of createdUserIds) {

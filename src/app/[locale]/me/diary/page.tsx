@@ -10,6 +10,8 @@ import { filtersFromSearchParams, toApiFilters } from "@/components/diary/diary-
 import { withClientMessages } from "@/i18n/client-messages";
 import { Link } from "@/i18n/navigation";
 import { currentYearIn, listYearsWithListens } from "@/services/laminas/year";
+import { YearInvitationCard } from "@/components/laminas/YearInvitationCard";
+import { yearInvitationForRequest } from "@/lib/year-invitation-request";
 
 const RAIL_TO_LOG = 4;
 
@@ -26,11 +28,13 @@ async function DiaryPage({
   // Los filtros de la URL siembran la primera página (D7); los valores
   // inválidos se ignoran en vez de propagar el 400 de la API.
   const initialFilters = filtersFromSearchParams(await searchParams);
-  const [initial, wanted, years] = await Promise.all([
+  const [initial, wanted, years, invitation] = await Promise.all([
     listMyDiary(user.id, 1, 20, { ...toApiFilters(initialFilters), timeZone }),
     // «Para anotar» del riel (D10): los Pendientes más recientes.
     listMyWantToListen(user.id, 1, RAIL_TO_LOG),
     listYearsWithListens(user.id, timeZone),
+    // Invitación de diciembre (add-year-in-discs-phase3): del 1 de diciembre al 15 de enero, el año que cierra.
+    yearInvitationForRequest(user.id),
   ]);
   // "Tu año en discos" del año que se mira (openspec: add-year-in-discs-phase1): el del filtro o el actual, si tiene escuchas.
   const yearInView = initialFilters.year ? Number(initialFilters.year) : currentYearIn(timeZone);
@@ -53,6 +57,7 @@ async function DiaryPage({
           <LogListenButton />
         </div>
       </header>
+      {invitation ? <YearInvitationCard username={user.username} year={invitation.year} inProgress={invitation.inProgress} /> : null}
       {/* Desde 1024px, la lista junto a un riel fijo (D10). Por debajo no hay
           riel: la fecha ya está en el filtro y una lista con carga continua no
           tiene final donde ponerlo. */}

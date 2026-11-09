@@ -43,7 +43,9 @@
     "releaseFallback": "There is news from an artist you follow",
     "markRead": "Mark as read",
     "approve": "Approve",
-    "reject": "Reject"
+    "reject": "Reject",
+    "yearInDiscs": "Your {year} in albums is ready: pick your Top 5 and share it",
+    "yearInDiscsFallback": "Your year in albums is ready"
   },
   "moderation": {
     "hideComment": "Your comment was hidden",
@@ -101,7 +103,8 @@
       "artist_release": "New releases",
       "artist_release_announced": "Announced releases",
       "artist_single": "New singles",
-      "artist_award": "Awards for artists you follow"
+      "artist_award": "Awards for artists you follow",
+      "year_in_discs": "Your year in albums"
     },
     "descriptions": {
       "comment_reply": "When someone replies to the thread you opened.",
@@ -115,7 +118,8 @@
       "artist_release": "When an artist you follow releases an album or an EP.",
       "artist_release_announced": "When an artist you follow announces a release with a date.",
       "artist_single": "When an artist you follow releases a single.",
-      "artist_award": "When an artist you follow is nominated for or wins an award."
+      "artist_award": "When an artist you follow is nominated for or wins an award.",
+      "year_in_discs": "In December, when your year in albums is ready to put together and share."
     }
   },
   "digest": {

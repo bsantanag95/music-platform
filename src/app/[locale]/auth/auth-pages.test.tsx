@@ -85,6 +85,17 @@ describe("páginas de autenticación", () => {
     ).rejects.toThrow('REDIRECT:{"href":"/users/ana/artist/10000000-0000-4000-8000-000000000001?valorar=1","locale":"es"}');
   });
 
+  it("la intención de año se conserva y, con sesión, lleva al año propio", async () => {
+    mocks.resolveSession.mockResolvedValueOnce(null);
+    render(await RegisterPage({ params: Promise.resolve({ locale: "es" }), searchParams: Promise.resolve({ anio: "2026" }) }));
+    expect(screen.getByRole("link", { name: "login" })).toHaveAttribute("href", "/auth/login?anio=2026");
+
+    mocks.resolveSession.mockResolvedValueOnce({ user: { id: "u1", username: "ana" } });
+    await expect(
+      LoginPage({ params: Promise.resolve({ locale: "es" }), searchParams: Promise.resolve({ anio: "2026" }) }),
+    ).rejects.toThrow('REDIRECT:{"href":"/users/ana/year/2026","locale":"es"}');
+  });
+
   it("una intención inválida se descarta", async () => {
     mocks.resolveSession.mockResolvedValueOnce(null);
 

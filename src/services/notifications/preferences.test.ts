@@ -86,6 +86,7 @@ describe("getNotificationPreferences", () => {
       artist_release_announced: false,
       artist_single: false,
       artist_award: true,
+      year_in_discs: true,
     });
   });
 

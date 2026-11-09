@@ -58,6 +58,8 @@ export const NOTIFICATION_KINDS = [
   "artist_single",
   "artist_award_nomination",
   "artist_award_win",
+  // Invitación de diciembre a "Tu año en discos" (0089, add-year-in-discs-phase3).
+  "year_in_discs",
 ] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
@@ -80,6 +82,7 @@ export const OPTIONAL_NOTIFICATION_KINDS = {
   // Preferencia única de los premios (D6): gobierna las dos clases de aviso,
   // que por eso no son claves de preferencia por separado.
   artist_award: true,
+  year_in_discs: true,
 } as const satisfies Partial<Record<NotificationKind | "artist_award", boolean>>;
 export type OptionalNotificationKind = keyof typeof OPTIONAL_NOTIFICATION_KINDS;
 
@@ -2088,6 +2091,9 @@ export const notification = pgTable(
     awardCeremonyId: uuid("award_ceremony_id").references(() => awardCeremony.id, {
       onDelete: "cascade",
     }),
+    // Aviso de "Tu año en discos" (migración 0089): el año del destinatario. Solo
+    // ese tipo la lleva (`chk_notification_year`); un aviso por persona y año.
+    year: smallint("year"),
     groupKey: text("group_key").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     readAt: timestamp("read_at", { withTimezone: true }),
@@ -2114,7 +2120,7 @@ export const notificationPreference = pgTable(
     primaryKey({ columns: [t.userId, t.kind] }),
     check(
       "chk_notification_preference_kind",
-      sql`${t.kind} IN ('comment_reply','thread_reply','new_follower','follow_accepted','comment_like_milestone','list_save_milestone','artist_release','artist_release_announced','artist_single','artist_award')`,
+      sql`${t.kind} IN ('comment_reply','thread_reply','new_follower','follow_accepted','comment_like_milestone','list_save_milestone','artist_release','artist_release_announced','artist_single','artist_award','year_in_discs')`,
     ),
   ],
 );

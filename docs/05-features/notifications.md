@@ -92,6 +92,14 @@ Los hitos avisan de un hecho propio, sin nombres ni actores: nunca dicen quién 
   "nominaciones" y "premios". Una victoria y una nominación de la misma ceremonia se agrupan en **una entrada**, y la
   agregación prefiere la victoria.
 
+### Tu año en discos (`add-year-in-discs-phase3`)
+
+- `year_in_discs`: la invitación de diciembre. Del 1 de diciembre a las 12:00 UTC al 16 de enero a las 12:00 UTC, el script diario
+  `scripts/send-year-invitations.ts` avisa del año que cierra a cada cuenta activa con escuchas ese año
+  (`docs/06-operations/year-invitations.md`). Sin actor; vive en **"Novedades"**, así que no suma al contador, y enlaza a la página del año propio.
+- Un aviso por persona y año (único parcial `(recipient_id, kind, year)`): el envío diario no duplica. Preferencia propia `year_in_discs`, activada por
+  defecto. Como cualquier novedad sin leer, entra en el resumen semanal con el mismo texto.
+
 Reglas comunes:
 
 - Nunca se notifica a la persona por su propia acción.

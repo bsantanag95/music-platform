@@ -43,7 +43,9 @@
     "releaseFallback": "Hay una novedad de un artista que sigues",
     "markRead": "Marcar como leída",
     "approve": "Aprobar",
-    "reject": "Rechazar"
+    "reject": "Rechazar",
+    "yearInDiscs": "Tu {year} en discos está listo: arma tu Top 5 y compártelo",
+    "yearInDiscsFallback": "Tu año en discos está listo"
   },
   "moderation": {
     "hideComment": "Se ocultó tu comentario",
@@ -101,7 +103,8 @@
       "artist_release": "Discos nuevos",
       "artist_release_announced": "Discos anunciados",
       "artist_single": "Sencillos nuevos",
-      "artist_award": "Premios de artistas que sigues"
+      "artist_award": "Premios de artistas que sigues",
+      "year_in_discs": "Tu año en discos"
     },
     "descriptions": {
       "comment_reply": "Cuando alguien responde al tema que abriste.",
@@ -115,7 +118,8 @@
       "artist_release": "Cuando un artista que sigues publica un álbum o un EP.",
       "artist_release_announced": "Cuando un artista que sigues anuncia un disco con fecha.",
       "artist_single": "Cuando un artista que sigues publica un sencillo.",
-      "artist_award": "Cuando un artista que sigues recibe una nominación o gana un premio."
+      "artist_award": "Cuando un artista que sigues recibe una nominación o gana un premio.",
+      "year_in_discs": "En diciembre, cuando tu año en discos está listo para armar y compartir."
     }
   },
   "digest": {

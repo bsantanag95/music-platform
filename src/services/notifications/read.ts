@@ -100,6 +100,12 @@ export type NotificationTarget =
       coverUrl: string | null;
     }
   | {
+      /** Invitación a "Tu año en discos" (add-year-in-discs-phase3): el año propio. */
+      type: "year";
+      year: number;
+      username: string;
+    }
+  | {
       type: "award";
       ceremonyId: string;
       awardSlug: string;
@@ -160,6 +166,8 @@ export const TAB_KINDS: Record<NotificationTab, readonly NotificationKind[]> = {
     "artist_single",
     "artist_award_nomination",
     "artist_award_win",
+    // La invitación de diciembre es una novedad, no algo dirigido: no suma al contador.
+    "year_in_discs",
   ],
 };
 
@@ -320,6 +328,7 @@ function visibleNotifications(recipientId: string, tab: NotificationTab) {
       awardSlug: sql<string | null>`${award.slug}`.as("award_slug"),
       awardYear: sql<number | null>`${awardCeremony.year}`.as("award_year"),
       awardKind: sql<string | null>`${award.kind}`.as("award_kind"),
+      year: notification.year,
     })
     .from(notification)
     .leftJoin(actor, eq(actor.id, notification.actorId))
@@ -495,6 +504,7 @@ function groupedNotifications(recipientId: string, zone: string, tab: Notificati
       awardSlug: source.awardSlug,
       awardYear: source.awardYear,
       awardKind: source.awardKind,
+      year: source.year,
     })
     .from(source)
     .as("grouped_notification");
@@ -570,6 +580,7 @@ export async function listNotificationGroups(
       awardSlug: sql<string | null>`(array_agg(${source.awardSlug} order by ${source.createdAt} desc))[1]`,
       awardYear: sql<number | null>`(array_agg(${source.awardYear} order by ${source.createdAt} desc))[1]`,
       awardKind: sql<string | null>`(array_agg(${source.awardKind} order by ${source.createdAt} desc))[1]`,
+      year: sql<number | null>`max(${source.year})`,
     })
     .from(source)
     .groupBy(source.groupId)
@@ -583,15 +594,17 @@ export async function listNotificationGroups(
     : await baseQuery;
 
   const page = rows.slice(0, pageSize);
-  const [actors, awardTargets] = await Promise.all([
+  const [actors, awardTargets, ownUsername] = await Promise.all([
     actorsByGroup(source, page.map((row) => row.id)),
     awardTargetsByGroup(recipientId, page),
+    // El aviso del año enlaza a la página propia: hace falta el usuario del destinatario.
+    page.some((row) => row.kind === "year_in_discs") ? usernameOf(recipientId) : Promise.resolve(null),
   ]);
   const last = page[page.length - 1];
 
   return {
     groups: page.map((row) =>
-      toGroup(row, actors.get(row.id) ?? [], awardTargets.get(row.id) ?? null),
+      toGroup(row, actors.get(row.id) ?? [], awardTargets.get(row.id) ?? null, ownUsername),
     ),
     nextCursor:
       rows.length > pageSize && last
@@ -975,12 +988,19 @@ type GroupRow = {
   awardSlug: string | null;
   awardYear: number | null;
   awardKind: string | null;
+  year: number | null;
 };
+
+async function usernameOf(userId: string): Promise<string | null> {
+  const [row] = await db.select({ username: appUser.username }).from(appUser).where(eq(appUser.id, userId));
+  return row?.username ?? null;
+}
 
 function toGroup(
   row: GroupRow,
   actors: NotificationActor[],
   awardTarget: AwardTargetRow | null,
+  ownUsername: string | null = null,
 ): NotificationGroup {
   return {
     id: row.id,
@@ -990,11 +1010,19 @@ function toGroup(
     eventCount: row.eventCount,
     actorCount: row.actorCount,
     actors,
-    target: targetFor(row, awardTarget),
+    target: targetFor(row, awardTarget, ownUsername),
   };
 }
 
-function targetFor(row: GroupRow, awardTarget: AwardTargetRow | null): NotificationTarget | null {
+function targetFor(
+  row: GroupRow,
+  awardTarget: AwardTargetRow | null,
+  ownUsername: string | null,
+): NotificationTarget | null {
+  if (row.kind === "year_in_discs") {
+    if (row.year === null || !ownUsername) return null;
+    return { type: "year", year: row.year, username: ownUsername };
+  }
   if (row.kind === "moderation") {
     if (!row.moderationAction || !row.moderationContentType || !row.moderationReason) return null;
     if (!isModerationAction(row.moderationAction)) return null;
