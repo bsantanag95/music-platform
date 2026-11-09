@@ -82,7 +82,8 @@ de cuál de las filas con el mismo título haya en la BD.
 >   renuevan y caducan, la rotación que conserva la elección y que una sesión anterior a la columna
 >   queda como mantenida. `smoke-test-google-oauth.ts` además cubre `remember=0`, la reautenticación y la intención de Lámina
 >   (alta nueva y cuenta existente van a armarla, un valor inválido se descarta y el callback no la lee de su query) y la de discografía
->   (alta nueva y cuenta existente van a la propia con su usuario, con las dos manda la Lámina, un valor inválido se descarta).
+>   (alta nueva y cuenta existente van a la propia con su usuario, con las dos manda la Lámina, un valor inválido se descarta) y la de año
+>   (alta nueva y cuenta existente van a su año, con la de discografía manda esa, un valor inválido se descarta).
 > - `smoke-test-account-settings.ts` crea usuarios `smoke_acct_*` y los borra al terminar (el `ON
 >   DELETE CASCADE` limpia alias, tokens y sesiones). Si se interrumpió, limpiar con
 >   `DELETE FROM user_role_action WHERE actor_id IN (SELECT id FROM app_user WHERE username LIKE
@@ -191,7 +192,10 @@ de cuál de las filas con el mismo título haya en la BD.
 >   la marca, el gesto y dejar de compartir, la exportación, los eventos con la cuenta y la lectura bajo 100 ms con 1.000 escuchas. Desde
 >   `add-year-in-discs-phase2` (migración `0088`) también verifica el Top 5 (prellenado por nota, guardado y su validación, lo elegido que deja de valer,
 >   volver al automático), ocultar y mostrar (calendario, cifras, Top 5, anónimo, ocultos y notas solo para el dueño, el diario intacto), los `CHECK` de
->   `0088` y la imagen con hasta 10 carátulas.
+>   `0088` y la imagen con hasta 10 carátulas. Desde `add-year-in-discs-phase3` (migración `0089`) también crea cuatro usuarios `smoke_year_*` más (los cubre
+>   la misma limpieza) y verifica los `CHECK` de `0089`, el aviso de diciembre (fuera y dentro de la ventana, repetido, preferencia apagada, cuenta desactivada,
+>   sin escuchas, `--dry-run`, en "Novedades" sin contador y con su enlace; el envío se acota a las cuentas del smoke) y la tarjeta de Inicio y el diario
+>   (diciembre y enero, descartada, ya compartido, discos ocultos, sin escuchas).
 > - `smoke-test-comment-replies.ts` crea un artista y un álbum sintéticos (MBID
 >   `5e0ce000-0000-4000-8000-0000000009b0` / `...09b1`) y usuarios `smoke_reply_*`, y los borra al terminar
 >   (también si falla; el `ON DELETE CASCADE` limpia comentarios, respuestas, likes y bloqueos). Si se

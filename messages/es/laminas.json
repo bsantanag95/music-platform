@@ -279,6 +279,23 @@
       "hiddenTitle": "{count, plural, one {# disco oculto} other {# discos ocultos}}",
       "hiddenHint": "No salen en tu año ni cuentan en las cifras. Solo tú los ves acá; tu diario no cambia.",
       "show": "Mostrar"
+    },
+    "cta": {
+      "title": "Arma tu {year} en discos",
+      "description": "Tu año sale de tu diario: registra lo que escuchas, elige tu Top 5 y compártelo."
+    },
+    "empty": {
+      "title": "Aún no tienes escuchas en {year}",
+      "body": "Tu año en discos se arma solo con tu diario: cada disco que registres entra en su mes, y con tus notas se prellena tu Top 5.",
+      "action": "Ir a tu diario"
+    },
+    "invite": {
+      "title": "Tu {year} en discos está listo",
+      "titleInProgress": "Tu {year} en discos, hasta ahora",
+      "description": "Míralo mes por mes, elige tu Top 5 y compártelo.",
+      "action": "Ver tu año",
+      "dismiss": "Descartar",
+      "dismissLabel": "Descartar la invitación de {year}"
     }
   }
 }

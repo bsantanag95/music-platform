@@ -24,6 +24,7 @@ vi.mock("next-intl/server", async () => {
 vi.mock("@/services/auth/sessions", () => ({ resolveSession: mocks.session }));
 vi.mock("@/services/laminas/year", () => ({
   getYearInDiscs: mocks.year,
+  currentYearIn: () => 2026,
   parseYear: (value: string) => (/^\d{4}$/.test(value) && Number(value) >= 2000 && Number(value) <= 2100 ? Number(value) : null),
 }));
 vi.mock("@/services/share/metadata", () => ({ buildShareMetadata: mocks.metadata }));
@@ -77,8 +78,8 @@ describe("Tu año en discos", () => {
   it("muestra los doce meses, los discos de cada uno y las cifras, sin escuchas", async () => {
     await render();
     expect(screen.getByRole("heading", { level: 1, name: "2026 en discos" })).toBeInTheDocument();
-    // Doce meses más "Mi Top 5".
-    expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(13);
+    // Doce meses, "Mi Top 5" y "Arma la tuya".
+    expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(14);
     const march = screen.getByRole("list", { name: "marzo: 2 discos" });
     expect(within(march).getAllByRole("link").map((link) => link.getAttribute("title"))).toEqual(["Disco 1 · Banda", "Disco 2 · Banda"]);
     expect(screen.getAllByText("Sin discos este mes.")).toHaveLength(11);
@@ -99,6 +100,36 @@ describe("Tu año en discos", () => {
   it("un año que no se puede ver o sin escuchas responde 404", async () => {
     mocks.year.mockResolvedValue(null);
     await expect(render()).rejects.toThrow("NOT_FOUND");
+    mocks.session.mockResolvedValue({ user: { id: "u2", username: "bruno" } });
+    await expect(render()).rejects.toThrow("NOT_FOUND");
+  });
+
+  it("el dueño sin escuchas ese año ve el estado vacío que lleva al diario; un año futuro sigue siendo 404", async () => {
+    mocks.session.mockResolvedValue({ user: { id: "u1", username: "Ana" } });
+    mocks.year.mockResolvedValue(null);
+    await render("2025");
+    expect(screen.getByRole("heading", { level: 1, name: "2025 en discos" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Aún no tienes escuchas en 2025" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Ir a tu diario" })).toHaveAttribute("href", "/me/diary");
+    expect(screen.queryByRole("button")).toBeNull();
+    await expect(render("2027")).rejects.toThrow("NOT_FOUND");
+  });
+
+  it("Arma la tuya: sin sesión al registro con el año, con sesión al año propio, nunca al dueño", async () => {
+    await render();
+    expect(screen.getByRole("heading", { level: 2, name: "Arma tu 2026 en discos" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Arma la tuya" })).toHaveAttribute("href", "/auth/register?anio=2026");
+    expect(screen.getByRole("link", { name: "Ya tengo cuenta" })).toHaveAttribute("href", "/auth/login?anio=2026");
+
+    mocks.session.mockResolvedValue({ user: { id: "u2", username: "bruno" } });
+    await render();
+    expect(screen.getAllByRole("link", { name: "Arma la tuya" }).at(-1)).toHaveAttribute("href", "/users/bruno/year/2026");
+
+    document.body.innerHTML = "";
+    mocks.session.mockResolvedValue({ user: { id: "u1", username: "ana" } });
+    mocks.year.mockResolvedValue(data({ isOwner: true }));
+    await render();
+    expect(screen.queryByRole("link", { name: "Arma la tuya" })).toBeNull();
   });
 
   it("un año inválido responde 404 sin leer nada", async () => {

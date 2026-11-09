@@ -172,6 +172,13 @@ describe("GET /api/auth/google/start", () => {
     expect(mocks.generateOAuthFlowState).toHaveBeenLastCalledWith("es", undefined, true, { kind: "lamina", id: "8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f" });
   });
 
+  it("guarda la intención de año y descarta un año inválido", async () => {
+    await startGet(new NextRequest("http://localhost:3000/api/auth/google/start?locale=es&anio=2026"));
+    expect(mocks.generateOAuthFlowState).toHaveBeenLastCalledWith("es", undefined, true, { kind: "year", year: 2026 });
+    await startGet(new NextRequest("http://localhost:3000/api/auth/google/start?locale=es&anio=1850"));
+    expect(mocks.generateOAuthFlowState).toHaveBeenLastCalledWith("es", undefined, true, null);
+  });
+
   it("una intención de Lámina inválida se descarta sin cortar el flujo", async () => {
     const response = await startGet(new NextRequest("http://localhost:3000/api/auth/google/start?locale=es&lamina=https://otro.example"));
     expect(response.status).toBe(307);

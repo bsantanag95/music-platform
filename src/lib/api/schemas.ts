@@ -3106,6 +3106,7 @@ export const NotificationKindSchema = z.enum([
   "artist_single",
   "artist_award_nomination",
   "artist_award_win",
+  "year_in_discs",
 ]);
 export type NotificationKindValue = z.infer<typeof NotificationKindSchema>;
 
@@ -3120,6 +3121,7 @@ export const OptionalNotificationKindSchema = z.enum([
   "artist_release_announced",
   "artist_single",
   "artist_award",
+  "year_in_discs",
 ]);
 export type OptionalNotificationKindValue = z.infer<typeof OptionalNotificationKindSchema>;
 
@@ -3187,6 +3189,12 @@ export const NotificationTargetSchema = z.discriminatedUnion("type", [
     artistCount: z.number().int(),
     count: z.number().int(),
   }),
+  z.object({
+    // Invitación a "Tu año en discos" (add-year-in-discs-phase3): enlaza al año propio.
+    type: z.literal("year"),
+    year: z.number().int(),
+    username: z.string(),
+  }),
 ]);
 
 export const NotificationGroupSchema = z.object({
@@ -3237,6 +3245,7 @@ export const NotificationPreferencesSchema = z.object({
   artist_single: z.boolean(),
   // Una sola clave para las dos clases de premio (D6).
   artist_award: z.boolean(),
+  year_in_discs: z.boolean(),
 });
 export type NotificationPreferencesValue = z.infer<typeof NotificationPreferencesSchema>;
 

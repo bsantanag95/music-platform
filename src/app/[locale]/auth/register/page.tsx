@@ -12,7 +12,7 @@ async function RegisterPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams?: Promise<{ lamina?: string; discografia?: string }>;
+  searchParams?: Promise<{ lamina?: string; discografia?: string; anio?: string }>;
 }) {
   const { locale } = await params;
   const intent = parseBuildIntent((await searchParams) ?? {});

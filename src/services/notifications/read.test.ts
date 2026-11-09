@@ -432,7 +432,32 @@ describe("listNotificationGroups", () => {
       "artist_single",
       "artist_award_nomination",
       "artist_award_win",
+      "year_in_discs",
     ]);
+  });
+
+  it("la invitación del año enlaza al año propio con el usuario del destinatario", async () => {
+    mockPage(
+      [
+        groupRow({
+          id: "year:2026",
+          kind: "year_in_discs",
+          actorCount: 0,
+          actorUsername: null,
+          artistId: null,
+          artistName: null,
+          rootId: null,
+          year: 2026,
+        }),
+      ],
+      [],
+    );
+    mocks.db.select.mockReturnValueOnce(queryChain({ rows: [{ username: "ana" }] }));
+    mocks.db.execute.mockResolvedValue([]);
+
+    const [group] = (await listNotificationGroups("me", { tab: "releases" })).groups;
+
+    expect(group!.target).toEqual({ type: "year", year: 2026, username: "ana" });
   });
 
   it("una nominación de premios nombra al artista con más y suma las cifras del grupo", async () => {

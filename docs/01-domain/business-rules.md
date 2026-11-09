@@ -358,6 +358,11 @@ el mismo umbral que el álbum, aplicado en el read-model (`artist-community.ts`)
   prellenado. Las notas solo ordenan: nunca se muestran a otros.
 - Un disco oculto del año desaparece para los demás del calendario, del Top 5, de la imagen y de las cifras (sus escuchas no cuentan). Solo su dueño lo ve,
   aparte, y lo puede volver a mostrar. Ocultar no toca el diario.
+- Del 1 de diciembre al 15 de enero, en la zona de la persona, Inicio y el diario invitan a su año que cierra (el en curso en diciembre, el anterior en
+  enero) a quien tiene escuchas visibles ese año y todavía no lo compartió; la tarjeta se descarta por año. Además llega un aviso en "Novedades", una sola
+  vez por persona y año, a toda cuenta activa con escuchas ese año y la preferencia `year_in_discs` activa (lo está por defecto).
+- "Arma la tuya" en el año de otra persona lleva al año propio de ese mismo año, también después de registrarse (intención `anio`, ADR 0055). El dueño
+  que abre un año pasado sin escuchas ve un estado vacío que lleva al diario; para cualquier otra persona sigue sin existir.
 - Una discografía es una Lámina derivada: los discos de la sección principal de un artista que una persona valoró, desde 3. La ven el dueño y
   sus seguidores. La marca por artista la abre a quien pueda ver el perfil, se mantiene al día con las notas nuevas, es reversible y no vuelve
   públicas esas valoraciones en otro lugar. Su progreso es discreto: nunca "X de Y" (`product_philosophy.md` §6.4.1).

@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   years: vi.fn(),
 }));
 
+vi.mock("@/lib/year-invitation-request", () => ({ yearInvitationForRequest: vi.fn(async () => null) }));
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn().mockResolvedValue((key: string) => key),
   getTimeZone: vi.fn().mockResolvedValue("America/Santiago"),

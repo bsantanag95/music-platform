@@ -2221,13 +2221,13 @@ ninguna, o un día inválido responden `400 VALIDATION_ERROR`.
 
 `GET` **200 OK:** `{ preferences, emailDigest, emailVerified }`.
 
-- `preferences` trae las **doce** claves del contrato: las diez desactivables (`comment_reply`,
+- `preferences` trae las **trece** claves del contrato: las once desactivables (`comment_reply`,
   `thread_reply`, `new_follower`, `follow_accepted`, `comment_like_milestone`, `list_save_milestone`,
-  `artist_release`, `artist_release_announced`, `artist_single` y `artist_award`, que gobierna los dos
-  tipos de premio) y las dos fijas (`follow_request` y `moderation`, siempre `true`; la interfaz las
+  `artist_release`, `artist_release_announced`, `artist_single`, `artist_award`, que gobierna los dos
+  tipos de premio, y `year_in_discs`, la invitación de diciembre) y las dos fijas (`follow_request` y `moderation`, siempre `true`; la interfaz las
   muestra como texto, no como interruptor). El valor es el **efectivo**: la fila guardada si existe y,
   si no, el defecto del tipo. Defectos: activados `comment_reply`, `thread_reply`, `new_follower`,
-  `follow_accepted`, `comment_like_milestone`, `artist_release` y `artist_award`; desactivados
+  `follow_accepted`, `comment_like_milestone`, `artist_release`, `artist_award` y `year_in_discs`; desactivados
   `list_save_milestone`, `artist_release_announced` y `artist_single`.
 - `emailDigest` — opt-in del resumen semanal por email; desactivado por defecto.
 - `emailVerified` — hay email verificado. Sin él, la interfaz deshabilita el interruptor y ofrece
@@ -2338,6 +2338,11 @@ zona horaria del dueño (cookie `tz`; UTC si no hay); repetirlo desde otra zona 
 - `POST /api/me/year/<año>/hidden/<releaseGroupId>` → `204`: oculta el disco del año (`VALIDATION_ERROR` si no tiene escuchas ese año) y lo saca del Top 5
   elegido. `DELETE` → `204`: lo vuelve a mostrar. No tocan el diario.
 - Un año fuera de 2000 a 2100 responde `YEAR_NOT_FOUND`.
+
+**Intención de año** (`add-year-in-discs-phase3`, ADR 0055): `/auth/register`, `/auth/login` y `GET /api/auth/google/start` aceptan `anio=<año>` (entero de
+2000 a 2100; otro valor se descarta) y, al autenticarse, llevan a `/<locale>/users/<usuario>/year/<año>`. Con `lamina` o `discografia` en el mismo pedido,
+mandan esas. Las notificaciones suman el tipo `year_in_discs` en la pestaña `releases`, con destino `{ type: "year", year, username }`, y la preferencia
+`year_in_discs` en `GET|PUT /api/me/notification-preferences`.
 
 - `GET`: `{ state, canUnshare, hasNote, payload }`. `state` es `public`, `needs_gesture` o `private_profile`. `payload` son los
   datos de la hoja; fuera de `public`, su imagen es la personal.

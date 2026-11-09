@@ -279,6 +279,23 @@
       "hiddenTitle": "{count, plural, one {# hidden album} other {# hidden albums}}",
       "hiddenHint": "They don’t appear in your year or count in the figures. Only you see them here; your diary doesn’t change.",
       "show": "Show"
+    },
+    "cta": {
+      "title": "Make your {year} in albums",
+      "description": "Your year comes from your diary: log what you listen to, pick your Top 5 and share it."
+    },
+    "empty": {
+      "title": "No listens in {year} yet",
+      "body": "Your year in albums builds itself from your diary: every album you log goes into its month, and your ratings prefill your Top 5.",
+      "action": "Go to your diary"
+    },
+    "invite": {
+      "title": "Your {year} in albums is ready",
+      "titleInProgress": "Your {year} in albums, so far",
+      "description": "See it month by month, pick your Top 5 and share it.",
+      "action": "See your year",
+      "dismiss": "Dismiss",
+      "dismissLabel": "Dismiss the {year} invitation"
     }
   }
 }

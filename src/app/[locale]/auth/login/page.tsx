@@ -11,11 +11,11 @@ async function LoginPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams?: Promise<{ reset?: string; lamina?: string; discografia?: string }>;
+  searchParams?: Promise<{ reset?: string; lamina?: string; discografia?: string; anio?: string }>;
 }) {
   const { locale } = await params;
-  const { reset, lamina, discografia } = (await searchParams) ?? {};
-  const intent = parseBuildIntent({ lamina, discografia });
+  const { reset, lamina, discografia, anio } = (await searchParams) ?? {};
+  const intent = parseBuildIntent({ lamina, discografia, anio });
   const session = await resolveSession();
   if (session) redirect({ href: intent ? buildIntentDestination(intent, session.user.username) : "/", locale });
   const t = await getTranslations("auth");

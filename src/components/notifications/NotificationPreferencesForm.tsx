@@ -32,6 +32,7 @@ const RELEASE_KINDS = [
   "artist_release_announced",
   "artist_single",
   "artist_award",
+  "year_in_discs",
 ] as const satisfies readonly OptionalNotificationKindValue[];
 
 const FIXED_KINDS = ["follow_request", "moderation"] as const satisfies readonly NotificationKindValue[];

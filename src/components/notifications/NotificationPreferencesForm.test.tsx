@@ -32,6 +32,7 @@ const ALL_ON = {
   artist_release_announced: true,
   artist_single: true,
   artist_award: true,
+  year_in_discs: true,
 } as const;
 
 function settings(
@@ -56,7 +57,7 @@ describe("NotificationPreferencesForm", () => {
     renderForm({ preferences: { ...ALL_ON, new_follower: false } });
 
     // Diez tipos desactivables (los premios son una sola clave) y el resumen.
-    expect(screen.getAllByRole("switch")).toHaveLength(11);
+    expect(screen.getAllByRole("switch")).toHaveLength(12);
     expect(screen.getByRole("switch", { name: "Nuevos seguidores" })).toHaveAttribute(
       "aria-checked",
       "false",

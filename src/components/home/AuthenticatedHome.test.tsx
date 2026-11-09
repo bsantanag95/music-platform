@@ -14,6 +14,7 @@ import { ResumeList } from "./ResumeList";
 import { WelcomePanel } from "./WelcomePanel";
 import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
 
+vi.mock("@/lib/year-invitation-request", () => ({ yearInvitationForRequest: vi.fn(async () => null) }));
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn().mockResolvedValue((key: string) => key),
   getLocale: vi.fn().mockResolvedValue("es"),

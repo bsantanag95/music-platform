@@ -531,7 +531,8 @@ Cada cambio parte de este documento y abre con el repaso en detalle de las decis
      el marco común (cifras y hasta 4 carátulas, ADR 0049), entradas desde el diario y `/me/laminas`.
    - **`add-year-in-discs-phase2`** ✅ implementado — Top 5 del año prellenado por la nota y editable, ocultar discos (fuera también de las cifras),
      imagen Publicación e Historia con el Top 5 y los doce meses, hasta 10 carátulas por ADR 0051 (`0088`).
-   - **`add-year-in-discs-phase3`** — invitación de diciembre y "Arma la tuya".
+   - **`add-year-in-discs-phase3`** ✅ implementado — invitación de diciembre (tarjeta en Inicio y en el diario del 1 de diciembre al 15 de enero, y un
+     aviso en "Novedades" por año, `0089`) y "Arma la tuya" al año propio con la intención `anio` (ADR 0055), con estado vacío para quien no tiene escuchas.
 7. **Siguientes** (§4.4) — "Tú vs. otra persona", décadas/géneros, mes en discos, pared de la colección.
 
 Documentos a actualizar en cada cambio: `business-rules.md` (visibilidad de lo compartido),

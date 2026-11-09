@@ -1263,6 +1263,14 @@ año: PK `(user_id, year, release_group_id)`. Las dos con `year` entre 2000 y 21
 se haya escuchado ese año y no esté oculto es una regla entre tablas: la aplica el servicio al guardar y la lectura descarta lo que dejó de cumplirla. Entran
 en la exportación como `yearTops` y `yearHidden`.
 
+## Aviso de "Tu año en discos" (migración `0089`, openspec `add-year-in-discs-phase3`)
+
+`notification` suma el tipo `year_in_discs` (sin actor ni referencia a otra tabla, en "Novedades") y la columna `year` (`SMALLINT`, entre 2000 y 2100):
+`chk_notification_year` exige que la lleve ese tipo y ningún otro. `group_key` es `year:<año>`. Único parcial `uq_notification_recipient_year (recipient_id,
+kind, year) WHERE year IS NOT NULL`: un aviso por persona y año, así el envío diario (`scripts/send-year-invitations.ts`) es idempotente.
+`notification_preference` suma `year_in_discs` (activada por defecto), y con él son once los tipos desactivables del `CHECK`. Se rehacen, con el mismo nombre, `chk_notification_kind`, `chk_notification_actor`,
+`chk_notification_target` y `chk_notification_preference_kind`.
+
 ## `discography_preference` (migración `0085`, openspec `add-discography-lamina-phase2`)
 
 Qué muestra la discografía de una persona con un artista: `sections` (`text[]`, solo `live` y `compilations`, sumadas a la principal) y `default_view`

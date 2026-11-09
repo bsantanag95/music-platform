@@ -116,6 +116,10 @@ export function notificationText(
     return t(key, { artist: target.artistName, title: target.title });
   }
 
+  if (group.kind === "year_in_discs") {
+    return target?.type === "year" ? t("row.yearInDiscs", { year: target.year }) : t("row.yearInDiscsFallback");
+  }
+
   if (target?.type === "award") {
     const award = options.awardName?.(target.awardSlug, target.awardName) ?? target.awardName;
     const params = {
