@@ -8,6 +8,7 @@ import { parseLaminaIntent } from "@/lib/laminas/intent";
 import { requirePageUser } from "@/services/auth/page-auth";
 import { listDiscographyEntries } from "@/services/laminas/discography";
 import { getLaminaInspiration, listMyLaminas } from "@/services/laminas/laminas";
+import { listYearsWithListens } from "@/services/laminas/year";
 import { getTierInspiration } from "@/services/laminas/tiers";
 
 // Láminas propias (spec top-laminas): un ranking armado a mano para mostrar y compartir.
@@ -16,13 +17,15 @@ async function LaminasPage({ searchParams }: { searchParams?: Promise<{ desde?: 
   const user = await requirePageUser();
   const inspirationId = parseLaminaIntent((await searchParams)?.desde);
   // `desde` puede ser un Top N o una tier list: cada lectura devuelve `null` si no es de su tipo, no se puede ver o es propia.
-  const [laminas, inspiration, tierInspiration, discographies] = await Promise.all([
+  const timeZone = await getTimeZone();
+  const [laminas, inspiration, tierInspiration, discographies, years] = await Promise.all([
     listMyLaminas(user.id),
     inspirationId ? getLaminaInspiration(inspirationId, user.id) : null,
     inspirationId ? getTierInspiration(inspirationId, user.id) : null,
     listDiscographyEntries(user.id),
+    listYearsWithListens(user.id, timeZone),
   ]);
-  const currentYear = Number(new Intl.DateTimeFormat("en", { year: "numeric", timeZone: await getTimeZone() }).format(new Date()));
+  const currentYear = Number(new Intl.DateTimeFormat("en", { year: "numeric", timeZone }).format(new Date()));
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-4 py-12">
@@ -57,6 +60,26 @@ async function LaminasPage({ searchParams }: { searchParams?: Promise<{ desde?: 
           ))}
         </ul>
       )}
+      {years.length > 0 ? (
+        <section className="flex flex-col gap-3">
+          <header className="flex flex-col gap-1">
+            <h2 className="font-display text-lg text-paper">{t("year.sectionTitle")}</h2>
+            <p className="font-body text-sm text-paper-muted">{t("year.sectionDescription")}</p>
+          </header>
+          <ul className="flex flex-wrap gap-2">
+            {years.map((year) => (
+              <li key={year}>
+                <Link
+                  href={`/users/${encodeURIComponent(user.username)}/year/${year}`}
+                  className="flex min-h-11 items-center rounded border border-ink-border bg-ink-surface px-4 font-display text-sm text-paper transition-colors hover:border-amber"
+                >
+                  {year === currentYear ? t("year.inProgressShort", { year }) : year}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       {discographies.length > 0 ? (
         <section className="flex flex-col gap-3">
           <header className="flex flex-col gap-1">

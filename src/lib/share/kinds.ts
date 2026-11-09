@@ -31,6 +31,7 @@ export const SHARE_TARGET_KINDS = [
   "top",
   "discography",
   "tier",
+  "year",
 ] as const;
 export type ShareTargetKind = (typeof SHARE_TARGET_KINDS)[number];
 

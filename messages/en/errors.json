@@ -306,5 +306,9 @@
   "DISCOGRAPHY_NOT_FOUND": {
     "title": "Discography not found",
     "description": "We could not find this discography."
+  },
+  "YEAR_NOT_FOUND": {
+    "title": "Year not found",
+    "description": "We could not find this year in albums."
   }
 }

@@ -423,6 +423,7 @@ export const ErrorCodeSchema = z.enum([
   "SHARE_TARGET_NOT_FOUND",
   "LAMINA_NOT_FOUND",
   "DISCOGRAPHY_NOT_FOUND",
+  "YEAR_NOT_FOUND",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 

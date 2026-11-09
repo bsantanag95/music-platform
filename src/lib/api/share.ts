@@ -44,7 +44,7 @@ export function getSharePayload(kind: ShareTargetKind, ref: string, locale: stri
   return apiFetch(`/api/share/payload/${kind}/${encodeURIComponent(ref)}?locale=${locale}`, SharePayloadSchema);
 }
 
-type OwnKind = "rating" | "listen" | "top" | "discography" | "tier";
+type OwnKind = "rating" | "listen" | "top" | "discography" | "tier" | "year";
 
 const ownSharePath = (kind: OwnKind, ref: string, locale: string) => `/api/me/share/${kind}/${ref}?locale=${locale}`;
 

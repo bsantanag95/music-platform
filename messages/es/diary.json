@@ -104,5 +104,6 @@
     "asOthers": "Así lo ven otros",
     "asOthersDescription": "Cada escucha se ve según su audiencia: las privadas solo las ves tú.",
     "asOthersLink": "Ver tu diario en el perfil"
-  }
+  },
+  "yearInDiscs": "Tu {year} en discos"
 }

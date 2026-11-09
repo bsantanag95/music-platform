@@ -1869,6 +1869,29 @@ export const discographyShare = pgTable(
 
 export type DiscographyShareRow = typeof discographyShare.$inferSelect;
 
+/**
+ * Marca de "Tu año en discos" compartido (migración 0087, openspec: add-year-in-discs-phase1): abre ese año (discos y cifras, nunca las escuchas) a
+ * quien pueda ver el perfil. Guarda la zona horaria del dueño al compartir, con la que se cuentan los meses para cualquier otra persona.
+ */
+export const yearShare = pgTable(
+  "year_share",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    year: smallint("year").notNull(),
+    timeZone: text("time_zone").notNull(),
+    sharedAt: timestamp("shared_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.year] }),
+    check("chk_year_share_year", sql`${t.year} BETWEEN 2000 AND 2100`),
+    check("chk_year_share_time_zone", sql`char_length(${t.timeZone}) BETWEEN 1 AND 64`),
+  ],
+);
+
+export type YearShareRow = typeof yearShare.$inferSelect;
+
 // Preferencias del dueño en su discografía (migración 0085, openspec: add-discography-lamina-phase2): secciones que suma a la
 // principal y vista por defecto. Aparte de la marca: se elige también sin compartir. `updated_at` lo mantiene un trigger.
 export const discographyPreference = pgTable(
@@ -2401,7 +2424,7 @@ export const shareEvent = pgTable(
     index("idx_share_event_target").on(t.targetKind, t.targetRef),
     check(
       "chk_share_event_target_kind",
-      sql`${t.targetKind} IN ('album', 'song', 'artist', 'genre', 'awards', 'award', 'ceremony', 'halls', 'hall', 'hall_class', 'collections', 'collection', 'profile', 'review', 'comment', 'list', 'camino', 'user_collection', 'fingerprint', 'rating', 'listen', 'top', 'discography', 'tier')`,
+      sql`${t.targetKind} IN ('album', 'song', 'artist', 'genre', 'awards', 'award', 'ceremony', 'halls', 'hall', 'hall_class', 'collections', 'collection', 'profile', 'review', 'comment', 'list', 'camino', 'user_collection', 'fingerprint', 'rating', 'listen', 'top', 'discography', 'tier', 'year')`,
     ),
     check("chk_share_event_target_ref", sql`char_length(${t.targetRef}) BETWEEN 1 AND 200`),
     check(

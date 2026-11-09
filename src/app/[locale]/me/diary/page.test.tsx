@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   requirePageUser: vi.fn(),
   listMyDiary: vi.fn(),
   listMyWantToListen: vi.fn(),
+  years: vi.fn(),
 }));
 
 vi.mock("next-intl/server", () => ({
@@ -16,6 +17,8 @@ vi.mock("next-intl/server", () => ({
 vi.mock("@/services/auth/page-auth", () => ({ requirePageUser: mocks.requirePageUser }));
 vi.mock("@/services/diary/diary", () => ({ listMyDiary: mocks.listMyDiary }));
 vi.mock("@/services/want-to-listen/want-to-listen", () => ({ listMyWantToListen: mocks.listMyWantToListen }));
+vi.mock("@/i18n/navigation", () => ({ Link: ({ href, children }: { href: string; children: ReactNode }) => <a href={href}>{children}</a> }));
+vi.mock("@/services/laminas/year", () => ({ listYearsWithListens: mocks.years, currentYearIn: () => 2026 }));
 vi.mock("@/components/diary/LogListenButton", () => ({ LogListenButton: () => <button type="button">logListen</button> }));
 vi.mock("@/components/diary/DiaryBridge", () => ({
   DiaryBridgeProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
@@ -41,6 +44,24 @@ describe("/me/diary", () => {
     mocks.requirePageUser.mockResolvedValue({ id: "u1", username: "ana maría" });
     mocks.listMyDiary.mockResolvedValue({ entries: [], page: 1, pageSize: 20, hasNext: false });
     mocks.listMyWantToListen.mockResolvedValue({ items: [{ id: "w1" }, { id: "w2" }], page: 1, pageSize: 4, hasNext: false });
+    mocks.years.mockResolvedValue([2026, 2025]);
+  });
+
+  it("enlaza a tu año en discos del año que se mira, si tiene escuchas", async () => {
+    await renderPage();
+    expect(mocks.years).toHaveBeenCalledWith("u1", "America/Santiago");
+    expect(screen.getByRole("link", { name: "yearInDiscs" })).toHaveAttribute("href", "/users/ana%20mar%C3%ADa/year/2026");
+  });
+
+  it("con el filtro de un año usa ese año", async () => {
+    await renderPage({ year: "2025" });
+    expect(screen.getByRole("link", { name: "yearInDiscs" })).toHaveAttribute("href", "/users/ana%20mar%C3%ADa/year/2025");
+  });
+
+  it("sin escuchas en el año que se mira, no hay enlace", async () => {
+    mocks.years.mockResolvedValue([2024]);
+    await renderPage();
+    expect(screen.queryByRole("link", { name: "yearInDiscs" })).toBeNull();
   });
 
   it("muestra la cabecera con la acción de anotar", async () => {

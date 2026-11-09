@@ -348,6 +348,11 @@ el mismo umbral que el álbum, aplicado en el read-model (`artist-community.ts`)
   Lámina no cambia si la fuente cambia. Creada así, nace privada aunque la audiencia por defecto sea otra, y sus notas siguen apagadas.
 - "Arma la tuya" hereda de una Lámina ajena su formato y su tipo, y ofrece su título como sugerencia; nunca sus ítems ni sus notas. Si
   la persona no la puede ver, no hereda nada. Quien se registra por ese camino va a armarla y su bienvenida queda pendiente.
+- "Tu año en discos" es una Lámina derivada del diario: los discos de las escuchas de una persona en un año, mes por mes, y sus cifras (escuchas,
+  discos, discos nuevos y artistas descubiertos según el diario). Nunca muestra el texto de una escucha, su reacción ni una nota. Existe desde la
+  primera escucha del año; el año en curso es "hasta ahora". Lo ve su dueño; la marca de ese año lo abre a quien pueda ver el perfil, sin cambiar la
+  audiencia de ninguna escucha, y se puede quitar. Los meses se cuentan en la zona del dueño: la suya al mirarlo, la guardada en la marca para cualquier
+  otra persona.
 - Una discografía es una Lámina derivada: los discos de la sección principal de un artista que una persona valoró, desde 3. La ven el dueño y
   sus seguidores. La marca por artista la abre a quien pueda ver el perfil, se mantiene al día con las notas nuevas, es reversible y no vuelve
   públicas esas valoraciones en otro lugar. Su progreso es discreto: nunca "X de Y" (`product_philosophy.md` §6.4.1).

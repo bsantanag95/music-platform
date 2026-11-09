@@ -245,5 +245,22 @@
       }
     },
     "fromDiscography": "Armar tier list"
+  },
+  "year": {
+    "kicker": "Tu año en discos",
+    "title": "{year} en discos",
+    "titleInProgress": "{year} en discos, hasta ahora",
+    "stats": {
+      "listens": "Escuchas",
+      "discs": "Discos",
+      "newDiscs": "Discos nuevos",
+      "artistsDiscovered": "Artistas descubiertos"
+    },
+    "statsNote": "Según el diario. Un disco nuevo es uno con una primera escucha ese año; un artista descubierto, uno que se escuchó por primera vez ese año.",
+    "emptyMonth": "Sin discos este mes.",
+    "monthDiscs": "{month}: {count, plural, one {# disco} other {# discos}}",
+    "sectionTitle": "Tus años",
+    "sectionDescription": "Tu año en discos, mes por mes, desde tu diario.",
+    "inProgressShort": "{year}, hasta ahora"
   }
 }

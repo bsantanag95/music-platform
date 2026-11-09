@@ -104,5 +104,6 @@
     "asOthers": "How others see it",
     "asOthersDescription": "Each listen is shown according to its audience: private ones are only visible to you.",
     "asOthersLink": "See your diary on your profile"
-  }
+  },
+  "yearInDiscs": "Your {year} in albums"
 }

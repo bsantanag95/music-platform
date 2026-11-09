@@ -182,6 +182,13 @@ de cuál de las filas con el mismo título haya en la BD.
 >   `add-tier-list-lamina-phase3` también crea un tercer usuario `smoke_tier_*` (lo cubre la misma limpieza) y verifica "Arma la tuya" desde una tier list
 >   ajena (mismos ítems por la nota propia, sin bandeja ni notas, etiquetas con y sin copia, para seguidores, oculta, bloqueo, propia y de otro tipo) y el
 >   resumen para el formulario (`getTierInspiration`).
+> - `smoke-test-year-laminas.ts` crea artistas, discos y una canción sintéticos (MBID `5e0ce000-0000-4000-8000-00000000f0*`) y usuarios `smoke_year_*` con
+>   escuchas, y los borra al terminar (también si falla). Si se interrumpió, limpiar con `DELETE FROM app_user WHERE username LIKE 'smoke_year_%'; DELETE FROM
+>   release_group WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000f0%'; DELETE FROM recording WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000f0%';
+>   DELETE FROM artist WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000f0%';`. Necesita las migraciones `0079` a `0087`. Verifica los `CHECK` de `0087`,
+>   los meses de "Tu año en discos" en la zona horaria (una escucha de fin de mes), el orden por mes, las cifras (disco nuevo, artista descubierto y no), que
+>   canciones y artistas no entran en el calendario, la visibilidad con y sin la marca por año (anónimo, seguidora, perfil privado, bloqueo), la zona guardada en
+>   la marca, el gesto y dejar de compartir, la exportación, los eventos con la cuenta y la lectura bajo 100 ms con 1.000 escuchas.
 > - `smoke-test-comment-replies.ts` crea un artista y un álbum sintéticos (MBID
 >   `5e0ce000-0000-4000-8000-0000000009b0` / `...09b1`) y usuarios `smoke_reply_*`, y los borra al terminar
 >   (también si falla; el `ON DELETE CASCADE` limpia comentarios, respuestas, likes y bloqueos). Si se

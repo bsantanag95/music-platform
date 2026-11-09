@@ -7,10 +7,13 @@ import { updateListenEntry } from "@/services/diary/diary";
 import { isDiscographyShared } from "@/services/laminas/discography";
 import { updateLamina } from "@/services/laminas/laminas";
 import { updateTierList } from "@/services/laminas/tiers";
+import { markYearShared, readYearShare, unmarkYearShared } from "@/services/laminas/year";
+import { requestTimeZone } from "@/lib/request-time-zone";
 import { shareFormatsOf, sharePayloadFor } from "./metadata";
 import { loadDiscographyTarget } from "./targets/discography";
 import { loadLaminaTarget } from "./targets/lamina";
 import { loadTierTarget } from "./targets/tier";
+import { loadYearTarget, parseYearRef } from "./targets/year";
 import { loadListenTarget, loadRatingTarget } from "./targets/relation";
 import type { ShareTarget } from "./types";
 
@@ -18,7 +21,7 @@ import type { ShareTarget } from "./types";
 // una escucha. Lo decide el servidor: la hoja solo muestra el estado. Lo único que vuelve público algo es
 // `makeOwnPublic`, y solo esa fila.
 
-export const OWN_SHARE_KINDS = ["rating", "listen", "top", "discography", "tier"] as const;
+export const OWN_SHARE_KINDS = ["rating", "listen", "top", "discography", "tier", "year"] as const;
 export type OwnShareKind = (typeof OWN_SHARE_KINDS)[number];
 
 export function isOwnShareKind(value: string): value is OwnShareKind {
@@ -33,6 +36,7 @@ function artistOf(ref: string): string {
 function loadTarget(kind: OwnShareKind, ref: string, locale: ShareLocale, owner?: string): Promise<ShareTarget | null> {
   if (kind === "top") return loadLaminaTarget(ref, locale, { owner });
   if (kind === "tier") return loadTierTarget(ref, locale, { owner });
+  if (kind === "year") return loadYearTarget(ref, locale, { owner });
   if (kind === "discography") return loadDiscographyTarget(ref, locale, { owner });
   return kind === "rating" ? loadRatingTarget(ref, locale, { owner }) : loadListenTarget(ref, locale, { owner });
 }
@@ -45,6 +49,7 @@ export function loadOwnTarget(kind: OwnShareKind, ref: string, locale: ShareLoca
 function notFound(kind: OwnShareKind): ApiError {
   if (kind === "top" || kind === "tier") return new ApiError("LAMINA_NOT_FOUND", 404, "La Lámina no existe");
   if (kind === "discography") return new ApiError("DISCOGRAPHY_NOT_FOUND", 404, "La discografía no existe");
+  if (kind === "year") return new ApiError("YEAR_NOT_FOUND", 404, "El año no existe");
   return kind === "rating"
     ? new ApiError("RATING_NOT_FOUND", 404, "La valoración no existe")
     : new ApiError("LISTEN_ENTRY_NOT_FOUND", 404, "La escucha no existe");
@@ -74,6 +79,8 @@ export async function ownShareState(kind: OwnShareKind, ref: string, locale: Sha
       ? db.select({ id: ratingShare.ratingId }).from(ratingShare).where(eq(ratingShare.ratingId, ref)).limit(1).then((rows) => rows.length > 0)
       : kind === "discography"
         ? isDiscographyShared(userId, artistOf(ref))
+        : kind === "year"
+          ? readYearShare(userId, parseYearRef(ref)!.year).then(Boolean)
         : Promise.resolve(false),
   ]);
   const common = { canUnshare: marked, hasNote: Boolean(own.card.quote) };
@@ -102,19 +109,24 @@ export async function makeOwnPublic(kind: OwnShareKind, ref: string, locale: Sha
     await updateLamina(ref, userId, { audience: "public" });
   } else if (kind === "tier") {
     await updateTierList(ref, userId, { audience: "public" });
+  } else if (kind === "year") {
+    // Guarda la zona del dueño: los meses del año compartido se cuentan en ella para cualquier otra persona.
+    await markYearShared(userId, parseYearRef(ref)!.year, await requestTimeZone());
   } else {
     await updateListenEntry(ref, userId, { audience: "public" });
   }
   return ownShareState(kind, ref, locale, userId);
 }
 
-export const STOPPABLE_KINDS = ["rating", "discography"] as const;
+export const STOPPABLE_KINDS = ["rating", "discography", "year"] as const;
 export type StoppableKind = (typeof STOPPABLE_KINDS)[number];
 
 /** "Dejar de compartir" lo que tiene marca. Una escucha o una Lámina se cierran desde su audiencia. */
 export async function stopSharing(kind: StoppableKind, ref: string, locale: ShareLocale, userId: string) {
   await requireOwnTarget(kind, ref, locale, userId);
-  if (kind === "discography") {
+  if (kind === "year") {
+    await unmarkYearShared(userId, parseYearRef(ref)!.year);
+  } else if (kind === "discography") {
     await db.delete(discographyShare).where(and(eq(discographyShare.userId, userId), eq(discographyShare.artistId, artistOf(ref))));
   } else {
     await db.delete(ratingShare).where(and(eq(ratingShare.ratingId, ref), eq(ratingShare.userId, userId)));

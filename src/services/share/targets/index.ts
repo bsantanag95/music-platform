@@ -8,6 +8,7 @@ import { loadCeremonyTarget, loadCollectionTarget, loadGenreTarget, loadIndexTar
 import { loadLaminaTarget } from "./lamina";
 import { loadProfileTarget } from "./profile";
 import { loadTierTarget } from "./tier";
+import { loadYearTarget } from "./year";
 import { loadListenTarget, loadRatingTarget } from "./relation";
 import {
   loadCaminoTarget,
@@ -62,6 +63,8 @@ export const loadShareTarget = cache(async (kind: ShareTargetKind, ref: string, 
       return loadDiscographyTarget(ref, locale);
     case "tier":
       return loadTierTarget(ref, locale);
+    case "year":
+      return loadYearTarget(ref, locale);
     case "awards":
     case "halls":
     case "collections":
