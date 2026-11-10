@@ -46,15 +46,16 @@ La cabecera SHALL mostrar una ficha con estas filas, omitiendo las que no tienen
 - Grupos: **Origen** (lugar de formación, traducido y con país) y **Actividad** (año de
   formación, año de separación si terminó, y estado "Activa" o "Separada").
 - Personas: **Nacimiento** (fecha con su precisión y lugar de nacimiento con país),
-  **Fallecimiento** si terminó, y **Actividad** desde el año del primer lanzamiento de su
-  discografía propia.
+  **Fallecimiento** si terminó, y **Primer disco** con el año del primer lanzamiento de su
+  discografía propia (no "Actividad": es lo único que se sabe).
 - Grupos: **Integrantes** (o **Última alineación** si el grupo terminó) con hasta 5 nombres
   de ese bloque de la alineación, en su orden y enlazados, y un enlace "Ver alineación" a la
   sub-vista Actual de la pestaña Integrantes.
 - Personas: **Bandas** con hasta 5 grupos (actuales primero, luego antiguos del más reciente
   al más antiguo), enlazados, y un enlace "Ver todas" a la pestaña Bandas.
 - **Enlaces**: sitio oficial, Bandcamp, Wikipedia (el artículo del idioma de lectura) y la
-  plataforma de streaming, en ese orden fijo.
+  plataforma de streaming, en ese orden fijo. Cada enlace externo SHALL marcarse como tal (`↗`)
+  y SHALL NOT usar el color de acento.
 
 #### Scenario: Grupo separado
 
@@ -71,12 +72,12 @@ La cabecera SHALL mostrar una ficha con estas filas, omitiendo las que no tienen
 
 - **WHEN** una persona abre a Mon Laferte en español
 - **THEN** la ficha muestra "Nacimiento: 2 de mayo de 1983 · Viña del Mar, Chile" y la
-  actividad desde el año de su primer lanzamiento
+  "Primer disco" con el año de su primer lanzamiento, sin fila "Actividad"
 
 #### Scenario: Enlaces en orden fijo
 
 - **WHEN** un artista tiene Spotify, sitio oficial y artículo de Wikipedia
-- **THEN** la fila Enlaces muestra "Sitio oficial · Wikipedia · Spotify"
+- **THEN** la fila Enlaces muestra "Sitio oficial ↗ · Wikipedia ↗ · Spotify ↗"
 
 #### Scenario: Alineación actual en la ficha
 

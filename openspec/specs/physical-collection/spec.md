@@ -222,7 +222,8 @@ tras aplicar `q` y el filtro de atributo pero **ignorando** el filtro de formato
 encabezado muestre siempre la distribución entre formatos, y el **total** de copias del usuario
 sin ningún filtro (`total`). El encabezado SHALL presentar el conteo como **segmentos por
 formato** (Todo y los cuatro formatos, cada uno con su cifra) que filtran al elegirlos; un
-formato sin copias SHALL quedar deshabilitado. El encabezado SHALL NOT incluir barras de
+formato sin copias SHALL NOT mostrarse, salvo que sea el formato elegido (para poder salir de él). El segmento
+elegido SHALL usar un estado neutro, no el color de acento, que queda para la pestaña activa. El encabezado SHALL NOT incluir barras de
 progreso, pendientes ni insignias de completitud.
 
 #### Scenario: Ver la colección propia
@@ -279,6 +280,10 @@ progreso, pendientes ni insignias de completitud.
 - **WHEN** el usuario busca "dokken" en una colección de 13 copias
 - **THEN** la respuesta sigue trayendo `total: 13`
 
+#### Scenario: Formato sin copias
+- **WHEN** el usuario no tiene ninguna copia en cassette
+- **THEN** el encabezado no muestra el segmento "Cassette"
+
 ### Requirement: Colección ajena en el perfil
 El sistema SHALL exponer la lectura paginada de la colección de un usuario por `username`,
 filtrando por la matriz de visibilidad existente (bloqueos, perfil privado y relación de
@@ -323,7 +328,10 @@ visualización a elegir por el visitante:
 - **Estantería**: cuadrícula de carátulas cuadradas donde predomina lo visual, con el título, el
   artista con el año del álbum y el formato con su primer atributo al pie de cada ficha.
 - **Lista detallada**: filas compactas separadas por una línea con carátula, título, artista con
-  el año, formato, atributos, nota, audiencia y fecha. Cuando la colección se agrupa por artista,
+  el año, una línea de texto "formato · atributos", nota, audiencia y la fecha de alta rotulada
+  como tal ("Añadida el …"). La audiencia Pública o Seguidores SHALL mostrarse solo como un ícono
+  discreto (con el nombre en la etiqueta accesible y al pasar el cursor); la Privada SHALL
+  conservar su nombre y el color de acento. Cuando la colección se agrupa por artista,
   la fila SHALL NOT repetir el artista del encabezado.
 - **Índice**: una tabla con posición, álbum, artista, formato, edición, fecha de alta y las
   acciones de la fila, sin reservar espacio oculto.
@@ -361,6 +369,10 @@ SHALL usar la silueta de disco del sistema en lugar de un recuadro vacío.
 #### Scenario: Año del álbum
 - **WHEN** una copia es de un álbum publicado en 1987
 - **THEN** su ficha dice "Guns N' Roses · 1987" junto al título
+
+#### Scenario: Audiencia en la Lista detallada
+- **WHEN** el usuario ve en Lista detallada una copia para Seguidores y otra Privada
+- **THEN** la primera muestra solo el ícono de audiencia y la segunda el ícono con "Privado"
 
 ### Requirement: Cambio de audiencia en lote de entradas de colección
 El sistema SHALL permitir al dueño cambiar la audiencia de varias entradas propias a la vez, de
