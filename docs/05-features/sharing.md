@@ -373,9 +373,10 @@ solo un "cuerpo" distinto dentro del mismo marco.
   3×3 de 1080 ronda los 300 px — al límite; el Top 10 de 5 columnas da ~180 px). Los formatos se
   diseñan alrededor de esa medida en lugar de estirar la carátula.
 - Un disco con carátula retirada o sin carátula muestra el `CoverTile` tipográfico (título + artista).
-- **Pendiente de confirmar (§8 D6):** que una imagen compuesta que el usuario descarga y publica sigue
-  siendo "uso de identificación del contenido" en los términos de §C de data-licensing. Es la práctica
-  de toda la industria de estos formatos, pero es una ampliación de la política y merece un ADR.
+- **Decidido (§8 D6):** una imagen compuesta que el usuario descarga y publica sigue siendo "uso de
+  identificación del contenido" en los términos de §C de data-licensing, con hasta 4 carátulas de ≤250 px,
+  créditos y retiros respetados (ADR 0049). Una Lámina armada o curada por una persona (Top N, tier list,
+  año en discos) llega a 10 (ADR 0051) y la discografía también (ADR 0053).
 
 ---
 
