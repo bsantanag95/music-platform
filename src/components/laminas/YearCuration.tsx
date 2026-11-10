@@ -120,7 +120,7 @@ export function YearTopEditor({ year, top, custom, choices }: { year: number; to
               return (
                 <li key={choice.id}>
                   <label className="flex min-h-11 items-center gap-3 rounded px-2 py-1 hover:bg-ink">
-                    <input type="checkbox" checked={checked} disabled={!checked && selected.length >= TOP_SIZE} onChange={() => toggle(choice.id)} />
+                    <input type="checkbox" checked={checked} disabled={!checked && selected.length >= TOP_SIZE} onChange={() => toggle(choice.id)} className="form-check" />
                     <span className="flex min-w-0 flex-1 flex-col">
                       <span className="truncate font-display text-sm text-paper">{choice.title}</span>
                       <span className="truncate font-data text-xs text-paper-muted">

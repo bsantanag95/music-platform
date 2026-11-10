@@ -266,7 +266,7 @@ export function TierListEditor({ initial, ownerUsername }: { initial: TierListDe
             checked={tierList.showScores}
             disabled={busy}
             onChange={(event) => void save({ showScores: event.target.checked })}
-            className="mt-0.5"
+            className="form-check mt-0.5"
           />
           <span className="flex flex-col gap-0.5">
             {t("fields.showScores")}
