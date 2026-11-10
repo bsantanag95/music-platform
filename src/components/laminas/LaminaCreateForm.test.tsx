@@ -122,8 +122,8 @@ describe("LaminaCreateForm", () => {
 
     it("trae formato y tipo, y el título solo como sugerencia", () => {
       renderInspired();
-      expect(screen.getByRole("combobox", { name: "Formato" })).toHaveValue("top10");
-      expect(screen.getByRole("combobox", { name: "Qué rankeas" })).toHaveValue("recording");
+      expect(screen.getByRole("button", { name: "Top 10" })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByRole("button", { name: "Canciones" })).toHaveAttribute("aria-pressed", "true");
       expect(screen.getByRole("textbox", { name: "Título" })).toHaveValue("");
       expect(screen.getByRole("link", { name: "Como la de @ana" })).toHaveAttribute("href", `/users/ana/laminas/${inspiration.id}`);
     });

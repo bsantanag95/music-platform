@@ -4,6 +4,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { decadeLabel } from "@/services/discovery/decade-label";
 import { genreDisplayName, genreLocaleOf } from "@/services/genres/names";
+import { SEGMENT_GROUP, segmentOption } from "./form-parts";
+import { ScoreBadge } from "./ScoreBadge";
 import type { LaminaFilterState, LaminaSourceChoice, LaminaSourceState } from "./use-lamina-source";
 
 // Fuente de una Lámina (spec top-laminas): filtros y candidatos con los primeros ya elegidos. Se usa al crear y al completar;
@@ -24,15 +26,9 @@ export function LaminaSourceTabs({
   return (
     <fieldset className="flex flex-col gap-1">
       <legend className="font-data text-xs text-paper-muted">{t("source.legend")}</legend>
-      <div className="flex flex-wrap gap-1 rounded border border-ink-border p-0.5">
+      <div className={SEGMENT_GROUP}>
         {options.map((option) => (
-          <button
-            key={option}
-            type="button"
-            aria-pressed={source === option}
-            onClick={() => onChange(option)}
-            className={`min-h-9 flex-1 rounded px-3 py-1 font-data text-xs transition-colors ${source === option ? "bg-ink-border text-paper" : "text-paper-muted hover:text-paper"}`}
-          >
+          <button key={option} type="button" aria-pressed={source === option} onClick={() => onChange(option)} className={segmentOption(source === option)}>
             {t(`source.${option}`)}
           </button>
         ))}
@@ -154,7 +150,7 @@ export function LaminaSourcePanel({ state, rankStart }: { state: LaminaSourceSta
               return (
                 <li key={candidate.target.id}>
                   <label className={`flex min-h-11 items-center gap-2 rounded px-1 py-1 transition-colors hover:bg-ink ${!checked && full ? "opacity-50" : ""}`}>
-                    <input type="checkbox" checked={checked} disabled={!checked && full} onChange={() => state.toggle(candidate.target.id)} className="size-4 shrink-0" />
+                    <input type="checkbox" checked={checked} disabled={!checked && full} onChange={() => state.toggle(candidate.target.id)} className="form-check" />
                     {rankStart !== null ? <span className="w-5 shrink-0 text-center font-data text-xs text-paper-muted">{checked ? rankStart + position : ""}</span> : null}
                     <CoverThumb cover={candidate.target.coverThumbUrl} label="" className="size-10 shrink-0 rounded" />
                     <span className="flex min-w-0 flex-1 flex-col">
@@ -162,9 +158,7 @@ export function LaminaSourcePanel({ state, rankStart }: { state: LaminaSourceSta
                       {candidate.target.artistName ? <span className="truncate font-data text-xs text-paper-muted">{candidate.target.artistName}</span> : null}
                     </span>
                     {candidate.score ? (
-                      <span className="shrink-0 font-data text-xs text-paper-muted">
-                        {candidate.score.detailedScore != null ? `${candidate.score.detailedScore}/100` : `${Number(candidate.score.stars)}★`}
-                      </span>
+                      <ScoreBadge score={{ stars: Number(candidate.score.stars), detailedScore: candidate.score.detailedScore }} className="shrink-0" />
                     ) : null}
                   </label>
                 </li>

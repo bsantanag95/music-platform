@@ -13,6 +13,12 @@
   "moveUp": "Subir {title}",
   "moveDown": "Bajar {title}",
   "remove": "Quitar {title}",
+  "itemMenu": "Acciones de {title}",
+  "menu": {
+    "up": "Subir",
+    "down": "Bajar",
+    "remove": "Quitar"
+  },
   "delete": "Eliminar Lámina",
   "deleteTitle": "¿Eliminar esta Lámina?",
   "deleteMessage": "No se puede deshacer.",
@@ -23,14 +29,15 @@
   "showScoresHint": "Quien vea la Lámina verá tu nota de cada ítem, también en la imagen.",
   "create": {
     "heading": "Nueva Lámina",
-    "titlePlaceholder": "Mis 10 discos de 2026",
+    "titlePlaceholder": "Mis {n} {kind, select, recording {canciones} other {discos}} de {year}",
     "submit": "Crear",
-    "inspired": "Como la de @{username}"
+    "inspired": "Como la de @{username}",
+    "pending": "Creando…"
   },
   "fields": {
     "title": "Título",
     "format": "Formato",
-    "entityType": "Qué rankeas",
+    "entityType": "Qué incluye",
     "audience": "Quién la ve",
     "showScores": "Mostrar mis notas"
   },
@@ -41,7 +48,7 @@
     "tier": "Tier list"
   },
   "entityTypes": {
-    "release-group": "Álbumes",
+    "release-group": "Discos",
     "recording": "Canciones"
   },
   "audience": {
@@ -166,7 +173,7 @@
       "submit": "Armar tier list",
       "pending": "Armando…",
       "failed": "No se pudo armar. Inténtalo de nuevo.",
-      "type": "Qué ordenas",
+      "type": "Qué incluye",
       "types": {
         "release-group": "Discos",
         "recording": "Canciones"

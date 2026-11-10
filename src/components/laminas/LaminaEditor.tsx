@@ -6,21 +6,22 @@ import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { useTargetSearch } from "@/components/quick-actions/use-target-search";
 import { OwnShareButton } from "@/components/share/OwnShareSheet";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { RowMenu, RowMenuItem, RowMenuSeparator } from "@/components/ui/RowMenu";
 import { Link, useRouter } from "@/i18n/navigation";
 import { addLaminaItem, addLaminaItems, deleteLamina, removeLaminaItem, reorderLamina, updateLamina } from "@/lib/api/laminas";
 import type { LaminaDetail, UpdateLaminaRequest } from "@/lib/api/schemas";
 import { LaminaSourcePanel, LaminaSourceTabs } from "./LaminaSourcePanel";
+import { SEGMENT_ROW, segmentOption } from "./form-parts";
+import { ScoreBadge } from "./ScoreBadge";
 import { useLaminaSource } from "./use-lamina-source";
 
-// Editor de una Lámina (spec top-laminas): el orden es el ranking, así que se mueve con botones operables con teclado y
-// toque. Bajar a un formato con menos lugares avisa qué se pierde antes de guardar.
+// Editor de una Lámina (spec top-laminas): el orden es el ranking, así que se mueve desde el menú ⋯ de cada fila, operable con
+// teclado y toque. Con tres botones por fila el título no cabía en un teléfono (openspec: refine-laminas-page-phase1). Bajar a un formato con menos lugares avisa qué se pierde antes de guardar.
 
 const CAPACITY = { top5: 5, top10: 10, grid9: 9 } as const;
 const FORMATS = ["top5", "top10", "grid9"] as const;
 const SOURCES = ["ratings", "favorites", "list"] as const;
 const AUDIENCES = ["private", "followers", "public"] as const;
-const iconButton =
-  "grid size-9 place-items-center rounded border border-ink-border font-data text-sm text-paper-muted transition-colors hover:text-paper disabled:opacity-40 [@media(pointer:coarse)]:size-11";
 
 export function LaminaEditor({ initial, ownerUsername }: { initial: LaminaDetail; ownerUsername: string }) {
   const t = useTranslations("laminas");
@@ -106,7 +107,7 @@ export function LaminaEditor({ initial, ownerUsername }: { initial: LaminaDetail
       <div className="flex flex-wrap gap-x-8 gap-y-3">
         <fieldset className="flex flex-col gap-1">
           <legend className="font-data text-xs text-paper-muted">{t("fields.format")}</legend>
-          <div className="flex gap-1 rounded border border-ink-border p-0.5">
+          <div className={SEGMENT_ROW}>
             {FORMATS.map((option) => (
               <button
                 key={option}
@@ -114,7 +115,7 @@ export function LaminaEditor({ initial, ownerUsername }: { initial: LaminaDetail
                 aria-pressed={lamina.format === option}
                 disabled={busy}
                 onClick={() => chooseFormat(option)}
-                className={`rounded px-3 py-1 font-data text-xs transition-colors ${lamina.format === option ? "bg-ink-border text-paper" : "text-paper-muted hover:text-paper"}`}
+                className={segmentOption(lamina.format === option)}
               >
                 {t(`formats.${option}`)}
               </button>
@@ -142,7 +143,7 @@ export function LaminaEditor({ initial, ownerUsername }: { initial: LaminaDetail
             checked={lamina.showScores}
             disabled={busy}
             onChange={(event) => void save({ showScores: event.target.checked })}
-            className="mt-0.5"
+            className="form-check mt-0.5"
           />
           <span className="flex flex-col gap-0.5">
             {t("fields.showScores")}
@@ -159,38 +160,25 @@ export function LaminaEditor({ initial, ownerUsername }: { initial: LaminaDetail
           <ol className="flex flex-col gap-2">
             {lamina.items.map((item, index) => (
               <li key={item.id} className="flex items-center gap-3 rounded border border-ink-border bg-ink-surface p-2">
-                <span className="w-6 text-center font-data text-sm text-paper-muted">{lamina.format === "grid9" ? "" : index + 1}</span>
+                <span className="w-6 shrink-0 text-center font-data text-sm text-paper-muted">{lamina.format === "grid9" ? "" : index + 1}</span>
                 <CoverThumb cover={item.target.coverThumbUrl} label="" className="size-12 shrink-0 rounded" />
                 <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate font-display text-sm text-paper">{item.target.title}</span>
+                  <span className="line-clamp-2 font-display text-sm text-paper [overflow-wrap:anywhere]">{item.target.title}</span>
                   {item.target.artistName ? <span className="truncate font-data text-xs text-paper-muted">{item.target.artistName}</span> : null}
                 </span>
-                {item.score ? (
-                  <span className="font-data text-xs text-paper-muted">
-                    {item.score.detailedScore != null ? `${item.score.detailedScore}/100` : `${Number(item.score.stars)}★`}
-                  </span>
-                ) : null}
-                <button type="button" className={iconButton} disabled={busy || index === 0} aria-label={t("moveUp", { title: item.target.title })} onClick={() => move(index, -1)}>
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  className={iconButton}
-                  disabled={busy || index === lamina.items.length - 1}
-                  aria-label={t("moveDown", { title: item.target.title })}
-                  onClick={() => move(index, 1)}
-                >
-                  ↓
-                </button>
-                <button
-                  type="button"
-                  className={iconButton}
-                  disabled={busy}
-                  aria-label={t("remove", { title: item.target.title })}
-                  onClick={() => void run(() => removeLaminaItem(lamina.id, item.id))}
-                >
-                  ×
-                </button>
+                {item.score ? <ScoreBadge score={{ stars: Number(item.score.stars), detailedScore: item.score.detailedScore }} className="shrink-0" /> : null}
+                {busy ? (
+                  <span aria-hidden className="size-8 shrink-0 [@media(pointer:coarse)]:size-11" />
+                ) : (
+                  <RowMenu label={t("itemMenu", { title: item.target.title })} triggerClassName="size-8 [@media(pointer:coarse)]:size-11">
+                    {index > 0 ? <RowMenuItem onSelect={() => move(index, -1)}>{t("menu.up")}</RowMenuItem> : null}
+                    {index < lamina.items.length - 1 ? <RowMenuItem onSelect={() => move(index, 1)}>{t("menu.down")}</RowMenuItem> : null}
+                    {lamina.items.length > 1 ? <RowMenuSeparator /> : null}
+                    <RowMenuItem danger onSelect={() => void run(() => removeLaminaItem(lamina.id, item.id))}>
+                      {t("menu.remove")}
+                    </RowMenuItem>
+                  </RowMenu>
+                )}
               </li>
             ))}
           </ol>

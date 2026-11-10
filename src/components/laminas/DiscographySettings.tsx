@@ -52,7 +52,7 @@ export function DiscographySettings({
                   setState("idle");
                   setSections((current) => (event.target.checked ? [...current, section] : current.filter((item) => item !== section)));
                 }}
-                className="size-4"
+                className="form-check"
               />
               {t(`section.${section}`)}
             </label>
