@@ -7,6 +7,7 @@ import { useRouter } from "@/i18n/navigation";
 import { createTierList, type TierListSourceInput } from "@/lib/api/laminas";
 import { suggestTierTitle, type TierTitleSource, type TierTitleTranslator } from "@/lib/laminas/tier-title";
 import { TIER_LIST_MAX_ITEMS } from "@/lib/laminas/tiers";
+import { FIELD as field, SEGMENT_GROUP, SEGMENT_ROW, segmentOption as segment } from "./form-parts";
 import { LaminaSourcePanel } from "./LaminaSourcePanel";
 import { useLaminaSource } from "./use-lamina-source";
 
@@ -31,9 +32,6 @@ const SOURCES: Record<EntityType, readonly TierSource[]> = {
   "release-group": ["discography", "ratings", "list"],
   recording: ["album", "ratings", "list"],
 };
-const field = "rounded border border-ink-border bg-ink px-3 py-2 font-body text-sm text-paper";
-const segment = (active: boolean) =>
-  `min-h-9 flex-1 rounded px-3 py-1 font-data text-xs transition-colors ${active ? "bg-ink-border text-paper" : "text-paper-muted hover:text-paper"}`;
 
 export function TierListCreateForm({ inspiration = null }: { inspiration?: TierFormInspiration | null }) {
   const t = useTranslations("laminas.tier");
@@ -120,7 +118,7 @@ export function TierListCreateForm({ inspiration = null }: { inspiration?: TierF
 
       <fieldset className="flex flex-col gap-1">
         <legend className="font-data text-xs text-paper-muted">{t("create.type")}</legend>
-        <div className="flex gap-1 rounded border border-ink-border p-0.5">
+        <div className={SEGMENT_ROW}>
           {(["release-group", "recording"] as const).map((option) => (
             <button key={option} type="button" aria-pressed={entityType === option} onClick={() => chooseType(option)} className={segment(entityType === option)}>
               {t(`create.types.${option}`)}
@@ -131,7 +129,7 @@ export function TierListCreateForm({ inspiration = null }: { inspiration?: TierF
 
       <fieldset className="flex flex-col gap-1">
         <legend className="font-data text-xs text-paper-muted">{t("create.source")}</legend>
-        <div className="flex flex-wrap gap-1 rounded border border-ink-border p-0.5">
+        <div className={SEGMENT_GROUP}>
           {sourcesFor(entityType).map((option) => (
             <button key={option} type="button" aria-pressed={source === option} onClick={() => chooseSource(option)} className={segment(source === option)}>
               {option === "lamina" && inspiration ? t("sources.lamina", { username: inspiration.ownerUsername }) : t(`sources.${option}`)}
@@ -145,7 +143,7 @@ export function TierListCreateForm({ inspiration = null }: { inspiration?: TierF
           <p className="font-body text-sm text-paper">{t(`inspired.summary.${entityType}`, { count: inspiration.itemCount })}</p>
           {inspiration.customLabels ? (
             <label className="flex items-start gap-2 font-data text-xs text-paper">
-              <input type="checkbox" checked={copyLabels} onChange={(event) => setCopyLabels(event.target.checked)} className="mt-0.5" />
+              <input type="checkbox" checked={copyLabels} onChange={(event) => setCopyLabels(event.target.checked)} className="form-check mt-0.5" />
               <span className="flex flex-col gap-0.5">
                 {t("inspired.copyLabels")}
                 <span className="text-paper-muted">{inspiration.labels.join(" · ")}</span>

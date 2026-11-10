@@ -268,6 +268,7 @@ Un ranking corto, numerado, con carátulas grandes. Formato propio, no la grilla
   filtros del Top N: año o década, año de escucha, género, artista), una lista propia, o a mano. Ítems: discos o
   canciones; artistas después. De un género o una década entran tus valorados, no el catálogo: la bandeja no se
   llena de cosas ajenas.
+- **Editor del Top N** (`refine-laminas-page-phase1`): subir, bajar y quitar en un menú ⋯ por fila; la nota en una sola forma (detallada o estrellas, `ScoreBadge`). Las dos altas comparten «Qué incluye», «Discos»/«Canciones» y segmentos (`form-parts.ts`).
 - **Editor:** arrastrar y soltar con alternativa de teclado y de toque (mover con "Mover a…" desde el
   menú del ítem) — requisito de accesibilidad, no un extra.
 

@@ -67,14 +67,19 @@ describe("LaminaEditor", () => {
   it("mover un ítem manda el orden completo", async () => {
     mocks.reorder.mockImplementation(async () => lamina());
     render();
-    await userEvent.click(screen.getByRole("button", { name: "Subir Disco 2" }));
+    await userEvent.click(screen.getByRole("button", { name: "Acciones de Disco 2" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Subir" }));
     expect(mocks.reorder).toHaveBeenCalledWith(lamina().id, [item(2).id, item(1).id, item(3).id]);
   });
 
-  it("el primero no sube y el último no baja", () => {
+  it("el primero no sube y el último no baja", async () => {
     render();
-    expect(screen.getByRole("button", { name: "Subir Disco 1" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Bajar Disco 3" })).toBeDisabled();
+    await userEvent.click(screen.getByRole("button", { name: "Acciones de Disco 1" }));
+    expect(screen.queryByRole("menuitem", { name: "Subir" })).toBeNull();
+    expect(screen.getByRole("menuitem", { name: "Bajar" })).toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    await userEvent.click(screen.getByRole("button", { name: "Acciones de Disco 3" }));
+    expect(screen.queryByRole("menuitem", { name: "Bajar" })).toBeNull();
   });
 
   it("cambiar a un formato con lugar guarda sin preguntar", async () => {
@@ -172,10 +177,25 @@ describe("LaminaEditor", () => {
     });
   });
 
+  it("la nota tiene una sola forma: la detallada si existe, si no las estrellas", () => {
+    render(
+      lamina({
+        items: [
+          { ...item(1), score: { stars: "5.0", detailedScore: 96 } },
+          { ...item(2), score: { stars: "4.5", detailedScore: null } },
+        ],
+      }),
+    );
+    expect(screen.getByText("96")).toBeInTheDocument();
+    expect(screen.getByText("4.5★")).toBeInTheDocument();
+    expect(screen.queryByText(/\/100/)).toBeNull();
+  });
+
   it("un fallo se muestra", async () => {
     mocks.remove.mockRejectedValue(new Error("no"));
     render();
-    await userEvent.click(screen.getByRole("button", { name: "Quitar Disco 1" }));
+    await userEvent.click(screen.getByRole("button", { name: "Acciones de Disco 1" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Quitar" }));
     await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
   });
 });

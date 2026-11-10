@@ -13,6 +13,12 @@
   "moveUp": "Move {title} up",
   "moveDown": "Move {title} down",
   "remove": "Remove {title}",
+  "itemMenu": "Actions for {title}",
+  "menu": {
+    "up": "Move up",
+    "down": "Move down",
+    "remove": "Remove"
+  },
   "delete": "Delete Card",
   "deleteTitle": "Delete this Card?",
   "deleteMessage": "This can't be undone.",
@@ -23,14 +29,15 @@
   "showScoresHint": "Anyone who can see the Card will see your score for each item, also on the image.",
   "create": {
     "heading": "New Card",
-    "titlePlaceholder": "My 10 albums of 2026",
+    "titlePlaceholder": "My {n} {kind, select, recording {songs} other {albums}} of {year}",
     "submit": "Create",
-    "inspired": "Like @{username}'s"
+    "inspired": "Like @{username}'s",
+    "pending": "Creating…"
   },
   "fields": {
     "title": "Title",
     "format": "Format",
-    "entityType": "What you rank",
+    "entityType": "What it includes",
     "audience": "Who can see it",
     "showScores": "Show my scores"
   },
@@ -166,7 +173,7 @@
       "submit": "Build tier list",
       "pending": "Building…",
       "failed": "Couldn’t build it. Please try again.",
-      "type": "What you rank",
+      "type": "What it includes",
       "types": {
         "release-group": "Albums",
         "recording": "Songs"

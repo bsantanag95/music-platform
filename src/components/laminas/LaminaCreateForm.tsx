@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createLamina } from "@/lib/api/laminas";
 import { manualTitleSuggestions, suggestLaminaTitle, type TitleTranslator } from "@/lib/laminas/suggested-title";
+import { FIELD, SEGMENT_ROW, segmentOption } from "./form-parts";
 import { LaminaSourcePanel, LaminaSourceTabs } from "./LaminaSourcePanel";
 import { useLaminaSource } from "./use-lamina-source";
 
@@ -14,7 +15,6 @@ const FORMATS = ["top5", "top10", "grid9"] as const;
 const ENTITY_TYPES = ["release-group", "recording"] as const;
 const SOURCES = ["manual", "ratings", "favorites", "list"] as const;
 const CAPACITY = { top5: 5, top10: 10, grid9: 9 } as const;
-const field = "rounded border border-ink-border bg-ink px-3 py-2 font-body text-sm text-paper";
 
 /** Lo que hereda de una Lámina ajena con "Arma la tuya": nunca sus ítems, y el título solo como sugerencia. */
 export interface LaminaFormInspiration {
@@ -72,33 +72,38 @@ export function LaminaCreateForm({ currentYear, inspiration = null }: { currentY
           {t("create.inspired", { username: inspiration.ownerUsername })}
         </Link>
       ) : null}
-      <div className="flex flex-wrap gap-3">
-        <label className="flex flex-col gap-1 font-data text-xs text-paper-muted">
-          {t("fields.format")}
-          <select value={format} onChange={(event) => setFormat(event.target.value as typeof format)} className={field}>
-            {FORMATS.map((option) => (
-              <option key={option} value={option}>
-                {t(`formats.${option}`)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 font-data text-xs text-paper-muted">
-          {t("fields.entityType")}
-          <select value={entityType} onChange={(event) => setEntityType(event.target.value as typeof entityType)} className={field}>
+      <div className="flex flex-wrap gap-x-6 gap-y-3">
+        <fieldset className="flex flex-col gap-1">
+          <legend className="font-data text-xs text-paper-muted">{t("fields.entityType")}</legend>
+          <div className={SEGMENT_ROW}>
             {ENTITY_TYPES.map((option) => (
-              <option key={option} value={option}>
+              <button key={option} type="button" aria-pressed={entityType === option} onClick={() => setEntityType(option)} className={segmentOption(entityType === option)}>
                 {t(`entityTypes.${option}`)}
-              </option>
+              </button>
             ))}
-          </select>
-        </label>
+          </div>
+        </fieldset>
+        <fieldset className="flex flex-col gap-1">
+          <legend className="font-data text-xs text-paper-muted">{t("fields.format")}</legend>
+          <div className={SEGMENT_ROW}>
+            {FORMATS.map((option) => (
+              <button key={option} type="button" aria-pressed={format === option} onClick={() => setFormat(option)} className={segmentOption(format === option)}>
+                {t(`formats.${option}`)}
+              </button>
+            ))}
+          </div>
+        </fieldset>
       </div>
       <LaminaSourceTabs source={source.source} options={SOURCES} onChange={source.setSource} />
       <LaminaSourcePanel state={source} rankStart={format === "grid9" ? null : 1} />
       <label className="flex flex-col gap-1 font-data text-xs text-paper-muted">
         {t("fields.title")}
-        <input value={title} onChange={(event) => setEditedTitle(event.target.value)} maxLength={100} placeholder={t("create.titlePlaceholder")} className={field} />
+        <input
+          value={title}
+          onChange={(event) => setEditedTitle(event.target.value)}
+          maxLength={100} placeholder={t("create.titlePlaceholder", { n: CAPACITY[format], kind: entityType, year: currentYear })}
+          className={FIELD}
+        />
       </label>
       {chips.length > 0 ? (
         <div className="flex flex-wrap gap-2">
@@ -125,7 +130,7 @@ export function LaminaCreateForm({ currentYear, inspiration = null }: { currentY
         disabled={pending || !ready}
         className="self-start rounded bg-amber px-4 py-2 font-display text-sm text-ink transition-colors hover:bg-amber-hover disabled:opacity-50"
       >
-        {t("create.submit")}
+        {pending ? t("create.pending") : t("create.submit")}
       </button>
     </form>
   );
