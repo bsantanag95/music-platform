@@ -55,7 +55,10 @@ La cabecera SHALL mostrar una ficha con estas filas, omitiendo las que no tienen
   al más antiguo), enlazados, y un enlace "Ver todas" a la pestaña Bandas.
 - **Enlaces**: sitio oficial, Bandcamp, Wikipedia (el artículo del idioma de lectura) y la
   plataforma de streaming, en ese orden fijo. Cada enlace externo SHALL marcarse como tal (`↗`)
-  y SHALL NOT usar el color de acento.
+  y SHALL NOT usar el color de acento. El enlace a setlist.fm no va en esta fila.
+- Grupos y personas: **En vivo**, después de Enlaces, con "Conciertos en setlist.fm ↗": la
+  página del artista en setlist.fm si está guardada, o si no la búsqueda del artista por nombre
+  en setlist.fm. Artistas de otro tipo (varios, desconocido) SHALL NOT mostrar la fila.
 
 #### Scenario: Grupo separado
 
@@ -89,6 +92,21 @@ La cabecera SHALL mostrar una ficha con estas filas, omitiendo las que no tienen
 
 - **WHEN** un grupo activo no tiene integrantes actuales
 - **THEN** la ficha no muestra la fila Integrantes
+
+#### Scenario: En vivo con página en setlist.fm
+
+- **WHEN** una persona abre un grupo con su página de setlist.fm guardada
+- **THEN** la ficha muestra "En vivo: Conciertos en setlist.fm ↗" enlazado a esa página, en una pestaña nueva
+
+#### Scenario: En vivo sin página guardada
+
+- **WHEN** un solista no tiene enlace de setlist.fm guardado
+- **THEN** la fila En vivo enlaza a la búsqueda de su nombre en setlist.fm
+
+#### Scenario: Artista de tipo varios
+
+- **WHEN** una persona abre "Various Artists"
+- **THEN** la ficha no muestra la fila En vivo
 
 ### Requirement: Resumen de la biografía
 
