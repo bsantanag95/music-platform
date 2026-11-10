@@ -137,6 +137,18 @@ La carátula del riel no viene de ListenBrainz: sale del pipeline de Cover Art A
 reintento ante 429/503; un fallo conserva el calendario anterior. La verificación de los finalistas
 pasa por el cliente de MusicBrainz y su límite de 1 request por segundo (sección B).
 
+## F) setlist.fm (enlace a los conciertos del artista, sin su API)
+
+La ficha del artista enlaza a sus conciertos en setlist.fm (fila **En vivo**, cambio
+`add-setlistfm-artist-link`). La URL sale de la relación `setlistfm` que declara MusicBrainz (sección A) y se
+guarda en `artist_link` como un enlace curado más; sin ella, se enlaza a la búsqueda por nombre en setlist.fm.
+**No se usa la API de setlist.fm ni se muestra ningún dato suyo**: es solo un enlace saliente.
+
+Se descartó a propósito integrar su API (pestaña con la lista de conciertos): exige clave, tiene cuota
+diaria, solo se permite para uso **no comercial**, obliga a atribuir con los enlaces que entrega y prohíbe
+guardar los datos más allá de una caché corta. Si algún día se usa, hay que revisar sus términos de API
+(`https://www.setlist.fm/help/terms`) y sumarla a los gates de monetización.
+
 ## Dónde se materializa la atribución
 
 El bloque de atribución del **pie de página global** (`src/components/layout/Footer.tsx`,

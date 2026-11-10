@@ -549,7 +549,9 @@
       "seeLineup": "See lineup",
       "seeAll": "See all",
       "awards": "Awards",
-      "seeAwards": "See"
+      "seeAwards": "See",
+      "live": "Live",
+      "setlistfm": "Concerts on setlist.fm"
     },
     "summary": {
       "readMore": "Keep reading",

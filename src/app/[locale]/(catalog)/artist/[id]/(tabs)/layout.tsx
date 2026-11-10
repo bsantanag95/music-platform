@@ -123,6 +123,7 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
               <div className="hidden sm:block">
                 <ArtistFacts
                   type={type}
+                  name={artist.name}
                   profile={profile}
                   firstMainYear={discography?.firstMainYear ?? null}
                   lineup={fact}
@@ -135,6 +136,7 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
           <div className="sm:hidden">
             <ArtistFacts
               type={type}
+              name={artist.name}
               profile={profile}
               firstMainYear={discography?.firstMainYear ?? null}
               lineup={fact}

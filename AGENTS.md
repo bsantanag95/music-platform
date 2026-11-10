@@ -309,7 +309,7 @@ de cuál de las filas con el mismo título haya en la BD.
 >   limpieza de arriba lo cubre. Mockea MusicBrainz y Wikimedia (no sale a internet ni necesita
 >   `WIKIMEDIA_USER_AGENT` real). Verifica la ficha con la misma request que las pertenencias,
 >   los enlaces curados, la foto con crédito, los textos por idioma con respaldo, el lugar con
->   país, los `CHECK` de la migración `0054`, que un fallo de Wikimedia conserva los datos y el
+>   país, los `CHECK` de la migración `0054` (y el enlace de setlist.fm, que necesita la `0090`), que un fallo de Wikimedia conserva los datos y el
 >   retiro de fotos.
 > - `smoke-test-artist-lineup.ts` crea una banda, tres integrantes o músicos de apoyo, otra banda
 >   y un solista con el mismo prefijo sintético `5e0ce000-0000-4000-8000-*` (el `ON DELETE

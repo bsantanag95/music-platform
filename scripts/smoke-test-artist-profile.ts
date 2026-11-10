@@ -39,6 +39,8 @@ const artistResponse = {
     { type: "bandcamp", "target-type": "url", url: { resource: "https://smoke.bandcamp.com/" } },
     { type: "free streaming", "target-type": "url", url: { resource: "https://open.spotify.com/artist/smoke" } },
     { type: "social network", "target-type": "url", url: { resource: "https://twitter.com/smoke" } },
+    // Página en setlist.fm (openspec: add-setlistfm-artist-link): ejercita el CHECK de la migración 0090.
+    { type: "setlistfm", "target-type": "url", url: { resource: "https://www.setlist.fm/setlists/banda-de-perfil-smoke-0.html" } },
   ],
 };
 
@@ -134,7 +136,7 @@ async function main() {
     );
     const links = await db.select().from(schema.artistLink).where(eq(schema.artistLink.artistId, band.id));
     check(
-      links.map((l) => `${l.position}:${l.kind}`).sort().join(",") === "0:bandcamp,1:streaming",
+      links.map((l) => `${l.position}:${l.kind}`).sort().join(",") === "0:bandcamp,1:streaming,2:setlistfm",
       `enlaces curados sin redes sociales (${links.map((l) => l.kind).join(", ")})`,
     );
 
