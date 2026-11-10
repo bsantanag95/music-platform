@@ -83,6 +83,19 @@ describe("buildArtistProfile", () => {
     expect(profile.description).toBe("Chilean musical group");
   });
 
+  it("deja pasar el enlace de setlist.fm y descarta tipos desconocidos", () => {
+    const profile = buildArtistProfile(
+      row(),
+      [
+        { kind: "setlistfm", url: "https://www.setlist.fm/setlists/x.html" },
+        { kind: "songkick", url: "https://www.songkick.com/artists/1" },
+      ],
+      [],
+      "es",
+    );
+    expect(profile.links).toEqual([{ kind: "setlistfm", url: "https://www.setlist.fm/setlists/x.html" }]);
+  });
+
   it("la descripción no usa la de otro idioma", () => {
     expect(buildArtistProfile(row(), [], [ES], "en").description).toBeNull();
   });

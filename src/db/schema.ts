@@ -626,14 +626,14 @@ export const artistLink = pgTable(
     artistId: uuid("artist_id")
       .notNull()
       .references(() => artist.id, { onDelete: "cascade" }),
-    kind: text("kind").notNull(), // 'official' | 'bandcamp' | 'streaming'
+    kind: text("kind").notNull(), // 'official' | 'bandcamp' | 'streaming' | 'setlistfm' (0090)
     url: text("url").notNull(),
     position: smallint("position").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    check("chk_artist_link_kind", sql`${t.kind} IN ('official', 'bandcamp', 'streaming')`),
+    check("chk_artist_link_kind", sql`${t.kind} IN ('official', 'bandcamp', 'streaming', 'setlistfm')`),
     unique("uq_artist_link_kind").on(t.artistId, t.kind),
   ],
 );

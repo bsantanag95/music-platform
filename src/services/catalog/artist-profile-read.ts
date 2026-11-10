@@ -1,7 +1,7 @@
 import { asc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { artistLink, artistLocalizedText, type ArtistLocalizedTextRow, type ArtistRow } from "@/db/schema";
-import type { ArtistLinkKind } from "../musicbrainz/artist-profile-mappers";
+import { ARTIST_LINK_KINDS, type ArtistLinkKind } from "../musicbrainz/artist-profile-mappers";
 
 // Lectura del perfil de artista para la página (openspec: enrich-artist-profile). Solo lee
 // la base: la actualización corre en segundo plano (artist-profile-sync.ts).
@@ -52,7 +52,7 @@ export function buildArtistProfile(
       lifeEnded: row.lifeEnded,
     },
     links: links
-      .filter((link): link is { kind: ArtistLinkKind; url: string } => ["official", "bandcamp", "streaming"].includes(link.kind))
+      .filter((link): link is { kind: ArtistLinkKind; url: string } => (ARTIST_LINK_KINDS as readonly string[]).includes(link.kind))
       .map(({ kind, url }) => ({ kind, url })),
     description: own?.description ?? null,
     summary: summarySource

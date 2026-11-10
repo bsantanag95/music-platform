@@ -142,6 +142,48 @@ describe("ArtistFacts", () => {
     expect(dd(artistEs.facts.links).textContent).toBe("Sitio oficial ↗ · Wikipedia ↗ · Spotify ↗");
   });
 
+  it("En vivo enlaza a la página guardada en setlist.fm, fuera de la fila Enlaces (openspec: add-setlistfm-artist-link)", () => {
+    renderWithIntl(
+      <ArtistFacts
+        type="group"
+        name="Mötley Crüe"
+        firstMainYear={null}
+        profile={profile({
+          links: [
+            { kind: "official", url: "https://example.com" },
+            { kind: "setlistfm", url: "https://www.setlist.fm/setlists/motley-crue-bd6b5d2.html" },
+          ],
+        })}
+      />,
+    );
+    expect(dd(artistEs.facts.links).textContent).toBe("Sitio oficial ↗");
+    const link = screen.getByRole("link", { name: /Conciertos en setlist\.fm/ });
+    expect(link).toHaveAttribute("href", "https://www.setlist.fm/setlists/motley-crue-bd6b5d2.html");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link.getAttribute("rel")).not.toContain("nofollow");
+    expect(dd(artistEs.facts.live).textContent).toBe("Conciertos en setlist.fm ↗");
+  });
+
+  it("sin página guardada, En vivo busca el nombre en setlist.fm", () => {
+    renderWithIntl(<ArtistFacts type="person" name="Mon Laferte & Café" firstMainYear={null} profile={profile()} />);
+    expect(screen.getByRole("link", { name: /Conciertos en setlist\.fm/ })).toHaveAttribute(
+      "href",
+      "https://www.setlist.fm/search?query=Mon+Laferte+%26+Caf%C3%A9",
+    );
+  });
+
+  it("un artista de tipo varios no tiene fila En vivo", () => {
+    const { container } = renderWithIntl(
+      <ArtistFacts
+        type="various"
+        name="Various Artists"
+        firstMainYear={null}
+        profile={profile({ links: [{ kind: "setlistfm", url: "https://www.setlist.fm/setlists/x.html" }] })}
+      />,
+    );
+    expect(container).toBeEmptyDOMElement();
+  });
+
   it("sin ningún dato, la ficha no se renderiza", () => {
     const { container } = renderWithIntl(<ArtistFacts type="group" firstMainYear={null} profile={profile()} />);
     expect(container).toBeEmptyDOMElement();

@@ -4,7 +4,7 @@ import { AppImage } from "@/components/ui/AppImage";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import { artistHref } from "@/lib/catalog-links";
 import type { ArtistProfile } from "@/services/catalog/artist-profile-read";
-import { countryName, formatPartialDate, repairSentenceSpacing, streamingName, yearOf } from "./artist-format";
+import { countryName, formatPartialDate, repairSentenceSpacing, setlistFmSearchUrl, streamingName, yearOf } from "./artist-format";
 import type { LineupFact } from "./lineup-fact";
 
 // Cabecera de la página de artista (openspec: redesign-artist-page, capability
@@ -89,14 +89,16 @@ interface ArtistFactsProps {
   lineup?: LineupFact | null;
   /** Cifras de premios con el enlace a la pestaña Premios (openspec: refine-artist-page-phase3). */
   awards?: { wins: number; nominations: number; inductions: number; href: string } | null;
+  /** Nombre del artista: arma la búsqueda en setlist.fm cuando no hay enlace guardado (openspec: add-setlistfm-artist-link). */
+  name?: string;
 }
 
 /**
  * Filas de la ficha con dato, en orden: origen o nacimiento, fallecimiento, actividad,
- * integrantes o bandas, enlaces.
+ * integrantes o bandas, premios, enlaces y en vivo.
  */
 export function artistFactRows(
-  { type, profile, firstMainYear, lineup, awards }: ArtistFactsProps,
+  { type, profile, firstMainYear, lineup, awards, name }: ArtistFactsProps,
   locale: string,
   t: (key: string, values?: Record<string, string | number>) => string,
 ): { key: string; label: string; value: React.ReactNode }[] {
@@ -204,6 +206,24 @@ export function artistFactRows(
         </span>
       ),
     });
+  }
+
+  // En vivo (openspec: add-setlistfm-artist-link, D3): la página en setlist.fm que declara MusicBrainz o, si aún no está
+  // guardada, la búsqueda por nombre. Solo grupos y personas.
+  if (type === "group" || type === "person") {
+    const setlistfm = byKind.get("setlistfm") ?? (name ? setlistFmSearchUrl(name) : null);
+    if (setlistfm) {
+      rows.push({
+        key: "live",
+        label: t("facts.live"),
+        value: (
+          <a href={setlistfm} target="_blank" rel="noopener noreferrer" className={externalLink}>
+            {t("facts.setlistfm")}
+            <span aria-hidden> ↗</span>
+          </a>
+        ),
+      });
+    }
   }
   return rows;
 }

@@ -193,7 +193,8 @@ de biblioteca y biografía, con la misma estructura que el álbum):
   "Separada"; persona: Nacimiento con fecha y lugar, Fallecimiento y **Primer disco** con el año de su
   primer disco principal; **Integrantes** —o **Última alineación** si la banda se separó— con hasta 5
   nombres y "Ver alineación", o **Bandas** en una persona con "Ver todas"; Enlaces en orden
-  fijo: sitio oficial, Bandcamp, Wikipedia y una plataforma de streaming); y un **resumen** de Wikipedia de tres líneas con "Seguir leyendo" y la
+  fijo: sitio oficial, Bandcamp, Wikipedia y una plataforma de streaming; **En vivo** en grupos y personas, con
+  "Conciertos en setlist.fm" —la página que declara MusicBrainz o, si falta, la búsqueda por nombre—); y un **resumen** de Wikipedia de tres líneas con "Seguir leyendo" y la
   atribución CC BY-SA 4.0. Sin géneros por ahora (los de MusicBrainz son etiquetas no
   comerciales) y sin la desambiguación de MusicBrainz ni el nombre legal. Cada dato que falta
   se omite sin dejar huecos. Los enlaces externos van en texto claro con subrayado punteado y

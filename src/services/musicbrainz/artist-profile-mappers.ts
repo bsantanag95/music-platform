@@ -5,7 +5,10 @@
 
 import type { MBArtistDetail, MBArtistRelation } from "./types";
 
-export type ArtistLinkKind = "official" | "bandcamp" | "streaming";
+export type ArtistLinkKind = "official" | "bandcamp" | "streaming" | "setlistfm";
+
+/** Tipos de enlace curado, en su orden fijo. */
+export const ARTIST_LINK_KINDS: readonly ArtistLinkKind[] = ["official", "bandcamp", "streaming", "setlistfm"];
 
 export interface ArtistLinkInput {
   kind: ArtistLinkKind;
@@ -62,10 +65,14 @@ export function wikidataIdOf(detail: { relations?: MBArtistRelation[] }): string
   return null;
 }
 
+/** Hosts aceptados para la página del artista en setlist.fm. */
+const SETLISTFM_HOSTS = ["setlist.fm", "www.setlist.fm"];
+
 /**
- * Enlaces curados en orden fijo: sitio oficial, Bandcamp y una plataforma de streaming (la
- * primera disponible entre Spotify, Apple Music, Deezer y YouTube Music). Sin redes sociales,
- * tiendas ni bases de datos. Las relaciones terminadas se descartan.
+ * Enlaces curados en orden fijo: sitio oficial, Bandcamp, una plataforma de streaming (la
+ * primera disponible entre Spotify, Apple Music, Deezer y YouTube Music) y la página del
+ * artista en setlist.fm (openspec: add-setlistfm-artist-link; solo el enlace, no su API). Sin
+ * redes sociales, tiendas ni otras bases de datos. Las relaciones terminadas se descartan.
  */
 export function curatedArtistLinks(detail: MBArtistDetail): ArtistLinkInput[] {
   const relations = activeUrlRelations(detail);
@@ -73,6 +80,10 @@ export function curatedArtistLinks(detail: MBArtistDetail): ArtistLinkInput[] {
   const bandcamp = relations.find(
     (r) => r.type === "bandcamp" || hostOf(r.url.resource)?.endsWith(".bandcamp.com"),
   )?.url.resource;
+  const setlistfm = relations.find((r) => {
+    const host = hostOf(r.url.resource);
+    return r.type === "setlistfm" && host !== null && SETLISTFM_HOSTS.includes(host);
+  })?.url.resource;
 
   let streaming: string | undefined;
   let bestRank = Number.POSITIVE_INFINITY;
@@ -90,6 +101,7 @@ export function curatedArtistLinks(detail: MBArtistDetail): ArtistLinkInput[] {
     ["official", official],
     ["bandcamp", bandcamp],
     ["streaming", streaming],
+    ["setlistfm", setlistfm],
   ];
   return ordered
     .filter((entry): entry is [ArtistLinkKind, string] => Boolean(entry[1]))

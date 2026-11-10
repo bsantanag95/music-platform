@@ -393,8 +393,9 @@ Se recorren todas las páginas, sin atajo, si el total es desconocido, si hay un
 ## `artist_link` (migración `0054`)
 
 **Propósito:** enlaces curados del artista en orden fijo: `official` (sitio oficial), `bandcamp` y
-`streaming` (la primera disponible entre Spotify, Apple Music, Deezer y YouTube Music). Sin redes
-sociales ni el resto de las relaciones de URL de MusicBrainz. `UNIQUE (artist_id, kind)`, `CHECK`
+`streaming` (la primera disponible entre Spotify, Apple Music, Deezer y YouTube Music) y, desde la
+migración `0090`, `setlistfm` (página del artista en setlist.fm, de la relación `setlistfm` de MusicBrainz;
+solo el enlace). Sin redes sociales ni el resto de las relaciones de URL de MusicBrainz. `UNIQUE (artist_id, kind)`, `CHECK`
 sobre `kind`, `position` para el orden. La sincronización de la ficha reemplaza el conjunto.
 
 ## `artist_localized_text` (migración `0054`)

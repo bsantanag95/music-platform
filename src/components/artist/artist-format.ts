@@ -40,6 +40,14 @@ export function kindKey(kind: string): string {
   return kind.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
 }
 
+/**
+ * Búsqueda del artista por nombre en setlist.fm (openspec: add-setlistfm-artist-link, D2): respaldo de la fila En vivo
+ * mientras la ficha no tenga guardada la página que declara MusicBrainz.
+ */
+export function setlistFmSearchUrl(name: string): string {
+  return `https://www.setlist.fm/search?${new URLSearchParams({ query: name }).toString()}`;
+}
+
 /** Nombre de la plataforma de un enlace de streaming. */
 export function streamingName(url: string): string | null {
   try {

@@ -2,12 +2,14 @@ import { describe, expect, it } from "vitest";
 import pinkFloyd from "./__fixtures__/pink-floyd-artist-with-relations.json";
 import kuervos from "./__fixtures__/kuervos-del-sur-artist-with-relations.json";
 import monLaferte from "./__fixtures__/mon-laferte-artist-with-relations.json";
+import motleyCrue from "./__fixtures__/motley-crue-artist-with-relations.json";
 import { curatedArtistLinks, mapArtistProfileFacts, partialDate, wikidataIdOf } from "./artist-profile-mappers";
 import type { MBArtistDetail } from "./types";
 
 const PINK_FLOYD = pinkFloyd as MBArtistDetail;
 const KUERVOS = kuervos as MBArtistDetail;
 const MON_LAFERTE = monLaferte as MBArtistDetail;
+const MOTLEY_CRUE = motleyCrue as unknown as MBArtistDetail;
 
 function withUrls(...urls: [string, string, boolean?][]): MBArtistDetail {
   return {
@@ -67,6 +69,24 @@ describe("curatedArtistLinks", () => {
       withUrls(["free streaming", "https://www.deezer.com/artist/1"], ["streaming", "https://music.apple.com/us/artist/2"]),
     );
     expect(links).toEqual([{ kind: "streaming", url: "https://music.apple.com/us/artist/2", position: 0 }]);
+  });
+
+  it("guarda la página de setlist.fm al final, sin Songkick ni Bandsintown (openspec: add-setlistfm-artist-link)", () => {
+    const links = curatedArtistLinks(MOTLEY_CRUE);
+    expect(links.at(-1)).toEqual({
+      kind: "setlistfm",
+      url: "https://www.setlist.fm/setlists/motley-crue-bd6b5d2.html",
+      position: links.length - 1,
+    });
+    expect(links.some((l) => /songkick|bandsintown/.test(l.url))).toBe(false);
+  });
+
+  it("descarta una relación setlistfm con otro host o terminada", () => {
+    expect(curatedArtistLinks(withUrls(["setlistfm", "https://setlist.fm.example.com/x"]))).toEqual([]);
+    expect(curatedArtistLinks(withUrls(["setlistfm", "https://www.setlist.fm/setlists/x.html", true]))).toEqual([]);
+    expect(curatedArtistLinks(withUrls(["setlistfm", "https://setlist.fm/setlists/x.html"]))).toEqual([
+      { kind: "setlistfm", url: "https://setlist.fm/setlists/x.html", position: 0 },
+    ]);
   });
 
   it("descarta relaciones terminadas y URLs inválidas", () => {
