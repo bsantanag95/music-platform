@@ -21,6 +21,7 @@ import type {
   MBRelease,
   MBRecordingSearchResponse,
   MBReleaseBrowseByGroupResponse,
+  MBEventBrowseResponse,
 } from "./types";
 
 const MB_BASE_URL = "https://musicbrainz.org/ws/2";
@@ -338,6 +339,19 @@ export const musicbrainz = {
       },
       signal,
     );
+  },
+
+  /**
+   * Eventos de un artista, de a 100 (openspec: add-shared-concerts-phase1): recinto (`place-rels`), área y artistas del
+   * cartel (`artist-rels`) en la misma request. La normalización vive en `event-mappers.ts`.
+   */
+  browseEventsByArtist(artistMbid: string, offset = 0) {
+    return mbFetch<MBEventBrowseResponse>("/event", {
+      artist: artistMbid,
+      limit: String(RELEASE_BROWSE_PAGE_SIZE),
+      offset: String(offset),
+      inc: "place-rels+area-rels+artist-rels",
+    });
   },
 
   /**

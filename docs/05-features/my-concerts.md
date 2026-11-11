@@ -39,7 +39,20 @@ Un festival se registra como un registro por artista. El mismo artista puede ten
 - **Ajustes:** los conciertos son el sexto tipo de la audiencia por defecto y de "Aplicar a lo existente".
 - **Exportación de datos:** `library.concerts`, con todos los campos.
 
+## Conciertos compartidos (Fase 1, `add-shared-concerts-phase1`, ADR 0057)
+
+- **Pestaña Conciertos** del artista (última, grupos y personas): sus conciertos de MusicBrainz (conciertos y festivales
+  con fecha completa), traídos al abrirla. Próximos arriba y pasados por año, 50 por página. Cada fila: fecha, nombre,
+  marca Festival, recinto y ciudad, cuántas personas estuvieron (umbral 5) y "Estuve ahí" en los pasados. Vacía: invita a
+  registrar el concierto en Mis conciertos.
+- **Página del concierto** (`/concert/<slug>`): fecha, recinto, cartel (principales, teloneros, invitados; enlazados si
+  están en el catálogo), cuántas personas estuvieron, quiénes (según la audiencia de cada recuerdo) y "Estuve ahí".
+- **"Estuve ahí"** crea el recuerdo con los datos del concierto (o enlaza uno propio del mismo artista y la misma fecha);
+  después es tuyo. Quitarlo borra el recuerdo solo si nunca lo editaste. En Mis conciertos un recuerdo enlazado muestra
+  "Ver concierto".
+- Fase 2: conciertos creados por la comunidad con confirmación; Fase 3: sugerencias de enlace, desvincular, festivales.
+
 ## Fuera de alcance (por ahora)
 
-Entidad de concierto compartida, sugerencias o verificación, la API de setlist.fm, festivales con varios artistas en un
+Sugerencias o verificación de conciertos (Fases 2 y 3), la API de setlist.fm, festivales con varios artistas en un
 registro, feed de seguidos, Láminas, compartir, notificaciones y cifras de comunidad en la página del artista.

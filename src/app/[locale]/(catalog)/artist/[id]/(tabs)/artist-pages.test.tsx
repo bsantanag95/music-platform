@@ -138,6 +138,7 @@ function makeArtist(overrides: Partial<ArtistRow> = {}): ArtistRow {
     photoUrl: null,
     createdAt: new Date("2026-01-01T00:00:00Z"),
     discographySyncedAt: new Date(),
+    concertsSyncedAt: null,
     discographyCompleteAt: new Date(),
     discographyMbTotal: null,
     discographyCheckedAt: null,
@@ -290,6 +291,14 @@ describe("layout de la página de artista", () => {
     await renderLayout();
     expect(screen.getByRole("link", { name: artistEs.tabs.discography })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: artistEs.tabs.biography })).toHaveAttribute("href", `${artistHref("Pink Floyd", VALID_UUID)}/biography`);
+  });
+
+  it("un grupo tiene la pestaña Conciertos al final (openspec: add-shared-concerts-phase1)", async () => {
+    await renderLayout();
+    const tabs = screen.getByRole("navigation", { name: artistEs.tabs.label });
+    const links = within(tabs).getAllByRole("link");
+    expect(links.at(-1)).toHaveTextContent(artistEs.tabs.concerts);
+    expect(links.at(-1)).toHaveAttribute("href", `${artistHref("Pink Floyd", VALID_UUID)}/concerts`);
   });
 
   it("un grupo con alineación suma Integrantes y la fila de la ficha", async () => {

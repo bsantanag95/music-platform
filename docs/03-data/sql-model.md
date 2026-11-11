@@ -1087,6 +1087,27 @@ perfil; el orden de texto deja la fecha más precisa antes que la parcial del mi
 `idx_concert_entry_user_artist` (cifra del panel del artista y filtro por artista) e `idx_concert_entry_artist`
 (cascada al borrar un artista).
 
+## `concert` y `concert_performer` (migración `0092`)
+
+**Propósito:** conciertos compartidos (`add-shared-concerts-phase1`, ADR 0057): el hecho, distinto del recuerdo personal
+(`concert_entry`).
+
+**`concert`:** `mbid` único (opcional), `name` (1–300), `kind` (`concert` / `festival`), `event_date` (`DATE`, fecha
+exacta), `venue` (1–300) + `venue_mbid`, `city` (1–200) + `area_mbid`, `country` (ISO, `NULL` si MusicBrainz solo da la
+ciudad), `source` (`musicbrainz` / `community`), `status` (`confirmed` / `pending` / `hidden`, default `confirmed`),
+`cancelled`, `synced_at`, `created_at` / `updated_at` (trigger `fn_touch_updated_at`). `CHECK`: dominios de tipo, origen
+y estado, largos, país, y `mbid` obligatorio cuando el origen es MusicBrainz. Índice `idx_concert_date`. Las lecturas
+públicas filtran `status = 'confirmed' AND NOT cancelled`.
+
+**`concert_performer`:** cartel. `concert_id` (`ON DELETE CASCADE`), `artist_mbid` y `artist_name` (de MusicBrainz),
+`artist_id` opcional (`ON DELETE SET NULL`: solo si el artista ya está en el catálogo; no se crean stubs), `role`
+(`main` / `support` / `guest`), `position`. `UNIQUE (concert_id, artist_mbid, role)`; índices por `artist_mbid` (pestaña
+del artista y enlace al entrar al catálogo) y `artist_id`.
+
+**Columnas nuevas:** `artist.concerts_synced_at` (último recorrido completo de sus eventos);
+`concert_entry.concert_id` (`ON DELETE SET NULL`, índice único parcial `(user_id, concert_id) WHERE concert_id IS NOT NULL`
+e índice parcial por `concert_id`) y `concert_entry.from_concert` (el recuerdo lo creó "Estuve ahí").
+
 ## `wanted_entry`
 
 **Propósito:** wishlist de colección, "En tu búsqueda" (migración `0028`, cambio

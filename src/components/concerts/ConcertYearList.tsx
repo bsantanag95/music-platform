@@ -49,6 +49,12 @@ export function ConcertYearList({ entries, renderActions, showAudience = false }
                     {place && <p className="font-body text-sm text-paper">{place}</p>}
                     {entry.tour && <p className="font-body text-sm text-paper-muted">{entry.tour}</p>}
                     {entry.note && <p className="font-body text-sm italic text-paper-muted">{entry.note}</p>}
+                    {entry.concertId && (
+                      // Concierto compartido enlazado (openspec: add-shared-concerts-phase1); el id pelado redirige al slug.
+                      <Link href={`/concert/${entry.concertId}`} className="self-start font-data text-xs text-paper-muted hover:text-paper">
+                        {t("shared.linked")} →
+                      </Link>
+                    )}
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     {entry.setlistfmUrl && (

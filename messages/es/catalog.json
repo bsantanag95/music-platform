@@ -519,7 +519,8 @@
       "members": "Integrantes",
       "bands": "Bandas",
       "biography": "Biografía",
-      "awards": "Premios"
+      "awards": "Premios",
+      "concerts": "Conciertos"
     },
     "photo": {
       "alt": "Foto de {name}",

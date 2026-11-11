@@ -15,6 +15,7 @@ function row(overrides: Partial<ArtistRow> = {}): ArtistRow {
     photoUrl: "https://thumb.wikimedia.org/k.jpg",
     createdAt: new Date(),
     discographySyncedAt: null,
+    concertsSyncedAt: null,
     discographyCompleteAt: null,
     discographyMbTotal: null,
     discographyCheckedAt: null,

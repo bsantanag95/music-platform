@@ -519,7 +519,8 @@
       "members": "Members",
       "bands": "Bands",
       "biography": "Biography",
-      "awards": "Awards"
+      "awards": "Awards",
+      "concerts": "Concerts"
     },
     "photo": {
       "alt": "Photo of {name}",

@@ -223,3 +223,43 @@ export interface MBRelease {
   /** Relaciones de nivel edición (con `inc=artist-rels`). */
   relations?: MBCreditRelation[];
 }
+
+// ---------------------------------------------------------------------------
+// Eventos (openspec: add-shared-concerts-phase1): browse `/event?artist=…&inc=place-rels+area-rels+artist-rels`.
+// ---------------------------------------------------------------------------
+
+export interface MBEventArea {
+  id: string;
+  name: string;
+  type?: string | null; // 'Country' | 'City' | 'Subdivision' | ...
+  "iso-3166-1-codes"?: string[];
+}
+
+export interface MBEventPlace {
+  id: string;
+  name: string;
+  area?: MBEventArea | null;
+}
+
+export interface MBEventRelation {
+  type?: string; // 'held at' | 'main performer' | 'support act' | 'guest performer' | ...
+  "target-type"?: string; // 'place' | 'area' | 'artist' | ...
+  place?: MBEventPlace;
+  area?: MBEventArea;
+  artist?: { id: string; name: string };
+}
+
+export interface MBEvent {
+  id: string;
+  name: string;
+  type?: string | null; // 'Concert' | 'Festival' | 'Award ceremony' | ...
+  cancelled?: boolean;
+  "life-span"?: { begin?: string | null; end?: string | null };
+  relations?: MBEventRelation[];
+}
+
+export interface MBEventBrowseResponse {
+  "event-count": number;
+  "event-offset"?: number;
+  events: MBEvent[];
+}

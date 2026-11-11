@@ -80,5 +80,35 @@
     "metaTitle": "Conciertos de {name}",
     "empty": "No hay conciertos visibles.",
     "emptyOwn": "Todavía no registraste conciertos."
+  },
+  "shared": {
+    "tabTitle": "Conciertos",
+    "upcoming": "Próximos",
+    "festival": "Festival",
+    "attendeesExact": "{count, plural, one {# persona estuvo} other {# personas estuvieron}}",
+    "attendeesFewer": "Menos de {threshold} personas estuvieron",
+    "attend": "Estuve ahí",
+    "attending": "Estuviste",
+    "unattend": "Quitar",
+    "attendError": "No se pudo guardar. Intenta de nuevo.",
+    "empty": "Aún no hay conciertos de este artista.",
+    "emptyHint": "¿Estuviste en uno? Regístralo en Mis conciertos.",
+    "emptyLink": "Ir a Mis conciertos",
+    "newer": "Más recientes",
+    "older": "Más antiguos",
+    "source": "Conciertos de MusicBrainz (CC0).",
+    "page": {
+      "metaTitle": "{name} · {date}",
+      "lineup": "Cartel",
+      "main": "Principales",
+      "support": "Teloneros",
+      "guest": "Invitados",
+      "people": "Quiénes estuvieron",
+      "morePeople": "{count, plural, one {y # persona más} other {y # personas más}}",
+      "noVisiblePeople": "Nadie que puedas ver registró este concierto todavía.",
+      "nobody": "Nadie registró este concierto todavía.",
+      "signIn": "Inicia sesión para decir que estuviste."
+    },
+    "linked": "Ver concierto"
   }
 }

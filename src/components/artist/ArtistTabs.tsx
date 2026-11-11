@@ -11,7 +11,7 @@ import { artistHref } from "@/lib/catalog-links";
 // (openspec: add-artist-members-tab) se llama Integrantes en un grupo y Bandas en una persona, y
 // solo existe si hay algo que listar.
 
-type ArtistTabKey = "discography" | "members" | "bands" | "biography" | "awards";
+type ArtistTabKey = "discography" | "members" | "bands" | "biography" | "awards" | "concerts";
 
 interface ArtistTabsProps {
   artistId: string;
@@ -22,6 +22,8 @@ interface ArtistTabsProps {
   hasAwards?: boolean;
   /** Pestaña de la alineación con su nombre, o `null` si no hay nada que listar. */
   lineupTab: "members" | "bands" | null;
+  /** Grupos y personas tienen la pestaña Conciertos (openspec: add-shared-concerts-phase1); siempre al final. */
+  hasConcerts?: boolean;
 }
 
 const SEGMENTS: Record<ArtistTabKey, string | null> = {
@@ -30,9 +32,10 @@ const SEGMENTS: Record<ArtistTabKey, string | null> = {
   bands: "members",
   biography: "biography",
   awards: "awards",
+  concerts: "concerts",
 };
 
-export function ArtistTabs({ artistId, artistName = "", hasBiography, hasAwards = false, lineupTab }: ArtistTabsProps) {
+export function ArtistTabs({ artistId, artistName = "", hasBiography, hasAwards = false, lineupTab, hasConcerts = false }: ArtistTabsProps) {
   const t = useTranslations("catalog.artist.tabs");
   const segment = useSelectedLayoutSegment();
   const tabs: ArtistTabKey[] = [
@@ -40,6 +43,7 @@ export function ArtistTabs({ artistId, artistName = "", hasBiography, hasAwards 
     ...(lineupTab ? [lineupTab] : []),
     ...(hasBiography ? (["biography"] as const) : []),
     ...(hasAwards ? (["awards"] as const) : []),
+    ...(hasConcerts ? (["concerts"] as const) : []),
   ];
 
   return (

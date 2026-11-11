@@ -123,6 +123,15 @@ de cuál de las filas con el mismo título haya en la BD.
 >   la migración `0091`. Verifica los `CHECK` de `0091`, el alta con la audiencia por defecto, el orden por fecha parcial,
 >   los totales, la visibilidad por visitante (anónimo, seguidor, perfil privado, bloqueo), la cifra del panel del
 >   artista, "Aplicar a lo existente" sin tocar `updated_at`, la exportación y las cascadas de cuenta y artista.
+> - `smoke-test-shared-concerts.ts` simula MusicBrainz (no sale a internet), crea dos artistas sintéticos (MBID
+>   `5e0ce000-0000-4000-8000-00000000bc0*`), conciertos con MBID `5e0ce000-0000-4000-8000-00000000bce*` y usuarios
+>   `smoke_sc_*`, y los borra al terminar (también si falla). Si se interrumpió, limpiar con `DELETE FROM app_user WHERE
+>   username LIKE 'smoke_sc_%'; DELETE FROM concert WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000bc%'; DELETE FROM
+>   artist WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000bc%';`. Necesita la migración `0092`. Verifica los `CHECK`
+>   y el único de `0092`, la sincronización de eventos (qué se importa, enlace del cartel por mbid sin stubs, idempotencia),
+>   la pestaña (próximos, pasados, cancelados), "Estuve ahí" (crear, enlazar un recuerdo existente, idempotencia, rechazos,
+>   quitar con y sin edición), la cifra con umbral, la lista por visitante (anónimo, seguidor, bloqueo) y el `ON DELETE SET
+>   NULL` del recuerdo.
 > - `smoke-test-artist-comment-topics.ts` crea un artista y un álbum sintéticos (MBID
 >   `5e0ce000-0000-4000-8000-0000000009a0` / `...09a1`) y usuarios `smoke_topic_*`, y los borra al terminar
 >   (también si falla; el `ON DELETE CASCADE` limpia los comentarios). Si se interrumpió, limpiar con

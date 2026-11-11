@@ -564,6 +564,8 @@ export const artist = pgTable(
     photoUrl: text("photo_url"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     discographySyncedAt: timestamp("discography_synced_at", { withTimezone: true }),
+    /** Último recorrido completo de sus eventos en MusicBrainz (migración 0092, add-shared-concerts-phase1). */
+    concertsSyncedAt: timestamp("concerts_synced_at", { withTimezone: true }),
     // NULL = la discografía nunca se recorrió entera (migración 0053, openspec:
     // fix-artist-discography-ingestion). Base de la resincronización cada 7 días.
     discographyCompleteAt: timestamp("discography_complete_at", { withTimezone: true }),
@@ -1456,10 +1458,16 @@ export const concertEntry = pgTable(
     setlistfmUrl: text("setlistfm_url"),
     note: text("note"),
     audience: text("audience").notNull().default("followers"),
+    /** Concierto compartido al que se enlaza (migración 0092, ADR 0057); `null` = recuerdo sin enlazar. */
+    concertId: uuid("concert_id").references((): AnyPgColumn => concert.id, { onDelete: "set null" }),
+    /** El registro lo creó "Estuve ahí": quitar la asistencia lo borra solo si además nunca se editó. */
+    fromConcert: boolean("from_concert").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
+    uniqueIndex("uq_concert_entry_user_concert").on(t.userId, t.concertId).where(sql`${t.concertId} IS NOT NULL`),
+    index("idx_concert_entry_concert").on(t.concertId).where(sql`${t.concertId} IS NOT NULL`),
     index("idx_concert_entry_user_date").on(t.userId, t.eventDate, t.createdAt),
     index("idx_concert_entry_user_artist").on(t.userId, t.artistId),
     index("idx_concert_entry_artist").on(t.artistId),
@@ -1481,6 +1489,71 @@ export const concertEntry = pgTable(
 );
 
 export type ConcertEntryRow = typeof concertEntry.$inferSelect;
+
+/**
+ * Concierto compartido (migración 0092, openspec: add-shared-concerts-phase1, ADR 0057): el hecho, distinto del recuerdo
+ * personal (`concert_entry`). Dos orígenes (`musicbrainz` | `community`) y un estado (`confirmed` | `pending` | `hidden`)
+ * para la Fase 2; las lecturas públicas solo muestran los confirmados y no cancelados. Fecha exacta.
+ */
+export const concert = pgTable(
+  "concert",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    mbid: uuid("mbid").unique(),
+    name: text("name").notNull(),
+    kind: text("kind").notNull(), // 'concert' | 'festival'
+    eventDate: date("event_date").notNull(),
+    venue: text("venue"),
+    venueMbid: uuid("venue_mbid"),
+    city: text("city"),
+    areaMbid: uuid("area_mbid"),
+    country: text("country"),
+    source: text("source").notNull(), // 'musicbrainz' | 'community'
+    status: text("status").notNull().default("confirmed"), // 'confirmed' | 'pending' | 'hidden'
+    cancelled: boolean("cancelled").notNull().default(false),
+    syncedAt: timestamp("synced_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_concert_date").on(t.eventDate),
+    check("chk_concert_name", sql`length(${t.name}) BETWEEN 1 AND 300`),
+    check("chk_concert_kind", sql`${t.kind} IN ('concert', 'festival')`),
+    check("chk_concert_source", sql`${t.source} IN ('musicbrainz', 'community')`),
+    check("chk_concert_status", sql`${t.status} IN ('confirmed', 'pending', 'hidden')`),
+    check("chk_concert_musicbrainz_mbid", sql`${t.source} <> 'musicbrainz' OR ${t.mbid} IS NOT NULL`),
+    check("chk_concert_country", sql`${t.country} IS NULL OR ${t.country} ~ '^[A-Z]{2}$'`),
+    check("chk_concert_venue", sql`${t.venue} IS NULL OR length(${t.venue}) BETWEEN 1 AND 300`),
+    check("chk_concert_city", sql`${t.city} IS NULL OR length(${t.city}) BETWEEN 1 AND 200`),
+  ],
+);
+
+export type ConcertRow = typeof concert.$inferSelect;
+
+/** Cartel de un concierto: el artista de MusicBrainz y, si ya está en el catálogo, su fila (sin crear stubs). */
+export const concertPerformer = pgTable(
+  "concert_performer",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    concertId: uuid("concert_id")
+      .notNull()
+      .references(() => concert.id, { onDelete: "cascade" }),
+    artistMbid: uuid("artist_mbid").notNull(),
+    artistName: text("artist_name").notNull(),
+    artistId: uuid("artist_id").references(() => artist.id, { onDelete: "set null" }),
+    role: text("role").notNull(), // 'main' | 'support' | 'guest'
+    position: smallint("position").notNull(),
+  },
+  (t) => [
+    unique("uq_concert_performer").on(t.concertId, t.artistMbid, t.role),
+    index("idx_concert_performer_artist_mbid").on(t.artistMbid),
+    index("idx_concert_performer_artist").on(t.artistId),
+    check("chk_concert_performer_role", sql`${t.role} IN ('main', 'support', 'guest')`),
+    check("chk_concert_performer_name", sql`length(${t.artistName}) BETWEEN 1 AND 500`),
+  ],
+);
+
+export type ConcertPerformerRow = typeof concertPerformer.$inferSelect;
 
 // Wishlist de colección (Fase 5, add-collection-wishlist). A diferencia de
 // collectionEntry, format es nullable ("cualquier formato"). Sin vista

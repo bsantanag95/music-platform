@@ -465,6 +465,12 @@
     "users.signInToFollow",
     "users.unfollow"
   ],
+  "(catalog)/artist/[id]/(tabs)/concerts/page": [
+    "concerts.shared.attend",
+    "concerts.shared.attendError",
+    "concerts.shared.attending",
+    "concerts.shared.unattend"
+  ],
   "(catalog)/artist/[id]/(tabs)/layout": [
     "artistJourney.albumSearch.noResults",
     "artistJourney.albumSearch.placeholder",
@@ -600,6 +606,7 @@
     "catalog.artist.tabs.awards",
     "catalog.artist.tabs.bands",
     "catalog.artist.tabs.biography",
+    "catalog.artist.tabs.concerts",
     "catalog.artist.tabs.discography",
     "catalog.artist.tabs.label",
     "catalog.artist.tabs.members",
@@ -997,6 +1004,12 @@
     "catalog.artist.coverPlaceholderAlt",
     "catalog.explore.scrollNext",
     "catalog.explore.scrollPrev"
+  ],
+  "(catalog)/concert/[id]/page": [
+    "concerts.shared.attend",
+    "concerts.shared.attendError",
+    "concerts.shared.attending",
+    "concerts.shared.unattend"
   ],
   "(catalog)/explore/collections/[segment]/page": [
     "camino.trackingOff",
@@ -3609,6 +3622,7 @@
     "concerts.row.removeMessage",
     "concerts.row.removeTitle",
     "concerts.row.setlist",
+    "concerts.shared.linked",
     "concerts.totals.artists",
     "concerts.totals.concerts",
     "concerts.totals.countries",

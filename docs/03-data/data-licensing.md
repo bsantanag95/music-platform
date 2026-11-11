@@ -151,6 +151,13 @@ diaria, solo se permite para uso **no comercial**, obliga a atribuir con los enl
 guardar los datos más allá de una caché corta. Si algún día se usa, hay que revisar sus términos de API
 (`https://www.setlist.fm/help/terms`) y sumarla a los gates de monetización.
 
+### Eventos de MusicBrainz (conciertos compartidos, `add-shared-concerts-phase1`, ADR 0057)
+
+Los conciertos compartidos se siembran con los eventos de MusicBrainz (`/ws/2/event`), datos **CC0** como el resto de
+su metadata (sección A), por el mismo cliente y su límite de 1 request por segundo (sección B). Se guardan nombre, tipo,
+fecha, recinto, ciudad y cartel; la atribución general del pie a MusicBrainz los cubre, y la pestaña dice "Conciertos de
+MusicBrainz (CC0)".
+
 ## Dónde se materializa la atribución
 
 El bloque de atribución del **pie de página global** (`src/components/layout/Footer.tsx`,

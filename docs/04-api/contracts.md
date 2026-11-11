@@ -1943,7 +1943,8 @@ concierto verificado. **No es un toggle:** `POST` siempre crea un registro nuevo
 lectura propia también y la ajena aplica la matriz de visibilidad de la colección física.
 
 Forma de `entry`: `{ id, artist: { id, name }, eventDate, country, city, venue, tour, setlistfmUrl, note, audience,
-createdAt, updatedAt }`. `eventDate` es una fecha parcial: `YYYY`, `YYYY-MM` o `YYYY-MM-DD`.
+concertId, createdAt, updatedAt }`. `concertId` (aditivo en `add-shared-concerts-phase1`) es el concierto compartido
+enlazado o `null`; las mutaciones de Mis conciertos no lo cambian. `eventDate` es una fecha parcial: `YYYY`, `YYYY-MM` o `YYYY-MM-DD`.
 
 Reglas del cuerpo: `eventDate` real, desde 1900 y no futura; `country` código ISO de dos letras (se acepta en minúsculas);
 `city`, `venue`, `tour` hasta 100 caracteres y `note` hasta 140, recortados (vacío = `null`); `setlistfmUrl` solo un
@@ -1977,6 +1978,25 @@ Quita un registro propio. **204** sin cuerpo. **404** `CONCERT_NOT_FOUND`.
 Conciertos de un perfil visibles para quien consulta, misma forma que la lista propia. Sin permiso (bloqueo, perfil
 privado sin seguir) responde una lista vacía con totales en cero, sin revelar si hay registros. **404**
 `USER_NOT_FOUND` si el usuario no existe.
+
+## Conciertos compartidos (`add-shared-concerts-phase1`, ADR 0057)
+
+Las páginas (pestaña Conciertos del artista y `/concert/{id}`) se renderizan en el servidor; la API solo cubre "Estuve
+ahí".
+
+### `POST /api/concerts/{id}/attendance`
+
+"Estuve ahí". **Body** opcional: `{ artistId? }` (artista de contexto, el de la pestaña). **200 OK:** `{ entryId }`, el
+recuerdo personal enlazado. Idempotente. Si la persona tiene un recuerdo sin enlazar del mismo artista y la misma fecha
+exacta, lo enlaza; si no, crea uno con fecha, recinto, ciudad y país del concierto y su audiencia por defecto. **404**
+`SHARED_CONCERT_NOT_FOUND` si el id no es un UUID, no existe, no está confirmado o fue cancelado. **400**
+`VALIDATION_ERROR` si el concierto es futuro, ningún artista del cartel está en el catálogo o el cuerpo no es válido.
+**401** `AUTH_REQUIRED`.
+
+### `DELETE /api/concerts/{id}/attendance`
+
+Quita "Estuve ahí": borra el recuerdo si lo creó la acción y nunca se editó; si no, solo lo desenlaza. Idempotente.
+**204** sin cuerpo. **401** `AUTH_REQUIRED`.
 
 ## Wishlist de colección (`add-collection-wishlist`)
 
