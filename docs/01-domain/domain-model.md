@@ -186,6 +186,9 @@ contenido o su cuenta, un **hito** de su comentario o de su lista, un **lanzamie
   cuentan o un setlist de setlist.fm, con quien lo registró como crédito discreto. Puede ocultarse o fusionarse en otro
   (moderación, o solo cuando MusicBrainz agrega el mismo). El Concierto asistido se enlaza a él de forma opcional
   ("Estuve ahí"), sin perder lo que escribió la persona.
+- **Gira y festival** (`add-shared-concerts-phase3`, ADR 0059): agrupaciones de conciertos compartidos que vienen de
+  MusicBrainz. Una gira (serie de tipo `Tour`) reúne las fechas de un artista; un festival es un concierto de tipo festival
+  con rango de fechas cuyos días y escenarios son conciertos enlazados a él.
 - **Concierto asistido** ("Mis conciertos", `add-my-concerts`, ADR 0056): recuerdo de un Usuario de haber visto en
   vivo a un Artista, con la fecha que recuerde (al menos el año), país, ciudad, recinto, gira, nota, un enlace opcional
   al setlist en setlist.fm y audiencia propia. **No es un concierto verificado ni una entidad compartida**: dos personas

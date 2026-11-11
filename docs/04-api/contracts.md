@@ -2026,6 +2026,23 @@ Candidatos antes de crear: conciertos confirmados o por confirmar, no cancelados
 name, eventDate, venue, city, country, status, sameCity, attending }] }`. **400** `VALIDATION_ERROR` (fecha parcial o
 futura). **401** `AUTH_REQUIRED`. **404** `ARTIST_NOT_FOUND`.
 
+### Sugerencias de enlace (`add-shared-concerts-phase3`, ADR 0059)
+
+Las sugerencias se renderizan en el servidor en `/me/concerts` (sin filtro). Las mutaciones:
+
+- `POST /api/me/concerts/{id}/link` con `{ concertId }`: enlaza el recuerdo propio `{id}` si el par cumple las
+  condiciones de una sugerencia (aunque se haya descartado). **200 OK:** `{ entry }`. Idempotente si ya está enlazado a
+  ese concierto. **400** `CONCERT_LINK_INVALID` (no coincide, o el recuerdo está enlazado a otro concierto) o
+  `VALIDATION_ERROR`. **401** `AUTH_REQUIRED`. **404** `CONCERT_NOT_FOUND` (recuerdo ajeno, inexistente o id mal formado) o
+  `SHARED_CONCERT_NOT_FOUND`. **409** `CONCERT_LINK_CONFLICT` (ya tiene otro recuerdo en ese concierto).
+- `DELETE /api/me/concerts/{id}/link`: desvincula sin borrar el recuerdo y descarta ese concierto como sugerencia.
+  **200 OK:** `{ entry }`. Idempotente. **401**, **404** como arriba.
+- `POST /api/me/concerts/{id}/dismissals` con `{ concertId }`: "No es este". **204**. Idempotente. **400**
+  `VALIDATION_ERROR`, **401**, **404** como arriba.
+
+Páginas: `/{locale}/tour/{segment}` (gira; 404 si no tiene conciertos visibles). La página de un concierto muestra su gira
+y su festival; la de un festival, sus días y escenarios y el cartel reunido.
+
 ### `POST /api/concerts/{id}/report`
 
 Reporta un concierto que quien reporta puede ver. **Body:** `{ reason: "did_not_happen" | "duplicate" | "wrong_data",

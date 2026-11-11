@@ -4,7 +4,6 @@
 Conciertos compartidos creados por la comunidad (ADR 0058): quién puede crearlos y con qué límites, la plausibilidad
 contra la actividad del artista, los duplicados, la confirmación por personas que estuvieron o por un setlist de
 setlist.fm, qué se ve mientras están por confirmar y el crédito discreto de quien los registró.
-
 ## Requirements
 ### Requirement: Crear un concierto de la comunidad
 
@@ -146,4 +145,21 @@ crear otro.
 
 - **WHEN** una persona comparte su recuerdo de Kuervos del Sur del 2019-03-30 en Curicó, Chile
 - **THEN** se crea el concierto por confirmar y su recuerdo queda enlazado
+
+### Requirement: Agregar a MusicBrainz
+
+La página de un concierto de la comunidad confirmado SHALL ofrecer, con sesión, un enlace "Agregar a MusicBrainz" al
+formulario de alta de eventos de MusicBrainz precargado con su nombre, el tipo concierto, la fecha y, si tiene, el enlace
+del setlist como fuente. El servidor SHALL NOT enviar datos a MusicBrainz. Un concierto por confirmar o de MusicBrainz
+SHALL NOT ofrecerlo.
+
+#### Scenario: Concierto confirmado
+
+- **WHEN** una persona con sesión abre un concierto de la comunidad confirmado
+- **THEN** ve "Agregar a MusicBrainz", que abre el formulario de MusicBrainz con el nombre y la fecha ya escritos
+
+#### Scenario: Por confirmar
+
+- **WHEN** el concierto está por confirmar
+- **THEN** no se ofrece el enlace
 

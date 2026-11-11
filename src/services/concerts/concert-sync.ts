@@ -4,14 +4,15 @@
 // resto después (`after()`); con más de 30 días se refresca en segundo plano. Idempotente por `mbid`; un concierto que
 // desaparece de MusicBrainz no se borra (puede tener asistentes). No crea artistas: el cartel se enlaza por `mbid` solo
 // a los que ya están en el catálogo. Un concierto de la comunidad con el mismo artista principal, fecha y ciudad se
-// fusiona en el importado (add-shared-concerts-phase2).
+// fusiona en el importado (add-shared-concerts-phase2). Fase 3 (add-shared-concerts-phase3, ADR 0059): cada concierto
+// enlaza su gira y, si es un día o un escenario, su festival, que se guarda sin cartel si no existía.
 
 import { after } from "next/server";
-import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, lte, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { artist, concert, concertPerformer, type ArtistRow } from "@/db/schema";
+import { artist, concert, concertPerformer, concertSeries, type ArtistRow } from "@/db/schema";
 import { musicbrainz, RELEASE_BROWSE_PAGE_SIZE } from "@/services/musicbrainz/client";
-import { mapEventToConcert, type ConcertInput } from "@/services/musicbrainz/event-mappers";
+import { mapEventToConcert, type ConcertInput, type ConcertParentInput, type ConcertTourInput } from "@/services/musicbrainz/event-mappers";
 import { mergeCommunityDuplicatesInto } from "./merge";
 
 /** Cada cuánto se vuelve a recorrer MusicBrainz. */
@@ -20,6 +21,46 @@ export const CONCERTS_REFRESH_MS = 30 * 24 * 60 * 60 * 1000;
 export const CONCERTS_SYNC_MAX_EVENTS = 1000;
 
 type SyncTarget = Pick<ArtistRow, "id" | "mbid" | "concertsSyncedAt">;
+
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/** La gira por `mbid` (el nombre se actualiza). */
+async function upsertTour(tx: Tx, tour: ConcertTourInput): Promise<string | null> {
+  const [row] = await tx
+    .insert(concertSeries)
+    .values({ mbid: tour.mbid, name: tour.name })
+    .onConflictDoUpdate({ target: concertSeries.mbid, set: { name: tour.name } })
+    .returning({ id: concertSeries.id });
+  return row?.id ?? null;
+}
+
+/**
+ * El festival padre: se crea sin cartel ni recinto si no existe; si ya existe (importado por su propio cartel) no se
+ * pisan sus datos y solo se completa el fin del rango si faltaba.
+ */
+async function ensureParent(tx: Tx, parent: ConcertParentInput, now: Date): Promise<string | null> {
+  await tx
+    .insert(concert)
+    .values({
+      mbid: parent.mbid,
+      name: parent.name,
+      kind: "festival",
+      eventDate: parent.eventDate,
+      endDate: parent.endDate,
+      source: "musicbrainz",
+      cancelled: parent.cancelled,
+      syncedAt: now,
+    })
+    .onConflictDoNothing({ target: concert.mbid });
+  if (parent.endDate) {
+    await tx
+      .update(concert)
+      .set({ endDate: parent.endDate })
+      .where(and(eq(concert.mbid, parent.mbid), isNull(concert.endDate), lte(concert.eventDate, parent.endDate)));
+  }
+  const [row] = await tx.select({ id: concert.id }).from(concert).where(eq(concert.mbid, parent.mbid)).limit(1);
+  return row?.id ?? null;
+}
 
 /** Guarda una página de conciertos: upsert por `mbid`, cartel reemplazado y enlazado por `mbid` al catálogo. */
 export async function saveConcerts(inputs: ConcertInput[], now: Date = new Date()): Promise<number> {
@@ -31,7 +72,13 @@ export async function saveConcerts(inputs: ConcertInput[], now: Date = new Date(
   const artistIdByMbid = new Map(catalog.map((row) => [row.mbid!, row.id]));
 
   await db.transaction(async (tx) => {
+    const tourIds = new Map<string, string | null>();
+    const parentIds = new Map<string, string | null>();
     for (const input of inputs) {
+      if (input.tour && !tourIds.has(input.tour.mbid)) tourIds.set(input.tour.mbid, await upsertTour(tx, input.tour));
+      if (input.parent && !parentIds.has(input.parent.mbid)) parentIds.set(input.parent.mbid, await ensureParent(tx, input.parent, now));
+      const seriesId = input.tour ? (tourIds.get(input.tour.mbid) ?? null) : null;
+      const parentId = input.parent ? (parentIds.get(input.parent.mbid) ?? null) : null;
       const values = {
         mbid: input.mbid,
         name: input.name,
@@ -45,6 +92,9 @@ export async function saveConcerts(inputs: ConcertInput[], now: Date = new Date(
         source: "musicbrainz" as const,
         cancelled: input.cancelled,
         syncedAt: now,
+        endDate: input.endDate,
+        seriesId,
+        parentId,
       };
       const [row] = await tx
         .insert(concert)
@@ -63,6 +113,9 @@ export async function saveConcerts(inputs: ConcertInput[], now: Date = new Date(
             country: values.country,
             cancelled: values.cancelled,
             syncedAt: values.syncedAt,
+            endDate: values.endDate,
+            seriesId: values.seriesId,
+            parentId: values.parentId,
           },
         })
         .returning({ id: concert.id });

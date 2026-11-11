@@ -334,5 +334,13 @@
   "CONCERT_MERGE_INVALID": {
     "title": "Invalid merge",
     "description": "That concert can't be merged or restored."
+  },
+  "CONCERT_LINK_INVALID": {
+    "title": "The memory doesn't match",
+    "description": "That concert doesn't match your memory."
+  },
+  "CONCERT_LINK_CONFLICT": {
+    "title": "You already have that concert",
+    "description": "Another of your memories is already linked to that concert."
   }
 }

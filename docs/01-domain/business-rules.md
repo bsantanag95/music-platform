@@ -240,6 +240,22 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
   se borra. Si MusicBrainz agrega el mismo concierto (artista principal, fecha y ciudad), el de la comunidad se fusiona
   solo en el importado.
 
+## Sugerencias de enlace, giras y festivales (`add-shared-concerts-phase3`, ADR 0059)
+
+- Mis conciertos sugiere, para cada recuerdo sin enlazar, hasta 3 conciertos visibles con sesión (confirmados o por
+  confirmar, no cancelados, pasados) con el artista del recuerdo en el cartel y fecha compatible: con día exacto, ese día,
+  el anterior o el siguiente; con mes, ese mes; con año, ese año. Si el recuerdo tiene ciudad, la ciudad normalizada
+  coincide; sin ciudad solo se sugiere con día exacto. Si los dos tienen país, coincide. El bloque muestra hasta 20.
+- Las sugerencias usan solo los recuerdos de la propia persona; nunca se sugiere a partir de recuerdos ajenos.
+- Enlazar no modifica el recuerdo, cuenta como asistencia y no se permite si la persona ya tiene otro recuerdo en ese
+  concierto. "No es este" descarta para siempre. Desvincular conserva el recuerdo y lo descarta como sugerencia; la
+  confirmación del concierto no cambia.
+- Un concierto de MusicBrainz enlaza su gira (primera serie de tipo `Tour`) y, si es un día o un escenario, su festival,
+  que se guarda sin cartel con su rango de fechas; un festival existente no se pisa. Un festival sin cartel propio no
+  ofrece "Estuve ahí": se dice en cada día. "Estuve ahí" que crea un recuerdo copia el nombre de la gira.
+- Un concierto de la comunidad confirmado ofrece, con sesión, un enlace al alta de eventos de MusicBrainz precargado;
+  el servidor no escribe en MusicBrainz.
+
 ## Notificaciones (Fases 1 a 3, `add-notifications-core`, `add-notification-milestones-and-releases` y `add-notification-digest-and-awards`)
 
 - Toda notificación nace de **un único servicio de emisión**, dentro de la **misma transacción** que la acción que la

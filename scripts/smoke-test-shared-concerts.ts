@@ -69,7 +69,7 @@ async function main() {
     const url = new URL(input.toString());
     if (url.hostname !== "musicbrainz.org") throw new Error(`salida inesperada a ${url.hostname}`);
     mbCalls += 1;
-    check(url.pathname === "/ws/2/event" && url.searchParams.get("inc") === "place-rels+area-rels+artist-rels", "browse de eventos con recinto, área y artistas");
+    check(url.pathname === "/ws/2/event" && url.searchParams.get("inc") === "place-rels+area-rels+artist-rels+series-rels+event-rels", "browse de eventos con recinto, área, artistas, gira y festival");
     return new Response(JSON.stringify({ "event-count": events.length, "event-offset": 0, events }), { status: 200 });
   }) as typeof fetch;
 

@@ -350,7 +350,8 @@ export const musicbrainz = {
       artist: artistMbid,
       limit: String(RELEASE_BROWSE_PAGE_SIZE),
       offset: String(offset),
-      inc: "place-rels+area-rels+artist-rels",
+      // Gira y festival padre en la misma request (add-shared-concerts-phase3).
+      inc: "place-rels+area-rels+artist-rels+series-rels+event-rels",
     });
   },
 

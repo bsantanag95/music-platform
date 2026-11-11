@@ -27,7 +27,9 @@
     "removeMessage": "The {artist} concert on {date} will be removed. This cannot be undone.",
     "removeConfirm": "Remove",
     "cancel": "Cancel",
-    "removeError": "The concert could not be removed. Try again."
+    "removeError": "The concert could not be removed. Try again.",
+    "unlink": "Unlink from the concert",
+    "unlinkError": "Couldn't unlink. Try again."
   },
   "audience": {
     "private": "Private",
@@ -107,9 +109,12 @@
       "morePeople": "{count, plural, one {and # more person} other {and # more people}}",
       "noVisiblePeople": "Nobody you can see has logged this concert yet.",
       "nobody": "Nobody has logged this concert yet.",
-      "signIn": "Sign in to say you were there."
+      "signIn": "Sign in to say you were there.",
+      "parts": "Days and stages"
     },
-    "linked": "See concert"
+    "linked": "See concert",
+    "tour": "Tour:",
+    "partOf": "Part of"
   },
   "community": {
     "add": "Add a concert",
@@ -175,7 +180,8 @@
       "registeredBy": "Added by",
       "setlist": "Setlist on setlist.fm",
       "communitySource": "Concert added by the community.",
-      "musicbrainzSource": "Concert from MusicBrainz (CC0)."
+      "musicbrainzSource": "Concert from MusicBrainz (CC0).",
+      "addToMusicBrainz": "Add to MusicBrainz"
     },
     "report": {
       "open": "Report",
@@ -193,5 +199,23 @@
       "error": "Couldn't send. Try again.",
       "cancel": "Cancel"
     }
+  },
+  "links": {
+    "title": "Are these your concerts?",
+    "intro": "Concerts that match memories of yours that aren't linked yet. Linking them doesn't change what you wrote.",
+    "memory": "Your memory: {artist}, {date}",
+    "pending": "Pending confirmation",
+    "link": "Link",
+    "dismiss": "Not this one",
+    "error": "Couldn't save. Try again.",
+    "more": "{count, plural, one {and # more suggestion} other {and # more suggestions}}"
+  },
+  "tour": {
+    "metaTitle": "{name} · Tour",
+    "eyebrow": "Tour",
+    "dates": "{count, plural, one {# date} other {# dates}}",
+    "attended": "{count, plural, one {you were at #} other {you were at #}}",
+    "past": "Dates",
+    "source": "Tours from MusicBrainz (CC0)."
   }
 }

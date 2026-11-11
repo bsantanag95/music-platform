@@ -3,12 +3,15 @@ import { z } from "zod";
 import { getTranslations } from "next-intl/server";
 import { requirePageUser } from "@/services/auth/page-auth";
 import { concertArtistName, listOwnConcerts } from "@/services/concerts/concerts";
+import { listLinkSuggestions } from "@/services/concerts/suggestions";
 import { OwnConcerts } from "@/components/concerts/OwnConcerts";
+import { ConcertLinkSuggestions } from "@/components/concerts/ConcertLinkSuggestions";
 import { withClientMessages } from "@/i18n/client-messages";
 
 // Mis conciertos (openspec: add-my-concerts, capability `concert-log`): los conciertos a los que fue el usuario,
 // agrupados por año, con registrar, editar y quitar. `?artista=<id>` acota la lista a un artista (el enlace "Lo viste
-// N veces" del panel del artista); un valor inválido o de un artista inexistente se ignora.
+// N veces" del panel del artista); un valor inválido o de un artista inexistente se ignora. Sin filtro, arriba van las
+// sugerencias de enlace de los recuerdos sueltos (add-shared-concerts-phase3).
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -24,7 +27,10 @@ async function MyConcertsPage({ searchParams }: { searchParams: Promise<SearchPa
   const artistId = typeof raw === "string" && z.uuid().safeParse(raw).success ? raw : null;
   const artistName = artistId ? await concertArtistName(artistId) : null;
   const filter = artistId && artistName ? { id: artistId, name: artistName } : null;
-  const initial = await listOwnConcerts(user.id, filter ? { artistId: filter.id } : {});
+  const [initial, links] = await Promise.all([
+    listOwnConcerts(user.id, filter ? { artistId: filter.id } : {}),
+    filter ? Promise.resolve(null) : listLinkSuggestions(user.id),
+  ]);
 
   return (
     // Mismo ancho y título a la izquierda que Colección, Diario y Pendientes.
@@ -33,6 +39,7 @@ async function MyConcertsPage({ searchParams }: { searchParams: Promise<SearchPa
         <h1 className="font-display text-2xl text-paper">{t("title")}</h1>
         <p className="font-body text-sm text-paper-muted">{t("intro")}</p>
       </header>
+      {links && links.suggestions.length > 0 && <ConcertLinkSuggestions suggestions={links.suggestions} total={links.total} />}
       <OwnConcerts initial={initial} filter={filter} />
     </main>
   );

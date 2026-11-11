@@ -225,7 +225,7 @@ export interface MBRelease {
 }
 
 // ---------------------------------------------------------------------------
-// Eventos (openspec: add-shared-concerts-phase1): browse `/event?artist=…&inc=place-rels+area-rels+artist-rels`.
+// Eventos (openspec: add-shared-concerts-phase1/phase3): browse `/event?artist=…&inc=place-rels+area-rels+artist-rels+series-rels+event-rels`.
 // ---------------------------------------------------------------------------
 
 export interface MBEventArea {
@@ -242,11 +242,16 @@ export interface MBEventPlace {
 }
 
 export interface MBEventRelation {
-  type?: string; // 'held at' | 'main performer' | 'support act' | 'guest performer' | ...
-  "target-type"?: string; // 'place' | 'area' | 'artist' | ...
+  type?: string; // 'held at' | 'main performer' | 'support act' | 'guest performer' | 'part of' | 'parts' | ...
+  "target-type"?: string; // 'place' | 'area' | 'artist' | 'series' | 'event' | ...
+  direction?: "forward" | "backward";
   place?: MBEventPlace;
   area?: MBEventArea;
   artist?: { id: string; name: string };
+  /** Serie (`inc=series-rels`, add-shared-concerts-phase3): una gira es `type: 'Tour'`. */
+  series?: { id: string; name: string; type?: string | null };
+  /** Otro evento (`inc=event-rels`): con `type: 'parts'` y `direction: 'backward'`, el festival del que es parte. */
+  event?: { id: string; name: string; type?: string | null; cancelled?: boolean; "life-span"?: { begin?: string | null; end?: string | null } };
 }
 
 export interface MBEvent {

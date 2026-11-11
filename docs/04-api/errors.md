@@ -101,6 +101,8 @@ además del `error` legible:
 | `CONCERT_IMPLAUSIBLE` | 400 | Conciertos de la comunidad: el año es anterior a la formación o nacimiento de un artista principal, o posterior a su separación o muerte. |
 | `CONCERT_CREATE_NOT_ALLOWED` | 403 | Conciertos de la comunidad: la cuenta no tiene email verificado, tiene menos de 7 días o está desactivada. |
 | `CONCERT_CREATE_LIMIT` | 429 | Conciertos de la comunidad: la persona ya creó 5 conciertos en las últimas 24 horas. |
+| `CONCERT_LINK_INVALID` | 400 | Mis conciertos: el recuerdo no coincide con ese concierto (artista, fecha o lugar) o ya está enlazado a otro. |
+| `CONCERT_LINK_CONFLICT` | 409 | Mis conciertos: la persona ya tiene otro recuerdo enlazado a ese concierto. |
 | `CONCERT_MERGE_INVALID` | 400 | Moderación de conciertos: fusión consigo mismo, destino oculto, origen ya fusionado, o restaurar uno fusionado. |
 | `CONCERT_NOT_FOUND` | 404 | Mis conciertos: el registro no existe, el id no es un UUID o pertenece a otra persona (404 para no revelar registros ajenos). |
 | `COLLECTION_ENTRY_NOT_FOUND` | 404 | Colección física: la entrada no existe o no pertenece al usuario autenticado (se responde 404 para no revelar existencia de entradas ajenas). |
