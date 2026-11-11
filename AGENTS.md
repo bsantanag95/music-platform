@@ -139,7 +139,7 @@ de cuál de las filas con el mismo título haya en la BD.
 >   username LIKE 'smoke_cc_%'); DELETE FROM app_user WHERE username LIKE 'smoke_cc_%'; DELETE FROM concert WHERE mbid::text
 >   LIKE '5e0ce000-0000-4000-8000-00000000cc%' OR id IN (SELECT concert_id FROM concert_performer WHERE artist_mbid::text LIKE
 >   '5e0ce000-0000-4000-8000-00000000cc%'); DELETE FROM artist WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000cc%';`.
->   Necesita la migración `0093`. Verifica los `CHECK` y la columna generada `city_key`, los requisitos para crear (cuenta
+>   Necesita las migraciones `0093` y `0094`. Verifica los `CHECK` y la columna generada `city_key`, los requisitos para crear (cuenta
 >   nueva, sin verificar, suspendida) y el límite de 24 horas, la plausibilidad, el duplicado exacto (también con pedidos
 >   simultáneos), la confirmación (3 personas que cuentan, cuentas que no cuentan, setlist del mismo y de otro artista,
 >   pegajosa), la visibilidad con y sin sesión y el enlace en el perfil, "Compartir este concierto", los candidatos, los

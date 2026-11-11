@@ -277,7 +277,8 @@ export const contentReport = pgTable(
     ),
     check(
       "chk_content_report_reason_code",
-      sql`(${t.concertId} IS NULL AND ${t.reasonCode} IS NULL) OR (${t.concertId} IS NOT NULL AND ${t.reasonCode} IN ('did_not_happen', 'duplicate', 'wrong_data'))`,
+      // `IS NOT NULL` explícito (0094): con un nulo, `IN (...)` da NULL y el CHECK lo aceptaría.
+      sql`(${t.concertId} IS NULL AND ${t.reasonCode} IS NULL) OR (${t.concertId} IS NOT NULL AND ${t.reasonCode} IS NOT NULL AND ${t.reasonCode} IN ('did_not_happen', 'duplicate', 'wrong_data'))`,
     ),
     uniqueIndex("uq_content_report_open_concert")
       .on(t.reporterId, t.concertId)
