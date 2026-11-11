@@ -15,9 +15,13 @@ vi.mock("@/i18n/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn() }),
 }));
 vi.mock("@/lib/api/concerts", () => ({ attendConcert: vi.fn(), unattendConcert: vi.fn() }));
+// El diálogo de creación tiene su propio test; aquí basta con el botón.
+vi.mock("./AddConcertButton", () => ({ AddConcertButton: () => <button type="button">Agregar un concierto</button> }));
 
 const shared = concertsEs.shared;
-const ARTIST = "00000000-0000-4000-8000-0000000000a1";
+const community = concertsEs.community;
+const ARTIST_ID = "00000000-0000-4000-8000-0000000000a1";
+const ARTIST = { id: ARTIST_ID, name: "Los Bunkers" };
 
 function concert(id: string, overrides: Partial<SharedConcertSummary> = {}): SharedConcertSummary {
   return {
@@ -35,13 +39,13 @@ function concert(id: string, overrides: Partial<SharedConcertSummary> = {}): Sha
   };
 }
 
-const page = (over: Partial<Parameters<typeof ArtistConcerts>[0]["data"]> = {}) => ({ upcoming: [], past: [], page: 1, hasNext: false, ...over });
+const page = (over: Partial<Parameters<typeof ArtistConcerts>[0]["data"]> = {}) => ({ upcoming: [], past: [], pending: [], page: 1, hasNext: false, ...over });
 
 describe("ArtistConcerts", () => {
   it("próximos arriba sin 'Estuve ahí' y pasados por año con su acción", () => {
     renderWithIntl(
       <ArtistConcerts
-        artistId={ARTIST}
+        artist={ARTIST} signedIn
         baseHref="/artist/x/concerts"
         data={page({
           upcoming: [concert("u1", { eventDate: "2027-01-10", upcoming: true })],
@@ -62,7 +66,8 @@ describe("ArtistConcerts", () => {
   it("cifra con umbral y sin sesión no hay acción", () => {
     renderWithIntl(
       <ArtistConcerts
-        artistId={ARTIST}
+        artist={ARTIST}
+        signedIn={false}
         baseHref="/artist/x/concerts"
         data={page({
           past: [
@@ -78,20 +83,46 @@ describe("ArtistConcerts", () => {
   });
 
   it("ya estuvo: muestra 'Estuviste' y Quitar", () => {
-    renderWithIntl(<ArtistConcerts artistId={ARTIST} baseHref="/a" data={page({ past: [concert("p1", { attending: true })] })} />);
-    expect(screen.getByText(new RegExp(shared.attending))).toBeInTheDocument();
+    renderWithIntl(<ArtistConcerts artist={ARTIST} signedIn baseHref="/a" data={page({ past: [concert("p1", { attending: true })] })} />);
+    expect(screen.getByText(`✓ ${shared.attending}`)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: shared.unattend })).toBeInTheDocument();
   });
 
-  it("vacío: invita a Mis conciertos", () => {
-    renderWithIntl(<ArtistConcerts artistId={ARTIST} baseHref="/a" data={page()} />);
+  it("vacío sin sesión: invita a Mis conciertos", () => {
+    renderWithIntl(<ArtistConcerts artist={ARTIST} signedIn={false} baseHref="/a" data={page()} />);
     expect(screen.getByText(shared.empty)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: new RegExp(shared.emptyLink) })).toHaveAttribute("href", "/me/concerts");
   });
 
   it("paginación por URL", () => {
-    renderWithIntl(<ArtistConcerts artistId={ARTIST} baseHref="/a" data={page({ page: 2, hasNext: true, past: [concert("p1")] })} />);
+    renderWithIntl(<ArtistConcerts artist={ARTIST} signedIn baseHref="/a" data={page({ page: 2, hasNext: true, past: [concert("p1")] })} />);
     expect(screen.getByRole("link", { name: new RegExp(shared.newer) })).toHaveAttribute("href", "/a");
     expect(screen.getByRole("link", { name: new RegExp(shared.older) })).toHaveAttribute("href", "/a?pagina=3");
+  });
+
+  it("vacío con sesión: invita a agregarlo", () => {
+    renderWithIntl(<ArtistConcerts artist={ARTIST} signedIn baseHref="/a" data={page()} />);
+    expect(screen.getByText(community.addHint)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: community.add })).toBeInTheDocument();
+  });
+
+  it("por confirmar: al final, con lo que falta y sin cifra de personas", () => {
+    renderWithIntl(
+      <ArtistConcerts
+        artist={ARTIST}
+        signedIn
+        baseHref="/a"
+        data={page({
+          past: [concert("p1", { attendees: { kind: "exact", value: 7 } })],
+          pending: [{ ...concert("q1", { eventDate: "2009-05-15" }), missing: 2 }],
+        })}
+      />,
+    );
+    const headings = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
+    expect(headings).toEqual(["2023", community.pendingTitle]);
+    const pending = screen.getByRole("region", { name: community.pendingTitle });
+    expect(within(pending).getByText("Faltan 2 confirmaciones")).toBeInTheDocument();
+    expect(within(pending).getByRole("button", { name: shared.attend })).toBeInTheDocument();
+    expect(within(pending).queryByText(/personas estuvieron/)).not.toBeInTheDocument();
   });
 });

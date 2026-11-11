@@ -12,6 +12,7 @@ import {
   restoreList,
   restoreReview,
 } from "@/services/moderation";
+import { hideConcert, restoreConcert } from "@/services/concerts/community";
 
 export const PATCH = withErrorHandling(async (
   request: NextRequest,
@@ -32,6 +33,10 @@ export const PATCH = withErrorHandling(async (
   } else if (targetTypeParsed.data === "review") {
     if (action === "hide") await hideReview(actor.id, targetId, parsed.data.reason);
     else await restoreReview(actor.id, targetId, parsed.data.reason);
+  } else if (targetTypeParsed.data === "concert") {
+    // Conciertos compartidos (openspec: add-shared-concerts-phase2): también resuelve sus reportes abiertos.
+    if (action === "hide") await hideConcert(actor.id, targetId, parsed.data.reason);
+    else await restoreConcert(actor.id, targetId, parsed.data.reason);
   } else {
     if (action === "hide") await hideList(actor.id, targetId, parsed.data.reason);
     else await restoreList(actor.id, targetId, parsed.data.reason);

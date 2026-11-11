@@ -1988,15 +1988,60 @@ ahí".
 
 "Estuve ahí". **Body** opcional: `{ artistId? }` (artista de contexto, el de la pestaña). **200 OK:** `{ entryId }`, el
 recuerdo personal enlazado. Idempotente. Si la persona tiene un recuerdo sin enlazar del mismo artista y la misma fecha
-exacta, lo enlaza; si no, crea uno con fecha, recinto, ciudad y país del concierto y su audiencia por defecto. **404**
-`SHARED_CONCERT_NOT_FOUND` si el id no es un UUID, no existe, no está confirmado o fue cancelado. **400**
+exacta, lo enlaza; si no, crea uno con fecha, recinto, ciudad y país del concierto y su audiencia por defecto. Desde
+`add-shared-concerts-phase2` también vale en uno por confirmar, y la asistencia puede confirmarlo. **404**
+`SHARED_CONCERT_NOT_FOUND` si el id no es un UUID, no existe, está oculto o fue cancelado. **400**
 `VALIDATION_ERROR` si el concierto es futuro, ningún artista del cartel está en el catálogo o el cuerpo no es válido.
 **401** `AUTH_REQUIRED`.
 
 ### `DELETE /api/concerts/{id}/attendance`
 
 Quita "Estuve ahí": borra el recuerdo si lo creó la acción y nunca se editó; si no, solo lo desenlaza. Idempotente.
-**204** sin cuerpo. **401** `AUTH_REQUIRED`.
+**204** sin cuerpo. **401** `AUTH_REQUIRED`. Quitar asistencias no deshace una confirmación.
+
+## Conciertos de la comunidad (`add-shared-concerts-phase2`, ADR 0058)
+
+Con sesión, la pestaña Conciertos agrega la sección "Por confirmar" y la página `/concert/{id}` existe también para uno
+por confirmar (sin cifra ni lista de personas, con `noindex`); sin sesión responde 404. Una página de un concierto
+fusionado redirige (308) al destino.
+
+### `POST /api/concerts`
+
+Crea un concierto de la comunidad. **Body:** `{ artistId, performers?: [{ artistId, role: "main" | "support" }] (≤10),
+eventDate: "YYYY-MM-DD", venue, city, country (ISO), name?, setlistfmUrl?, fromEntryId? }`. `venue` y `city` 1–100,
+`name` ≤300 (por defecto "<artista> en <recinto>"), `setlistfmUrl` solo de un setlist de setlist.fm. `fromEntryId`
+("Compartir este concierto") enlaza ese recuerdo propio sin enlazar, que debe tener la misma fecha y un artista del
+cartel. Nace por confirmar con quien lo crea como asistente; un setlist del mismo artista y año lo confirma al nacer.
+**201 Created:** `{ concert: { id, name, status: "pending" | "confirmed" }, entryId }`. **400** `VALIDATION_ERROR`
+(falta un dato, fecha parcial o futura, setlist inválido, artista sin mbid, recuerdo que no coincide) o
+`CONCERT_IMPLAUSIBLE`. **401** `AUTH_REQUIRED`. **403** `CONCERT_CREATE_NOT_ALLOWED` (cuenta sin email verificado, de
+menos de 7 días o desactivada) o `SOCIAL_SUSPENSION_ACTIVE`. **404** `ARTIST_NOT_FOUND` o `CONCERT_NOT_FOUND` (recuerdo
+ajeno, inexistente o ya enlazado). **409** `CONCERT_DUPLICATE` con `{ error, code, concertId }`: mismo artista
+principal, fecha y ciudad normalizada que uno no oculto. **429** `CONCERT_CREATE_LIMIT` (5 en 24 horas).
+
+### `GET /api/concerts/candidates?artistId=&date=&city=`
+
+Candidatos antes de crear: conciertos confirmados o por confirmar, no cancelados, con el artista en el cartel y fecha a
+±1 día; primero los de la misma ciudad normalizada, después por cercanía, hasta 10. **200 OK:** `{ candidates: [{ id,
+name, eventDate, venue, city, country, status, sameCity, attending }] }`. **400** `VALIDATION_ERROR` (fecha parcial o
+futura). **401** `AUTH_REQUIRED`. **404** `ARTIST_NOT_FOUND`.
+
+### `POST /api/concerts/{id}/report`
+
+Reporta un concierto que quien reporta puede ver. **Body:** `{ reason: "did_not_happen" | "duplicate" | "wrong_data",
+details? (≤500) }`. **201 Created:** `{ report: { id } }`; **200 OK** con `{ report: null }` si ya tenía uno abierto.
+**400** `VALIDATION_ERROR`. **401** `AUTH_REQUIRED`. **404** `SHARED_CONCERT_NOT_FOUND`.
+
+### Moderación de conciertos
+
+- `PATCH /api/moderation/content/concert/{id}` con `{ action: "hide" | "restore", reason }`: oculta, o restaura a
+  confirmado (si es de MusicBrainz o alguna vez se confirmó) o a por confirmar. Resuelve sus reportes abiertos. **400**
+  `CONCERT_MERGE_INVALID` al restaurar uno fusionado.
+- `POST /api/moderation/concerts/{id}/merge` con `{ targetId, reason }`: fusiona el concierto en `targetId`. **200 OK:**
+  `{ ok: true, moved, unlinked }`. **400** `CONCERT_MERGE_INVALID` (el mismo, destino oculto u origen ya fusionado).
+  **403** sin permiso de moderación. **404** `SHARED_CONCERT_NOT_FOUND`.
+- `GET /api/moderation/reports` acepta `targetType=concert`; cada reporte trae `reasonCode` (nulo fuera de conciertos) y
+  `concert: { id, name, eventDate, status, source }`.
 
 ## Wishlist de colección (`add-collection-wishlist`)
 

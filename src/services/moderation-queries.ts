@@ -4,6 +4,7 @@ import { db } from "@/db";
 import {
   appUser,
   comment,
+  concert,
   contentReport,
   review,
   userRestriction,
@@ -16,7 +17,7 @@ const reportedUser = alias(appUser, "reported_user");
 
 export async function listModerationReports(options: {
   status: ReportStatus;
-  targetType?: "comment" | "review" | "user";
+  targetType?: "comment" | "review" | "user" | "concert";
   page: number;
   pageSize: number;
 }) {
@@ -25,7 +26,9 @@ export async function listModerationReports(options: {
       ? sql`${contentReport.commentId} IS NOT NULL`
       : options.targetType === "review"
         ? sql`${contentReport.reviewId} IS NOT NULL`
-        : sql`${contentReport.userId} IS NOT NULL`
+        : options.targetType === "concert"
+          ? sql`${contentReport.concertId} IS NOT NULL`
+          : sql`${contentReport.userId} IS NOT NULL`
     : undefined;
   const where = and(
     eq(contentReport.status, options.status),
@@ -35,6 +38,7 @@ export async function listModerationReports(options: {
     .select({
       id: contentReport.id,
       reason: contentReport.reason,
+      reasonCode: contentReport.reasonCode,
       status: contentReport.status,
       createdAt: contentReport.createdAt,
       reporter: {
@@ -58,12 +62,21 @@ export async function listModerationReports(options: {
         username: reportedUser.username,
         displayName: reportedUser.displayName,
       },
+      // Concierto compartido reportado (openspec: add-shared-concerts-phase2).
+      concert: {
+        id: concert.id,
+        name: concert.name,
+        eventDate: concert.eventDate,
+        status: concert.status,
+        source: concert.source,
+      },
     })
     .from(contentReport)
     .innerJoin(appUser, eq(appUser.id, contentReport.reporterId))
     .leftJoin(comment, eq(comment.id, contentReport.commentId))
     .leftJoin(review, eq(review.id, contentReport.reviewId))
     .leftJoin(reportedUser, eq(reportedUser.id, contentReport.userId))
+    .leftJoin(concert, eq(concert.id, contentReport.concertId))
     .where(where)
     .orderBy(desc(contentReport.createdAt), desc(contentReport.id))
     .limit(options.pageSize + 1)
@@ -73,7 +86,8 @@ export async function listModerationReports(options: {
   return {
     reports: rows.slice(0, options.pageSize).map((row) => ({
       ...row,
-      targetType: row.comment?.id ? "comment" : row.review?.id ? "review" : "user",
+      reasonCode: row.reasonCode as "did_not_happen" | "duplicate" | "wrong_data" | null,
+      targetType: row.comment?.id ? "comment" : row.review?.id ? "review" : row.concert?.id ? "concert" : "user",
       createdAt: row.createdAt.toISOString(),
     })),
     status: options.status,

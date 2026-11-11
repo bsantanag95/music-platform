@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
   marks: 0,
 }));
 
+// La fusión con conciertos de la comunidad (Fase 2) la verifica scripts/smoke-test-community-concerts.ts.
+vi.mock("./merge", () => ({ mergeCommunityDuplicatesInto: vi.fn().mockResolvedValue(0) }));
 vi.mock("next/server", () => ({ after: (task: () => Promise<unknown>) => mocks.scheduled.push(task) }));
 vi.mock("@/services/musicbrainz/client", () => ({
   RELEASE_BROWSE_PAGE_SIZE: 100,

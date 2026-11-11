@@ -259,6 +259,9 @@ export const contentReport = pgTable(
     commentId: uuid("comment_id"),
     reviewId: uuid("review_id"),
     userId: uuid("user_id").references(() => appUser.id, { onDelete: "cascade" }),
+    // Reporte de un concierto compartido y su motivo cerrado (migración 0093, add-shared-concerts-phase2).
+    concertId: uuid("concert_id").references((): AnyPgColumn => concert.id, { onDelete: "cascade" }),
+    reasonCode: text("reason_code"), // 'did_not_happen' | 'duplicate' | 'wrong_data'
     reason: text("reason").notNull(),
     status: text("status").notNull().default("pending"),
     resolvedBy: uuid("resolved_by").references(() => appUser.id, { onDelete: "set null" }),
@@ -268,7 +271,17 @@ export const contentReport = pgTable(
   (t) => [
     index("idx_content_report_status_created").on(t.status, t.createdAt),
     check("chk_content_report_status", sql`${t.status} IN ('pending', 'resolved', 'dismissed')`),
-    check("chk_content_report_target", sql`num_nonnulls(${t.commentId}, ${t.reviewId}, ${t.userId}) = 1`),
+    check(
+      "chk_content_report_target",
+      sql`num_nonnulls(${t.commentId}, ${t.reviewId}, ${t.userId}, ${t.concertId}) = 1`,
+    ),
+    check(
+      "chk_content_report_reason_code",
+      sql`(${t.concertId} IS NULL AND ${t.reasonCode} IS NULL) OR (${t.concertId} IS NOT NULL AND ${t.reasonCode} IN ('did_not_happen', 'duplicate', 'wrong_data'))`,
+    ),
+    uniqueIndex("uq_content_report_open_concert")
+      .on(t.reporterId, t.concertId)
+      .where(sql`${t.concertId} IS NOT NULL AND ${t.status} = 'pending'`),
   ],
 );
 
@@ -285,6 +298,8 @@ export const moderationAction = pgTable(
     listId: uuid("list_id"),
     restrictionId: uuid("restriction_id"),
     userId: uuid("user_id"),
+    // Concierto moderado (migración 0093); `merge` registra la fusión manual de un duplicado.
+    concertId: uuid("concert_id").references((): AnyPgColumn => concert.id, { onDelete: "set null" }),
     reason: text("reason").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -292,11 +307,11 @@ export const moderationAction = pgTable(
     index("idx_moderation_action_created").on(t.createdAt),
     check(
       "chk_moderation_action_action",
-      sql`${t.action} IN ('hide', 'restore', 'report_resolve', 'report_dismiss', 'suspend_social', 'revoke_social')`,
+      sql`${t.action} IN ('hide', 'restore', 'report_resolve', 'report_dismiss', 'suspend_social', 'revoke_social', 'merge')`,
     ),
     check(
       "chk_moderation_action_target",
-      sql`num_nonnulls(${t.commentId}, ${t.reviewId}, ${t.listId}, ${t.restrictionId}, ${t.userId}) <= 1`,
+      sql`num_nonnulls(${t.commentId}, ${t.reviewId}, ${t.listId}, ${t.restrictionId}, ${t.userId}, ${t.concertId}) <= 1`,
     ),
   ],
 );
@@ -1512,11 +1527,34 @@ export const concert = pgTable(
     status: text("status").notNull().default("confirmed"), // 'confirmed' | 'pending' | 'hidden'
     cancelled: boolean("cancelled").notNull().default(false),
     syncedAt: timestamp("synced_at", { withTimezone: true }),
+    // Fase 2 (migración 0093, add-shared-concerts-phase2, ADR 0058): creador de un concierto de la comunidad, prueba de
+    // setlist.fm, ciudad normalizada (duplicado exacto), cuándo se confirmó (pegajosa) y destino de una fusión.
+    createdBy: uuid("created_by").references((): AnyPgColumn => appUser.id, { onDelete: "set null" }),
+    setlistfmUrl: text("setlistfm_url"),
+    // Generada con `search_key(city)` (0051): la mantiene la base, la app nunca la escribe.
+    cityKey: text("city_key").generatedAlwaysAs(sql`search_key(city)`),
+    confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+    mergedIntoId: uuid("merged_into_id").references((): AnyPgColumn => concert.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     index("idx_concert_date").on(t.eventDate),
+    index("idx_concert_created_by").on(t.createdBy, t.createdAt).where(sql`${t.createdBy} IS NOT NULL`),
+    index("idx_concert_date_city_key").on(t.eventDate, t.cityKey),
+    check(
+      "chk_concert_setlistfm_url",
+      sql`${t.setlistfmUrl} IS NULL OR (length(${t.setlistfmUrl}) <= 500 AND ${t.setlistfmUrl} ~ '^https://(www\\.)?setlist\\.fm/setlist/[^\\s]+$')`,
+    ),
+    check(
+      "chk_concert_community_place",
+      sql`${t.source} <> 'community' OR (${t.venue} IS NOT NULL AND ${t.city} IS NOT NULL AND ${t.cityKey} <> '' AND ${t.country} IS NOT NULL)`,
+    ),
+    check(
+      "chk_concert_community_confirmed",
+      sql`${t.source} <> 'community' OR ${t.status} <> 'confirmed' OR ${t.confirmedAt} IS NOT NULL`,
+    ),
+    check("chk_concert_merged", sql`${t.mergedIntoId} IS NULL OR (${t.status} = 'hidden' AND ${t.mergedIntoId} <> ${t.id})`),
     check("chk_concert_name", sql`length(${t.name}) BETWEEN 1 AND 300`),
     check("chk_concert_kind", sql`${t.kind} IN ('concert', 'festival')`),
     check("chk_concert_source", sql`${t.source} IN ('musicbrainz', 'community')`),

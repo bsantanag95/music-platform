@@ -72,7 +72,8 @@
       "comment": "Comment",
       "review": "Review",
       "list": "List",
-      "user": "User"
+      "user": "User",
+      "concert": "Concert"
     },
     "suspensionTitle": "Suspend social activity",
     "identifier": "Username or email",
@@ -83,7 +84,28 @@
     "cancel": "Cancel",
     "stateActive": "Active",
     "stateExpired": "Expired",
-    "stateRevoked": "Revoked"
+    "stateRevoked": "Revoked",
+    "concert": {
+      "status": {
+        "confirmed": "Confirmed",
+        "pending": "Pending confirmation",
+        "hidden": "Hidden"
+      },
+      "source": {
+        "musicbrainz": "MusicBrainz",
+        "community": "Community"
+      },
+      "reason": {
+        "did_not_happen": "Did not happen",
+        "duplicate": "Duplicate",
+        "wrong_data": "Wrong details"
+      },
+      "merge": "Merge",
+      "mergeTargetLabel": "Merge into another concert",
+      "mergeTargetPlaceholder": "Address or id of the concert to keep",
+      "mergeTargetInvalid": "Enter the address or id of the concert to keep.",
+      "confirmMerge": "Merge this concert into the one given? People move to the other one and this one is hidden."
+    }
   },
   "adminConsole": {
     "title": "Editorial administration",

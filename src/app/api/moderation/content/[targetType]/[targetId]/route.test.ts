@@ -11,6 +11,13 @@ const mocks = vi.hoisted(() => ({
   restoreReview: vi.fn(),
   hideList: vi.fn(),
   restoreList: vi.fn(),
+  hideConcert: vi.fn(),
+  restoreConcert: vi.fn(),
+}));
+
+vi.mock("@/services/concerts/community", () => ({
+  hideConcert: mocks.hideConcert,
+  restoreConcert: mocks.restoreConcert,
 }));
 
 vi.mock("@/services/auth/authorization", () => ({ requirePermission: mocks.requirePermission }));
@@ -35,6 +42,15 @@ function patch(targetType: string, targetId: string, body: unknown) {
 }
 
 describe("PATCH acciones de moderación sobre contenido", () => {
+  it("oculta y restaura un concierto (add-shared-concerts-phase2)", async () => {
+    mocks.requirePermission.mockResolvedValue({ id: "moderator" });
+
+    expect((await patch("concert", TARGET_ID, { action: "hide", reason: "No ocurrió" })).status).toBe(200);
+    expect(mocks.hideConcert).toHaveBeenCalledWith("moderator", TARGET_ID, "No ocurrió");
+    expect((await patch("concert", TARGET_ID, { action: "restore", reason: "Sí ocurrió" })).status).toBe(200);
+    expect(mocks.restoreConcert).toHaveBeenCalledWith("moderator", TARGET_ID, "Sí ocurrió");
+  });
+
   it("rechaza a quien no tiene permiso", async () => {
     mocks.requirePermission.mockRejectedValue(new ApiError("ROLE_REQUIRED", 403, "Sin permiso"));
 

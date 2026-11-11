@@ -182,8 +182,10 @@ contenido o su cuenta, un **hito** de su comentario o de su lista, un **lanzamie
   Usuario — el catálogo no modela soporte físico.
 - **Concierto compartido** (`add-shared-concerts-phase1`, ADR 0057): el hecho de un concierto o festival en una fecha
   exacta y un lugar, con su cartel (principales, teloneros, invitados). Viene de MusicBrainz (confirmado) o, desde la
-  Fase 2, de la comunidad (pendiente hasta confirmarse). El Concierto asistido se enlaza a él de forma opcional ("Estuve
-  ahí"), sin perder lo que escribió la persona.
+  Fase 2, de la comunidad (`add-shared-concerts-phase2`, ADR 0058): por confirmar hasta que lo confirman 3 personas que
+  cuentan o un setlist de setlist.fm, con quien lo registró como crédito discreto. Puede ocultarse o fusionarse en otro
+  (moderación, o solo cuando MusicBrainz agrega el mismo). El Concierto asistido se enlaza a él de forma opcional
+  ("Estuve ahí"), sin perder lo que escribió la persona.
 - **Concierto asistido** ("Mis conciertos", `add-my-concerts`, ADR 0056): recuerdo de un Usuario de haber visto en
   vivo a un Artista, con la fecha que recuerde (al menos el año), país, ciudad, recinto, gira, nota, un enlace opcional
   al setlist en setlist.fm y audiencia propia. **No es un concierto verificado ni una entidad compartida**: dos personas

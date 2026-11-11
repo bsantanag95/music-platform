@@ -132,6 +132,19 @@ de cuál de las filas con el mismo título haya en la BD.
 >   la pestaña (próximos, pasados, cancelados), "Estuve ahí" (crear, enlazar un recuerdo existente, idempotencia, rechazos,
 >   quitar con y sin edición), la cifra con umbral, la lista por visitante (anónimo, seguidor, bloqueo) y el `ON DELETE SET
 >   NULL` del recuerdo.
+> - `smoke-test-community-concerts.ts` simula MusicBrainz (no sale a internet), crea dos artistas sintéticos (MBID
+>   `5e0ce000-0000-4000-8000-00000000cc0*`), conciertos de la comunidad con ellos, un concierto de MusicBrainz con MBID
+>   `5e0ce000-0000-4000-8000-00000000cce*` y usuarios `smoke_cc_*` (uno moderador), y los borra al terminar (también si
+>   falla). Si se interrumpió, limpiar con `DELETE FROM moderation_action WHERE actor_id IN (SELECT id FROM app_user WHERE
+>   username LIKE 'smoke_cc_%'); DELETE FROM app_user WHERE username LIKE 'smoke_cc_%'; DELETE FROM concert WHERE mbid::text
+>   LIKE '5e0ce000-0000-4000-8000-00000000cc%' OR id IN (SELECT concert_id FROM concert_performer WHERE artist_mbid::text LIKE
+>   '5e0ce000-0000-4000-8000-00000000cc%'); DELETE FROM artist WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000cc%';`.
+>   Necesita la migración `0093`. Verifica los `CHECK` y la columna generada `city_key`, los requisitos para crear (cuenta
+>   nueva, sin verificar, suspendida) y el límite de 24 horas, la plausibilidad, el duplicado exacto (también con pedidos
+>   simultáneos), la confirmación (3 personas que cuentan, cuentas que no cuentan, setlist del mismo y de otro artista,
+>   pegajosa), la visibilidad con y sin sesión y el enlace en el perfil, "Compartir este concierto", los candidatos, los
+>   reportes, ocultar y restaurar, la fusión manual (recuerdo repetido sin enlace, `updated_at` conservado) y la fusión
+>   automática con MusicBrainz.
 > - `smoke-test-artist-comment-topics.ts` crea un artista y un álbum sintéticos (MBID
 >   `5e0ce000-0000-4000-8000-0000000009a0` / `...09a1`) y usuarios `smoke_topic_*`, y los borra al terminar
 >   (también si falla; el `ON DELETE CASCADE` limpia los comentarios). Si se interrumpió, limpiar con

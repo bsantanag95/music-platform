@@ -12,7 +12,8 @@ import { loadArtist, loadSession } from "../../artist-data";
 
 // Pestaña Conciertos (openspec: add-shared-concerts-phase1, capability `shared-concerts`). Trae bajo demanda los eventos
 // de MusicBrainz del artista (la primera página antes de responder, el resto después) y lista los conciertos
-// confirmados. Solo grupos y personas; para otros tipos la URL responde 404. `?pagina=` inválida cae a la primera.
+// confirmados; con sesión, también "Agregar un concierto" y los por confirmar (add-shared-concerts-phase2). Solo grupos y
+// personas; para otros tipos la URL responde 404. `?pagina=` inválida cae a la primera.
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -56,7 +57,14 @@ async function ArtistConcertsPage({ params, searchParams }: PageProps) {
   let data = await listArtistConcerts(artist, session?.user.id ?? null, page);
   if (page > 1 && data.past.length === 0) data = await listArtistConcerts(artist, session?.user.id ?? null, 1);
 
-  return <ArtistConcerts artistId={artist.id} data={data} baseHref={`${artistHref(artist.name, artist.id)}/concerts`} />;
+  return (
+    <ArtistConcerts
+      artist={{ id: artist.id, name: artist.name }}
+      data={data}
+      baseHref={`${artistHref(artist.name, artist.id)}/concerts`}
+      signedIn={Boolean(session)}
+    />
+  );
 }
 
 export default withClientMessages("(catalog)/artist/[id]/(tabs)/concerts/page", ArtistConcertsPage);

@@ -8,12 +8,14 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RowMenu, RowMenuItem } from "@/components/ui/RowMenu";
 import { removeConcert } from "@/lib/api/concerts";
 import type { ConcertEntryDto, ConcertListResponse } from "@/lib/api/schemas";
+import { CommunityConcertDialog } from "./CommunityConcertDialog";
 import { ConcertFormDialog } from "./ConcertFormDialog";
 import { ConcertYearList } from "./ConcertYearList";
 import { formatConcertDate } from "./concert-format";
 
 // Gestión de Mis conciertos (openspec: add-my-concerts): totales, registrar (con buscador de artistas), editar (con la
-// audiencia) y quitar con confirmación. Los datos vienen del servidor; tras cada cambio se refresca la ruta.
+// audiencia) y quitar con confirmación. Los datos vienen del servidor; tras cada cambio se refresca la ruta. Un recuerdo
+// sin enlazar con fecha completa, ciudad y país ofrece "Compartir este concierto" (add-shared-concerts-phase2).
 
 interface OwnConcertsProps {
   initial: ConcertListResponse;
@@ -25,7 +27,13 @@ type OpenDialog =
   | { kind: "create" }
   | { kind: "edit"; entry: ConcertEntryDto }
   | { kind: "remove"; entry: ConcertEntryDto }
+  | { kind: "share"; entry: ConcertEntryDto }
   | null;
+
+/** Se puede compartir como concierto de la comunidad: sin enlazar, con el día exacto, ciudad y país. */
+export function isShareableEntry(entry: ConcertEntryDto): boolean {
+  return entry.concertId === null && entry.eventDate.length === 10 && Boolean(entry.city) && Boolean(entry.country);
+}
 
 export function OwnConcerts({ initial, filter }: OwnConcertsProps) {
   const t = useTranslations("concerts");
@@ -99,6 +107,9 @@ export function OwnConcerts({ initial, filter }: OwnConcertsProps) {
           renderActions={(entry) => (
             <RowMenu label={t("row.menu", { artist: entry.artist.name })}>
               <RowMenuItem onSelect={() => setDialog({ kind: "edit", entry })}>{t("row.edit")}</RowMenuItem>
+              {isShareableEntry(entry) && (
+                <RowMenuItem onSelect={() => setDialog({ kind: "share", entry })}>{t("community.share")}</RowMenuItem>
+              )}
               <RowMenuItem danger onSelect={() => setDialog({ kind: "remove", entry })}>
                 {t("row.remove")}
               </RowMenuItem>
@@ -113,6 +124,21 @@ export function OwnConcerts({ initial, filter }: OwnConcertsProps) {
       )}
       {dialog?.kind === "edit" && (
         <ConcertFormDialog open mode="edit" entry={dialog.entry} onClose={() => setDialog(null)} onSaved={saved} />
+      )}
+      {dialog?.kind === "share" && (
+        <CommunityConcertDialog
+          open
+          artist={dialog.entry.artist}
+          fromEntry={{
+            id: dialog.entry.id,
+            eventDate: dialog.entry.eventDate,
+            venue: dialog.entry.venue,
+            city: dialog.entry.city,
+            country: dialog.entry.country,
+            setlistfmUrl: dialog.entry.setlistfmUrl,
+          }}
+          onClose={() => setDialog(null)}
+        />
       )}
       <ConfirmDialog
         open={dialog?.kind === "remove"}
