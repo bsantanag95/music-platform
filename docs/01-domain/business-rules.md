@@ -206,6 +206,19 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - Se exportan con los datos de la cuenta y se borran en cascada al eliminarla; también si se borra el artista del
   catálogo.
 
+## Conciertos compartidos (`add-shared-concerts-phase1`, ADR 0057)
+
+- Un concierto compartido es el hecho; el recuerdo personal se enlaza de forma opcional, a lo sumo una vez por persona y
+  concierto. Borrar el concierto no borra recuerdos.
+- Tiene fecha exacta. Solo se muestran los confirmados y no cancelados; los de MusicBrainz nacen confirmados.
+- De MusicBrainz solo se importan `Concert` y `Festival` con fecha completa, bajo demanda al abrir la pestaña del
+  artista, hasta 1.000 por artista y con refresco cada 30 días. No se crean artistas desde el cartel.
+- "Estuve ahí" solo en conciertos pasados. Copia los datos una vez; después el recuerdo es de la persona. Si ya había un
+  recuerdo del mismo artista y la misma fecha exacta, se enlaza en vez de duplicar. Quitarlo borra el recuerdo solo si lo
+  creó la acción y nunca se editó.
+- La cifra de personas cuenta cuentas activas con cualquier audiencia y no da el número exacto por debajo de 5. La lista
+  muestra solo los recuerdos que el visitante puede ver (audiencia, perfil privado, seguimiento, bloqueo).
+
 ## Notificaciones (Fases 1 a 3, `add-notifications-core`, `add-notification-milestones-and-releases` y `add-notification-digest-and-awards`)
 
 - Toda notificación nace de **un único servicio de emisión**, dentro de la **misma transacción** que la acción que la

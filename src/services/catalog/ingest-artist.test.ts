@@ -29,6 +29,7 @@ function makeArtist(overrides: Partial<ArtistRow> = {}): ArtistRow {
     photoUrl: null,
     createdAt: new Date("2026-01-01"),
     discographySyncedAt: null,
+    concertsSyncedAt: null,
     discographyCompleteAt: null,
     discographyMbTotal: null,
     discographyCheckedAt: null,

@@ -111,6 +111,7 @@ describe("ConcertFormDialog", () => {
       setlistfmUrl: null,
       note: null,
       audience: "followers" as const,
+      concertId: null,
       createdAt: "2026-11-11T00:00:00.000Z",
       updatedAt: "2026-11-11T00:00:00.000Z",
     };

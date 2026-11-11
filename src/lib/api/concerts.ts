@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { apiFetch } from "./client";
 import {
+  ConcertAttendanceResponseSchema,
   ConcertEntryResponseSchema,
+  type ConcertAttendanceResponse,
   type ConcertEntryDto,
   type CreateConcertRequest,
   type UpdateConcertRequest,
@@ -27,4 +29,18 @@ export function updateConcert(id: string, changes: UpdateConcertRequest): Promis
 
 export function removeConcert(id: string): Promise<null> {
   return apiFetch(`/api/me/concerts/${encodeURIComponent(id)}`, z.null(), { method: "DELETE" });
+}
+
+/** "Estuve ahí" en un concierto compartido (openspec: add-shared-concerts-phase1). */
+export function attendConcert(concertId: string, artistId?: string): Promise<ConcertAttendanceResponse> {
+  return apiFetch(`/api/concerts/${encodeURIComponent(concertId)}/attendance`, ConcertAttendanceResponseSchema, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(artistId ? { artistId } : {}),
+  });
+}
+
+/** Quita "Estuve ahí" (borra el registro solo si lo creó la acción y nunca se editó). */
+export function unattendConcert(concertId: string): Promise<null> {
+  return apiFetch(`/api/concerts/${encodeURIComponent(concertId)}/attendance`, z.null(), { method: "DELETE" });
 }

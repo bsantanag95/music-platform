@@ -25,6 +25,7 @@ function entry(id: string, eventDate: string, overrides: Partial<ConcertEntryDto
     setlistfmUrl: null,
     note: null,
     audience: "public",
+    concertId: null,
     createdAt: "2026-11-11T00:00:00.000Z",
     updatedAt: "2026-11-11T00:00:00.000Z",
     ...overrides,

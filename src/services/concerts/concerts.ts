@@ -59,6 +59,7 @@ const selection = {
   setlistfmUrl: concertEntry.setlistfmUrl,
   note: concertEntry.note,
   audience: concertEntry.audience,
+  concertId: concertEntry.concertId,
   createdAt: concertEntry.createdAt,
   updatedAt: concertEntry.updatedAt,
 } as const;
@@ -75,6 +76,7 @@ type Row = {
   setlistfmUrl: string | null;
   note: string | null;
   audience: string;
+  concertId: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -91,6 +93,7 @@ function serialize(row: Row): ConcertEntry {
     setlistfmUrl: row.setlistfmUrl,
     note: row.note,
     audience: row.audience as Audience,
+    concertId: row.concertId,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

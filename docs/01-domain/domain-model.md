@@ -180,6 +180,10 @@ contenido o su cuenta, un **hito** de su comentario o de su lista, un **lanzamie
   **no es un toggle**: un Usuario puede tener varias entradas para el mismo Álbum (distintos
   formatos, o copias distinguibles del mismo formato). Formato y atributos son dato del
   Usuario — el catálogo no modela soporte físico.
+- **Concierto compartido** (`add-shared-concerts-phase1`, ADR 0057): el hecho de un concierto o festival en una fecha
+  exacta y un lugar, con su cartel (principales, teloneros, invitados). Viene de MusicBrainz (confirmado) o, desde la
+  Fase 2, de la comunidad (pendiente hasta confirmarse). El Concierto asistido se enlaza a él de forma opcional ("Estuve
+  ahí"), sin perder lo que escribió la persona.
 - **Concierto asistido** ("Mis conciertos", `add-my-concerts`, ADR 0056): recuerdo de un Usuario de haber visto en
   vivo a un Artista, con la fecha que recuerde (al menos el año), país, ciudad, recinto, gira, nota, un enlace opcional
   al setlist en setlist.fm y audiencia propia. **No es un concierto verificado ni una entidad compartida**: dos personas

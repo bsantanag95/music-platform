@@ -50,6 +50,11 @@ export function collectionSegment(title: string, collectionId: string): string {
   return buildSegment(truncateSlug(slugify(title), LIST_SLUG_MAX), collectionId);
 }
 
+/** Segmento canónico de un concierto compartido: `<nombre>-<id>` (openspec: add-shared-concerts-phase1). */
+export function concertSegment(name: string, concertId: string): string {
+  return buildSegment(truncateSlug(slugify(name), LIST_SLUG_MAX), concertId);
+}
+
 /** Segmento canónico de una reseña: `<usuario>-<álbum>-<id>`. */
 export function reviewSegment(username: string, albumTitle: string, reviewId: string): string {
   return buildSegment(joinParts(slugify(username), slugify(albumTitle)), reviewId);
@@ -89,6 +94,11 @@ export function reviewHref(username: string, albumTitle: string, reviewId: strin
 }
 
 /** Página de un género de la taxonomía: usa su slug guardado, sin id (ADR 0023). */
+/** Página de un concierto compartido. */
+export function concertHref(name: string, concertId: string): string {
+  return `/concert/${concertSegment(name, concertId)}`;
+}
+
 export function genreHref(slug: string): string {
   return `/genre/${slug}`;
 }

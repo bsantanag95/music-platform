@@ -96,6 +96,7 @@ además del `error` legible:
 | `LIST_TARGET_INVALID` | 404 | Listas: el objetivo del ítem no existe o no es un artista/álbum/canción válido. |
 | `LIST_ITEM_NOT_FOUND` | 404 | Listas: el ítem no existe dentro de la lista indicada. |
 | `CAMINO_NOT_FOUND` | 404 | Camino: el Camino no existe o no pertenece al usuario autenticado. |
+| `SHARED_CONCERT_NOT_FOUND` | 404 | Conciertos compartidos: el concierto no existe, el id no es un UUID, no está confirmado o fue cancelado. |
 | `CONCERT_NOT_FOUND` | 404 | Mis conciertos: el registro no existe, el id no es un UUID o pertenece a otra persona (404 para no revelar registros ajenos). |
 | `COLLECTION_ENTRY_NOT_FOUND` | 404 | Colección física: la entrada no existe o no pertenece al usuario autenticado (se responde 404 para no revelar existencia de entradas ajenas). |
 | `WANTED_ENTRY_NOT_FOUND` | 404 | Wishlist de colección: la entrada de deseo no existe o no pertenece al usuario autenticado (se responde 404 para no revelar existencia de entradas ajenas). |

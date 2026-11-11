@@ -6,7 +6,7 @@ import { permanentRedirect } from "next/navigation";
 // UUID hexadecimal del formato anterior), responde un 308 a la dirección
 // canónica conservando locale, subruta de pestaña y query.
 
-export type CatalogRouteKind = "artist" | "album" | "song" | "review" | "list" | "collection";
+export type CatalogRouteKind = "artist" | "album" | "song" | "review" | "list" | "collection" | "concert";
 
 const BASE_PATH: Record<Exclude<CatalogRouteKind, "list">, string> = {
   artist: "artist",
@@ -14,6 +14,7 @@ const BASE_PATH: Record<Exclude<CatalogRouteKind, "list">, string> = {
   song: "song",
   review: "review",
   collection: "explore/collections",
+  concert: "concert",
 };
 
 function decodeSegment(segment: string): string {

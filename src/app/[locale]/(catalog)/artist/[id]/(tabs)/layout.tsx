@@ -173,6 +173,7 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
           hasBiography={profile.summary !== null}
           hasAwards={awards.ceremonies.length > 0}
           lineupTab={lineupTabOf(lineup)}
+          hasConcerts={type === "group" || type === "person"}
         />
         {children}
       </div>

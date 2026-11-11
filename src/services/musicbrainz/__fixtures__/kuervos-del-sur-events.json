@@ -1,0 +1,361 @@
+{
+ "event-offset": 0,
+ "event-count": 2,
+ "events": [
+  {
+   "id": "4e0a4e81-b087-4ccb-8633-0b3b753e2387",
+   "disambiguation": "",
+   "relations": [
+    {
+     "attribute-ids": {},
+     "type-id": "936c7c95-3156-3889-a062-8a0cd57f8946",
+     "target-credit": "",
+     "attributes": [],
+     "target-type": "artist",
+     "direction": "backward",
+     "begin": null,
+     "type": "main performer",
+     "attribute-values": {},
+     "ended": false,
+     "source-credit": "",
+     "artist": {
+      "sort-name": "Damas Gratis",
+      "id": "23fbd79b-2937-4140-b988-0865a9ba9ef6",
+      "disambiguation": "",
+      "country": "AR",
+      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+      "type": "Group",
+      "name": "Damas Gratis"
+     },
+     "end": null
+    },
+    {
+     "target-credit": "",
+     "attribute-ids": {},
+     "type-id": "936c7c95-3156-3889-a062-8a0cd57f8946",
+     "attributes": [],
+     "begin": null,
+     "direction": "backward",
+     "target-type": "artist",
+     "attribute-values": {},
+     "type": "main performer",
+     "source-credit": "",
+     "ended": false,
+     "end": null,
+     "artist": {
+      "sort-name": "Del Rey, Lana",
+      "id": "b7539c32-53e7-4908-bda3-81449c367da6",
+      "disambiguation": "",
+      "country": "US",
+      "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+      "type": "Person",
+      "name": "Lana Del Rey"
+     }
+    },
+    {
+     "source-credit": "",
+     "ended": false,
+     "end": null,
+     "artist": {
+      "disambiguation": "",
+      "sort-name": "DeMarco, Mac",
+      "id": "f2492c31-54a8-4347-a1fc-f81f72873bbf",
+      "type": "Person",
+      "name": "Mac DeMarco",
+      "country": "CA",
+      "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df"
+     },
+     "direction": "backward",
+     "begin": null,
+     "target-type": "artist",
+     "attribute-values": {},
+     "type": "main performer",
+     "target-credit": "",
+     "attribute-ids": {},
+     "type-id": "936c7c95-3156-3889-a062-8a0cd57f8946",
+     "attributes": []
+    },
+    {
+     "type-id": "936c7c95-3156-3889-a062-8a0cd57f8946",
+     "attribute-ids": {},
+     "target-credit": "",
+     "attributes": [],
+     "target-type": "artist",
+     "direction": "backward",
+     "begin": null,
+     "type": "main performer",
+     "attribute-values": {},
+     "ended": false,
+     "source-credit": "",
+     "artist": {
+      "disambiguation": "American R&B singer‐songwriter",
+      "sort-name": "Khalid",
+      "id": "28737730-ec70-4da5-89c5-77ac13c5c34d",
+      "type": "Person",
+      "name": "Khalid",
+      "country": "US",
+      "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df"
+     },
+     "end": null
+    },
+    {
+     "end": null,
+     "artist": {
+      "disambiguation": "Chilean fusion band",
+      "id": "b97abf8a-6b72-43eb-8f0f-8ce210fce812",
+      "sort-name": "Kuervos del Sur",
+      "name": "Kuervos del Sur",
+      "type": "Group",
+      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+      "country": "CL"
+     },
+     "source-credit": "",
+     "ended": false,
+     "attributes": [],
+     "target-credit": "",
+     "type-id": "936c7c95-3156-3889-a062-8a0cd57f8946",
+     "attribute-ids": {},
+     "attribute-values": {},
+     "type": "main performer",
+     "direction": "backward",
+     "begin": null,
+     "target-type": "artist"
+    },
+    {
+     "end": null,
+     "source-credit": "",
+     "ended": false,
+     "place": {
+      "disambiguation": "",
+      "area": {
+       "sort-name": "Santiago",
+       "id": "77ec97c2-5377-4ac7-b156-620470e71940",
+       "type-id": "6fd8f29a-3d0a-32fc-980d-ea697b69da78",
+       "name": "Santiago",
+       "type": "City",
+       "disambiguation": ""
+      },
+      "id": "d61db4e0-fef9-44c4-9421-65ca31b7104f",
+      "coordinates": {
+       "longitude": -70.567,
+       "latitude": -33.426
+      },
+      "type": "Park",
+      "name": "Parque O’Higgins",
+      "address": "",
+      "type-id": "9c482e19-7975-4d38-bfca-ef00ba919c92"
+     },
+     "attribute-values": {},
+     "type": "held at",
+     "direction": "forward",
+     "begin": null,
+     "target-type": "place",
+     "attributes": [],
+     "target-credit": "",
+     "attribute-ids": {},
+     "type-id": "e2c6f697-07dc-38b1-be0b-83d740165532"
+    }
+   ],
+   "type-id": "b6ded574-b592-3f0e-b56e-5b5f06aa0678",
+   "life-span": {
+    "ended": true,
+    "begin": "2018-03-18",
+    "end": "2018-03-18"
+   },
+   "setlist": "",
+   "cancelled": false,
+   "name": "Lollapalooza Chile 2018, Day 3: Itaú Stage",
+   "time": "",
+   "type": "Festival"
+  },
+  {
+   "setlist": "",
+   "name": "Vive Rock 2023",
+   "cancelled": false,
+   "type": "Festival",
+   "time": "",
+   "relations": [
+    {
+     "artist": {
+      "disambiguation": "Chilean funk rock band",
+      "sort-name": "Chancho en Piedra",
+      "id": "233ea5e9-bd1c-4e1e-9be4-c2c93e0b1cac",
+      "type": "Group",
+      "name": "Chancho en Piedra",
+      "country": "CL",
+      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+     },
+     "end": null,
+     "ended": false,
+     "source-credit": "",
+     "type": "main performer",
+     "attribute-values": {},
+     "target-type": "artist",
+     "begin": null,
+     "direction": "backward",
+     "attributes": [],
+     "attribute-ids": {},
+     "type-id": "936c7c95-3156-3889-a062-8a0cd57f8946",
+     "target-credit": ""
+    },
+    {
+     "target-type": "artist",
+     "direction": "backward",
+     "begin": null,
+     "type": "main performer",
+     "attribute-values": {},
+     "attribute-ids": {},
+     "type-id": "936c7c95-3156-3889-a062-8a0cd57f8946",
+     "target-credit": "",
+     "attributes": [],
+     "ended": false,
+     "source-credit": "",
+     "artist": {
+      "name": "Kuervos del Sur",
+      "type": "Group",
+      "country": "CL",
+      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+      "disambiguation": "Chilean fusion band",
+      "sort-name": "Kuervos del Sur",
+      "id": "b97abf8a-6b72-43eb-8f0f-8ce210fce812"
+     },
+     "end": null
+    },
+    {
+     "artist": {
+      "type": "Group",
+      "name": "Pettinellis",
+      "country": null,
+      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+      "disambiguation": "",
+      "sort-name": "Pettinellis",
+      "id": "ab3af652-6c2b-4f0f-8c1b-67d48e119336"
+     },
+     "end": null,
+     "ended": false,
+     "source-credit": "",
+     "type": "main performer",
+     "attribute-values": {},
+     "target-type": "artist",
+     "begin": null,
+     "direction": "backward",
+     "attributes": [],
+     "type-id": "936c7c95-3156-3889-a062-8a0cd57f8946",
+     "attribute-ids": {},
+     "target-credit": ""
+    },
+    {
+     "ended": false,
+     "source-credit": "",
+     "artist": {
+      "disambiguation": "Chilean synth pop band",
+      "sort-name": "Saiko",
+      "id": "00a8bf3d-acbc-4e17-8e07-ab5d3ae550e8",
+      "name": "Saiko",
+      "type": "Group",
+      "country": "CL",
+      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+     },
+     "end": null,
+     "type-id": "936c7c95-3156-3889-a062-8a0cd57f8946",
+     "attribute-ids": {},
+     "target-credit": "",
+     "attributes": [],
+     "target-type": "artist",
+     "direction": "backward",
+     "begin": null,
+     "type": "main performer",
+     "attribute-values": {}
+    },
+    {
+     "artist": {
+      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+      "country": "CL",
+      "type": "Group",
+      "name": "El Cruce",
+      "id": "4da9bd8f-a22b-4714-92f4-234927795979",
+      "sort-name": "Cruce, El",
+      "disambiguation": "Chilean blues-rock band"
+     },
+     "end": null,
+     "ended": false,
+     "source-credit": "",
+     "attributes": [],
+     "attribute-ids": {},
+     "type-id": "492a850e-97eb-306a-a85e-4b6d98527796",
+     "target-credit": "",
+     "type": "support act",
+     "attribute-values": {},
+     "target-type": "artist",
+     "begin": null,
+     "direction": "backward"
+    },
+    {
+     "end": null,
+     "artist": {
+      "country": null,
+      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+      "type": "Group",
+      "name": "Miles de Aves",
+      "sort-name": "Miles de Aves",
+      "id": "d451821b-7e6a-4c9a-b19e-54575bc43087",
+      "disambiguation": "Rock band from Chile"
+     },
+     "source-credit": "",
+     "ended": false,
+     "attributes": [],
+     "target-credit": "",
+     "type-id": "492a850e-97eb-306a-a85e-4b6d98527796",
+     "attribute-ids": {},
+     "attribute-values": {},
+     "type": "support act",
+     "begin": null,
+     "direction": "backward",
+     "target-type": "artist"
+    },
+    {
+     "attributes": [],
+     "type-id": "e2c6f697-07dc-38b1-be0b-83d740165532",
+     "attribute-ids": {},
+     "target-credit": "",
+     "type": "held at",
+     "attribute-values": {},
+     "target-type": "place",
+     "begin": null,
+     "direction": "forward",
+     "place": {
+      "coordinates": {
+       "latitude": -33.458344,
+       "longitude": -70.660761
+      },
+      "id": "5fbd2fd3-19e4-459a-988a-16b6777d3280",
+      "area": {
+       "disambiguation": "",
+       "type": "City",
+       "name": "Santiago",
+       "sort-name": "Santiago",
+       "type-id": "6fd8f29a-3d0a-32fc-980d-ea697b69da78",
+       "id": "77ec97c2-5377-4ac7-b156-620470e71940"
+      },
+      "disambiguation": "Stadium in Santiago, Chile",
+      "type-id": "a77c11f6-82fa-3cc0-9041-ac60e5f6e024",
+      "name": "Santander Arena",
+      "address": "Tupper, Santiago, Región Metropolitana, Chile",
+      "type": "Indoor arena"
+     },
+     "end": null,
+     "ended": false,
+     "source-credit": ""
+    }
+   ],
+   "type-id": "b6ded574-b592-3f0e-b56e-5b5f06aa0678",
+   "life-span": {
+    "end": "2023-04-22",
+    "ended": true,
+    "begin": "2023-04-22"
+   },
+   "disambiguation": "",
+   "id": "955ad844-8937-475d-ba11-dc331e51d6b5"
+  }
+ ]
+}

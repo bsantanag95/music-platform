@@ -80,5 +80,35 @@
     "metaTitle": "{name}'s concerts",
     "empty": "No visible concerts.",
     "emptyOwn": "You have not logged any concerts yet."
+  },
+  "shared": {
+    "tabTitle": "Concerts",
+    "upcoming": "Upcoming",
+    "festival": "Festival",
+    "attendeesExact": "{count, plural, one {# person was there} other {# people were there}}",
+    "attendeesFewer": "Fewer than {threshold} people were there",
+    "attend": "I was there",
+    "attending": "You were there",
+    "unattend": "Remove",
+    "attendError": "Could not save. Try again.",
+    "empty": "No concerts for this artist yet.",
+    "emptyHint": "Were you at one? Log it in My concerts.",
+    "emptyLink": "Go to My concerts",
+    "newer": "Newer",
+    "older": "Older",
+    "source": "Concerts from MusicBrainz (CC0).",
+    "page": {
+      "metaTitle": "{name} · {date}",
+      "lineup": "Lineup",
+      "main": "Headliners",
+      "support": "Support acts",
+      "guest": "Guests",
+      "people": "Who was there",
+      "morePeople": "{count, plural, one {and # more person} other {and # more people}}",
+      "noVisiblePeople": "Nobody you can see has logged this concert yet.",
+      "nobody": "Nobody has logged this concert yet.",
+      "signIn": "Sign in to say you were there."
+    },
+    "linked": "See concert"
   }
 }

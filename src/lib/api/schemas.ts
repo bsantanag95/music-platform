@@ -395,6 +395,7 @@ export const ErrorCodeSchema = z.enum([
   "COLLECTION_ENTRY_NOT_FOUND",
   "WANTED_ENTRY_NOT_FOUND",
   "CONCERT_NOT_FOUND",
+  "SHARED_CONCERT_NOT_FOUND",
 "MODERATION_REPORT_NOT_FOUND",
   "RESTRICTION_NOT_FOUND",
   "SOCIAL_SUSPENSION_ACTIVE",
@@ -3389,6 +3390,8 @@ export const ConcertEntrySchema = z.object({
   setlistfmUrl: z.string().nullable(),
   note: z.string().nullable(),
   audience: DiaryAudienceSchema,
+  /** Concierto compartido al que está enlazado (openspec: add-shared-concerts-phase1); `null` si no lo está. */
+  concertId: z.uuid().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -3406,3 +3409,7 @@ export type ConcertListResponse = z.infer<typeof ConcertListResponseSchema>;
 
 export const ConcertEntryResponseSchema = z.object({ entry: ConcertEntrySchema });
 export type ConcertEntryResponse = z.infer<typeof ConcertEntryResponseSchema>;
+
+/** Respuesta de "Estuve ahí" (openspec: add-shared-concerts-phase1). */
+export const ConcertAttendanceResponseSchema = z.object({ entryId: z.uuid() });
+export type ConcertAttendanceResponse = z.infer<typeof ConcertAttendanceResponseSchema>;
