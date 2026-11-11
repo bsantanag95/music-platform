@@ -50,16 +50,24 @@ conciertos. Para artistas de otro tipo la URL SHALL responder 404.
 Cada concierto confirmado SHALL tener una página (`/{locale}/concert/{id}`) con su nombre, fecha, recinto, ciudad y país,
 la marca Festival, el cartel (principales primero, luego teloneros e invitados; enlazados al artista si está en el
 catálogo, como texto si no), cuántas personas estuvieron, la lista de las que el visitante puede ver y "Estuve ahí". Un
-concierto inexistente, no confirmado o cancelado SHALL responder 404.
+concierto inexistente, oculto o cancelado SHALL responder 404; uno por confirmar SHALL responder 404 a quien no tiene
+sesión (capability `community-concerts`). Un concierto fusionado SHALL redirigir al concierto en el que se fusionó.
 
 #### Scenario: Cartel de un festival
 
 - **WHEN** una persona abre "Vive Rock 2023"
 - **THEN** ve a Chancho en Piedra, Kuervos del Sur, Pettinellis y Saiko como principales y a El Cruce como telonero, enlazados los que están en el catálogo
 
+#### Scenario: Concierto fusionado
+
+- **WHEN** una persona abre la dirección de un concierto que la moderación fusionó en otro
+- **THEN** la página redirige al concierto destino
+
 ### Requirement: Estuve ahí
 
-Un usuario autenticado SHALL poder decir "Estuve ahí" en un concierto confirmado, no cancelado y pasado. Si ya está
+Un usuario autenticado SHALL poder decir "Estuve ahí" en un concierto confirmado o por confirmar (capability
+`community-concerts`), no oculto, no cancelado y pasado; en uno por confirmar la asistencia SHALL contar para su
+confirmación. Si ya está
 enlazado, la acción SHALL ser idempotente. Si tiene un registro personal sin enlazar del mismo artista y la misma fecha
 exacta, SHALL enlazarlo en lugar de crear otro. Si no, SHALL crear un registro personal enlazado con el artista de
 contexto (o el primer principal que esté en el catálogo), la fecha, el recinto, la ciudad y el país del concierto, y la
