@@ -1,0 +1,84 @@
+{
+  "title": "My concerts",
+  "metaTitle": "My concerts",
+  "intro": "The concerts you went to. It is your own record: nobody verifies dates or places.",
+  "register": "Log a concert",
+  "totals": {
+    "concerts": "{count, plural, one {# concert} other {# concerts}}",
+    "artists": "{count, plural, one {# artist} other {# artists}}",
+    "countries": "{count, plural, one {# country} other {# countries}}"
+  },
+  "yearHeading": "{year}",
+  "yearCount": "{count, plural, one {# concert} other {# concerts}}",
+  "filteredBy": "Only {artist}",
+  "clearFilter": "See all",
+  "truncated": "Showing the {count} most recent.",
+  "empty": {
+    "title": "You have not logged any concerts yet",
+    "body": "Open the page of an artist you saw live and use “Log” in the Live row of “Your relationship”, or log it from here.",
+    "filtered": "You have not logged concerts by this artist."
+  },
+  "row": {
+    "setlist": "Setlist",
+    "edit": "Edit",
+    "remove": "Remove",
+    "menu": "Actions for {artist}",
+    "removeTitle": "Remove concert",
+    "removeMessage": "The {artist} concert on {date} will be removed. This cannot be undone.",
+    "removeConfirm": "Remove",
+    "cancel": "Cancel",
+    "removeError": "The concert could not be removed. Try again."
+  },
+  "audience": {
+    "private": "Private",
+    "followers": "Followers",
+    "public": "Public"
+  },
+  "form": {
+    "createTitle": "Log a concert",
+    "editTitle": "Edit concert",
+    "artist": "Artist",
+    "artistSearch": "Search artist",
+    "artistSearchPlaceholder": "Artist name",
+    "artistChange": "Change",
+    "searching": "Searching…",
+    "noResults": "No results",
+    "searchError": "The search failed. Try again.",
+    "date": "Date",
+    "dateHint": "The year is enough; add the month and day if you remember them.",
+    "year": "Year",
+    "month": "Month",
+    "monthNone": "No month",
+    "day": "Day",
+    "dayNone": "No day",
+    "country": "Country",
+    "city": "City",
+    "venue": "Venue",
+    "venuePlaceholder": "Stadium, club, festival…",
+    "tour": "Tour",
+    "setlist": "Setlist link on setlist.fm",
+    "setlistHint": "Paste the setlist address (setlist.fm/setlist/…). Optional.",
+    "note": "Note",
+    "notePlaceholder": "Who you went with, what you remember…",
+    "audienceLabel": "Who can see it",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "errors": {
+      "artistRequired": "Choose an artist.",
+      "yearInvalid": "Enter a year between 1900 and the current one.",
+      "dateFuture": "The date cannot be in the future.",
+      "dayInvalid": "That day does not exist in the chosen month.",
+      "setlistInvalid": "The link must be a setlist on setlist.fm (setlist.fm/setlist/…).",
+      "generic": "The concert could not be saved. Check the details and try again."
+    }
+  },
+  "profile": {
+    "rail": "Concerts",
+    "seeAll": "See all",
+    "pageTitle": "{name}'s concerts",
+    "metaTitle": "{name}'s concerts",
+    "empty": "No visible concerts.",
+    "emptyOwn": "You have not logged any concerts yet."
+  }
+}

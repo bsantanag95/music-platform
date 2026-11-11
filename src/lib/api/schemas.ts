@@ -394,6 +394,7 @@ export const ErrorCodeSchema = z.enum([
   "CAMINO_NOT_FOUND",
   "COLLECTION_ENTRY_NOT_FOUND",
   "WANTED_ENTRY_NOT_FOUND",
+  "CONCERT_NOT_FOUND",
 "MODERATION_REPORT_NOT_FOUND",
   "RESTRICTION_NOT_FOUND",
   "SOCIAL_SUSPENSION_ACTIVE",
@@ -1051,6 +1052,7 @@ export const ApplyAudienceResultSchema = z.object({
   diary: ChangeCountSchema,
   lists: ChangeCountSchema,
   collection: ChangeCountSchema,
+  concerts: ChangeCountSchema,
 });
 export type ApplyAudienceResult = z.infer<typeof ApplyAudienceResultSchema>;
 
@@ -3283,3 +3285,124 @@ export type NotificationPreferencesResponse = z.infer<
 /** Respuesta de la baja en un clic del resumen (D5). */
 export const UnsubscribeResponseSchema = z.object({ unsubscribed: z.literal(true) });
 export type UnsubscribeResponse = z.infer<typeof UnsubscribeResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Mis conciertos (openspec: add-my-concerts, ADR 0056). Cada registro es un recuerdo de la persona: el artista y la
+// fecha (al menos el año) son obligatorios; lo demás es opcional. Las mismas reglas de formato y largo viven como
+// CHECK en `concert_entry` (migración 0091); "no futura" solo acá y en el servicio, porque depende del día.
+// ---------------------------------------------------------------------------
+
+export const CONCERT_TEXT_MAX = 100;
+export const CONCERT_NOTE_MAX = 140;
+export const CONCERT_URL_MAX = 500;
+/** Primer año aceptado para un concierto. */
+export const CONCERT_MIN_YEAR = 1900;
+/** Formato de fecha parcial: `YYYY`, `YYYY-MM` o `YYYY-MM-DD` (mismo patrón que el CHECK de la base). */
+export const CONCERT_DATE_PATTERN = /^\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\d|3[01]))?)?$/;
+/** URL de un setlist (no de la página de un artista) en setlist.fm, como el CHECK de la base. */
+export const SETLISTFM_SETLIST_URL_PATTERN = /^https:\/\/(www\.)?setlist\.fm\/setlist\/\S+$/;
+
+/** Hoy en la zona horaria más adelantada (UTC+14): nadie queda con su "hoy" rechazado por la diferencia horaria. */
+function latestTodayIso(now: Date): string {
+  return new Date(now.getTime() + 14 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+/**
+ * Valida una fecha parcial de concierto: formato, que exista (no 2019-02-30) y que no sea futura ni anterior a 1900.
+ * Una fecha parcial es futura solo si todo su período lo es (`2026` vale durante todo 2026).
+ */
+export function isValidConcertDate(value: string, now: Date = new Date()): boolean {
+  if (!CONCERT_DATE_PATTERN.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number) as [number, number | undefined, number | undefined];
+  if (year < CONCERT_MIN_YEAR) return false;
+  if (month !== undefined && day !== undefined) {
+    const date = new Date(Date.UTC(year, month - 1, day));
+    if (date.getUTCMonth() !== month - 1) return false;
+  }
+  return value <= latestTodayIso(now).slice(0, value.length);
+}
+
+/** Texto opcional: recortado; vacío equivale a no indicarlo (`null`). */
+const optionalText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .nullable()
+    .optional()
+    .transform((value) => (value === undefined ? undefined : value === null || value === "" ? null : value));
+
+export const ConcertDateSchema = z.string().trim().refine((value) => isValidConcertDate(value), {
+  message: "La fecha no es válida",
+});
+
+export const ConcertCountrySchema = z
+  .string()
+  .trim()
+  .nullable()
+  .optional()
+  .transform((value) => (value === undefined ? undefined : value ? value.toUpperCase() : null))
+  .refine((value) => value === undefined || value === null || /^[A-Z]{2}$/.test(value), {
+    message: "El país no es válido",
+  });
+
+export const SetlistFmUrlSchema = z
+  .string()
+  .trim()
+  .max(CONCERT_URL_MAX)
+  .nullable()
+  .optional()
+  .transform((value) => (value === undefined ? undefined : value ? value : null))
+  .refine((value) => value === undefined || value === null || SETLISTFM_SETLIST_URL_PATTERN.test(value), {
+    message: "El enlace no es de un setlist de setlist.fm",
+  });
+
+const concertFields = {
+  eventDate: ConcertDateSchema,
+  country: ConcertCountrySchema,
+  city: optionalText(CONCERT_TEXT_MAX),
+  venue: optionalText(CONCERT_TEXT_MAX),
+  tour: optionalText(CONCERT_TEXT_MAX),
+  setlistfmUrl: SetlistFmUrlSchema,
+  note: optionalText(CONCERT_NOTE_MAX),
+  audience: DiaryAudienceSchema.optional(),
+};
+
+export const CreateConcertRequestSchema = z.object({ artistId: z.uuid(), ...concertFields });
+export type CreateConcertRequest = z.input<typeof CreateConcertRequestSchema>;
+
+export const UpdateConcertRequestSchema = z
+  .object({ artistId: z.uuid().optional(), ...concertFields, eventDate: ConcertDateSchema.optional() })
+  .refine((changes) => Object.values(changes).some((value) => value !== undefined), {
+    message: "Debe indicarse al menos un campo a modificar",
+  });
+export type UpdateConcertRequest = z.input<typeof UpdateConcertRequestSchema>;
+
+export const ConcertEntrySchema = z.object({
+  id: z.uuid(),
+  artist: z.object({ id: z.uuid(), name: z.string() }),
+  eventDate: z.string(),
+  country: z.string().nullable(),
+  city: z.string().nullable(),
+  venue: z.string().nullable(),
+  tour: z.string().nullable(),
+  setlistfmUrl: z.string().nullable(),
+  note: z.string().nullable(),
+  audience: DiaryAudienceSchema,
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type ConcertEntryDto = z.infer<typeof ConcertEntrySchema>;
+
+export const ConcertTotalsSchema = z.object({ concerts: z.number(), artists: z.number(), countries: z.number() });
+export type ConcertTotals = z.infer<typeof ConcertTotalsSchema>;
+
+export const ConcertListResponseSchema = z.object({
+  entries: z.array(ConcertEntrySchema),
+  totals: ConcertTotalsSchema,
+  truncated: z.boolean(),
+});
+export type ConcertListResponse = z.infer<typeof ConcertListResponseSchema>;
+
+export const ConcertEntryResponseSchema = z.object({ entry: ConcertEntrySchema });
+export type ConcertEntryResponse = z.infer<typeof ConcertEntryResponseSchema>;

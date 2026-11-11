@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 interface ProfileLevel3LinksProps {
   username: string;
   /** Cuáles de los estantes tienen contenido — no se enlaza a un estante vacío. */
-  has: { diary: boolean; favorites: boolean; lists: boolean; caminos: boolean; collection: boolean };
+  has: { diary: boolean; favorites: boolean; lists: boolean; caminos: boolean; collection: boolean; concerts?: boolean };
   /** La huella de gusto tiene datos para mostrar en su vista de Nivel 3. */
   hasFingerprint: boolean;
 }
@@ -27,6 +27,7 @@ export async function ProfileLevel3Links({ username, has, hasFingerprint }: Prof
     has.lists && { href: `/users/${username}/lists`, label: t("level3.lists") },
     has.caminos && { href: `/users/${username}/caminos`, label: t("level3.caminos") },
     has.collection && { href: `/users/${username}/collection`, label: t("level3.collection") },
+    has.concerts && { href: `/users/${username}/concerts`, label: t("level3.concerts") },
     hasFingerprint && { href: `/users/${username}/fingerprint`, label: t("level3.fingerprint") },
   ].filter((link): link is { href: string; label: string } => Boolean(link));
 

@@ -441,6 +441,7 @@
     "lists": "Todas las listas",
     "caminos": "Todas las listas para completar",
     "collection": "Colección física completa",
+    "concerts": "Todos los conciertos",
     "fingerprint": "Huella de gusto completa"
   },
   "editPanel": {
@@ -518,11 +519,11 @@
       "intro": "Quién puede ver tu perfil y con qué audiencia nace lo que agregues.",
       "audience": {
         "title": "Audiencia por defecto del contenido nuevo",
-        "intro": "Aplica a los favoritos, entradas de diario, listas y copias de colección que agregues desde ahora. No cambia lo que ya tienes (para eso está «Aplicar a lo existente», más abajo) y puedes ajustar cada elemento por separado.",
+        "intro": "Aplica a los favoritos, entradas de diario, listas, copias de colección y conciertos que agregues desde ahora. No cambia lo que ya tienes (para eso está «Aplicar a lo existente», más abajo) y puedes ajustar cada elemento por separado.",
         "options": {
           "auto": {
             "title": "Según el tipo (recomendado)",
-            "description": "Cada tipo conserva su valor habitual: favoritos públicos, listas y colección para seguidores, diario privado."
+            "description": "Cada tipo conserva su valor habitual: favoritos públicos, listas, colección y conciertos para seguidores, diario privado."
           },
           "private": {
             "title": "Privado",
@@ -555,6 +556,7 @@
             "diary": "{count, plural, one {# entrada de diario} other {# entradas de diario}}",
             "lists": "{count, plural, one {# lista} other {# listas}}",
             "collection": "{count, plural, one {# copia de colección} other {# copias de colección}}",
+            "concerts": "{count, plural, one {# concierto} other {# conciertos}}",
             "pinnedLists": "{count, plural, one {# lista fijada} other {# listas fijadas}}",
             "highlightedDiary": "{count, plural, one {# entrada de diario destacada} other {# entradas de diario destacadas}}"
           },

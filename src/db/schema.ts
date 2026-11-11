@@ -1432,6 +1432,56 @@ export const collectionEntry = pgTable(
 
 export type CollectionEntryRow = typeof collectionEntry.$inferSelect;
 
+/**
+ * Conciertos a los que fue el usuario (migración 0091, openspec: add-my-concerts, ADR 0056). Cada fila es un
+ * recuerdo de la persona, no un concierto verificado; un enlace futuro a una entidad de concierto sería una columna
+ * nueva opcional. Fecha parcial (`YYYY`, `YYYY-MM` o `YYYY-MM-DD`), país ISO y enlace a un setlist de setlist.fm
+ * escrito por la persona. Varias filas por artista permitidas.
+ */
+export const concertEntry = pgTable(
+  "concert_entry",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    artistId: uuid("artist_id")
+      .notNull()
+      .references(() => artist.id, { onDelete: "cascade" }),
+    eventDate: text("event_date").notNull(),
+    country: text("country"),
+    city: text("city"),
+    venue: text("venue"),
+    tour: text("tour"),
+    setlistfmUrl: text("setlistfm_url"),
+    note: text("note"),
+    audience: text("audience").notNull().default("followers"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_concert_entry_user_date").on(t.userId, t.eventDate, t.createdAt),
+    index("idx_concert_entry_user_artist").on(t.userId, t.artistId),
+    index("idx_concert_entry_artist").on(t.artistId),
+    check(
+      "chk_concert_entry_event_date",
+      sql`${t.eventDate} ~ '^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$'`,
+    ),
+    check("chk_concert_entry_country", sql`${t.country} IS NULL OR ${t.country} ~ '^[A-Z]{2}$'`),
+    check("chk_concert_entry_city", sql`${t.city} IS NULL OR (length(${t.city}) BETWEEN 1 AND 100)`),
+    check("chk_concert_entry_venue", sql`${t.venue} IS NULL OR (length(${t.venue}) BETWEEN 1 AND 100)`),
+    check("chk_concert_entry_tour", sql`${t.tour} IS NULL OR (length(${t.tour}) BETWEEN 1 AND 100)`),
+    check(
+      "chk_concert_entry_setlistfm_url",
+      sql`${t.setlistfmUrl} IS NULL OR (${t.setlistfmUrl} ~ '^https://(www\\.)?setlist\\.fm/setlist/[^\\s]+$' AND length(${t.setlistfmUrl}) <= 500)`,
+    ),
+    check("chk_concert_entry_note", sql`${t.note} IS NULL OR (length(${t.note}) BETWEEN 1 AND 140)`),
+    check("chk_concert_entry_audience", sql`${t.audience} IN ('private', 'followers', 'public')`),
+  ],
+);
+
+export type ConcertEntryRow = typeof concertEntry.$inferSelect;
+
 // Wishlist de colección (Fase 5, add-collection-wishlist). A diferencia de
 // collectionEntry, format es nullable ("cualquier formato"). Sin vista
 // pública por `username`; desde la migración 0061 (expand-feed-coverage) cada

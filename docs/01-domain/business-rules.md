@@ -185,6 +185,27 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - Un perfil privado no revela contenido no autorizado: las superficies ajenas devuelven lista
   vacía (o `404` en el detalle) sin indicar si el usuario tiene contenido.
 
+## Conciertos asistidos (`add-my-concerts`, ADR 0056)
+
+- Un concierto registrado es un recuerdo de la persona, no un concierto verificado: nadie valida que existió y la
+  interfaz no muestra cifras de comunidad sobre ellos.
+- El artista (del catálogo) y la fecha con al menos el año son obligatorios. La fecha es parcial (`YYYY`, `YYYY-MM` o
+  `YYYY-MM-DD`), real, desde 1900 y no futura (el "hoy" es el de la zona horaria más adelantada). El formato vive como
+  `CHECK`; "no futura", en el servicio.
+- País como código ISO; ciudad, recinto y gira hasta 100 caracteres; nota hasta 140. Un texto vacío equivale a no
+  indicarlo.
+- El enlace opcional solo puede ser un setlist de setlist.fm (`https://(www.)setlist.fm/setlist/…`). Se guarda tal
+  como lo pegó la persona; nunca se consulta setlist.fm.
+- No hay unicidad: el mismo artista puede tener varios registros, aun el mismo día.
+- Audiencia por registro (`private` / `followers` / `public`), con la audiencia por defecto del usuario al crear y
+  `followers` si no la tiene; entra en "Aplicar a lo existente" sin tocar su fecha de actualización.
+- Lectura ajena con la misma matriz que la colección física (bloqueo, perfil privado, seguimiento y audiencia). Sin
+  permiso, una lista vacía que no revela si hay registros.
+- La cifra "Lo viste N veces" del panel del artista cuenta todos los registros propios, con cualquier audiencia; solo la
+  ve su dueño.
+- Se exportan con los datos de la cuenta y se borran en cascada al eliminarla; también si se borra el artista del
+  catálogo.
+
 ## Notificaciones (Fases 1 a 3, `add-notifications-core`, `add-notification-milestones-and-releases` y `add-notification-digest-and-awards`)
 
 - Toda notificación nace de **un único servicio de emisión**, dentro de la **misma transacción** que la acción que la

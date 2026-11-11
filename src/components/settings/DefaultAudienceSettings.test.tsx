@@ -116,6 +116,7 @@ function previewOf(overrides: Record<string, unknown> = {}) {
     diary: 5,
     lists: 2,
     collection: 0,
+    concerts: 0,
     highlighted: { pinnedLists: 0, highlightedDiary: 0 },
     ...overrides,
   };
@@ -225,7 +226,7 @@ describe("DefaultAudienceSettings · aplicar a lo existente", () => {
 
   it("confirmar aplica la audiencia de la vista previa, informa el resultado y refresca", async () => {
     const user = userEvent.setup();
-    mockApply(previewOf(), { audience: "private", favorites: 3, diary: 5, lists: 2, collection: 0 });
+    mockApply(previewOf(), { audience: "private", favorites: 3, diary: 5, lists: 2, collection: 0, concerts: 0 });
     renderWithIntl(<DefaultAudienceSettings initialAudience="private" />);
 
     await user.click(applyButton());

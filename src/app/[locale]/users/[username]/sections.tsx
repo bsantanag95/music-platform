@@ -10,6 +10,7 @@ import { LISTS_PREVIEW_LIMIT } from "@/services/lists/types";
 import { listVisibleCaminos } from "@/services/camino/camino";
 import { CAMINOS_PREVIEW_LIMIT } from "@/services/camino/types";
 import { getCollectionPreview, listProfileCollection } from "@/services/collection/collection";
+import { getConcertPreview } from "@/services/concerts/concerts";
 import { getTasteFingerprint } from "@/services/profiles/stats";
 import { getShowcase } from "@/services/profiles/showcase";
 import { getProfileInRotation } from "@/services/profiles/in-rotation";
@@ -45,6 +46,7 @@ import { FavoritesPreview } from "@/components/favorites/FavoritesPreview";
 import { ListsCarousel } from "@/components/lists/ListsCarousel";
 import { CaminosCarousel } from "@/components/camino/CaminosCarousel";
 import { CollectionPreview } from "@/components/collection/CollectionPreview";
+import { ConcertsPreview } from "@/components/concerts/ConcertsPreview";
 
 // Secciones asíncronas del perfil, cada una envuelta por su propio <Suspense>
 // en `page.tsx` para que nada bloquee la Placa. Un estante colapsa cuando no
@@ -335,17 +337,33 @@ export async function CollectionRail({ username, viewerId, isOwn }: SectionProps
   );
 }
 
+// Estante "Conciertos" (openspec: add-my-concerts): los últimos registros visibles y la puerta a
+// `/users/[username]/concerts`. El conteo es el total visible, no lo traído.
+export async function ConcertsRail({ username, viewerId, isOwn }: SectionProps) {
+  const t = await getTranslations("concerts.profile");
+  const preview = await getConcertPreview(username, viewerId);
+  if (preview.total === 0) {
+    return isOwn ? <EmptyRailForOwner label={t("rail")} message={t("emptyOwn")} /> : null;
+  }
+  return (
+    <ProfileRail id="conciertos" label={t("rail")} count={preview.total}>
+      <ConcertsPreview entries={preview.entries} total={preview.total} username={username} />
+    </ProfileRail>
+  );
+}
+
 // Puertas al Nivel 3 (spec `social-profiles`): comprueba livianamente qué
 // estantes tienen contenido para no enlazar a un ancla vacía. Independiente
 // y con su propio <Suspense> en `page.tsx`, igual que el resto de las
 // secciones — no bloquea ni depende de los estantes que referencia.
 export async function Level3LinksSection({ username, viewerId }: Omit<SectionProps, "isOwn">) {
-  const [diary, favorites, lists, caminos, collection, fingerprint] = await Promise.all([
+  const [diary, favorites, lists, caminos, collection, concerts, fingerprint] = await Promise.all([
     listUserDiary(username, viewerId, 1, 1),
     listUserFavorites(username, viewerId, 1, 1),
     listUserLists(username, viewerId, 1, 1),
     listVisibleCaminos(username, viewerId, 1, 1),
     listProfileCollection(username, viewerId, 1, 1),
+    getConcertPreview(username, viewerId),
     getTasteFingerprint(username, viewerId),
   ]);
 
@@ -358,6 +376,7 @@ export async function Level3LinksSection({ username, viewerId }: Omit<SectionPro
         lists: lists.lists.length > 0,
         caminos: caminos.caminos.length > 0,
         collection: collection.entries.length > 0,
+        concerts: concerts.total > 0,
       }}
       hasFingerprint={Boolean(fingerprint)}
     />

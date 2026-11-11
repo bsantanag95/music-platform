@@ -1059,6 +1059,34 @@ ediciones del mismo CD). No es un toggle idempotente.
 página de álbum), `idx_collection_entry_release_group` (recuperación por álbum) e
 `idx_collection_entry_attributes` (`GIN` sobre `attributes`, filtro por atributo).
 
+## `concert_entry` (migración `0091`)
+
+**Propósito:** conciertos a los que fue el usuario ("Mis conciertos", cambio `add-my-concerts`, ADR 0056). Cada fila es
+un recuerdo de la persona, no un concierto verificado: no hay entidad de concierto compartida. Un sistema futuro se
+enlazaría con una columna nueva opcional (`concert_id`) sin sobrescribir lo escrito.
+
+**Campos:**
+
+- `user_id`: dueño, `ON DELETE CASCADE`.
+- `artist_id`: artista del catálogo, `NOT NULL`, `ON DELETE CASCADE`.
+- `event_date`: fecha parcial `TEXT`, `CHECK` `^\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\d|3[01]))?)?$`. Que sea real, desde
+  1900 y no futura lo valida el servicio (un `CHECK` con `now()` no es estable).
+- `country`: código ISO 3166-1 alfa-2, `CHECK '^[A-Z]{2}$'`, como `app_user.country`.
+- `city`, `venue`, `tour`: texto opcional de 1 a 100 caracteres (`CHECK`).
+- `setlistfm_url`: enlace opcional a un setlist que pega la persona, `CHECK` de prefijo
+  `https://(www.)setlist.fm/setlist/` y hasta 500. No se usa la API de setlist.fm.
+- `note`: hasta 140 (`CHECK`).
+- `audience`: `private` / `followers` / `public`, default `followers`.
+- `created_at` / `updated_at`: `updated_at` por el trigger `trg_concert_entry_updated_at`, que conserva el valor con
+  `app.preserve_updated_at = 'on'` (migración `0037`), como `collection_entry`.
+
+**Restricciones:** ninguna de unicidad (dos funciones del mismo artista el mismo día son válidas).
+
+**Índices:** `idx_concert_entry_user_date` (`user_id, event_date DESC, created_at DESC`: Mis conciertos y el riel del
+perfil; el orden de texto deja la fecha más precisa antes que la parcial del mismo período),
+`idx_concert_entry_user_artist` (cifra del panel del artista y filtro por artista) e `idx_concert_entry_artist`
+(cascada al borrar un artista).
+
 ## `wanted_entry`
 
 **Propósito:** wishlist de colección, "En tu búsqueda" (migración `0028`, cambio

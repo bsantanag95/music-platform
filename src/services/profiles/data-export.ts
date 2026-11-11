@@ -5,6 +5,7 @@ import {
   artist,
   artistFollow,
   collectionEntry,
+  concertEntry,
   comment,
   favorite,
   listenEntry,
@@ -65,6 +66,8 @@ export interface DataExport {
     favorites: unknown[];
     wantToListen: unknown[];
     collection: unknown[];
+    /** Conciertos registrados (openspec: add-my-concerts). */
+    concerts: unknown[];
     wanted: unknown[];
     followedArtists: unknown[];
   };
@@ -127,6 +130,7 @@ export async function buildDataExport(userId: string, now: Date = new Date()): P
     favorites,
     wantToListen,
     collection,
+    concerts,
     wanted,
     followedArtists,
     ratings,
@@ -157,6 +161,7 @@ export async function buildDataExport(userId: string, now: Date = new Date()): P
     own(db.select().from(favorite).where(eq(favorite.userId, userId)).orderBy(asc(favorite.createdAt))),
     own(db.select().from(wantToListenEntry).where(eq(wantToListenEntry.userId, userId)).orderBy(asc(wantToListenEntry.createdAt))),
     own(db.select().from(collectionEntry).where(eq(collectionEntry.userId, userId)).orderBy(asc(collectionEntry.createdAt))),
+    own(db.select().from(concertEntry).where(eq(concertEntry.userId, userId)).orderBy(asc(concertEntry.createdAt))),
     own(db.select().from(wantedEntry).where(eq(wantedEntry.userId, userId)).orderBy(asc(wantedEntry.createdAt))),
     own(db.select().from(artistFollow).where(eq(artistFollow.userId, userId)).orderBy(asc(artistFollow.createdAt))),
     own(db.select().from(rating).where(eq(rating.userId, userId)).orderBy(asc(rating.createdAt))),
@@ -265,7 +270,7 @@ export async function buildDataExport(userId: string, now: Date = new Date()): P
 
   // Diccionario de nombres del catálogo para todo lo referenciado.
   const refs = { artists: new Set<string>(), releaseGroups: new Set<string>(), recordings: new Set<string>() };
-  for (const rows of [diary, favorites, wantToListen, collection, wanted, ratings, reviews, comments, items, pinned]) {
+  for (const rows of [diary, favorites, wantToListen, collection, concerts, wanted, ratings, reviews, comments, items, pinned]) {
     collectRefs(rows as CatalogRefs[], refs);
   }
   collectRefs(followedArtists.map((row) => ({ artistId: row.artistId })), refs);
@@ -308,7 +313,7 @@ export async function buildDataExport(userId: string, now: Date = new Date()): P
       memberSince: user.createdAt,
     },
     profile: { links, pinned, showcase: showcase ?? null, prompts },
-    library: { diary, favorites, wantToListen, collection, wanted, followedArtists },
+    library: { diary, favorites, wantToListen, collection, concerts, wanted, followedArtists },
     activity: { ratings, reviews, comments },
     lists: {
       owned: ownedLists.map((list) => ({ ...list, items: items.filter((item) => item.listId === list.id) })),

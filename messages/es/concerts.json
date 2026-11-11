@@ -1,0 +1,84 @@
+{
+  "title": "Mis conciertos",
+  "metaTitle": "Mis conciertos",
+  "intro": "Los conciertos a los que fuiste. Es tu registro: nadie verifica las fechas ni los lugares.",
+  "register": "Registrar concierto",
+  "totals": {
+    "concerts": "{count, plural, one {# concierto} other {# conciertos}}",
+    "artists": "{count, plural, one {# artista} other {# artistas}}",
+    "countries": "{count, plural, one {# país} other {# países}}"
+  },
+  "yearHeading": "{year}",
+  "yearCount": "{count, plural, one {# concierto} other {# conciertos}}",
+  "filteredBy": "Solo {artist}",
+  "clearFilter": "Ver todos",
+  "truncated": "Se muestran los {count} más recientes.",
+  "empty": {
+    "title": "Todavía no registraste conciertos",
+    "body": "Abre la página de un artista que viste en vivo y usa «Registrar» en la fila En vivo de «Tu relación», o regístralo desde aquí.",
+    "filtered": "No registraste conciertos de este artista."
+  },
+  "row": {
+    "setlist": "Setlist",
+    "edit": "Editar",
+    "remove": "Quitar",
+    "menu": "Acciones de {artist}",
+    "removeTitle": "Quitar el concierto",
+    "removeMessage": "Se quitará el concierto de {artist} del {date}. No se puede deshacer.",
+    "removeConfirm": "Quitar",
+    "cancel": "Cancelar",
+    "removeError": "No se pudo quitar el concierto. Intenta de nuevo."
+  },
+  "audience": {
+    "private": "Privado",
+    "followers": "Seguidores",
+    "public": "Público"
+  },
+  "form": {
+    "createTitle": "Registrar concierto",
+    "editTitle": "Editar concierto",
+    "artist": "Artista",
+    "artistSearch": "Buscar artista",
+    "artistSearchPlaceholder": "Nombre del artista",
+    "artistChange": "Cambiar",
+    "searching": "Buscando…",
+    "noResults": "Sin resultados",
+    "searchError": "No se pudo buscar. Intenta de nuevo.",
+    "date": "Fecha",
+    "dateHint": "Basta con el año; suma el mes y el día si los recuerdas.",
+    "year": "Año",
+    "month": "Mes",
+    "monthNone": "Sin mes",
+    "day": "Día",
+    "dayNone": "Sin día",
+    "country": "País",
+    "city": "Ciudad",
+    "venue": "Recinto",
+    "venuePlaceholder": "Estadio, sala, festival…",
+    "tour": "Gira",
+    "setlist": "Enlace al setlist en setlist.fm",
+    "setlistHint": "Pega la dirección del setlist (setlist.fm/setlist/…). Es opcional.",
+    "note": "Nota",
+    "notePlaceholder": "Con quién fuiste, qué recuerdas…",
+    "audienceLabel": "Quién lo ve",
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "cancel": "Cancelar",
+    "errors": {
+      "artistRequired": "Elige un artista.",
+      "yearInvalid": "Escribe un año entre 1900 y el actual.",
+      "dateFuture": "La fecha no puede ser futura.",
+      "dayInvalid": "Ese día no existe en el mes elegido.",
+      "setlistInvalid": "El enlace tiene que ser de un setlist de setlist.fm (setlist.fm/setlist/…).",
+      "generic": "No se pudo guardar el concierto. Revisa los datos e intenta de nuevo."
+    }
+  },
+  "profile": {
+    "rail": "Conciertos",
+    "seeAll": "Ver todos",
+    "pageTitle": "Conciertos de {name}",
+    "metaTitle": "Conciertos de {name}",
+    "empty": "No hay conciertos visibles.",
+    "emptyOwn": "Todavía no registraste conciertos."
+  }
+}

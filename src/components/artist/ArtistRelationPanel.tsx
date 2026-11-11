@@ -7,6 +7,7 @@ import { ListenEntryForm } from "@/components/diary/ListenEntryForm";
 import { AlbumListPicker, type PickerMembership } from "@/components/album/AlbumListPicker";
 import { HeartIcon, ToggleChip } from "@/components/album/AlbumRelationPanel";
 import { ArtistJourneyStartModal } from "@/components/artist-journey/ArtistJourneyStartModal";
+import { ConcertFormDialog } from "@/components/concerts/ConcertFormDialog";
 import { followArtist, getArtistJourneyAlbums, unfollowArtist } from "@/lib/api/catalog";
 import { createListenEntry } from "@/lib/api/diary";
 import { toggleFavorite } from "@/lib/api/favorites";
@@ -20,7 +21,7 @@ import { DISCOGRAPHY_ANCHOR, DISCOGRAPHY_FILTER_EVENT } from "./discography-filt
 // `artist-personal-panel`). Mismo lenguaje que el panel del álbum, con las filas que aplican
 // a un artista: Siguiendo, Favorito y Pendiente como conmutadores; Escuchas y Colección
 // calculadas desde sus discos (nunca con el total de la discografía, que la regla de
-// recorridos prohíbe fuera de su gestión); Listas; y Recorrido (barra sin cifras). Sin
+// recorridos prohíbe fuera de su gestión); En vivo (conciertos registrados, openspec: add-my-concerts); Listas; y Recorrido (barra sin cifras). Sin
 // estrellas ni reseña del artista.
 
 export interface ArtistRelationState {
@@ -29,6 +30,8 @@ export interface ArtistRelationState {
   pending: boolean;
   listens: { albumCount: number; last: { title: string | null; at: string } | null };
   collection: { have: number; seeking: number };
+  /** Conciertos propios registrados del artista (openspec: add-my-concerts); opcional para los tests. */
+  concerts?: number;
   /** Discos suyos que valoraste y tu media (openspec: refine-artist-page-phase3); sin el total de la discografía. */
   rated?: { count: number; average: number | null };
   ownListMemberships: PickerMembership[];
@@ -110,6 +113,9 @@ function AuthenticatedPanel({
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [memberships, setMemberships] = useState(state.ownListMemberships);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [concerts, setConcerts] = useState(state.concerts ?? 0);
+  const [concertFormOpen, setConcertFormOpen] = useState(false);
+  const concertButton = useRef<HTMLButtonElement>(null);
   // Los discos del modal se piden al abrirlo (openspec: refine-artist-page-phase1, design D2).
   const [journeyAlbums, setJourneyAlbums] = useState<ReleaseGroup[] | null>(null);
   const [journeyLoading, setJourneyLoading] = useState(false);
@@ -264,6 +270,38 @@ function AuthenticatedPanel({
         <Field label={t("collection")}>
           <Value empty={noCollection}>{collectionSummary}</Value>
         </Field>
+        <Field
+          label={t("live")}
+          action={
+            <button ref={concertButton} type="button" className={linkButton} onClick={() => setConcertFormOpen(true)}>
+              {t("liveLog")}
+            </button>
+          }
+        >
+          {concerts > 0 ? (
+            <Link href={`/me/concerts?artista=${artistId}`} className="self-start font-body text-sm text-paper underline-offset-2 hover:underline">
+              {t("liveCount", { count: concerts })}
+            </Link>
+          ) : (
+            <Value empty>{t("liveNone")}</Value>
+          )}
+        </Field>
+        {concertFormOpen && (
+          <ConcertFormDialog
+            open
+            mode="create"
+            artist={{ id: artistId, name: artistName }}
+            onClose={() => {
+              setConcertFormOpen(false);
+              concertButton.current?.focus();
+            }}
+            onSaved={() => {
+              setConcerts((count) => count + 1);
+              setConcertFormOpen(false);
+              concertButton.current?.focus();
+            }}
+          />
+        )}
         {state.rated && (
           <Field
             label={t("rated")}

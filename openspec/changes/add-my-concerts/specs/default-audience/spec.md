@@ -1,0 +1,193 @@
+## MODIFIED Requirements
+
+### Requirement: Audiencia por defecto opcional del contenido nuevo
+
+El sistema SHALL permitir a cada usuario configurar, de forma opcional, una audiencia por
+defecto (`private`, `followers` o `public`) para el contenido nuevo de biblioteca: favoritos,
+entradas de diario, listas, copias de colección, entradas de la wishlist ("En tu búsqueda") y
+conciertos registrados (capability `concert-log`).
+La ausencia de valor (`NULL`) SHALL significar
+"según el tipo" y SHALL conservar los defaults de cada tipo vigentes cuando se aprobó este
+requisito. Los usuarios nuevos y los existentes SHALL comenzar sin valor.
+
+#### Scenario: Usuario sin preferencia
+
+- **WHEN** un usuario sin audiencia por defecto crea un favorito, una entrada de diario, una
+  lista y una copia de colección sin indicar audiencia
+- **THEN** cada uno nace con el default de su tipo, igual que antes de este cambio
+
+#### Scenario: Usuarios existentes
+
+- **WHEN** se despliega este cambio sobre una base con usuarios existentes
+- **THEN** ningún usuario tiene audiencia por defecto y ningún contenido cambia de audiencia
+
+#### Scenario: Default del tipo para la wishlist
+
+- **WHEN** un usuario sin audiencia por defecto agrega un disco a su wishlist sin indicar
+  audiencia
+- **THEN** la entrada nace `followers`, igual que una copia de colección
+
+#### Scenario: Default del tipo para los conciertos
+
+- **WHEN** un usuario sin audiencia por defecto registra un concierto sin indicar audiencia
+- **THEN** el registro nace `followers`, igual que una copia de colección
+
+### Requirement: Alcance de la preferencia
+
+La preferencia SHALL aplicarse únicamente a los seis tipos de contenido de biblioteca
+(favoritos, entradas de diario, listas, copias de colección, entradas de la wishlist y conciertos). NO SHALL aplicarse a las
+reseñas ni a los comentarios: no tienen audiencia propia y son contenido público visible en
+la página del álbum o la canción (ver `profile-reviews`). Una reseña SHALL seguir mostrándose
+en el perfil accesible del dueño con independencia de su audiencia por defecto.
+
+#### Scenario: Las reseñas siguen siendo públicas
+
+- **WHEN** un usuario con audiencia por defecto `private` publica una reseña de álbum
+- **THEN** la reseña es pública como siempre y aparece en la sección "Reseñas" de su perfil
+  accesible y en la página del álbum
+
+#### Scenario: Una reseña no consulta la preferencia
+
+- **WHEN** se crea una reseña o un comentario
+- **THEN** no se lee ni se aplica la audiencia por defecto del usuario
+
+### Requirement: Precedencia al crear contenido
+
+Al crear favoritos, entradas de diario, listas, copias de colección, entradas de la wishlist o conciertos, la audiencia resultante
+SHALL resolverse con esta precedencia: el valor explícito de la petición, luego la audiencia por
+defecto del usuario y, si no la tiene, el default del tipo. La preferencia SHALL aplicarse en el
+servidor, no en el cliente.
+
+#### Scenario: La petición indica audiencia
+
+- **WHEN** un usuario con audiencia por defecto `public` crea una lista indicando `private`
+- **THEN** la lista se crea `private`
+
+#### Scenario: La preferencia sustituye al default del tipo
+
+- **WHEN** un usuario con audiencia por defecto `public` registra una entrada de diario sin
+  indicar audiencia
+- **THEN** la entrada nace `public` y no `private`
+
+#### Scenario: Sin valor explícito ni preferencia
+
+- **WHEN** un usuario sin preferencia crea una copia de colección sin indicar audiencia
+- **THEN** la copia nace con el default de colección
+
+#### Scenario: La preferencia alcanza a la wishlist
+
+- **WHEN** un usuario con audiencia por defecto `private` agrega un disco a su wishlist sin
+  indicar audiencia
+- **THEN** la entrada nace `private`
+
+#### Scenario: La preferencia alcanza a los conciertos
+
+- **WHEN** un usuario con audiencia por defecto `public` registra un concierto sin indicar audiencia
+- **THEN** el registro nace `public`
+
+### Requirement: Aplicar la audiencia a todo lo existente
+
+El sistema SHALL permitir al usuario autenticado aplicar una audiencia (`private`, `followers`
+o `public`) a **todo su contenido de biblioteca existente** mediante una acción explícita: sus
+favoritos, entradas de diario, listas propias (`kind = 'standard'`), copias de colección y
+conciertos. La
+acción SHALL actualizar únicamente la audiencia de los elementos del propio usuario cuya
+audiencia difiera de la indicada, dentro de una única transacción, de modo que o se aplica a
+todos o a ninguno. SHALL ser idempotente: repetirla, o aplicar una audiencia que todo ya tiene,
+SHALL responder con éxito y conteos en cero. SHALL incluir los elementos fijados o destacados
+(listas fijadas y entradas de diario destacadas). NO SHALL modificar
+la audiencia por defecto guardada, los pines ni los destacados, ni crear, modificar o eliminar
+valoraciones, escuchas, comentarios, reseñas ni la wishlist, ni la fecha de actualización de las
+listas, las copias de colección y los conciertos (por lo que no genera eventos de "lista actualizada" en el
+feed), ni tocar contenido de otros usuarios. La respuesta SHALL devolver cuántos elementos se
+actualizaron de cada tipo.
+
+#### Scenario: Aplicar a todo lo existente
+
+- **WHEN** un usuario con favoritos `public`, diario `private` y listas `followers` aplica la
+  audiencia `private`
+- **THEN** sus favoritos y listas pasan a `private`, el diario no cambia y la respuesta indica
+  cuántos favoritos y listas se actualizaron y cero entradas de diario
+
+#### Scenario: Se incluyen los elementos fijados y destacados
+
+- **WHEN** un usuario aplica `private` teniendo una lista fijada y una entrada de diario
+  destacada
+- **THEN** ambas pasan a `private` y conservan su pin y su destacado
+
+#### Scenario: Solo cambia la audiencia
+
+- **WHEN** un usuario aplica una audiencia a su biblioteca
+- **THEN** su audiencia por defecto guardada, sus valoraciones, escuchas, comentarios, reseñas y
+  wishlist no cambian, y las listas y copias de colección conservan su fecha de actualización
+
+#### Scenario: No genera eventos de lista actualizada
+
+- **WHEN** un usuario aplica una audiencia y cambian varias de sus listas
+- **THEN** el feed no muestra eventos de "lista actualizada" por esa acción
+
+#### Scenario: Las ediciones individuales siguen actualizando la fecha
+
+- **WHEN** un usuario cambia a mano la audiencia de una sola lista
+- **THEN** la fecha de actualización de la lista avanza como siempre
+
+#### Scenario: Idempotente
+
+- **WHEN** un usuario aplica la misma audiencia dos veces seguidas
+- **THEN** la segunda respuesta es exitosa con todos los conteos en cero y nada cambia
+
+#### Scenario: Atomicidad
+
+- **WHEN** falla la actualización de uno de los tipos durante la acción
+- **THEN** ningún tipo queda modificado
+
+#### Scenario: Solo el propio contenido
+
+- **WHEN** un usuario aplica una audiencia
+- **THEN** el contenido de otros usuarios y las listas que no son suyas o no son estándar no
+  cambian
+
+#### Scenario: Audiencia inválida
+
+- **WHEN** el usuario envía una audiencia fuera de `private`, `followers` o `public`, o la
+  omite
+- **THEN** la API responde `400` con código `VALIDATION_ERROR` y no modifica nada
+
+#### Scenario: Sesión requerida
+
+- **WHEN** una petición sin sesión intenta aplicar una audiencia
+- **THEN** la API responde `401` con código `AUTH_REQUIRED` y no modifica nada
+
+#### Scenario: Se incluyen los conciertos
+
+- **WHEN** un usuario con dos conciertos `public` aplica la audiencia `followers`
+- **THEN** ambos pasan a `followers`, conservan su fecha de actualización y la respuesta cuenta dos conciertos
+
+### Requirement: Vista previa de la acción de aplicar
+
+El sistema SHALL ofrecer una vista previa de solo lectura de la acción anterior mediante
+`GET /api/me/default-audience/apply?audience=`, que responda cuántos elementos de cada tipo
+cambiarían (los que hoy tienen una audiencia distinta) y, de ellos, cuántos son listas fijadas
+y entradas de diario destacadas. La vista previa NO SHALL modificar
+ningún dato y SHALL exigir sesión y una audiencia válida con los mismos errores que la acción.
+
+#### Scenario: Conteos de lo que cambiaría
+
+- **WHEN** un usuario con tres favoritos `public` y dos listas `followers` pide la vista previa
+  de `private`
+- **THEN** la respuesta indica tres favoritos y dos listas, y nada se modifica
+
+#### Scenario: Conteo de destacados
+
+- **WHEN** una de las listas que cambiarían está fijada
+- **THEN** la vista previa la cuenta también entre las listas fijadas
+
+#### Scenario: Nada cambiaría
+
+- **WHEN** todo el contenido del usuario ya tiene la audiencia consultada
+- **THEN** la vista previa devuelve todos los conteos en cero
+
+#### Scenario: Conteo de conciertos
+
+- **WHEN** un usuario con un concierto `private` pide la vista previa de `public`
+- **THEN** la respuesta cuenta un concierto entre lo que cambiaría

@@ -43,6 +43,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       awards: (await import(`../../messages/${resolvedLocale}/awards.json`)).default,
       notifications: (await import(`../../messages/${resolvedLocale}/notifications.json`)).default,
       share: (await import(`../../messages/${resolvedLocale}/share.json`)).default,
+      concerts: (await import(`../../messages/${resolvedLocale}/concerts.json`)).default,
     },
   };
 });

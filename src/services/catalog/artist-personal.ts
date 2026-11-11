@@ -5,6 +5,7 @@ import { isFavorited } from "@/services/favorites/favorites";
 import { isFollowingArtist } from "@/services/social/artist-following";
 import { isWantToListen } from "@/services/want-to-listen/want-to-listen";
 import { getArtistJourneyDetail } from "@/services/artist-journeys/artist-journeys";
+import { countOwnConcertsForArtist } from "@/services/concerts/concerts";
 import type { AlbumListMembership } from "./album-personal";
 
 // Estado personal del usuario sobre un artista para el panel "Tu relación" (openspec:
@@ -25,6 +26,8 @@ export interface ArtistPersonalState {
   pending: boolean;
   listens: ArtistListenSummary;
   collection: { have: number; seeking: number };
+  /** Conciertos propios registrados del artista, con cualquier audiencia (openspec: add-my-concerts, fila En vivo). */
+  concerts: number;
   /**
    * Discos de la discografía propia que el usuario valoró y la media de sus estrellas (openspec:
    * refine-artist-page-phase3). Sin el total de la discografía: nunca "N de M".
@@ -49,7 +52,7 @@ export async function getArtistPersonalState(
       : eq(listenEntry.artistId, artistId),
   );
 
-  const [following, favorited, pending, albumRows, lastRows, haveRows, seekingRows, listRows, journey, ratedRows] = await Promise.all([
+  const [following, favorited, pending, albumRows, lastRows, haveRows, seekingRows, listRows, journey, ratedRows, concerts] = await Promise.all([
     isFollowingArtist(userId, artistId),
     isFavorited({ type: "artist", id: artistId }, userId),
     isWantToListen({ type: "artist", id: artistId }, userId),
@@ -91,6 +94,7 @@ export async function getArtistPersonalState(
           .from(rating)
           .where(and(eq(rating.userId, userId), inArray(rating.releaseGroupId, ownReleaseGroupIds)))
       : Promise.resolve([{ n: 0, average: null }]),
+    countOwnConcertsForArtist(userId, artistId),
   ]);
 
   const last = lastRows[0];
@@ -104,6 +108,7 @@ export async function getArtistPersonalState(
       last: last ? { title: last.title ?? null, at: new Date(last.at).toISOString() } : null,
     },
     collection: { have: haveRows[0]?.n ?? 0, seeking: seekingRows[0]?.n ?? 0 },
+    concerts,
     rated: {
       count: ratedRows[0]?.n ?? 0,
       average: ratedRows[0]?.average != null ? Math.round(Number(ratedRows[0].average) * 10) / 10 : null,
