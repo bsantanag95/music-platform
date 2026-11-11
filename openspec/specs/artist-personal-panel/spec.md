@@ -7,7 +7,7 @@ Reunir en el panel "Tu relación" las acciones personales sobre un artista (segu
 
 La cabecera del artista SHALL incluir un panel "Tu relación" que reúna todas las acciones
 personales sobre el artista, en este orden: Siguiendo, Favorito, Pendiente, Escuchas,
-Colección, Listas y Recorrido. La página SHALL NOT mostrar estas acciones fuera del panel. El
+Colección, En vivo, Listas y Recorrido. La página SHALL NOT mostrar estas acciones fuera del panel. El
 panel SHALL NOT ofrecer valoración con estrellas ni reseña del artista. Las filas SHALL
 rotularse sin posesivo, como en el panel del álbum.
 
@@ -37,7 +37,7 @@ menú `···` ni de "Más acciones".
 #### Scenario: Primera visita autenticada
 
 - **WHEN** un usuario autenticado abre un artista con el que nunca interactuó
-- **THEN** el panel muestra las siete filas sin ningún menú `···`
+- **THEN** el panel muestra las ocho filas sin ningún menú `···`
 
 ### Requirement: Seguir, Favorito y Pendiente como conmutadores
 
@@ -161,4 +161,27 @@ a ella; desde otra pestaña SHALL abrir la Discografía con el filtro activo.
 
 - **WHEN** el usuario pulsa "Ver sin valorar" en la pestaña Biografía
 - **THEN** se abre la Discografía con "Sin valorar" activo
+
+### Requirement: Conciertos en el panel del artista
+
+La fila **En vivo** SHALL ir después de Colección (capability `concert-log`). Sin conciertos registrados del artista
+SHALL mostrar la acción "Registrar"; con registros SHALL mostrar "Lo viste N veces" enlazado a Mis conciertos filtrada
+por el artista y la acción "Registrar". "Registrar" SHALL abrir el formulario del concierto con el artista ya elegido; al
+guardar, la cifra SHALL actualizarse sin recargar la página. La cifra cuenta todos los registros propios, cualquiera sea
+su audiencia.
+
+#### Scenario: Sin conciertos
+
+- **WHEN** un usuario autenticado abre un artista del que no registró conciertos
+- **THEN** la fila En vivo muestra solo "Registrar"
+
+#### Scenario: Registrar desde el panel
+
+- **WHEN** el usuario pulsa "Registrar", escribe el año 2019 y guarda
+- **THEN** el formulario se cierra y la fila muestra "Lo viste 1 vez · Registrar"
+
+#### Scenario: Visitante anónimo
+
+- **WHEN** una persona sin sesión abre un artista
+- **THEN** no ve la fila En vivo, solo la invitación a iniciar sesión
 
