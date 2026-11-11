@@ -1108,6 +1108,20 @@ del artista y enlace al entrar al catálogo) y `artist_id`.
 `concert_entry.concert_id` (`ON DELETE SET NULL`, índice único parcial `(user_id, concert_id) WHERE concert_id IS NOT NULL`
 e índice parcial por `concert_id`) y `concert_entry.from_concert` (el recuerdo lo creó "Estuve ahí").
 
+**Fase 2 (migración `0093`, `add-shared-concerts-phase2`, ADR 0058):** en `concert`, `created_by` (`ON DELETE SET NULL`:
+el concierto sobrevive a la cuenta), `setlistfm_url` (prueba externa; mismo `CHECK` de setlist que `concert_entry`),
+`city_key` (**columna generada** `search_key(city)`: la mantiene la base, la app nunca la escribe), `confirmed_at` (cuándo
+se confirmó uno de la comunidad; la confirmación es pegajosa) y `merged_into_id` (`ON DELETE SET NULL`, destino de una
+fusión). `CHECK`: uno de la comunidad tiene recinto, ciudad (con `city_key` no vacía) y país; uno de la comunidad
+confirmado tiene `confirmed_at`; fusionado ⇒ oculto y nunca en sí mismo. Índices `idx_concert_created_by`
+(`created_by, created_at`, límite de 24 horas) e `idx_concert_date_city_key` (`event_date, city_key`, duplicado exacto y
+fusión con MusicBrainz).
+`content_report.concert_id` (`ON DELETE CASCADE`) y `reason_code` (`did_not_happen` / `duplicate` / `wrong_data`,
+obligatorio en un reporte de concierto y nulo en los demás); el `CHECK` de objetivo pasa a
+`num_nonnulls(comment_id, review_id, user_id, concert_id) = 1` y `uq_content_report_open_concert` deja uno abierto por
+persona y concierto. `moderation_action.concert_id` (`ON DELETE SET NULL`) entra en el `CHECK` de objetivo (`<= 1`) y la
+acción `merge` en el de acciones.
+
 ## `wanted_entry`
 
 **Propósito:** wishlist de colección, "En tu búsqueda" (migración `0028`, cambio

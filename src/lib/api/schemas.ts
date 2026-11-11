@@ -396,6 +396,11 @@ export const ErrorCodeSchema = z.enum([
   "WANTED_ENTRY_NOT_FOUND",
   "CONCERT_NOT_FOUND",
   "SHARED_CONCERT_NOT_FOUND",
+  "CONCERT_DUPLICATE",
+  "CONCERT_IMPLAUSIBLE",
+  "CONCERT_CREATE_NOT_ALLOWED",
+  "CONCERT_CREATE_LIMIT",
+  "CONCERT_MERGE_INVALID",
 "MODERATION_REPORT_NOT_FOUND",
   "RESTRICTION_NOT_FOUND",
   "SOCIAL_SUSPENSION_ACTIVE",
@@ -492,10 +497,10 @@ export const ReportContentResponseSchema = z.object({
 });
 
 export const ModerationStatusSchema = z.enum(["pending", "resolved", "dismissed"]);
-export const ModerationTargetTypeSchema = z.enum(["comment", "review", "list"]);
+export const ModerationTargetTypeSchema = z.enum(["comment", "review", "list", "concert"]);
 export const ModerationReportQuerySchema = z.object({
   status: ModerationStatusSchema.default("pending"),
-  targetType: z.enum(["comment", "review", "user"]).optional(),
+  targetType: z.enum(["comment", "review", "user", "concert"]).optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(50).default(20),
 });
@@ -526,11 +531,22 @@ export const ModerationReportSchema = z.object({
   reason: z.string(),
   status: ModerationStatusSchema,
   createdAt: z.string(),
-  targetType: z.enum(["comment", "review", "user"]),
+  targetType: z.enum(["comment", "review", "user", "concert"]),
+  /** Motivo cerrado de un reporte de concierto (openspec: add-shared-concerts-phase2); `null` en los demás. */
+  reasonCode: z.enum(["did_not_happen", "duplicate", "wrong_data"]).nullable(),
   reporter: z.object({ id: z.uuid(), username: z.string(), displayName: z.string().nullable() }),
   comment: z.object({ id: z.uuid().nullable(), body: z.string().nullable(), moderationStatus: z.string().nullable() }).nullable(),
   review: z.object({ id: z.uuid().nullable(), title: z.string().nullable(), body: z.string().nullable(), moderationStatus: z.string().nullable() }).nullable(),
   user: z.object({ id: z.uuid().nullable(), username: z.string().nullable(), displayName: z.string().nullable() }).nullable(),
+  concert: z
+    .object({
+      id: z.uuid().nullable(),
+      name: z.string().nullable(),
+      eventDate: z.string().nullable(),
+      status: z.string().nullable(),
+      source: z.string().nullable(),
+    })
+    .nullable(),
 });
 export const ModerationReportsResponseSchema = z.object({
   reports: z.array(ModerationReportSchema),
@@ -3413,3 +3429,87 @@ export type ConcertEntryResponse = z.infer<typeof ConcertEntryResponseSchema>;
 /** Respuesta de "Estuve ahí" (openspec: add-shared-concerts-phase1). */
 export const ConcertAttendanceResponseSchema = z.object({ entryId: z.uuid() });
 export type ConcertAttendanceResponse = z.infer<typeof ConcertAttendanceResponseSchema>;
+
+// Conciertos de la comunidad (openspec: add-shared-concerts-phase2, capability `community-concerts`, ADR 0058).
+
+/** Artistas del cartel además del principal. */
+export const COMMUNITY_CONCERT_EXTRA_PERFORMERS_MAX = 10;
+/** Nombre de un concierto compartido (como los de MusicBrainz). */
+export const SHARED_CONCERT_NAME_MAX = 300;
+/** Motivos cerrados de un reporte de concierto (mismo `CHECK` que `content_report.reason_code`). */
+export const CONCERT_REPORT_REASONS = ["did_not_happen", "duplicate", "wrong_data"] as const;
+export type ConcertReportReason = (typeof CONCERT_REPORT_REASONS)[number];
+export const CONCERT_REPORT_DETAILS_MAX = 500;
+
+/** Fecha exacta (`YYYY-MM-DD`), existente, desde 1900 y no futura: un concierto compartido se reconoce por su día. */
+export const ExactConcertDateSchema = z
+  .string()
+  .trim()
+  .refine((value) => value.length === 10 && isValidConcertDate(value), { message: "La fecha no es válida" });
+
+const requiredText = (max: number) => z.string().trim().min(1).max(max);
+
+export const CreateSharedConcertRequestSchema = z.object({
+  artistId: z.uuid(),
+  /** Más artistas del catálogo en el cartel, como principales o teloneros. */
+  performers: z
+    .array(z.object({ artistId: z.uuid(), role: z.enum(["main", "support"]) }))
+    .max(COMMUNITY_CONCERT_EXTRA_PERFORMERS_MAX)
+    .default([]),
+  eventDate: ExactConcertDateSchema,
+  venue: requiredText(CONCERT_TEXT_MAX),
+  city: requiredText(CONCERT_TEXT_MAX),
+  country: z
+    .string()
+    .trim()
+    .transform((value) => value.toUpperCase())
+    .refine((value) => /^[A-Z]{2}$/.test(value), { message: "El país no es válido" }),
+  name: optionalText(SHARED_CONCERT_NAME_MAX),
+  setlistfmUrl: SetlistFmUrlSchema,
+  /** "Compartir este concierto": el recuerdo propio que queda enlazado en vez de crear otro. */
+  fromEntryId: z.uuid().optional(),
+});
+export type CreateSharedConcertRequest = z.input<typeof CreateSharedConcertRequestSchema>;
+
+export const SharedConcertCreatedResponseSchema = z.object({
+  concert: z.object({
+    id: z.uuid(),
+    name: z.string(),
+    status: z.enum(["confirmed", "pending"]),
+  }),
+  entryId: z.uuid(),
+});
+export type SharedConcertCreatedResponse = z.infer<typeof SharedConcertCreatedResponseSchema>;
+
+export const ConcertCandidatesQuerySchema = z.object({
+  artistId: z.uuid(),
+  date: ExactConcertDateSchema,
+  city: z.string().trim().max(CONCERT_TEXT_MAX).optional(),
+});
+
+export const ConcertCandidateSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  eventDate: z.string(),
+  venue: z.string().nullable(),
+  city: z.string().nullable(),
+  country: z.string().nullable(),
+  status: z.enum(["confirmed", "pending"]),
+  sameCity: z.boolean(),
+  attending: z.boolean(),
+});
+export type ConcertCandidate = z.infer<typeof ConcertCandidateSchema>;
+export const ConcertCandidatesResponseSchema = z.object({ candidates: z.array(ConcertCandidateSchema) });
+export type ConcertCandidatesResponse = z.infer<typeof ConcertCandidatesResponseSchema>;
+
+export const ReportConcertRequestSchema = z.object({
+  reason: z.enum(CONCERT_REPORT_REASONS),
+  details: optionalText(CONCERT_REPORT_DETAILS_MAX),
+});
+export type ReportConcertRequest = z.input<typeof ReportConcertRequestSchema>;
+
+export const MergeConcertRequestSchema = z.object({
+  targetId: z.uuid(),
+  reason: z.string().trim().min(1).max(1000),
+});
+export type MergeConcertRequest = z.infer<typeof MergeConcertRequestSchema>;

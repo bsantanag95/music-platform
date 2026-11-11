@@ -7,6 +7,7 @@ import { apiFetch, ApiError } from "@/lib/api/client";
 import { RelativeDate } from "@/components/feed/feed-row-parts";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { SUSPENSION_PRESETS, expiresAtFromPreset } from "@/lib/moderation-presets";
+import { concertHref } from "@/lib/catalog-links";
 import {
   ModerationActionResponseSchema,
   ModerationReportSchema,
@@ -14,21 +15,30 @@ import {
   SocialRestrictionMutationResponseSchema,
   SocialRestrictionsResponseSchema,
 } from "@/lib/api/schemas";
-import type { z } from "zod";
+import { z } from "zod";
+
+const ModerationMergeResponseSchema = z.object({ ok: z.literal(true), moved: z.number(), unlinked: z.number() });
 
 type Report = z.infer<typeof ModerationReportSchema>;
 type ReportData = z.infer<typeof ModerationReportsResponseSchema>;
 type Restriction = z.infer<typeof SocialRestrictionsResponseSchema>["restrictions"][number];
 
 const STATUS_OPTIONS = ["pending", "resolved", "dismissed"] as const;
-const TARGET_OPTIONS = ["comment", "review", "user"] as const;
+const TARGET_OPTIONS = ["comment", "review", "user", "concert"] as const;
+const UUID_PATTERN = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
 
 function targetIdOf(report: Report): string | null {
-  return report.comment?.id ?? report.review?.id ?? null;
+  return report.comment?.id ?? report.review?.id ?? report.concert?.id ?? null;
 }
 
 function moderationStatusOf(report: Report): string | null {
+  if (report.concert?.id) return report.concert.status === "hidden" ? "hidden" : "visible";
   return report.comment?.moderationStatus ?? report.review?.moderationStatus ?? null;
+}
+
+/** Id del concierto destino a partir de un id o de la dirección de su página (el último UUID). */
+function concertIdFrom(value: string): string | null {
+  return value.match(UUID_PATTERN)?.at(-1)?.toLowerCase() ?? null;
 }
 
 export function ModerationConsole({ initial, initialRestrictions }: { initial: ReportData; initialRestrictions: Restriction[] }) {
@@ -41,6 +51,7 @@ export function ModerationConsole({ initial, initialRestrictions }: { initial: R
   const [hasNext, setHasNext] = useState(initial.hasNext);
   const [reports, setReports] = useState<Report[]>(initial.reports);
   const [reasons, setReasons] = useState<Record<string, string>>({});
+  const [mergeTargets, setMergeTargets] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [suspensionError, setSuspensionError] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
@@ -101,10 +112,42 @@ export function ModerationConsole({ initial, initialRestrictions }: { initial: R
         ModerationActionResponseSchema,
         { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, reason }) },
       );
-      await apiFetch(`/api/moderation/reports/${report.id}`, ModerationActionResponseSchema, {
-        method: "PATCH",
+      // En un concierto, la acción ya resuelve sus reportes abiertos (add-shared-concerts-phase2).
+      if (report.targetType !== "concert") {
+        await apiFetch(`/api/moderation/reports/${report.id}`, ModerationActionResponseSchema, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "resolved" }),
+        });
+      }
+      await refresh();
+    } catch (caught) {
+      showError(caught);
+    } finally {
+      setPending(null);
+    }
+  };
+
+  /** Fusiona el concierto reportado en otro (por id o dirección de su página); resuelve sus reportes. */
+  const mergeConcert = async (report: Report) => {
+    const reason = reasons[report.id]?.trim();
+    const targetId = concertIdFrom(mergeTargets[report.id] ?? "");
+    if (!reason) {
+      setError(t("requiredReason"));
+      return;
+    }
+    if (!targetId || !report.concert?.id) {
+      setError(t("concert.mergeTargetInvalid"));
+      return;
+    }
+    if (!window.confirm(t("concert.confirmMerge"))) return;
+    setPending(report.id);
+    setError(null);
+    try {
+      await apiFetch(`/api/moderation/concerts/${report.concert.id}/merge`, ModerationMergeResponseSchema, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "resolved" }),
+        body: JSON.stringify({ targetId, reason }),
       });
       await refresh();
     } catch (caught) {
@@ -211,6 +254,7 @@ export function ModerationConsole({ initial, initialRestrictions }: { initial: R
           <ul className="flex flex-col gap-3">
             {reports.map((report) => {
               const isUser = report.targetType === "user";
+              const reportedConcert = report.targetType === "concert" ? report.concert : null;
               const body = report.comment?.body ?? report.review?.body ?? "";
               const title = report.review?.title;
               const contentStatus = moderationStatusOf(report);
@@ -228,13 +272,33 @@ export function ModerationConsole({ initial, initialRestrictions }: { initial: R
                         </Link>
                       ) : null}
                     </p>
+                  ) : reportedConcert ? (
+                    <div className="mt-3 flex flex-col gap-1">
+                      {reportedConcert.id && reportedConcert.name ? (
+                        <Link href={concertHref(reportedConcert.name, reportedConcert.id)} className="font-display text-lg text-paper hover:underline">
+                          {reportedConcert.name}
+                        </Link>
+                      ) : null}
+                      <p className="font-data text-xs text-paper-muted">
+                        {[
+                          reportedConcert.eventDate,
+                          reportedConcert.status ? t(`concert.status.${reportedConcert.status}`) : null,
+                          reportedConcert.source ? t(`concert.source.${reportedConcert.source}`) : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
                   ) : (
                     <>
                       {title ? <h2 className="mt-3 font-display text-lg text-paper">{title}</h2> : null}
                       <p className="mt-2 whitespace-pre-wrap font-body text-paper">{body}</p>
                     </>
                   )}
-                  <p className="mt-3 font-data text-xs text-paper-muted">{report.reason}</p>
+                  {report.reasonCode ? (
+                    <p className="mt-3 font-data text-xs text-amber">{t(`concert.reason.${report.reasonCode}`)}</p>
+                  ) : null}
+                  {report.reason !== report.reasonCode ? <p className="mt-1 font-data text-xs text-paper-muted">{report.reason}</p> : null}
                   {isUser ? null : (
                     <textarea
                       value={reasons[report.id] ?? ""}
@@ -243,6 +307,17 @@ export function ModerationConsole({ initial, initialRestrictions }: { initial: R
                       className="mt-4 min-h-20 w-full rounded border border-ink-border bg-ink px-3 py-2 font-body text-sm text-paper outline-none focus:border-amber"
                     />
                   )}
+                  {reportedConcert && reportedConcert.status !== "hidden" ? (
+                    <label className="mt-3 flex flex-col gap-1 font-data text-xs text-paper-muted">
+                      <span>{t("concert.mergeTargetLabel")}</span>
+                      <input
+                        value={mergeTargets[report.id] ?? ""}
+                        onChange={(event) => setMergeTargets((current) => ({ ...current, [report.id]: event.target.value }))}
+                        placeholder={t("concert.mergeTargetPlaceholder")}
+                        className="rounded border border-ink-border bg-ink px-3 py-2 font-data text-xs text-paper"
+                      />
+                    </label>
+                  ) : null}
                   <div className="mt-3 flex flex-wrap gap-2">
                     {isUser ? (
                       <button type="button" onClick={() => prefillSuspension(report)} className="rounded bg-amber px-3 py-2 font-data text-xs text-ink">
@@ -253,6 +328,11 @@ export function ModerationConsole({ initial, initialRestrictions }: { initial: R
                         {contentStatus === "hidden" ? t("restore") : t("hide")}
                       </button>
                     )}
+                    {reportedConcert && reportedConcert.status !== "hidden" ? (
+                      <button type="button" disabled={pending === report.id} onClick={() => void mergeConcert(report)} className="rounded border border-amber px-3 py-2 font-data text-xs text-amber disabled:opacity-50">
+                        {t("concert.merge")}
+                      </button>
+                    ) : null}
                     <button type="button" disabled={pending === report.id} onClick={() => void dismiss(report.id)} className="rounded border border-ink-border px-3 py-2 font-data text-xs text-paper-muted hover:text-paper disabled:opacity-50">
                       {t("dismiss")}
                     </button>

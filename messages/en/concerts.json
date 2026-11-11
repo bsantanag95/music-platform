@@ -96,7 +96,7 @@
     "emptyLink": "Go to My concerts",
     "newer": "Newer",
     "older": "Older",
-    "source": "Concerts from MusicBrainz (CC0).",
+    "source": "Concerts from MusicBrainz (CC0) and the community.",
     "page": {
       "metaTitle": "{name} · {date}",
       "lineup": "Lineup",
@@ -110,5 +110,88 @@
       "signIn": "Sign in to say you were there."
     },
     "linked": "See concert"
+  },
+  "community": {
+    "add": "Add a concert",
+    "addHint": "Were you at one that isn't listed? Add it: it stays pending until other people confirm it.",
+    "pendingTitle": "Pending confirmation",
+    "pendingIntro": "Added by the community. They're published once 3 people who were there confirm them, or with a setlist.fm setlist.",
+    "missing": "{count, plural, one {# confirmation needed} other {# confirmations needed}}",
+    "share": "Share this concert",
+    "dialog": {
+      "title": "Add a concert",
+      "shareTitle": "Share this concert",
+      "artist": "Main artist",
+      "date": "Date",
+      "dateHint": "The exact date: that's how the concert is recognised.",
+      "venue": "Venue",
+      "venuePlaceholder": "Theatre, stadium, bar…",
+      "city": "City",
+      "country": "Country",
+      "continue": "Continue",
+      "checking": "Searching…",
+      "candidatesTitle": "Is it one of these?",
+      "candidatesHint": "If you were at one of these, join it instead of adding another.",
+      "sameCity": "Same city",
+      "pendingBadge": "Pending",
+      "notListed": "No, it's a different concert",
+      "noCandidates": "We couldn't find this concert. Fill it in to add it.",
+      "back": "Back",
+      "name": "Name",
+      "nameHint": "Optional. If left empty: “{example}”.",
+      "defaultName": "{artist} at {venue}",
+      "lineup": "More artists on the bill",
+      "lineupHint": "Optional, up to 10.",
+      "lineupSearch": "Search for an artist",
+      "lineupSearchPlaceholder": "Artist name",
+      "lineupRole": "Role of {name}",
+      "lineupMain": "Headliner",
+      "lineupSupport": "Support",
+      "lineupRemove": "Remove {name}",
+      "searching": "Searching…",
+      "noResults": "No results.",
+      "searchError": "Couldn't search. Try again.",
+      "setlist": "Setlist on setlist.fm",
+      "setlistHint": "Optional. If it's this concert's setlist, it's confirmed right away.",
+      "rules": "It's published once 3 people who were there confirm it, or with the setlist. You'll be shown as the person who added it.",
+      "submit": "Add concert",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "errors": {
+        "required": "Fill in the date, venue, city and country.",
+        "dateInvalid": "The date isn't valid.",
+        "setlistInvalid": "The link must be a setlist on setlist.fm.",
+        "duplicate": "That concert already exists: join it instead.",
+        "implausible": "The date doesn't match the artist's years of activity.",
+        "notAllowed": "Adding concerts needs an account at least 7 days old with a verified email.",
+        "limit": "You've reached today's limit of 5 added concerts.",
+        "suspended": "Your account has an active social suspension.",
+        "generic": "Couldn't save. Try again."
+      }
+    },
+    "page": {
+      "pendingTitle": "Pending confirmation",
+      "pendingBody": "Added by the community and not public yet. It's published once 3 people who were there confirm it, or with a setlist.fm setlist.",
+      "registeredBy": "Added by",
+      "setlist": "Setlist on setlist.fm",
+      "communitySource": "Concert added by the community.",
+      "musicbrainzSource": "Concert from MusicBrainz (CC0)."
+    },
+    "report": {
+      "open": "Report",
+      "title": "Report this concert",
+      "reasonLabel": "Reason",
+      "reasons": {
+        "did_not_happen": "It didn't happen",
+        "duplicate": "It's a duplicate",
+        "wrong_data": "It has wrong details"
+      },
+      "details": "Details (optional)",
+      "submit": "Send report",
+      "sending": "Sending…",
+      "sent": "Thanks. Moderation will review it.",
+      "error": "Couldn't send. Try again.",
+      "cancel": "Cancel"
+    }
   }
 }

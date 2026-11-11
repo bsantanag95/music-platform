@@ -72,7 +72,8 @@
       "comment": "Comentario",
       "review": "Reseña",
       "list": "Lista",
-      "user": "Usuario"
+      "user": "Usuario",
+      "concert": "Concierto"
     },
     "suspensionTitle": "Suspender actividad social",
     "identifier": "Usuario o email",
@@ -83,7 +84,28 @@
     "cancel": "Cancelar",
     "stateActive": "Activa",
     "stateExpired": "Expirada",
-    "stateRevoked": "Revocada"
+    "stateRevoked": "Revocada",
+    "concert": {
+      "status": {
+        "confirmed": "Confirmado",
+        "pending": "Por confirmar",
+        "hidden": "Oculto"
+      },
+      "source": {
+        "musicbrainz": "MusicBrainz",
+        "community": "Comunidad"
+      },
+      "reason": {
+        "did_not_happen": "No ocurrió",
+        "duplicate": "Duplicado",
+        "wrong_data": "Datos erróneos"
+      },
+      "merge": "Fusionar",
+      "mergeTargetLabel": "Fusionar en otro concierto",
+      "mergeTargetPlaceholder": "Dirección o id del concierto que se queda",
+      "mergeTargetInvalid": "Indica la dirección o el id del concierto que se queda.",
+      "confirmMerge": "¿Fusionar este concierto en el indicado? Las personas pasan al otro y este queda oculto."
+    }
   },
   "adminConsole": {
     "title": "Administración editorial",

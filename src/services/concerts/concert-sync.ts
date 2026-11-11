@@ -3,7 +3,8 @@
 // abrir la pestaña Conciertos de un artista nunca sincronizado se importa la primera página antes de responder y el
 // resto después (`after()`); con más de 30 días se refresca en segundo plano. Idempotente por `mbid`; un concierto que
 // desaparece de MusicBrainz no se borra (puede tener asistentes). No crea artistas: el cartel se enlaza por `mbid` solo
-// a los que ya están en el catálogo.
+// a los que ya están en el catálogo. Un concierto de la comunidad con el mismo artista principal, fecha y ciudad se
+// fusiona en el importado (add-shared-concerts-phase2).
 
 import { after } from "next/server";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
@@ -11,6 +12,7 @@ import { db } from "@/db";
 import { artist, concert, concertPerformer, type ArtistRow } from "@/db/schema";
 import { musicbrainz, RELEASE_BROWSE_PAGE_SIZE } from "@/services/musicbrainz/client";
 import { mapEventToConcert, type ConcertInput } from "@/services/musicbrainz/event-mappers";
+import { mergeCommunityDuplicatesInto } from "./merge";
 
 /** Cada cuánto se vuelve a recorrer MusicBrainz. */
 export const CONCERTS_REFRESH_MS = 30 * 24 * 60 * 60 * 1000;
@@ -78,6 +80,8 @@ export async function saveConcerts(inputs: ConcertInput[], now: Date = new Date(
           })),
         );
       }
+      // Fase 2 (ADR 0058): si la comunidad ya había registrado este concierto, se fusiona en el de MusicBrainz.
+      await mergeCommunityDuplicatesInto(tx, row.id, now);
     }
   });
   return inputs.length;

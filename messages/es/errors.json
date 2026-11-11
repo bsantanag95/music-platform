@@ -310,5 +310,29 @@
   "YEAR_NOT_FOUND": {
     "title": "Año no encontrado",
     "description": "No encontramos este año en discos."
+  },
+  "SHARED_CONCERT_NOT_FOUND": {
+    "title": "No se encontró el concierto",
+    "description": "El concierto no existe o ya no está disponible."
+  },
+  "CONCERT_DUPLICATE": {
+    "title": "Ese concierto ya existe",
+    "description": "Súmate al existente con «Estuve ahí»."
+  },
+  "CONCERT_IMPLAUSIBLE": {
+    "title": "Fecha poco probable",
+    "description": "La fecha no coincide con la actividad del artista."
+  },
+  "CONCERT_CREATE_NOT_ALLOWED": {
+    "title": "No puedes registrar conciertos todavía",
+    "description": "Hace falta una cuenta de al menos 7 días con el email verificado."
+  },
+  "CONCERT_CREATE_LIMIT": {
+    "title": "Límite diario",
+    "description": "Llegaste al límite de conciertos registrados por hoy."
+  },
+  "CONCERT_MERGE_INVALID": {
+    "title": "Fusión no válida",
+    "description": "Ese concierto no se puede fusionar o restaurar."
   }
 }

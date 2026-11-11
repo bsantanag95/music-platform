@@ -44,6 +44,24 @@ const report: z.infer<typeof ModerationReportSchema> = {
   comment: { id: "00000000-0000-4000-8000-000000000003", body: "Contenido inapropiado", moderationStatus: "visible" },
   review: null,
   user: null,
+  reasonCode: null,
+  concert: null,
+};
+
+const concertReport: z.infer<typeof ModerationReportSchema> = {
+  ...report,
+  id: "00000000-0000-4000-8000-000000000011",
+  reason: "Nunca tocaron ahí",
+  reasonCode: "did_not_happen",
+  targetType: "concert",
+  comment: null,
+  concert: {
+    id: "00000000-0000-4000-8000-0000000000c1",
+    name: "Los Bunkers en Teatro Caupolicán",
+    eventDate: "2009-05-15",
+    status: "pending",
+    source: "community",
+  },
 };
 
 describe("ModerationConsole", () => {
@@ -115,6 +133,46 @@ describe("ModerationConsole", () => {
         expect.objectContaining({ body: JSON.stringify({ status: "resolved" }) }),
       );
     });
+  });
+
+  it("reporte de concierto: motivo, ocultar sin resolver aparte y fusionar por dirección", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    vi.mocked(apiFetch).mockImplementation(async (path: string) => {
+      if (path.startsWith("/api/moderation/reports?")) return { ...empty, reports: [concertReport] };
+      return { ok: true, moved: 1, unlinked: 0 };
+    });
+    renderWithIntl(
+      <ModerationConsole initial={{ reports: [concertReport], status: "pending", page: 1, pageSize: 20, hasNext: false }} initialRestrictions={[]} />,
+    );
+
+    const card = screen.getByRole("listitem");
+    expect(within(card).getByText("No ocurrió")).toBeInTheDocument();
+    expect(within(card).getByText("Nunca tocaron ahí")).toBeInTheDocument();
+    expect(within(card).getByText("2009-05-15 · Por confirmar · Comunidad")).toBeInTheDocument();
+
+    fireEvent.change(within(card).getByPlaceholderText("Motivo de la acción"), { target: { value: "Duplicado" } });
+    fireEvent.change(within(card).getByLabelText("Fusionar en otro concierto"), {
+      target: { value: "https://example.test/es/concert/los-bunkers-00000000-0000-4000-8000-0000000000c2" },
+    });
+    fireEvent.click(within(card).getByRole("button", { name: "Fusionar" }));
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledWith(
+        `/api/moderation/concerts/${concertReport.concert!.id}/merge`,
+        expect.anything(),
+        expect.objectContaining({ body: JSON.stringify({ targetId: "00000000-0000-4000-8000-0000000000c2", reason: "Duplicado" }) }),
+      );
+    });
+
+    fireEvent.change(within(screen.getByRole("listitem")).getByPlaceholderText("Motivo de la acción"), { target: { value: "No ocurrió" } });
+    fireEvent.click(within(screen.getByRole("listitem")).getByRole("button", { name: "Ocultar" }));
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledWith(
+        `/api/moderation/content/concert/${concertReport.concert!.id}`,
+        expect.anything(),
+        expect.objectContaining({ method: "PATCH" }),
+      );
+    });
+    expect(apiFetch).not.toHaveBeenCalledWith(`/api/moderation/reports/${concertReport.id}`, expect.anything(), expect.anything());
   });
 
   it("exige un motivo antes de ocultar", async () => {

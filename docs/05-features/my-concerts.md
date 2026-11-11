@@ -50,9 +50,25 @@ Un festival se registra como un registro por artista. El mismo artista puede ten
 - **"Estuve ahí"** crea el recuerdo con los datos del concierto (o enlaza uno propio del mismo artista y la misma fecha);
   después es tuyo. Quitarlo borra el recuerdo solo si nunca lo editaste. En Mis conciertos un recuerdo enlazado muestra
   "Ver concierto".
-- Fase 2: conciertos creados por la comunidad con confirmación; Fase 3: sugerencias de enlace, desvincular, festivales.
+
+## Conciertos de la comunidad (Fase 2, `add-shared-concerts-phase2`, ADR 0058)
+
+- **Agregar un concierto** (pestaña Conciertos, con sesión): primero la fecha exacta, el recinto, la ciudad y el país;
+  con eso aparecen los conciertos del artista a ±1 día ("¿Es alguno de estos?", primero los de la misma ciudad) para
+  decir "Estuve ahí" en vez de duplicar. Si no es ninguno: nombre opcional, más artistas del cartel y el setlist. Al
+  crearlo se abre su página.
+- **Compartir este concierto** (Mis conciertos, en el menú de un recuerdo sin enlazar con día exacto, ciudad y país):
+  la misma creación con los datos del recuerdo y la fecha fija; ese recuerdo queda enlazado.
+- **Por confirmar:** sección al final de la pestaña, solo con sesión, con "Faltan N confirmaciones" y "Estuve ahí". Su
+  página tiene un aviso y no se indexa. Se confirma con 3 personas que cuentan o con el setlist del mismo artista y año.
+- **Página:** "Registrado por @usuario" en uno de la comunidad confirmado, enlace al setlist si lo tiene, y "Reportar"
+  (no ocurrió, duplicado, datos erróneos) con sesión. Uno fusionado redirige al que quedó.
+- **Moderación:** los reportes de conciertos llegan a la consola (`/moderation`, filtro Concierto) con ocultar,
+  restaurar y fusionar (por la dirección o el id del concierto que se queda).
+- Fase 3: sugerir crear conciertos desde recuerdos coincidentes, desvincular, festivales por días y escenarios, proponer
+  lo confirmado a MusicBrainz.
 
 ## Fuera de alcance (por ahora)
 
-Sugerencias o verificación de conciertos (Fases 2 y 3), la API de setlist.fm, festivales con varios artistas en un
+Sugerencias de enlace (Fase 3), la API de setlist.fm, festivales con varios artistas en un
 registro, feed de seguidos, Láminas, compartir, notificaciones y cifras de comunidad en la página del artista.

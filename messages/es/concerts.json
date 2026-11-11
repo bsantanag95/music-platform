@@ -96,7 +96,7 @@
     "emptyLink": "Ir a Mis conciertos",
     "newer": "Más recientes",
     "older": "Más antiguos",
-    "source": "Conciertos de MusicBrainz (CC0).",
+    "source": "Conciertos de MusicBrainz (CC0) y de la comunidad.",
     "page": {
       "metaTitle": "{name} · {date}",
       "lineup": "Cartel",
@@ -110,5 +110,88 @@
       "signIn": "Inicia sesión para decir que estuviste."
     },
     "linked": "Ver concierto"
+  },
+  "community": {
+    "add": "Agregar un concierto",
+    "addHint": "¿Estuviste en uno que no aparece? Agrégalo: queda por confirmar hasta que lo confirmen otras personas.",
+    "pendingTitle": "Por confirmar",
+    "pendingIntro": "Los registró la comunidad. Se publican cuando los confirman 3 personas que estuvieron o un setlist de setlist.fm.",
+    "missing": "{count, plural, one {Falta # confirmación} other {Faltan # confirmaciones}}",
+    "share": "Compartir este concierto",
+    "dialog": {
+      "title": "Agregar un concierto",
+      "shareTitle": "Compartir este concierto",
+      "artist": "Artista principal",
+      "date": "Fecha",
+      "dateHint": "La fecha exacta: así se reconoce el concierto.",
+      "venue": "Recinto",
+      "venuePlaceholder": "Teatro, estadio, bar…",
+      "city": "Ciudad",
+      "country": "País",
+      "continue": "Continuar",
+      "checking": "Buscando…",
+      "candidatesTitle": "¿Es alguno de estos?",
+      "candidatesHint": "Si estuviste en uno de estos, súmate en vez de crear otro.",
+      "sameCity": "Misma ciudad",
+      "pendingBadge": "Por confirmar",
+      "notListed": "No, es otro concierto",
+      "noCandidates": "No encontramos este concierto. Complétalo para registrarlo.",
+      "back": "Atrás",
+      "name": "Nombre",
+      "nameHint": "Opcional. Si lo dejas vacío: «{example}».",
+      "defaultName": "{artist} en {venue}",
+      "lineup": "Más artistas del cartel",
+      "lineupHint": "Opcional, hasta 10.",
+      "lineupSearch": "Buscar artista",
+      "lineupSearchPlaceholder": "Nombre del artista",
+      "lineupRole": "Rol de {name}",
+      "lineupMain": "Principal",
+      "lineupSupport": "Telonero",
+      "lineupRemove": "Quitar {name}",
+      "searching": "Buscando…",
+      "noResults": "Sin resultados.",
+      "searchError": "No se pudo buscar. Intenta de nuevo.",
+      "setlist": "Setlist en setlist.fm",
+      "setlistHint": "Opcional. Si es el setlist de este concierto, se confirma al instante.",
+      "rules": "Se publica cuando lo confirman 3 personas que estuvieron, o con el setlist. Quedarás como quien lo registró.",
+      "submit": "Registrar concierto",
+      "saving": "Guardando…",
+      "cancel": "Cancelar",
+      "errors": {
+        "required": "Completa la fecha, el recinto, la ciudad y el país.",
+        "dateInvalid": "La fecha no es válida.",
+        "setlistInvalid": "El enlace debe ser de un setlist de setlist.fm.",
+        "duplicate": "Ese concierto ya existe: súmate a él.",
+        "implausible": "La fecha no coincide con la actividad del artista.",
+        "notAllowed": "Para registrar conciertos hace falta una cuenta de al menos 7 días con el email verificado.",
+        "limit": "Llegaste al límite de 5 conciertos registrados por hoy.",
+        "suspended": "Tu cuenta tiene una suspensión social activa.",
+        "generic": "No se pudo guardar. Intenta de nuevo."
+      }
+    },
+    "page": {
+      "pendingTitle": "Por confirmar",
+      "pendingBody": "Lo registró la comunidad y todavía no es público. Se publica cuando lo confirman 3 personas que estuvieron o un setlist de setlist.fm.",
+      "registeredBy": "Registrado por",
+      "setlist": "Setlist en setlist.fm",
+      "communitySource": "Concierto registrado por la comunidad.",
+      "musicbrainzSource": "Concierto de MusicBrainz (CC0)."
+    },
+    "report": {
+      "open": "Reportar",
+      "title": "Reportar este concierto",
+      "reasonLabel": "Motivo",
+      "reasons": {
+        "did_not_happen": "No ocurrió",
+        "duplicate": "Está duplicado",
+        "wrong_data": "Tiene datos erróneos"
+      },
+      "details": "Detalles (opcional)",
+      "submit": "Enviar reporte",
+      "sending": "Enviando…",
+      "sent": "Gracias. Moderación lo revisará.",
+      "error": "No se pudo enviar. Intenta de nuevo.",
+      "cancel": "Cancelar"
+    }
   }
 }

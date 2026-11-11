@@ -96,7 +96,12 @@ además del `error` legible:
 | `LIST_TARGET_INVALID` | 404 | Listas: el objetivo del ítem no existe o no es un artista/álbum/canción válido. |
 | `LIST_ITEM_NOT_FOUND` | 404 | Listas: el ítem no existe dentro de la lista indicada. |
 | `CAMINO_NOT_FOUND` | 404 | Camino: el Camino no existe o no pertenece al usuario autenticado. |
-| `SHARED_CONCERT_NOT_FOUND` | 404 | Conciertos compartidos: el concierto no existe, el id no es un UUID, no está confirmado o fue cancelado. |
+| `SHARED_CONCERT_NOT_FOUND` | 404 | Conciertos compartidos: el concierto no existe, el id no es un UUID, está oculto, fue cancelado o está por confirmar y no hay sesión. |
+| `CONCERT_DUPLICATE` | 409 | Conciertos de la comunidad: ya existe uno no oculto con el mismo artista principal, fecha y ciudad; la respuesta trae `concertId`. |
+| `CONCERT_IMPLAUSIBLE` | 400 | Conciertos de la comunidad: el año es anterior a la formación o nacimiento de un artista principal, o posterior a su separación o muerte. |
+| `CONCERT_CREATE_NOT_ALLOWED` | 403 | Conciertos de la comunidad: la cuenta no tiene email verificado, tiene menos de 7 días o está desactivada. |
+| `CONCERT_CREATE_LIMIT` | 429 | Conciertos de la comunidad: la persona ya creó 5 conciertos en las últimas 24 horas. |
+| `CONCERT_MERGE_INVALID` | 400 | Moderación de conciertos: fusión consigo mismo, destino oculto, origen ya fusionado, o restaurar uno fusionado. |
 | `CONCERT_NOT_FOUND` | 404 | Mis conciertos: el registro no existe, el id no es un UUID o pertenece a otra persona (404 para no revelar registros ajenos). |
 | `COLLECTION_ENTRY_NOT_FOUND` | 404 | Colección física: la entrada no existe o no pertenece al usuario autenticado (se responde 404 para no revelar existencia de entradas ajenas). |
 | `WANTED_ENTRY_NOT_FOUND` | 404 | Wishlist de colección: la entrada de deseo no existe o no pertenece al usuario autenticado (se responde 404 para no revelar existencia de entradas ajenas). |

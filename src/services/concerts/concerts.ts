@@ -5,7 +5,7 @@
 
 import { and, count, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { artist, concertEntry } from "@/db/schema";
+import { artist, concert, concertEntry } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { isValidConcertDate, type ConcertEntryDto, type ConcertTotals } from "@/lib/api/schemas";
 import { resolveNewContentAudience } from "@/services/social/default-audience";
@@ -47,7 +47,16 @@ export const CONCERT_LIST_MAX = 500;
 /** Registros del riel del perfil. */
 export const CONCERT_PREVIEW_SIZE = 6;
 
-const selection = {
+/**
+ * Enlace al concierto compartido que se muestra (add-shared-concerts-phase2, ADR 0058): para la dueña, a uno no oculto
+ * (también por confirmar: lo ve con sesión); en el perfil, solo a uno confirmado.
+ */
+function linkedConcertId(owner: boolean): SQL<string | null> {
+  const visible = owner ? sql`${concert.status} <> 'hidden'` : sql`${concert.status} = 'confirmed'`;
+  return sql<string | null>`(select ${concert.id} from ${concert} where ${concert.id} = ${concertEntry.concertId} and ${visible})`;
+}
+
+const baseSelection = {
   id: concertEntry.id,
   artistId: concertEntry.artistId,
   artistName: artist.name,
@@ -59,10 +68,12 @@ const selection = {
   setlistfmUrl: concertEntry.setlistfmUrl,
   note: concertEntry.note,
   audience: concertEntry.audience,
-  concertId: concertEntry.concertId,
   createdAt: concertEntry.createdAt,
   updatedAt: concertEntry.updatedAt,
 } as const;
+
+const ownSelection = { ...baseSelection, concertId: linkedConcertId(true) };
+const profileSelection = { ...baseSelection, concertId: linkedConcertId(false) };
 
 type Row = {
   id: string;
@@ -119,7 +130,7 @@ function assertDate(eventDate: string): void {
 
 async function getOwned(entryId: string, userId: string): Promise<ConcertEntry> {
   const [row] = await db
-    .select(selection)
+    .select(ownSelection)
     .from(concertEntry)
     .innerJoin(artist, eq(artist.id, concertEntry.artistId))
     .where(and(eq(concertEntry.id, entryId), eq(concertEntry.userId, userId)))
@@ -181,11 +192,11 @@ export async function removeConcert(entryId: string, userId: string): Promise<vo
   if (!deleted) notFound();
 }
 
-async function readList(conditions: SQL[]): Promise<ConcertList> {
+async function readList(conditions: SQL[], owner: boolean): Promise<ConcertList> {
   const where = and(...conditions);
   const [rows, [totals]] = await Promise.all([
     db
-      .select(selection)
+      .select(owner ? ownSelection : profileSelection)
       .from(concertEntry)
       .innerJoin(artist, eq(artist.id, concertEntry.artistId))
       .where(where)
@@ -217,7 +228,7 @@ const EMPTY_LIST: ConcertList = { entries: [], totals: { concerts: 0, artists: 0
 export async function listOwnConcerts(userId: string, filters: { artistId?: string } = {}): Promise<ConcertList> {
   const conditions: SQL[] = [eq(concertEntry.userId, userId)];
   if (filters.artistId) conditions.push(eq(concertEntry.artistId, filters.artistId));
-  return readList(conditions);
+  return readList(conditions, true);
 }
 
 /** Audiencias del perfil visibles para el lector; `null` si no puede ver nada (bloqueo, perfil privado). */
@@ -232,7 +243,7 @@ async function visibleScope(username: string, viewerId: string | null): Promise<
 export async function listProfileConcerts(username: string, viewerId: string | null): Promise<ConcertList> {
   const scope = await visibleScope(username, viewerId);
   if (!scope) return EMPTY_LIST;
-  return readList([eq(concertEntry.userId, scope.ownerId), inArray(concertEntry.audience, scope.audiences)]);
+  return readList([eq(concertEntry.userId, scope.ownerId), inArray(concertEntry.audience, scope.audiences)], false);
 }
 
 /** Riel del perfil: los últimos registros visibles y el total visible. */
@@ -242,7 +253,7 @@ export async function getConcertPreview(username: string, viewerId: string | nul
   const where = and(eq(concertEntry.userId, scope.ownerId), inArray(concertEntry.audience, scope.audiences));
   const [rows, [total]] = await Promise.all([
     db
-      .select(selection)
+      .select(profileSelection)
       .from(concertEntry)
       .innerJoin(artist, eq(artist.id, concertEntry.artistId))
       .where(where)

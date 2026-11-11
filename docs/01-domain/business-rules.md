@@ -219,6 +219,27 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - La cifra de personas cuenta cuentas activas con cualquier audiencia y no da el número exacto por debajo de 5. La lista
   muestra solo los recuerdos que el visitante puede ver (audiencia, perfil privado, seguimiento, bloqueo).
 
+## Conciertos de la comunidad (`add-shared-concerts-phase2`, ADR 0058)
+
+- Crear un concierto pide sesión, cuenta activa con email verificado, al menos 7 días de antigüedad y sin suspensión
+  social; hasta 5 por persona en 24 horas. Un artista principal del catálogo y hasta 10 más (principales o teloneros),
+  fecha exacta (desde 1900, no futura), recinto, ciudad y país obligatorios; nombre opcional ("<artista> en <recinto>").
+- Plausibilidad: el año no puede ser anterior a la formación o nacimiento de un artista principal ni, si terminó,
+  posterior a su separación o muerte. Sin datos de actividad no se restringe.
+- Duplicado exacto: mismo artista principal, misma fecha y misma ciudad normalizada (sin mayúsculas, tildes ni
+  puntuación) que un concierto no oculto. Antes de crear se muestran los del artista a ±1 día para sumarse.
+- Nace por confirmar, con quien lo crea como primera asistente (o con su recuerdo enlazado, si lo comparte desde Mis
+  conciertos). Se confirma con 3 personas distintas que cuentan (mismos requisitos de cuenta, sin el límite) o con un
+  setlist de setlist.fm del mismo artista y año. La confirmación no se deshace al quitar asistencias.
+- Por confirmar: solo con sesión, sin cifra ni lista de personas, sin creador, fuera de buscadores, y sin enlace desde
+  los perfiles. "Estuve ahí" también vale en él y suma para confirmarlo.
+- "Registrado por" solo en uno confirmado, con la cuenta activa y sin bloqueo con quien mira. Sin conteos ni rankings.
+- Reportes: motivo `did_not_happen`, `duplicate` o `wrong_data`, uno abierto por persona y concierto. Moderación: ocultar,
+  restaurar (a confirmado si alguna vez lo estuvo) y fusionar; cada acción se audita y resuelve los reportes abiertos.
+- Fusionar mueve los recuerdos al destino; si la persona ya estaba ahí, el recuerdo del origen queda sin enlace y nunca
+  se borra. Si MusicBrainz agrega el mismo concierto (artista principal, fecha y ciudad), el de la comunidad se fusiona
+  solo en el importado.
+
 ## Notificaciones (Fases 1 a 3, `add-notifications-core`, `add-notification-milestones-and-releases` y `add-notification-digest-and-awards`)
 
 - Toda notificación nace de **un único servicio de emisión**, dentro de la **misma transacción** que la acción que la

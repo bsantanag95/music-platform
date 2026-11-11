@@ -310,5 +310,29 @@
   "YEAR_NOT_FOUND": {
     "title": "Year not found",
     "description": "We could not find this year in albums."
+  },
+  "SHARED_CONCERT_NOT_FOUND": {
+    "title": "Concert not found",
+    "description": "The concert doesn't exist or is no longer available."
+  },
+  "CONCERT_DUPLICATE": {
+    "title": "That concert already exists",
+    "description": "Join the existing one with “I was there”."
+  },
+  "CONCERT_IMPLAUSIBLE": {
+    "title": "Unlikely date",
+    "description": "The date doesn't match the artist's years of activity."
+  },
+  "CONCERT_CREATE_NOT_ALLOWED": {
+    "title": "You can't add concerts yet",
+    "description": "It needs an account at least 7 days old with a verified email."
+  },
+  "CONCERT_CREATE_LIMIT": {
+    "title": "Daily limit",
+    "description": "You've reached today's limit of added concerts."
+  },
+  "CONCERT_MERGE_INVALID": {
+    "title": "Invalid merge",
+    "description": "That concert can't be merged or restored."
   }
 }
