@@ -14,7 +14,7 @@ export {};
 //   DELETE FROM concert WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000cc%' OR id IN (SELECT concert_id FROM
 //     concert_performer WHERE artist_mbid::text LIKE '5e0ce000-0000-4000-8000-00000000cc%');
 //   DELETE FROM artist WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000cc%';
-// Necesita la migración 0093 aplicada. Correr contra una BD de scratch:
+// Necesita las migraciones 0093 y 0094 aplicadas. Correr contra una BD de scratch:
 //   ALLOW_SMOKE_ON_REAL_DB=1 npx tsx --env-file=.env scripts/smoke-test-community-concerts.ts
 
 import { randomUUID } from "node:crypto";
@@ -45,6 +45,17 @@ const DAY = 24 * 60 * 60 * 1000;
 function check(condition: unknown, message: string): void {
   if (!condition) throw new Error(`FALLÓ: ${message}`);
   console.log(`  ✓ ${message}`);
+}
+
+/** Nombre de la restricción que rechazó la escritura (`null` si no falló): distingue qué `CHECK` saltó. */
+async function constraintOf(fn: () => Promise<unknown>): Promise<string | null> {
+  try {
+    await fn();
+    return null;
+  } catch (error) {
+    const e = error as { constraint_name?: string; cause?: { constraint_name?: string } };
+    return e.constraint_name ?? e.cause?.constraint_name ?? "SIN_RESTRICCION";
+  }
 }
 
 async function codeOf(fn: () => Promise<unknown>): Promise<string | null> {
@@ -105,16 +116,26 @@ async function main() {
       community.createCommunityConcert(userId, { ...base, setlistfmUrl: null, name: null, ...over });
 
     console.log("CHECK y columna generada de la migración 0093");
-    const raw = { name: "x", kind: "concert", eventDate: "2010-01-01", source: "community", venue: "v", city: "c", country: "CL" };
-    check((await codeOf(() => db.insert(concert).values({ ...raw, venue: null }))) === "23514", "comunitario sin recinto");
-    check((await codeOf(() => db.insert(concert).values({ ...raw, city: "!!" }))) === "23514", "comunitario con una ciudad que normalizada queda vacía");
-    check((await codeOf(() => db.insert(concert).values({ ...raw, status: "confirmed" }))) === "23514", "comunitario confirmado sin confirmed_at");
-    check((await codeOf(() => db.insert(concert).values({ ...raw, setlistfmUrl: "https://www.setlist.fm/setlists/x.html" }))) === "23514", "setlist que no es un setlist");
+    // Por confirmar, como nace uno de la comunidad: el default de la columna (`confirmed`, 0092) es para MusicBrainz.
+    const raw = { name: "x", kind: "concert", eventDate: "2010-01-01", source: "community", status: "pending", venue: "v", city: "c", country: "CL" };
+    const rejects = async (values: typeof concert.$inferInsert, constraint: string) =>
+      (await constraintOf(() => db.insert(concert).values(values))) === constraint;
+    check(await rejects({ ...raw, venue: null }, "chk_concert_community_place"), "comunitario sin recinto");
+    check(await rejects({ ...raw, city: "!!" }, "chk_concert_community_place"), "comunitario con una ciudad que normalizada queda vacía");
+    check(await rejects({ ...raw, status: "confirmed" }, "chk_concert_community_confirmed"), "comunitario confirmado sin confirmed_at");
+    check(
+      await rejects({ ...raw, setlistfmUrl: "https://www.setlist.fm/setlists/x.html" }, "chk_concert_setlistfm_url"),
+      "setlist que no es un setlist",
+    );
     const [probe] = await db.insert(concert).values({ ...raw, city: "  São Paulo-Centro " }).returning();
     check(probe?.cityKey === "sao paulo centro", "city_key la calcula la base (sin tildes, puntuación a espacio)");
-    check((await codeOf(() => db.update(concert).set({ mergedIntoId: probe!.id }).where(eq(concert.id, probe!.id)))) === "23514", "fusionado en sí mismo / sin ocultar");
     check(
-      (await codeOf(() => db.insert(contentReport).values({ reporterId: fan1.id, concertId: probe!.id, reason: "x" }))) === "23514",
+      (await constraintOf(() => db.update(concert).set({ mergedIntoId: probe!.id }).where(eq(concert.id, probe!.id)))) === "chk_concert_merged",
+      "fusionado sin ocultar y en sí mismo",
+    );
+    check(
+      (await constraintOf(() => db.insert(contentReport).values({ reporterId: fan1.id, concertId: probe!.id, reason: "x" }))) ===
+        "chk_content_report_reason_code",
       "reporte de concierto sin motivo cerrado",
     );
     await db.delete(concert).where(eq(concert.id, probe!.id));

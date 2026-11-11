@@ -1117,7 +1117,8 @@ confirmado tiene `confirmed_at`; fusionado ⇒ oculto y nunca en sí mismo. Índ
 (`created_by, created_at`, límite de 24 horas) e `idx_concert_date_city_key` (`event_date, city_key`, duplicado exacto y
 fusión con MusicBrainz).
 `content_report.concert_id` (`ON DELETE CASCADE`) y `reason_code` (`did_not_happen` / `duplicate` / `wrong_data`,
-obligatorio en un reporte de concierto y nulo en los demás); el `CHECK` de objetivo pasa a
+obligatorio en un reporte de concierto y nulo en los demás; la migración `0094` corrige el `CHECK` con un
+`reason_code IS NOT NULL` explícito, porque con un nulo `IN (...)` da `NULL` y el `CHECK` lo aceptaba); el `CHECK` de objetivo pasa a
 `num_nonnulls(comment_id, review_id, user_id, concert_id) = 1` y `uq_content_report_open_concert` deja uno abierto por
 persona y concierto. `moderation_action.concert_id` (`ON DELETE SET NULL`) entra en el `CHECK` de objetivo (`<= 1`) y la
 acción `merge` en el de acciones.
