@@ -158,6 +158,10 @@ su metadata (sección A), por el mismo cliente y su límite de 1 request por seg
 fecha, recinto, ciudad y cartel; la atribución general del pie a MusicBrainz los cubre, y la pestaña dice "Conciertos de
 MusicBrainz (CC0)".
 
+Desde `add-shared-concerts-phase3` (ADR 0059) el mismo browse trae las giras (series) y las relaciones entre eventos
+(festival y sus partes), también CC0; la página de una gira dice "Giras de MusicBrainz (CC0)". El enlace "Agregar a
+MusicBrainz" solo abre su formulario precargado: el servidor no envía datos.
+
 ## Dónde se materializa la atribución
 
 El bloque de atribución del **pie de página global** (`src/components/layout/Footer.tsx`,

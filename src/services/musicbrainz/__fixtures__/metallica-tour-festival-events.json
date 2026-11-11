@@ -1,0 +1,629 @@
+{
+  "event-count": 3,
+  "event-offset": 0,
+  "events": [
+    {
+      "disambiguation": "night 4",
+      "cancelled": false,
+      "type-id": "ef55e8d7-3d00-394a-8012-f5506a29ff0b",
+      "name": "M72 World Tour: Mexico City",
+      "life-span": {
+        "ended": true,
+        "end": "2024-09-29",
+        "begin": "2024-09-29"
+      },
+      "type": "Concert",
+      "relations": [
+        {
+          "attribute-values": {},
+          "artist": {
+            "name": "Metallica",
+            "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+            "country": "US",
+            "type": "Group",
+            "sort-name": "Metallica",
+            "disambiguation": "",
+            "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+          },
+          "target-type": "artist",
+          "source-credit": "",
+          "type": "main performer",
+          "begin": null,
+          "ended": false,
+          "target-credit": "",
+          "attributes": [],
+          "direction": "backward",
+          "type-id": "936c7c95-3156-3889-a062-8a0cd57f8946",
+          "attribute-ids": {},
+          "end": null
+        },
+        {
+          "source-credit": "",
+          "target-type": "artist",
+          "artist": {
+            "name": "Five Finger Death Punch",
+            "type": "Group",
+            "country": "US",
+            "id": "7e8571b1-7c5a-4739-bc51-73d422ee9d74",
+            "disambiguation": "",
+            "sort-name": "Five Finger Death Punch",
+            "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+          },
+          "attribute-values": {},
+          "attribute-ids": {},
+          "end": null,
+          "type-id": "492a850e-97eb-306a-a85e-4b6d98527796",
+          "attributes": [],
+          "direction": "backward",
+          "target-credit": "",
+          "ended": false,
+          "begin": null,
+          "type": "support act"
+        },
+        {
+          "target-type": "artist",
+          "source-credit": "",
+          "attribute-values": {},
+          "artist": {
+            "sort-name": "Ice Nine Kills",
+            "disambiguation": "",
+            "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+            "name": "Ice Nine Kills",
+            "country": "US",
+            "id": "d8f0f6ac-a0a7-47bd-9786-f9106d7bdd11",
+            "type": "Group"
+          },
+          "ended": false,
+          "target-credit": "",
+          "direction": "backward",
+          "attributes": [],
+          "type-id": "492a850e-97eb-306a-a85e-4b6d98527796",
+          "end": null,
+          "attribute-ids": {},
+          "type": "support act",
+          "begin": null
+        },
+        {
+          "begin": null,
+          "type": "held at",
+          "end": null,
+          "attribute-ids": {},
+          "type-id": "e2c6f697-07dc-38b1-be0b-83d740165532",
+          "direction": "forward",
+          "attributes": [],
+          "ended": false,
+          "target-credit": "Foro Sol",
+          "attribute-values": {},
+          "source-credit": "",
+          "place": {
+            "area": {
+              "id": "3c810219-baf2-4fff-b98c-46b425eea1f5",
+              "type": "City",
+              "name": "Ciudad de México",
+              "iso-3166-2-codes": [
+                "MX-DIF"
+              ],
+              "sort-name": "Ciudad de México",
+              "disambiguation": "",
+              "type-id": "6fd8f29a-3d0a-32fc-980d-ea697b69da78"
+            },
+            "address": "Av. Viaducto Rio de la Piedad y Rio Churubusco S/N, Granjas México, Iztacalco, 08400 Mexico City, Federal District, Mexico",
+            "type-id": "62664fbd-cd55-3b5f-a5ea-fb5d1bc0113c",
+            "disambiguation": "",
+            "coordinates": {
+              "longitude": -99.095944,
+              "latitude": 19.404889
+            },
+            "name": "Estadio GNP Seguros",
+            "id": "4b427098-c5c4-42ac-8377-3b7f29e0b07c",
+            "type": "Stadium"
+          },
+          "target-type": "place"
+        },
+        {
+          "attributes": [
+            "number"
+          ],
+          "direction": "forward",
+          "ended": false,
+          "target-credit": "",
+          "attribute-ids": {
+            "number": "a59c5830-5ec7-38fe-9a21-c7ea54f6650a"
+          },
+          "end": null,
+          "ordering-key": 87,
+          "type-id": "707d947d-9563-328a-9a7d-0c5b9c3a9791",
+          "type": "part of",
+          "begin": null,
+          "target-type": "series",
+          "series": {
+            "disambiguation": "",
+            "type": "Tour",
+            "id": "e3dbc677-0209-4904-a940-fcbb149f5423",
+            "name": "M72 World Tour",
+            "type-id": "8ff6df0e-3dce-3bdf-bd57-d386c51b0060"
+          },
+          "source-credit": "",
+          "attribute-values": {
+            "number": "4.14"
+          }
+        }
+      ],
+      "id": "0067d9af-d86e-4874-80f0-2979189f9623",
+      "setlist": "* Whiplash\r\n* For Whom the Bell Tolls\r\n* Cyanide\r\n* The Memory Remains\r\n* Lux Æterna\r\n* Too Far Gone?\r\n* Kirk and Rob Doodle (Conjunto Africa's \"Los Luchadores\")\r\n*  Fade to Black\r\n* You Must Burn!\r\n* The Call of Ktulu\r\n* The Unforgiven\r\n* [https://musicbrainz.org/recording/fd91dde6-5856-44a7-80c7-7a910576c0d4|Whiskey in the Jar] # ([traditional] cover) (preceded by Lars and Rob “The Outlaw Torn” jam)\r\n* Battery\r\n* Moth Into Flame\r\n* One\r\n* Enter Sandman",
+      "time": ""
+    },
+    {
+      "disambiguation": "",
+      "type-id": "b6ded574-b592-3f0e-b56e-5b5f06aa0678",
+      "cancelled": false,
+      "relations": [
+        {
+          "target-type": "artist",
+          "source-credit": "",
+          "attribute-values": {
+            "time": "16:40"
+          },
+          "artist": {
+            "disambiguation": "the singer, active as a solo artist 1975–present",
+            "sort-name": "Cooper, Alice",
+            "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+            "type": "Person",
+            "id": "ee58c59f-8e7f-4430-b8ca-236c4d3745ae",
+            "country": "US",
+            "name": "Alice Cooper"
+          },
+          "ended": false,
+          "target-credit": "",
+          "attributes": [
+            "time"
+          ],
+          "direction": "backward",
+          "type-id": "936c7c95-3156-3889-a062-8a0cd57f8946",
+          "attribute-ids": {
+            "time": "ebd303c3-7f57-452a-aa3b-d780ebad868d"
+          },
+          "end": null,
+          "type": "main performer",
+          "begin": null
+        },
+        {
+          "attribute-values": {
+            "time": "13:45"
+          },
+          "artist": {
+            "disambiguation": "American thrash metal band",
+            "sort-name": "Exodus",
+            "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+            "name": "Exodus",
+            "type": "Group",
+            "id": "18e9bfd5-db23-4bc1-be0f-5710e5d656e4",
+            "country": "US"
+          },
+          "target-type": "artist",
+          "source-credit": "",
+          "type": "main performer",
+          "begin": null,
+          "attributes": [
+            "time"
+          ],
+          "direction": "backward",
+          "target-credit": "",
+          "ended": false,
+          "attribute-ids": {
+            "time": "ebd303c3-7f57-452a-aa3b-d780ebad868d"
+          },
+          "end": null,
+          "type-id": "936c7c95-3156-3889-a062-8a0cd57f8946"
+        },
+        {
+          "attributes": [
+            "time"
+          ],
+          "direction": "backward",
+          "target-credit": "",
+          "ended": false,
+          "attribute-ids": {
+            "time": "ebd303c3-7f57-452a-aa3b-d780ebad868d"
+          },
+          "end": null,
+          "type-id": "936c7c95-3156-3889-a062-8a0cd57f8946",
+          "type": "main performer",
+          "begin": null,
+          "target-type": "artist",
+          "source-credit": "",
+          "attribute-values": {
+            "time": "20:50"
+          },
+          "artist": {
+            "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+            "country": "US",
+            "type": "Group",
+            "name": "Metallica",
+            "sort-name": "Metallica",
+            "disambiguation": "",
+            "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+          }
+        },
+        {
+          "type": "main performer",
+          "begin": null,
+          "ended": false,
+          "target-credit": "",
+          "direction": "backward",
+          "attributes": [
+            "time"
+          ],
+          "type-id": "936c7c95-3156-3889-a062-8a0cd57f8946",
+          "end": null,
+          "attribute-ids": {
+            "time": "ebd303c3-7f57-452a-aa3b-d780ebad868d"
+          },
+          "attribute-values": {
+            "time": "12:35"
+          },
+          "artist": {
+            "name": "Overkill",
+            "country": "US",
+            "id": "97fa7dd1-4706-4fad-b6ff-e099a37837fc",
+            "type": "Group",
+            "sort-name": "Overkill",
+            "disambiguation": "US thrash metal band fronted by Bobby “Blitz” Ellsworth",
+            "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+          },
+          "target-type": "artist",
+          "source-credit": ""
+        },
+        {
+          "attribute-values": {
+            "time": "15:05"
+          },
+          "artist": {
+            "name": "Testament",
+            "id": "05106775-5d45-4131-aecc-1177f813ba11",
+            "country": "US",
+            "type": "Group",
+            "sort-name": "Testament",
+            "disambiguation": "thrash metal band, originally named Legacy",
+            "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+          },
+          "target-type": "artist",
+          "source-credit": "",
+          "type": "main performer",
+          "begin": null,
+          "ended": false,
+          "target-credit": "",
+          "attributes": [
+            "time"
+          ],
+          "direction": "backward",
+          "type-id": "936c7c95-3156-3889-a062-8a0cd57f8946",
+          "attribute-ids": {
+            "time": "ebd303c3-7f57-452a-aa3b-d780ebad868d"
+          },
+          "end": null
+        },
+        {
+          "type": "main performer",
+          "begin": null,
+          "ended": false,
+          "target-credit": "",
+          "attributes": [
+            "time"
+          ],
+          "direction": "backward",
+          "type-id": "936c7c95-3156-3889-a062-8a0cd57f8946",
+          "attribute-ids": {
+            "time": "ebd303c3-7f57-452a-aa3b-d780ebad868d"
+          },
+          "end": null,
+          "attribute-values": {
+            "time": "18:40"
+          },
+          "artist": {
+            "disambiguation": "",
+            "sort-name": "Zombie, Rob",
+            "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+            "type": "Person",
+            "country": "US",
+            "id": "c995a379-60b9-404b-bd97-a7e2de0751d3",
+            "name": "Rob Zombie"
+          },
+          "target-type": "artist",
+          "source-credit": ""
+        },
+        {
+          "type": "parts",
+          "begin": null,
+          "event": {
+            "cancelled": false,
+            "type-id": "b6ded574-b592-3f0e-b56e-5b5f06aa0678",
+            "disambiguation": "",
+            "setlist": "",
+            "time": "",
+            "name": "Sonic Temple 2025",
+            "type": "Festival",
+            "life-span": {
+              "ended": true,
+              "begin": "2025-05-08",
+              "end": "2025-05-11"
+            },
+            "id": "a704ea43-53e7-4ac4-86be-a6366a8d97ee"
+          },
+          "ended": false,
+          "target-credit": "",
+          "direction": "backward",
+          "attributes": [],
+          "type-id": "65742183-b25c-469e-b094-ff6739e6699c",
+          "end": null,
+          "attribute-ids": {},
+          "attribute-values": {},
+          "target-type": "event",
+          "source-credit": ""
+        },
+        {
+          "attribute-values": {},
+          "source-credit": "",
+          "place": {
+            "coordinates": null,
+            "name": "Temple Stage",
+            "type": "Festival stage",
+            "id": "31af8620-cf61-48b4-8f4d-bdb0dc30927b",
+            "area": {
+              "type-id": "6fd8f29a-3d0a-32fc-980d-ea697b69da78",
+              "sort-name": "Columbus",
+              "id": "18187bcb-18e6-4075-903e-fb976db17a55",
+              "disambiguation": "",
+              "type": "City",
+              "name": "Columbus"
+            },
+            "type-id": "1d787b70-630c-4b35-b086-36ab5ccd9424",
+            "address": "",
+            "disambiguation": "Sonic Temple festival stage"
+          },
+          "target-type": "place",
+          "begin": null,
+          "type": "held at",
+          "type-id": "e2c6f697-07dc-38b1-be0b-83d740165532",
+          "attribute-ids": {},
+          "end": null,
+          "ended": false,
+          "target-credit": "",
+          "attributes": [],
+          "direction": "forward"
+        },
+        {
+          "begin": null,
+          "type": "part of",
+          "attribute-ids": {},
+          "end": null,
+          "ordering-key": 18,
+          "type-id": "707d947d-9563-328a-9a7d-0c5b9c3a9791",
+          "attributes": [],
+          "direction": "forward",
+          "ended": false,
+          "target-credit": "",
+          "attribute-values": {},
+          "source-credit": "",
+          "target-type": "series",
+          "series": {
+            "type-id": "8ff6df0e-3dce-3bdf-bd57-d386c51b0060",
+            "name": "M72 World Tour",
+            "id": "e3dbc677-0209-4904-a940-fcbb149f5423",
+            "type": "Tour",
+            "disambiguation": ""
+          }
+        },
+        {
+          "attribute-values": {},
+          "target-type": "series",
+          "series": {
+            "disambiguation": "",
+            "type": "Tour",
+            "id": "02c25e0b-f87a-49e2-8947-f679bf444e9e",
+            "name": "Too Close for Comfort",
+            "type-id": "8ff6df0e-3dce-3bdf-bd57-d386c51b0060"
+          },
+          "source-credit": "",
+          "type": "part of",
+          "begin": null,
+          "attributes": [],
+          "direction": "forward",
+          "ended": false,
+          "target-credit": "",
+          "attribute-ids": {},
+          "end": null,
+          "ordering-key": 83,
+          "type-id": "707d947d-9563-328a-9a7d-0c5b9c3a9791"
+        }
+      ],
+      "id": "51ad0f7d-49c9-4260-93ff-1e0b1a901b5a",
+      "life-span": {
+        "ended": true,
+        "end": "2025-05-09",
+        "begin": "2025-05-09"
+      },
+      "type": "Festival",
+      "name": "Sonic Temple 2025, Day 2: Temple Stage",
+      "time": "11:00",
+      "setlist": ""
+    },
+    {
+      "relations": [
+        {
+          "attribute-values": {},
+          "artist": {
+            "name": "Metallica",
+            "country": "US",
+            "id": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+            "type": "Group",
+            "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+            "sort-name": "Metallica",
+            "disambiguation": ""
+          },
+          "target-type": "artist",
+          "source-credit": "",
+          "type": "main performer",
+          "begin": null,
+          "direction": "backward",
+          "attributes": [],
+          "ended": false,
+          "target-credit": "",
+          "end": null,
+          "attribute-ids": {},
+          "type-id": "936c7c95-3156-3889-a062-8a0cd57f8946"
+        },
+        {
+          "attribute-values": {},
+          "artist": {
+            "disambiguation": "",
+            "sort-name": "Five Finger Death Punch",
+            "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+            "name": "Five Finger Death Punch",
+            "type": "Group",
+            "country": "US",
+            "id": "7e8571b1-7c5a-4739-bc51-73d422ee9d74"
+          },
+          "target-type": "artist",
+          "source-credit": "",
+          "type": "support act",
+          "begin": null,
+          "direction": "backward",
+          "attributes": [],
+          "ended": false,
+          "target-credit": "",
+          "end": null,
+          "attribute-ids": {},
+          "type-id": "492a850e-97eb-306a-a85e-4b6d98527796"
+        },
+        {
+          "target-credit": "",
+          "ended": false,
+          "direction": "backward",
+          "attributes": [],
+          "type-id": "492a850e-97eb-306a-a85e-4b6d98527796",
+          "end": null,
+          "attribute-ids": {},
+          "type": "support act",
+          "begin": null,
+          "target-type": "artist",
+          "source-credit": "",
+          "attribute-values": {},
+          "artist": {
+            "name": "Suicidal Tendencies",
+            "country": "US",
+            "id": "e9e2a634-984f-4c10-bf7b-7970179e1ef1",
+            "type": "Group",
+            "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+            "sort-name": "Suicidal Tendencies",
+            "disambiguation": "American crossover thrash band"
+          }
+        },
+        {
+          "source-credit": "",
+          "target-type": "event",
+          "attribute-values": {},
+          "attribute-ids": {},
+          "end": null,
+          "type-id": "eb39ba59-5c98-4af7-8475-02a28e235ba4",
+          "attributes": [],
+          "direction": "backward",
+          "target-credit": "",
+          "ended": false,
+          "event": {
+            "time": "",
+            "setlist": "",
+            "name": "M72 World Tour: Glendale",
+            "id": "48eecbcd-6b61-4b72-a3c6-31969110c473",
+            "type": "Concert",
+            "life-span": {
+              "ended": true,
+              "begin": "2023-09-03",
+              "end": "2023-09-03"
+            },
+            "type-id": "ef55e8d7-3d00-394a-8012-f5506a29ff0b",
+            "cancelled": true,
+            "disambiguation": "night 2"
+          },
+          "begin": null,
+          "type": "rescheduled as"
+        },
+        {
+          "type": "held at",
+          "begin": null,
+          "target-credit": "State Farm Stadium",
+          "ended": false,
+          "direction": "forward",
+          "attributes": [],
+          "type-id": "e2c6f697-07dc-38b1-be0b-83d740165532",
+          "end": null,
+          "attribute-ids": {},
+          "attribute-values": {},
+          "target-type": "place",
+          "place": {
+            "coordinates": {
+              "latitude": 33.5275,
+              "longitude": -112.2625
+            },
+            "type": "Stadium",
+            "id": "8899fd72-6530-428b-96d8-9076e10baa61",
+            "name": "State Farm Stadium",
+            "type-id": "62664fbd-cd55-3b5f-a5ea-fb5d1bc0113c",
+            "address": "1 Cardinals Dr, Glendale, AZ 85305",
+            "area": {
+              "type-id": "6fd8f29a-3d0a-32fc-980d-ea697b69da78",
+              "name": "Glendale",
+              "sort-name": "Glendale",
+              "id": "a5f2e4d7-1a7c-4313-9d1b-c6b6929cde96",
+              "type": "City",
+              "disambiguation": ""
+            },
+            "disambiguation": ""
+          },
+          "source-credit": ""
+        },
+        {
+          "type": "part of",
+          "begin": null,
+          "attributes": [
+            "number"
+          ],
+          "direction": "forward",
+          "ended": false,
+          "target-credit": "",
+          "attribute-ids": {
+            "number": "a59c5830-5ec7-38fe-9a21-c7ea54f6650a"
+          },
+          "end": null,
+          "ordering-key": 59,
+          "type-id": "707d947d-9563-328a-9a7d-0c5b9c3a9791",
+          "attribute-values": {
+            "number": "2.11"
+          },
+          "target-type": "series",
+          "series": {
+            "type-id": "8ff6df0e-3dce-3bdf-bd57-d386c51b0060",
+            "id": "e3dbc677-0209-4904-a940-fcbb149f5423",
+            "type": "Tour",
+            "disambiguation": "",
+            "name": "M72 World Tour"
+          },
+          "source-credit": ""
+        }
+      ],
+      "id": "456a612a-2250-4e70-9b29-69e378075466",
+      "type": "Concert",
+      "life-span": {
+        "end": "2023-09-09",
+        "begin": "2023-09-09",
+        "ended": true
+      },
+      "name": "M72 World Tour: Glendale",
+      "time": "",
+      "setlist": "",
+      "disambiguation": "night 2",
+      "type-id": "ef55e8d7-3d00-394a-8012-f5506a29ff0b",
+      "cancelled": false
+    }
+  ]
+}

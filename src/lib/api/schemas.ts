@@ -401,6 +401,8 @@ export const ErrorCodeSchema = z.enum([
   "CONCERT_CREATE_NOT_ALLOWED",
   "CONCERT_CREATE_LIMIT",
   "CONCERT_MERGE_INVALID",
+  "CONCERT_LINK_INVALID",
+  "CONCERT_LINK_CONFLICT",
 "MODERATION_REPORT_NOT_FOUND",
   "RESTRICTION_NOT_FOUND",
   "SOCIAL_SUSPENSION_ACTIVE",
@@ -3513,3 +3515,9 @@ export const MergeConcertRequestSchema = z.object({
   reason: z.string().trim().min(1).max(1000),
 });
 export type MergeConcertRequest = z.infer<typeof MergeConcertRequestSchema>;
+
+// Sugerencias de enlace (openspec: add-shared-concerts-phase3, ADR 0059).
+
+/** Enlazar un recuerdo a un concierto o descartarlo como sugerencia. */
+export const ConcertLinkRequestSchema = z.object({ concertId: z.uuid() });
+export type ConcertLinkRequest = z.infer<typeof ConcertLinkRequestSchema>;

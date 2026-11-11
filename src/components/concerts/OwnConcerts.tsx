@@ -6,7 +6,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RowMenu, RowMenuItem } from "@/components/ui/RowMenu";
-import { removeConcert } from "@/lib/api/concerts";
+import { removeConcert, unlinkConcertEntry } from "@/lib/api/concerts";
 import type { ConcertEntryDto, ConcertListResponse } from "@/lib/api/schemas";
 import { CommunityConcertDialog } from "./CommunityConcertDialog";
 import { ConcertFormDialog } from "./ConcertFormDialog";
@@ -15,7 +15,8 @@ import { formatConcertDate } from "./concert-format";
 
 // Gestión de Mis conciertos (openspec: add-my-concerts): totales, registrar (con buscador de artistas), editar (con la
 // audiencia) y quitar con confirmación. Los datos vienen del servidor; tras cada cambio se refresca la ruta. Un recuerdo
-// sin enlazar con fecha completa, ciudad y país ofrece "Compartir este concierto" (add-shared-concerts-phase2).
+// sin enlazar con fecha completa, ciudad y país ofrece "Compartir este concierto" (add-shared-concerts-phase2); uno
+// enlazado, "Desvincular del concierto" (add-shared-concerts-phase3).
 
 interface OwnConcertsProps {
   initial: ConcertListResponse;
@@ -41,12 +42,24 @@ export function OwnConcerts({ initial, filter }: OwnConcertsProps) {
   const router = useRouter();
   const [dialog, setDialog] = useState<OpenDialog>(null);
   const [removeError, setRemoveError] = useState(false);
+  const [unlinkError, setUnlinkError] = useState(false);
   const { totals, entries } = initial;
 
   const saved = () => {
     setDialog(null);
     router.refresh();
   };
+
+  /** Desvincula del concierto compartido sin borrar el recuerdo (add-shared-concerts-phase3). */
+  async function unlink(entry: ConcertEntryDto) {
+    setUnlinkError(false);
+    try {
+      await unlinkConcertEntry(entry.id);
+      router.refresh();
+    } catch {
+      setUnlinkError(true);
+    }
+  }
 
   async function confirmRemove(entry: ConcertEntryDto) {
     setRemoveError(false);
@@ -88,6 +101,11 @@ export function OwnConcerts({ initial, filter }: OwnConcertsProps) {
           {t("row.removeError")}
         </p>
       )}
+      {unlinkError && (
+        <p role="alert" className="font-data text-xs text-danger">
+          {t("row.unlinkError")}
+        </p>
+      )}
 
       {entries.length === 0 ? (
         <div className="flex flex-col gap-1 rounded border border-ink-border bg-ink-surface p-6">
@@ -110,6 +128,7 @@ export function OwnConcerts({ initial, filter }: OwnConcertsProps) {
               {isShareableEntry(entry) && (
                 <RowMenuItem onSelect={() => setDialog({ kind: "share", entry })}>{t("community.share")}</RowMenuItem>
               )}
+              {entry.concertId && <RowMenuItem onSelect={() => void unlink(entry)}>{t("row.unlink")}</RowMenuItem>}
               <RowMenuItem danger onSelect={() => setDialog({ kind: "remove", entry })}>
                 {t("row.remove")}
               </RowMenuItem>

@@ -1536,6 +1536,11 @@ export const concert = pgTable(
     cityKey: text("city_key").generatedAlwaysAs(sql`search_key(city)`),
     confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
     mergedIntoId: uuid("merged_into_id").references((): AnyPgColumn => concert.id, { onDelete: "set null" }),
+    // Fase 3 (migración 0095, add-shared-concerts-phase3, ADR 0059): gira de MusicBrainz, festival del que es un día o
+    // escenario (relación `parts`) y fin del rango de fechas de un festival.
+    seriesId: uuid("series_id").references((): AnyPgColumn => concertSeries.id, { onDelete: "set null" }),
+    parentId: uuid("parent_id").references((): AnyPgColumn => concert.id, { onDelete: "set null" }),
+    endDate: date("end_date"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -1556,6 +1561,10 @@ export const concert = pgTable(
       sql`${t.source} <> 'community' OR ${t.status} <> 'confirmed' OR ${t.confirmedAt} IS NOT NULL`,
     ),
     check("chk_concert_merged", sql`${t.mergedIntoId} IS NULL OR (${t.status} = 'hidden' AND ${t.mergedIntoId} <> ${t.id})`),
+    index("idx_concert_series").on(t.seriesId, t.eventDate).where(sql`${t.seriesId} IS NOT NULL`),
+    index("idx_concert_parent").on(t.parentId, t.eventDate).where(sql`${t.parentId} IS NOT NULL`),
+    check("chk_concert_parent", sql`${t.parentId} IS NULL OR ${t.parentId} <> ${t.id}`),
+    check("chk_concert_end_date", sql`${t.endDate} IS NULL OR ${t.endDate} >= ${t.eventDate}`),
     check("chk_concert_name", sql`length(${t.name}) BETWEEN 1 AND 300`),
     check("chk_concert_kind", sql`${t.kind} IN ('concert', 'festival')`),
     check("chk_concert_source", sql`${t.source} IN ('musicbrainz', 'community')`),
@@ -1568,6 +1577,35 @@ export const concert = pgTable(
 );
 
 export type ConcertRow = typeof concert.$inferSelect;
+
+/** Gira de MusicBrainz (serie de tipo `Tour`, migración 0095, add-shared-concerts-phase3). */
+export const concertSeries = pgTable(
+  "concert_series",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    mbid: uuid("mbid").notNull().unique(),
+    name: text("name").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [check("chk_concert_series_name", sql`length(${t.name}) BETWEEN 1 AND 300`)],
+);
+
+export type ConcertSeriesRow = typeof concertSeries.$inferSelect;
+
+/** "No es este": un concierto descartado como sugerencia de enlace para un recuerdo (migración 0095). */
+export const concertLinkDismissal = pgTable(
+  "concert_link_dismissal",
+  {
+    entryId: uuid("entry_id")
+      .notNull()
+      .references(() => concertEntry.id, { onDelete: "cascade" }),
+    concertId: uuid("concert_id")
+      .notNull()
+      .references(() => concert.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.entryId, t.concertId] }), index("idx_concert_link_dismissal_concert").on(t.concertId)],
+);
 
 /** Cartel de un concierto: el artista de MusicBrainz y, si ya está en el catálogo, su fila (sin crear stubs). */
 export const concertPerformer = pgTable(

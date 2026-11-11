@@ -1123,6 +1123,13 @@ obligatorio en un reporte de concierto y nulo en los demás; la migración `0094
 persona y concierto. `moderation_action.concert_id` (`ON DELETE SET NULL`) entra en el `CHECK` de objetivo (`<= 1`) y la
 acción `merge` en el de acciones.
 
+**Fase 3 (migración `0095`, `add-shared-concerts-phase3`, ADR 0059):** `concert_series` (giras de MusicBrainz: `mbid`
+único y `name` 1–300). En `concert`, `series_id` (`ON DELETE SET NULL`), `parent_id` (festival del que es un día o
+escenario, `ON DELETE SET NULL`, `CHECK` distinto de `id`) y `end_date` (fin del rango de un festival, `CHECK` ≥
+`event_date`), con índices parciales `idx_concert_series` e `idx_concert_parent` (`…, event_date`).
+`concert_link_dismissal` ("No es este" de una sugerencia de enlace): `entry_id` y `concert_id` con `ON DELETE CASCADE`,
+PK de los dos e índice por `concert_id`.
+
 ## `wanted_entry`
 
 **Propósito:** wishlist de colección, "En tu búsqueda" (migración `0028`, cambio

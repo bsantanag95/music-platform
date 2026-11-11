@@ -3,10 +3,12 @@
 // recuerdo, enlazado de forma opcional (ADR 0056). Las lecturas públicas solo ven conciertos confirmados y no cancelados.
 // Fase 2 (add-shared-concerts-phase2, ADR 0058): con sesión también se ven los de la comunidad por confirmar (sección
 // "Por confirmar" y su página, fuera de toda cifra), y "Estuve ahí" en ellos suma para confirmarlos.
+// Fase 3 (add-shared-concerts-phase3, ADR 0059): cada concierto lleva su gira y su festival; la página de un festival
+// reúne sus días y escenarios y su cartel; "Estuve ahí" copia la gira al recuerdo que crea.
 
 import { and, asc, count, countDistinct, desc, eq, gt, inArray, isNull, lte, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { appUser, concert, concertEntry, concertPerformer } from "@/db/schema";
+import { appUser, concert, concertEntry, concertPerformer, concertSeries } from "@/db/schema";
 import { countingAttendees, evaluateConfirmation, missingConfirmations, type Executor } from "./confirmation";
 import { ApiError } from "@/lib/api/errors";
 import { isValidConcertDate } from "@/lib/api/schemas";
@@ -25,6 +27,14 @@ export const UPCOMING_CONCERTS_MAX = 50;
 export const CONCERT_ATTENDEES_MAX = 50;
 /** Tope de la sección "Por confirmar" de la pestaña. */
 export const PENDING_CONCERTS_MAX = 50;
+/** Días y escenarios de un festival que se listan en su página. */
+export const FESTIVAL_PARTS_MAX = 200;
+
+/** Gira o festival al que pertenece un concierto. */
+export interface ConcertGroupRef {
+  id: string;
+  name: string;
+}
 
 export interface SharedConcertSummary {
   id: string;
@@ -39,6 +49,12 @@ export interface SharedConcertSummary {
   /** Si quien mira estuvo; `null` sin sesión. */
   attending: boolean | null;
   upcoming: boolean;
+  /** Fin del rango de un festival de varios días; `null` si es de un día. */
+  endDate: string | null;
+  /** Gira de MusicBrainz. */
+  tour: ConcertGroupRef | null;
+  /** Festival del que es un día o un escenario. */
+  parent: ConcertGroupRef | null;
 }
 
 export interface PendingConcertSummary extends SharedConcertSummary {
@@ -74,7 +90,12 @@ export interface SharedConcertDetail extends SharedConcertSummary {
   /** "Registrado por": solo en uno de la comunidad confirmado, con la cuenta activa y sin bloqueo con quien mira. */
   registeredBy: ConcertAttendee | null;
   setlistfmUrl: string | null;
+  /** Cartel: el propio y, en un festival, el de sus días y escenarios, sin repetir artistas. */
   performers: ConcertPerformerView[];
+  /** Si "Estuve ahí" tiene sentido: algún artista del cartel propio está en el catálogo (un festival sin cartel, no). */
+  attendable: boolean;
+  /** Días y escenarios conocidos de un festival, por fecha. */
+  parts: SharedConcertSummary[];
   /** Personas que quien mira puede ver, hasta `CONCERT_ATTENDEES_MAX`. */
   visibleAttendees: ConcertAttendee[];
   /** Personas visibles que no entraron en la lista. */
@@ -94,9 +115,23 @@ const summarySelection = {
   venue: concert.venue,
   city: concert.city,
   country: concert.country,
+  endDate: concert.endDate,
+  seriesId: concert.seriesId,
+  parentId: concert.parentId,
 } as const;
 
-type SummaryRow = { id: string; name: string; kind: string; eventDate: string; venue: string | null; city: string | null; country: string | null };
+type SummaryRow = {
+  id: string;
+  name: string;
+  kind: string;
+  eventDate: string;
+  venue: string | null;
+  city: string | null;
+  country: string | null;
+  endDate: string | null;
+  seriesId: string | null;
+  parentId: string | null;
+};
 
 function thresholded(value: number): ThresholdedCount | null {
   if (value === 0) return null;
@@ -130,17 +165,58 @@ async function attendingSet(viewerId: string | null, concertIds: string[]): Prom
   return new Set(rows.map((row) => row.concertId!));
 }
 
+/** Nombres de las giras y los festivales de un lote de conciertos (dos consultas, no una por concierto). */
+async function groupRefs(rows: SummaryRow[]): Promise<{ tours: Map<string, string>; parents: Map<string, string> }> {
+  const seriesIds = [...new Set(rows.map((row) => row.seriesId).filter((id): id is string => id !== null))];
+  const parentIds = [...new Set(rows.map((row) => row.parentId).filter((id): id is string => id !== null))];
+  const [tours, parents] = await Promise.all([
+    seriesIds.length
+      ? db.select({ id: concertSeries.id, name: concertSeries.name }).from(concertSeries).where(inArray(concertSeries.id, seriesIds))
+      : Promise.resolve([]),
+    parentIds.length
+      ? db
+          .select({ id: concert.id, name: concert.name })
+          .from(concert)
+          .where(and(inArray(concert.id, parentIds), PUBLIC_CONCERT))
+      : Promise.resolve([]),
+  ]);
+  return { tours: new Map(tours.map((t) => [t.id, t.name])), parents: new Map(parents.map((p) => [p.id, p.name])) };
+}
+
+function groupRef(id: string | null, names: Map<string, string>): ConcertGroupRef | null {
+  const name = id ? names.get(id) : undefined;
+  return id && name ? { id, name } : null;
+}
+
 async function summarize(rows: SummaryRow[], viewerId: string | null, now: Date): Promise<SharedConcertSummary[]> {
   const ids = rows.map((row) => row.id);
-  const [counts, attending] = await Promise.all([attendeeCounts(ids), attendingSet(viewerId, ids)]);
+  const [counts, attending, groups] = await Promise.all([attendeeCounts(ids), attendingSet(viewerId, ids), groupRefs(rows)]);
   const today = todayIso(now);
-  return rows.map((row) => ({
+  return rows.map(({ seriesId, parentId, ...row }) => ({
     ...row,
     kind: row.kind as ConcertKind,
     attendees: thresholded(counts.get(row.id) ?? 0),
     attending: attending ? attending.has(row.id) : null,
     upcoming: row.eventDate > today,
+    tour: groupRef(seriesId, groups.tours),
+    parent: groupRef(parentId, groups.parents),
   }));
+}
+
+/** Conciertos públicos que cumplen `where`, por fecha ascendente, resumidos para quien mira (página de la gira). */
+export async function listPublicConcerts(
+  where: SQL,
+  viewerId: string | null,
+  limit: number,
+  now: Date = new Date(),
+): Promise<SharedConcertSummary[]> {
+  const rows = await db
+    .select(summarySelection)
+    .from(concert)
+    .where(and(where, PUBLIC_CONCERT))
+    .orderBy(asc(concert.eventDate), asc(concert.id))
+    .limit(limit);
+  return summarize(rows, viewerId, now);
 }
 
 /** Conciertos donde toca el artista (por su fila del catálogo o por su `mbid`). */
@@ -199,17 +275,14 @@ async function listPendingConcerts(
     .orderBy(desc(concert.eventDate), desc(concert.id))
     .limit(PENDING_CONCERTS_MAX);
   if (rows.length === 0) return [];
-  const [attending, counting] = await Promise.all([
-    attendingSet(viewerId, rows.map((row) => row.id)),
+  const [summaries, counting] = await Promise.all([
+    summarize(rows, viewerId, now),
     Promise.all(rows.map((row) => countingAttendees(db, row.id, now))),
   ]);
-  const today = todayIso(now);
-  return rows.map((row, index) => ({
-    ...row,
-    kind: row.kind as ConcertKind,
+  return summaries.map((summary, index) => ({
+    ...summary,
     attendees: null,
-    attending: attending?.has(row.id) ?? false,
-    upcoming: row.eventDate > today,
+    attending: summary.attending ?? false,
     missing: missingConfirmations(counting[index] ?? 0),
   }));
 }
@@ -280,17 +353,26 @@ export async function getSharedConcert(
   if (!row) return null;
   const { status, source, createdBy, setlistfmUrl, ...base } = row;
   const pending = status === "pending";
-  const [[summary], performers, attendees, counting, creator] = await Promise.all([
+  const [[summary], performers, attendees, counting, creator, parts] = await Promise.all([
     summarize([base], viewerId, now),
     db
-      .select({ name: concertPerformer.artistName, artistId: concertPerformer.artistId, role: concertPerformer.role })
+      .select({
+        name: concertPerformer.artistName,
+        artistId: concertPerformer.artistId,
+        artistMbid: concertPerformer.artistMbid,
+        role: concertPerformer.role,
+      })
       .from(concertPerformer)
       .where(eq(concertPerformer.concertId, concertId))
       .orderBy(asc(concertPerformer.position)),
     pending ? Promise.resolve({ list: [] as ConcertAttendee[], more: 0 }) : visibleAttendees(concertId, viewerId),
     pending ? countingAttendees(db, concertId, now) : Promise.resolve(0),
     !pending && source === "community" ? registeredBy(createdBy, viewerId) : Promise.resolve(null),
+    base.kind === "festival" ? festivalParts(concertId, viewerId, now) : Promise.resolve({ parts: [], performers: [] }),
   ]);
+  // Un festival sin recinto propio toma el de sus partes si todas coinciden.
+  const venues = new Set(parts.parts.map((part) => `${part.venue}|${part.city}|${part.country}`));
+  const shared = !summary!.venue && venues.size === 1 ? parts.parts[0]! : null;
   return {
     ...summary!,
     attendees: pending ? null : summary!.attendees,
@@ -299,10 +381,59 @@ export async function getSharedConcert(
     missing: pending ? missingConfirmations(counting) : null,
     registeredBy: creator,
     setlistfmUrl,
-    performers: performers.map((p) => ({ ...p, role: p.role as PerformerRole })),
+    ...(shared ? { venue: shared.venue, city: shared.city, country: shared.country } : {}),
+    performers: mergeLineup([...performers, ...parts.performers]),
+    attendable: performers.some((p) => p.artistId !== null),
+    parts: parts.parts,
     visibleAttendees: attendees.list,
     moreAttendees: attendees.more,
   };
+}
+
+type LineupRow = { name: string; artistId: string | null; artistMbid: string; role: string };
+
+const ROLE_RANK: Record<string, number> = { main: 0, support: 1, guest: 2 };
+
+/** Cartel sin repetir artistas: cada uno con su rol más alto, en el orden en que aparece. */
+function mergeLineup(rows: LineupRow[]): ConcertPerformerView[] {
+  const byArtist = new Map<string, ConcertPerformerView>();
+  for (const row of rows) {
+    const current = byArtist.get(row.artistMbid);
+    const role = row.role as PerformerRole;
+    if (!current) byArtist.set(row.artistMbid, { name: row.name, artistId: row.artistId, role });
+    else if ((ROLE_RANK[role] ?? 9) < (ROLE_RANK[current.role] ?? 9)) current.role = role;
+  }
+  return [...byArtist.values()];
+}
+
+/** Días y escenarios públicos de un festival, por fecha, y su cartel. */
+async function festivalParts(
+  festivalId: string,
+  viewerId: string | null,
+  now: Date,
+): Promise<{ parts: SharedConcertSummary[]; performers: LineupRow[] }> {
+  const rows = await db
+    .select(summarySelection)
+    .from(concert)
+    .where(and(eq(concert.parentId, festivalId), PUBLIC_CONCERT))
+    .orderBy(asc(concert.eventDate), asc(concert.name))
+    .limit(FESTIVAL_PARTS_MAX);
+  if (rows.length === 0) return { parts: [], performers: [] };
+  const [parts, performers] = await Promise.all([
+    summarize(rows, viewerId, now),
+    db
+      .select({
+        name: concertPerformer.artistName,
+        artistId: concertPerformer.artistId,
+        artistMbid: concertPerformer.artistMbid,
+        role: concertPerformer.role,
+      })
+      .from(concertPerformer)
+      .innerJoin(concert, eq(concert.id, concertPerformer.concertId))
+      .where(inArray(concertPerformer.concertId, rows.map((row) => row.id)))
+      .orderBy(asc(concert.eventDate), asc(concertPerformer.position)),
+  ]);
+  return { parts, performers };
 }
 
 /** Destino de un concierto fusionado (su página redirige ahí); `null` si no se fusionó. */
@@ -342,6 +473,15 @@ export interface AttendTarget {
   venue: string | null;
   city: string | null;
   country: string | null;
+  /** Gira: su nombre es el valor inicial de `tour` en un recuerdo nuevo (add-shared-concerts-phase3). */
+  seriesId?: string | null;
+}
+
+/** Nombre de la gira recortado al tope del recuerdo (100), o `null`. */
+async function tourNameFor(executor: Executor, seriesId: string | null | undefined): Promise<string | null> {
+  if (!seriesId) return null;
+  const [row] = await executor.select({ name: concertSeries.name }).from(concertSeries).where(eq(concertSeries.id, seriesId)).limit(1);
+  return row ? row.name.slice(0, 100) : null;
 }
 
 /**
@@ -402,6 +542,7 @@ export async function linkOrCreateEntry(
       venue: target.venue ? target.venue.slice(0, 100) : null,
       city: target.city ? target.city.slice(0, 100) : null,
       country: target.country,
+      tour: await tourNameFor(executor, target.seriesId),
       audience: await resolveNewContentAudience(userId, "concert"),
       concertId: target.id,
       fromConcert: true,

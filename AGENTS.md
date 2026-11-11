@@ -145,6 +145,18 @@ de cuál de las filas con el mismo título haya en la BD.
 >   pegajosa), la visibilidad con y sin sesión y el enlace en el perfil, "Compartir este concierto", los candidatos, los
 >   reportes, ocultar y restaurar, la fusión manual (recuerdo repetido sin enlace, `updated_at` conservado) y la fusión
 >   automática con MusicBrainz.
+> - `smoke-test-concert-links-tours.ts` simula MusicBrainz (no sale a internet), crea dos artistas sintéticos (MBID
+>   `5e0ce000-0000-4000-8000-00000000dd0*`), conciertos y una gira con MBID `5e0ce000-0000-4000-8000-00000000dd*`, un
+>   concierto de la comunidad con esos artistas y usuarios `smoke_ct_*` (uno con 500 recuerdos), y los borra al terminar
+>   (también si falla). Si se interrumpió, limpiar con `DELETE FROM app_user WHERE username LIKE 'smoke_ct_%'; DELETE FROM
+>   concert WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000dd%' OR id IN (SELECT concert_id FROM concert_performer
+>   WHERE artist_mbid::text LIKE '5e0ce000-0000-4000-8000-00000000dd%'); DELETE FROM concert_series WHERE mbid::text LIKE
+>   '5e0ce000-0000-4000-8000-00000000dd%'; DELETE FROM artist WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-00000000dd%';`.
+>   Necesita la migración `0095`. Verifica los `CHECK` de `0095` por su nombre, giras y festival padre desde la
+>   sincronización (un padre existente no se pisa, un reprogramado no crea festival), las páginas de la gira y del festival,
+>   "Estuve ahí" con la gira, las sugerencias de enlace (día ±1, mes, año, ciudad, país, artista, tope, descarte), enlazar
+>   (inválido, conflicto, descartado, confirmación), desvincular, cascadas y la lectura de sugerencias bajo 100 ms con 500
+>   recuerdos.
 > - `smoke-test-artist-comment-topics.ts` crea un artista y un álbum sintéticos (MBID
 >   `5e0ce000-0000-4000-8000-0000000009a0` / `...09a1`) y usuarios `smoke_topic_*`, y los borra al terminar
 >   (también si falla; el `ON DELETE CASCADE` limpia los comentarios). Si se interrumpió, limpiar con

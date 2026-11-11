@@ -65,8 +65,20 @@ Un festival se registra como un registro por artista. El mismo artista puede ten
   (no ocurrió, duplicado, datos erróneos) con sesión. Uno fusionado redirige al que quedó.
 - **Moderación:** los reportes de conciertos llegan a la consola (`/moderation`, filtro Concierto) con ocultar,
   restaurar y fusionar (por la dirección o el id del concierto que se queda).
-- Fase 3: sugerir crear conciertos desde recuerdos coincidentes, desvincular, festivales por días y escenarios, proponer
-  lo confirmado a MusicBrainz.
+
+## Giras, festivales y sugerencias (Fase 3, `add-shared-concerts-phase3`, ADR 0059)
+
+- **¿Son estos tus conciertos?** (Mis conciertos, sin filtro): para cada recuerdo sin enlazar, hasta 3 conciertos del
+  mismo artista con fecha compatible y la misma ciudad (obligatoria si la fecha no es exacta). "Enlazar" no cambia lo
+  escrito; "No es este" lo descarta. Hasta 20 a la vez, con "y N más".
+- **Desvincular del concierto** en el menú de un recuerdo enlazado: conserva el recuerdo.
+- **Giras:** cada concierto nombra su gira ("Gira: …") con enlace a `/tour/<slug>`: sus fechas, sus artistas y en cuántas
+  estuviste. "Estuve ahí" lleva la gira al recuerdo nuevo.
+- **Festivales:** un día o escenario dice "Parte de <festival>"; la página del festival muestra su rango de fechas, sus
+  días y escenarios por día (cada uno con "Estuve ahí") y el cartel reunido.
+- **Agregar a MusicBrainz:** en un concierto de la comunidad confirmado, con sesión, abre el alta de eventos de
+  MusicBrainz con nombre y fecha escritos.
+- Pendiente: el país de los conciertos de MusicBrainz, avisos, ediciones de festivales.
 
 ## Fuera de alcance (por ahora)
 

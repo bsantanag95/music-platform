@@ -59,3 +59,11 @@ describe("buildConcertDate", () => {
     expect(buildConcertDate("", "3", "")).toBeNull();
   });
 });
+
+describe("formatConcertRange (add-shared-concerts-phase3)", () => {
+  it("rango de un festival en el mismo mes", async () => {
+    const { formatConcertRange } = await import("./shared-concert-format");
+    expect(formatConcertRange("2019-06-26", "2019-06-30", "es")).toMatch(/26.*30.*junio.*2019/);
+    expect(formatConcertRange("2019-06-26", "2019-06-30", "en")).toMatch(/June 26.*30.*2019/);
+  });
+});

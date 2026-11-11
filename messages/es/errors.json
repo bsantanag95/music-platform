@@ -334,5 +334,13 @@
   "CONCERT_MERGE_INVALID": {
     "title": "Fusión no válida",
     "description": "Ese concierto no se puede fusionar o restaurar."
+  },
+  "CONCERT_LINK_INVALID": {
+    "title": "El recuerdo no coincide",
+    "description": "Ese concierto no coincide con tu recuerdo."
+  },
+  "CONCERT_LINK_CONFLICT": {
+    "title": "Ya tienes ese concierto",
+    "description": "Otro de tus recuerdos ya está enlazado a ese concierto."
   }
 }

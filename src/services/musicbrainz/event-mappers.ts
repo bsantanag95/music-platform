@@ -4,8 +4,11 @@
 // Reglas: solo `Concert` y `Festival` con fecha completa; el recinto sale de la relación `held at` con un `place`, la
 // ciudad del área de ese `place` y el país solo cuando el área es un país (la ciudad llega sin país: D4). Los cancelados
 // se devuelven marcados (no se listan, pero se guardan para no reimportarlos como nuevos).
+// Fase 3 (add-shared-concerts-phase3, ADR 0059): la gira (primera serie de tipo `Tour`), el festival del que el evento es
+// un día o un escenario (relación `parts` hacia atrás con un `Festival`) y el fin del rango de fechas de un festival. Las
+// demás relaciones entre eventos (`rescheduled as`…) se ignoran.
 
-import type { MBEvent, MBEventArea } from "./types";
+import type { MBEvent, MBEventArea, MBEventRelation } from "./types";
 
 export type ConcertKind = "concert" | "festival";
 export type PerformerRole = "main" | "support" | "guest";
@@ -17,11 +20,29 @@ export interface ConcertPerformerInput {
   position: number;
 }
 
+export interface ConcertTourInput {
+  mbid: string;
+  name: string;
+}
+
+/** Festival padre tal como lo trae la relación: sin recinto ni cartel. */
+export interface ConcertParentInput {
+  mbid: string;
+  name: string;
+  eventDate: string; // 'YYYY-MM-DD'
+  endDate: string | null;
+  cancelled: boolean;
+}
+
 export interface ConcertInput {
   mbid: string;
   name: string;
   kind: ConcertKind;
   eventDate: string; // 'YYYY-MM-DD'
+  /** Fin de un rango de varios días (festival); `null` si es de un día. */
+  endDate: string | null;
+  tour: ConcertTourInput | null;
+  parent: ConcertParentInput | null;
   venue: string | null;
   venueMbid: string | null;
   city: string | null;
@@ -56,6 +77,36 @@ function countryOf(area: MBEventArea | null | undefined): string | null {
   if (!area || area.type !== "Country") return null;
   const code = area["iso-3166-1-codes"]?.[0];
   return code && /^[A-Z]{2}$/.test(code) ? code : null;
+}
+
+/** Fin de un rango solo si es una fecha completa posterior al inicio (un día no tiene fin propio). */
+function endOf(begin: string, end: string | null | undefined): string | null {
+  return end && FULL_DATE.test(end) && end > begin ? end : null;
+}
+
+/** La gira: la primera relación `part of` con una serie de tipo `Tour`. */
+function tourOf(relations: MBEventRelation[]): ConcertTourInput | null {
+  const series = relations.find(
+    (r) => r["target-type"] === "series" && r.type === "part of" && r.series && r.series.type === "Tour",
+  )?.series;
+  const name = clip(series?.name, 300);
+  return series && name ? { mbid: series.id, name } : null;
+}
+
+/** El festival del que el evento es parte: `parts` hacia atrás con un `Festival` de fecha completa. */
+function parentOf(relations: MBEventRelation[], ownMbid: string): ConcertParentInput | null {
+  const parent = relations.find(
+    (r) =>
+      r["target-type"] === "event" &&
+      r.type === "parts" &&
+      r.direction === "backward" &&
+      r.event?.type === "Festival" &&
+      r.event.id !== ownMbid,
+  )?.event;
+  const begin = parent?.["life-span"]?.begin ?? "";
+  const name = clip(parent?.name, 300);
+  if (!parent || !name || !FULL_DATE.test(begin)) return null;
+  return { mbid: parent.id, name, eventDate: begin, endDate: endOf(begin, parent["life-span"]?.end), cancelled: parent.cancelled === true };
 }
 
 /** Concierto compartido a partir de un evento de MusicBrainz, o `null` si no se importa. */
@@ -96,6 +147,9 @@ export function mapEventToConcert(event: MBEvent): ConcertInput | null {
     name,
     kind,
     eventDate: date,
+    endDate: endOf(date, event["life-span"]?.end),
+    tour: tourOf(relations),
+    parent: parentOf(relations, event.id),
     venue: clip(place?.name, 300),
     venueMbid: place?.id ?? null,
     city: area && area.type !== "Country" ? clip(area.name, 200) : null,

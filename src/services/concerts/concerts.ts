@@ -128,7 +128,7 @@ function assertDate(eventDate: string): void {
   if (!isValidConcertDate(eventDate)) throw new ApiError("VALIDATION_ERROR", 400, "La fecha no es válida");
 }
 
-async function getOwned(entryId: string, userId: string): Promise<ConcertEntry> {
+export async function getOwned(entryId: string, userId: string): Promise<ConcertEntry> {
   const [row] = await db
     .select(ownSelection)
     .from(concertEntry)

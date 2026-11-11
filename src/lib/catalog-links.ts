@@ -55,6 +55,11 @@ export function concertSegment(name: string, concertId: string): string {
   return buildSegment(truncateSlug(slugify(name), LIST_SLUG_MAX), concertId);
 }
 
+/** Segmento canónico de una gira: `<nombre>-<id>` (openspec: add-shared-concerts-phase3). */
+export function tourSegment(name: string, seriesId: string): string {
+  return buildSegment(truncateSlug(slugify(name), LIST_SLUG_MAX), seriesId);
+}
+
 /** Segmento canónico de una reseña: `<usuario>-<álbum>-<id>`. */
 export function reviewSegment(username: string, albumTitle: string, reviewId: string): string {
   return buildSegment(joinParts(slugify(username), slugify(albumTitle)), reviewId);
@@ -97,6 +102,10 @@ export function reviewHref(username: string, albumTitle: string, reviewId: strin
 /** Página de un concierto compartido. */
 export function concertHref(name: string, concertId: string): string {
   return `/concert/${concertSegment(name, concertId)}`;
+}
+
+export function tourHref(name: string, seriesId: string): string {
+  return `/tour/${tourSegment(name, seriesId)}`;
 }
 
 export function genreHref(slug: string): string {

@@ -76,3 +76,30 @@ export function reportSharedConcert(concertId: string, input: ReportConcertReque
     body: JSON.stringify(input),
   });
 }
+
+// Sugerencias de enlace y desvincular (openspec: add-shared-concerts-phase3).
+
+/** Enlaza un recuerdo propio a un concierto sugerido. */
+export function linkConcertEntry(entryId: string, concertId: string): Promise<ConcertEntryDto> {
+  return apiFetch(`/api/me/concerts/${encodeURIComponent(entryId)}/link`, ConcertEntryResponseSchema, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ concertId }),
+  }).then((response) => response.entry);
+}
+
+/** Desvincula un recuerdo de su concierto (lo conserva). */
+export function unlinkConcertEntry(entryId: string): Promise<ConcertEntryDto> {
+  return apiFetch(`/api/me/concerts/${encodeURIComponent(entryId)}/link`, ConcertEntryResponseSchema, { method: "DELETE" }).then(
+    (response) => response.entry,
+  );
+}
+
+/** "No es este": descarta la sugerencia. */
+export function dismissConcertSuggestion(entryId: string, concertId: string): Promise<null> {
+  return apiFetch(`/api/me/concerts/${encodeURIComponent(entryId)}/dismissals`, z.null(), {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ concertId }),
+  });
+}

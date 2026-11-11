@@ -2732,6 +2732,12 @@
     "users.signInToFollow",
     "users.unfollow"
   ],
+  "(catalog)/tour/[id]/page": [
+    "concerts.shared.attend",
+    "concerts.shared.attendError",
+    "concerts.shared.attending",
+    "concerts.shared.unattend"
+  ],
   "activity/page": [
     "catalog.social.topics.albums",
     "catalog.social.topics.general",
@@ -3720,6 +3726,14 @@
     "concerts.form.venue",
     "concerts.form.venuePlaceholder",
     "concerts.form.year",
+    "concerts.links.dismiss",
+    "concerts.links.error",
+    "concerts.links.intro",
+    "concerts.links.link",
+    "concerts.links.memory",
+    "concerts.links.more",
+    "concerts.links.pending",
+    "concerts.links.title",
     "concerts.register",
     "concerts.row.cancel",
     "concerts.row.edit",
@@ -3730,6 +3744,8 @@
     "concerts.row.removeMessage",
     "concerts.row.removeTitle",
     "concerts.row.setlist",
+    "concerts.row.unlink",
+    "concerts.row.unlinkError",
     "concerts.shared.attend",
     "concerts.shared.attendError",
     "concerts.shared.attending",

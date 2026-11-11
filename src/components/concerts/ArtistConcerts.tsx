@@ -1,6 +1,6 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { concertHref } from "@/lib/catalog-links";
+import { concertHref, tourHref } from "@/lib/catalog-links";
 import type { ArtistConcertsPage, PendingConcertSummary, SharedConcertSummary } from "@/services/concerts/shared";
 import { formatConcertDate } from "./concert-format";
 import { AddConcertButton } from "./AddConcertButton";
@@ -10,7 +10,8 @@ import { attendeesLabel, sharedConcertPlace } from "./shared-concert-format";
 // Pestaña Conciertos del artista (openspec: add-shared-concerts-phase1): próximos arriba, después los pasados por año.
 // Cada fila enlaza a la página del concierto y, con sesión, ofrece "Estuve ahí" en los pasados. Fase 2
 // (add-shared-concerts-phase2): con sesión, "Agregar un concierto" y la sección "Por confirmar" (sin cifra de personas,
-// con las confirmaciones que faltan); sin sesión no existe.
+// con las confirmaciones que faltan); sin sesión no existe. Fase 3 (add-shared-concerts-phase3): cada fila nombra su gira
+// y su festival, enlazados.
 
 interface ArtistConcertsProps {
   artist: { id: string; name: string };
@@ -41,6 +42,26 @@ function ConcertRow({ concert, artistId }: { concert: SharedConcertSummary | Pen
           )}
         </span>
         {place && <span className="font-body text-sm text-paper-muted">{place}</span>}
+        {(concert.tour || concert.parent) && (
+          <span className="flex flex-wrap gap-x-3 font-data text-xs text-paper-muted">
+            {concert.parent && (
+              <span>
+                {t("partOf")}{" "}
+                <Link href={concertHref(concert.parent.name, concert.parent.id)} className="text-paper hover:underline">
+                  {concert.parent.name}
+                </Link>
+              </span>
+            )}
+            {concert.tour && (
+              <span>
+                {t("tour")}{" "}
+                <Link href={tourHref(concert.tour.name, concert.tour.id)} className="text-paper hover:underline">
+                  {concert.tour.name}
+                </Link>
+              </span>
+            )}
+          </span>
+        )}
         {people && <span className="font-data text-xs text-paper-muted">{people}</span>}
       </div>
       {concert.attending !== null && !concert.upcoming && (

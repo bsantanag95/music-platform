@@ -27,7 +27,9 @@
     "removeMessage": "Se quitará el concierto de {artist} del {date}. No se puede deshacer.",
     "removeConfirm": "Quitar",
     "cancel": "Cancelar",
-    "removeError": "No se pudo quitar el concierto. Intenta de nuevo."
+    "removeError": "No se pudo quitar el concierto. Intenta de nuevo.",
+    "unlink": "Desvincular del concierto",
+    "unlinkError": "No se pudo desvincular. Intenta de nuevo."
   },
   "audience": {
     "private": "Privado",
@@ -107,9 +109,12 @@
       "morePeople": "{count, plural, one {y # persona más} other {y # personas más}}",
       "noVisiblePeople": "Nadie que puedas ver registró este concierto todavía.",
       "nobody": "Nadie registró este concierto todavía.",
-      "signIn": "Inicia sesión para decir que estuviste."
+      "signIn": "Inicia sesión para decir que estuviste.",
+      "parts": "Días y escenarios"
     },
-    "linked": "Ver concierto"
+    "linked": "Ver concierto",
+    "tour": "Gira:",
+    "partOf": "Parte de"
   },
   "community": {
     "add": "Agregar un concierto",
@@ -175,7 +180,8 @@
       "registeredBy": "Registrado por",
       "setlist": "Setlist en setlist.fm",
       "communitySource": "Concierto registrado por la comunidad.",
-      "musicbrainzSource": "Concierto de MusicBrainz (CC0)."
+      "musicbrainzSource": "Concierto de MusicBrainz (CC0).",
+      "addToMusicBrainz": "Agregar a MusicBrainz"
     },
     "report": {
       "open": "Reportar",
@@ -193,5 +199,23 @@
       "error": "No se pudo enviar. Intenta de nuevo.",
       "cancel": "Cancelar"
     }
+  },
+  "links": {
+    "title": "¿Son estos tus conciertos?",
+    "intro": "Conciertos que coinciden con recuerdos tuyos sin enlazar. Enlazarlos no cambia lo que escribiste.",
+    "memory": "Tu recuerdo: {artist}, {date}",
+    "pending": "Por confirmar",
+    "link": "Enlazar",
+    "dismiss": "No es este",
+    "error": "No se pudo guardar. Intenta de nuevo.",
+    "more": "{count, plural, one {y # sugerencia más} other {y # sugerencias más}}"
+  },
+  "tour": {
+    "metaTitle": "{name} · Gira",
+    "eyebrow": "Gira",
+    "dates": "{count, plural, one {# fecha} other {# fechas}}",
+    "attended": "{count, plural, one {estuviste en #} other {estuviste en #}}",
+    "past": "Fechas",
+    "source": "Giras de MusicBrainz (CC0)."
   }
 }

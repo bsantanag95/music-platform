@@ -3,7 +3,7 @@ import { screen, within } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import concertsEs from "../../../messages/es/concerts.json";
 import type { SharedConcertSummary } from "@/services/concerts/shared";
-import { concertHref } from "@/lib/catalog-links";
+import { concertHref, tourHref } from "@/lib/catalog-links";
 import { ArtistConcerts } from "./ArtistConcerts";
 
 vi.mock("@/i18n/navigation", () => ({
@@ -35,6 +35,9 @@ function concert(id: string, overrides: Partial<SharedConcertSummary> = {}): Sha
     attendees: null,
     attending: false,
     upcoming: false,
+    endDate: null,
+    tour: null,
+    parent: null,
     ...overrides,
   };
 }
@@ -124,5 +127,14 @@ describe("ArtistConcerts", () => {
     expect(within(pending).getByText("Faltan 2 confirmaciones")).toBeInTheDocument();
     expect(within(pending).getByRole("button", { name: shared.attend })).toBeInTheDocument();
     expect(within(pending).queryByText(/personas estuvieron/)).not.toBeInTheDocument();
+  });
+
+  it("gira y festival de cada fila, enlazados (add-shared-concerts-phase3)", () => {
+    const tour = { id: "00000000-0000-4000-8000-0000000000f1", name: "M72 World Tour" };
+    const parent = { id: "00000000-0000-4000-8000-0000000000f2", name: "Sonic Temple 2025" };
+    renderWithIntl(<ArtistConcerts artist={ARTIST} signedIn={false} baseHref="/a" data={page({ past: [concert("p1", { tour, parent })] })} />);
+    expect(screen.getByRole("link", { name: tour.name })).toHaveAttribute("href", tourHref(tour.name, tour.id));
+    expect(screen.getByRole("link", { name: parent.name })).toHaveAttribute("href", concertHref(parent.name, parent.id));
+    expect(screen.getByText(shared.partOf, { exact: false })).toBeInTheDocument();
   });
 });

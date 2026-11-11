@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import kuervosEvents from "./__fixtures__/kuervos-del-sur-events.json";
+import metallicaEvents from "./__fixtures__/metallica-tour-festival-events.json";
 import { mapEventToConcert } from "./event-mappers";
 import type { MBEvent, MBEventBrowseResponse } from "./types";
 
@@ -7,6 +8,9 @@ import type { MBEvent, MBEventBrowseResponse } from "./types";
 // Kuervos del Sur (browse del 2026-11-11).
 
 const KUERVOS = kuervosEvents as MBEventBrowseResponse;
+// Fase 3 (add-shared-concerts-phase3): browse real de Metallica con `series-rels+event-rels` (2026-11-11): un concierto
+// de gira, un día de festival que también es de dos giras y un concierto reprogramado.
+const METALLICA = metallicaEvents as MBEventBrowseResponse;
 
 function event(overrides: Partial<MBEvent> = {}): MBEvent {
   return {
@@ -91,5 +95,43 @@ describe("mapEventToConcert", () => {
 
   it("recorta un nombre más largo que el tope de la base", () => {
     expect(mapEventToConcert(event({ name: "x".repeat(400) }))?.name).toHaveLength(300);
+  });
+
+  it("gira: la serie de tipo Tour", () => {
+    const concert = mapEventToConcert(METALLICA.events[0]!);
+    expect(concert?.tour).toEqual({ mbid: "e3dbc677-0209-4904-a940-fcbb149f5423", name: "M72 World Tour" });
+    expect(concert?.parent).toBeNull();
+    expect(concert?.endDate).toBeNull();
+  });
+
+  it("día de festival: el festival padre con su rango y la primera gira", () => {
+    const day = mapEventToConcert(METALLICA.events[1]!);
+    expect(day?.parent).toMatchObject({ name: "Sonic Temple 2025", eventDate: "2025-05-08", endDate: "2025-05-11" });
+    expect(day?.tour?.name).toBe("M72 World Tour");
+    expect(day?.endDate).toBeNull();
+  });
+
+  it("reprogramado: no es un festival padre", () => {
+    const concert = mapEventToConcert(METALLICA.events[2]!);
+    expect(concert?.parent).toBeNull();
+    expect(concert?.tour?.name).toBe("M72 World Tour");
+  });
+
+  it("fin del rango solo si es posterior y completo; series que no son giras se ignoran", () => {
+    expect(mapEventToConcert(event({ type: "Festival", "life-span": { begin: "2019-06-26", end: "2019-06-30" } }))?.endDate).toBe("2019-06-30");
+    expect(mapEventToConcert(event({ "life-span": { begin: "2019-06-26", end: "2019-06" } }))?.endDate).toBeNull();
+    const series = { "target-type": "series", type: "part of", series: { id: "s1", name: "Lollapalooza", type: "Festival" } };
+    expect(mapEventToConcert(event({ relations: [series] }))?.tour).toBeNull();
+  });
+
+  it("padre con fecha parcial o que no es un festival: se ignora", () => {
+    const parts = (type: string, begin: string) => ({
+      "target-type": "event",
+      type: "parts",
+      direction: "backward" as const,
+      event: { id: "p1", name: "Padre", type, "life-span": { begin } },
+    });
+    expect(mapEventToConcert(event({ relations: [parts("Festival", "2019-06")] }))?.parent).toBeNull();
+    expect(mapEventToConcert(event({ relations: [parts("Concert", "2019-06-26")] }))?.parent).toBeNull();
   });
 });
