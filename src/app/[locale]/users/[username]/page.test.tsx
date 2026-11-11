@@ -73,6 +73,7 @@ vi.mock("./sections", () => ({
   ListsRail: () => null,
   CaminosRail: () => null,
   CollectionRail: () => null,
+  ConcertsRail: () => null,
   Level3LinksSection: () => null,
 }));
 

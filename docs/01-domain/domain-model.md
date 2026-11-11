@@ -180,6 +180,11 @@ contenido o su cuenta, un **hito** de su comentario o de su lista, un **lanzamie
   **no es un toggle**: un Usuario puede tener varias entradas para el mismo Álbum (distintos
   formatos, o copias distinguibles del mismo formato). Formato y atributos son dato del
   Usuario — el catálogo no modela soporte físico.
+- **Concierto asistido** ("Mis conciertos", `add-my-concerts`, ADR 0056): recuerdo de un Usuario de haber visto en
+  vivo a un Artista, con la fecha que recuerde (al menos el año), país, ciudad, recinto, gira, nota, un enlace opcional
+  al setlist en setlist.fm y audiencia propia. **No es un concierto verificado ni una entidad compartida**: dos personas
+  en el mismo concierto tienen registros independientes, y no es un toggle (varias funciones del mismo artista valen).
+  Un sistema futuro de conciertos se enlazaría de forma opcional, sin reescribir lo que escribió la persona.
 - **Actividad**: registro de lo que un Usuario fue valorando/comentando recientemente, visible para
   quienes lo siguen — la función inspirada en el "qué estás escuchando" de MSN.
 

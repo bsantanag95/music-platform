@@ -42,6 +42,8 @@ import laminasEs from "../../messages/es/laminas.json";
 import laminasEn from "../../messages/en/laminas.json";
 import shareEs from "../../messages/es/share.json";
 import shareEn from "../../messages/en/share.json";
+import concertsEs from "../../messages/es/concerts.json";
+import concertsEn from "../../messages/en/concerts.json";
 
 const messagesByLocale = {
   es: {
@@ -64,6 +66,7 @@ const messagesByLocale = {
     awards: awardsEs,
     notifications: notificationsEs,
     share: shareEs,
+    concerts: concertsEs,
     laminas: laminasEs,
   },
   en: {
@@ -86,6 +89,7 @@ const messagesByLocale = {
     awards: awardsEn,
     notifications: notificationsEn,
     share: shareEn,
+    concerts: concertsEn,
     laminas: laminasEn,
   },
 };

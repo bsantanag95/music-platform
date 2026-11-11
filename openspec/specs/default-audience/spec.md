@@ -8,7 +8,8 @@ Preferencia opcional de audiencia por defecto del contenido nuevo de biblioteca 
 
 El sistema SHALL permitir a cada usuario configurar, de forma opcional, una audiencia por
 defecto (`private`, `followers` o `public`) para el contenido nuevo de biblioteca: favoritos,
-entradas de diario, listas, copias de colección y entradas de la wishlist ("En tu búsqueda").
+entradas de diario, listas, copias de colección, entradas de la wishlist ("En tu búsqueda") y
+conciertos registrados (capability `concert-log`).
 La ausencia de valor (`NULL`) SHALL significar
 "según el tipo" y SHALL conservar los defaults de cada tipo vigentes cuando se aprobó este
 requisito. Los usuarios nuevos y los existentes SHALL comenzar sin valor.
@@ -30,10 +31,15 @@ requisito. Los usuarios nuevos y los existentes SHALL comenzar sin valor.
   audiencia
 - **THEN** la entrada nace `followers`, igual que una copia de colección
 
+#### Scenario: Default del tipo para los conciertos
+
+- **WHEN** un usuario sin audiencia por defecto registra un concierto sin indicar audiencia
+- **THEN** el registro nace `followers`, igual que una copia de colección
+
 ### Requirement: Alcance de la preferencia
 
-La preferencia SHALL aplicarse únicamente a los cinco tipos de contenido de biblioteca
-(favoritos, entradas de diario, listas, copias de colección y entradas de la wishlist). NO SHALL aplicarse a las
+La preferencia SHALL aplicarse únicamente a los seis tipos de contenido de biblioteca
+(favoritos, entradas de diario, listas, copias de colección, entradas de la wishlist y conciertos). NO SHALL aplicarse a las
 reseñas ni a los comentarios: no tienen audiencia propia y son contenido público visible en
 la página del álbum o la canción (ver `profile-reviews`). Una reseña SHALL seguir mostrándose
 en el perfil accesible del dueño con independencia de su audiencia por defecto.
@@ -51,7 +57,7 @@ en el perfil accesible del dueño con independencia de su audiencia por defecto.
 
 ### Requirement: Precedencia al crear contenido
 
-Al crear favoritos, entradas de diario, listas, copias de colección o entradas de la wishlist, la audiencia resultante
+Al crear favoritos, entradas de diario, listas, copias de colección, entradas de la wishlist o conciertos, la audiencia resultante
 SHALL resolverse con esta precedencia: el valor explícito de la petición, luego la audiencia por
 defecto del usuario y, si no la tiene, el default del tipo. La preferencia SHALL aplicarse en el
 servidor, no en el cliente.
@@ -77,6 +83,11 @@ servidor, no en el cliente.
 - **WHEN** un usuario con audiencia por defecto `private` agrega un disco a su wishlist sin
   indicar audiencia
 - **THEN** la entrada nace `private`
+
+#### Scenario: La preferencia alcanza a los conciertos
+
+- **WHEN** un usuario con audiencia por defecto `public` registra un concierto sin indicar audiencia
+- **THEN** el registro nace `public`
 
 ### Requirement: La preferencia no es retroactiva
 
@@ -137,7 +148,8 @@ mediante `PATCH /api/me/profile`. Una petición sin sesión SHALL responder `401
 
 El sistema SHALL permitir al usuario autenticado aplicar una audiencia (`private`, `followers`
 o `public`) a **todo su contenido de biblioteca existente** mediante una acción explícita: sus
-favoritos, entradas de diario, listas propias (`kind = 'standard'`) y copias de colección. La
+favoritos, entradas de diario, listas propias (`kind = 'standard'`), copias de colección y
+conciertos. La
 acción SHALL actualizar únicamente la audiencia de los elementos del propio usuario cuya
 audiencia difiera de la indicada, dentro de una única transacción, de modo que o se aplica a
 todos o a ninguno. SHALL ser idempotente: repetirla, o aplicar una audiencia que todo ya tiene,
@@ -145,7 +157,7 @@ SHALL responder con éxito y conteos en cero. SHALL incluir los elementos fijado
 (listas fijadas y entradas de diario destacadas). NO SHALL modificar
 la audiencia por defecto guardada, los pines ni los destacados, ni crear, modificar o eliminar
 valoraciones, escuchas, comentarios, reseñas ni la wishlist, ni la fecha de actualización de las
-listas y las copias de colección (por lo que no genera eventos de "lista actualizada" en el
+listas, las copias de colección y los conciertos (por lo que no genera eventos de "lista actualizada" en el
 feed), ni tocar contenido de otros usuarios. La respuesta SHALL devolver cuántos elementos se
 actualizaron de cada tipo.
 
@@ -205,6 +217,11 @@ actualizaron de cada tipo.
 - **WHEN** una petición sin sesión intenta aplicar una audiencia
 - **THEN** la API responde `401` con código `AUTH_REQUIRED` y no modifica nada
 
+#### Scenario: Se incluyen los conciertos
+
+- **WHEN** un usuario con dos conciertos `public` aplica la audiencia `followers`
+- **THEN** ambos pasan a `followers`, conservan su fecha de actualización y la respuesta cuenta dos conciertos
+
 ### Requirement: Vista previa de la acción de aplicar
 
 El sistema SHALL ofrecer una vista previa de solo lectura de la acción anterior mediante
@@ -228,6 +245,11 @@ ningún dato y SHALL exigir sesión y una audiencia válida con los mismos error
 
 - **WHEN** todo el contenido del usuario ya tiene la audiencia consultada
 - **THEN** la vista previa devuelve todos los conteos en cero
+
+#### Scenario: Conteo de conciertos
+
+- **WHEN** un usuario con un concierto `private` pide la vista previa de `public`
+- **THEN** la respuesta cuenta un concierto entre lo que cambiaría
 
 ### Requirement: Acción "Aplicar a lo existente" en Ajustes
 

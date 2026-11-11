@@ -71,8 +71,8 @@ beforeEach(() => {
 
 describe("previewApplyAudience", () => {
   it("devuelve cuántos elementos cambiarían por tipo y cuántos son destacados", async () => {
-    // Orden: favoritos, diario, listas, colección, listas fijadas, diario destacado.
-    queueCounts(3, 5, 2, 1, 1, 4);
+    // Orden: favoritos, diario, listas, colección, conciertos, listas fijadas, diario destacado.
+    queueCounts(3, 5, 2, 1, 2, 1, 4);
 
     await expect(previewApplyAudience("u1", "private")).resolves.toEqual({
       audience: "private",
@@ -80,12 +80,13 @@ describe("previewApplyAudience", () => {
       diary: 5,
       lists: 2,
       collection: 1,
+      concerts: 2,
       highlighted: { pinnedLists: 1, highlightedDiary: 4 },
     });
   });
 
   it("devuelve ceros cuando todo ya tiene esa audiencia", async () => {
-    queueCounts(0, 0, 0, 0, 0, 0);
+    queueCounts(0, 0, 0, 0, 0, 0, 0);
 
     await expect(previewApplyAudience("u1", "public")).resolves.toEqual({
       audience: "public",
@@ -93,6 +94,7 @@ describe("previewApplyAudience", () => {
       diary: 0,
       lists: 0,
       collection: 0,
+      concerts: 0,
       highlighted: { pinnedLists: 0, highlightedDiary: 0 },
     });
   });
@@ -118,8 +120,8 @@ describe("previewApplyAudience", () => {
 });
 
 describe("applyAudienceToExisting", () => {
-  it("aplica la audiencia a los cuatro tipos y devuelve los conteos reales", async () => {
-    queueUpdates([{ id: "f1" }, { id: "f2" }], [{ id: "e1" }], [{ id: "l1" }, { id: "l2" }, { id: "l3" }], []);
+  it("aplica la audiencia a los cinco tipos y devuelve los conteos reales", async () => {
+    queueUpdates([{ id: "f1" }, { id: "f2" }], [{ id: "e1" }], [{ id: "l1" }, { id: "l2" }, { id: "l3" }], [], [{ id: "c1" }]);
 
     await expect(applyAudienceToExisting("u1", "private")).resolves.toEqual({
       audience: "private",
@@ -127,8 +129,9 @@ describe("applyAudienceToExisting", () => {
       diary: 1,
       lists: 3,
       collection: 0,
+      concerts: 1,
     });
-    expect(mocks.set).toHaveBeenCalledTimes(4);
+    expect(mocks.set).toHaveBeenCalledTimes(5);
     // Solo se escribe la columna de audiencia.
     for (const [values] of mocks.set.mock.calls) expect(values).toEqual({ audience: "private" });
   });
@@ -146,7 +149,7 @@ describe("applyAudienceToExisting", () => {
     queueUpdates([], [], [], []);
     await applyAudienceToExisting("u1", "public");
 
-    expect(mocks.calls).toEqual(["set_config", "update", "update", "update", "update"]);
+    expect(mocks.calls).toEqual(["set_config", "update", "update", "update", "update", "update"]);
     // set_config con `true` = local a la transacción (no se filtra a otras conexiones).
     const [statement] = mocks.execute.mock.calls[0] as [{ queryChunks: unknown[] }];
     const text = JSON.stringify(statement.queryChunks);
@@ -163,6 +166,7 @@ describe("applyAudienceToExisting", () => {
       diary: 0,
       lists: 0,
       collection: 0,
+      concerts: 0,
     });
   });
 

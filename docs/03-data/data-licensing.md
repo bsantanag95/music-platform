@@ -143,6 +143,8 @@ La ficha del artista enlaza a sus conciertos en setlist.fm (fila **En vivo**, ca
 `add-setlistfm-artist-link`). La URL sale de la relación `setlistfm` que declara MusicBrainz (sección A) y se
 guarda en `artist_link` como un enlace curado más; sin ella, se enlaza a la búsqueda por nombre en setlist.fm.
 **No se usa la API de setlist.fm ni se muestra ningún dato suyo**: es solo un enlace saliente.
+En "Mis conciertos" (`add-my-concerts`, ADR 0056) la persona puede pegar el enlace a un setlist: es un dato
+suyo, se guarda tal cual y tampoco se consulta setlist.fm.
 
 Se descartó a propósito integrar su API (pestaña con la lista de conciertos): exige clave, tiene cuota
 diaria, solo se permite para uso **no comercial**, obliga a atribuir con los enlaces que entrega y prohíbe

@@ -63,6 +63,7 @@ const svc = vi.hoisted(() => ({
   listVisibleCaminos: vi.fn(),
   listProfileCollection: vi.fn(),
   getCollectionPreview: vi.fn(),
+  getConcertPreview: vi.fn(),
   getTasteFingerprint: vi.fn(),
   getShowcase: vi.fn(),
   getProfileInRotation: vi.fn(),
@@ -86,6 +87,7 @@ vi.mock("@/services/collection/collection", () => ({
   listProfileCollection: svc.listProfileCollection,
   getCollectionPreview: svc.getCollectionPreview,
 }));
+vi.mock("@/services/concerts/concerts", () => ({ getConcertPreview: svc.getConcertPreview }));
 vi.mock("@/services/profiles/stats", () => ({ getTasteFingerprint: svc.getTasteFingerprint }));
 vi.mock("@/services/profiles/showcase", () => ({ getShowcase: svc.getShowcase }));
 vi.mock("@/services/profiles/in-rotation", () => ({

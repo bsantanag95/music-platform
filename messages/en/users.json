@@ -441,6 +441,7 @@
     "lists": "All lists",
     "caminos": "All lists to complete",
     "collection": "Full physical collection",
+    "concerts": "All concerts",
     "fingerprint": "Full taste fingerprint"
   },
   "editPanel": {
@@ -518,11 +519,11 @@
       "intro": "Who can see your profile and the audience new content is created with.",
       "audience": {
         "title": "Default audience for new content",
-        "intro": "Applies to the favorites, diary entries, lists and collection copies you add from now on. It does not change what you already have (that is what \"Apply to existing content\" below is for), and you can adjust each item separately.",
+        "intro": "Applies to the favorites, diary entries, lists, collection copies and concerts you add from now on. It does not change what you already have (that is what \"Apply to existing content\" below is for), and you can adjust each item separately.",
         "options": {
           "auto": {
             "title": "By type (recommended)",
-            "description": "Each type keeps its usual value: public favorites, lists and collection for followers, private diary."
+            "description": "Each type keeps its usual value: public favorites, lists, collection and concerts for followers, private diary."
           },
           "private": {
             "title": "Private",
@@ -555,6 +556,7 @@
             "diary": "{count, plural, one {# diary entry} other {# diary entries}}",
             "lists": "{count, plural, one {# list} other {# lists}}",
             "collection": "{count, plural, one {# collection copy} other {# collection copies}}",
+            "concerts": "{count, plural, one {# concert} other {# concerts}}",
             "pinnedLists": "{count, plural, one {# pinned list} other {# pinned lists}}",
             "highlightedDiary": "{count, plural, one {# highlighted diary entry} other {# highlighted diary entries}}"
           },

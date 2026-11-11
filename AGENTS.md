@@ -116,6 +116,13 @@ de cuál de las filas con el mismo título haya en la BD.
 >   '5e0ce000%';`. Necesita la migración `0062` aplicada. Verifica el conteo con umbral, `likedByMe`, el orden
 >   y la cifra de Comentarios populares, que las cuentas desactivadas no cuentan, bloqueos, comentario propio y
 >   oculto, la suspensión social y las cascadas.
+> - `smoke-test-concerts.ts` crea un artista sintético (MBID `5e0ce000-0000-4000-8000-0000000c0e01`) y usuarios
+>   `smoke_concert_*` con sus conciertos, seguimientos y un bloqueo, y los borra al terminar (también si falla). Si se
+>   interrumpió, limpiar con `DELETE FROM app_user WHERE username LIKE 'smoke_concert_%'; DELETE FROM artist WHERE mbid =
+>   '5e0ce000-0000-4000-8000-0000000c0e01';` (el `ON DELETE CASCADE` limpia conciertos, seguimientos y bloqueos). Necesita
+>   la migración `0091`. Verifica los `CHECK` de `0091`, el alta con la audiencia por defecto, el orden por fecha parcial,
+>   los totales, la visibilidad por visitante (anónimo, seguidor, perfil privado, bloqueo), la cifra del panel del
+>   artista, "Aplicar a lo existente" sin tocar `updated_at`, la exportación y las cascadas de cuenta y artista.
 > - `smoke-test-artist-comment-topics.ts` crea un artista y un álbum sintéticos (MBID
 >   `5e0ce000-0000-4000-8000-0000000009a0` / `...09a1`) y usuarios `smoke_topic_*`, y los borra al terminar
 >   (también si falla; el `ON DELETE CASCADE` limpia los comentarios). Si se interrumpió, limpiar con

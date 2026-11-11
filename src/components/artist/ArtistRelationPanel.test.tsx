@@ -32,6 +32,17 @@ vi.mock("@/lib/api/favorites", () => ({ toggleFavorite: mocks.toggleFavorite }))
 vi.mock("@/lib/api/want-to-listen", () => ({ toggleWantToListen: mocks.toggleWantToListen }));
 vi.mock("@/components/diary/ListenEntryForm", () => ({ ListenEntryForm: () => <div>formulario de escucha</div> }));
 vi.mock("@/components/album/AlbumListPicker", () => ({ AlbumListPicker: () => <div>selector de listas</div> }));
+// El formulario del concierto tiene sus propios tests: acá solo importa que se abre con el artista y avisa al guardar.
+vi.mock("@/components/concerts/ConcertFormDialog", () => ({
+  ConcertFormDialog: ({ artist, onSaved }: { artist: { name: string }; onSaved: (entry: unknown) => void }) => (
+    <div role="dialog">
+      formulario de concierto de {artist.name}
+      <button type="button" onClick={() => onSaved({})}>
+        guardar concierto
+      </button>
+    </div>
+  ),
+}));
 vi.mock("@/components/artist-journey/ArtistJourneyStartModal", () => ({
   ArtistJourneyStartModal: ({ albums }: { albums: { title: string }[] }) => (
     <div role="dialog">modal de inicio del recorrido: {albums.map((album) => album.title).join(", ")}</div>
@@ -73,13 +84,13 @@ describe("ArtistRelationPanel", () => {
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
-  it("primera visita: las siete filas sin menú, sin estrellas ni reseña", () => {
+  it("primera visita: las ocho filas sin menú, sin estrellas ni reseña", () => {
     renderPanel(makeState());
     const panel = screen.getByRole("complementary", { name: relation.heading });
     for (const label of [relation.follow, relation.favorite, relation.pending]) {
       expect(within(panel).getByRole("button", { name: label })).toHaveAttribute("aria-pressed", "false");
     }
-    for (const label of [relation.listens, relation.collection, relation.journey]) {
+    for (const label of [relation.listens, relation.collection, relation.live, relation.journey]) {
       expect(within(panel).getByText(label)).toBeInTheDocument();
     }
     expect(within(panel).getByText("En ninguna de tus listas")).toBeInTheDocument();
@@ -184,6 +195,29 @@ describe("ArtistRelationPanel", () => {
       expect(heard).toHaveBeenCalledWith("unrated");
       expect(anchor.scrollIntoView).toHaveBeenCalled();
       anchor.remove();
+    });
+  });
+
+  describe("En vivo (openspec: add-my-concerts)", () => {
+    it("sin conciertos: dice que no hay y ofrece Registrar", () => {
+      renderPanel(makeState());
+      expect(screen.getByText(relation.liveNone)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: relation.liveLog })).toBeInTheDocument();
+    });
+
+    it("con conciertos: la cifra enlaza a Mis conciertos filtrada por el artista", () => {
+      renderPanel(makeState({ concerts: 3 }));
+      expect(screen.getByRole("link", { name: "Lo viste 3 veces" })).toHaveAttribute("href", `/me/concerts?artista=${ARTIST}`);
+    });
+
+    it("Registrar abre el formulario con el artista y al guardar suma uno sin recargar", () => {
+      renderPanel(makeState({ concerts: 0 }));
+      fireEvent.click(screen.getByRole("button", { name: relation.liveLog }));
+      expect(screen.getByRole("dialog")).toHaveTextContent("formulario de concierto de Pink Floyd");
+      fireEvent.click(screen.getByRole("button", { name: "guardar concierto" }));
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Lo viste 1 vez" })).toBeInTheDocument();
+      expect(mocks.refresh).not.toHaveBeenCalled();
     });
   });
 });

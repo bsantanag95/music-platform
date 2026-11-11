@@ -2,6 +2,7 @@ import { and, count, eq, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   collectionEntry,
+  concertEntry,
   favorite,
   listenEntry,
   listenEntryHighlight,
@@ -17,6 +18,8 @@ export interface AudienceChangeCounts {
   diary: number;
   lists: number;
   collection: number;
+  /** Conciertos registrados (openspec: add-my-concerts). */
+  concerts: number;
 }
 
 /**
@@ -62,7 +65,7 @@ export async function previewApplyAudience(
 ): Promise<ApplyAudiencePreview> {
   assertAudience(audience);
 
-  const [[fav], [diary], [lists], [collection], [pinnedLists], [highlightedDiary]] =
+  const [[fav], [diary], [lists], [collection], [concerts], [pinnedLists], [highlightedDiary]] =
     await Promise.all([
       db
         .select({ n: count() })
@@ -80,6 +83,10 @@ export async function previewApplyAudience(
         .select({ n: count() })
         .from(collectionEntry)
         .where(and(eq(collectionEntry.userId, userId), ne(collectionEntry.audience, audience))),
+      db
+        .select({ n: count() })
+        .from(concertEntry)
+        .where(and(eq(concertEntry.userId, userId), ne(concertEntry.audience, audience))),
       db
         .select({ n: count() })
         .from(userListPin)
@@ -100,6 +107,7 @@ export async function previewApplyAudience(
     diary: diary?.n ?? 0,
     lists: lists?.n ?? 0,
     collection: collection?.n ?? 0,
+    concerts: concerts?.n ?? 0,
     highlighted: {
       pinnedLists: pinnedLists?.n ?? 0,
       highlightedDiary: highlightedDiary?.n ?? 0,
@@ -110,13 +118,13 @@ export async function previewApplyAudience(
 /**
  * Aplica una audiencia a todo el contenido de biblioteca existente del usuario
  * (spec default-audience, "Aplicar la audiencia a todo lo existente"):
- * favoritos, entradas de diario, listas estándar propias y copias de colección.
+ * favoritos, entradas de diario, listas estándar propias, copias de colección y conciertos.
  *
  * - Una sola transacción: o cambian todos los tipos o ninguno.
  * - Idempotente: solo actualiza las filas cuya audiencia difiere.
  * - Solo escribe la columna `audience`; no toca pines, destacados ni la
  *   preferencia guardada. El indicador `app.preserve_updated_at` (migración
- *   0037) hace que los triggers de `user_list` y `collection_entry` conserven
+ *   0037) hace que los triggers de `user_list`, `collection_entry` y `concert_entry` (0091) conserven
  *   `updated_at`, para no generar eventos de "lista actualizada" en el feed.
  */
 export async function applyAudienceToExisting(
@@ -149,6 +157,11 @@ export async function applyAudienceToExisting(
       .set({ audience })
       .where(and(eq(collectionEntry.userId, userId), ne(collectionEntry.audience, audience)))
       .returning({ id: collectionEntry.id });
+    const concerts = await tx
+      .update(concertEntry)
+      .set({ audience })
+      .where(and(eq(concertEntry.userId, userId), ne(concertEntry.audience, audience)))
+      .returning({ id: concertEntry.id });
 
     return {
       audience,
@@ -156,6 +169,7 @@ export async function applyAudienceToExisting(
       diary: diary.length,
       lists: lists.length,
       collection: collection.length,
+      concerts: concerts.length,
     };
   });
 }

@@ -1936,6 +1936,48 @@ mismos parámetros opcionales que la lectura propia.
 **200 OK:** `{ entries: [...], page, pageSize, hasNext, counts: { vinyl, cd, cassette, other } }`.
 **404** con `USER_NOT_FOUND`.
 
+## Mis conciertos (`add-my-concerts`, ADR 0056)
+
+Conciertos a los que fue el usuario. Cada registro es un recuerdo de la persona sobre un artista del catálogo, no un
+concierto verificado. **No es un toggle:** `POST` siempre crea un registro nuevo. Las mutaciones requieren sesión; la
+lectura propia también y la ajena aplica la matriz de visibilidad de la colección física.
+
+Forma de `entry`: `{ id, artist: { id, name }, eventDate, country, city, venue, tour, setlistfmUrl, note, audience,
+createdAt, updatedAt }`. `eventDate` es una fecha parcial: `YYYY`, `YYYY-MM` o `YYYY-MM-DD`.
+
+Reglas del cuerpo: `eventDate` real, desde 1900 y no futura; `country` código ISO de dos letras (se acepta en minúsculas);
+`city`, `venue`, `tour` hasta 100 caracteres y `note` hasta 140, recortados (vacío = `null`); `setlistfmUrl` solo un
+setlist de setlist.fm (`https://(www.)setlist.fm/setlist/…`, hasta 500); `audience` `private` / `followers` / `public`.
+
+### `GET /api/me/concerts?artistId=`
+
+Conciertos propios por fecha descendente (la fecha más precisa antes que la parcial del mismo período), hasta 500.
+`artistId` opcional acota a un artista. **200 OK:** `{ entries: [...], totals: { concerts, artists, countries },
+truncated }`; los totales siguen el filtro. **400** `VALIDATION_ERROR` si `artistId` no es un UUID. **401**
+`AUTH_REQUIRED`.
+
+### `POST /api/me/concerts`
+
+**Body:** `{ artistId, eventDate, country?, city?, venue?, tour?, setlistfmUrl?, note?, audience? }`. Sin `audience`,
+la audiencia por defecto del usuario o `followers`. **201 OK:** `{ entry }`. **400** `VALIDATION_ERROR` por cualquier
+regla del cuerpo. **404** `ARTIST_NOT_FOUND` si el artista no existe. **401** `AUTH_REQUIRED`.
+
+### `PATCH /api/me/concerts/{id}`
+
+Edita un registro propio. **Body:** cualquier subconjunto de los campos del alta (incluido `artistId`), al menos uno;
+`null` quita un dato opcional. **200 OK:** `{ entry }`. **400** `VALIDATION_ERROR`. **404** `CONCERT_NOT_FOUND` si el
+id no es un UUID, no existe o es de otra persona; `ARTIST_NOT_FOUND` si se cambia a un artista inexistente.
+
+### `DELETE /api/me/concerts/{id}`
+
+Quita un registro propio. **204** sin cuerpo. **404** `CONCERT_NOT_FOUND`.
+
+### `GET /api/users/[username]/concerts`
+
+Conciertos de un perfil visibles para quien consulta, misma forma que la lista propia. Sin permiso (bloqueo, perfil
+privado sin seguir) responde una lista vacía con totales en cero, sin revelar si hay registros. **404**
+`USER_NOT_FOUND` si el usuario no existe.
+
 ## Wishlist de colección (`add-collection-wishlist`)
 
 Señal prospectiva ("quiero conseguir este álbum"), independiente de la colección física

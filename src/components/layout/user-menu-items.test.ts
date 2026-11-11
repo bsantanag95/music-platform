@@ -41,6 +41,7 @@ describe("user-menu-items", () => {
       "favorites",
       "wantToListen",
       "collection",
+      "concerts",
       "lists",
       "laminas",
       "progress",

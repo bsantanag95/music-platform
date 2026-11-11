@@ -17,6 +17,7 @@ import {
   AffinitySection,
   CaminosRail,
   CollectionRail,
+  ConcertsRail,
   DiaryRail,
   ExplorationSection,
   FavoritesRail,
@@ -215,6 +216,9 @@ async function UserProfilePage({ params, searchParams }: UserProfilePageProps) {
         </Streamed>
         <Streamed>
           <CollectionRail {...section} />
+        </Streamed>
+        <Streamed>
+          <ConcertsRail {...section} />
         </Streamed>
         <Suspense fallback={null}>
           <Level3LinksSection username={section.username} viewerId={effectiveViewerId} />

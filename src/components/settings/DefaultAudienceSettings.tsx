@@ -25,7 +25,7 @@ const CHOICES: readonly Choice[] = ["auto", "private", "followers", "public"];
 type Phase = "idle" | "checking" | "confirming" | "applying";
 
 // Tipos de contenido que cambian y, de ellos, los fijados o destacados que se avisan.
-const TYPE_KEYS = ["favorites", "diary", "lists", "collection"] as const;
+const TYPE_KEYS = ["favorites", "diary", "lists", "collection", "concerts"] as const;
 const HIGHLIGHT_KEYS = ["pinnedLists", "highlightedDiary"] as const;
 type CountKey = (typeof TYPE_KEYS)[number] | (typeof HIGHLIGHT_KEYS)[number];
 

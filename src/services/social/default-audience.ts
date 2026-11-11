@@ -4,7 +4,7 @@ import { appUser } from "@/db/schema";
 import { AUDIENCES, type Audience } from "./types";
 
 /** Tipos de contenido de biblioteca que nacen con una audiencia. */
-export type NewContentType = "favorite" | "diary" | "list" | "collection" | "wanted";
+export type NewContentType = "favorite" | "diary" | "list" | "collection" | "wanted" | "concert";
 
 /**
  * Default de cada tipo cuando el usuario no tiene preferencia. No son
@@ -22,6 +22,8 @@ export const TYPE_DEFAULT_AUDIENCE: Readonly<Record<NewContentType, Audience>> =
   // Wishlist ("En tu búsqueda", openspec: expand-feed-coverage): simétrica a
   // la colección. Las entradas anteriores a la migración 0061 quedaron `private`.
   wanted: "followers",
+  // Conciertos (openspec: add-my-concerts): simétricos a la colección.
+  concert: "followers",
 };
 
 function isAudience(value: unknown): value is Audience {

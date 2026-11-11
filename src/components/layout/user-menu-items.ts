@@ -38,6 +38,7 @@ export type UserMenuLabelKey =
   | "artists"
   | "blocks"
   | "collection"
+  | "concerts"
   | "diary"
   | "favorites"
   | "feed"
@@ -85,6 +86,8 @@ export const USER_MENU_ITEMS: readonly UserMenuItemDef[] = [
   { id: "favorites", href: "/me/favorites", labelKey: "favorites", group: "music", surfaces: BOTH },
   { id: "wantToListen", href: "/me/want-to-listen", labelKey: "wantToListen", group: "music", surfaces: BOTH },
   { id: "collection", href: "/me/collection", labelKey: "collection", group: "music", surfaces: BOTH },
+  // Conciertos a los que fue (openspec: add-my-concerts).
+  { id: "concerts", href: "/me/concerts", labelKey: "concerts", group: "music", surfaces: BOTH },
   { id: "lists", href: "/me/lists", labelKey: "lists", group: "music", surfaces: BOTH },
   { id: "laminas", href: "/me/laminas", labelKey: "laminas", group: "music", surfaces: BOTH },
   // Un solo acceso para recorridos de artista, Caminos y listas seguidas (panel con pestañas).

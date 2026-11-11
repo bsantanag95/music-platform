@@ -24,6 +24,7 @@ describe("TYPE_DEFAULT_AUDIENCE", () => {
       list: "followers",
       collection: "followers",
       wanted: "followers",
+      concert: "followers",
     });
   });
 });
