@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { artistHref } from "@/lib/catalog-links";
 import type { ConcertEntryDto } from "@/lib/api/schemas";
 import { formatConcertDate, formatConcertPlace, formatConcertShortDate, groupConcertsByYear } from "./concert-format";
-import { CONCERT_BADGE, CONCERT_ROW, CONCERT_ROW_DATE, CONCERT_SECTION_HEADING } from "./concert-ui";
+import { CONCERT_BADGE, CONCERT_ROW, CONCERT_ROW_DATE, CONCERT_SECTION_HEADING, ConcertAudienceIcon } from "./concert-ui";
 
 // Conciertos agrupados por año (openspec: add-my-concerts): la usan Mis conciertos (con acciones por fila) y la página
 // de un perfil (solo lectura). Misma anatomía de fila que la pestaña del artista (`concert-ui`): la fecha corta en su
@@ -15,13 +15,18 @@ interface ConcertYearListProps {
   entries: readonly ConcertEntryDto[];
   /** Acciones de la fila (solo en la página del dueño). */
   renderActions?: (entry: ConcertEntryDto) => ReactNode;
-  /** Muestra la audiencia de cada registro que no es público (solo para el dueño). */
+  /**
+   * Muestra la audiencia de cada registro que no es público (solo para el dueño): Seguidores como un ícono discreto, con el
+   * nombre al pasar el cursor, y Privado con su nombre. Repetida en cada fila, la etiqueta "SEGUIDORES" no informaba nada.
+   */
   showAudience?: boolean;
+  /** Abre la edición de un registro sin lugar (solo para el dueño): la fila ofrece "Agregar lugar". */
+  onAddPlace?: (entry: ConcertEntryDto) => void;
 }
 
 const META_LINK = "text-paper-muted underline-offset-2 transition-colors hover:text-paper hover:underline";
 
-export function ConcertYearList({ entries, renderActions, showAudience = false }: ConcertYearListProps) {
+export function ConcertYearList({ entries, renderActions, showAudience = false, onAddPlace }: ConcertYearListProps) {
   const t = useTranslations("concerts");
   const locale = useLocale();
 
@@ -50,9 +55,30 @@ export function ConcertYearList({ entries, renderActions, showAudience = false }
                       >
                         {entry.artist.name}
                       </Link>
-                      {showAudience && entry.audience !== "public" && <span className={CONCERT_BADGE}>{t(`audience.${entry.audience}`)}</span>}
+                      {showAudience && entry.audience === "private" && (
+                        <span className={`inline-flex items-center gap-1 ${CONCERT_BADGE}`}>
+                          <ConcertAudienceIcon audience="private" />
+                          {t("audience.private")}
+                        </span>
+                      )}
+                      {showAudience && entry.audience === "followers" && (
+                        <span title={t("audience.followers")} className="inline-flex text-paper-muted/70">
+                          <ConcertAudienceIcon audience="followers" />
+                          <span className="sr-only">{t("audience.followers")}</span>
+                        </span>
+                      )}
                     </div>
-                    {place && <p className="font-body text-sm text-paper">{place}</p>}
+                    {place ? (
+                      <p className="font-body text-sm text-paper">{place}</p>
+                    ) : onAddPlace ? (
+                      // Sin lugar la fila quedaba en el puro nombre; el dato también hace falta para compartir el concierto.
+                      <p className="font-data text-xs text-paper-muted">
+                        {t("row.noPlace")} ·{" "}
+                        <button type="button" onClick={() => onAddPlace(entry)} className={`${META_LINK} underline`}>
+                          {t("row.addPlace")}
+                        </button>
+                      </p>
+                    ) : null}
                     {entry.tour && <p className="font-body text-sm text-paper-muted">{entry.tour}</p>}
                     {entry.note && <p className="max-w-prose text-pretty font-body text-sm italic text-paper-muted">{entry.note}</p>}
                     {(entry.concertId || entry.setlistfmUrl) && (

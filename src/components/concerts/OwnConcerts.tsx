@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
@@ -18,12 +18,17 @@ import { formatConcertDate } from "./concert-format";
 // Gestión de Mis conciertos (openspec: add-my-concerts): totales, registrar (con buscador de artistas), editar (con la
 // audiencia) y quitar con confirmación. Los datos vienen del servidor; tras cada cambio se refresca la ruta. Un recuerdo
 // sin enlazar con fecha completa, ciudad y país ofrece "Compartir este concierto" (add-shared-concerts-phase2); uno
-// enlazado, "Desvincular del concierto" (add-shared-concerts-phase3).
+// enlazado, "Desvincular del concierto" (add-shared-concerts-phase3). "Registrar concierto" va junto al título, como "Añadir copia"
+// en Colección, y los totales quedan debajo como una línea de datos, sin las cifras en cero (polish-my-concerts).
 
 interface OwnConcertsProps {
   initial: ConcertListResponse;
   /** Artista del filtro `?artista=`, o `null` sin filtro. */
   filter: { id: string; name: string } | null;
+  /** Título e introducción de la página, a la izquierda del botón de registrar. */
+  heading: ReactNode;
+  /** Sugerencias de enlace de los recuerdos sueltos, entre los totales y la lista. */
+  suggestions?: ReactNode;
 }
 
 type OpenDialog =
@@ -38,7 +43,7 @@ export function isShareableEntry(entry: ConcertEntryDto): boolean {
   return entry.concertId === null && entry.eventDate.length === 10 && Boolean(entry.city) && Boolean(entry.country);
 }
 
-export function OwnConcerts({ initial, filter }: OwnConcertsProps) {
+export function OwnConcerts({ initial, filter, heading, suggestions = null }: OwnConcertsProps) {
   const t = useTranslations("concerts");
   const locale = useLocale();
   const router = useRouter();
@@ -76,22 +81,29 @@ export function OwnConcerts({ initial, filter }: OwnConcertsProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-        {/* Sin registros, los tres ceros no dicen nada: queda solo el botón. */}
+      <header className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+          {heading}
+          <Button type="button" onClick={() => setDialog({ kind: "create" })}>
+            <PlusIcon />
+            {t("register")}
+          </Button>
+        </div>
+        {/* Sin registros no hay totales; una cifra en cero (países sin ningún país anotado) tampoco dice nada. */}
         {totals.concerts > 0 && (
           <p className="font-data text-sm tabular-nums text-paper-muted">
             {[
               t("totals.concerts", { count: totals.concerts }),
-              t("totals.artists", { count: totals.artists }),
-              t("totals.countries", { count: totals.countries }),
-            ].join(" · ")}
+              totals.artists > 0 ? t("totals.artists", { count: totals.artists }) : null,
+              totals.countries > 0 ? t("totals.countries", { count: totals.countries }) : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           </p>
         )}
-        <Button type="button" className="ml-auto" onClick={() => setDialog({ kind: "create" })}>
-          <PlusIcon />
-          {t("register")}
-        </Button>
-      </div>
+      </header>
+
+      {suggestions}
 
       {filter && (
         <p className="flex flex-wrap items-center gap-2 font-data text-xs text-paper-muted">
@@ -128,6 +140,7 @@ export function OwnConcerts({ initial, filter }: OwnConcertsProps) {
         <ConcertYearList
           entries={entries}
           showAudience
+          onAddPlace={(entry) => setDialog({ kind: "edit", entry })}
           renderActions={(entry) => (
             <RowMenu label={t("row.menu", { artist: entry.artist.name })}>
               <RowMenuItem onSelect={() => setDialog({ kind: "edit", entry })}>{t("row.edit")}</RowMenuItem>

@@ -1,7 +1,7 @@
 {
   "title": "Mis conciertos",
   "metaTitle": "Mis conciertos",
-  "intro": "Los conciertos a los que fuiste. Es tu registro: nadie verifica las fechas ni los lugares.",
+  "intro": "Los conciertos a los que fuiste, año por año.",
   "register": "Registrar concierto",
   "totals": {
     "concerts": "{count, plural, one {# concierto} other {# conciertos}}",
@@ -29,7 +29,9 @@
     "cancel": "Cancelar",
     "removeError": "No se pudo quitar el concierto. Intenta de nuevo.",
     "unlink": "Desvincular del concierto",
-    "unlinkError": "No se pudo desvincular. Intenta de nuevo."
+    "unlinkError": "No se pudo desvincular. Intenta de nuevo.",
+    "noPlace": "Sin lugar",
+    "addPlace": "Agregar lugar"
   },
   "audience": {
     "private": "Privado",
