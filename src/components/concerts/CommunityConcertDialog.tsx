@@ -21,6 +21,7 @@ import {
 } from "@/lib/api/schemas";
 import { AttendButton } from "./AttendButton";
 import { formatConcertDate } from "./concert-format";
+import { CONCERT_DIALOG_FOOTER, CONCERT_FIELD, CONCERT_LABEL, CONCERT_PICKER_LABEL, CloseIcon } from "./concert-ui";
 import { sharedConcertPlace } from "./shared-concert-format";
 
 // "Agregar un concierto" (openspec: add-shared-concerts-phase2, capability `community-concerts`). Primero la fecha exacta
@@ -69,10 +70,6 @@ const ERROR_BY_CODE: Partial<Record<string, ErrorKey>> = {
   CONCERT_CREATE_LIMIT: "limit",
   SOCIAL_SUSPENSION_ACTIVE: "suspended",
 };
-
-const fieldClass =
-  "rounded border border-ink-border bg-ink px-2 py-1.5 font-body text-base text-paper placeholder:text-paper-muted disabled:opacity-50 sm:text-sm";
-const labelClass = "flex flex-col gap-1 font-data text-xs text-paper-muted";
 
 /** Hoy en UTC+14, como el servidor: nadie queda con su "hoy" rechazado. */
 function latestToday(): string {
@@ -169,16 +166,16 @@ export function CommunityConcertDialog({ open, onClose, artist, fromEntry }: Com
 
   return (
     <Dialog open={open} onClose={onClose} title={fromEntry ? t("shareTitle") : t("title")}>
-      <form onSubmit={(event) => void submit(event)} className="flex flex-col gap-4" noValidate>
-        <div className="flex flex-col gap-1">
+      <form onSubmit={(event) => void submit(event)} className="flex flex-col gap-5" noValidate>
+        <div className="flex flex-col gap-1.5">
           <span className="font-data text-xs text-paper-muted">{t("artist")}</span>
-          <span className="rounded border border-ink-border bg-ink px-2 py-1.5 font-display text-sm text-paper">{artist.name}</span>
+          <span className="truncate rounded border border-ink-border bg-ink px-2.5 py-2 font-display text-sm text-paper">{artist.name}</span>
         </div>
 
         {step === "place" && (
           <fieldset className="flex flex-col gap-3" disabled={busy}>
-            <div className="flex flex-col gap-1">
-              <label className={labelClass}>
+            <div className="flex flex-col gap-1.5">
+              <label className={CONCERT_LABEL}>
                 {t("date")}
                 <input
                   type="date"
@@ -189,14 +186,14 @@ export function CommunityConcertDialog({ open, onClose, artist, fromEntry }: Com
                   readOnly={Boolean(fromEntry)}
                   aria-describedby={`${fieldId}-date-hint`}
                   onChange={(event) => setDate(event.target.value)}
-                  className={fieldClass}
+                  className={CONCERT_FIELD}
                 />
               </label>
               <p id={`${fieldId}-date-hint`} className="font-data text-xs text-paper-muted">
                 {t("dateHint")}
               </p>
             </div>
-            <label className={labelClass}>
+            <label className={CONCERT_LABEL}>
               {t("venue")}
               <input
                 type="text"
@@ -205,21 +202,30 @@ export function CommunityConcertDialog({ open, onClose, artist, fromEntry }: Com
                 value={venue}
                 placeholder={t("venuePlaceholder")}
                 onChange={(event) => setVenue(event.target.value)}
-                className={fieldClass}
+                className={CONCERT_FIELD}
               />
             </label>
-            <label className={labelClass}>
-              {t("city")}
-              <input
-                type="text"
-                required
-                maxLength={CONCERT_TEXT_MAX}
-                value={city}
-                onChange={(event) => setCity(event.target.value)}
-                className={fieldClass}
+            <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2">
+              <label className={CONCERT_LABEL}>
+                {t("city")}
+                <input
+                  type="text"
+                  required
+                  maxLength={CONCERT_TEXT_MAX}
+                  value={city}
+                  onChange={(event) => setCity(event.target.value)}
+                  className={CONCERT_FIELD}
+                />
+              </label>
+              <CountryPicker
+                id={`${fieldId}-country`}
+                label={t("country")}
+                value={country}
+                onChange={setCountry}
+                inputClassName={CONCERT_FIELD}
+                labelClassName={CONCERT_PICKER_LABEL}
               />
-            </label>
-            <CountryPicker id={`${fieldId}-country`} label={t("country")} value={country} onChange={setCountry} />
+            </div>
           </fieldset>
         )}
 
@@ -229,11 +235,11 @@ export function CommunityConcertDialog({ open, onClose, artist, fromEntry }: Com
               {t("candidatesTitle")}
             </h3>
             <p className="font-body text-sm text-paper-muted">{t("candidatesHint")}</p>
-            <ul className="flex flex-col divide-y divide-ink-border rounded border border-ink-border">
+            <ul className="flex flex-col divide-y divide-ink-border rounded border border-ink-border bg-ink">
               {candidates.map((candidate) => (
-                <li key={candidate.id} className="flex items-start justify-between gap-3 px-3 py-2">
+                <li key={candidate.id} className="flex flex-col gap-2 px-3 py-2.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                   <div className="flex min-w-0 flex-col gap-0.5">
-                    <Link href={concertHref(candidate.name, candidate.id)} className="font-body text-sm text-paper hover:underline">
+                    <Link href={concertHref(candidate.name, candidate.id)} className="font-display text-sm text-paper underline-offset-2 hover:underline">
                       {candidate.name}
                     </Link>
                     <span className="font-data text-xs text-paper-muted">
@@ -257,11 +263,11 @@ export function CommunityConcertDialog({ open, onClose, artist, fromEntry }: Com
         {step === "details" && (
           <fieldset className="flex flex-col gap-3" disabled={busy}>
             {candidates.length === 0 && <p className="font-body text-sm text-paper-muted">{t("noCandidates")}</p>}
-            <p className="font-data text-xs text-paper-muted">
+            <p className="rounded border border-ink-border bg-ink px-2.5 py-2 font-data text-xs text-paper">
               {[formatConcertDate(date, locale), sharedConcertPlace({ venue, city, country }, locale)].filter(Boolean).join(" · ")}
             </p>
-            <div className="flex flex-col gap-1">
-              <label className={labelClass}>
+            <div className="flex flex-col gap-1.5">
+              <label className={CONCERT_LABEL}>
                 {t("name")}
                 <input
                   type="text"
@@ -270,7 +276,7 @@ export function CommunityConcertDialog({ open, onClose, artist, fromEntry }: Com
                   placeholder={exampleName}
                   aria-describedby={`${fieldId}-name-hint`}
                   onChange={(event) => setName(event.target.value)}
-                  className={fieldClass}
+                  className={CONCERT_FIELD}
                 />
               </label>
               <p id={`${fieldId}-name-hint`} className="font-data text-xs text-paper-muted">
@@ -278,14 +284,14 @@ export function CommunityConcertDialog({ open, onClose, artist, fromEntry }: Com
               </p>
             </div>
 
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1.5">
               <span className="font-data text-xs text-paper-muted">
                 {t("lineup")} · {t("lineupHint")}
               </span>
               {extras.length > 0 && (
                 <ul className="flex flex-col gap-1">
                   {extras.map((extra) => (
-                    <li key={extra.id} className="flex items-center justify-between gap-2 rounded border border-ink-border bg-ink px-2 py-1">
+                    <li key={extra.id} className="flex items-center justify-between gap-2 rounded border border-ink-border bg-ink py-1 pl-2.5 pr-1">
                       <span className="truncate font-body text-sm text-paper">{extra.name}</span>
                       <span className="flex items-center gap-2">
                         <select
@@ -305,9 +311,9 @@ export function CommunityConcertDialog({ open, onClose, artist, fromEntry }: Com
                           type="button"
                           aria-label={t("lineupRemove", { name: extra.name })}
                           onClick={() => setExtras((current) => current.filter((item) => item.id !== extra.id))}
-                          className="font-data text-xs text-paper-muted hover:text-paper"
+                          className="inline-flex size-8 items-center justify-center rounded text-paper-muted transition-colors hover:bg-ink-surface hover:text-paper"
                         >
-                          ✕
+                          <CloseIcon />
                         </button>
                       </span>
                     </li>
@@ -315,7 +321,7 @@ export function CommunityConcertDialog({ open, onClose, artist, fromEntry }: Com
                 </ul>
               )}
               {extras.length < COMMUNITY_CONCERT_EXTRA_PERFORMERS_MAX && (
-                <label className={labelClass}>
+                <label className={CONCERT_LABEL}>
                   <span className="sr-only">{t("lineupSearch")}</span>
                   <input
                     type="search"
@@ -323,7 +329,7 @@ export function CommunityConcertDialog({ open, onClose, artist, fromEntry }: Com
                     value={query}
                     placeholder={t("lineupSearchPlaceholder")}
                     onChange={(event) => setQuery(event.target.value)}
-                    className={fieldClass}
+                    className={CONCERT_FIELD}
                   />
                 </label>
               )}
@@ -339,13 +345,13 @@ export function CommunityConcertDialog({ open, onClose, artist, fromEntry }: Com
                 </p>
               )}
               {search.candidates.length > 0 && (
-                <ul className="themed-scrollbar flex max-h-40 flex-col gap-1 overflow-y-auto">
+                <ul className="themed-scrollbar flex max-h-40 flex-col overflow-y-auto rounded border border-ink-border bg-ink">
                   {search.candidates.map((candidate) => (
-                    <li key={candidate.id}>
+                    <li key={candidate.id} className="border-b border-ink-border/70 last:border-b-0">
                       <button
                         type="button"
                         onClick={() => addExtra({ id: candidate.id, name: candidate.title })}
-                        className="flex min-h-11 w-full flex-col items-start rounded border border-ink-border bg-ink px-2 py-1.5 text-left transition-colors hover:border-amber"
+                        className="flex min-h-11 w-full flex-col items-start justify-center px-2.5 py-1.5 text-left transition-colors hover:bg-ink-surface focus-visible:-outline-offset-2"
                       >
                         <span className="font-body text-sm text-paper">{candidate.title}</span>
                         {candidate.subtitle && <span className="font-data text-xs text-paper-muted">{candidate.subtitle}</span>}
@@ -356,8 +362,8 @@ export function CommunityConcertDialog({ open, onClose, artist, fromEntry }: Com
               )}
             </div>
 
-            <div className="flex flex-col gap-1">
-              <label className={labelClass}>
+            <div className="flex flex-col gap-1.5">
+              <label className={CONCERT_LABEL}>
                 {t("setlist")}
                 <input
                   type="url"
@@ -367,24 +373,23 @@ export function CommunityConcertDialog({ open, onClose, artist, fromEntry }: Com
                   placeholder="https://www.setlist.fm/setlist/…"
                   aria-describedby={`${fieldId}-setlist-hint`}
                   onChange={(event) => setSetlistfmUrl(event.target.value)}
-                  className={fieldClass}
+                  className={CONCERT_FIELD}
                 />
               </label>
               <p id={`${fieldId}-setlist-hint`} className="font-data text-xs text-paper-muted">
                 {t("setlistHint")}
               </p>
             </div>
-            <p className="font-body text-sm text-paper-muted">{t("rules")}</p>
+            <p className="border-t border-ink-border pt-3 font-body text-sm text-paper-muted">{t("rules")}</p>
           </fieldset>
         )}
 
-        {error && (
-          <p role="alert" className="font-data text-xs text-danger">
-            {t(`errors.${error}`)}
-          </p>
-        )}
-
-        <div className="flex flex-wrap justify-end gap-2">
+        <div className={CONCERT_DIALOG_FOOTER}>
+          {error && (
+            <p role="alert" className="basis-full font-data text-xs text-danger sm:mr-auto sm:basis-0 sm:grow">
+              {t(`errors.${error}`)}
+            </p>
+          )}
           {step === "place" ? (
             <Button type="button" variant="ghost" onClick={onClose} disabled={busy}>
               {t("cancel")}

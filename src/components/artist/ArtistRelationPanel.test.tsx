@@ -202,7 +202,7 @@ describe("ArtistRelationPanel", () => {
     it("sin conciertos: dice que no hay y ofrece Registrar", () => {
       renderPanel(makeState());
       expect(screen.getByText(relation.liveNone)).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: relation.liveLog })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: relation.liveLogLabel })).toBeInTheDocument();
     });
 
     it("con conciertos: la cifra enlaza a Mis conciertos filtrada por el artista", () => {
@@ -212,7 +212,7 @@ describe("ArtistRelationPanel", () => {
 
     it("Registrar abre el formulario con el artista y al guardar suma uno sin recargar", () => {
       renderPanel(makeState({ concerts: 0 }));
-      fireEvent.click(screen.getByRole("button", { name: relation.liveLog }));
+      fireEvent.click(screen.getByRole("button", { name: relation.liveLogLabel }));
       expect(screen.getByRole("dialog")).toHaveTextContent("formulario de concierto de Pink Floyd");
       fireEvent.click(screen.getByRole("button", { name: "guardar concierto" }));
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

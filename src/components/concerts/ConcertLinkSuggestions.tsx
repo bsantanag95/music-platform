@@ -58,7 +58,7 @@ export function ConcertLinkSuggestions({ suggestions, total }: ConcertLinkSugges
 
   const more = total - suggestions.length;
   return (
-    <section aria-labelledby="concert-link-suggestions" className="flex flex-col gap-3 rounded border border-amber/40 bg-amber/5 p-4">
+    <section aria-labelledby="concert-link-suggestions" className="flex flex-col gap-3 rounded-lg border border-amber/40 bg-amber/5 p-4 sm:p-5">
       <div className="flex flex-col gap-0.5">
         <h2 id="concert-link-suggestions" className="font-display text-lg text-paper">
           {t("title")}
@@ -106,7 +106,7 @@ export function ConcertLinkSuggestions({ suggestions, total }: ConcertLinkSugges
                   type="button"
                   disabled={busy !== null}
                   onClick={() => void act(suggestion, "link")}
-                  className="rounded border border-amber/60 px-2.5 py-1 font-data text-xs uppercase tracking-wide text-amber transition-colors hover:bg-amber/10 disabled:opacity-50"
+                  className="inline-flex min-h-8 items-center rounded border border-amber/60 px-2.5 font-data text-xs uppercase tracking-wide text-amber transition-colors hover:bg-amber/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {t("link")}
                 </button>
@@ -114,7 +114,7 @@ export function ConcertLinkSuggestions({ suggestions, total }: ConcertLinkSugges
                   type="button"
                   disabled={busy !== null}
                   onClick={() => void act(suggestion, "dismiss")}
-                  className="font-data text-xs text-paper-muted underline-offset-2 hover:text-paper hover:underline disabled:opacity-50"
+                  className="py-1.5 font-data text-xs text-paper-muted underline-offset-2 hover:text-paper hover:underline disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {t("dismiss")}
                 </button>

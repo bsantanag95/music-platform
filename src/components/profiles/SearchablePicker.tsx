@@ -60,6 +60,8 @@ interface SearchablePickerProps {
   texts: SearchablePickerTexts;
   /** Clase del campo, para igualarlo a los de un formulario (búsqueda avanzada). */
   inputClassName?: string;
+  /** Clase de la etiqueta, para igualarla a las de un formulario denso (diálogos de conciertos). */
+  labelClassName?: string;
 }
 
 type Row = { kind: "none" } | { kind: "option"; option: PickerOption };
@@ -68,7 +70,7 @@ type Row = { kind: "none" } | { kind: "option"; option: PickerOption };
 // ARIA con la lista en línea, no flotante: dentro del panel lateral de edición una lista
 // absoluta quedaría recortada por su scroll. Se filtra al escribir; las flechas mueven la
 // opción activa, Enter elige, Escape cierra la lista (sin cerrar el panel que la aloja).
-export function SearchablePicker({ id, label, value, onChange, options, texts, inputClassName }: SearchablePickerProps) {
+export function SearchablePicker({ id, label, value, onChange, options, texts, inputClassName, labelClassName }: SearchablePickerProps) {
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -152,7 +154,7 @@ export function SearchablePicker({ id, label, value, onChange, options, texts, i
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="font-display text-sm text-paper-muted">
+      <label htmlFor={id} className={labelClassName ?? "font-display text-sm text-paper-muted"}>
         {label}
       </label>
       <input

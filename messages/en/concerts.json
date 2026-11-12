@@ -63,6 +63,8 @@
     "note": "Note",
     "notePlaceholder": "Who you went with, what you remember…",
     "audienceLabel": "Who can see it",
+    "extras": "Tour, setlist and note",
+    "optional": "Optional",
     "save": "Save",
     "saving": "Saving…",
     "cancel": "Cancel",
@@ -98,6 +100,7 @@
     "emptyLink": "Go to My concerts",
     "newer": "Newer",
     "older": "Older",
+    "pagination": "Concert pages",
     "source": "Concerts from MusicBrainz (CC0) and the community.",
     "page": {
       "metaTitle": "{name} · {date}",

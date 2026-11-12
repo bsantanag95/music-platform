@@ -23,6 +23,24 @@ export function formatConcertDate(value: string, locale: string): string {
   }).format(date);
 }
 
+/**
+ * Fecha corta para la columna de fecha de una lista: "2 nov" bajo el encabezado de su año, "2 nov 2027" si el año no
+ * está a la vista (`withYear`). Con menos precisión: "noviembre" o, si solo hay año, el año.
+ */
+export function formatConcertShortDate(value: string, locale: string, withYear = false): string {
+  const { year, month, day } = concertDateParts(value);
+  if (month === null) return String(year);
+  const date = new Date(Date.UTC(year, month - 1, day ?? 1));
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: "UTC",
+    month: day !== null || withYear ? "short" : "long",
+    ...(day !== null ? { day: "numeric" } : {}),
+    ...(withYear ? { year: "numeric" } : {}),
+  })
+    .format(date)
+    .replace(/\./g, "");
+}
+
 /** Lugar: "Autódromo de Interlagos · São Paulo, Brasil", omitiendo lo que falte; `null` si no hay nada. */
 export function formatConcertPlace(entry: Pick<ConcertEntryDto, "venue" | "city" | "country">, locale: string): string | null {
   const area = [entry.city, entry.country ? countryName(entry.country, locale) : null].filter(Boolean).join(", ");

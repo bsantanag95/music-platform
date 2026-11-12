@@ -7,6 +7,7 @@ import { ListenEntryForm } from "@/components/diary/ListenEntryForm";
 import { AlbumListPicker, type PickerMembership } from "@/components/album/AlbumListPicker";
 import { HeartIcon, ToggleChip } from "@/components/album/AlbumRelationPanel";
 import { ArtistJourneyStartModal } from "@/components/artist-journey/ArtistJourneyStartModal";
+import { SECONDARY_LINK } from "@/components/ui/segmented";
 import { ConcertFormDialog } from "@/components/concerts/ConcertFormDialog";
 import { followArtist, getArtistJourneyAlbums, unfollowArtist } from "@/lib/api/catalog";
 import { createListenEntry } from "@/lib/api/diary";
@@ -273,13 +274,20 @@ function AuthenticatedPanel({
         <Field
           label={t("live")}
           action={
-            <button ref={concertButton} type="button" className={linkButton} onClick={() => setConcertFormOpen(true)}>
+            <button
+              ref={concertButton}
+              type="button"
+              // Nombre propio: "+ Registrar" a secas ya es el botón de la fila Escuchas.
+              aria-label={t("liveLogLabel")}
+              className={linkButton}
+              onClick={() => setConcertFormOpen(true)}
+            >
               {t("liveLog")}
             </button>
           }
         >
           {concerts > 0 ? (
-            <Link href={`/me/concerts?artista=${artistId}`} className="self-start font-body text-sm text-paper underline-offset-2 hover:underline">
+            <Link href={`/me/concerts?artista=${artistId}`} className={`self-start font-body text-sm ${SECONDARY_LINK}`}>
               {t("liveCount", { count: concerts })}
             </Link>
           ) : (

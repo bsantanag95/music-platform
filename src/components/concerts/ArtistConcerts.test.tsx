@@ -87,7 +87,7 @@ describe("ArtistConcerts", () => {
 
   it("ya estuvo: muestra 'Estuviste' y Quitar", () => {
     renderWithIntl(<ArtistConcerts artist={ARTIST} signedIn baseHref="/a" data={page({ past: [concert("p1", { attending: true })] })} />);
-    expect(screen.getByText(`✓ ${shared.attending}`)).toBeInTheDocument();
+    expect(screen.getByText(shared.attending)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: shared.unattend })).toBeInTheDocument();
   });
 

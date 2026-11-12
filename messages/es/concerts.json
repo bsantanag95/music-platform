@@ -63,6 +63,8 @@
     "note": "Nota",
     "notePlaceholder": "Con quién fuiste, qué recuerdas…",
     "audienceLabel": "Quién lo ve",
+    "extras": "Gira, setlist y nota",
+    "optional": "Opcional",
     "save": "Guardar",
     "saving": "Guardando…",
     "cancel": "Cancelar",
@@ -98,6 +100,7 @@
     "emptyLink": "Ir a Mis conciertos",
     "newer": "Más recientes",
     "older": "Más antiguos",
+    "pagination": "Páginas de conciertos",
     "source": "Conciertos de MusicBrainz (CC0) y de la comunidad.",
     "page": {
       "metaTitle": "{name} · {date}",

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { attendConcert, unattendConcert } from "@/lib/api/concerts";
+import { CONCERT_ROW_BUTTON, CheckIcon } from "./concert-ui";
 
 // "Estuve ahí" / "Estuviste · Quitar" (openspec: add-shared-concerts-phase1). Cambia al instante y refresca la ruta
 // para que la cifra de personas salga del servidor. Sin sesión no se muestra (lo decide quien lo usa).
@@ -38,28 +39,26 @@ export function AttendButton({ concertId, artistId, initialAttending }: AttendBu
   }
 
   return (
-    <span className="inline-flex flex-col items-end gap-0.5">
+    <span className="inline-flex flex-col items-end gap-1">
       {attending ? (
-        <span className="inline-flex items-center gap-2 font-data text-xs">
-          <span className="rounded border border-amber/60 bg-amber/10 px-2.5 py-1 uppercase tracking-wide text-amber">
-            ✓ {t("attending")}
+        // Un solo control en dos partes: el estado (no interactivo) y, tras una línea, la acción de quitarlo. Quitar no
+        // comparte botón con el estado para que un toque de más no borre el registro.
+        <span aria-busy={busy} className="inline-flex min-h-8 items-stretch overflow-hidden rounded border border-amber/50 font-data text-xs">
+          <span className="inline-flex items-center gap-1.5 bg-amber/10 px-2.5 uppercase tracking-wide text-amber">
+            <CheckIcon />
+            {t("attending")}
           </span>
           <button
             type="button"
             disabled={busy}
             onClick={() => void toggle(false)}
-            className="text-paper-muted underline-offset-2 hover:text-paper hover:underline disabled:opacity-50"
+            className="border-l border-amber/50 px-2.5 text-paper-muted transition-colors hover:bg-ink hover:text-paper focus-visible:-outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {t("unattend")}
           </button>
         </span>
       ) : (
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void toggle(true)}
-          className="rounded border border-ink-border px-2.5 py-1 font-data text-xs uppercase tracking-wide text-paper-muted transition-colors hover:border-amber hover:text-paper disabled:opacity-50"
-        >
+        <button type="button" disabled={busy} aria-busy={busy} onClick={() => void toggle(true)} className={CONCERT_ROW_BUTTON}>
           {t("attend")}
         </button>
       )}

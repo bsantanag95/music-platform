@@ -1,9 +1,10 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Dialog } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
+import { Chevron } from "@/components/ui/Chevron";
 import { CountryPicker } from "@/components/profiles/CountryPicker";
 import { useTargetSearch } from "@/components/quick-actions/use-target-search";
 import { ApiError } from "@/lib/api/client";
@@ -19,11 +20,14 @@ import {
   type DiaryAudience,
 } from "@/lib/api/schemas";
 import { concertDateParts } from "./concert-format";
+import { CONCERT_DIALOG_FOOTER, CONCERT_FIELD, CONCERT_LABEL, CONCERT_PICKER_LABEL } from "./concert-ui";
 
 // Formulario de un concierto en un diálogo (openspec: add-my-concerts). Se abre desde la fila En vivo del panel del
 // artista (artista fijo) y desde Mis conciertos (con buscador de artistas, o para editar un registro). La fecha se arma
 // con la precisión que la persona recuerde: el año es obligatorio; el mes y el día, opcionales. Al crear no se elige
-// audiencia: el servidor aplica la audiencia por defecto del usuario (spec default-audience); al editar sí.
+// audiencia: el servidor aplica la audiencia por defecto del usuario (spec default-audience); al editar sí. Lo esencial
+// (artista, fecha, lugar) queda a la vista; la gira, el setlist y la nota van plegados y se abren solos si ya tienen
+// datos o si el error está ahí. El pie con el error y las acciones queda fijo mientras el formulario se desplaza.
 
 const AUDIENCES: DiaryAudience[] = ["private", "followers", "public"];
 
@@ -39,10 +43,16 @@ type ConcertFormDialogProps = {
 } & ({ mode: "create"; artist: ArtistRef | null } | { mode: "edit"; entry: ConcertEntryDto });
 
 type ErrorKey = "artistRequired" | "yearInvalid" | "dateFuture" | "dayInvalid" | "setlistInvalid" | "generic";
+type FieldKey = "artist" | "year" | "day" | "setlist";
 
-const fieldClass =
-  "rounded border border-ink-border bg-ink px-2 py-1.5 font-body text-base text-paper placeholder:text-paper-muted disabled:opacity-50 sm:text-sm";
-const labelClass = "flex flex-col gap-1 font-data text-xs text-paper-muted";
+/** Campo al que pertenece cada error: se marca como inválido y recibe el foco. */
+const ERROR_FIELD: Partial<Record<ErrorKey, FieldKey>> = {
+  artistRequired: "artist",
+  yearInvalid: "year",
+  dateFuture: "year",
+  dayInvalid: "day",
+  setlistInvalid: "setlist",
+};
 
 /** Arma la fecha parcial; `null` si el año no es un número de 4 cifras. */
 export function buildConcertDate(year: string, month: string, day: string): string | null {
@@ -87,21 +97,33 @@ export function ConcertFormDialog(props: ConcertFormDialogProps) {
   const [audience, setAudience] = useState<DiaryAudience>(initial?.audience ?? "followers");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<ErrorKey | null>(null);
+  const [extrasOpen, setExtrasOpen] = useState(Boolean(initial?.tour || initial?.setlistfmUrl || initial?.note));
+  const fields = useRef<Partial<Record<FieldKey, HTMLElement | null>>>({});
+  const invalid = error ? ERROR_FIELD[error] : undefined;
 
   // El artista solo se elige con buscador al crear desde Mis conciertos sin artista, o al cambiarlo.
   const canChangeArtist = !(props.mode === "create" && props.artist !== null);
   const search = useTargetSearch("artist", artist ? "" : query);
 
+  /** Muestra el error y lleva el foco al campo que lo causó (abriendo antes los opcionales si está ahí). */
+  function fail(key: ErrorKey) {
+    setError(key);
+    const field = ERROR_FIELD[key];
+    if (!field) return;
+    if (field === "setlist") setExtrasOpen(true);
+    requestAnimationFrame(() => fields.current[field]?.focus());
+  }
+
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (saving) return;
-    if (!artist) return setError("artistRequired");
+    if (!artist) return fail("artistRequired");
     const problem = dateError(year, month, day);
-    if (problem) return setError(problem);
+    if (problem) return fail(problem);
     const url = setlistfmUrl.trim();
-    if (url && (!SETLISTFM_SETLIST_URL_PATTERN.test(url) || url.length > CONCERT_URL_MAX)) return setError("setlistInvalid");
+    if (url && (!SETLISTFM_SETLIST_URL_PATTERN.test(url) || url.length > CONCERT_URL_MAX)) return fail("setlistInvalid");
 
-    const fields = {
+    const payload = {
       artistId: artist.id,
       eventDate: buildConcertDate(year, month, day)!,
       country: country || null,
@@ -115,10 +137,10 @@ export function ConcertFormDialog(props: ConcertFormDialogProps) {
     setError(null);
     try {
       const saved =
-        props.mode === "edit" ? await updateConcert(props.entry.id, { ...fields, audience }) : await createConcert(fields);
+        props.mode === "edit" ? await updateConcert(props.entry.id, { ...payload, audience }) : await createConcert(payload);
       props.onSaved(saved);
     } catch (caught) {
-      setError(caught instanceof ApiError && caught.code === "ARTIST_NOT_FOUND" ? "artistRequired" : "generic");
+      fail(caught instanceof ApiError && caught.code === "ARTIST_NOT_FOUND" ? "artistRequired" : "generic");
     } finally {
       setSaving(false);
     }
@@ -129,16 +151,16 @@ export function ConcertFormDialog(props: ConcertFormDialogProps) {
 
   return (
     <Dialog open={props.open} onClose={props.onClose} title={props.mode === "edit" ? t("editTitle") : t("createTitle")}>
-      <form onSubmit={(event) => void submit(event)} className="flex flex-col gap-4" noValidate>
-        <div className="flex flex-col gap-1">
+      <form onSubmit={(event) => void submit(event)} className="flex flex-col gap-5" noValidate>
+        <div className="flex flex-col gap-1.5">
           <span className="font-data text-xs text-paper-muted">{t("artist")}</span>
           {artist ? (
-            <div className="flex items-center justify-between gap-3 rounded border border-ink-border bg-ink px-2 py-1.5">
+            <div className="flex items-center justify-between gap-3 rounded border border-ink-border bg-ink px-2.5 py-2">
               <span className="truncate font-display text-sm text-paper">{artist.name}</span>
               {canChangeArtist && (
                 <button
                   type="button"
-                  className="font-data text-xs text-paper-muted underline-offset-2 hover:text-paper hover:underline"
+                  className="shrink-0 font-data text-xs text-paper-muted underline-offset-2 hover:text-paper hover:underline"
                   onClick={() => {
                     setArtist(null);
                     setQuery("");
@@ -149,17 +171,21 @@ export function ConcertFormDialog(props: ConcertFormDialogProps) {
               )}
             </div>
           ) : (
-            <div className="flex flex-col gap-1">
-              <label className={labelClass} htmlFor={`${fieldId}-artist`}>
+            <div className="flex flex-col gap-1.5">
+              <label className={CONCERT_LABEL} htmlFor={`${fieldId}-artist`}>
                 <span className="sr-only">{t("artistSearch")}</span>
                 <input
                   id={`${fieldId}-artist`}
+                  ref={(node) => {
+                    fields.current.artist = node;
+                  }}
                   type="search"
                   autoComplete="off"
+                  aria-invalid={invalid === "artist"}
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder={t("artistSearchPlaceholder")}
-                  className={fieldClass}
+                  className={CONCERT_FIELD}
                 />
               </label>
               {search.searchable && (
@@ -174,16 +200,16 @@ export function ConcertFormDialog(props: ConcertFormDialogProps) {
                 </p>
               )}
               {search.candidates.length > 0 && (
-                <ul className="themed-scrollbar flex max-h-48 flex-col gap-1 overflow-y-auto">
+                <ul className="themed-scrollbar flex max-h-48 flex-col overflow-y-auto rounded border border-ink-border bg-ink">
                   {search.candidates.map((candidate) => (
-                    <li key={candidate.id}>
+                    <li key={candidate.id} className="border-b border-ink-border/70 last:border-b-0">
                       <button
                         type="button"
                         onClick={() => {
                           setArtist({ id: candidate.id, name: candidate.title });
                           setError(null);
                         }}
-                        className="flex min-h-11 w-full flex-col items-start rounded border border-ink-border bg-ink px-2 py-1.5 text-left transition-colors hover:border-amber"
+                        className="flex min-h-11 w-full flex-col items-start justify-center px-2.5 py-1.5 text-left transition-colors hover:bg-ink-surface focus-visible:-outline-offset-2"
                       >
                         <span className="font-body text-sm text-paper">{candidate.title}</span>
                         {candidate.subtitle && <span className="font-data text-xs text-paper-muted">{candidate.subtitle}</span>}
@@ -196,22 +222,27 @@ export function ConcertFormDialog(props: ConcertFormDialogProps) {
           )}
         </div>
 
-        <fieldset className="flex flex-col gap-1" disabled={saving}>
-          <legend className="font-data text-xs text-paper-muted">{t("date")}</legend>
-          <div className="grid grid-cols-[6rem_minmax(0,1fr)_6rem] gap-2">
-            <label className={labelClass}>
+        <fieldset className="flex flex-col gap-1.5" disabled={saving}>
+          <legend className="pb-1.5 font-data text-xs text-paper-muted">{t("date")}</legend>
+          <div className="grid grid-cols-[5rem_minmax(0,1fr)] gap-2 sm:grid-cols-[5rem_minmax(0,1fr)_6.5rem]">
+            <label className={CONCERT_LABEL}>
               {t("year")}
               <input
+                ref={(node) => {
+                  fields.current.year = node;
+                }}
                 type="text"
                 inputMode="numeric"
                 maxLength={4}
                 required
+                aria-invalid={invalid === "year"}
+                aria-describedby={`${fieldId}-date-hint`}
                 value={year}
                 onChange={(event) => setYear(event.target.value.replace(/\D/g, ""))}
-                className={fieldClass}
+                className={`${CONCERT_FIELD} tabular-nums`}
               />
             </label>
-            <label className={labelClass}>
+            <label className={CONCERT_LABEL}>
               {t("month")}
               <select
                 value={month}
@@ -219,7 +250,7 @@ export function ConcertFormDialog(props: ConcertFormDialogProps) {
                   setMonth(event.target.value);
                   if (!event.target.value) setDay("");
                 }}
-                className={fieldClass}
+                className={CONCERT_FIELD}
               >
                 <option value="">{t("monthNone")}</option>
                 {months.map((value) => (
@@ -229,9 +260,18 @@ export function ConcertFormDialog(props: ConcertFormDialogProps) {
                 ))}
               </select>
             </label>
-            <label className={labelClass}>
+            <label className={`${CONCERT_LABEL} col-span-2 sm:col-span-1`}>
               {t("day")}
-              <select value={day} disabled={!month} onChange={(event) => setDay(event.target.value)} className={fieldClass}>
+              <select
+                ref={(node) => {
+                  fields.current.day = node;
+                }}
+                value={day}
+                disabled={!month}
+                aria-invalid={invalid === "day"}
+                onChange={(event) => setDay(event.target.value)}
+                className={`${CONCERT_FIELD} tabular-nums`}
+              >
                 <option value="">{t("dayNone")}</option>
                 {days.map((value) => (
                   <option key={value} value={String(value)}>
@@ -241,17 +281,14 @@ export function ConcertFormDialog(props: ConcertFormDialogProps) {
               </select>
             </label>
           </div>
-          <p className="font-data text-xs text-paper-muted">{t("dateHint")}</p>
+          <p id={`${fieldId}-date-hint`} className="font-data text-xs text-paper-muted">
+            {t("dateHint")}
+          </p>
         </fieldset>
 
-        <CountryPicker id={`${fieldId}-country`} label={t("country")} value={country} onChange={setCountry} />
-
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <label className={labelClass}>
-            {t("city")}
-            <input type="text" maxLength={CONCERT_TEXT_MAX} value={city} onChange={(event) => setCity(event.target.value)} className={fieldClass} />
-          </label>
-          <label className={labelClass}>
+        {/* El lugar, en el orden en que después se lee: recinto · ciudad, país. */}
+        <div className="flex flex-col gap-3">
+          <label className={CONCERT_LABEL}>
             {t("venue")}
             <input
               type="text"
@@ -259,57 +296,101 @@ export function ConcertFormDialog(props: ConcertFormDialogProps) {
               value={venue}
               placeholder={t("venuePlaceholder")}
               onChange={(event) => setVenue(event.target.value)}
-              className={fieldClass}
+              className={CONCERT_FIELD}
             />
           </label>
-        </div>
-
-        <label className={labelClass}>
-          {t("tour")}
-          <input type="text" maxLength={CONCERT_TEXT_MAX} value={tour} onChange={(event) => setTour(event.target.value)} className={fieldClass} />
-        </label>
-
-        <div className="flex flex-col gap-1">
-          <label className={labelClass}>
-            {t("setlist")}
-            <input
-              type="url"
-              inputMode="url"
-              maxLength={CONCERT_URL_MAX}
-              value={setlistfmUrl}
-              placeholder="https://www.setlist.fm/setlist/…"
-              aria-describedby={`${fieldId}-setlist-hint`}
-              onChange={(event) => setSetlistfmUrl(event.target.value)}
-              className={fieldClass}
+          <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2">
+            <label className={CONCERT_LABEL}>
+              {t("city")}
+              <input
+                type="text"
+                maxLength={CONCERT_TEXT_MAX}
+                value={city}
+                onChange={(event) => setCity(event.target.value)}
+                className={CONCERT_FIELD}
+              />
+            </label>
+            <CountryPicker
+              id={`${fieldId}-country`}
+              label={t("country")}
+              value={country}
+              onChange={setCountry}
+              inputClassName={CONCERT_FIELD}
+              labelClassName={CONCERT_PICKER_LABEL}
             />
-          </label>
-          <p id={`${fieldId}-setlist-hint`} className="font-data text-xs text-paper-muted">
-            {t("setlistHint")}
-          </p>
+          </div>
         </div>
 
-        <label className={labelClass}>
-          {t("note")}
-          <input
-            type="text"
-            maxLength={CONCERT_NOTE_MAX}
-            value={note}
-            placeholder={t("notePlaceholder")}
-            onChange={(event) => setNote(event.target.value)}
-            className={fieldClass}
-          />
-        </label>
+        <details
+          open={extrasOpen}
+          onToggle={(event) => setExtrasOpen(event.currentTarget.open)}
+          className="group border-t border-ink-border pt-3"
+        >
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded py-1 font-data text-xs text-paper-muted transition-colors hover:text-paper [&::-webkit-details-marker]:hidden">
+            <span>
+              <span className="text-paper">{t("extras")}</span> · {t("optional")}
+            </span>
+            <Chevron direction="down" className="group-open:rotate-180" />
+          </summary>
+          <div className="flex flex-col gap-3 pt-3">
+            <label className={CONCERT_LABEL}>
+              {t("tour")}
+              <input
+                type="text"
+                maxLength={CONCERT_TEXT_MAX}
+                value={tour}
+                onChange={(event) => setTour(event.target.value)}
+                className={CONCERT_FIELD}
+              />
+            </label>
+
+            <div className="flex flex-col gap-1.5">
+              <label className={CONCERT_LABEL}>
+                {t("setlist")}
+                <input
+                  ref={(node) => {
+                    fields.current.setlist = node;
+                  }}
+                  type="url"
+                  inputMode="url"
+                  maxLength={CONCERT_URL_MAX}
+                  value={setlistfmUrl}
+                  placeholder="https://www.setlist.fm/setlist/…"
+                  aria-invalid={invalid === "setlist"}
+                  aria-describedby={`${fieldId}-setlist-hint`}
+                  onChange={(event) => setSetlistfmUrl(event.target.value)}
+                  className={CONCERT_FIELD}
+                />
+              </label>
+              <p id={`${fieldId}-setlist-hint`} className="font-data text-xs text-paper-muted">
+                {t("setlistHint")}
+              </p>
+            </div>
+
+            <label className={CONCERT_LABEL}>
+              {t("note")}
+              <input
+                type="text"
+                maxLength={CONCERT_NOTE_MAX}
+                value={note}
+                placeholder={t("notePlaceholder")}
+                onChange={(event) => setNote(event.target.value)}
+                className={CONCERT_FIELD}
+              />
+            </label>
+          </div>
+        </details>
 
         {props.mode === "edit" && (
-          <fieldset className="flex flex-col gap-1" disabled={saving}>
-            <legend className="font-data text-xs text-paper-muted">{t("audienceLabel")}</legend>
+          <fieldset className="flex flex-col" disabled={saving}>
+            <legend className="pb-1.5 font-data text-xs text-paper-muted">{t("audienceLabel")}</legend>
             <div className="flex flex-wrap gap-1.5">
               {AUDIENCES.map((value) => {
                 const active = audience === value;
                 return (
                   <label
                     key={value}
-                    className={`cursor-pointer rounded border px-2 py-1 font-data text-xs transition-colors ${
+                    className={`cursor-pointer rounded border px-2.5 py-1.5 font-data text-xs transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-amber ${
                       active ? "border-amber bg-amber/10 text-amber" : "border-ink-border text-paper-muted hover:text-paper"
                     }`}
                   >
@@ -328,13 +409,12 @@ export function ConcertFormDialog(props: ConcertFormDialogProps) {
           </fieldset>
         )}
 
-        {error && (
-          <p role="alert" className="font-data text-xs text-danger">
-            {t(`errors.${error}`)}
-          </p>
-        )}
-
-        <div className="flex justify-end gap-2">
+        <div className={CONCERT_DIALOG_FOOTER}>
+          {error && (
+            <p role="alert" className="basis-full font-data text-xs text-danger sm:mr-auto sm:basis-0 sm:grow">
+              {t(`errors.${error}`)}
+            </p>
+          )}
           <Button type="button" variant="ghost" onClick={props.onClose} disabled={saving}>
             {t("cancel")}
           </Button>
