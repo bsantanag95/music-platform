@@ -128,10 +128,10 @@ describe("removeConcert", () => {
 
 describe("listas", () => {
   it("lista propia con totales", async () => {
-    mocks.results = [[row], [{ concerts: 1, artists: 1, countries: 1 }]];
+    mocks.results = [[row], [{ concerts: 1, artists: 1, cities: 1, countries: 1 }]];
     await expect(listOwnConcerts(USER)).resolves.toMatchObject({
       entries: [{ id: ENTRY }],
-      totals: { concerts: 1, artists: 1, countries: 1 },
+      totals: { concerts: 1, artists: 1, cities: 1, countries: 1 },
       truncated: false,
     });
   });
@@ -140,7 +140,7 @@ describe("listas", () => {
     mocks.getProfileByUsername.mockResolvedValue({ id: USER, profileVisibility: "private", relation: "none", blockedByMe: false });
     await expect(listProfileConcerts("ana", null)).resolves.toEqual({
       entries: [],
-      totals: { concerts: 0, artists: 0, countries: 0 },
+      totals: { concerts: 0, artists: 0, cities: 0, countries: 0 },
       truncated: false,
     });
     expect(mocks.calls).toEqual([]);

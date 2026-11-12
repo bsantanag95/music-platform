@@ -3,13 +3,13 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { artistHref } from "@/lib/catalog-links";
 import type { ConcertEntryDto } from "@/lib/api/schemas";
-import { formatConcertDate, formatConcertPlace, formatConcertShortDate, groupConcertsByYear } from "./concert-format";
-import { CONCERT_BADGE, CONCERT_ROW, CONCERT_ROW_DATE, CONCERT_SECTION_HEADING, ConcertAudienceIcon } from "./concert-ui";
+import { concertDateBlock, formatConcertDate, formatConcertPlace, groupConcertsByYear } from "./concert-format";
+import { CONCERT_BADGE, CONCERT_SECTION_HEADING, ConcertArtistPhoto, ConcertAudienceIcon } from "./concert-ui";
 
 // Conciertos agrupados por año (openspec: add-my-concerts): la usan Mis conciertos (con acciones por fila) y la página
-// de un perfil (solo lectura). Misma anatomía de fila que la pestaña del artista (`concert-ui`): la fecha corta en su
-// columna (el año ya está en el encabezado), el artista como título, y debajo el lugar, la gira, la nota y los enlaces
-// (el concierto compartido y el setlist) en una sola línea de datos.
+// de un perfil (solo lectura). Cada fila (openspec: redesign-my-concerts) lleva la fecha como un bloque de calendario (el
+// año ya está en el encabezado), la foto del artista desde `sm`, el artista como título y debajo el lugar, la gira, el
+// concierto compartido con cuántas personas estuvieron, el setlist y la nota.
 
 interface ConcertYearListProps {
   entries: readonly ConcertEntryDto[];
@@ -26,6 +26,11 @@ interface ConcertYearListProps {
 
 const META_LINK = "text-paper-muted underline-offset-2 transition-colors hover:text-paper hover:underline";
 
+/** Id del grupo de un año, para los saltos de la barra de Mis conciertos. */
+export function concertYearAnchor(year: string): string {
+  return `anio-${year}`;
+}
+
 export function ConcertYearList({ entries, renderActions, showAudience = false, onAddPlace }: ConcertYearListProps) {
   const t = useTranslations("concerts");
   const locale = useLocale();
@@ -33,7 +38,12 @@ export function ConcertYearList({ entries, renderActions, showAudience = false, 
   return (
     <div className="flex flex-col gap-8">
       {groupConcertsByYear(entries).map((group) => (
-        <section key={group.year} aria-labelledby={`concerts-${group.year}`} className="flex flex-col gap-1">
+        <section
+          key={group.year}
+          id={concertYearAnchor(group.year)}
+          aria-labelledby={`concerts-${group.year}`}
+          className="flex scroll-mt-[calc(var(--site-header-h)+3.5rem)] flex-col gap-1"
+        >
           <h2 id={`concerts-${group.year}`} className={CONCERT_SECTION_HEADING}>
             <span className="font-display text-xl tabular-nums text-paper">{t("yearHeading", { year: group.year })}</span>
             <span className="font-data text-xs text-paper-muted">{t("yearCount", { count: group.entries.length })}</span>
@@ -42,12 +52,23 @@ export function ConcertYearList({ entries, renderActions, showAudience = false, 
             {group.entries.map((entry) => {
               const place = formatConcertPlace(entry, locale);
               const actions = renderActions?.(entry);
+              const date = concertDateBlock(entry.eventDate, locale);
+              const attendees = entry.concertAttendees;
               return (
-                <li key={entry.id} className={CONCERT_ROW}>
-                  <time dateTime={entry.eventDate} title={formatConcertDate(entry.eventDate, locale)} className={CONCERT_ROW_DATE}>
-                    {formatConcertShortDate(entry.eventDate, locale)}
+                <li
+                  key={entry.id}
+                  className="grid grid-cols-[3.25rem_minmax(0,1fr)_auto] items-start gap-x-3 py-3.5 sm:grid-cols-[3.25rem_3.25rem_minmax(0,1fr)_auto] sm:gap-x-4"
+                >
+                  <time
+                    dateTime={entry.eventDate}
+                    title={formatConcertDate(entry.eventDate, locale)}
+                    className="flex min-h-[3.25rem] flex-col items-center justify-center rounded border border-ink-border font-data leading-tight"
+                  >
+                    <span className={`tabular-nums text-paper ${date.sub ? "font-display text-xl" : "text-xs"}`}>{date.main}</span>
+                    {date.sub && <span className="text-[0.65rem] uppercase tracking-wide text-paper-muted">{date.sub}</span>}
                   </time>
-                  <div className={`flex min-w-0 flex-col gap-1 ${actions ? "" : "col-span-2"}`}>
+                  <ConcertArtistPhoto name={entry.artist.name} photoUrl={entry.artist.photoUrl ?? null} className="hidden sm:flex" />
+                  <div className={`flex min-w-0 flex-col gap-1 ${actions ? "" : "col-span-2 sm:col-span-1"}`}>
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                       <Link
                         href={artistHref(entry.artist.name, entry.artist.id)}
@@ -55,6 +76,7 @@ export function ConcertYearList({ entries, renderActions, showAudience = false, 
                       >
                         {entry.artist.name}
                       </Link>
+                      {entry.concertKind === "festival" && <span className={CONCERT_BADGE}>{t("shared.festival")}</span>}
                       {showAudience && entry.audience === "private" && (
                         <span className={`inline-flex items-center gap-1 ${CONCERT_BADGE}`}>
                           <ConcertAudienceIcon audience="private" />
@@ -79,14 +101,20 @@ export function ConcertYearList({ entries, renderActions, showAudience = false, 
                         </button>
                       </p>
                     ) : null}
-                    {entry.tour && <p className="font-body text-sm text-paper-muted">{entry.tour}</p>}
-                    {entry.note && <p className="max-w-prose text-pretty font-body text-sm italic text-paper-muted">{entry.note}</p>}
-                    {(entry.concertId || entry.setlistfmUrl) && (
-                      <p className="flex flex-wrap gap-x-4 gap-y-0.5 pt-0.5 font-data text-xs">
+                    {(entry.tour || entry.concertId || entry.setlistfmUrl) && (
+                      <p className="flex flex-wrap gap-x-4 gap-y-0.5 font-data text-xs text-paper-muted">
+                        {entry.tour && <span>{entry.tour}</span>}
                         {entry.concertId && (
                           // Concierto compartido enlazado (openspec: add-shared-concerts-phase1); el id pelado redirige al slug.
                           <Link href={`/concert/${entry.concertId}`} className={META_LINK}>
-                            {t("shared.linked")} →
+                            {t("shared.linked")}
+                            {attendees &&
+                              ` · ${
+                                attendees.kind === "exact"
+                                  ? t("shared.attendeesExact", { count: attendees.value })
+                                  : t("shared.attendeesFewer", { threshold: attendees.threshold })
+                              }`}{" "}
+                            →
                           </Link>
                         )}
                         {entry.setlistfmUrl && (
@@ -97,8 +125,9 @@ export function ConcertYearList({ entries, renderActions, showAudience = false, 
                         )}
                       </p>
                     )}
+                    {entry.note && <p className="max-w-prose text-pretty font-body text-sm italic text-paper-muted">{entry.note}</p>}
                   </div>
-                  {actions && <div className="-mr-1 flex shrink-0 items-center pl-3 sm:pl-0">{actions}</div>}
+                  {actions && <div className="-mr-1 flex shrink-0 items-center">{actions}</div>}
                 </li>
               );
             })}

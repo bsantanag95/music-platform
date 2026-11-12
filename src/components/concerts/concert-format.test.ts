@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { concertDateParts, formatConcertDate, formatConcertPlace, formatConcertShortDate, groupConcertsByYear } from "./concert-format";
+import {
+  concertDateBlock,
+  concertDateParts,
+  concertsByArtist,
+  earliestConcertDate,
+  formatConcertDate,
+  formatConcertPlace,
+  formatConcertShortDate,
+  groupConcertsByYear,
+  mostSeenArtist,
+  needsPlace,
+} from "./concert-format";
 import { buildConcertDate } from "./ConcertFormDialog";
 
 describe("formatConcertDate", () => {
@@ -79,5 +90,33 @@ describe("formatConcertShortDate", () => {
     expect(formatConcertShortDate("2027-06-20", "es", true)).toBe("20 jun 2027");
     expect(formatConcertShortDate("2027-06", "es", true)).toBe("jun 2027");
     expect(formatConcertShortDate("2027-06-20", "en", true)).toBe("Jun 20, 2027");
+  });
+});
+
+describe("resumen y vista por artista (redesign-my-concerts)", () => {
+  const base = { id: "x", country: null, city: null, venue: null, tour: null, setlistfmUrl: null, note: null, audience: "public" as const, concertId: null, createdAt: "", updatedAt: "" };
+  const e = (artist: string, eventDate: string, over = {}) => ({ ...base, artist: { id: artist, name: artist }, eventDate, ...over });
+
+  it("bloque de fecha: día y mes, solo mes o una raya", () => {
+    expect(concertDateBlock("2019-11-02", "es")).toEqual({ main: "2", sub: "nov" });
+    expect(concertDateBlock("2022-05", "es")).toEqual({ main: "may", sub: null });
+    expect(concertDateBlock("2008", "es")).toEqual({ main: "—", sub: null });
+  });
+
+  it("le falta lugar sin ciudad o sin país, salvo si está enlazado", () => {
+    expect(needsPlace(e("A", "2020", { city: "Lima", country: "PE" }))).toBe(false);
+    expect(needsPlace(e("A", "2020", { country: "DE" }))).toBe(true);
+    expect(needsPlace(e("A", "2020", { concertId: "c" }))).toBe(false);
+  });
+
+  it("por artista: más vistos primero, con sus años; el más visto solo si es único y de más de una vez", () => {
+    const entries = [e("Soda", "2019"), e("Mötley", "2022"), e("Soda", "2007"), e("Soda", "2014")];
+    expect(concertsByArtist(entries).map((g) => [g.artist.name, g.count, g.firstYear, g.lastYear])).toEqual([
+      ["Soda", 3, "2007", "2019"],
+      ["Mötley", 1, "2022", "2022"],
+    ]);
+    expect(mostSeenArtist(entries)?.artist.name).toBe("Soda");
+    expect(mostSeenArtist([e("A", "2020"), e("B", "2021")])).toBeNull();
+    expect(earliestConcertDate(entries)).toBe("2007");
   });
 });

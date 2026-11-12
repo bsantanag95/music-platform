@@ -3,11 +3,6 @@
   "metaTitle": "Mis conciertos",
   "intro": "Los conciertos a los que fuiste, año por año.",
   "register": "Registrar concierto",
-  "totals": {
-    "concerts": "{count, plural, one {# concierto} other {# conciertos}}",
-    "artists": "{count, plural, one {# artista} other {# artistas}}",
-    "countries": "{count, plural, one {# país} other {# países}}"
-  },
   "yearHeading": "{year}",
   "yearCount": "{count, plural, one {# concierto} other {# conciertos}}",
   "filteredBy": "Solo {artist}",
@@ -222,5 +217,29 @@
     "attended": "{count, plural, one {estuviste en #} other {estuviste en #}}",
     "past": "Fechas",
     "source": "Giras de MusicBrainz (CC0)."
+  },
+  "summary": {
+    "label": "Resumen",
+    "concerts": "{count, plural, one {concierto} other {conciertos}}",
+    "artists": "{count, plural, one {artista} other {artistas}}",
+    "cities": "{count, plural, one {ciudad} other {ciudades}}",
+    "countries": "{count, plural, one {país} other {países}}",
+    "since": "Desde {date}",
+    "mostSeen": "el más visto: {artist}, {count} veces"
+  },
+  "incomplete": {
+    "body": "{count, plural, one {A # concierto le falta la ciudad o el país. Con los dos puedes compartirlo y encontrar a quienes también fueron.} other {A # conciertos les falta la ciudad o el país. Con los dos puedes compartirlos y encontrar a quienes también fueron.}}",
+    "showing": "{count, plural, one {# concierto por completar.} other {# conciertos por completar.}}",
+    "action": "Completar",
+    "showAll": "Ver todos"
+  },
+  "view": {
+    "label": "Vista",
+    "years": "Por año",
+    "artists": "Por artista",
+    "jump": "Ir a un año"
+  },
+  "byArtist": {
+    "times": "{count, plural, one {# vez} other {# veces}}"
   }
 }

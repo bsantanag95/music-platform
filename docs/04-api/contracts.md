@@ -1953,8 +1953,10 @@ setlist de setlist.fm (`https://(www.)setlist.fm/setlist/…`, hasta 500); `audi
 ### `GET /api/me/concerts?artistId=`
 
 Conciertos propios por fecha descendente (la fecha más precisa antes que la parcial del mismo período), hasta 500.
-`artistId` opcional acota a un artista. **200 OK:** `{ entries: [...], totals: { concerts, artists, countries },
-truncated }`; los totales siguen el filtro. **400** `VALIDATION_ERROR` si `artistId` no es un UUID. **401**
+`artistId` opcional acota a un artista. **200 OK:** `{ entries: [...], totals: { concerts, artists, cities, countries },
+truncated }`; los totales siguen el filtro (`cities` cuenta pares ciudad + país distintos). Cada registro trae además
+`artist.photoUrl` y, si está enlazado, `concertKind` (`concert` | `festival`) y `concertAttendees` (cifra con umbral de
+5) (`redesign-my-concerts`). **400** `VALIDATION_ERROR` si `artistId` no es un UUID. **401**
 `AUTH_REQUIRED`.
 
 ### `POST /api/me/concerts`

@@ -155,6 +155,22 @@ async function attendeeCounts(concertIds: string[]): Promise<Map<string, number>
   return new Map(rows.map((row) => [row.concertId!, Number(row.n)]));
 }
 
+/**
+ * Tipo y personas que estuvieron (con umbral) de un lote de conciertos compartidos, para las filas de Mis conciertos y del
+ * perfil (openspec: redesign-my-concerts). Dos consultas por lote, no una por fila.
+ */
+export async function linkedConcertSummaries(
+  concertIds: string[],
+): Promise<Map<string, { kind: ConcertKind; attendees: ThresholdedCount | null }>> {
+  const ids = [...new Set(concertIds)];
+  if (ids.length === 0) return new Map();
+  const [kinds, counts] = await Promise.all([
+    db.select({ id: concert.id, kind: concert.kind }).from(concert).where(inArray(concert.id, ids)),
+    attendeeCounts(ids),
+  ]);
+  return new Map(kinds.map((row) => [row.id, { kind: row.kind as ConcertKind, attendees: thresholded(counts.get(row.id) ?? 0) }]));
+}
+
 async function attendingSet(viewerId: string | null, concertIds: string[]): Promise<Set<string> | null> {
   if (!viewerId) return null;
   if (concertIds.length === 0) return new Set();
