@@ -11,13 +11,16 @@ interface CountryPickerProps {
   /** Código del país elegido; cadena vacía = sin país. */
   value: string;
   onChange: (code: string) => void;
+  /** Clases del campo y de la etiqueta, para igualarlos a los de un formulario denso. */
+  inputClassName?: string;
+  labelClassName?: string;
 }
 
 // Selector de país con buscador (spec profile-personal-info, "País del perfil"): la
 // lista cerrada de países con su nombre en el idioma de la interfaz, ordenados en él.
 // Se busca por el nombre, sin distinguir mayúsculas ni tildes ("mexico" encuentra
 // México). Envoltorio fino de `SearchablePicker`, el mismo combobox que la zona horaria.
-export function CountryPicker({ id, label, value, onChange }: CountryPickerProps) {
+export function CountryPicker({ id, label, value, onChange, inputClassName, labelClassName }: CountryPickerProps) {
   const t = useTranslations("users");
   const locale = useLocale();
 
@@ -40,5 +43,16 @@ export function CountryPicker({ id, label, value, onChange }: CountryPickerProps
     [t],
   );
 
-  return <SearchablePicker id={id} label={label} value={value} onChange={onChange} options={options} texts={texts} />;
+  return (
+    <SearchablePicker
+      id={id}
+      label={label}
+      value={value}
+      onChange={onChange}
+      options={options}
+      texts={texts}
+      inputClassName={inputClassName}
+      labelClassName={labelClassName}
+    />
+  );
 }

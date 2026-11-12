@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { concertDateParts, formatConcertDate, formatConcertPlace, groupConcertsByYear } from "./concert-format";
+import { concertDateParts, formatConcertDate, formatConcertPlace, formatConcertShortDate, groupConcertsByYear } from "./concert-format";
 import { buildConcertDate } from "./ConcertFormDialog";
 
 describe("formatConcertDate", () => {
@@ -65,5 +65,19 @@ describe("formatConcertRange (add-shared-concerts-phase3)", () => {
     const { formatConcertRange } = await import("./shared-concert-format");
     expect(formatConcertRange("2019-06-26", "2019-06-30", "es")).toMatch(/26.*30.*junio.*2019/);
     expect(formatConcertRange("2019-06-26", "2019-06-30", "en")).toMatch(/June 26.*30.*2019/);
+  });
+});
+
+describe("formatConcertShortDate", () => {
+  it("bajo el encabezado de su año: día y mes corto, el mes entero o el año", () => {
+    expect(formatConcertShortDate("2019-11-02", "es")).toBe("2 nov");
+    expect(formatConcertShortDate("2019-11", "es")).toBe("noviembre");
+    expect(formatConcertShortDate("2019", "es")).toBe("2019");
+  });
+
+  it("con el año cuando el encabezado no lo dice", () => {
+    expect(formatConcertShortDate("2027-06-20", "es", true)).toBe("20 jun 2027");
+    expect(formatConcertShortDate("2027-06", "es", true)).toBe("jun 2027");
+    expect(formatConcertShortDate("2027-06-20", "en", true)).toBe("Jun 20, 2027");
   });
 });

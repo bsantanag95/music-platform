@@ -6,11 +6,13 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RowMenu, RowMenuItem } from "@/components/ui/RowMenu";
+import { SECONDARY_LINK } from "@/components/ui/segmented";
 import { removeConcert, unlinkConcertEntry } from "@/lib/api/concerts";
 import type { ConcertEntryDto, ConcertListResponse } from "@/lib/api/schemas";
 import { CommunityConcertDialog } from "./CommunityConcertDialog";
 import { ConcertFormDialog } from "./ConcertFormDialog";
 import { ConcertYearList } from "./ConcertYearList";
+import { PlusIcon } from "./concert-ui";
 import { formatConcertDate } from "./concert-format";
 
 // Gestión de Mis conciertos (openspec: add-my-concerts): totales, registrar (con buscador de artistas), editar (con la
@@ -74,23 +76,27 @@ export function OwnConcerts({ initial, filter }: OwnConcertsProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="font-data text-sm text-paper-muted">
-          {[
-            t("totals.concerts", { count: totals.concerts }),
-            t("totals.artists", { count: totals.artists }),
-            t("totals.countries", { count: totals.countries }),
-          ].join(" · ")}
-        </p>
-        <Button type="button" onClick={() => setDialog({ kind: "create" })}>
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        {/* Sin registros, los tres ceros no dicen nada: queda solo el botón. */}
+        {totals.concerts > 0 && (
+          <p className="font-data text-sm tabular-nums text-paper-muted">
+            {[
+              t("totals.concerts", { count: totals.concerts }),
+              t("totals.artists", { count: totals.artists }),
+              t("totals.countries", { count: totals.countries }),
+            ].join(" · ")}
+          </p>
+        )}
+        <Button type="button" className="ml-auto" onClick={() => setDialog({ kind: "create" })}>
+          <PlusIcon />
           {t("register")}
         </Button>
       </div>
 
       {filter && (
-        <p className="flex flex-wrap items-baseline gap-3 font-data text-xs text-paper-muted">
-          <span>{t("filteredBy", { artist: filter.name })}</span>
-          <Link href="/me/concerts" className="text-paper underline-offset-2 hover:underline">
+        <p className="flex flex-wrap items-center gap-2 font-data text-xs text-paper-muted">
+          <span className="rounded border border-ink-border bg-ink-surface px-2 py-1 text-paper">{t("filteredBy", { artist: filter.name })}</span>
+          <Link href="/me/concerts" className={`py-1 ${SECONDARY_LINK}`}>
             {t("clearFilter")}
           </Link>
         </p>
@@ -108,13 +114,13 @@ export function OwnConcerts({ initial, filter }: OwnConcertsProps) {
       )}
 
       {entries.length === 0 ? (
-        <div className="flex flex-col gap-1 rounded border border-ink-border bg-ink-surface p-6">
+        <div className="flex flex-col items-start gap-2 rounded-lg border border-ink-border bg-ink-surface px-5 py-8 sm:px-8">
           {filter ? (
             <p className="font-body text-sm text-paper-muted">{t("empty.filtered")}</p>
           ) : (
             <>
-              <p className="font-display text-base text-paper">{t("empty.title")}</p>
-              <p className="font-body text-sm text-paper-muted">{t("empty.body")}</p>
+              <p className="font-display text-lg text-paper">{t("empty.title")}</p>
+              <p className="max-w-prose text-pretty font-body text-sm text-paper-muted">{t("empty.body")}</p>
             </>
           )}
         </div>

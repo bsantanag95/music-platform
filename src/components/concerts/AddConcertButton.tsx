@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
+import { PlusIcon } from "./concert-ui";
 import { CommunityConcertDialog } from "./CommunityConcertDialog";
 
 // "Agregar un concierto" en la pestaña Conciertos del artista (openspec: add-shared-concerts-phase2). Solo con sesión
@@ -13,7 +14,8 @@ export function AddConcertButton({ artist }: { artist: { id: string; name: strin
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button type="button" variant="ghost" onClick={() => setOpen(true)}>
+      <Button type="button" variant="secondary" onClick={() => setOpen(true)}>
+        <PlusIcon />
         {t("add")}
       </Button>
       {open && <CommunityConcertDialog open artist={artist} onClose={() => setOpen(false)} />}

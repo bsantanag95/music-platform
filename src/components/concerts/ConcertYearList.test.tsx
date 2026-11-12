@@ -50,7 +50,7 @@ describe("ConcertYearList", () => {
     const setlist = screen.getByRole("link", { name: /Setlist/ });
     expect(setlist).toHaveAttribute("target", "_blank");
     expect(setlist.getAttribute("rel")).not.toContain("nofollow");
-    expect(screen.getByText("20 de octubre de 2007")).toBeInTheDocument();
+    expect(screen.getByText("20 oct")).toHaveAttribute("title", "20 de octubre de 2007");
   });
 
   it("la audiencia solo aparece para el dueño y si no es pública", () => {
