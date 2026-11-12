@@ -29,9 +29,9 @@ Un festival se registra como un registro por artista. El mismo artista puede ten
 - **Panel "Tu relación" del artista:** fila **En vivo** después de Colección. Sin registros, "Sin conciertos
   registrados"; con registros, "Lo viste N veces" (enlaza a Mis conciertos filtrada por el artista). "Registrar" abre el
   formulario con el artista elegido y la cifra se actualiza al guardar, sin recargar.
-- **Mis conciertos** (`/me/concerts`, en el menú personal como "Conciertos"): totales (conciertos, artistas, países),
+- **Mis conciertos** (`/me/concerts`, en el menú personal como "Conciertos"): "Registrar concierto" junto al título y debajo los totales (conciertos, artistas, países; sin las cifras en cero; `polish-my-concerts`),
   grupos por año del más reciente al más antiguo (la fecha completa antes que la parcial del mismo período), y por fila
-  artista, fecha, lugar, gira, nota, botón **Setlist** si hay enlace y la audiencia si no es pública. Menú por fila con
+  artista, fecha, lugar, gira, nota, botón **Setlist** si hay enlace y la audiencia si no es pública (Seguidores como ícono, Privado con su nombre); una fila sin lugar ofrece "Agregar lugar". Menú por fila con
   Editar y Quitar (con confirmación). Botón "Registrar concierto" con buscador de artistas. `?artista=<id>` filtra por
   un artista. Hasta 500 registros.
 - **Perfil:** riel **Conciertos** con los 6 últimos visibles y el total, y página `/users/<usuario>/concerts` de solo

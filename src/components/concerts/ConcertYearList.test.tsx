@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import userEvent from "@testing-library/user-event";
 import { screen, within } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import type { ConcertEntryDto } from "@/lib/api/schemas";
@@ -61,6 +62,29 @@ describe("ConcertYearList", () => {
     renderWithIntl(<ConcertYearList entries={entries} showAudience />);
     expect(screen.getAllByText(/Privado/)).toHaveLength(1);
     expect(screen.queryByText(/Público/)).not.toBeInTheDocument();
+  });
+});
+
+describe("ConcertYearList para el dueño (polish-my-concerts)", () => {
+  it("Seguidores es un ícono con su nombre al pasar el cursor; Privado conserva el texto", () => {
+    renderWithIntl(
+      <ConcertYearList entries={[entry("c1", "2019", { audience: "followers" }), entry("c2", "2018", { audience: "private" })]} showAudience />,
+    );
+    expect(screen.getByTitle("Seguidores")).toHaveTextContent("Seguidores");
+    expect(screen.getByTitle("Seguidores").querySelector(".sr-only")).not.toBeNull();
+    expect(screen.getByText("Privado")).not.toHaveClass("sr-only");
+  });
+
+  it("una fila sin lugar ofrece agregarlo solo al dueño", async () => {
+    const onAddPlace = vi.fn();
+    const only = entry("c1", "2022-05");
+    const { unmount } = renderWithIntl(<ConcertYearList entries={[only]} />);
+    expect(screen.queryByRole("button", { name: "Agregar lugar" })).not.toBeInTheDocument();
+    unmount();
+    renderWithIntl(<ConcertYearList entries={[only, entry("c2", "2022", { country: "DE" })]} onAddPlace={onAddPlace} />);
+    expect(screen.getAllByRole("button", { name: "Agregar lugar" })).toHaveLength(1);
+    await userEvent.click(screen.getByRole("button", { name: "Agregar lugar" }));
+    expect(onAddPlace).toHaveBeenCalledWith(only);
   });
 });
 

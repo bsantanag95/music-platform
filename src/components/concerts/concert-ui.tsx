@@ -84,3 +84,23 @@ export function CloseIcon(props: IconProps) {
     </Icon>
   );
 }
+
+/** Audiencia de un recuerdo (candado o personas), con los mismos trazos que el resto de la app, en 12 px. */
+export function ConcertAudienceIcon({ audience }: { audience: "private" | "followers" }) {
+  return (
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
+      {audience === "private" ? (
+        <>
+          <rect x="3" y="7" width="10" height="7" rx="1.5" />
+          <path d="M5.5 7V5a2.5 2.5 0 015 0v2" />
+        </>
+      ) : (
+        <>
+          <circle cx="6" cy="5.5" r="2.3" />
+          <path d="M1.8 13c.4-2.4 2-3.6 4.2-3.6s3.8 1.2 4.2 3.6" />
+          <path d="M10.5 3.6a2.2 2.2 0 010 4M12 9.6c1.4.5 2.2 1.6 2.4 3.4" />
+        </>
+      )}
+    </svg>
+  );
+}

@@ -1,7 +1,7 @@
 {
   "title": "My concerts",
   "metaTitle": "My concerts",
-  "intro": "The concerts you went to. It is your own record: nobody verifies dates or places.",
+  "intro": "The concerts you went to, year by year.",
   "register": "Log a concert",
   "totals": {
     "concerts": "{count, plural, one {# concert} other {# concerts}}",
@@ -29,7 +29,9 @@
     "cancel": "Cancel",
     "removeError": "The concert could not be removed. Try again.",
     "unlink": "Unlink from the concert",
-    "unlinkError": "Couldn't unlink. Try again."
+    "unlinkError": "Couldn't unlink. Try again.",
+    "noPlace": "No place",
+    "addPlace": "Add place"
   },
   "audience": {
     "private": "Private",

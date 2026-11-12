@@ -35,12 +35,19 @@ async function MyConcertsPage({ searchParams }: { searchParams: Promise<SearchPa
   return (
     // Mismo ancho y título a la izquierda que Colección, Diario y Pendientes.
     <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-4 py-12">
-      <header className="flex min-w-0 flex-col gap-1.5">
-        <h1 className="font-display text-2xl text-paper">{t("title")}</h1>
-        <p className="font-body text-sm text-paper-muted">{t("intro")}</p>
-      </header>
-      {links && links.suggestions.length > 0 && <ConcertLinkSuggestions suggestions={links.suggestions} total={links.total} />}
-      <OwnConcerts initial={initial} filter={filter} />
+      <OwnConcerts
+        initial={initial}
+        filter={filter}
+        heading={
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <h1 className="font-display text-2xl text-paper">{t("title")}</h1>
+            <p className="font-body text-sm text-paper-muted">{t("intro")}</p>
+          </div>
+        }
+        suggestions={
+          links && links.suggestions.length > 0 ? <ConcertLinkSuggestions suggestions={links.suggestions} total={links.total} /> : null
+        }
+      />
     </main>
   );
 }
