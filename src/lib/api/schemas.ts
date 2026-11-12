@@ -3397,9 +3397,16 @@ export const UpdateConcertRequestSchema = z
   });
 export type UpdateConcertRequest = z.input<typeof UpdateConcertRequestSchema>;
 
+/** Cifra con umbral (personas que estuvieron en un concierto compartido): la exacta o "menos de N". */
+const ConcertThresholdedCountSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("exact"), value: z.number() }),
+  z.object({ kind: z.literal("fewer"), threshold: z.number() }),
+]);
+
 export const ConcertEntrySchema = z.object({
   id: z.uuid(),
-  artist: z.object({ id: z.uuid(), name: z.string() }),
+  /** `photoUrl`: miniatura de la foto de Commons del artista, si tiene (openspec: redesign-my-concerts). */
+  artist: z.object({ id: z.uuid(), name: z.string(), photoUrl: z.string().nullable().optional() }),
   eventDate: z.string(),
   country: z.string().nullable(),
   city: z.string().nullable(),
@@ -3410,12 +3417,15 @@ export const ConcertEntrySchema = z.object({
   audience: DiaryAudienceSchema,
   /** Concierto compartido al que está enlazado (openspec: add-shared-concerts-phase1); `null` si no lo está. */
   concertId: z.uuid().nullable(),
+  /** Tipo del concierto compartido enlazado y cuántas personas estuvieron, con umbral (openspec: redesign-my-concerts). */
+  concertKind: z.enum(["concert", "festival"]).nullable().optional(),
+  concertAttendees: ConcertThresholdedCountSchema.nullable().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
 export type ConcertEntryDto = z.infer<typeof ConcertEntrySchema>;
 
-export const ConcertTotalsSchema = z.object({ concerts: z.number(), artists: z.number(), countries: z.number() });
+export const ConcertTotalsSchema = z.object({ concerts: z.number(), artists: z.number(), cities: z.number(), countries: z.number() });
 export type ConcertTotals = z.infer<typeof ConcertTotalsSchema>;
 
 export const ConcertListResponseSchema = z.object({

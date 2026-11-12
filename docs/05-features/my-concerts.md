@@ -31,7 +31,10 @@ Un festival se registra como un registro por artista. El mismo artista puede ten
   formulario con el artista elegido y la cifra se actualiza al guardar, sin recargar.
 - **Mis conciertos** (`/me/concerts`, en el menú personal como "Conciertos"): "Registrar concierto" junto al título y debajo los totales (conciertos, artistas, países; sin las cifras en cero; `polish-my-concerts`),
   grupos por año del más reciente al más antiguo (la fecha completa antes que la parcial del mismo período), y por fila
-  artista, fecha, lugar, gira, nota, botón **Setlist** si hay enlace y la audiencia si no es pública (Seguidores como ícono, Privado con su nombre); una fila sin lugar ofrece "Agregar lugar". Menú por fila con
+  artista, fecha, lugar, gira, nota, botón **Setlist** si hay enlace y la audiencia si no es pública (Seguidores como ícono, Privado con su nombre); una fila sin lugar ofrece "Agregar lugar". Desde `redesign-my-concerts`: resumen con cifras (conciertos, artistas,
+  ciudades y países), "Desde …" y el artista más visto; aviso de registros sin ciudad o país con filtro para verlos; barra
+  fija Por año / Por artista con saltos a cada año; filas con la fecha como bloque, la foto del artista, "Festival" y
+  cuántas personas estuvieron en el concierto compartido. Menú por fila con
   Editar y Quitar (con confirmación). Botón "Registrar concierto" con buscador de artistas. `?artista=<id>` filtra por
   un artista. Hasta 500 registros.
 - **Perfil:** riel **Conciertos** con los 6 últimos visibles y el total, y página `/users/<usuario>/concerts` de solo

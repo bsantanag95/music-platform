@@ -103,7 +103,10 @@ async function main() {
     const order = own.entries.map((e) => e.id);
     check(order[0] === c.id, "2024-05 primero");
     check(order.indexOf(b.id) < order.indexOf(a.id) && order.indexOf(d.id) < order.indexOf(a.id), "la fecha completa de 2019 antes que el registro de solo año");
-    check(own.totals.concerts === 4 && own.totals.artists === 1 && own.totals.countries === 2, "totales: 4 conciertos, 1 artista, 2 países");
+    check(
+      own.totals.concerts === 4 && own.totals.artists === 1 && own.totals.cities === 1 && own.totals.countries === 2,
+      "totales: 4 conciertos, 1 artista, 1 ciudad, 2 países",
+    );
     check((await concerts.listOwnConcerts(owner.id, { artistId: art.id })).entries.length === 4, "filtro por artista");
     check((await concerts.countOwnConcertsForArtist(owner.id, art.id)) === 4, "la cifra del panel cuenta todas las audiencias");
 

@@ -11,6 +11,7 @@ import { isValidConcertDate, type ConcertEntryDto, type ConcertTotals } from "@/
 import { resolveNewContentAudience } from "@/services/social/default-audience";
 import { audiencesForProfile } from "@/services/social/visibility";
 import type { Audience } from "@/services/social/types";
+import { linkedConcertSummaries } from "./shared";
 
 export type ConcertEntry = ConcertEntryDto;
 
@@ -60,6 +61,7 @@ const baseSelection = {
   id: concertEntry.id,
   artistId: concertEntry.artistId,
   artistName: artist.name,
+  artistPhoto: artist.photoUrl,
   eventDate: concertEntry.eventDate,
   country: concertEntry.country,
   city: concertEntry.city,
@@ -79,6 +81,7 @@ type Row = {
   id: string;
   artistId: string;
   artistName: string;
+  artistPhoto: string | null;
   eventDate: string;
   country: string | null;
   city: string | null;
@@ -92,10 +95,13 @@ type Row = {
   updatedAt: Date;
 };
 
-function serialize(row: Row): ConcertEntry {
+type LinkedSummaries = Awaited<ReturnType<typeof linkedConcertSummaries>>;
+
+function serialize(row: Row, linked: LinkedSummaries = new Map()): ConcertEntry {
+  const shared = row.concertId ? linked.get(row.concertId) : undefined;
   return {
     id: row.id,
-    artist: { id: row.artistId, name: row.artistName },
+    artist: { id: row.artistId, name: row.artistName, photoUrl: row.artistPhoto },
     eventDate: row.eventDate,
     country: row.country,
     city: row.city,
@@ -105,9 +111,17 @@ function serialize(row: Row): ConcertEntry {
     note: row.note,
     audience: row.audience as Audience,
     concertId: row.concertId,
+    concertKind: shared?.kind ?? null,
+    concertAttendees: shared?.attendees ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
+}
+
+/** Filas con el tipo y las personas de su concierto compartido, leídos por lote. */
+async function serializeAll(rows: Row[]): Promise<ConcertEntry[]> {
+  const linked = await linkedConcertSummaries(rows.map((row) => row.concertId).filter((id): id is string => Boolean(id)));
+  return rows.map((row) => serialize(row, linked));
 }
 
 // Fecha descendente como texto: dentro de un mismo período, la fecha más precisa queda antes que la parcial
@@ -136,7 +150,8 @@ export async function getOwned(entryId: string, userId: string): Promise<Concert
     .where(and(eq(concertEntry.id, entryId), eq(concertEntry.userId, userId)))
     .limit(1);
   if (!row) notFound();
-  return serialize(row);
+  const [entry] = await serializeAll([row]);
+  return entry!;
 }
 
 /** Registra un concierto. No es un toggle: cada llamada crea un registro, aunque haya otro igual. */
@@ -206,23 +221,26 @@ async function readList(conditions: SQL[], owner: boolean): Promise<ConcertList>
       .select({
         concerts: count(),
         artists: sql<number>`count(distinct ${concertEntry.artistId})`.mapWith(Number),
+        // Una ciudad es el par ciudad + país, sin distinguir mayúsculas: "Santiago, CL" y "Santiago, ES" son dos.
+        cities: sql<number>`count(distinct lower(${concertEntry.city}) || '|' || coalesce(${concertEntry.country}, ''))`.mapWith(Number),
         countries: sql<number>`count(distinct ${concertEntry.country})`.mapWith(Number),
       })
       .from(concertEntry)
       .where(where),
   ]);
   return {
-    entries: rows.slice(0, CONCERT_LIST_MAX).map(serialize),
+    entries: await serializeAll(rows.slice(0, CONCERT_LIST_MAX)),
     totals: {
       concerts: Number(totals?.concerts ?? 0),
       artists: totals?.artists ?? 0,
+      cities: totals?.cities ?? 0,
       countries: totals?.countries ?? 0,
     },
     truncated: rows.length > CONCERT_LIST_MAX,
   };
 }
 
-const EMPTY_LIST: ConcertList = { entries: [], totals: { concerts: 0, artists: 0, countries: 0 }, truncated: false };
+const EMPTY_LIST: ConcertList = { entries: [], totals: { concerts: 0, artists: 0, cities: 0, countries: 0 }, truncated: false };
 
 /** Conciertos propios, opcionalmente de un artista. Los totales siguen el mismo filtro. */
 export async function listOwnConcerts(userId: string, filters: { artistId?: string } = {}): Promise<ConcertList> {
@@ -261,7 +279,7 @@ export async function getConcertPreview(username: string, viewerId: string | nul
       .limit(CONCERT_PREVIEW_SIZE),
     db.select({ n: count() }).from(concertEntry).where(where),
   ]);
-  return { entries: rows.map(serialize), total: Number(total?.n ?? 0) };
+  return { entries: await serializeAll(rows), total: Number(total?.n ?? 0) };
 }
 
 /** Cuántas veces el usuario registró haber visto al artista (fila En vivo del panel), con cualquier audiencia. */

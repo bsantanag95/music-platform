@@ -3,11 +3,6 @@
   "metaTitle": "My concerts",
   "intro": "The concerts you went to, year by year.",
   "register": "Log a concert",
-  "totals": {
-    "concerts": "{count, plural, one {# concert} other {# concerts}}",
-    "artists": "{count, plural, one {# artist} other {# artists}}",
-    "countries": "{count, plural, one {# country} other {# countries}}"
-  },
   "yearHeading": "{year}",
   "yearCount": "{count, plural, one {# concert} other {# concerts}}",
   "filteredBy": "Only {artist}",
@@ -222,5 +217,29 @@
     "attended": "{count, plural, one {you were at #} other {you were at #}}",
     "past": "Dates",
     "source": "Tours from MusicBrainz (CC0)."
+  },
+  "summary": {
+    "label": "Summary",
+    "concerts": "{count, plural, one {concert} other {concerts}}",
+    "artists": "{count, plural, one {artist} other {artists}}",
+    "cities": "{count, plural, one {city} other {cities}}",
+    "countries": "{count, plural, one {country} other {countries}}",
+    "since": "Since {date}",
+    "mostSeen": "most seen: {artist}, {count} times"
+  },
+  "incomplete": {
+    "body": "{count, plural, one {# concert is missing its city or country. With both you can share it and find who else was there.} other {# concerts are missing their city or country. With both you can share them and find who else was there.}}",
+    "showing": "{count, plural, one {# concert to complete.} other {# concerts to complete.}}",
+    "action": "Complete",
+    "showAll": "Show all"
+  },
+  "view": {
+    "label": "View",
+    "years": "By year",
+    "artists": "By artist",
+    "jump": "Go to a year"
+  },
+  "byArtist": {
+    "times": "{count, plural, one {# time} other {# times}}"
   }
 }

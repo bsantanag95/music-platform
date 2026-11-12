@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { AppImage } from "@/components/ui/AppImage";
 
 // Piezas visuales que comparten las listas y los formularios de conciertos: la pestaña del artista, Mis conciertos, la
 // página de conciertos de un perfil y los dos diálogos. Una sola anatomía de fila (fecha · contenido · acción) y un solo
@@ -102,5 +103,24 @@ export function ConcertAudienceIcon({ audience }: { audience: "private" | "follo
         </>
       )}
     </svg>
+  );
+}
+
+/**
+ * Foto del artista en una fila o tarjeta de conciertos (openspec: redesign-my-concerts): la miniatura de Commons si la
+ * tiene; si no, su inicial sobre la superficie, del mismo tamaño, para que las filas no salten.
+ */
+export function ConcertArtistPhoto({ name, photoUrl, className = "" }: { name: string; photoUrl: string | null; className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`relative size-[3.25rem] shrink-0 items-center justify-center overflow-hidden rounded bg-ink-surface font-display text-lg text-paper-muted ${className || "flex"}`}
+    >
+      {photoUrl ? (
+        <AppImage src={photoUrl} alt="" fill sizes="52px" className="object-cover object-[center_20%]" />
+      ) : (
+        name.trim().charAt(0).toUpperCase()
+      )}
+    </span>
   );
 }

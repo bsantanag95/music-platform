@@ -6,20 +6,28 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RowMenu, RowMenuItem } from "@/components/ui/RowMenu";
-import { SECONDARY_LINK } from "@/components/ui/segmented";
+import {
+  SECONDARY_LINK,
+  SEGMENT_GROUP,
+  SEGMENT_OPTION,
+} from "@/components/ui/segmented";
 import { removeConcert, unlinkConcertEntry } from "@/lib/api/concerts";
 import type { ConcertEntryDto, ConcertListResponse } from "@/lib/api/schemas";
 import { CommunityConcertDialog } from "./CommunityConcertDialog";
 import { ConcertFormDialog } from "./ConcertFormDialog";
-import { ConcertYearList } from "./ConcertYearList";
+import { ConcertArtistGrid } from "./ConcertArtistGrid";
+import { ConcertsSummary } from "./ConcertsSummary";
+import { ConcertYearList, concertYearAnchor } from "./ConcertYearList";
 import { PlusIcon } from "./concert-ui";
-import { formatConcertDate } from "./concert-format";
+import { concertYear, formatConcertDate, needsPlace } from "./concert-format";
 
 // Gestión de Mis conciertos (openspec: add-my-concerts): totales, registrar (con buscador de artistas), editar (con la
 // audiencia) y quitar con confirmación. Los datos vienen del servidor; tras cada cambio se refresca la ruta. Un recuerdo
 // sin enlazar con fecha completa, ciudad y país ofrece "Compartir este concierto" (add-shared-concerts-phase2); uno
 // enlazado, "Desvincular del concierto" (add-shared-concerts-phase3). "Registrar concierto" va junto al título, como "Añadir copia"
-// en Colección, y los totales quedan debajo como una línea de datos, sin las cifras en cero (polish-my-concerts).
+// en Colección (polish-my-concerts). Debajo (openspec: redesign-my-concerts): el resumen con cifras, un aviso con los
+// registros a los que les falta ciudad o país (para compartirlos), y una barra fija con la vista Por año / Por artista y los
+// saltos a cada año.
 
 interface OwnConcertsProps {
   initial: ConcertListResponse;
@@ -40,17 +48,35 @@ type OpenDialog =
 
 /** Se puede compartir como concierto de la comunidad: sin enlazar, con el día exacto, ciudad y país. */
 export function isShareableEntry(entry: ConcertEntryDto): boolean {
-  return entry.concertId === null && entry.eventDate.length === 10 && Boolean(entry.city) && Boolean(entry.country);
+  return (
+    entry.concertId === null &&
+    entry.eventDate.length === 10 &&
+    Boolean(entry.city) &&
+    Boolean(entry.country)
+  );
 }
 
-export function OwnConcerts({ initial, filter, heading, suggestions = null }: OwnConcertsProps) {
+export function OwnConcerts({
+  initial,
+  filter,
+  heading,
+  suggestions = null,
+}: OwnConcertsProps) {
   const t = useTranslations("concerts");
   const locale = useLocale();
   const router = useRouter();
   const [dialog, setDialog] = useState<OpenDialog>(null);
   const [removeError, setRemoveError] = useState(false);
   const [unlinkError, setUnlinkError] = useState(false);
+  const [view, setView] = useState<"years" | "artists">("years");
+  // Solo los registros a completar, a pedido desde el aviso.
+  const [onlyIncomplete, setOnlyIncomplete] = useState(false);
   const { totals, entries } = initial;
+  const incomplete = entries.filter(needsPlace);
+  const shown = onlyIncomplete ? incomplete : entries;
+  const years = [
+    ...new Set(shown.map((entry) => concertYear(entry.eventDate))),
+  ];
 
   const saved = () => {
     setDialog(null);
@@ -89,25 +115,24 @@ export function OwnConcerts({ initial, filter, heading, suggestions = null }: Ow
             {t("register")}
           </Button>
         </div>
-        {/* Sin registros no hay totales; una cifra en cero (países sin ningún país anotado) tampoco dice nada. */}
-        {totals.concerts > 0 && (
-          <p className="font-data text-sm tabular-nums text-paper-muted">
-            {[
-              t("totals.concerts", { count: totals.concerts }),
-              totals.artists > 0 ? t("totals.artists", { count: totals.artists }) : null,
-              totals.countries > 0 ? t("totals.countries", { count: totals.countries }) : null,
-            ]
-              .filter(Boolean)
-              .join(" · ")}
-          </p>
-        )}
       </header>
+
+      {/* Sin registros no hay resumen; las cifras en cero (países sin ningún país anotado) se omiten. */}
+      {totals.concerts > 0 && (
+        <ConcertsSummary
+          totals={totals}
+          entries={entries}
+          complete={!filter && !initial.truncated}
+        />
+      )}
 
       {suggestions}
 
       {filter && (
         <p className="flex flex-wrap items-center gap-2 font-data text-xs text-paper-muted">
-          <span className="rounded border border-ink-border bg-ink-surface px-2 py-1 text-paper">{t("filteredBy", { artist: filter.name })}</span>
+          <span className="rounded border border-ink-border bg-ink-surface px-2 py-1 text-paper">
+            {t("filteredBy", { artist: filter.name })}
+          </span>
           <Link href="/me/concerts" className={`py-1 ${SECONDARY_LINK}`}>
             {t("clearFilter")}
           </Link>
@@ -125,43 +150,139 @@ export function OwnConcerts({ initial, filter, heading, suggestions = null }: Ow
         </p>
       )}
 
+      {!filter && incomplete.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-dashed border-paper-muted/40 px-4 py-3">
+          <p className="font-body text-sm text-paper">
+            {onlyIncomplete
+              ? t("incomplete.showing", { count: incomplete.length })
+              : t("incomplete.body", { count: incomplete.length })}
+          </p>
+          <button
+            type="button"
+            aria-pressed={onlyIncomplete}
+            onClick={() => {
+              setOnlyIncomplete((current) => !current);
+              setView("years");
+            }}
+            className={`font-data text-xs ${SECONDARY_LINK}`}
+          >
+            {onlyIncomplete ? t("incomplete.showAll") : t("incomplete.action")}
+          </button>
+        </div>
+      )}
+
+      {entries.length > 0 && !onlyIncomplete && (
+        <div className="sticky top-[var(--site-header-h)] z-10 -mx-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-ink-border bg-ink px-4 py-2 sm:mx-0 sm:px-0">
+          <div
+            role="group"
+            aria-label={t("view.label")}
+            className={SEGMENT_GROUP}
+          >
+            {(["years", "artists"] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                aria-pressed={view === option}
+                onClick={() => setView(option)}
+                className={SEGMENT_OPTION}
+              >
+                {t(`view.${option}`)}
+              </button>
+            ))}
+          </div>
+          {view === "years" && years.length > 1 && (
+            <nav
+              aria-label={t("view.jump")}
+              className="flex max-w-full gap-1 overflow-x-auto [scrollbar-width:none]"
+            >
+              {years.map((year) => (
+                <a
+                  key={year}
+                  href={`#${concertYearAnchor(year)}`}
+                  className="whitespace-nowrap rounded px-2 py-1 font-data text-xs tabular-nums text-paper-muted transition-colors hover:bg-ink-surface hover:text-paper"
+                >
+                  {year}
+                </a>
+              ))}
+            </nav>
+          )}
+        </div>
+      )}
+
       {entries.length === 0 ? (
         <div className="flex flex-col items-start gap-2 rounded-lg border border-ink-border bg-ink-surface px-5 py-8 sm:px-8">
           {filter ? (
-            <p className="font-body text-sm text-paper-muted">{t("empty.filtered")}</p>
+            <p className="font-body text-sm text-paper-muted">
+              {t("empty.filtered")}
+            </p>
           ) : (
             <>
-              <p className="font-display text-lg text-paper">{t("empty.title")}</p>
-              <p className="max-w-prose text-pretty font-body text-sm text-paper-muted">{t("empty.body")}</p>
+              <p className="font-display text-lg text-paper">
+                {t("empty.title")}
+              </p>
+              <p className="max-w-prose text-pretty font-body text-sm text-paper-muted">
+                {t("empty.body")}
+              </p>
             </>
           )}
         </div>
+      ) : view === "artists" && !onlyIncomplete ? (
+        <ConcertArtistGrid entries={entries} />
       ) : (
         <ConcertYearList
-          entries={entries}
+          entries={shown}
           showAudience
           onAddPlace={(entry) => setDialog({ kind: "edit", entry })}
           renderActions={(entry) => (
             <RowMenu label={t("row.menu", { artist: entry.artist.name })}>
-              <RowMenuItem onSelect={() => setDialog({ kind: "edit", entry })}>{t("row.edit")}</RowMenuItem>
+              <RowMenuItem onSelect={() => setDialog({ kind: "edit", entry })}>
+                {t("row.edit")}
+              </RowMenuItem>
               {isShareableEntry(entry) && (
-                <RowMenuItem onSelect={() => setDialog({ kind: "share", entry })}>{t("community.share")}</RowMenuItem>
+                <RowMenuItem
+                  onSelect={() => setDialog({ kind: "share", entry })}
+                >
+                  {t("community.share")}
+                </RowMenuItem>
               )}
-              {entry.concertId && <RowMenuItem onSelect={() => void unlink(entry)}>{t("row.unlink")}</RowMenuItem>}
-              <RowMenuItem danger onSelect={() => setDialog({ kind: "remove", entry })}>
+              {entry.concertId && (
+                <RowMenuItem onSelect={() => void unlink(entry)}>
+                  {t("row.unlink")}
+                </RowMenuItem>
+              )}
+              <RowMenuItem
+                danger
+                onSelect={() => setDialog({ kind: "remove", entry })}
+              >
                 {t("row.remove")}
               </RowMenuItem>
             </RowMenu>
           )}
         />
       )}
-      {initial.truncated && <p className="font-data text-xs text-paper-muted">{t("truncated", { count: entries.length })}</p>}
+      {initial.truncated && (
+        <p className="font-data text-xs text-paper-muted">
+          {t("truncated", { count: entries.length })}
+        </p>
+      )}
 
       {dialog?.kind === "create" && (
-        <ConcertFormDialog open mode="create" artist={filter} onClose={() => setDialog(null)} onSaved={saved} />
+        <ConcertFormDialog
+          open
+          mode="create"
+          artist={filter}
+          onClose={() => setDialog(null)}
+          onSaved={saved}
+        />
       )}
       {dialog?.kind === "edit" && (
-        <ConcertFormDialog open mode="edit" entry={dialog.entry} onClose={() => setDialog(null)} onSaved={saved} />
+        <ConcertFormDialog
+          open
+          mode="edit"
+          entry={dialog.entry}
+          onClose={() => setDialog(null)}
+          onSaved={saved}
+        />
       )}
       {dialog?.kind === "share" && (
         <CommunityConcertDialog
@@ -183,7 +304,10 @@ export function OwnConcerts({ initial, filter, heading, suggestions = null }: Ow
         title={t("row.removeTitle")}
         message={
           dialog?.kind === "remove"
-            ? t("row.removeMessage", { artist: dialog.entry.artist.name, date: formatConcertDate(dialog.entry.eventDate, locale) })
+            ? t("row.removeMessage", {
+                artist: dialog.entry.artist.name,
+                date: formatConcertDate(dialog.entry.eventDate, locale),
+              })
             : ""
         }
         confirmLabel={t("row.removeConfirm")}

@@ -41,6 +41,19 @@ export function formatConcertShortDate(value: string, locale: string, withYear =
     .replace(/\./g, "");
 }
 
+/**
+ * Fecha como bloque de calendario para las filas (openspec: redesign-my-concerts): el día grande y el mes abreviado debajo.
+ * Con solo mes, el mes arriba; con solo año, una raya: el año ya está en el encabezado del grupo.
+ */
+export function concertDateBlock(value: string, locale: string): { main: string; sub: string | null } {
+  const { year, month, day } = concertDateParts(value);
+  if (month === null) return { main: "—", sub: null };
+  const monthShort = new Intl.DateTimeFormat(locale, { timeZone: "UTC", month: "short" })
+    .format(new Date(Date.UTC(year, month - 1, 1)))
+    .replace(/\./g, "");
+  return day === null ? { main: monthShort, sub: null } : { main: String(day), sub: monthShort };
+}
+
 /** Lugar: "Autódromo de Interlagos · São Paulo, Brasil", omitiendo lo que falte; `null` si no hay nada. */
 export function formatConcertPlace(entry: Pick<ConcertEntryDto, "venue" | "city" | "country">, locale: string): string | null {
   const area = [entry.city, entry.country ? countryName(entry.country, locale) : null].filter(Boolean).join(", ");
@@ -63,4 +76,52 @@ export function groupConcertsByYear<T extends { eventDate: string }>(entries: re
     else groups.push({ year, entries: [entry] });
   }
   return groups;
+}
+
+/**
+ * Le falta ciudad o país para compartirlo y encontrar a quienes también fueron (openspec: redesign-my-concerts). Uno ya
+ * enlazado a un concierto compartido no cuenta: ese dato lo trae el concierto.
+ */
+export function needsPlace(entry: Pick<ConcertEntryDto, "concertId" | "city" | "country">): boolean {
+  return entry.concertId === null && (!entry.city || !entry.country);
+}
+
+/** Fecha más antigua de los registros (la lista llega por fecha descendente, pero no se asume). */
+export function earliestConcertDate(entries: readonly Pick<ConcertEntryDto, "eventDate">[]): string | null {
+  let earliest: string | null = null;
+  for (const entry of entries) if (earliest === null || entry.eventDate < earliest) earliest = entry.eventDate;
+  return earliest;
+}
+
+export interface ArtistConcertGroup {
+  artist: ConcertEntryDto["artist"];
+  count: number;
+  firstYear: string;
+  lastYear: string;
+}
+
+/** Registros por artista: más vistos primero; a igual cantidad, el visto más recientemente y luego por nombre. */
+export function concertsByArtist(entries: readonly ConcertEntryDto[]): ArtistConcertGroup[] {
+  const groups = new Map<string, ArtistConcertGroup>();
+  for (const entry of entries) {
+    const year = concertYear(entry.eventDate);
+    const group = groups.get(entry.artist.id);
+    if (!group) {
+      groups.set(entry.artist.id, { artist: entry.artist, count: 1, firstYear: year, lastYear: year });
+      continue;
+    }
+    group.count += 1;
+    if (year < group.firstYear) group.firstYear = year;
+    if (year > group.lastYear) group.lastYear = year;
+  }
+  return [...groups.values()].sort(
+    (a, b) => b.count - a.count || b.lastYear.localeCompare(a.lastYear) || a.artist.name.localeCompare(b.artist.name),
+  );
+}
+
+/** El artista visto más veces, solo si fue más de una: con todos empatados en uno no hay "más visto". */
+export function mostSeenArtist(entries: readonly ConcertEntryDto[]): ArtistConcertGroup | null {
+  const [top, second] = concertsByArtist(entries);
+  if (!top || top.count < 2 || (second && second.count === top.count)) return null;
+  return top;
 }

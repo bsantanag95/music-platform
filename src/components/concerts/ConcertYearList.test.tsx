@@ -51,7 +51,8 @@ describe("ConcertYearList", () => {
     const setlist = screen.getByRole("link", { name: /Setlist/ });
     expect(setlist).toHaveAttribute("target", "_blank");
     expect(setlist.getAttribute("rel")).not.toContain("nofollow");
-    expect(screen.getByText("20 oct")).toHaveAttribute("title", "20 de octubre de 2007");
+    // La fecha es un bloque: el día grande y el mes debajo, con la fecha completa en el título.
+    expect(screen.getByTitle("20 de octubre de 2007")).toHaveTextContent("20oct");
   });
 
   it("la audiencia solo aparece para el dueño y si no es pública", () => {
@@ -85,6 +86,31 @@ describe("ConcertYearList para el dueño (polish-my-concerts)", () => {
     expect(screen.getAllByRole("button", { name: "Agregar lugar" })).toHaveLength(1);
     await userEvent.click(screen.getByRole("button", { name: "Agregar lugar" }));
     expect(onAddPlace).toHaveBeenCalledWith(only);
+  });
+});
+
+describe("ConcertYearList: concierto compartido y foto (redesign-my-concerts)", () => {
+  it("un recuerdo enlazado dice cuántas personas estuvieron y si es un festival", () => {
+    renderWithIntl(
+      <ConcertYearList
+        entries={[
+          entry("c1", "2019-11-14", {
+            concertId: "00000000-0000-4000-8000-0000000000f1",
+            concertKind: "festival",
+            concertAttendees: { kind: "exact", value: 41 },
+          }),
+          entry("c2", "2018", { concertId: "00000000-0000-4000-8000-0000000000f2", concertAttendees: { kind: "fewer", threshold: 5 } }),
+        ]}
+      />,
+    );
+    expect(screen.getByRole("link", { name: /41 personas estuvieron/ })).toHaveAttribute("href", "/concert/00000000-0000-4000-8000-0000000000f1");
+    expect(screen.getByRole("link", { name: /Menos de 5 personas estuvieron/ })).toBeInTheDocument();
+    expect(screen.getAllByText("Festival")).toHaveLength(1);
+  });
+
+  it("sin foto del artista, su inicial en el mismo lugar", () => {
+    const { container } = renderWithIntl(<ConcertYearList entries={[entry("c1", "2019")]} />);
+    expect(container.querySelector('[aria-hidden="true"]')).toHaveTextContent("S");
   });
 });
 
