@@ -41,10 +41,10 @@ export type DiscographyGrouping = "type" | "decade" | "none";
 const GROUPINGS: readonly DiscographyGrouping[] = ["type", "decade", "none"];
 const GROUPING_STORAGE_KEY = "artist-discography-grouping";
 
-/** Agrupación efectiva: la elegida si se puede, si no la por defecto (por tipo si hay dos tipos, si no sin agrupar). */
+/** Agrupación efectiva: la elegida si se puede ("Tipo" solo existe con álbumes y EP); por defecto, sin agrupar. */
 export function effectiveGrouping(chosen: DiscographyGrouping | null, typeAvailable: boolean): DiscographyGrouping {
-  if (chosen === "decade" || chosen === "none") return chosen;
-  return typeAvailable ? "type" : "none";
+  if (chosen === "type") return typeAvailable ? "type" : "none";
+  return chosen ?? "none";
 }
 
 type MainBlockKey = "albums" | "eps";

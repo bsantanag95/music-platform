@@ -139,8 +139,10 @@ describe("ArtistDiscography", () => {
       bestRatedId: "dsotm",
       marks: { ...EMPTY_DISCOGRAPHY_MARKS, listened: ["ep"], stars: { dsotm: 4.5 }, favorites: ["dsotm"], pending: ["ep"] },
     });
+    // Por defecto no agrupa: el EP lleva su etiqueta. Al agrupar por tipo va en su bloque, sin etiqueta propia.
+    expect(within(screen.getByText("Disco ep").closest("a")!).getByText(d.ep)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Tipo" }));
     const ep = screen.getByText("Disco ep").closest("a")!;
-    // Con álbumes y EP, el EP va en su bloque y no lleva etiqueta propia.
     const epBlock = screen.getByRole("region", { name: new RegExp(`^${d.blocks.eps}`) });
     expect(within(epBlock).getByText("Disco ep")).toBeInTheDocument();
     expect(within(ep).queryByText(d.ep)).not.toBeInTheDocument();
@@ -172,6 +174,8 @@ describe("ArtistDiscography", () => {
       renderDiscography({
         sections: [{ key: "main", items: [studio("e1", 1979, { isEp: true }), studio("a1", 1980), studio("a2", 1981)] }],
       });
+      expect(screen.queryByRole("heading", { level: 3 })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Tipo" }));
       const headings = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
       expect(headings).toEqual([`${d.blocks.albums}2`, `${d.blocks.eps}1`]);
     });

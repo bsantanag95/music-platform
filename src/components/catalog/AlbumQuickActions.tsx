@@ -11,12 +11,13 @@ import { BookmarkIcon, HeartIcon, ToggleChip } from "@/components/album/AlbumRel
 import { formatStars } from "@/components/album/album-format";
 import { ListenEntryForm } from "@/components/diary/ListenEntryForm";
 import { StarRatingInput } from "@/components/social/StarRatingInput";
+import { RatingDetailDialog } from "@/components/album/RatingDetailDialog";
 import { getReleaseGroupMarks } from "@/lib/api/catalog";
 import { createListenEntry } from "@/lib/api/diary";
 import { toggleFavorite } from "@/lib/api/favorites";
-import { saveRating } from "@/lib/api/social";
+import { getRatings, saveRating } from "@/lib/api/social";
 import { toggleWantToListen } from "@/lib/api/want-to-listen";
-import type { ListenEntry } from "@/lib/api/schemas";
+import type { ListenEntry, RatingsResponse } from "@/lib/api/schemas";
 import { isScoreCoherent } from "@/lib/rating-range";
 
 // Menú "…" de acciones de un disco (openspec: add-discography-quick-actions y
@@ -89,6 +90,9 @@ export function AlbumQuickActions({
   const onDemand = preloaded === undefined;
   const [fetched, setFetched] = useState<DiscMarks | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
+  // El diálogo del puntaje detallado vive aquí, fuera del popover: va en un portal y un clic dentro de él
+  // cerraría el popover (y desmontaría el diálogo), igual que la hoja de compartir.
+  const [detail, setDetail] = useState<{ own: RatingsResponse["own"] } | null>(null);
   const [loadState, setLoadState] = useState<"idle" | "loading" | "error">("idle");
   // Última versión del callback, para no reinstalar los listeners en cada render.
   const onOpenChangeRef = useRef(onOpenChange);
@@ -230,7 +234,16 @@ export function AlbumQuickActions({
             </p>
           ) : (
             // Mientras llegan las marcas, las acciones se ven con su forma final y deshabilitadas.
-            <MenuActions item={item} marks={marks ?? LOADING_MARKS} loading={marks === null} onMarksChange={updateMarks} />
+            <MenuActions
+              item={item}
+              marks={marks ?? LOADING_MARKS}
+              loading={marks === null}
+              onMarksChange={updateMarks}
+              onOpenDetail={(own) => {
+                setDetail({ own });
+                onOpenChange(false);
+              }}
+            />
           )}
           {extraActions && <div className="flex flex-col items-start gap-1.5 border-t border-ink-border pt-3">{extraActions}</div>}
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
@@ -247,6 +260,22 @@ export function AlbumQuickActions({
           </div>
         </div>
       )}
+      {detail ? (
+        <RatingDetailDialog
+          open
+          onClose={() => setDetail(null)}
+          target={{ type: "release-group", id: item.id }}
+          own={detail.own ?? undefined}
+          onChange={(ratings) => {
+            updateMarks((current) => ({
+              ...current,
+              stars: ratings.own?.stars ?? null,
+              detailedScore: ratings.own?.detailedScore ?? null,
+            }));
+            setDetail({ own: ratings.own });
+          }}
+        />
+      ) : null}
       {shareOpen ? <LazyShareSheet open onClose={() => setShareOpen(false)} kind="album" refId={item.id} /> : null}
     </div>
   );
@@ -257,11 +286,14 @@ function MenuActions({
   marks,
   loading,
   onMarksChange,
+  onOpenDetail,
 }: {
   item: { id: string; title: string };
   marks: DiscMarks;
   loading: boolean;
   onMarksChange: (update: (current: DiscMarks) => DiscMarks) => void;
+  /** Abre el diálogo del puntaje detallado con la valoración propia vigente (el menú se cierra). */
+  onOpenDetail: (own: RatingsResponse["own"]) => void;
 }) {
   const t = useTranslations("catalog.albumActions");
   const tAlbum = useTranslations("catalog.album.relation");
@@ -319,6 +351,12 @@ function MenuActions({
       if (score !== null && !keepScore) setNotice(tAlbum("scoreDropped", { score, stars: formatStars(value, locale) }));
     });
 
+  // Se lee la valoración vigente (id, estrellas y puntaje) para que el diálogo parta de lo guardado.
+  const openDetail = () =>
+    run("rating", async () => {
+      onOpenDetail((await getRatings("release-group", item.id)).own);
+    });
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
@@ -370,13 +408,24 @@ function MenuActions({
 
       <div className="flex flex-col gap-1">
         <span className="font-body text-sm text-paper-muted">{t("rating")}</span>
-        <StarRatingInput
-          value={marks.stars}
-          onChange={(value) => void rate(value)}
-          legend={tAlbum("starsLegend")}
-          valueLabel={(value) => tAlbum("starsValue", { stars: formatStars(value, locale) })}
-          disabled={loading || busy === "rating"}
-        />
+        <div className="flex items-center gap-2">
+          <StarRatingInput
+            value={marks.stars}
+            onChange={(value) => void rate(value)}
+            legend={tAlbum("starsLegend")}
+            valueLabel={(value) => tAlbum("starsValue", { stars: formatStars(value, locale) })}
+            disabled={loading || busy === "rating"}
+          />
+          <button
+            type="button"
+            disabled={loading || busy === "rating"}
+            aria-label={marks.detailedScore !== null ? tAlbum("detailEdit", { score: marks.detailedScore }) : tAlbum("detailAdd")}
+            onClick={() => void openDetail()}
+            className="inline-flex h-8 min-w-8 items-center justify-center rounded border border-ink-border px-1.5 font-data text-xs text-paper transition-colors hover:border-amber disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {marks.detailedScore !== null ? tAlbum("detailScale", { score: marks.detailedScore }) : "+"}
+          </button>
+        </div>
         {notice && (
           <p role="status" className="font-data text-xs text-paper-muted">
             {notice}

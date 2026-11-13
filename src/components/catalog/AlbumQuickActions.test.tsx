@@ -8,7 +8,13 @@ import { AlbumQuickActions } from "./AlbumQuickActions";
 // Marcas bajo demanda (openspec: extend-album-quick-actions): fuera de la discografía el menú
 // pide las marcas del disco al abrirse, una vez, con reintento ante un fallo, y nunca sin sesión.
 
-const mocks = vi.hoisted(() => ({ getReleaseGroupMarks: vi.fn(), getSharePayload: vi.fn(), toggleFavorite: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  getReleaseGroupMarks: vi.fn(),
+  getSharePayload: vi.fn(),
+  toggleFavorite: vi.fn(),
+  getRatings: vi.fn(),
+  saveRating: vi.fn(),
+}));
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) => (
@@ -22,7 +28,13 @@ vi.mock("@/lib/api/share", () => ({ getSharePayload: mocks.getSharePayload, post
 vi.mock("@/lib/api/diary", () => ({ createListenEntry: vi.fn() }));
 vi.mock("@/lib/api/favorites", () => ({ toggleFavorite: mocks.toggleFavorite }));
 vi.mock("@/lib/api/want-to-listen", () => ({ toggleWantToListen: vi.fn() }));
-vi.mock("@/lib/api/social", () => ({ saveRating: vi.fn() }));
+vi.mock("@/lib/api/social", () => ({
+  saveRating: mocks.saveRating,
+  getRatings: mocks.getRatings,
+  deleteRating: vi.fn(),
+  highlightRating: vi.fn(),
+  unhighlightRating: vi.fn(),
+}));
 vi.mock("@/components/album/AlbumListPicker", () => ({ AlbumListPicker: () => null }));
 
 const a = catalogEs.albumActions;
@@ -120,6 +132,21 @@ describe("AlbumQuickActions con marcas bajo demanda", () => {
     await act(async () => openMenu());
     await act(async () => fireEvent.click(screen.getByRole("button", { name: a.favorite })));
     expect(screen.getByRole("button", { name: a.favorite })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("puntaje detallado: abre el diálogo con la valoración vigente, cierra el menú y actualiza la marca", async () => {
+    mocks.getReleaseGroupMarks.mockResolvedValue({ ...MARKS, stars: 4, detailedScore: null });
+    const own = { id: "r1", stars: 4, detailedScore: null, isHighlighted: false };
+    mocks.getRatings.mockResolvedValueOnce({ own }).mockResolvedValue({ own: { ...own, detailedScore: 78 } });
+    mocks.saveRating.mockResolvedValue(undefined);
+    renderWithIntl(<Harness authenticated />);
+    await act(async () => openMenu());
+    await waitFor(() => expect(screen.getByRole("button", { name: "Agregar puntuación detallada" })).toBeEnabled());
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Agregar puntuación detallada" })));
+    expect(mocks.getRatings).toHaveBeenCalledWith("release-group", "rg1");
+    // El menú se cerró y el diálogo del puntaje quedó abierto.
+    expect(screen.queryByLabelText(a.rating)).not.toBeInTheDocument();
+    expect(await screen.findByRole("slider")).toBeInTheDocument();
   });
 
   it("muestra las acciones extra de la superficie", async () => {
