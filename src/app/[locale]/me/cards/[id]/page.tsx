@@ -34,4 +34,4 @@ async function LaminaEditorPage({ params }: { params: Promise<{ id: string }> })
   );
 }
 
-export default withClientMessages("me/laminas/[id]/page", LaminaEditorPage);
+export default withClientMessages("me/cards/[id]/page", LaminaEditorPage);

@@ -23,7 +23,7 @@ export function TierFromDiscographyButton({ artistId, artistName }: { artistId: 
         entityType: "release-group",
         source: { type: "discography", artistId },
       });
-      router.push(`/me/laminas/${created.id}`);
+      router.push(`/me/cards/${created.id}`);
     } catch {
       setFailed(true);
       setPending(false);

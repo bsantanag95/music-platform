@@ -44,7 +44,7 @@ export function normalizeBuildIntent(value: unknown): BuildIntent | null {
 
 /** Destino para armar una Lámina a partir de otra. */
 export function laminaBuildHref(id: string): string {
-  return `/me/laminas?desde=${id}`;
+  return `/me/cards?desde=${id}`;
 }
 
 /** Destino para armar la discografía propia de un artista: el modo para valorar lo que falta. */

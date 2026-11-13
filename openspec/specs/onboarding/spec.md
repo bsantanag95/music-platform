@@ -35,7 +35,7 @@ capacidad SHALL considerarse onboardeados (no ven `/welcome`).
 #### Scenario: Registro desde una Lámina
 
 - **WHEN** un usuario se registra con una intención de Lámina
-- **THEN** aterriza en `/me/laminas?desde=<id>`, su `onboarded_at` sigue nula e Inicio le ofrece la bienvenida
+- **THEN** aterriza en `/me/cards?desde=<id>`, su `onboarded_at` sigue nula e Inicio le ofrece la bienvenida
 
 #### Scenario: Usuario preexistente
 

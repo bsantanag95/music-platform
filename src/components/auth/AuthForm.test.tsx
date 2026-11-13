@@ -42,7 +42,7 @@ describe("AuthForm", () => {
     await user.type(screen.getByLabelText("Email"), "ana@example.com");
     await user.type(screen.getByLabelText("Contraseña"), "unaClaveLarga1");
     await user.click(screen.getByRole("button", { name: "Crear cuenta" }));
-    expect(mocks.hardNavigate).toHaveBeenCalledWith("/es/me/laminas?desde=8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f");
+    expect(mocks.hardNavigate).toHaveBeenCalledWith("/es/me/cards?desde=8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f");
   });
 
   it("con intención de discografía, el alta va a la propia en el modo para valorar", async () => {

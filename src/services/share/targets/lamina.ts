@@ -52,7 +52,7 @@ export async function loadLaminaTarget(id: string, locale: ShareLocale, options:
     kind: "top",
     ref: id,
     locale,
-    canonicalPath: localeHref(locale, `/users/${encodeURIComponent(owner.username)}/laminas/${id}`),
+    canonicalPath: localeHref(locale, `/users/${encodeURIComponent(owner.username)}/cards/${id}`),
     title,
     description: clipDescription(items.map((item, index) => `${index + 1}. ${item.title}`).join(" · ") || count),
     imageAlt: title,

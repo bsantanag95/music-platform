@@ -42,7 +42,7 @@ NOT mover ningún disco de una tier list ya creada.
 - **THEN** el disco sigue en A
 
 ### Requirement: Guardar la disposición
-`PUT /api/me/laminas/<id>/tiers` SHALL recibir los seis niveles y la bandeja como listas de ids de ítem y guardarlos en una sola transacción. Si
+`PUT /api/me/cards/<id>/tiers` SHALL recibir los seis niveles y la bandeja como listas de ids de ítem y guardarlos en una sola transacción. Si
 no traen exactamente los ítems de la tier list, SHALL responder `400` con `VALIDATION_ERROR` sin cambiar nada. Solo el dueño SHALL poder hacerlo;
 para otra persona, la tier list no existe (`404`).
 
@@ -55,7 +55,7 @@ para otra persona, la tier list no existe (`404`).
 - **THEN** la respuesta es `400` con `VALIDATION_ERROR` y nada cambia
 
 ### Requirement: Editor accesible
-`/me/laminas/<id>` SHALL mostrar una tier list con sus seis niveles y la bandeja, y permitir mover cada disco a otro nivel, a la bandeja o de lugar
+`/me/cards/<id>` SHALL mostrar una tier list con sus seis niveles y la bandeja, y permitir mover cada disco a otro nivel, a la bandeja o de lugar
 dentro de su nivel de dos maneras: arrastrando y soltando, y con un menú "Mover a…" en cada disco, operable con teclado y con toque. Después de
 mover, el foco SHALL seguir en el disco y un aviso SHALL decir dónde quedó. El editor SHALL permitir quitar discos y editar título, etiquetas,
 audiencia y notas. El dueño SHALL ver su nota real de cada disco, discreta; el editor SHALL NOT permitir cambiarla.
@@ -73,7 +73,7 @@ audiencia y notas. El dueño SHALL ver su nota real de cada disco, discreta; el 
 - **THEN** queda en A justo antes de ese disco
 
 ### Requirement: Página pública de una tier list
-`/users/<usuario>/laminas/<id>` SHALL mostrar una tier list con sus seis niveles, vacíos incluidos, sus etiquetas y sus discos enlazados, según su
+`/users/<usuario>/cards/<id>` SHALL mostrar una tier list con sus seis niveles, vacíos incluidos, sus etiquetas y sus discos enlazados, según su
 audiencia, sin sesión si es pública. La bandeja SHALL NOT mostrarse a nadie más que al dueño en su editor. Una tier list que el visitante no puede
 ver, oculta por moderación o de una cuenta desactivada SHALL responder `404`.
 
@@ -100,7 +100,7 @@ mostrar ninguna nota.
 - **THEN** quien pueda ver la tier list ve 96 sobre ese disco
 
 ### Requirement: Tier list entre las Láminas
-Una tier list SHALL listarse en `/me/laminas` junto a las Láminas Top N, con su tipo a la vista, y SHALL quedar fuera de las superficies de listas
+Una tier list SHALL listarse en `/me/cards` junto a las Láminas Top N, con su tipo a la vista, y SHALL quedar fuera de las superficies de listas
 como ellas. Una tier list nueva con al menos un disco en un nivel SHALL entrar al feed con la entrada de las Láminas, con su audiencia y sus
 exclusiones. Su exportación, su moderación y el borrado con la cuenta SHALL seguir las reglas de las Láminas.
 
@@ -219,12 +219,12 @@ con S a E. Copiadas, SHALL ser de quien la arma: cambiarlas en una no cambia la 
 - **THEN** el formulario no ofrece copiarlas
 
 ### Requirement: Formulario inspirado en una tier list
-`/me/laminas?desde=<id>` de una tier list que la persona puede ver SHALL abrir el formulario de tier list con la fuente "Como la de @usuario" elegida, su
+`/me/cards?desde=<id>` de una tier list que la persona puede ver SHALL abrir el formulario de tier list con la fuente "Como la de @usuario" elegida, su
 tipo, su título como sugerencia y cuántos ítems trae, sin mostrar sus ítems, notas ni bandeja. Si no se puede ver o es propia, el formulario SHALL quedar
 como siempre, sin revelar nada.
 
 #### Scenario: Desde una tier list pública
-- **WHEN** Beto abre `/me/laminas?desde=<id>` de una tier list pública de Ana con 12 discos en niveles
+- **WHEN** Beto abre `/me/cards?desde=<id>` de una tier list pública de Ana con 12 discos en niveles
 - **THEN** ve la fuente "Como la de @ana" con 12 discos y el título de Ana como sugerencia
 
 ### Requirement: Registro dirigido desde una tier list
@@ -233,7 +233,7 @@ inspirado en esa tier list.
 
 #### Scenario: Registro desde una tier list
 - **WHEN** alguien sin cuenta toca "Arma la tuya" en una tier list pública y se registra
-- **THEN** llega a `/me/laminas?desde=<id>` con el formulario de tier list inspirado en ella
+- **THEN** llega a `/me/cards?desde=<id>` con el formulario de tier list inspirado en ella
 
 ### Requirement: Tier list desde tu discografía
 En su propia discografía de un artista, su dueño SHALL tener "Armar tier list", que la crea en un toque desde esa discografía, con el título "Tier list de

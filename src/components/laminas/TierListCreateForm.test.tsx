@@ -50,7 +50,7 @@ describe("TierListCreateForm", () => {
     expect(screen.getByRole("textbox", { name: "Título" })).toHaveValue("Tier list de Black Sabbath");
     await userEvent.click(screen.getByRole("button", { name: "Armar tier list" }));
     expect(mocks.create).toHaveBeenCalledWith({ title: "Tier list de Black Sabbath", entityType: "release-group", source: { type: "discography", artistId: ARTIST } });
-    expect(mocks.push).toHaveBeenCalledWith("/me/laminas/t1");
+    expect(mocks.push).toHaveBeenCalledWith("/me/cards/t1");
   });
 
   it("de canciones desde un disco", async () => {

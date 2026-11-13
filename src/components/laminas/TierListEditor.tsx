@@ -220,11 +220,11 @@ export function TierListEditor({ initial, ownerUsername }: { initial: TierListDe
   return (
     <section className="flex w-full flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link href="/me/laminas" className="font-data text-xs text-paper-muted transition-colors hover:text-amber">
+        <Link href="/me/cards" className="font-data text-xs text-paper-muted transition-colors hover:text-amber">
           {t("back")}
         </Link>
         <div className="flex items-center gap-4">
-          <Link href={`/users/${encodeURIComponent(ownerUsername)}/laminas/${tierList.id}`} className="font-data text-xs text-paper-muted transition-colors hover:text-paper">
+          <Link href={`/users/${encodeURIComponent(ownerUsername)}/cards/${tierList.id}`} className="font-data text-xs text-paper-muted transition-colors hover:text-paper">
             {t("viewPage")}
           </Link>
           <OwnShareButton kind="tier" refId={tierList.id} />
@@ -417,7 +417,7 @@ export function TierListEditor({ initial, ownerUsername }: { initial: TierListDe
         danger
         onConfirm={() => {
           setConfirmDelete(false);
-          void deleteLamina(tierList.id).then(() => router.push("/me/laminas"));
+          void deleteLamina(tierList.id).then(() => router.push("/me/cards"));
         }}
         onCancel={() => setConfirmDelete(false)}
       />

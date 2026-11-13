@@ -19,31 +19,31 @@ const lamina = (path: string, init: RequestInit): Promise<LaminaDetail> =>
   apiFetch(path, LaminaMutationResponseSchema, init).then((response) => response.lamina);
 
 export function createLamina(input: { title: string; format: string; entityType: string; targetIds?: string[] }) {
-  return lamina("/api/me/laminas", { method: "POST", headers: json, body: JSON.stringify(input) });
+  return lamina("/api/me/cards", { method: "POST", headers: json, body: JSON.stringify(input) });
 }
 
 export function updateLamina(id: string, input: UpdateLaminaRequest) {
-  return lamina(`/api/me/laminas/${id}`, { method: "PATCH", headers: json, body: JSON.stringify(input) });
+  return lamina(`/api/me/cards/${id}`, { method: "PATCH", headers: json, body: JSON.stringify(input) });
 }
 
 export function deleteLamina(id: string) {
-  return apiFetch(`/api/me/laminas/${id}`, NoContentResponseSchema, { method: "DELETE" });
+  return apiFetch(`/api/me/cards/${id}`, NoContentResponseSchema, { method: "DELETE" });
 }
 
 export function addLaminaItem(id: string, targetId: string) {
-  return lamina(`/api/me/laminas/${id}/items`, { method: "POST", headers: json, body: JSON.stringify({ targetId }) });
+  return lamina(`/api/me/cards/${id}/items`, { method: "POST", headers: json, body: JSON.stringify({ targetId }) });
 }
 
 export function addLaminaItems(id: string, targetIds: string[]) {
-  return lamina(`/api/me/laminas/${id}/items`, { method: "POST", headers: json, body: JSON.stringify({ targetIds }) });
+  return lamina(`/api/me/cards/${id}/items`, { method: "POST", headers: json, body: JSON.stringify({ targetIds }) });
 }
 
 export function removeLaminaItem(id: string, itemId: string) {
-  return lamina(`/api/me/laminas/${id}/items/${itemId}`, { method: "DELETE" });
+  return lamina(`/api/me/cards/${id}/items/${itemId}`, { method: "DELETE" });
 }
 
 export function reorderLamina(id: string, itemIds: string[]) {
-  return lamina(`/api/me/laminas/${id}/items`, { method: "PUT", headers: json, body: JSON.stringify({ itemIds }) });
+  return lamina(`/api/me/cards/${id}/items`, { method: "PUT", headers: json, body: JSON.stringify({ itemIds }) });
 }
 
 // Tier list (openspec: add-tier-list-lamina-phase1): mismas rutas que el Top N, con su propia respuesta.
@@ -58,27 +58,27 @@ export type TierListSourceInput =
 
 export function createTierList(input: { title: string; entityType: "release-group" | "recording"; source: TierListSourceInput }) {
   const body = { kind: "tier", ...input };
-  return tierList("/api/me/laminas", { method: "POST", headers: json, body: JSON.stringify(body) });
+  return tierList("/api/me/cards", { method: "POST", headers: json, body: JSON.stringify(body) });
 }
 
 export function addTierListItem(id: string, targetId: string) {
-  return tierList(`/api/me/laminas/${id}/items`, { method: "POST", headers: json, body: JSON.stringify({ targetId }) });
+  return tierList(`/api/me/cards/${id}/items`, { method: "POST", headers: json, body: JSON.stringify({ targetId }) });
 }
 
 export function fetchTierList(id: string) {
-  return tierList(`/api/me/laminas/${id}`);
+  return tierList(`/api/me/cards/${id}`);
 }
 
 export function updateTierList(id: string, input: UpdateTierListRequest) {
-  return tierList(`/api/me/laminas/${id}`, { method: "PATCH", headers: json, body: JSON.stringify(input) });
+  return tierList(`/api/me/cards/${id}`, { method: "PATCH", headers: json, body: JSON.stringify(input) });
 }
 
 export function arrangeTierList(id: string, arrangement: ArrangeTierListRequest) {
-  return tierList(`/api/me/laminas/${id}/tiers`, { method: "PUT", headers: json, body: JSON.stringify(arrangement) });
+  return tierList(`/api/me/cards/${id}/tiers`, { method: "PUT", headers: json, body: JSON.stringify(arrangement) });
 }
 
 export function removeTierListItem(id: string, itemId: string) {
-  return tierList(`/api/me/laminas/${id}/items/${itemId}`, { method: "DELETE" });
+  return tierList(`/api/me/cards/${id}/items/${itemId}`, { method: "DELETE" });
 }
 
 export interface LaminaSourceParams {
@@ -108,11 +108,11 @@ function sourceQuery({ source, entityType, timeZone, limit }: LaminaSourceParams
 }
 
 export function fetchLaminaSourceOptions(params: LaminaSourceParams, signal?: AbortSignal) {
-  return apiFetch(`/api/me/laminas/sources?${sourceQuery(params)}`, LaminaSourceOptionsSchema, { signal });
+  return apiFetch(`/api/me/cards/sources?${sourceQuery(params)}`, LaminaSourceOptionsSchema, { signal });
 }
 
 export function fetchLaminaCandidates(params: LaminaSourceParams, filters: LaminaCandidateFilters, signal?: AbortSignal) {
-  return apiFetch(`/api/me/laminas/candidates?${sourceQuery(params, filters)}`, LaminaCandidatesResponseSchema, { signal }).then(
+  return apiFetch(`/api/me/cards/candidates?${sourceQuery(params, filters)}`, LaminaCandidatesResponseSchema, { signal }).then(
     (response) => response.candidates,
   );
 }

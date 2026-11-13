@@ -176,6 +176,10 @@ produce imagen en español. Los textos de la imagen salen de los mismos catálog
 Una lámina es una imagen + una página interactiva que muestra una parte de tu gusto. Todas comparten el
 sistema visual de la §5. Se dividen en dos clases (decisión de modelo en §8 D7):
 
+**Rutas** (en inglés, por `conventions.md`; la UI en inglés las llama *Cards*): `/me/cards` y `/me/cards/<id>` (editor), `/users/<usuario>/cards/<id>` (página
+pública) y `/api/me/cards/...`. Antes se llamaban `/laminas`: `next.config.mjs` redirige las tres rutas de página viejas con `308`, para que los enlaces ya
+compartidos sigan funcionando. El nombre interno (carpetas `laminas/`, namespace de mensajes `laminas`, claves JSON `{ laminas }`) no cambia: no es una URL.
+
 - **Derivadas:** se calculan solas desde tus datos (gráfica de discografía, tu año). No se "crean":
   existen en cuanto hay datos y siempre muestran el estado actual.
 - **De autor:** las armas tú (Top N, tier list). Tienen título, orden y audiencia propios.
@@ -530,7 +534,7 @@ Cada cambio parte de este documento y abre con el repaso en detalle de las decis
 6. **`add-year-in-discs`** ("Tu año en discos", §4.4.1), dividido en tres fases (2026-11-07). Derivado del diario con curaduría, marca por año como la
    discografía, el año en curso existe siempre ("hasta ahora").
    - **`add-year-in-discs-phase1`** ✅ implementado — página por mes, cifras, marca por año con la zona del dueño (`0087`), imagen Enlace e Historia en
-     el marco común (cifras y hasta 4 carátulas, ADR 0049), entradas desde el diario y `/me/laminas`.
+     el marco común (cifras y hasta 4 carátulas, ADR 0049), entradas desde el diario y `/me/cards`.
    - **`add-year-in-discs-phase2`** ✅ implementado — Top 5 del año prellenado por la nota y editable, ocultar discos (fuera también de las cifras),
      imagen Publicación e Historia con el Top 5 y los doce meses, hasta 10 carátulas por ADR 0051 (`0088`).
    - **`add-year-in-discs-phase3`** ✅ implementado — invitación de diciembre (tarjeta en Inicio y en el diario del 1 de diciembre al 15 de enero, y un

@@ -24,7 +24,7 @@ describe("TierFromDiscographyButton", () => {
       entityType: "release-group",
       source: { type: "discography", artistId: ARTIST },
     });
-    expect(mocks.push).toHaveBeenCalledWith("/me/laminas/t1");
+    expect(mocks.push).toHaveBeenCalledWith("/me/cards/t1");
   });
 
   it("si falla, avisa y se puede volver a intentar", async () => {

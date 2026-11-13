@@ -12,7 +12,7 @@ vi.mock("@/services/laminas/sources", () => ({ listLaminaSourceOptions: mocks.op
 import { GET as candidates } from "../candidates/route";
 import { GET as sources } from "./route";
 
-const req = (path: string) => new NextRequest(`http://localhost/api/me/laminas/${path}`);
+const req = (path: string) => new NextRequest(`http://localhost/api/me/cards/${path}`);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -21,7 +21,7 @@ beforeEach(() => {
   mocks.candidates.mockResolvedValue([]);
 });
 
-describe("/api/me/laminas/sources", () => {
+describe("/api/me/cards/sources", () => {
   it("pasa fuente, tipo y zona", async () => {
     const res = await sources(req("sources?source=ratings&entityType=recording&tz=America/Santiago"));
     expect(res.status).toBe(200);
@@ -37,7 +37,7 @@ describe("/api/me/laminas/sources", () => {
   );
 });
 
-describe("/api/me/laminas/candidates", () => {
+describe("/api/me/cards/candidates", () => {
   it("convierte los filtros", async () => {
     const res = await candidates(req(`candidates?source=favorites&entityType=release-group&year=1999&listenYear=2026&genre=metal`));
     expect(res.status).toBe(200);
