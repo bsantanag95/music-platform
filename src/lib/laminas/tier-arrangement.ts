@@ -1,7 +1,7 @@
 import { TIER_COUNT } from "./tiers";
 
 // Disposición de una tier list en el editor (spec tier-laminas): seis niveles y la bandeja, como ids de ítem. Funciones puras: el editor
-// las aplica al instante y manda el resultado completo a `PUT /api/me/laminas/<id>/tiers`.
+// las aplica al instante y manda el resultado completo a `PUT /api/me/cards/<id>/tiers`.
 
 export interface TierArrangement {
   tiers: string[][];

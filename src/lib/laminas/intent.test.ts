@@ -50,8 +50,8 @@ describe("normalizeBuildIntent", () => {
 
 describe("rutas", () => {
   it("el destino lo arma el código, con el usuario autenticado", () => {
-    expect(laminaBuildHref(ID)).toBe(`/me/laminas?desde=${ID}`);
-    expect(buildIntentDestination({ kind: "lamina", id: ID }, "ana")).toBe(`/me/laminas?desde=${ID}`);
+    expect(laminaBuildHref(ID)).toBe(`/me/cards?desde=${ID}`);
+    expect(buildIntentDestination({ kind: "lamina", id: ID }, "ana")).toBe(`/me/cards?desde=${ID}`);
     expect(buildIntentDestination({ kind: "discography", artistId: ARTIST }, "ana b")).toBe(`/users/ana%20b/artist/${ARTIST}?valorar=1`);
   });
 

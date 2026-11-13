@@ -54,7 +54,7 @@ export function LaminaCreateForm({ currentYear, inspiration = null }: { currentY
     try {
       const targetIds = manual ? undefined : source.selected.map((candidate) => candidate.target.id);
       const lamina = await createLamina({ title: title.trim(), format, entityType, targetIds });
-      router.push(`/me/laminas/${lamina.id}`);
+      router.push(`/me/cards/${lamina.id}`);
     } catch {
       setFailed(true);
       setPending(false);
@@ -66,7 +66,7 @@ export function LaminaCreateForm({ currentYear, inspiration = null }: { currentY
       <h2 className="font-display text-base text-paper">{t("create.heading")}</h2>
       {inspiration ? (
         <Link
-          href={`/users/${encodeURIComponent(inspiration.ownerUsername)}/laminas/${inspiration.id}`}
+          href={`/users/${encodeURIComponent(inspiration.ownerUsername)}/cards/${inspiration.id}`}
           className="self-start font-data text-xs text-paper-muted transition-colors hover:text-paper"
         >
           {t("create.inspired", { username: inspiration.ownerUsername })}

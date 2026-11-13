@@ -187,7 +187,7 @@ sigue prohibida.
 parámetro `returnTo` dinámico ni ninguna URL de retorno controlada por el cliente, para evitar
 abrir una redirección abierta. Las únicas intenciones que cambian el destino son cerradas: el id validado de una Lámina
 (`lamina=<uuid>`) o de un artista (`discografia=<uuid>`), de "Arma la tuya". Con ellas el código arma
-`/<locale>/me/laminas?desde=<uuid>` o `/<locale>/users/<usuario>/artist/<uuid>?valorar=1`, con el usuario ya
+`/<locale>/me/cards?desde=<uuid>` o `/<locale>/users/<usuario>/artist/<uuid>?valorar=1`, con el usuario ya
 autenticado, tanto en el alta local y el login como en Google, donde viajan en el estado del flujo (ADR 0052 y 0054).
 
 **Dependencia `jose`.** Se aprueba `jose` como dependencia para la validación de ID tokens y JWKS

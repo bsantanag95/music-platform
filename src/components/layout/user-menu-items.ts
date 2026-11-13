@@ -89,7 +89,7 @@ export const USER_MENU_ITEMS: readonly UserMenuItemDef[] = [
   // Conciertos a los que fue (openspec: add-my-concerts).
   { id: "concerts", href: "/me/concerts", labelKey: "concerts", group: "music", surfaces: BOTH },
   { id: "lists", href: "/me/lists", labelKey: "lists", group: "music", surfaces: BOTH },
-  { id: "laminas", href: "/me/laminas", labelKey: "laminas", group: "music", surfaces: BOTH },
+  { id: "laminas", href: "/me/cards", labelKey: "laminas", group: "music", surfaces: BOTH },
   // Un solo acceso para recorridos de artista, Caminos y listas seguidas (panel con pestañas).
   { id: "progress", href: "/me/progress", labelKey: "progress", group: "music", surfaces: BOTH },
 

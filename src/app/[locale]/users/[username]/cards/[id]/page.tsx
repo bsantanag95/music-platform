@@ -46,7 +46,7 @@ async function tierListPage(username: string, id: string, viewerId: string | nul
         </Link>
         <div className="flex items-center gap-4">
           {owner ? (
-            <Link href={`/me/laminas/${tierList.id}`} className="font-data text-xs text-paper-muted hover:text-paper">
+            <Link href={`/me/cards/${tierList.id}`} className="font-data text-xs text-paper-muted hover:text-paper">
               {t("edit")}
             </Link>
           ) : null}
@@ -97,7 +97,7 @@ async function UserLaminaPage({ params }: PageProps) {
         </Link>
         <div className="flex items-center gap-4">
           {owner ? (
-            <Link href={`/me/laminas/${lamina.id}`} className="font-data text-xs text-paper-muted hover:text-paper">
+            <Link href={`/me/cards/${lamina.id}`} className="font-data text-xs text-paper-muted hover:text-paper">
               {t("edit")}
             </Link>
           ) : null}
@@ -137,4 +137,4 @@ async function UserLaminaPage({ params }: PageProps) {
   );
 }
 
-export default withClientMessages("users/[username]/laminas/[id]/page", UserLaminaPage);
+export default withClientMessages("users/[username]/cards/[id]/page", UserLaminaPage);

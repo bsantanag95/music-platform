@@ -125,7 +125,7 @@ describe("LaminaCreateForm", () => {
       expect(screen.getByRole("button", { name: "Top 10" })).toHaveAttribute("aria-pressed", "true");
       expect(screen.getByRole("button", { name: "Canciones" })).toHaveAttribute("aria-pressed", "true");
       expect(screen.getByRole("textbox", { name: "Título" })).toHaveValue("");
-      expect(screen.getByRole("link", { name: "Como la de @ana" })).toHaveAttribute("href", `/users/ana/laminas/${inspiration.id}`);
+      expect(screen.getByRole("link", { name: "Como la de @ana" })).toHaveAttribute("href", `/users/ana/cards/${inspiration.id}`);
     });
 
     it("tocar la sugerencia la deja en el campo, sin ítems ajenos", async () => {

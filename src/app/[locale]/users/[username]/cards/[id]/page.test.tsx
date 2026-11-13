@@ -95,7 +95,7 @@ describe("página pública de una tier list", () => {
   it("con sesión lleva al formulario inspirado", async () => {
     mocks.session.mockResolvedValue({ user: { id: "u2", username: "beto" } });
     await render();
-    expect(screen.getByText(new RegExp(`arma la tuya:${ID}:/me/laminas\\?desde=${ID}:`))).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`arma la tuya:${ID}:/me/cards\\?desde=${ID}:`))).toBeInTheDocument();
   });
 
   it("su dueño no ve Arma la tuya", async () => {
@@ -124,7 +124,7 @@ describe("página pública de una tier list", () => {
   it("el dueño llega a su editor", async () => {
     mocks.session.mockResolvedValue({ user: { id: "u1", username: "ana" } });
     await render();
-    expect(screen.getByRole("link", { name: "Editar" })).toHaveAttribute("href", `/me/laminas/${ID}`);
+    expect(screen.getByRole("link", { name: "Editar" })).toHaveAttribute("href", `/me/cards/${ID}`);
   });
 
   it("una que no se puede ver responde 404", async () => {

@@ -37,7 +37,7 @@ seguir las reglas de las listas.
 - **THEN** el archivo incluye sus Láminas con sus ítems
 
 ### Requirement: Editor
-`/me/laminas` SHALL listar las Láminas propias y `/me/laminas/<id>` SHALL permitir buscar y quitar ítems, ordenarlos con controles operables con
+`/me/cards` SHALL listar las Láminas propias y `/me/cards/<id>` SHALL permitir buscar y quitar ítems, ordenarlos con controles operables con
 teclado y toque, y cambiar título, formato, audiencia y notas. Bajar a un formato con menos lugares SHALL avisar qué ítems se quitan antes de
 guardar.
 
@@ -50,7 +50,7 @@ guardar.
 - **THEN** ve qué 3 ítems se quitarían y puede cancelar
 
 ### Requirement: Página pública
-`/users/<usuario>/laminas/<id>` SHALL mostrar la Lámina con los puestos, título, dueño y enlaces a cada ítem, según su audiencia, sin sesión si es
+`/users/<usuario>/cards/<id>` SHALL mostrar la Lámina con los puestos, título, dueño y enlaces a cada ítem, según su audiencia, sin sesión si es
 pública. Una Lámina que el visitante no puede ver, oculta por moderación o de una cuenta desactivada SHALL responder `404`. Su dueño SHALL llegar a su
 gestión.
 
@@ -186,8 +186,8 @@ que la persona edite el título y SHALL NOT pisar lo que escribió.
 
 ### Requirement: Arma la tuya
 La página pública de una Lámina SHALL ofrecer el llamado **"Arma la tuya"** a quien no es su dueño, sin ocultar ni recortar la Lámina. Con sesión SHALL llevar a
-`/me/laminas?desde=<id>`. Sin sesión SHALL llevar al registro, con un enlace al login, conservando la intención como `lamina=<id>`. Después de registrarse o
-de iniciar sesión, con contraseña o con Google, la persona SHALL llegar a `/<locale>/me/laminas?desde=<id>`. La intención SHALL ser solo un identificador
+`/me/cards?desde=<id>`. Sin sesión SHALL llevar al registro, con un enlace al login, conservando la intención como `lamina=<id>`. Después de registrarse o
+de iniciar sesión, con contraseña o con Google, la persona SHALL llegar a `/<locale>/me/cards?desde=<id>`. La intención SHALL ser solo un identificador
 de Lámina validado: un valor que no lo sea SHALL descartarse y el destino SHALL armarse en el código, nunca a partir de una URL del cliente.
 
 #### Scenario: Visitante anónimo
@@ -196,7 +196,7 @@ de Lámina validado: un valor que no lo sea SHALL descartarse y el destino SHALL
 
 #### Scenario: Visitante con sesión
 - **WHEN** una persona con sesión abre la Lámina de otra
-- **THEN** el llamado lleva a `/me/laminas?desde=<id>`
+- **THEN** el llamado lleva a `/me/cards?desde=<id>`
 
 #### Scenario: Dueño
 - **WHEN** el dueño abre su Lámina
@@ -204,7 +204,7 @@ de Lámina validado: un valor que no lo sea SHALL descartarse y el destino SHALL
 
 #### Scenario: Registro con la intención
 - **WHEN** una persona se registra con contraseña desde `/auth/register?lamina=<id>`
-- **THEN** llega a `/<locale>/me/laminas?desde=<id>`, no a `/welcome`
+- **THEN** llega a `/<locale>/me/cards?desde=<id>`, no a `/welcome`
 
 #### Scenario: Pasar del registro al login
 - **WHEN** una persona con `lamina=<id>` va del registro al login
@@ -216,15 +216,15 @@ de Lámina validado: un valor que no lo sea SHALL descartarse y el destino SHALL
 
 #### Scenario: Con sesión en el registro
 - **WHEN** una persona con sesión abre `/auth/register?lamina=<id>`
-- **THEN** llega a `/me/laminas?desde=<id>`
+- **THEN** llega a `/me/cards?desde=<id>`
 
 ### Requirement: Formulario inspirado en otra Lámina
-`/me/laminas?desde=<id>` SHALL preseleccionar el formato y el tipo de ítem de esa Lámina, ofrecer su título como sugerencia para tocar y enlazar de vuelta a
+`/me/cards?desde=<id>` SHALL preseleccionar el formato y el tipo de ítem de esa Lámina, ofrecer su título como sugerencia para tocar y enlazar de vuelta a
 ella. SHALL NOT copiar sus ítems ni sus notas, y SHALL NOT escribir el título en el campo. La lectura SHALL aplicar las reglas de la página pública: si la
 persona no puede ver esa Lámina, si no existe o si es propia, el formulario SHALL quedar como siempre, sin error.
 
 #### Scenario: Llegar desde una Lámina
-- **WHEN** una persona abre `/me/laminas?desde=<id>` de un Top 10 de canciones titulado "Mis 10 de 2026"
+- **WHEN** una persona abre `/me/cards?desde=<id>` de un Top 10 de canciones titulado "Mis 10 de 2026"
 - **THEN** el formulario tiene Top 10 y canciones elegidos, el título vacío y "Mis 10 de 2026" como sugerencia
 
 #### Scenario: Usar el título sugerido

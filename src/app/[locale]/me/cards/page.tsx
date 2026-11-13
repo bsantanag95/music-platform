@@ -44,7 +44,7 @@ async function LaminasPage({ searchParams }: { searchParams?: Promise<{ desde?: 
           {laminas.map((lamina) => (
             <li key={lamina.id} className="min-w-0">
               <Link
-                href={`/me/laminas/${lamina.id}`}
+                href={`/me/cards/${lamina.id}`}
                 className="flex items-center gap-3 rounded border border-ink-border bg-ink-surface p-3 transition-colors hover:border-amber"
               >
                 <CoverThumb cover={lamina.coverThumbs[0] ?? null} label="" className="size-14 shrink-0 rounded" />
@@ -105,4 +105,4 @@ async function LaminasPage({ searchParams }: { searchParams?: Promise<{ desde?: 
   );
 }
 
-export default withClientMessages("me/laminas/page", LaminasPage);
+export default withClientMessages("me/cards/page", LaminasPage);

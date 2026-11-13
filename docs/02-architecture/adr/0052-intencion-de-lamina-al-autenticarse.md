@@ -13,7 +13,7 @@ que nunca existió y que chocaría con esa regla.
 El retorno sigue sin aceptar URL. Se agrega **una intención cerrada**: el identificador de una Lámina.
 
 - El registro, el login y `GET /api/auth/google/start` reciben `lamina=<uuid>`. Un valor que no sea un identificador se descarta sin interrumpir el flujo.
-- El destino lo arma el código: `/<locale>/me/laminas?desde=<uuid>`. El cliente aporta el identificador, nunca la ruta.
+- El destino lo arma el código: `/<locale>/me/cards?desde=<uuid>`. El cliente aporta el identificador, nunca la ruta.
 - En Google viaja en el estado del flujo, protegido por `state`, PKCE y `nonce`, solo con la intención `login`. El callback no lo lee de su query.
 - La intención manda sobre `onboarded_at` nula: quien llega así no pasa por `/welcome`, que sigue pendiente y que Inicio sigue ofreciendo.
 - Abrir el destino no da acceso a nada: la Lámina se lee con las reglas de su página pública.

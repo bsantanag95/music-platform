@@ -108,7 +108,7 @@ describe("páginas de autenticación", () => {
 
     await expect(
       RegisterPage({ params: Promise.resolve({ locale: "es" }), searchParams: Promise.resolve({ lamina: "8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f" }) }),
-    ).rejects.toThrow('REDIRECT:{"href":"/me/laminas?desde=8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f","locale":"es"}');
+    ).rejects.toThrow('REDIRECT:{"href":"/me/cards?desde=8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f","locale":"es"}');
   });
 
   it("enlaza al flujo de olvido de contraseña", async () => {

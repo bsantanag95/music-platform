@@ -17,6 +17,15 @@ const nextConfig = {
   env: {
     STORAGE_PUBLIC_DOMAIN: process.env.STORAGE_PUBLIC_DOMAIN ?? "",
   },
+  // Las Láminas se publicaban en `/laminas` (slug en español); las rutas de página son en inglés
+  // (conventions.md), así que ahora viven en `/cards`. Los enlaces ya compartidos redirigen para siempre.
+  async redirects() {
+    return [
+      { source: "/:locale(es|en)/me/laminas", destination: "/:locale/me/cards", permanent: true },
+      { source: "/:locale(es|en)/me/laminas/:id", destination: "/:locale/me/cards/:id", permanent: true },
+      { source: "/:locale(es|en)/users/:username/laminas/:id", destination: "/:locale/users/:username/cards/:id", permanent: true },
+    ];
+  },
   images: {
     // El optimizador sigue activo por defecto. archive.org no envía
     // `Cache-Control`, así que el camino de hotlink aprovecha una caché larga.

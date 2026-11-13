@@ -80,11 +80,11 @@ export function LaminaEditor({ initial, ownerUsername }: { initial: LaminaDetail
   return (
     <section className="flex w-full flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link href="/me/laminas" className="font-data text-xs text-paper-muted transition-colors hover:text-amber">
+        <Link href="/me/cards" className="font-data text-xs text-paper-muted transition-colors hover:text-amber">
           {t("back")}
         </Link>
         <div className="flex items-center gap-4">
-          <Link href={`/users/${encodeURIComponent(ownerUsername)}/laminas/${lamina.id}`} className="font-data text-xs text-paper-muted transition-colors hover:text-paper">
+          <Link href={`/users/${encodeURIComponent(ownerUsername)}/cards/${lamina.id}`} className="font-data text-xs text-paper-muted transition-colors hover:text-paper">
             {t("viewPage")}
           </Link>
           <OwnShareButton kind="top" refId={lamina.id} />
@@ -289,7 +289,7 @@ export function LaminaEditor({ initial, ownerUsername }: { initial: LaminaDetail
         danger
         onConfirm={() => {
           setConfirmDelete(false);
-          void deleteLamina(lamina.id).then(() => router.push("/me/laminas"));
+          void deleteLamina(lamina.id).then(() => router.push("/me/cards"));
         }}
         onCancel={() => setConfirmDelete(false)}
       />

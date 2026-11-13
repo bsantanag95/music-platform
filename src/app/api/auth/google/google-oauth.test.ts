@@ -360,7 +360,7 @@ describe("GET /api/auth/google/callback", () => {
 
     const response = await callbackGet(new NextRequest("http://localhost:3000/api/auth/google/callback?code=auth-code&state=valid-state"));
 
-    expect(response.headers.get("location")).toMatch(/\/en\/me\/laminas\?desde=8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f$/);
+    expect(response.headers.get("location")).toMatch(/\/en\/me\/cards\?desde=8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f$/);
   });
 
   it("con intención de discografía va a la propia, armada con el usuario autenticado", async () => {

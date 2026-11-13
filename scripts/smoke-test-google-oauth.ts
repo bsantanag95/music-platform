@@ -413,10 +413,10 @@ async function main() {
     const created = await flowWith(ipL, "auth-code-l1", `&lamina=${laminaId}`, subLamina, emailLamina);
     const [laminaUser] = await db.select().from(appUser).where(eq(appUser.email, emailLamina));
     if (laminaUser) createdUserIds.push(laminaUser.id);
-    if (!created.endsWith(`/es/me/laminas?desde=${laminaId}`)) throw new Error(`Lámina (alta nueva): ${created}`);
+    if (!created.endsWith(`/es/me/cards?desde=${laminaId}`)) throw new Error(`Lámina (alta nueva): ${created}`);
     if (!laminaUser || laminaUser.onboardedAt !== null) throw new Error("Lámina (alta nueva): el onboarding debe seguir pendiente");
     const existing = await flowWith(ipL, "auth-code-l2", `&lamina=${laminaId}`, subLamina, emailLamina);
-    if (!existing.endsWith(`/es/me/laminas?desde=${laminaId}`)) throw new Error(`Lámina (cuenta existente): ${existing}`);
+    if (!existing.endsWith(`/es/me/cards?desde=${laminaId}`)) throw new Error(`Lámina (cuenta existente): ${existing}`);
     const invalid = await flowWith(ipL, "auth-code-l3", "&lamina=https%3A%2F%2Fotro.example", subLamina, emailLamina);
     if (!invalid.endsWith("/es/welcome")) throw new Error(`Lámina (inválida): ${invalid}`);
     const injected = await flowWith(ipL, "auth-code-l4", "", subLamina, emailLamina, `&lamina=${laminaId}`);
@@ -436,7 +436,7 @@ async function main() {
     const again = await flowWith(ipDisco, "auth-code-d2", `&discografia=${artistId}`, subDisco, emailDisco);
     if (!again.endsWith(`/es/users/${discoUser.username}/artist/${artistId}?valorar=1`)) throw new Error(`Discografía (cuenta existente): ${again}`);
     const both = await flowWith(ipDisco, "auth-code-d3", `&discografia=${artistId}&lamina=${laminaId}`, subDisco, emailDisco);
-    if (!both.endsWith(`/es/me/laminas?desde=${laminaId}`)) throw new Error(`Discografía y Lámina juntas: ${both}`);
+    if (!both.endsWith(`/es/me/cards?desde=${laminaId}`)) throw new Error(`Discografía y Lámina juntas: ${both}`);
     const bad = await flowWith(ipDisco, "auth-code-d4", "&discografia=..%2F..%2Fadmin", subDisco, emailDisco);
     if (!bad.endsWith("/es/welcome")) throw new Error(`Discografía (inválida): ${bad}`);
     console.log("OK 8 intención de discografía -> alta y cuenta existente van a la propia, con su usuario; con las dos manda la Lámina; inválida se ignora");

@@ -102,7 +102,7 @@ export function TierListCreateForm({ inspiration = null }: { inspiration?: TierF
     setFailed(false);
     try {
       const created = await createTierList({ title: title.trim(), entityType, source: sourceInput });
-      router.push(`/me/laminas/${created.id}`);
+      router.push(`/me/cards/${created.id}`);
     } catch {
       setFailed(true);
       setPending(false);

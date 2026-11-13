@@ -18,8 +18,8 @@ describe("LaminaCta", () => {
   });
 
   it("con sesión lleva directo al formulario", () => {
-    renderWithIntl(<LaminaCta intent={{ kind: "lamina", id: ID }} signedInHref={`/me/laminas?desde=${ID}`} />);
-    expect(screen.getByRole("link", { name: "Arma la tuya" })).toHaveAttribute("href", `/me/laminas?desde=${ID}`);
+    renderWithIntl(<LaminaCta intent={{ kind: "lamina", id: ID }} signedInHref={`/me/cards?desde=${ID}`} />);
+    expect(screen.getByRole("link", { name: "Arma la tuya" })).toHaveAttribute("href", `/me/cards?desde=${ID}`);
     expect(screen.queryByRole("link", { name: "Ya tengo cuenta" })).toBeNull();
   });
 });

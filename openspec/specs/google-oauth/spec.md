@@ -143,7 +143,7 @@ guardado, que prevalece; ver `account-preferences`), y SHALL decidirse según el
 onboarding del usuario: si `onboarded_at` es nula SHALL redirigir a `/<locale>/welcome`; en
 caso contrario SHALL redirigir a `/<locale>/search` de forma fija. Si el estado del flujo guarda una
 intención (ver "Acceso desde login y registro"), SHALL redirigir en ambos casos a su destino:
-`/<locale>/me/laminas?desde=<id>` para una Lámina y `/<locale>/users/<usuario>/artist/<id>?valorar=1`
+`/<locale>/me/cards?desde=<id>` para una Lámina y `/<locale>/users/<usuario>/artist/<id>?valorar=1`
 para una discografía, con el usuario autenticado. El identificador sale del estado guardado y la ruta
 es fija. Las intenciones de vincular una
 cuenta de Google y de confirmar la identidad (ver "Intenciones del flujo con retorno fijo") SHALL
@@ -172,7 +172,7 @@ parámetro del cliente.
 
 #### Scenario: Retorno con intención de Lámina
 - **WHEN** el flujo con `login` y una intención de Lámina completa con éxito, para un usuario nuevo o existente
-- **THEN** el navegador es redirigido a `/<locale>/me/laminas?desde=<id>` y la cookie de sesión queda establecida
+- **THEN** el navegador es redirigido a `/<locale>/me/cards?desde=<id>` y la cookie de sesión queda establecida
 
 #### Scenario: La intención no se lee del callback
 - **WHEN** una persona agrega `lamina=<id>` a la URL del callback

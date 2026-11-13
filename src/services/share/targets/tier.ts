@@ -62,7 +62,7 @@ export async function loadTierTarget(id: string, locale: ShareLocale, options: {
     kind: "tier",
     ref: id,
     locale,
-    canonicalPath: localeHref(locale, `/users/${encodeURIComponent(owner.username)}/laminas/${id}`),
+    canonicalPath: localeHref(locale, `/users/${encodeURIComponent(owner.username)}/cards/${id}`),
     title,
     description: clipDescription(description || count),
     imageAlt: title,

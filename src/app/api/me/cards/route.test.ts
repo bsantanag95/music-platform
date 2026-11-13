@@ -52,7 +52,7 @@ import { PUT as arrange } from "./[id]/tiers/route";
 import { POST } from "./route";
 
 const req = (method: string, body: unknown) =>
-  new NextRequest("http://localhost/api/me/laminas", { method, body: JSON.stringify(body), headers: { "content-type": "application/json" } });
+  new NextRequest("http://localhost/api/me/cards", { method, body: JSON.stringify(body), headers: { "content-type": "application/json" } });
 const context = { params: Promise.resolve({ id: ID }) };
 
 beforeEach(() => {
@@ -73,7 +73,7 @@ beforeEach(() => {
   mocks.addTier.mockResolvedValue({ id: ID });
 });
 
-describe("/api/me/laminas", () => {
+describe("/api/me/cards", () => {
   it("crea con formato y tipo", async () => {
     const res = await POST(req("POST", { title: "Mis discos", format: "top5", entityType: "release-group" }));
     expect(res.status).toBe(201);

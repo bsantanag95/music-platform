@@ -62,7 +62,7 @@ SHALL responder `404`.
 - **THEN** lo ve, incluidos los discos de escuchas privadas, y esas escuchas siguen privadas en el diario
 
 ### Requirement: Entradas al año
-El diario SHALL ofrecer "Tu año en discos" del año que se mira, y `/me/laminas` SHALL listar "Tus años" con los años que tienen escuchas.
+El diario SHALL ofrecer "Tu año en discos" del año que se mira, y `/me/cards` SHALL listar "Tus años" con los años que tienen escuchas.
 
 #### Scenario: Desde el diario
 - **WHEN** el dueño mira su diario de 2026

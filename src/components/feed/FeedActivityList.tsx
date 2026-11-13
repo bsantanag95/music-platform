@@ -626,7 +626,7 @@ function targetLink(
   if (entry.kind === "list") {
     return {
       href: entry.list.lamina
-        ? `/users/${encodeURIComponent(entry.author.username)}/laminas/${entry.list.id}`
+        ? `/users/${encodeURIComponent(entry.author.username)}/cards/${entry.list.id}`
         : listHref(entry.author.username, entry.list.title, entry.list.id),
       label: entry.list.title,
       artist: null,

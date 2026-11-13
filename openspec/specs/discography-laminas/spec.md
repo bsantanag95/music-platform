@@ -93,16 +93,16 @@ ni cuándo.
 - **THEN** la cabecera usa los discos valorados
 
 ### Requirement: Entradas a la discografía
-`/me/laminas` SHALL listar hasta 12 artistas con 3 discos valorados o más, de mayor a menor cantidad. La página del artista SHALL enlazar a la discografía propia a
+`/me/cards` SHALL listar hasta 12 artistas con 3 discos valorados o más, de mayor a menor cantidad. La página del artista SHALL enlazar a la discografía propia a
 quien tiene 3 discos valorados de ese artista.
 
 #### Scenario: Con artistas suficientes
-- **WHEN** una persona con 4 discos valorados de un artista abre `/me/laminas`
+- **WHEN** una persona con 4 discos valorados de un artista abre `/me/cards`
 - **THEN** ve ese artista y llega a su página
 
 #### Scenario: Sin artistas suficientes
 - **WHEN** una persona no tiene 3 discos valorados de ningún artista
-- **THEN** `/me/laminas` no muestra la sección
+- **THEN** `/me/cards` no muestra la sección
 
 ### Requirement: Vista Por canción
 La discografía SHALL ofrecer una vista Por canción: una columna por disco, en orden cronológico, y una fila por número de pista de su edición representativa, con
