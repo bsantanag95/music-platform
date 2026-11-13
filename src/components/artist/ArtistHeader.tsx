@@ -5,7 +5,7 @@ import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import { artistHref } from "@/lib/catalog-links";
 import type { ArtistProfile } from "@/services/catalog/artist-profile-read";
 import { countryName, formatPartialDate, repairSentenceSpacing, setlistFmSearchUrl, streamingName, yearOf } from "./artist-format";
-import type { LineupFact } from "./lineup-fact";
+import { ARTIST_TABS_ANCHOR, type LineupFact } from "./lineup-fact";
 
 // Cabecera de la página de artista (openspec: redesign-artist-page, capability
 // `artist-header`): foto con crédito, identidad, ficha y resumen de la biografía. Componentes
@@ -290,7 +290,7 @@ export function ArtistSummary({
         {firstParagraph}
       </p>
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <Link href={`${artistHref(artistName, artistId)}/biography`} className="font-data text-xs text-amber hover:underline">
+        <Link href={`${artistHref(artistName, artistId)}/biography#${ARTIST_TABS_ANCHOR}`} className="font-data text-xs text-amber hover:underline">
           {t("readMore")} →
         </Link>
         <WikipediaAttribution url={summary.url} />

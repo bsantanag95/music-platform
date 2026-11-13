@@ -94,7 +94,7 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
           wins: awards.wins,
           nominations: awards.nominations,
           inductions: awards.inductions,
-          href: `${artistHref(artist.name, artist.id)}/awards`,
+          href: `${artistHref(artist.name, artist.id)}/awards#${ARTIST_TABS_ANCHOR}`,
         }
       : null;
   const discographyHref =
