@@ -6,7 +6,6 @@ import { EMPTY_DISCOGRAPHY_MARKS, type ArtistDiscographyItem } from "@/services/
 import type { DiscographySection } from "@/services/catalog/discography-sections";
 import {
   ArtistDiscography,
-  DECADE_SEPARATORS_MIN,
   GRID_PAGE_SIZE,
   discographyBlocks,
   sectionFromSearch,
@@ -201,23 +200,30 @@ describe("ArtistDiscography", () => {
       expect(tile).toHaveAttribute("aria-hidden", "true");
     });
 
-    it(`separa por décadas desde ${DECADE_SEPARATORS_MIN} discos y no antes`, () => {
-      const many = Array.from({ length: DECADE_SEPARATORS_MIN }, (_, i) => studio(`d${i}`, 1978 + i * 2));
-      const { unmount } = renderDiscography({ sections: [{ key: "live", items: many }] , activeSection: "live" });
-      fireEvent.click(screen.getByRole("button", { name: d.viewGrid }));
-      expect(screen.getAllByText(/^Años /).map((el) => el.textContent)).toEqual(["Años 70", "Años 80", "Años 90", "Años 2000"]);
-      unmount();
-      renderDiscography({ sections: [{ key: "main", items: many.slice(0, DECADE_SEPARATORS_MIN - 1) }] });
+    it("por defecto no separa por décadas, aunque haya muchos discos", () => {
+      const many = Array.from({ length: 24 }, (_, i) => studio(`d${i}`, 1978 + i));
+      renderDiscography({ sections: [{ key: "main", items: many }] });
       expect(screen.queryByText(/^Años /)).not.toBeInTheDocument();
     });
 
-    it("los discos sin año van bajo 'Sin año'", () => {
-      const many = [
-        ...Array.from({ length: DECADE_SEPARATORS_MIN }, (_, i) => studio(`d${i}`, 1990 + i)),
-        studio("x", 0, { year: null }),
-      ];
+    it("la agrupación por década se elige en los filtros y se recuerda", () => {
+      window.localStorage.removeItem("artist-discography-grouping");
+      const many = Array.from({ length: 6 }, (_, i) => studio(`d${i}`, 1978 + i * 5));
       renderDiscography({ sections: [{ key: "main", items: many }] });
+      fireEvent.click(screen.getByRole("button", { name: "Década" }));
+      expect(screen.getAllByText(/^Años /).map((el) => el.textContent)).toEqual(["Años 70", "Años 80", "Años 90", "Años 2000"]);
+      expect(window.localStorage.getItem("artist-discography-grouping")).toBe("decade");
+      fireEvent.click(screen.getByRole("button", { name: "Sin agrupar" }));
+      expect(screen.queryByText(/^Años /)).not.toBeInTheDocument();
+      window.localStorage.removeItem("artist-discography-grouping");
+    });
+
+    it("los discos sin año van bajo 'Sin año' al agrupar por década", () => {
+      window.localStorage.removeItem("artist-discography-grouping");
+      renderDiscography({ sections: [{ key: "main", items: [studio("a", 1990), studio("x", 0, { year: null })] }] });
+      fireEvent.click(screen.getByRole("button", { name: "Década" }));
       expect(screen.getByText(d.noYear)).toBeInTheDocument();
+      window.localStorage.removeItem("artist-discography-grouping");
     });
   });
 

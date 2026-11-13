@@ -320,20 +320,23 @@ ya está en el enlace de la tarjeta). La tabla SHALL seguir usando la miniatura 
 - **WHEN** Principal muestra "Christmas EP" (1984) sin carátula
 - **THEN** su cuadro dice "Christmas EP" y "1984" en lugar del vinilo vacío
 
-### Requirement: Separadores por década
+### Requirement: Agrupación elegible de la grilla
 
-En la grilla, un bloque con 12 discos o más SHALL separarse por décadas: un separador con el nombre de la década
-("Años 80", "Años 2000"; "1980s" en inglés) antes del primer disco de cada una, y "Sin año" antes de los discos sin año.
-Un bloque con menos de 12 discos y la tabla SHALL NOT llevar separadores.
+La grilla SHALL ofrecer en la barra de la discografía un selector "Agrupar" con las opciones Tipo (solo cuando Principal
+tiene álbumes y EP: los dos bloques), Década y Sin agrupar. Por defecto agrupa por tipo si está disponible y, si no,
+no agrupa; nunca separa por década sin que la persona lo elija. La elección SHALL recordarse en el navegador. Por Década,
+la sección entera es un solo bloque con un separador con el nombre de la década ("Años 80", "Años 2000"; "1980s" en
+inglés) antes del primer disco de cada una y "Sin año" antes de los discos sin año. El selector SHALL mostrarse solo en la
+vista grilla y fuera de la búsqueda; la tabla SHALL NOT llevar separadores de década.
 
-#### Scenario: Álbumes de una banda longeva
+#### Scenario: Elegir Década
 
-- **WHEN** el bloque de álbumes de Iron Maiden (17) se muestra en grilla
-- **THEN** los discos quedan bajo "Años 80", "Años 90", "Años 2000", "Años 2010" y "Años 2020"
+- **WHEN** la persona elige "Década" en una sección de 24 discos en grilla
+- **THEN** los discos quedan bajo "Años 80", "Años 90", "Años 2000"… y la elección se recuerda
 
-#### Scenario: Pocos discos
+#### Scenario: Por defecto sin décadas
 
-- **WHEN** una sección tiene 8 discos en grilla
+- **WHEN** una sección tiene 24 discos y la persona no ha elegido agrupación
 - **THEN** no hay separadores de década
 
 ### Requirement: Barra de la discografía fija

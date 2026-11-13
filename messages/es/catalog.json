@@ -663,6 +663,12 @@
         "albums": "Álbumes",
         "eps": "EP"
       },
+      "grouping": {
+        "label": "Agrupar discos",
+        "type": "Tipo",
+        "decade": "Década",
+        "none": "Sin agrupar"
+      },
       "noYear": "Sin año",
       "filter": {
         "label": "Filtrar por tus discos",

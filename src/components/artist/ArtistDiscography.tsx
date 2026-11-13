@@ -35,8 +35,17 @@ import { TitleTile } from "@/components/catalog/TitleTile";
 
 export const GRID_PAGE_SIZE = 48;
 
-/** Desde cuántos discos un bloque de la grilla se separa por décadas (openspec: refine-artist-page-phase2, D3). */
-export const DECADE_SEPARATORS_MIN = 12;
+/** Cómo agrupa la grilla: por tipo (Álbumes y EP en Principal), por década o sin agrupar. */
+export type DiscographyGrouping = "type" | "decade" | "none";
+
+const GROUPINGS: readonly DiscographyGrouping[] = ["type", "decade", "none"];
+const GROUPING_STORAGE_KEY = "artist-discography-grouping";
+
+/** Agrupación efectiva: la elegida si se puede, si no la por defecto (por tipo si hay dos tipos, si no sin agrupar). */
+export function effectiveGrouping(chosen: DiscographyGrouping | null, typeAvailable: boolean): DiscographyGrouping {
+  if (chosen === "decade" || chosen === "none") return chosen;
+  return typeAvailable ? "type" : "none";
+}
 
 type MainBlockKey = "albums" | "eps";
 
@@ -98,6 +107,30 @@ function useSectionView(section: DiscographySection): [View, (view: View) => voi
     (next) => {
       setView(next);
       storeView(section, next);
+    },
+  ];
+}
+
+/** Agrupación elegida (recordada en el navegador): `null` hasta hidratar o si nunca se eligió. */
+function useGrouping(): [DiscographyGrouping | null, (grouping: DiscographyGrouping) => void] {
+  const [grouping, setGrouping] = useState<DiscographyGrouping | null>(null);
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(GROUPING_STORAGE_KEY);
+      setGrouping(GROUPINGS.find((option) => option === stored) ?? null);
+    } catch {
+      // Sin almacenamiento: se usa la agrupación por defecto.
+    }
+  }, []);
+  return [
+    grouping,
+    (next) => {
+      setGrouping(next);
+      try {
+        window.localStorage.setItem(GROUPING_STORAGE_KEY, next);
+      } catch {
+        // La elección dura hasta recargar.
+      }
     },
   ];
 }
@@ -222,6 +255,7 @@ export function ArtistDiscography({
   const locale = useLocale();
   const [activeSection, selectSection] = useActiveSection(initialSection, sections);
   const [view, setView] = useSectionView(activeSection);
+  const [chosenGrouping, setGrouping] = useGrouping();
   const active = sections.find((s) => s.key === activeSection);
   const defaultSection = sections[0]?.key ?? "main";
   const [discMarks, setDiscMarks] = useState<Record<string, DiscMarks>>(() => (marks ? marksByDisc(marks) : {}));
@@ -255,6 +289,11 @@ export function ArtistDiscography({
   }
 
   const blocks = discographyBlocks(activeSection, active.items);
+  // "Por tipo" solo existe cuando Principal tiene álbumes y EP; la tabla siempre conserva sus bloques por tipo.
+  const typeAvailable = blocks.length > 1;
+  const grouping = effectiveGrouping(chosenGrouping, typeAvailable);
+  const gridBlocks =
+    grouping === "type" ? blocks : [{ key: activeSection as MainBlockKey | DiscographySection, items: active.items }];
   const markOf = (id: string) => discMarks[id] ?? NO_MARKS;
   const isRated = (id: string) => markOf(id).stars !== null;
   const isYours = (id: string) => hasMarks(markOf(id));
@@ -406,6 +445,21 @@ export function ArtistDiscography({
               })}
             </div>
           )}
+          {!result && view === "grid" && active.items.length > 1 && (
+            <div role="group" aria-label={t("grouping.label")} className={SEGMENT_GROUP}>
+              {GROUPINGS.filter((option) => option !== "type" || typeAvailable).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  aria-pressed={grouping === option}
+                  onClick={() => setGrouping(option)}
+                  className={SEGMENT_OPTION}
+                >
+                  {t(`grouping.${option}`)}
+                </button>
+              ))}
+            </div>
+          )}
           {!result && (
             <div role="group" aria-label={t("viewLabel")} className={SEGMENT_GROUP}>
               {(["grid", "table"] as const).map((option) => (
@@ -458,15 +512,16 @@ export function ArtistDiscography({
         </div>
       ) : view === "grid" ? (
         <div key={activeSection} className="flex flex-col gap-8">
-          {blocks.map((block) => (
+          {gridBlocks.map((block) => (
             <DiscographyGrid
               key={block.key}
               artistName={artistName}
               items={block.items}
-              heading={blocks.length > 1 ? { id: blockAnchor(block.key), label: t(`blocks.${block.key}`) } : undefined}
+              heading={gridBlocks.length > 1 ? { id: blockAnchor(block.key), label: t(`blocks.${block.key}`) } : undefined}
               compact={block.key === "eps"}
               bestRatedId={activeSection === "main" ? bestRatedId : null}
-              showEpBadge={activeSection === "main" && blocks.length === 1}
+              showEpBadge={activeSection === "main" && gridBlocks.length === 1}
+              withDecades={grouping === "decade"}
               actions={actions}
             />
           ))}
@@ -568,6 +623,7 @@ function DiscographyGrid({
   compact = false,
   bestRatedId,
   showEpBadge,
+  withDecades,
   actions,
 }: {
   artistName: string;
@@ -578,13 +634,13 @@ function DiscographyGrid({
   compact?: boolean;
   bestRatedId: string | null;
   showEpBadge: boolean;
+  /** Agrupación por década elegida: los discos llegan ordenados por año y un separador marca cada cambio de década. */
+  withDecades: boolean;
   actions: DiscActions;
 }) {
   const t = useTranslations("catalog.artist.discography");
   const locale = useLocale();
   const [visible, setVisible] = useState(GRID_PAGE_SIZE);
-  // Los discos llegan ordenados por año: un separador cada vez que cambia la década.
-  const withDecades = items.length >= DECADE_SEPARATORS_MIN;
   const shown = items.slice(0, visible);
 
   return (
