@@ -52,7 +52,9 @@ async function ArtistDiscographyPage({ params, searchParams }: ArtistDiscography
     requested && sections.some((s) => s.key === requested) ? requested : (sections[0]?.key ?? "main");
 
   return (
-    <div className="flex flex-col gap-8">
+    // `display: contents`: Next hace `scrollIntoView` sobre el primer elemento de la página al navegar (por ejemplo
+    // desde la búsqueda) y salta los que no generan caja; así no se entra a media página, en la discografía.
+    <div className="contents">
       {fromSearch ? <SearchOriginNotice query={fromSearch} /> : null}
       <ArtistDiscography
         artistId={artist.id}

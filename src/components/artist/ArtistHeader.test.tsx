@@ -197,7 +197,7 @@ describe("ArtistSummary", () => {
     renderWithIntl(<ArtistSummary artistId="a1" summary={summary} />);
     expect(screen.getByText("Pink Floyd fue una banda de rock británica.")).toBeInTheDocument();
     expect(screen.queryByText("Segundo párrafo.")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: `${artistEs.summary.readMore} →` })).toHaveAttribute("href", "/artist/a1/biography");
+    expect(screen.getByRole("link", { name: `${artistEs.summary.readMore} →` })).toHaveAttribute("href", "/artist/a1/biography#artist-tabs");
     expect(screen.getByRole("link", { name: artistEs.summary.source })).toHaveAttribute("href", summary.url);
     expect(screen.getByRole("link", { name: artistEs.summary.license })).toBeInTheDocument();
     expect(screen.queryByText(/Resumen en/)).not.toBeInTheDocument();
