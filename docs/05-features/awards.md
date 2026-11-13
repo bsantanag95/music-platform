@@ -234,4 +234,4 @@ galardonado recibe un aviso en la pestaña **"Novedades"**.
 
 - La **marca** "Grammy" se usa solo para describir ("Premios Grammy 2025", "Grammy Hall of Fame"): sin logos ni imágenes del
   Grammy Museum, y sin copiar las descripciones del sitio de la Academia (solo hechos).
-- Smoke test: `scripts/smoke-test-music-awards.ts` (ver `AGENTS.md`).
+- Smoke test: `scripts/smoke-test-music-awards.ts` (ver `docs/06-operations/smoke-tests.md`).
