@@ -62,7 +62,6 @@ export async function Footer({ user = null, exploreEnabled = false, variant = "f
             ) : null}
             <FooterLink href="/search">{t("explore.search")}</FooterLink>
             <FooterLink href="/users">{t("explore.people")}</FooterLink>
-            <FooterLink href="/about">{t("explore.howItWorks")}</FooterLink>
           </FooterNav>
 
           {/* Cuenta */}
@@ -122,46 +121,32 @@ export async function Footer({ user = null, exploreEnabled = false, variant = "f
         </div>
         )}
 
-        {/* Bloque de atribución de fuentes de datos */}
+        {/* Atribución de las fuentes: una línea corta que cumple la licencia en cada página. El detalle
+            (qué viene de dónde, licencias, límites) vive en `/about/data-sources`, que no se enlaza desde acá. */}
         <section
           aria-label={t("attribution.label")}
           className={`flex flex-col gap-2 font-body text-sm text-paper-muted ${minimal ? "" : "border-t border-ink-border pt-6"}`}
         >
-          <h2 className="font-display text-xs font-bold uppercase tracking-wide text-paper">
-            {t("attribution.label")}
-          </h2>
           <p>
-            {t("attribution.metadata.before")}{" "}
-            <ExternalLink
-              href={DATA_SOURCE_URLS.musicbrainz}
-              newTabLabel={t("newTab")}
-            >
-              MusicBrainz
-            </ExternalLink>
-            {t("attribution.metadata.after")}
+            {t.rich("attribution.summary", {
+              appName,
+              musicbrainz: (chunks) => (
+                <ExternalLink href={DATA_SOURCE_URLS.musicbrainz} newTabLabel={t("newTab")}>
+                  {chunks}
+                </ExternalLink>
+              ),
+              coverart: (chunks) => (
+                <ExternalLink href={DATA_SOURCE_URLS.coverArtArchive} newTabLabel={t("newTab")}>
+                  {chunks}
+                </ExternalLink>
+              ),
+              metabrainz: (chunks) => (
+                <ExternalLink href={DATA_SOURCE_URLS.metabrainz} newTabLabel={t("newTab")}>
+                  {chunks}
+                </ExternalLink>
+              ),
+            })}
           </p>
-          <p>
-            {t("attribution.coverArt.before")}{" "}
-            <ExternalLink
-              href={DATA_SOURCE_URLS.coverArtArchive}
-              newTabLabel={t("newTab")}
-            >
-              Cover Art Archive
-            </ExternalLink>
-            {t("attribution.coverArt.after")}
-          </p>
-          <p>
-            {t("attribution.operator.before")}{" "}
-            <ExternalLink
-              href={DATA_SOURCE_URLS.metabrainz}
-              newTabLabel={t("newTab")}
-            >
-              MetaBrainz Foundation
-            </ExternalLink>
-            {t("attribution.operator.after")}
-          </p>
-          <p>{t("attribution.noAffiliation", { appName })}</p>
-          <p>{t("attribution.noAudio", { appName })}</p>
           {COVER_TAKEDOWN_EMAIL ? (
             <p>
               {t("attribution.takedown.before")}{" "}

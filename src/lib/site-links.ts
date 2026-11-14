@@ -8,7 +8,12 @@
 // perfiles que el sitio tendrá, aunque de momento apunten a handles previstos y
 // puedan dar 404. Ver `openspec/changes/add-site-footer/design.md` (decisión 8).
 
-/** Casilla de rol prevista. TODO: reemplazar por la dirección real cuando exista. */
+/**
+ * Casilla de rol prevista. TODO: reemplazar por la dirección real cuando exista.
+ * También es el contacto que publican las páginas informativas y legales (`src/lib/info-pages.ts`,
+ * `{contactEmail}`) y el de retiro de carátulas cuando `COVER_ART_TAKEDOWN_EMAIL` no está configurado:
+ * mientras sea un marcador de posición, esos textos remiten a un correo que no recibe nada.
+ */
 export const CONTACT_EMAIL = "hola@music-platform.app";
 
 export interface SocialLink {

@@ -6,8 +6,7 @@
     "label": "Explore",
     "home": "Home",
     "search": "Search",
-    "people": "Users",
-    "howItWorks": "How it works"
+    "people": "Users"
   },
   "account": {
     "label": "Your account",
@@ -35,21 +34,8 @@
     }
   },
   "attribution": {
-    "label": "Data sources",
-    "metadata": {
-      "before": "Catalog metadata — artists, discographies and credits — comes from",
-      "after": ", mostly in the public domain (CC0) and partly under CC BY-NC-SA 3.0."
-    },
-    "coverArt": {
-      "before": "Cover art comes from the",
-      "after": ": shown at low resolution for identification purposes and owned by their respective rights holders."
-    },
-    "operator": {
-      "before": "Metadata service operated by the",
-      "after": "."
-    },
-    "noAffiliation": "{appName} is not affiliated with or endorsed by the MetaBrainz Foundation.",
-    "noAudio": "{appName} is a catalog and community about music: it does not play or host audio.",
+    "label": "Source attribution",
+    "summary": "Catalog metadata comes from <musicbrainz>MusicBrainz</musicbrainz>, mostly in the public domain (CC0), and cover art from the <coverart>Cover Art Archive</coverart>: shown at low resolution and owned by their rights holders. {appName} is not affiliated with or endorsed by the <metabrainz>MetaBrainz Foundation</metabrainz>, which operates those services.",
     "takedown": {
       "before": "To request the removal of cover art, email",
       "after": "."
