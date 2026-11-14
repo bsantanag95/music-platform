@@ -1,7 +1,7 @@
 ## 1. Datos
 
 - [x] 1.1 Migración `0096_terms_acceptance.sql` + espejo en `schema.ts` + `src/lib/terms.ts` (`TERMS_VERSION`, modos, columnas)
-- [ ] 1.2 Aplicar `0096` en la BD de scratch y comprobar el `CHECK` (pendiente de autorización del usuario)
+- [x] 1.2 Aplicar `0096` en la BD de scratch y comprobar el `CHECK`
 
 ## 2. Backend
 
@@ -18,4 +18,4 @@
 - [x] 4.1 `/help`, `/terms` («Por definir») y `/privacy` (tabla) en es y en
 - [x] 4.2 ADR 0061, `contracts.md`, `sql-model.md`, `auth.md`, `info-pages.md`; smoke de verificación de email con `acceptTerms`
 - [x] 4.3 Tests: formulario, página, ruta, servicios, exportación, `TERMS_VERSION`
-- [ ] 4.4 `typecheck`, `lint`, `test`, `build` y revisión en el navegador
+- [x] 4.4 `typecheck`, `lint`, `test`, `build` y revisión en el navegador
