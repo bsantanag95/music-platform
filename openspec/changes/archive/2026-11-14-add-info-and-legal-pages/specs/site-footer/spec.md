@@ -70,10 +70,10 @@ punto (4) SHALL omitirse.
 - **THEN** los nombres "MusicBrainz", "Cover Art Archive" y "MetaBrainz Foundation"
   permanecen idénticos y solo cambia el texto que los rodea
 
-#### Scenario: Aclaración de no afiliación
+#### Scenario: Aclaración de no afiliación y de no reproducción
 
-- **WHEN** se renderiza el bloque de atribución
-- **THEN** incluye una frase de no afiliación con MetaBrainz Foundation
+- **WHEN** se renderiza el footer
+- **THEN** el bloque de atribución incluye una frase de no afiliación con MetaBrainz Foundation, y el grupo de identidad deja claro que no es un servicio de streaming (la aclaración de que no aloja audio vive en Acerca de y Fuentes de datos)
 
 #### Scenario: Sin encabezado ni enlace a la página de fuentes
 
