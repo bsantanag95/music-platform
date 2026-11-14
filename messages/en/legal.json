@@ -1,69 +1,469 @@
 {
-  "lastUpdated": "Last updated: pending",
-  "placeholderNotice": "This document is being prepared and is not yet a binding policy or agreement. A final version will be published before the public launch.",
-  "about": {
-    "title": "About",
-    "body": "music-platform is a catalog and community for logging and reviewing the music you've already listened to — a Letterboxd for music. It is not a player or an audio source: it builds on MusicBrainz's open data and on what its own community contributes."
-  },
   "terms": {
     "title": "Terms of Service",
-    "body": "This is where the platform's terms of use will live: what you may post, who owns the content you upload, and when an account may be suspended."
+    "lead": "These conditions govern the use of {appName}. They are written in plain language; where something is an obligation or a limitation, we say so clearly.",
+    "sections": [
+      {
+        "id": "who",
+        "title": "Who we are and who this applies to",
+        "paragraphs": [
+          "{appName} is a service under development operated by its team (“we”). By creating an account or using the service you accept these terms, together with the [Privacy Policy](/privacy), the [Cookie Policy](/cookies) and the [Community guidelines](/guidelines). If you do not agree, do not use the service.",
+          "The legal entity that operates it (name, legal form, address) is not yet defined: it will be completed before the public launch, as noted under “To be defined” at the end."
+        ]
+      },
+      {
+        "id": "service",
+        "title": "The service",
+        "paragraphs": [
+          "{appName} is a catalog and a community about music: you can browse the catalog and, with an account, log listens, rate, review, comment, build lists, keep your collection and your concerts, and follow other people. It does not play or host audio, does not sell music and is not a streaming service. What each part does is explained in [About](/about) and in [Help](/help).",
+          "The service is under development. Features, limits and rules may change, and there may be interruptions, errors or data loss. We offer it without a commitment of continuous availability."
+        ]
+      },
+      {
+        "id": "account",
+        "title": "Your account",
+        "items": [
+          "You must give truthful information in the essentials (an email you control) and keep your access secure: you are responsible for what happens with your account and for choosing a password you do not use elsewhere.",
+          "If you suspect someone got into your account, change the password, sign out the other sessions from Settings and write to us.",
+          "Your account is personal and cannot be transferred.",
+          "You can deactivate or delete it whenever you like from Settings → Account and security. What happens in each case is explained in the [Privacy Policy](/privacy).",
+          "Minimum age: not yet set (see “To be defined”). Until then the service is not intended for minors and we do not verify age."
+        ]
+      },
+      {
+        "id": "content",
+        "title": "Your content",
+        "paragraphs": [
+          "You are the author and owner of what you post: ratings, reviews, comments, lists, notes, links and your profile photo. We do not ask you to give up those rights.",
+          "To be able to provide the service you give us permission to store your content, show it according to the audience you chose (including its appearance in community activity, in averages and rankings and in the links and images you share) and adapt it technically (for example, cropping your photo or composing an image to share). It is a non-exclusive, free permission, limited to operating the service, and it ends when you delete the content or your account, except for temporary technical copies.",
+          "You are responsible for what you post: it must be yours or permitted, must not infringe third-party rights and must comply with the [Community guidelines](/guidelines). You may not post audio or files protected by copyright that do not belong to you.",
+          "What happens to your content when you deactivate or delete your account is in the [Privacy Policy](/privacy)."
+        ]
+      },
+      {
+        "id": "conduct",
+        "title": "Permitted use",
+        "paragraphs": [
+          "Use the service in good faith and according to the [Community guidelines](/guidelines). In addition, you may not:"
+        ],
+        "items": [
+          "access other people's accounts, try passwords or attempt to breach the service's security;",
+          "extract data in bulk or by automated means, or get around usage limits, without our written permission;",
+          "use the service to send spam, unsolicited advertising or malicious software;",
+          "pretend to be another person, an artist or the team;",
+          "use it for illegal purposes."
+        ]
+      },
+      {
+        "id": "moderation",
+        "title": "Moderation and suspensions",
+        "paragraphs": [
+          "The moderation team may hide content that breaks these rules (reversibly and keeping a record) and temporarily suspend an account's social activity: during the suspension you can still sign in, read and use your diary and your collection, but you cannot post socially. When something of yours is hidden or restored, or a suspension is applied or lifted, we notify you inside the application.",
+          "We may also close an account in serious or repeated cases. The procedure for asking us to review a decision is not yet defined; in the meantime you can write to us (see “To be defined”)."
+        ]
+      },
+      {
+        "id": "thirdparty",
+        "title": "Third-party data and content",
+        "paragraphs": [
+          "The catalog, cover art, photos and certain texts come from third-party sources, with their own licenses and conditions, explained in [Data sources](/about/data-sources). {appName} is not affiliated with or endorsed by those organizations; names, trademarks and cover art belong to their rights holders. We do not guarantee that this data is accurate, complete or up to date."
+        ]
+      },
+      {
+        "id": "ip",
+        "title": "Intellectual property",
+        "paragraphs": [
+          "The design, code, brand and own texts of {appName} belong to us or are used under license, and you may not copy or reuse them without permission, except as the law or an open license allows.",
+          "If you believe a user's content infringes your rights, write to [{contactEmail}](mailto:{contactEmail}) stating what it is and why; we will review it and, if appropriate, remove it. To request the removal of cover art, see [Data sources](/about/data-sources)."
+        ]
+      },
+      {
+        "id": "sharing",
+        "title": "Sharing",
+        "paragraphs": [
+          "When you share a link or an image, whoever receives it can see it even without an account, and can copy or forward it. Sharing something private does not make it public by itself: for a link to work you must make that content public with an explicit gesture. What you have already posted on another network is out of our control and we cannot remove it from there."
+        ]
+      },
+      {
+        "id": "liability",
+        "title": "Warranties and liability",
+        "paragraphs": [
+          "The service is offered “as is” and “as available”, without guarantees that it will work without interruptions or errors, or that the catalog data or other people's content is accurate. Published opinions belong to those who write them, not to us.",
+          "We recommend downloading your data from time to time from Settings → Account and security: during development we cannot guarantee that it will never be lost.",
+          "To the extent the law allows, we are not liable for indirect damages or for losses arising from using the service or from being unable to use it. None of this limits the rights the law gives you or liabilities that cannot be limited."
+        ]
+      },
+      {
+        "id": "ending",
+        "title": "Termination",
+        "paragraphs": [
+          "You may stop using the service and delete your account whenever you like. We may suspend or close accounts that break these terms, and modify or discontinue the service; if we were to shut it down, we will try to give reasonable notice and the chance to download your data."
+        ]
+      },
+      {
+        "id": "changes",
+        "title": "Changes to these terms",
+        "paragraphs": [
+          "We may update these terms. The “Last updated” date at the bottom shows when they last changed. If the change is significant, we will try to notify you in the application or by email before it applies; continuing to use the service afterward means accepting the new version."
+        ]
+      },
+      {
+        "id": "pending",
+        "title": "To be defined before the public launch",
+        "paragraphs": [
+          "These points depend on decisions or information that are not yet resolved, and these terms do not promise them:"
+        ],
+        "items": [
+          "Responsible entity: legal name or responsible person, legal form, address and legal contact details of whoever operates the service.",
+          "Governing law and jurisdiction: country or countries of operation, the law that governs these terms and the competent courts. They depend on where the service is established and where its users are.",
+          "Minimum age to use the service and, where applicable, parental or guardian consent.",
+          "Review of moderation decisions: how and within what time frame a suspension or hidden content can be reviewed.",
+          "Commercial terms: if the service ever adds payments or advertising, these terms and the privacy policy will be updated beforehand.",
+          "Legal review: this text has not been reviewed by a legal professional; clauses such as the content license, the limitation of liability, acceptance by use and governing law must be validated for the relevant jurisdiction."
+        ]
+      }
+    ]
   },
   "privacy": {
     "title": "Privacy Policy",
-    "body": "This is where we'll set out what personal data is collected, on what legal basis, how long it is kept, and how to exercise your rights over it.",
-    "intro": "This is the part of the policy that already describes what the application does today with your account and data. The rest of the document is being prepared.",
-    "sections": {
-      "personal": {
-        "title": "Optional personal details on your profile",
-        "body": "On your profile you can add, if you want, your country, your city or region, your pronouns, a bio, your time zone and, if you turn it on, your local time. Everything is optional, starts empty and today is used only to show it on your profile.",
-        "body2": "Who sees it: on a public profile, anyone; on a private profile, only you and the people who follow you with an approved request. The bio, links and counters follow the usual rule and are shown on the card of a private profile.",
-        "body3": "We never ask for it when you sign up. You can change or clear it whenever you want from Settings → Profile, and it is deleted with your account when you delete it. We do not collect your birth date, your gender or your legal name in separate fields: the only name is the “Display name”, which can be a nickname."
+    "lead": "Here we explain what personal data {appName} processes, what for, who can see it, how long it is kept and how you can control it. It describes what the application does today; it promises nothing that is not implemented.",
+    "sections": [
+      {
+        "id": "controller",
+        "title": "Who is responsible",
+        "paragraphs": [
+          "The team that operates {appName} is responsible for processing the data described here. The responsible legal entity (name and address) is not yet defined: see “To be defined” at the end. For any question about your data, write to [{contactEmail}](mailto:{contactEmail})."
+        ]
       },
-      "deactivate": {
-        "title": "Deactivating your account",
-        "body": "From Settings → Account and security you can deactivate your account to take a break. Your profile stops being visible to other people: it does not appear in search, followers, following, the feed, community activity or lists, and nobody can follow or block you. We sign you out everywhere. You must confirm your identity to do it.",
-        "body2": "Deactivating deletes nothing: we keep your ratings, reviews, comments, lists, favorites, diary and follows. Your ratings still count in averages, and your reviews and comments stay visible with the author shown as “Deactivated account”, without your username, your name or a link to your profile."
+      {
+        "id": "data",
+        "title": "What data we process",
+        "paragraphs": [
+          "This is the list of what we keep about you. We do not collect your birth date, your gender or your legal name in separate fields."
+        ],
+        "table": {
+          "caption": "Personal data processed by the application, when it is collected, what it is used for and who can see it",
+          "headers": ["Data", "When it is collected", "What it is used for", "Who can see it"],
+          "rows": [
+            ["Email", "When you sign up or sign in with Google.", "Identifying you, recovering your account and sending you account emails.", "You and those who operate the service. It is not shown on your profile."],
+            ["Username and display name", "When you sign up; the display name is your choice and can be a nickname.", "Showing your profile and your activity.", "Other people, depending on your profile privacy."],
+            ["Password", "When you sign up with a password.", "Signing in.", "Nobody: only a hash (Argon2id) is stored, never the password."],
+            ["Google account", "If you sign in with Google.", "Identifying you without a password. We receive your Google identifier, your email and the basic profile data Google shares.", "You and those who operate the service."],
+            ["Optional profile data", "If you add them: bio, country, city, pronouns, time zone, links and photo.", "Showing them on your profile (see “Optional personal profile data”).", "Depending on your profile privacy."],
+            ["What you create", "When you log it: ratings, reviews, comments, listens and diary notes, favorites, lists, collection, concerts, follows, blocks and reports.", "Giving you the library and the community.", "Depending on the audience of each item (see “Who sees your data”). Diary notes are private."],
+            ["Session data", "When you sign in.", "Keeping you signed in and showing you your active sessions: a token of which we only store the hash, dates, last activity and a device label.", "You, in Settings, and those who operate the service."],
+            ["IP address", "On every request.", "Limiting sign-in and sign-up attempts to protect accounts. It is used in memory and is not stored in our database.", "Nobody, except infrastructure technical logs (see “To be defined”)."],
+            ["Notifications and preferences", "When something concerning you happens and when you choose your settings.", "Showing you your notification inbox and, if you turned it on, sending you the weekly digest.", "Only you."],
+            ["Sharing measurement", "When you use the Share button.", "Knowing what content is shared and through which channel. It does not store who shared it or their IP.", "Only those who operate the service, and without personal data."]
+          ]
+        }
       },
-      "reactivate": {
-        "title": "Reactivating your account",
-        "body": "Signing in, with your password or with Google, reactivates your account immediately and everything is visible again as it was. There is no extra confirmation step: if you do not want your profile to be visible again, do not sign in."
-      },
-      "delete": {
-        "title": "Deleting your account",
-        "body": "Also from Account and security you can delete your account. We delete the account and everything you created: profile, links and prompts, ratings, reviews, comments, lists, favorites, diary, collection, follows, blocks, reports you filed and sessions. Other people’s data is not affected.",
-        "body2": "Deleting is immediate and irreversible: there is currently no grace period. To confirm, we ask you to type your username and confirm your identity. If you only want a break, deactivate the account."
-      },
-      "export": {
-        "title": "Downloading your data",
-        "body": "In the same place you can download a JSON file with your data: account, profile, library (including private diary notes), activity, lists and network. For people who follow you or that you follow, only the public username is included. The file never includes your password, tokens or sessions. One download per minute is allowed."
-      },
-      "limits": {
-        "title": "What cannot be deleted today",
-        "body": "An account with moderation or editorial history cannot be deleted, because we keep the record of those actions (who did them and when). It can be deactivated instead. A deactivated account keeps its data until you reactivate or delete it."
-      },
-      "pending": {
-        "title": "To be defined before the public launch",
-        "body": "These points are not settled yet and this policy does not promise them:",
+      {
+        "id": "uses",
+        "title": "What we use it for",
         "items": [
-          "Recovery period: we are considering having deletion leave the account deactivated and recoverable for 14 to 30 days before the final purge, to cover mistakes or unauthorized access. Today deletion is immediate.",
-          "Backups and technical logs: define how long until the data of a deleted account disappears from them.",
+          "Providing the service: your account, your library, your profile and the community.",
+          "Showing your activity to whoever you decide and calculating averages and rankings from the activity of many people.",
+          "Protecting accounts and the service: authentication, attempt limits, abuse detection and moderation.",
+          "Sending you the emails the account needs (confirming your email, changing it, resetting your password) and, only if you turn it on, the weekly digest.",
+          "Understanding how the service is used through aggregate figures without personal data, such as how many times each type of content is shared."
+        ],
+        "paragraphs": [
+          "We do not sell your data or use it for advertising. Today we do not use third-party analytics or tracking tools nor make automated decisions that affect you. If any of this changes, we will update it here and, where appropriate, ask you beforehand."
+        ]
+      },
+      {
+        "id": "visibility",
+        "title": "Who sees your data",
+        "paragraphs": [
+          "You control the audience. Your profile is public or private and, in addition, your listens, favorites, lists, collection and concerts each have their own audience (private, followers only, or public), which you can change later. With a private profile only you and the people who follow you with an approved request see what is not public. Diary notes are private.",
+          "Comments are public. Ratings are visible to you and the people who follow you, except those you feature, those you share and those that accompany a review. Your public activity may appear in community activity; averages and rankings are calculated from the activity of many people and do not show who contributed each piece of data.",
+          "The moderation team can see reported content and the data needed to resolve a report. Those who operate the service can technically access the database, including private data; we only do so to maintain the service, resolve incidents and moderate."
+        ]
+      },
+      {
+        "id": "providers",
+        "title": "Who we share data with",
+        "paragraphs": ["We do not sell your data. Only third parties that provide a technical part of the service are involved:"],
+        "items": [
+          "Google, if you choose to sign in with Google: you start the sign-in and it is governed by Google's privacy policy; we receive your identifier, your email and your basic profile data.",
+          "An email delivery provider (planned: Resend) for account emails and the weekly digest: it receives your email address and the content of the message.",
+          "An S3-compatible image storage provider (planned: Cloudflare R2) and its content delivery network: they store and deliver your profile photo and the low-resolution copies of cover art.",
+          "The hosting and database provider: not yet defined (see “To be defined”)."
+        ]
+      },
+      {
+        "id": "external",
+        "title": "Queries to other sources and external links",
+        "paragraphs": [
+          "Catalog queries (MusicBrainz, Wikimedia, ListenBrainz) are made by our server, not by your browser. The text of one of your searches may be sent to MusicBrainz, but never your identity or your account data. More in [Data sources](/about/data-sources).",
+          "When you open an external link, or when your browser loads a cover directly from the Cover Art Archive, that site can see your IP address, as in any web visit. We do not send them your account data."
+        ]
+      },
+      {
+        "id": "cookies",
+        "title": "Cookies and local storage",
+        "paragraphs": [
+          "We only use necessary or preference cookies and local storage; we do not use advertising or analytics cookies. The detail is in the [Cookie Policy](/cookies)."
+        ]
+      },
+      {
+        "id": "retention",
+        "title": "How long we keep it",
+        "items": [
+          "Your account and your content: while you keep the account. When you delete it they are erased (see “Deleting your account”).",
+          "Sessions: a remembered session expires after 30 days without activity; one that is not remembered, after 24 hours. Signing out removes it immediately.",
+          "Email confirmation and password reset links: they last 24 hours and 30 minutes respectively, and can be used only once.",
+          "Notifications: when you open your inbox, read ones older than 90 days and any older than 180 days are deleted.",
+          "Sharing measurement: kept without personal data.",
+          "Backups and technical logs: the period is not yet defined (see “To be defined”)."
+        ]
+      },
+      {
+        "id": "security",
+        "title": "Security",
+        "paragraphs": [
+          "What we apply today: passwords are stored with an Argon2id hash and never in plain text; the session uses a protected cookie (httpOnly, secure and SameSite) with a token of which we only store the hash; sessions can be closed one by one or all at once; we limit sign-in and sign-up attempts; and we ask you to confirm your identity for sensitive actions, such as deactivating or deleting the account.",
+          "No measure is infallible: we cannot guarantee absolute security. Use a unique password, keep your device protected and tell us if you see anything odd. The procedure for notifying a security breach is not yet defined (see “To be defined”)."
+        ]
+      },
+      {
+        "id": "rights",
+        "title": "Your rights and how to exercise them",
+        "paragraphs": ["Depending on the law that applies to you, you have rights over your data. This is what you can do on your own today:"],
+        "items": [
+          "Access your data and take it with you: download a JSON file from Settings → Account and security.",
+          "Correct it: edit your profile, ratings, reviews, comments and lists whenever you like.",
+          "Control visibility: private profile and the audience of each entry.",
+          "Choose notifications: turn each type of notification and the weekly digest on or off.",
+          "Pause or erase: deactivate or delete your account (following sections)."
+        ]
+      },
+      {
+        "id": "contact",
+        "title": "Other requests",
+        "paragraphs": [
+          "For any other request (for example, objecting to a processing activity or asking what data we hold about you), write to [{contactEmail}](mailto:{contactEmail}). Response times and the exact legal basis depend on the jurisdiction and are yet to be defined."
+        ]
+      },
+      {
+        "id": "minors",
+        "title": "Minors",
+        "paragraphs": [
+          "We have not yet set a minimum age and we do not verify it. {appName} is not aimed at children; if you believe a minor has created an account, write to us."
+        ]
+      },
+      {
+        "id": "personal",
+        "title": "Optional personal profile data",
+        "paragraphs": [
+          "On your profile you can add, if you wish, your country, your city or region, your pronouns, a bio, your time zone and, if you turn it on, your local time. Everything is optional, starts empty and is used today only to display it on your profile.",
+          "Who sees it: on a public profile, anyone; on a private profile, only you and the people who follow you with an approved request. The bio, links and counters follow the usual rule and are visible on the card of a private profile.",
+          "We never ask for it when you sign up. You can change or empty it whenever you like from Settings → Profile, and it is erased together with your account when you delete it. We do not collect your birth date, your gender or your legal name in separate fields: the only name is the “Display name”, which can be a nickname."
+        ]
+      },
+      {
+        "id": "deactivate",
+        "title": "Deactivating your account",
+        "paragraphs": [
+          "From Settings → Account and security you can deactivate your account to take a break. Your profile stops being visible to other people: it does not appear in searches, followers, following, feed, community activity or lists, and nobody can follow or block you. We close all your sessions. To do it we ask you to confirm your identity.",
+          "Deactivating does not delete anything: we keep your ratings, reviews, comments, lists, favorites, diary and follows. Your ratings keep counting in averages, and your reviews and comments remain visible with the authorship “Deactivated account”, without your username, without your name and without a link to your profile."
+        ]
+      },
+      {
+        "id": "reactivate",
+        "title": "Reactivating your account",
+        "paragraphs": [
+          "Signing in, with your password or with Google, reactivates your account immediately and everything looks as it was. There is no additional confirmation step: if you do not want your profile to become visible again, do not sign in."
+        ]
+      },
+      {
+        "id": "delete",
+        "title": "Deleting your account",
+        "paragraphs": [
+          "Also from Account and security you can delete your account. We erase the account and everything you created: profile, links and questions, ratings, reviews, comments, lists, favorites, diary, collection, follows, blocks, reports you made and sessions. Other people's data is not affected.",
+          "Deleting is immediate and irreversible: today there is no grace period. To confirm it we ask you to type your username and confirm your identity. If you only want a break, deactivate the account."
+        ]
+      },
+      {
+        "id": "export",
+        "title": "Downloading your data",
+        "paragraphs": [
+          "In the same place you can download a JSON file with your data: account, profile, library (including private diary notes), activity, lists and network. Of the people who follow you or you follow, only the public username appears. The file never includes your password, tokens or sessions. One download per minute is allowed."
+        ]
+      },
+      {
+        "id": "limits",
+        "title": "What cannot be deleted today",
+        "paragraphs": [
+          "An account with a moderation or editorial history cannot be deleted, because we keep the record of those actions (who did them and when). In that case it can be deactivated. A deactivated account keeps its data until you reactivate or delete it."
+        ]
+      },
+      {
+        "id": "pending",
+        "title": "To be defined before the public launch",
+        "paragraphs": ["These points are not yet resolved and this policy does not promise them:"],
+        "items": [
+          "Recovery period: we are evaluating that deleting leaves the account deactivated and recoverable for 14 to 30 days before the final purge, to cover mistakes or unauthorized access. Today deletion is immediate.",
+          "Backups and technical logs: define how long it takes for the data of a deleted account to disappear from them.",
           "Deactivated accounts: define how long they are kept without activity (today, no limit).",
-          "Moderation records: anonymize the person in those records so accounts with history can be deleted, instead of blocking it.",
-          "Data we must keep because of a legal obligation (fraud, legal requests): define which, for how long and isolated from the rest.",
-          "Right to erasure: confirm the deadlines and legal basis for each jurisdiction (for example, GDPR Art. 17 requires erasure without undue delay, generally within one month).",
-          "Reactivation: today signing in is enough, with no confirmation or notice. Revisit if there are complaints about unintended reactivations.",
-          "Minimum age: set in the Terms of service the minimum age to use the platform. Today age is neither asked nor verified."
+          "Moderation records: anonymize the person in those records so that accounts with a history can be deleted, instead of blocking it.",
+          "Data that must be kept by legal obligation (fraud, legal requests): define which, for how long and isolated from the rest.",
+          "Right to erasure: confirm the deadlines and the legal basis depending on the jurisdiction (for example, Art. 17 of the GDPR requires erasure without undue delay, generally within one month).",
+          "Reactivation: today signing in is enough, with no confirmation or notice. Review it if there are complaints about unintended reactivations.",
+          "Responsible entity: legal name or person responsible for the processing, address and, if the law requires it, a representative or data protection officer.",
+          "Legal framework and legal bases: which data protection laws apply (for example, the GDPR or Latin American ones, depending on where the service operates and where its users are) and what legal basis each processing activity relies on.",
+          "Providers and data location: choose the hosting, database, email delivery and storage; define where the data is hosted, whether there are international transfers and sign the corresponding data processing agreements.",
+          "Providers' technical logs (for example, IP addresses in server logs): what is recorded and for how long.",
+          "Security breaches: procedure and time frames for notifying affected people and authorities.",
+          "Rights and requests: definitive channel and response times to exercise them.",
+          "Minimum age: set in the Terms of Service the minimum age to use the platform. Today age is neither asked nor verified."
         ]
       }
-    }
+    ]
   },
   "cookies": {
     "title": "Cookie Policy",
-    "body": "Today the app only uses a strictly necessary session cookie to keep you signed in; it needs no consent. If analytics or other cookies are added later, they'll be explained here and your consent will be requested."
+    "lead": "We only use what is essential for the application to work and to remember your preferences. We do not use advertising or analytics cookies, and we do not install third-party cookies.",
+    "sections": [
+      {
+        "id": "what",
+        "title": "What they are and what we use them for",
+        "paragraphs": [
+          "A cookie is a small file that a site stores in your browser. The browser's local storage (localStorage) serves a similar purpose, but it is not sent to the server on every visit. This page covers both."
+        ]
+      },
+      {
+        "id": "cookies",
+        "title": "Cookies we use",
+        "table": {
+          "caption": "Application cookies, what they are for, how long they last and what type they are",
+          "headers": ["Name", "What it is for", "Duration", "Type"],
+          "rows": [
+            ["music_session", "Keeps you signed in; it is only created when you sign in. It cannot be read from JavaScript and only travels over secure connections.", "With “Keep me signed in”: the session lasts up to 30 days from your last activity (the cookie may remain in the browser for up to 400 days, but stops being valid when the session expires). Without it: the session expires after 24 hours.", "Strictly necessary."],
+            ["oauth_state", "Protects the Google sign-in against forgery and remembers which page to return to. It is deleted when the flow ends.", "10 minutes at most.", "Strictly necessary."],
+            ["tz", "Stores your time zone to show dates and group your diary according to your time. It is created when you visit the site.", "1 year.", "Preference."],
+            ["year_invite_dismissed", "Remembers that you dismissed the invitation to build your “year in records”, so it is not shown again.", "1 year.", "Preference."],
+            ["NEXT_LOCALE", "Remembers the interface language. It is created when you visit the site.", "Until you close the browser.", "Preference."]
+          ]
+        }
+      },
+      {
+        "id": "storage",
+        "title": "Browser local storage",
+        "paragraphs": [
+          "We store some view preferences on your device (for example, list or grid, how a discography is grouped or the view mode of the lists to complete) and your recent searches. They stay on your device, are never sent to the server and you can delete them from your browser settings."
+        ]
+      },
+      {
+        "id": "consent",
+        "title": "Consent",
+        "paragraphs": [
+          "We do not show a consent notice because today we only use necessary or preference cookies that, according to our current assessment, do not require it; that assessment is pending legal review (see “To be defined”). If we ever add analytics, advertising or other non-necessary cookies, we will say so here and ask for your consent before activating them."
+        ]
+      },
+      {
+        "id": "third",
+        "title": "Third parties",
+        "paragraphs": [
+          "We do not install third-party cookies. If you sign in with Google, your browser goes through Google sites, which apply their own cookies and their own policy. Cover art and photos may be loaded from third-party servers (Cover Art Archive, Wikimedia Commons or our delivery network), which receive your IP address like any web server. More in the [Privacy Policy](/privacy)."
+        ]
+      },
+      {
+        "id": "control",
+        "title": "How to control them",
+        "paragraphs": [
+          "You can delete or block cookies and local storage from your browser. If you block the necessary ones you will not be able to sign in; if you block the preference ones, dates will be shown in UTC and you will lose settings such as the chosen language until you configure them again."
+        ]
+      },
+      {
+        "id": "pending",
+        "title": "To be defined before the public launch",
+        "paragraphs": ["These points are not yet resolved and this policy does not promise them:"],
+        "items": [
+          "Consent: confirm with legal counsel whether any preference cookie (in particular the time zone and language ones, which are created automatically when the site is visited) requires prior notice or consent in the jurisdictions where the service operates.",
+          "If analytics, advertising or any non-necessary cookie is added: consent notice, consent record and an update of this policy.",
+          "Infrastructure (hosting, content delivery network): when choosing providers, confirm whether they set their own cookies."
+        ]
+      }
+    ]
   },
   "guidelines": {
-    "title": "Community Guidelines",
-    "body": "This is where we'll describe what's expected of reviews, comments and lists, and what content the platform moderates."
+    "title": "Community guidelines",
+    "lead": "{appName} is a place to talk about music with curiosity and respect. These guidelines explain what is expected of what you write and post, what content is moderated and how.",
+    "sections": [
+      {
+        "id": "spirit",
+        "title": "The spirit",
+        "paragraphs": [
+          "Here disagreement is welcome: two people can rate the same record with opposite scores and neither has to convince the other. What is not welcome is aiming disagreement at people. Criticize the record, not whoever listens to it."
+        ]
+      },
+      {
+        "id": "expect",
+        "title": "What is expected",
+        "items": [
+          "Talk about music: reviews and comments should be about the artist, the record, the song or the ongoing conversation.",
+          "Rate honestly: what you listened to, by your own judgment. You do not need an opinion on everything.",
+          "Respect other people, even if they think differently.",
+          "Look after your privacy and other people's: do not post other people's personal data or private conversations without their permission.",
+          "Post only content that is yours or permitted: do not copy other people's reviews as your own."
+        ]
+      },
+      {
+        "id": "prohibited",
+        "title": "What is not allowed",
+        "items": [
+          "Harassment, threats, insults or personal attacks, including repeated hounding of a person.",
+          "Hate speech or discrimination based on origin, ethnicity, religion, gender, sexual orientation, disability or another protected status.",
+          "Illegal content, or content that incites violence or harm to other people or to oneself.",
+          "Spam, unsolicited advertising, repetitive self-promotion and misleading or malicious links.",
+          "Pretending to be another person, an artist or the {appName} team.",
+          "Manipulating ratings and rankings: creating fake accounts, coordinating mass voting or asking for ratings in exchange for something.",
+          "Sharing or linking to illegal copies of music or other protected content.",
+          "Getting around a suspension or a moderation measure with another account."
+        ]
+      },
+      {
+        "id": "where",
+        "title": "What they apply to",
+        "paragraphs": [
+          "To everything other people can see: reviews, comments and replies, lists (titles and descriptions), bio, username and display name, links, profile photo, concerts added to the shared catalog and the texts of the Cards you share. What you keep private is not published and is not moderated as public content."
+        ]
+      },
+      {
+        "id": "report",
+        "title": "How to report",
+        "paragraphs": [
+          "If you see a comment, a review, a profile or a concert that breaks these guidelines, use “Report” and briefly state the reason. One open report per person and item is accepted. You can also block a person at any time from their profile, without needing to report them."
+        ]
+      },
+      {
+        "id": "moderation",
+        "title": "What we do when something breaks them",
+        "paragraphs": ["The moderation team reviews each report and may, depending on severity:"],
+        "items": [
+          "Dismiss the report if there is no violation: the content is not touched.",
+          "Hide the content: it stops being publicly visible, who did it and why is recorded, and it can be restored if it was a mistake.",
+          "Temporarily suspend the account's social activity (posting, commenting, following): you can still sign in and use your diary and your collection.",
+          "In serious or repeated cases, close the account (see the [Terms of Service](/terms))."
+        ]
+      },
+      {
+        "id": "notice",
+        "title": "Notices and review",
+        "paragraphs": [
+          "When your content is hidden or restored, or a suspension is applied or lifted, you receive a notification in the application. Content is not hidden for being a negative or unpopular opinion about an artist, as long as it respects these guidelines.",
+          "If you think a decision was a mistake, write to [{contactEmail}](mailto:{contactEmail}). There is not yet a defined procedure or time frame for those reviews."
+        ]
+      },
+      {
+        "id": "limits",
+        "title": "Limits of moderation",
+        "paragraphs": [
+          "We are a small team and we do not review everything that is posted: we depend on reports. We cannot guarantee that all inappropriate content is removed immediately. Catalog data (names, dates, credits) is not community content: it comes from external sources and is explained in [Data sources](/about/data-sources)."
+        ]
+      }
+    ]
   }
 }

@@ -1,0 +1,304 @@
+{
+  "ui": {
+    "pendingNotice": "This document describes how the service works today, but it has not yet been through a legal review: do not read it as a final agreement. The final version will be published before the public launch; the points that remain open are listed at the end.",
+    "lastUpdated": "Last updated: {date}",
+    "toc": "On this page",
+    "related": "More information",
+    "newTab": "opens in a new tab"
+  },
+  "pages": {
+    "about": "About",
+    "help": "Help",
+    "dataSources": "Data sources",
+    "guidelines": "Community guidelines",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "cookies": "Cookie Policy"
+  },
+  "about": {
+    "title": "About {appName}",
+    "lead": "{appName} is a social library for music: a place to log what you have listened to, give your opinion on it and discover what the people you follow are listening to.",
+    "sections": [
+      {
+        "id": "what",
+        "title": "What it is",
+        "paragraphs": [
+          "It brings together a catalog of artists, albums and songs with the tools to keep your own musical history: a listening diary, star ratings (and an optional detailed score), reviews, favorites, lists, your physical collection and the concerts you went to.",
+          "On top of that there is a community: you can follow other people and your favorite artists, comment, compare tastes and see what people close to you are listening to. What you log is yours, and you decide who can see it."
+        ]
+      },
+      {
+        "id": "who",
+        "title": "Who it is for",
+        "paragraphs": [
+          "For active listeners who want to keep a curated, personal record of their musical history, discuss discographies with precision (editions, remasters, collaborations) and discover music through other people rather than through an algorithm."
+        ]
+      },
+      {
+        "id": "principles",
+        "title": "How we see it",
+        "items": [
+          "The album is the central unit: it is the work that opinion revolves around. Artists and songs can also be rated and commented on.",
+          "You do not need an opinion on everything. Rating, commenting or marking a favorite are occasional gestures, kept for what left something with you. There are no streaks, backlog counters or badges for volume.",
+          "Your rating is your identity, not a verdict. Disagreement is part of the conversation.",
+          "You decide what is visible. Your listens, favorites, lists and concerts each have their own audience, and nothing becomes public just because you share it without an explicit gesture from you."
+        ]
+      },
+      {
+        "id": "not",
+        "title": "What it is not",
+        "items": [
+          "It is not a streaming service: it does not play or host audio and does not allow uploading audio files. To listen, you use the service you prefer.",
+          "It does not sell music, tickets or records.",
+          "It is not an official music source: the catalog comes from open projects and may contain errors or gaps (see Data sources)."
+        ]
+      },
+      {
+        "id": "how",
+        "title": "How it works inside, in brief",
+        "paragraphs": [
+          "The catalog is not loaded in full in advance: it grows with use. When you search for or open something that was not there yet, {appName} looks it up in MusicBrainz, an open music database maintained by its community, and saves it for next time. That is why the first visit to a rarely viewed artist can take a few seconds.",
+          "What comes from other sources (data, cover art, photos and texts) and what the community creates (ratings, reviews, lists) are kept separate and explained in [Data sources](/about/data-sources)."
+        ]
+      },
+      {
+        "id": "transparency",
+        "title": "Transparency and rules",
+        "paragraphs": ["These documents explain how the platform works and what is expected from each side:"],
+        "items": [
+          "[Data sources](/about/data-sources): where each piece of data comes from, under what license and with what limits.",
+          "[Community guidelines](/guidelines): what is expected of reviews, comments and lists, and how moderation works.",
+          "[Terms of Service](/terms): the conditions of use.",
+          "[Privacy Policy](/privacy): what data we process and how to control it.",
+          "[Cookie Policy](/cookies): what is stored in your browser.",
+          "[Help](/help): how to use each part of the application."
+        ]
+      },
+      {
+        "id": "status",
+        "title": "Project status",
+        "paragraphs": [
+          "{appName} is under development and is not yet open to the general public. Features, texts and rules may change in the meantime; when they change in a relevant way, we will reflect it on these pages."
+        ]
+      },
+      {
+        "id": "contact",
+        "title": "Contact",
+        "paragraphs": [
+          "For questions, suggestions or problems, write to [{contactEmail}](mailto:{contactEmail}). To request the removal of cover art or a photo, see [Data sources](/about/data-sources)."
+        ]
+      }
+    ]
+  },
+  "help": {
+    "title": "Help",
+    "lead": "Short answers to the most common questions about using {appName}. If you cannot find what you are looking for, write to us.",
+    "sections": [
+      {
+        "id": "start",
+        "title": "Getting started",
+        "paragraphs": [
+          "You can explore the catalog without an account. To rate, comment, keep a diary or follow other people you need to create one."
+        ],
+        "items": [
+          "Creating an account: with your email, a username and a password, or with your Google account. When you sign up we do not ask for anything else.",
+          "Confirming your email: we send you a link. Confirming it lets you recover the account if you forget your password, and some features, such as creating a concert in the shared catalog, require it.",
+          "The welcome guide: the first time, we suggest marking favorite albums and choosing artists to follow. It is optional and you can skip it."
+        ]
+      },
+      {
+        "id": "search",
+        "title": "Searching and finding music",
+        "items": [
+          "Search: use the search box in the header for artists, albums and songs. Advanced search lets you narrow things down with filters.",
+          "“I cannot find a record or an artist”: the catalog fills in as it is used. If it exists in MusicBrainz, it appears when you search for it by name. If it does not exist there, it will not be here either.",
+          "An incorrect or incomplete detail (title, date, credits, editions): it comes from MusicBrainz, which anyone can improve, and it is not edited here. If you fix it there, it will be reflected when {appName} queries it again, which can take a while."
+        ]
+      },
+      {
+        "id": "rate",
+        "title": "Rating and giving your opinion",
+        "items": [
+          "Stars: you can rate albums, songs and artists from 0.5 to 5 stars, in half-star steps.",
+          "Detailed score (optional): refine the rating from 1 to 100. It is not a second rating: it always matches the stars and never contradicts them.",
+          "Reviews and comments: you can write a review along with your rating and comment on artists, albums and songs. Replies have a single level of depth.",
+          "Editing and deleting: you can edit or delete your ratings, reviews and comments whenever you like. When you delete them, they are gone."
+        ]
+      },
+      {
+        "id": "library",
+        "title": "Your library",
+        "items": [
+          "Diary: log when you listened to something, with an optional private note.",
+          "Favorites: what matters most to you, by type (artists, albums, songs).",
+          "Listen Later: what you would like to listen to, with no pressure or deadlines.",
+          "Lists: group artists, albums or songs; each list is of a single type. Lists to complete are selections of albums you go through at your own pace.",
+          "Physical collection: the records you own or want, with their format and edition.",
+          "Concerts: the concerts you attended. Those in an artist's shared catalog can be confirmed by several people.",
+          "Cards: images of your taste (a Top list, an artist's discography, a tier list, your year in records) to share."
+        ]
+      },
+      {
+        "id": "privacy",
+        "title": "Privacy and who sees what",
+        "items": [
+          "Public or private profile: with a private profile, only people who follow you with an approved request can see your content.",
+          "Audience of each entry: listens, favorites, lists, collection and concerts can be private, followers only or public. You choose a default audience and can change it later, in Settings → Privacy and audience.",
+          "Ratings and comments: they have no audience of their own. Comments are public; a rating is visible to you and the people who follow you, except those you feature, those you share and those that accompany a review.",
+          "Followers and blocks: manage who follows you, requests and blocked accounts in Settings → Network."
+        ],
+        "paragraphs": [
+          "The detail of what data we keep and how it is handled is in the [Privacy Policy](/privacy)."
+        ]
+      },
+      {
+        "id": "share",
+        "title": "Sharing",
+        "paragraphs": [
+          "The Share button generates a link and an image. Nothing becomes public by being shared: if the content is private, the link does not show it, and to share it you must make it public with an explicit gesture. What you have already posted on another network is out of our control."
+        ]
+      },
+      {
+        "id": "notifications",
+        "title": "Notifications and email",
+        "paragraphs": [
+          "Notifications (replies, followers, releases and awards of artists you follow, milestones of your content) arrive in the bell in the header and are configured in Settings → Notifications. By email you only receive the messages the account needs (confirming your email, changing it, resetting your password) and, only if you turn it on, a weekly digest."
+        ]
+      },
+      {
+        "id": "account",
+        "title": "Account and security",
+        "items": [
+          "Changing your email, username or password, seeing the devices signed in and signing them out: Settings → Account and security.",
+          "I forgot my password: use “Forgot your password?” when signing in. If you created the account with Google, sign in with Google.",
+          "Deactivating the account (a pause), deleting it or downloading your data: also in Account and security. What happens in each case is explained in the [Privacy Policy](/privacy)."
+        ]
+      },
+      {
+        "id": "report",
+        "title": "Reporting content and problems",
+        "paragraphs": [
+          "If you see a comment, a review, a profile or a concert that breaks the [Community guidelines](/guidelines), use “Report”. The moderation team reviews it and can hide the content or suspend an account's social activity. If what you found is a technical error or a wrong detail, write to us."
+        ]
+      },
+      {
+        "id": "contact",
+        "title": "Still have questions?",
+        "paragraphs": [
+          "Write to [{contactEmail}](mailto:{contactEmail}) and tell us what you were trying to do and what happened."
+        ]
+      }
+    ]
+  },
+  "dataSources": {
+    "title": "Data sources",
+    "lead": "{appName} brings together information from several open sources and from what its community contributes. This page explains what comes from where, under what license it is used and what limits it has, so you know how far to trust each piece of data.",
+    "sections": [
+      {
+        "id": "overview",
+        "title": "Overview",
+        "table": {
+          "caption": "Data sources, what is used from each and under which license or conditions",
+          "headers": ["Source", "What we use", "License or conditions"],
+          "rows": [
+            ["MusicBrainz", "Artists, records, editions, songs, credits, group members and concert events.", "Mostly public domain (CC0). Its non-commercial part (CC BY-NC-SA 3.0) is not incorporated."],
+            ["Cover Art Archive", "Record cover art, at low resolution.", "Owned by their rights holders; shown to identify the record."],
+            ["Wikidata", "Short description and place of the artist, genres of artists and records, genre names.", "CC0."],
+            ["Wikipedia", "Artist summary and introductory text for each genre.", "CC BY-SA 4.0, with attribution next to the text."],
+            ["Wikimedia Commons", "Artist photo.", "Free license of each file; author and license shown under the photo."],
+            ["ListenBrainz", "Release calendar on Home and artist popularity.", "CC0."],
+            ["setlist.fm", "Only links to an artist's concerts.", "We do not use its data or its API."],
+            ["Awards and halls of fame", "Nominees, winners and inductions, loaded by hand.", "Public information from each organization, compiled by the team."],
+            ["Community", "Ratings, reviews, comments, lists and genre votes.", "From each person who writes them; see the Terms of Service."]
+          ]
+        }
+      },
+      {
+        "id": "musicbrainz",
+        "title": "MusicBrainz: the catalog",
+        "paragraphs": [
+          "The catalog of artists, albums, editions, songs and credits comes from [MusicBrainz](https://musicbrainz.org), an open music database maintained by its community and operated by the [MetaBrainz Foundation](https://metabrainz.org). {appName} is not affiliated with or endorsed by it.",
+          "Most of its data is in the public domain (CC0). A smaller part (MusicBrainz annotations, tags and ratings) has a non-commercial license (CC BY-NC-SA 3.0) and we do not incorporate it today.",
+          "How it is obtained: the catalog is not loaded in full. When someone searches for or opens something that was not there, the server looks it up in MusicBrainz, respecting its limit of one request per second, and saves the result. That is why the catalog grows with use, and what nobody has visited yet may be missing or incomplete. Descriptive data is updated from the source; it is not edited here.",
+          "To search, the text you type may be sent to MusicBrainz from our server. We do not send them your identity or your account data."
+        ]
+      },
+      {
+        "id": "covers",
+        "title": "Cover art",
+        "paragraphs": [
+          "Cover art comes from the [Cover Art Archive](https://coverartarchive.org), a project of the Internet Archive and MetaBrainz. It is copyrighted material of its rights holders, not under a free license.",
+          "Following the usual practice of music catalogs, we show it only at low resolution (thumbnails of up to 250 pixels) to identify the record within its page, never as full-size decoration. There is no way to list or bulk-download it. Images made for sharing include a few small covers, with a credit line to their sources.",
+          "Depending on the configuration, a cover is loaded directly from the Cover Art Archive or from our own low-resolution copy that is kept in sync with the source: if it is removed or changed there, it is here too.",
+          "If you hold the rights to a cover and want us to remove it, write to [{takedownContact}](mailto:{takedownContact}). The copy is removed and it is prevented from being shown again; what has already been posted on other networks is beyond our reach."
+        ]
+      },
+      {
+        "id": "wikimedia",
+        "title": "Wikidata, Wikipedia and Wikimedia Commons",
+        "paragraphs": [
+          "Artist profiles and genre pages are enriched with Wikimedia Foundation projects. They are reached only from the Wikidata link that MusicBrainz declares for that artist or record, never by searching by name; this avoids mixing up two artists with the same name."
+        ],
+        "items": [
+          "Wikidata (CC0): short description, place of birth or formation, genres of artists and records, and genre names in Spanish.",
+          "Wikipedia (CC BY-SA 4.0): an artist's summary and the “About the genre” text. They are shown unmodified and untranslated, with “Source: Wikipedia” and links to the article and the license.",
+          "Wikimedia Commons: the artist photo, only if its file has a verified free license (public domain, CC0, CC BY or CC BY-SA). The author and license are shown under the photo. We never use the thumbnail from a Wikipedia summary, which could be a non-free image."
+        ]
+      },
+      {
+        "id": "releases",
+        "title": "Release calendar",
+        "paragraphs": [
+          "The release calendar on Home comes from [ListenBrainz](https://listenbrainz.org), a MetaBrainz project with open data (CC0). We only keep the title, the artist, the date, the type and the number of listeners of the artist; we do not store listens or data about ListenBrainz people. Before a release is shown it is checked against MusicBrainz, and if ListenBrainz does not respond, the last saved calendar is kept."
+        ]
+      },
+      {
+        "id": "concerts",
+        "title": "Concerts",
+        "paragraphs": [
+          "The concerts in the shared catalog (an artist's Concerts tab, and its tours and festivals) are seeded with MusicBrainz events and completed with what the community contributes: a concert added by a person shows as “to be confirmed” until several people confirm it or a setlist is linked. Each person's memories in “My concerts” are personal and nobody verifies that they happened.",
+          "From [setlist.fm](https://www.setlist.fm) we only link to its pages: we do not use its API or show its data. If you paste a setlist link into a concert, it is saved as is, without being queried."
+        ]
+      },
+      {
+        "id": "awards",
+        "title": "Awards and halls of fame",
+        "paragraphs": [
+          "The nominees and winners of the ceremonies (Grammy, Latin Grammy, Premio Lo Nuestro, Brit Awards, Mercury Prize) and the classes of the halls of fame (Grammy Hall of Fame and the U.S. Library of Congress National Recording Registry) do not come from an API: the team compiles them by hand from each organization's official publications and other public sources, and links them to the catalog.",
+          "Each category states its coverage: if we only know the winner, it says so instead of showing a partial list as if it were complete. Only closed ceremonies from 2021 onward are loaded (for the halls, their latest classes), so it is not a complete historical archive. There may be errors or gaps, and some entries are not linked to the catalog because there is no equivalent record. {appName} is not affiliated with those organizations."
+        ]
+      },
+      {
+        "id": "community",
+        "title": "What the community contributes",
+        "paragraphs": [
+          "Ratings, reviews, comments, lists and genre votes belong to the people who write them: they are not data from an external source or opinions of {appName}.",
+          "Averages and rankings (for example “Top rated” or “Popular now”) are calculated only from the activity of this community. They reflect the people who take part here, which is a small sample and not representative of the general public.",
+          "The featured collections in Explore are put together by hand by the team or generated automatically from templates (for example, by decade or genre) using this same data."
+        ]
+      },
+      {
+        "id": "limits",
+        "title": "Limits and accuracy",
+        "items": [
+          "The catalog may have errors, gaps or outdated data: wrongly dated editions, incomplete credits, artists mixed up with each other. It inherits the errors of its sources.",
+          "The data is informational: it is not an official source and does not replace checking with the label, the artist or the rights holder.",
+          "What nobody has visited yet may not be loaded.",
+          "Photos, texts and cover art belong to their authors and rights holders; names and trademarks, to their owners.",
+          "{appName} does not play or host audio."
+        ]
+      },
+      {
+        "id": "corrections",
+        "title": "Correcting data or requesting a removal",
+        "items": [
+          "A catalog detail (name, date, credits, editions): fix it in [MusicBrainz](https://musicbrainz.org). It will be updated here when the source is queried again.",
+          "A cover: write to [{takedownContact}](mailto:{takedownContact}).",
+          "An artist photo or a Wikipedia text: fix the file or the article in Wikimedia, or write to [{contactEmail}](mailto:{contactEmail}) to have it removed from here.",
+          "A person's review, comment or list: use “Report” and see the [Community guidelines](/guidelines).",
+          "Any other question: [{contactEmail}](mailto:{contactEmail})."
+        ]
+      }
+    ]
+  }
+}

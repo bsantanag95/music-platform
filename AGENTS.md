@@ -144,6 +144,26 @@ Cuando haya varios agentes trabajando en paralelo:
   mandan, y la inconsistencia se corrige en la documentación (ver ADR 0006).
 - No introducir dependencias nuevas sin justificación explícita en el cambio.
 
+## Páginas informativas y legales (obligatorio al cambiar funcionalidades)
+
+Acerca de, Fuentes de datos, Ayuda, Directrices, Términos, Privacidad y Cookies (`/about`, `/about/data-sources`,
+`/help`, `/guidelines`, `/terms`, `/privacy`, `/cookies`) son una promesa pública sobre lo que la aplicación hace.
+Texto en `messages/{es,en}/{info,legal}.json`; registro, fechas y estado de revisión legal en `src/lib/info-pages.ts`;
+guía completa y mapa de "qué cambio obliga a tocar qué página" en `docs/05-features/info-pages.md` (ADR 0060).
+
+- **Si implementas o modificas una funcionalidad que afecte lo que esos textos afirman, actualízalos en el mismo cambio**:
+  datos personales o su visibilidad/retención/borrado, cookies o `localStorage`, sesión y seguridad, proveedores externos,
+  fuentes de datos y licencias, carátulas/fotos, moderación y reportes, funciones que la Ayuda describe, edad, correos que se
+  envían. Mantén la lógica, el tono y la estructura ya escritos; no los reescribas desde cero.
+- Cambia **ambos idiomas** (mismas secciones, listas, filas y enlaces: un test lo exige), actualiza la fecha de la página en
+  `INFO_PAGES` y, si resuelves un punto de la sección "Por definir", quítalo de ella.
+- **No inventes** políticas, plazos, garantías, certificaciones ni medidas de seguridad. Si falta información (entidad legal,
+  jurisdicción, proveedor, plazo), agrégala a "Por definir" en vez de afirmarla.
+- Una cookie nueva debe aparecer en la tabla de `/cookies`; un test compara esa tabla con las cookies que define el código.
+- No se enlaza `/about/data-sources` desde el pie: el pie solo conserva la atribución corta que exige la licencia
+  (`docs/03-data/data-licensing.md`).
+- `pendingLegalReview` pasa a `false` solo cuando una persona con criterio legal revisó el documento.
+
 ## Antes de dar un cambio por terminado
 
 - [ ] `pnpm run typecheck && pnpm run lint && pnpm run build` pasan.
@@ -159,3 +179,6 @@ Cuando haya varios agentes trabajando en paralelo:
 - [ ] Si el cambio afecta una regla de negocio, el modelo de dominio, un
       contrato de API o una decisión de arquitectura, el documento
       correspondiente en `/docs` quedó actualizado en el mismo cambio.
+- [ ] Si el cambio afecta lo que dicen las páginas informativas o legales (datos personales, cookies, proveedores,
+      fuentes de datos, moderación, funciones de la Ayuda), el texto en `messages/{es,en}/{info,legal}.json` y su fecha en
+      `src/lib/info-pages.ts` quedaron actualizados en el mismo cambio.

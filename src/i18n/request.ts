@@ -40,6 +40,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       footer: (await import(`../../messages/${resolvedLocale}/footer.json`)).default,
       quickActions: (await import(`../../messages/${resolvedLocale}/quickActions.json`)).default,
       legal: (await import(`../../messages/${resolvedLocale}/legal.json`)).default,
+      info: (await import(`../../messages/${resolvedLocale}/info.json`)).default,
       awards: (await import(`../../messages/${resolvedLocale}/awards.json`)).default,
       notifications: (await import(`../../messages/${resolvedLocale}/notifications.json`)).default,
       share: (await import(`../../messages/${resolvedLocale}/share.json`)).default,

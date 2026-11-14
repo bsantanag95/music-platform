@@ -1,14 +1,11 @@
 import type { Metadata } from "next";
-import {
-  LegalPageView,
-  legalMetadata,
-  legalPageProps,
-} from "@/components/legal/LegalPlaceholder";
+import { InfoPageView } from "@/components/legal/InfoPageView";
+import { infoMetadata, infoPageProps } from "@/lib/info-pages";
 
 export function generateMetadata(): Promise<Metadata> {
-  return legalMetadata("guidelines");
+  return infoMetadata("guidelines");
 }
 
 export default async function GuidelinesPage() {
-  return <LegalPageView {...(await legalPageProps("guidelines"))} />;
+  return <InfoPageView {...(await infoPageProps("guidelines"))} />;
 }

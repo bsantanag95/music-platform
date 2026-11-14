@@ -165,15 +165,18 @@ MusicBrainz" solo abre su formulario precargado: el servidor no envía datos.
 ## Dónde se materializa la atribución
 
 El bloque de atribución del **pie de página global** (`src/components/layout/Footer.tsx`,
-cambio `add-site-footer`) es el punto visible y persistente donde se cumplen A, B y C:
-nombra y enlaza a MusicBrainz (CC0 + parte CC BY-NC-SA 3.0), al Cover Art Archive
-(baja resolución, fines de identificación, copyright de sus titulares) y a la
-MetaBrainz Foundation, más la aclaración de no afiliación. Si cambian las condiciones
-de licencia de MetaBrainz, el texto de ese componente (`messages/{es,en}/footer.json`,
-clave `attribution`) es lo que hay que actualizar.
+cambio `add-site-footer`, reducido por `add-info-and-legal-pages`, ADR 0060) es el punto visible y persistente donde
+se cumplen A, B y C. Es deliberadamente corto y sin encabezado: nombra y enlaza a MusicBrainz (en su mayoría CC0), al Cover
+Art Archive (baja resolución, copyright de sus titulares) y a la MetaBrainz Foundation, más la aclaración de no afiliación y,
+si está configurado, el contacto de retiro de carátulas. **No puede quitarse del pie**: es lo que hace visible la fuente en cada
+página que muestra sus datos. El detalle largo (qué se usa de cada fuente, cada licencia, cómo se obtiene, límites, cómo corregir
+un dato o pedir un retiro) vive en la página `/about/data-sources` (`messages/{es,en}/info.json › dataSources`), que cuelga de
+«Acerca de» y no se enlaza desde el pie. Si cambian las condiciones de licencia de MetaBrainz, hay que actualizar **los dos**: la
+clave `attribution` de `messages/{es,en}/footer.json` y esa página. Si cambia lo que se usa de una fuente (secciones A–F de este
+documento), también la página y su fecha en `src/lib/info-pages.ts`.
 
 El pie tiene una variante reducida (`<Footer variant="minimal">`, pantallas de foco como `/welcome`,
-cambio `focus-chrome-on-welcome`) que **conserva** este bloque de atribución completo: reducir la navegación
+cambio `focus-chrome-on-welcome`) que **conserva** este bloque de atribución: reducir la navegación
 de una pantalla nunca debe quitar la atribución de las fuentes cuyos datos o carátulas muestra.
 
 La atribución de Wikipedia y de las fotos de Commons (D) no va en el footer: es por contenido y

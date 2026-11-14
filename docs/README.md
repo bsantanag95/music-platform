@@ -28,6 +28,7 @@ Este directorio es la fuente de verdad técnica y de producto del proyecto. Se p
 | `04-api/contracts.md` | Contrato real de los endpoints REST de catálogo, auth y funciones sociales | ✅ |
 | `04-api/errors.md` | Convención de errores de la API — código `code` machine-readable | ✅ Implementada |
 | `05-features/` | Especificaciones de producto por feature (catálogo, valoraciones, diario de escucha, listas, feed, notificaciones) — ver su propio índice en `05-features/README.md` | 🟡 Fases 3 y 4 implementadas; Fase 5: privacidad, seguimiento, diario, favoritos y listas, feed v1 y notificaciones in-app (Fases 1 y 2) implementados; scrobbling pendiente · 🟢 `sharing.md` (Compartir y Láminas): bloque A en curso (`add-share-foundation` implementado) |
+| `05-features/info-pages.md` | Páginas informativas y legales (Acerca de, Fuentes de datos, Ayuda, Directrices, Términos, Privacidad, Cookies): estructura, contenido, regla de mantenimiento y puntos pendientes de decisión humana (ADR 0060) | ✅ Implementado; Términos/Privacidad/Cookies pendientes de revisión legal |
 | `06-operations/backup-restore.md` | Operación de backup y restore de la base de datos local, con prueba real de restauración (item A.7 del checklist de infraestructura) | ✅ Backup nocturno + prueba de restore real (2026-08-31); PITR diferido |
 
 ## Regla de mantenimiento

@@ -1,50 +1,308 @@
 {
-  "lastUpdated": "Última actualización: pendiente",
-  "placeholderNotice": "Este documento está en preparación y todavía no constituye una política vigente ni un acuerdo vinculante. Se publicará una versión definitiva antes de la apertura al público.",
-  "about": {
-    "title": "Acerca de",
-    "body": "music-platform es un catálogo y una comunidad para registrar y opinar sobre la música que ya escuchaste — un Letterboxd para música. No es un reproductor ni una fuente de audio: se apoya en los datos abiertos de MusicBrainz y en lo que aporta su propia comunidad."
-  },
   "terms": {
     "title": "Términos del servicio",
-    "body": "Acá vivirán las condiciones de uso de la plataforma: qué se puede publicar, a quién pertenece el contenido que subes, y en qué casos se puede suspender una cuenta."
+    "lead": "Estas condiciones regulan el uso de {appName}. Están escritas en lenguaje sencillo; donde algo es una obligación o una limitación, lo decimos con claridad.",
+    "sections": [
+      {
+        "id": "who",
+        "title": "Quiénes somos y a quién aplican",
+        "paragraphs": [
+          "{appName} es un servicio en desarrollo operado por su equipo (en adelante, «nosotros»). Al crear una cuenta o usar el servicio aceptas estos términos, junto con la [Política de privacidad](/privacy), la [Política de cookies](/cookies) y las [Directrices de la comunidad](/guidelines). Si no estás de acuerdo, no uses el servicio.",
+          "Todavía no está definida la entidad legal que lo opera (nombre, forma jurídica, domicilio): se completará antes de la apertura al público, como se indica en «Por definir» al final."
+        ]
+      },
+      {
+        "id": "service",
+        "title": "El servicio",
+        "paragraphs": [
+          "{appName} es un catálogo y una comunidad sobre música: puedes consultar el catálogo y, con una cuenta, registrar escuchas, valorar, reseñar, comentar, armar listas, llevar tu colección y tus conciertos, y seguir a otras personas. No reproduce ni aloja audio, no vende música y no es un servicio de streaming. Qué hace cada parte está explicado en [Acerca de](/about) y en la [Ayuda](/help).",
+          "El servicio está en desarrollo. Las funciones, los límites y las reglas pueden cambiar, y puede haber interrupciones, errores o pérdida de datos. Lo ofrecemos sin un compromiso de disponibilidad continua."
+        ]
+      },
+      {
+        "id": "account",
+        "title": "Tu cuenta",
+        "items": [
+          "Debes dar datos verdaderos en lo esencial (un email que controles) y mantener tu acceso seguro: eres responsable de lo que ocurra con tu cuenta y de elegir una contraseña que no uses en otros sitios.",
+          "Si sospechas que alguien entró a tu cuenta, cambia la contraseña, cierra las demás sesiones desde Ajustes y escríbenos.",
+          "Tu cuenta es personal y no se puede transferir.",
+          "Puedes desactivarla o eliminarla cuando quieras desde Ajustes → Cuenta y seguridad. Qué ocurre en cada caso se explica en la [Política de privacidad](/privacy).",
+          "Edad mínima: todavía no está fijada (ver «Por definir»). Hasta entonces el servicio no está pensado para menores y no verificamos la edad."
+        ]
+      },
+      {
+        "id": "content",
+        "title": "Tu contenido",
+        "paragraphs": [
+          "Eres autor y titular de lo que publicas: valoraciones, reseñas, comentarios, listas, notas, enlaces y tu foto de perfil. No te pedimos que cedas esos derechos.",
+          "Para poder prestar el servicio nos das permiso para almacenar tu contenido, mostrarlo según la audiencia que elegiste (incluida su aparición en la actividad de la comunidad, en promedios y rankings y en los enlaces e imágenes que tú compartas) y adaptarlo técnicamente (por ejemplo, recortar tu foto o componer una imagen para compartir). Es un permiso no exclusivo y gratuito, limitado a operar el servicio, y termina cuando borras el contenido o tu cuenta, salvo copias técnicas temporales.",
+          "Eres responsable de lo que publicas: debe ser tuyo o estar permitido, no infringir derechos de terceros y cumplir las [Directrices de la comunidad](/guidelines). No puedes publicar audio ni archivos protegidos por derechos de autor que no te pertenezcan.",
+          "Qué pasa con tu contenido cuando desactivas o eliminas la cuenta está en la [Política de privacidad](/privacy)."
+        ]
+      },
+      {
+        "id": "conduct",
+        "title": "Uso permitido",
+        "paragraphs": [
+          "Usa el servicio de buena fe y según las [Directrices de la comunidad](/guidelines). Además, no puedes:"
+        ],
+        "items": [
+          "acceder a cuentas ajenas, probar contraseñas o intentar vulnerar la seguridad del servicio;",
+          "extraer datos de forma masiva o automatizada, ni eludir los límites de uso, sin nuestro permiso por escrito;",
+          "usar el servicio para enviar spam, publicidad no solicitada o software malicioso;",
+          "hacerte pasar por otra persona, por un artista o por el equipo;",
+          "usarlo para fines ilegales."
+        ]
+      },
+      {
+        "id": "moderation",
+        "title": "Moderación y suspensiones",
+        "paragraphs": [
+          "El equipo de moderación puede ocultar contenido que incumpla estas reglas (de forma reversible y dejando registro) y suspender temporalmente la actividad social de una cuenta: durante la suspensión puedes seguir entrando, leyendo y usando tu diario y tu colección, pero no publicar de forma social. Cuando se oculta o se restaura algo tuyo, o se aplica o se levanta una suspensión, te avisamos dentro de la aplicación.",
+          "También podemos cerrar una cuenta en casos graves o reiterados. El procedimiento para pedir que revisemos una decisión todavía no está definido; mientras tanto puedes escribirnos (ver «Por definir»)."
+        ]
+      },
+      {
+        "id": "thirdparty",
+        "title": "Datos y contenidos de terceros",
+        "paragraphs": [
+          "El catálogo, las carátulas, las fotos y ciertos textos vienen de fuentes de terceros, con sus propias licencias y condiciones, explicadas en [Fuentes de datos](/about/data-sources). {appName} no está afiliada ni respaldada por esas organizaciones; los nombres, las marcas y las carátulas pertenecen a sus titulares. No garantizamos que esos datos sean exactos, completos ni actuales."
+        ]
+      },
+      {
+        "id": "ip",
+        "title": "Propiedad intelectual",
+        "paragraphs": [
+          "El diseño, el código, la marca y los textos propios de {appName} nos pertenecen o los usamos con licencia, y no puedes copiarlos ni reutilizarlos sin permiso, salvo lo que la ley o una licencia abierta permitan.",
+          "Si crees que un contenido de una persona usuaria infringe tus derechos, escríbenos a [{contactEmail}](mailto:{contactEmail}) indicando qué es y por qué; lo revisaremos y, si corresponde, lo retiraremos. Para pedir el retiro de una carátula, mira [Fuentes de datos](/about/data-sources)."
+        ]
+      },
+      {
+        "id": "sharing",
+        "title": "Compartir",
+        "paragraphs": [
+          "Cuando compartes un enlace o una imagen, quien lo recibe puede verlo aunque no tenga cuenta, y puede copiarlo o reenviarlo. Compartir algo privado no lo vuelve público por sí solo: para que un enlace funcione debes hacer público ese contenido con un gesto explícito. Lo que ya publicaste en otra red queda fuera de nuestro control y no podemos retirarlo de allí."
+        ]
+      },
+      {
+        "id": "liability",
+        "title": "Garantías y responsabilidad",
+        "paragraphs": [
+          "El servicio se ofrece «tal cual» y «según disponibilidad», sin garantías de que funcione sin interrupciones ni errores, ni de que los datos del catálogo o los contenidos de otras personas sean exactos. Las opiniones publicadas son de quienes las escriben, no nuestras.",
+          "Te recomendamos descargar tus datos de vez en cuando desde Ajustes → Cuenta y seguridad: durante el desarrollo no podemos garantizar que nunca se pierdan.",
+          "En la medida que la ley lo permita, no somos responsables de daños indirectos ni de pérdidas derivadas del uso del servicio o de no poder usarlo. Nada de esto limita los derechos que la ley te reconozca ni las responsabilidades que no puedan limitarse."
+        ]
+      },
+      {
+        "id": "ending",
+        "title": "Terminación",
+        "paragraphs": [
+          "Puedes dejar de usar el servicio y eliminar tu cuenta cuando quieras. Podemos suspender o cerrar cuentas que incumplan estos términos, y modificar o discontinuar el servicio; si lo cerráramos, intentaremos avisar con antelación razonable y dar la posibilidad de descargar tus datos."
+        ]
+      },
+      {
+        "id": "changes",
+        "title": "Cambios en estos términos",
+        "paragraphs": [
+          "Podemos actualizar estos términos. La fecha de «Última actualización» al pie indica cuándo cambiaron por última vez. Si el cambio es relevante, intentaremos avisarte en la aplicación o por email antes de que se aplique; seguir usando el servicio después supone aceptar la nueva versión."
+        ]
+      },
+      {
+        "id": "pending",
+        "title": "Por definir antes de la apertura al público",
+        "paragraphs": [
+          "Estos puntos dependen de decisiones o información que todavía no están resueltas, y estos términos no los prometen:"
+        ],
+        "items": [
+          "Entidad responsable: nombre legal o persona responsable, forma jurídica, domicilio y datos de contacto legales de quien opera el servicio.",
+          "Ley aplicable y jurisdicción: país o países de operación, ley que rige estos términos y tribunales competentes. Dependen de dónde se constituya el servicio y dónde estén sus personas usuarias.",
+          "Edad mínima para usar el servicio y, si corresponde, el consentimiento de madres, padres o tutores.",
+          "Revisión de decisiones de moderación: cómo y en qué plazo se puede pedir que se revise una suspensión o un contenido oculto.",
+          "Condiciones comerciales: si el servicio incorpora algún día pagos o publicidad, estos términos y la política de privacidad se actualizarán antes.",
+          "Revisión legal: este texto no ha sido revisado por una persona profesional del derecho; cláusulas como la licencia de contenido, la limitación de responsabilidad, la aceptación por uso y la ley aplicable deben validarse según la jurisdicción."
+        ]
+      }
+    ]
   },
   "privacy": {
     "title": "Política de privacidad",
-    "body": "Acá se detallará qué datos personales se recogen, con qué base legal, durante cuánto tiempo se conservan y cómo ejercer tus derechos sobre ellos.",
-    "intro": "Esta es la parte de la política que ya describe lo que la aplicación hace hoy con tu cuenta y tus datos. El resto del documento está en preparación.",
-    "sections": {
-      "personal": {
+    "lead": "Aquí explicamos qué datos personales trata {appName}, para qué, quién puede verlos, cuánto tiempo se conservan y cómo puedes controlarlos. Describe lo que la aplicación hace hoy; no promete nada que no esté implementado.",
+    "sections": [
+      {
+        "id": "controller",
+        "title": "Quién es responsable",
+        "paragraphs": [
+          "El equipo que opera {appName} es responsable del tratamiento de los datos descritos aquí. Todavía no está definida la entidad legal responsable (nombre y domicilio): ver «Por definir» al final. Para cualquier consulta sobre tus datos, escribe a [{contactEmail}](mailto:{contactEmail})."
+        ]
+      },
+      {
+        "id": "data",
+        "title": "Qué datos tratamos",
+        "paragraphs": [
+          "Esta es la lista de lo que guardamos de ti. No recogemos tu fecha de nacimiento, tu género ni tu nombre legal en campos aparte."
+        ],
+        "table": {
+          "caption": "Datos personales que trata la aplicación, cuándo se recogen, para qué se usan y quién puede verlos",
+          "headers": ["Dato", "Cuándo se recoge", "Para qué se usa", "Quién puede verlo"],
+          "rows": [
+            ["Email", "Al registrarte o al iniciar sesión con Google.", "Identificarte, recuperar tu cuenta y enviarte los correos de la cuenta.", "Tú y quienes operan el servicio. No se muestra en tu perfil."],
+            ["Usuario y nombre visible", "Al registrarte; el nombre visible lo eliges tú y puede ser un apodo.", "Mostrar tu perfil y tu actividad.", "Otras personas, según la privacidad de tu perfil."],
+            ["Contraseña", "Al registrarte con contraseña.", "Iniciar sesión.", "Nadie: solo se guarda un hash (Argon2id), nunca la contraseña."],
+            ["Cuenta de Google", "Si inicias sesión con Google.", "Identificarte sin contraseña. Recibimos tu identificador de Google, tu email y los datos básicos de perfil que Google comparte.", "Tú y quienes operan el servicio."],
+            ["Datos opcionales del perfil", "Si los agregas: bio, país, ciudad, pronombres, zona horaria, enlaces y foto.", "Mostrarlos en tu perfil (ver «Datos personales opcionales del perfil»).", "Según la privacidad de tu perfil."],
+            ["Lo que creas", "Cuando lo registras: valoraciones, reseñas, comentarios, escuchas y notas del diario, favoritos, listas, colección, conciertos, seguimientos, bloqueos y reportes.", "Ofrecerte la biblioteca y la comunidad.", "Según la audiencia de cada cosa (ver «Quién ve tus datos»). Las notas del diario son privadas."],
+            ["Datos de sesión", "Al iniciar sesión.", "Mantenerte identificado y mostrarte tus sesiones activas: un token del que solo guardamos el hash, fechas, última actividad y una etiqueta del dispositivo.", "Tú, en Ajustes, y quienes operan el servicio."],
+            ["Dirección IP", "En cada solicitud.", "Limitar los intentos de inicio de sesión y registro para proteger las cuentas. Se usa en memoria y no se guarda en nuestra base de datos.", "Nadie, salvo los registros técnicos de la infraestructura (ver «Por definir»)."],
+            ["Avisos y preferencias", "Cuando ocurre algo que te concierne y cuando eliges tus ajustes.", "Mostrarte la bandeja de avisos y, si lo activaste, enviarte el resumen semanal.", "Solo tú."],
+            ["Medición de compartir", "Cuando usas el botón Compartir.", "Saber qué contenido se comparte y por qué canal. No guarda quién lo compartió ni su IP.", "Solo quienes operan el servicio, y sin datos personales."]
+          ]
+        }
+      },
+      {
+        "id": "uses",
+        "title": "Para qué los usamos",
+        "items": [
+          "Prestar el servicio: tu cuenta, tu biblioteca, tu perfil y la comunidad.",
+          "Mostrar tu actividad a quien tú decidas y calcular promedios y rankings con la actividad de muchas personas.",
+          "Proteger las cuentas y el servicio: autenticación, límites de intentos, detección de abusos y moderación.",
+          "Enviarte los correos necesarios de la cuenta (confirmar el email, cambiarlo, restablecer la contraseña) y, solo si lo activas, el resumen semanal.",
+          "Entender cómo se usa el servicio con cifras agregadas y sin datos personales, como cuántas veces se comparte cada tipo de contenido."
+        ],
+        "paragraphs": [
+          "No vendemos tus datos ni los usamos para publicidad. Hoy no usamos herramientas de analítica ni de seguimiento de terceros ni tomamos decisiones automatizadas que te afecten. Si algo de esto cambiara, lo actualizaremos aquí y, cuando corresponda, te lo pediremos antes."
+        ]
+      },
+      {
+        "id": "visibility",
+        "title": "Quién ve tus datos",
+        "paragraphs": [
+          "Tú controlas la audiencia. Tu perfil es público o privado y, además, tus escuchas, favoritos, listas, colección y conciertos tienen audiencia propia (privada, solo para quienes te siguen, o pública), que puedes cambiar después. En un perfil privado solo tú y quienes te siguen con la solicitud aprobada ven lo que no sea público. Las notas del diario son privadas.",
+          "Los comentarios son públicos. Las valoraciones las ven tú y quienes te siguen, salvo las que destacas, las que compartes y las que acompañan una reseña. Tu actividad pública puede aparecer en la actividad de la comunidad; los promedios y rankings se calculan con la actividad de muchas personas y no muestran quién aportó cada dato.",
+          "El equipo de moderación puede ver los contenidos reportados y los datos necesarios para resolver un reporte. Quienes operan el servicio pueden acceder técnicamente a la base de datos, incluidos los datos privados; solo lo hacemos para mantener el servicio, resolver incidentes y moderar."
+        ]
+      },
+      {
+        "id": "providers",
+        "title": "Con quién compartimos datos",
+        "paragraphs": ["No vendemos tus datos. Solo intervienen terceros que prestan una parte técnica del servicio:"],
+        "items": [
+          "Google, si eliges iniciar sesión con Google: el inicio de sesión lo inicias tú y se rige por la política de privacidad de Google; nosotros recibimos tu identificador, tu email y tus datos básicos de perfil.",
+          "Un proveedor de envío de correo (previsto: Resend) para los correos de la cuenta y el resumen semanal: recibe tu email y el contenido del mensaje.",
+          "Un proveedor de almacenamiento de imágenes compatible con S3 (previsto: Cloudflare R2) y su red de distribución de contenidos: guardan y entregan tu foto de perfil y las copias de baja resolución de las carátulas.",
+          "El proveedor de alojamiento y de la base de datos: todavía no está definido (ver «Por definir»)."
+        ]
+      },
+      {
+        "id": "external",
+        "title": "Consultas a otras fuentes y enlaces externos",
+        "paragraphs": [
+          "Las consultas al catálogo (MusicBrainz, Wikimedia, ListenBrainz) las hace nuestro servidor, no tu navegador. Puede enviarse a MusicBrainz el texto de una búsqueda tuya, pero nunca tu identidad ni los datos de tu cuenta. Más en [Fuentes de datos](/about/data-sources).",
+          "Cuando abres un enlace externo, o cuando tu navegador carga una carátula directamente desde el Cover Art Archive, ese sitio puede ver tu dirección IP, como en cualquier visita web. No les enviamos los datos de tu cuenta."
+        ]
+      },
+      {
+        "id": "cookies",
+        "title": "Cookies y almacenamiento local",
+        "paragraphs": [
+          "Usamos solo cookies y almacenamiento local necesarios o de preferencia; no usamos cookies de publicidad ni de analítica. El detalle está en la [Política de cookies](/cookies)."
+        ]
+      },
+      {
+        "id": "retention",
+        "title": "Cuánto tiempo los conservamos",
+        "items": [
+          "Tu cuenta y tu contenido: mientras mantengas la cuenta. Al eliminarla se borran (ver «Eliminar tu cuenta»).",
+          "Sesiones: una sesión mantenida caduca a los 30 días sin actividad; una sin mantener, a las 24 horas. Cerrar sesión la elimina al instante.",
+          "Enlaces de confirmación de email y de restablecimiento de contraseña: duran 24 horas y 30 minutos, respectivamente, y se usan una sola vez.",
+          "Avisos: al abrir tu bandeja se borran los leídos de más de 90 días y cualquiera de más de 180 días.",
+          "Medición de compartir: se conserva sin datos personales.",
+          "Copias de seguridad y registros técnicos: el plazo todavía no está definido (ver «Por definir»)."
+        ]
+      },
+      {
+        "id": "security",
+        "title": "Seguridad",
+        "paragraphs": [
+          "Lo que aplicamos hoy: las contraseñas se guardan con un hash Argon2id y nunca en texto plano; la sesión usa una cookie protegida (httpOnly, segura y SameSite) con un token del que solo guardamos el hash; las sesiones se pueden cerrar una a una o todas; limitamos los intentos de inicio de sesión y de registro; y pedimos confirmar tu identidad para acciones sensibles, como desactivar o eliminar la cuenta.",
+          "Ninguna medida es infalible: no podemos garantizar una seguridad absoluta. Usa una contraseña única, mantén tu dispositivo protegido y avísanos si ves algo raro. Todavía no está definido el procedimiento de aviso ante una brecha de seguridad (ver «Por definir»)."
+        ]
+      },
+      {
+        "id": "rights",
+        "title": "Tus derechos y cómo ejercerlos",
+        "paragraphs": ["Según la ley que te aplique, tienes derechos sobre tus datos. Esto es lo que puedes hacer hoy por tu cuenta:"],
+        "items": [
+          "Acceder a tus datos y llevártelos: descarga un archivo JSON desde Ajustes → Cuenta y seguridad.",
+          "Corregirlos: edita tu perfil, tus valoraciones, reseñas, comentarios y listas cuando quieras.",
+          "Controlar la visibilidad: perfil privado y audiencia de cada registro.",
+          "Elegir los avisos: activa o desactiva cada tipo de notificación y el resumen semanal.",
+          "Pausar o borrar: desactiva o elimina tu cuenta (secciones siguientes)."
+        ]
+      },
+      {
+        "id": "contact",
+        "title": "Otras solicitudes",
+        "paragraphs": [
+          "Para cualquier otra solicitud (por ejemplo, oponerte a un tratamiento o preguntar qué datos tuyos tenemos), escribe a [{contactEmail}](mailto:{contactEmail}). Los plazos de respuesta y la base legal exacta dependen de la jurisdicción y están por definir."
+        ]
+      },
+      {
+        "id": "minors",
+        "title": "Menores de edad",
+        "paragraphs": [
+          "Todavía no hemos fijado una edad mínima y no la verificamos. {appName} no está dirigida a niños; si crees que un menor creó una cuenta, escríbenos."
+        ]
+      },
+      {
+        "id": "personal",
         "title": "Datos personales opcionales del perfil",
-        "body": "En tu perfil puedes agregar, si quieres, tu país, tu ciudad o región, tus pronombres, una bio, tu zona horaria y, si lo activas, tu hora local. Todo es opcional, empieza vacío y hoy se usa solo para mostrarlo en tu perfil.",
-        "body2": "Quién lo ve: en un perfil público, cualquier persona; en un perfil privado, solo tú y quienes te siguen con la solicitud aprobada. La bio, los enlaces y los contadores siguen la regla de siempre y se ven en la tarjeta de un perfil privado.",
-        "body3": "Nunca te lo pedimos al registrarte. Puedes cambiarlo o vaciarlo cuando quieras desde Ajustes → Perfil, y se borra junto con tu cuenta cuando la eliminas. No recogemos tu fecha de nacimiento, tu género ni tu nombre legal en campos aparte: el único nombre es el «Nombre visible», que puede ser un apodo."
+        "paragraphs": [
+          "En tu perfil puedes agregar, si quieres, tu país, tu ciudad o región, tus pronombres, una bio, tu zona horaria y, si lo activas, tu hora local. Todo es opcional, empieza vacío y hoy se usa solo para mostrarlo en tu perfil.",
+          "Quién lo ve: en un perfil público, cualquier persona; en un perfil privado, solo tú y quienes te siguen con la solicitud aprobada. La bio, los enlaces y los contadores siguen la regla de siempre y se ven en la tarjeta de un perfil privado.",
+          "Nunca te lo pedimos al registrarte. Puedes cambiarlo o vaciarlo cuando quieras desde Ajustes → Perfil, y se borra junto con tu cuenta cuando la eliminas. No recogemos tu fecha de nacimiento, tu género ni tu nombre legal en campos aparte: el único nombre es el «Nombre visible», que puede ser un apodo."
+        ]
       },
-      "deactivate": {
+      {
+        "id": "deactivate",
         "title": "Desactivar tu cuenta",
-        "body": "Desde Ajustes → Cuenta y seguridad puedes desactivar tu cuenta para tomarte una pausa. Tu perfil deja de ser visible para las demás personas: no aparece en búsquedas, seguidores, seguidos, feed, actividad de la comunidad ni listas, y nadie puede seguirte ni bloquearte. Cerramos todas tus sesiones. Para hacerlo te pedimos confirmar tu identidad.",
-        "body2": "Desactivar no borra nada: conservamos tus valoraciones, reseñas, comentarios, listas, favoritos, diario y seguimientos. Tus valoraciones siguen contando en los promedios, y tus reseñas y comentarios siguen visibles con la autoría «Cuenta desactivada», sin tu usuario, sin tu nombre y sin enlace a tu perfil."
+        "paragraphs": [
+          "Desde Ajustes → Cuenta y seguridad puedes desactivar tu cuenta para tomarte una pausa. Tu perfil deja de ser visible para las demás personas: no aparece en búsquedas, seguidores, seguidos, feed, actividad de la comunidad ni listas, y nadie puede seguirte ni bloquearte. Cerramos todas tus sesiones. Para hacerlo te pedimos confirmar tu identidad.",
+          "Desactivar no borra nada: conservamos tus valoraciones, reseñas, comentarios, listas, favoritos, diario y seguimientos. Tus valoraciones siguen contando en los promedios, y tus reseñas y comentarios siguen visibles con la autoría «Cuenta desactivada», sin tu usuario, sin tu nombre y sin enlace a tu perfil."
+        ]
       },
-      "reactivate": {
+      {
+        "id": "reactivate",
         "title": "Reactivar tu cuenta",
-        "body": "Iniciar sesión, con tu contraseña o con Google, reactiva tu cuenta de inmediato y todo vuelve a verse como estaba. No hay un paso de confirmación adicional: si no quieres que tu perfil vuelva a ser visible, no inicies sesión."
+        "paragraphs": [
+          "Iniciar sesión, con tu contraseña o con Google, reactiva tu cuenta de inmediato y todo vuelve a verse como estaba. No hay un paso de confirmación adicional: si no quieres que tu perfil vuelva a ser visible, no inicies sesión."
+        ]
       },
-      "delete": {
+      {
+        "id": "delete",
         "title": "Eliminar tu cuenta",
-        "body": "También desde Cuenta y seguridad puedes eliminar tu cuenta. Borramos la cuenta y todo lo que creaste: perfil, enlaces y preguntas, valoraciones, reseñas, comentarios, listas, favoritos, diario, colección, seguimientos, bloqueos, reportes que hiciste y sesiones. Los datos de otras personas no se ven afectados.",
-        "body2": "Eliminar es inmediato e irreversible: hoy no hay período de gracia. Para confirmarlo te pedimos escribir tu usuario y confirmar tu identidad. Si solo quieres una pausa, desactiva la cuenta."
+        "paragraphs": [
+          "También desde Cuenta y seguridad puedes eliminar tu cuenta. Borramos la cuenta y todo lo que creaste: perfil, enlaces y preguntas, valoraciones, reseñas, comentarios, listas, favoritos, diario, colección, seguimientos, bloqueos, reportes que hiciste y sesiones. Los datos de otras personas no se ven afectados.",
+          "Eliminar es inmediato e irreversible: hoy no hay período de gracia. Para confirmarlo te pedimos escribir tu usuario y confirmar tu identidad. Si solo quieres una pausa, desactiva la cuenta."
+        ]
       },
-      "export": {
+      {
+        "id": "export",
         "title": "Descargar tus datos",
-        "body": "En el mismo lugar puedes descargar un archivo JSON con tus datos: cuenta, perfil, biblioteca (incluidas las notas privadas del diario), actividad, listas y red. De quienes te siguen o sigues solo figura el usuario público. El archivo nunca incluye tu contraseña, tokens ni sesiones. Se permite una descarga por minuto."
+        "paragraphs": [
+          "En el mismo lugar puedes descargar un archivo JSON con tus datos: cuenta, perfil, biblioteca (incluidas las notas privadas del diario), actividad, listas y red. De quienes te siguen o sigues solo figura el usuario público. El archivo nunca incluye tu contraseña, tokens ni sesiones. Se permite una descarga por minuto."
+        ]
       },
-      "limits": {
+      {
+        "id": "limits",
         "title": "Lo que hoy no se puede eliminar",
-        "body": "Una cuenta con historial de moderación o editorial no se puede eliminar, porque conservamos el registro de esas acciones (quién las hizo y cuándo). En ese caso se puede desactivar. Una cuenta desactivada conserva sus datos hasta que la reactives o la elimines."
+        "paragraphs": [
+          "Una cuenta con historial de moderación o editorial no se puede eliminar, porque conservamos el registro de esas acciones (quién las hizo y cuándo). En ese caso se puede desactivar. Una cuenta desactivada conserva sus datos hasta que la reactives o la elimines."
+        ]
       },
-      "pending": {
+      {
+        "id": "pending",
         "title": "Por definir antes de la apertura al público",
-        "body": "Estos puntos todavía no están resueltos y esta política no los promete:",
+        "paragraphs": ["Estos puntos todavía no están resueltos y esta política no los promete:"],
         "items": [
           "Período de recuperación: evaluamos que eliminar deje la cuenta desactivada y recuperable entre 14 y 30 días antes de la purga definitiva, para cubrir errores o accesos indebidos. Hoy la eliminación es inmediata.",
           "Copias de seguridad y registros técnicos: definir en cuánto tiempo desaparecen ahí los datos de una cuenta eliminada.",
@@ -53,17 +311,159 @@
           "Datos que haya que conservar por obligación legal (fraude, requerimientos legales): definir cuáles, por cuánto tiempo y aislados del resto.",
           "Derecho de supresión: confirmar los plazos y la base legal según la jurisdicción (por ejemplo, el art. 17 del RGPD exige borrar sin demora injustificada, en general dentro de un mes).",
           "Reactivación: hoy basta iniciar sesión, sin confirmar ni avisar. Revisarlo si hay quejas de reactivaciones involuntarias.",
+          "Entidad responsable: nombre legal o persona responsable del tratamiento, domicilio y, si la ley lo exige, representante o delegado de protección de datos.",
+          "Marco legal y bases legales: qué leyes de protección de datos aplican (por ejemplo, el RGPD o las de América Latina, según dónde opere el servicio y dónde estén sus personas usuarias) y en qué base legal se apoya cada tratamiento.",
+          "Proveedores y ubicación de los datos: elegir el alojamiento, la base de datos, el envío de correo y el almacenamiento; definir dónde se alojan los datos, si hay transferencias internacionales y firmar los acuerdos de tratamiento correspondientes.",
+          "Registros técnicos de los proveedores (por ejemplo, direcciones IP en los registros del servidor): qué se registra y por cuánto tiempo.",
+          "Brechas de seguridad: procedimiento y plazos para avisar a las personas afectadas y a las autoridades.",
+          "Derechos y solicitudes: canal definitivo y plazos de respuesta para ejercerlos.",
           "Edad mínima: fijar en los Términos del servicio la edad mínima para usar la plataforma. Hoy no se pregunta ni se verifica la edad."
         ]
       }
-    }
+    ]
   },
   "cookies": {
     "title": "Política de cookies",
-    "body": "Hoy la aplicación solo usa una cookie de sesión estrictamente necesaria para mantenerte identificado; no requiere consentimiento. Si en el futuro se añade analítica u otras cookies, se explicarán acá y se pedirá tu consentimiento."
+    "lead": "Usamos solo lo imprescindible para que la aplicación funcione y recuerde tus preferencias. No usamos cookies de publicidad ni de analítica, y no instalamos cookies de terceros.",
+    "sections": [
+      {
+        "id": "what",
+        "title": "Qué son y para qué las usamos",
+        "paragraphs": [
+          "Una cookie es un pequeño archivo que un sitio guarda en tu navegador. El almacenamiento local del navegador (localStorage) cumple una función parecida, pero no se envía al servidor en cada visita. Esta página cubre ambos."
+        ]
+      },
+      {
+        "id": "cookies",
+        "title": "Cookies que usamos",
+        "table": {
+          "caption": "Cookies de la aplicación, para qué sirven, cuánto duran y de qué tipo son",
+          "headers": ["Nombre", "Para qué sirve", "Duración", "Tipo"],
+          "rows": [
+            ["music_session", "Mantiene tu sesión iniciada; solo se crea al iniciar sesión. No se puede leer desde JavaScript y solo viaja por conexiones seguras.", "Con «Mantener la sesión iniciada»: la sesión dura hasta 30 días desde tu última actividad (la cookie puede quedar hasta 400 días en el navegador, pero deja de valer cuando la sesión caduca). Sin marcarla: la sesión caduca a las 24 horas.", "Estrictamente necesaria."],
+            ["oauth_state", "Protege el inicio de sesión con Google contra falsificaciones y recuerda a qué página volver. Se borra al terminar el flujo.", "10 minutos como máximo.", "Estrictamente necesaria."],
+            ["tz", "Guarda tu zona horaria para mostrar las fechas y agrupar tu diario según tu hora. Se crea al visitar el sitio.", "1 año.", "Preferencia."],
+            ["year_invite_dismissed", "Recuerda que descartaste la invitación a armar tu «año en discos», para no volver a mostrarla.", "1 año.", "Preferencia."],
+            ["NEXT_LOCALE", "Recuerda el idioma de la interfaz. Se crea al visitar el sitio.", "Hasta que cierres el navegador.", "Preferencia."]
+          ]
+        }
+      },
+      {
+        "id": "storage",
+        "title": "Almacenamiento local del navegador",
+        "paragraphs": [
+          "Guardamos en tu dispositivo algunas preferencias de vista (por ejemplo, lista o cuadrícula, el agrupamiento de una discografía o el modo de vista de las listas para completar) y tus búsquedas recientes. Se quedan en tu dispositivo, nunca se envían al servidor y puedes borrarlas desde los ajustes de tu navegador."
+        ]
+      },
+      {
+        "id": "consent",
+        "title": "Consentimiento",
+        "paragraphs": [
+          "No mostramos un aviso de consentimiento porque hoy solo usamos cookies necesarias o de preferencia y, según nuestra evaluación actual, no lo exigen; esa evaluación está pendiente de revisión legal (ver «Por definir»). Si algún día añadimos analítica, publicidad u otras cookies no necesarias, lo diremos aquí y te pediremos consentimiento antes de activarlas."
+        ]
+      },
+      {
+        "id": "third",
+        "title": "Terceros",
+        "paragraphs": [
+          "No instalamos cookies de terceros. Si inicias sesión con Google, tu navegador pasa por sitios de Google, que aplican sus propias cookies y su propia política. Las carátulas y las fotos pueden cargarse desde servidores de terceros (Cover Art Archive, Wikimedia Commons o nuestra red de distribución), que reciben tu dirección IP como cualquier servidor web. Más en la [Política de privacidad](/privacy)."
+        ]
+      },
+      {
+        "id": "control",
+        "title": "Cómo controlarlas",
+        "paragraphs": [
+          "Puedes borrar o bloquear las cookies y el almacenamiento local desde tu navegador. Si bloqueas las necesarias no podrás iniciar sesión; si bloqueas las de preferencia, las fechas se mostrarán en UTC y perderás ajustes como el idioma elegido hasta que vuelvas a configurarlos."
+        ]
+      },
+      {
+        "id": "pending",
+        "title": "Por definir antes de la apertura al público",
+        "paragraphs": ["Estos puntos todavía no están resueltos y esta política no los promete:"],
+        "items": [
+          "Consentimiento: confirmar con asesoría legal si alguna cookie de preferencia (en particular las de zona horaria y de idioma, que se crean automáticamente al visitar el sitio) exige aviso o consentimiento previo en las jurisdicciones donde opere el servicio.",
+          "Si se añade analítica, publicidad o cualquier cookie no necesaria: aviso de consentimiento, registro del consentimiento y actualización de esta política.",
+          "Infraestructura (alojamiento, red de distribución de contenidos): al elegir los proveedores, confirmar si establecen cookies propias."
+        ]
+      }
+    ]
   },
   "guidelines": {
     "title": "Directrices de la comunidad",
-    "body": "Acá se describirá qué se espera de las reseñas, comentarios y listas, y qué contenido modera la plataforma."
+    "lead": "{appName} es un lugar para hablar de música con curiosidad y respeto. Estas directrices explican qué se espera de lo que escribes y publicas, qué contenido se modera y cómo.",
+    "sections": [
+      {
+        "id": "spirit",
+        "title": "El espíritu",
+        "paragraphs": [
+          "Aquí el desacuerdo es bienvenido: dos personas pueden valorar el mismo disco con notas opuestas y ninguna tiene que convencer a la otra. Lo que no es bienvenido es dirigir el desacuerdo contra las personas. Critica el disco, no a quien lo escucha."
+        ]
+      },
+      {
+        "id": "expect",
+        "title": "Qué se espera",
+        "items": [
+          "Habla de música: las reseñas y los comentarios deben tratar del artista, el disco, la canción o la conversación en curso.",
+          "Valora con honestidad: lo que escuchaste, según tu criterio. No hace falta opinar sobre todo.",
+          "Respeta a las demás personas, aunque piensen distinto.",
+          "Cuida tu privacidad y la ajena: no publiques datos personales de otras personas ni conversaciones privadas sin su permiso.",
+          "Publica solo contenido tuyo o permitido: no copies reseñas ajenas como propias."
+        ]
+      },
+      {
+        "id": "prohibited",
+        "title": "Qué no se permite",
+        "items": [
+          "Acoso, amenazas, insultos o ataques personales, incluido el hostigamiento reiterado a una persona.",
+          "Discurso de odio o discriminación por origen, etnia, religión, género, orientación sexual, discapacidad u otra condición protegida.",
+          "Contenido ilegal o que incite a la violencia o al daño a otras personas o a una misma.",
+          "Spam, publicidad no solicitada, autopromoción repetitiva y enlaces engañosos o maliciosos.",
+          "Hacerse pasar por otra persona, por un artista o por el equipo de {appName}.",
+          "Manipular valoraciones y rankings: crear cuentas falsas, coordinar votaciones masivas o pedir valoraciones a cambio de algo.",
+          "Compartir o enlazar copias ilegales de música u otro contenido protegido.",
+          "Eludir una suspensión o una medida de moderación con otra cuenta."
+        ]
+      },
+      {
+        "id": "where",
+        "title": "A qué se aplican",
+        "paragraphs": [
+          "A todo lo que otras personas pueden ver: reseñas, comentarios y respuestas, listas (títulos y descripciones), bio, nombre de usuario y nombre visible, enlaces, foto de perfil, conciertos aportados al catálogo compartido y los textos de las Láminas que compartes. Lo que dejas como privado no se publica y no se modera como contenido público."
+        ]
+      },
+      {
+        "id": "report",
+        "title": "Cómo reportar",
+        "paragraphs": [
+          "Si ves un comentario, una reseña, un perfil o un concierto que incumple estas directrices, usa «Reportar» e indica brevemente el motivo. Se admite un reporte abierto por persona y contenido. También puedes bloquear a una persona en cualquier momento desde su perfil, sin necesidad de reportarla."
+        ]
+      },
+      {
+        "id": "moderation",
+        "title": "Qué hacemos cuando algo las incumple",
+        "paragraphs": ["El equipo de moderación revisa cada reporte y puede, según la gravedad:"],
+        "items": [
+          "Descartar el reporte si no hay incumplimiento: el contenido no se toca.",
+          "Ocultar el contenido: deja de verse públicamente, queda registrado quién lo hizo y por qué, y se puede restaurar si fue un error.",
+          "Suspender temporalmente la actividad social de la cuenta (publicar, comentar, seguir): puedes seguir entrando y usando tu diario y tu colección.",
+          "En casos graves o reiterados, cerrar la cuenta (ver los [Términos del servicio](/terms))."
+        ]
+      },
+      {
+        "id": "notice",
+        "title": "Avisos y revisión",
+        "paragraphs": [
+          "Cuando tu contenido se oculta o se restaura, o se aplica o se levanta una suspensión, recibes un aviso en la aplicación. No se oculta contenido por ser una opinión negativa o impopular sobre un artista, siempre que respete estas directrices.",
+          "Si crees que una decisión fue un error, escríbenos a [{contactEmail}](mailto:{contactEmail}). Todavía no hay un procedimiento ni plazos definidos para esas revisiones."
+        ]
+      },
+      {
+        "id": "limits",
+        "title": "Límites de la moderación",
+        "paragraphs": [
+          "Somos un equipo pequeño y no revisamos todo lo que se publica: dependemos de los reportes. No podemos garantizar que todo el contenido inadecuado se retire de inmediato. Los datos del catálogo (nombres, fechas, créditos) no son contenido de la comunidad: vienen de fuentes externas y se explican en [Fuentes de datos](/about/data-sources)."
+        ]
+      }
+    ]
   }
 }

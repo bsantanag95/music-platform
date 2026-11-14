@@ -104,14 +104,38 @@ describe("Footer", () => {
     }
   });
 
-  it("aclara la no afiliación y que no reproduce audio", async () => {
+  it("aclara la no afiliación y que no es un servicio de streaming", async () => {
     await renderFooter();
-    expect(
-      screen.getByText(/no está afiliada ni respaldada por la MetaBrainz Foundation/),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/no reproduce ni aloja audio/),
-    ).toBeInTheDocument();
+    const attribution = screen.getByRole("region", { name: footerEs.attribution.label });
+    expect(attribution).toHaveTextContent(
+      /no está afiliada ni respaldada por la MetaBrainz Foundation/,
+    );
+    expect(screen.getByText(/No es un servicio de streaming/)).toBeInTheDocument();
+  });
+
+  it("la atribución es una línea corta, sin encabezado propio ni enlace a la página de fuentes", async () => {
+    await renderFooter();
+    const attribution = screen.getByRole("region", { name: footerEs.attribution.label });
+    expect(within(attribution).queryByRole("heading")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Fuentes de datos" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Fuentes de datos/ })).not.toBeInTheDocument();
+    for (const link of screen.getAllByRole("link")) {
+      expect(link.getAttribute("href")).not.toMatch(/data-sources/);
+    }
+  });
+
+  it("Explorar y Recursos no repiten enlaces: Acerca de y Ayuda viven solo en Recursos", async () => {
+    await renderFooter();
+    const explore = screen.getByRole("navigation", { name: "Explorar" });
+    expect(within(explore).queryByRole("link", { name: "Cómo funciona" })).not.toBeInTheDocument();
+    const resources = screen.getByRole("navigation", { name: "Recursos" });
+    expect(within(resources).getByRole("link", { name: "Acerca de" })).toHaveAttribute("href", "/about");
+    expect(within(resources).getByRole("link", { name: "Ayuda" })).toHaveAttribute("href", "/help");
+    const hrefs = screen
+      .getAllByRole("link")
+      .map((link) => link.getAttribute("href"))
+      .filter((href) => href?.startsWith("/") && href !== "#top");
+    expect(new Set(hrefs).size).toBe(hrefs.length);
   });
 
   it("grupo Conectar: mailto con la dirección visible y un enlace por red social", async () => {
@@ -168,8 +192,9 @@ describe("Footer", () => {
       screen.getByRole("navigation", { name: "Explore" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/does not play or host audio/),
-    ).toBeInTheDocument();
+      screen.getByRole("region", { name: footerEn.attribution.label }),
+    ).toHaveTextContent(/not affiliated with or endorsed by the MetaBrainz Foundation/);
+    expect(screen.getByText(/Not a streaming service/)).toBeInTheDocument();
   });
 });
 
