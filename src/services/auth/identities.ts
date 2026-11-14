@@ -4,6 +4,7 @@ import { appUser, authIdentity, type AppUserRow } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import type { ExternalIdentity } from "./providers";
 import { findAvailableUsername, findUserByEmail } from "./users";
+import { termsAcceptanceValues } from "@/lib/terms";
 
 function isUniqueViolation(error: unknown): error is { code: "23505" } {
   return typeof error === "object" && error !== null && "code" in error && error.code === "23505";
@@ -63,6 +64,8 @@ export async function resolveOrCreateOAuthUser(identity: ExternalIdentity): Prom
             passwordHash: null,
             // El flujo ya exigió email_verified=true para crear la cuenta.
             emailVerifiedAt: new Date(),
+            // Sin casilla: el aviso junto al botón de Google dice que continuar es aceptar los Términos (ADR 0061).
+            ...termsAcceptanceValues("notice"),
           })
           .returning();
 

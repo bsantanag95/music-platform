@@ -4,20 +4,34 @@ import { appUser } from "@/db/schema";
 import { hashPassword, verifyPassword } from "./password";
 import type { RegisterRequest } from "@/lib/api/schemas";
 import { USERNAME_MAX, USERNAME_MIN, USERNAME_REGEX } from "./account-rules";
+import { termsAcceptanceValues, type TermsAcceptanceMethod } from "@/lib/terms";
 import { isUsernameReserved } from "./username";
 
 function isUniqueViolation(error: unknown): error is { code: "23505" } {
   return typeof error === "object" && error !== null && "code" in error && error.code === "23505";
 }
 
-export async function registerUser(input: RegisterRequest) {
+/**
+ * Crea la cuenta local. `acceptance` es cómo aceptó los Términos quien se registra: solo el handler de
+ * registro la pasa (después de validar la casilla); una cuenta creada sin ella (fixtures, scripts) queda
+ * sin aceptación registrada, que es lo que ocurrió.
+ */
+export async function registerUser(
+  input: Pick<RegisterRequest, "username" | "email" | "password">,
+  acceptance: TermsAcceptanceMethod | null = null,
+) {
   // Un usuario que alguien acaba de dejar sigue reservado para esa persona
   // durante 30 días (spec account-username, "Reserva del usuario anterior").
   if (await isUsernameReserved(input.username)) throw new Error("USERNAME_TAKEN");
   try {
     const [user] = await db
       .insert(appUser)
-      .values({ username: input.username, email: input.email, passwordHash: await hashPassword(input.password) })
+      .values({
+        username: input.username,
+        email: input.email,
+        passwordHash: await hashPassword(input.password),
+        ...(acceptance ? termsAcceptanceValues(acceptance) : {}),
+      })
       .returning();
     return user;
   } catch (error) {

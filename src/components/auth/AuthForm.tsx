@@ -18,6 +18,7 @@ import {
 } from "@/services/auth/account-rules";
 import { Button } from "@/components/ui/Button";
 import { AuthField } from "./AuthField";
+import { termsLinkTags } from "./terms-links";
 
 const localizedErrorCodes = new Set([
   "INVALID_CREDENTIALS",
@@ -75,6 +76,8 @@ export function AuthForm({
         return t("errorEmail");
       case "identifier":
         return t("errorIdentifier");
+      case "acceptTerms":
+        return t("errorTermsRequired");
       case "password":
         return mode === "login" || value.length === 0
           ? t("errorPasswordEmpty")
@@ -95,7 +98,11 @@ export function AuthForm({
     setErrorCode(null);
     setFieldErrors({});
     const fields = Object.fromEntries(new FormData(form));
-    const data = mode === "register" ? { ...fields, locale } : { ...fields, remember };
+    // La casilla de los Términos solo viaja en el formulario si está marcada: se manda como booleano.
+    const data =
+      mode === "register"
+        ? { ...fields, acceptTerms: fields.acceptTerms === "on", locale }
+        : { ...fields, remember };
     const parsed =
       mode === "login"
         ? LoginRequestSchema.safeParse(data)
@@ -213,6 +220,25 @@ export function AuthForm({
         error={fieldErrors.password}
         aside={mode === "login" ? passwordAside : undefined}
       />
+      {mode === "register" && (
+        <div className="flex flex-col gap-1.5">
+          <label className="flex cursor-pointer items-start gap-2 font-data text-sm text-paper">
+            <input
+              type="checkbox"
+              name="acceptTerms"
+              aria-invalid={fieldErrors.acceptTerms ? true : undefined}
+              aria-describedby={fieldErrors.acceptTerms ? "accept-terms-error" : undefined}
+              className="mt-0.5 size-4 shrink-0 accent-amber"
+            />
+            <span>{t.rich("acceptTerms", termsLinkTags(t("newTab")))}</span>
+          </label>
+          {fieldErrors.acceptTerms && (
+            <p id="accept-terms-error" role="alert" className="font-data text-sm text-danger">
+              {fieldErrors.acceptTerms}
+            </p>
+          )}
+        </div>
+      )}
       {errorCode && (
         <p
           role="alert"

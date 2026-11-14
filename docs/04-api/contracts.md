@@ -611,8 +611,10 @@ arriba; `[]` si la grabación no tiene obra).
 
 ## Autenticación local
 
-`POST /api/auth/register` recibe `{ username, email, password, locale? }`, crea una cuenta y devuelve
-`201 { user }`. Dispara en best-effort el correo de verificación de email (ver sección siguiente);
+`POST /api/auth/register` recibe `{ username, email, password, acceptTerms, locale? }`, crea una cuenta y devuelve
+`201 { user }`. `acceptTerms` es la casilla de los Términos del servicio y debe ser el booleano `true` (ADR 0061): ausente, `false`
+o de otro tipo responde `VALIDATION_ERROR` (400) y no crea nada; el alta guarda la fecha, la versión (`TERMS_VERSION`) y el modo
+(`checkbox`) en `app_user`. La cuenta creada con Google guarda el modo `notice` (el aviso junto al botón). Dispara en best-effort el correo de verificación de email (ver sección siguiente);
 un fallo de envío no afecta el alta. `POST /api/auth/login` recibe `{ identifier, password, remember? }`, rota la
 sesión actual o crea una nueva y devuelve `200 { user }`. `remember` es un booleano opcional (la
 casilla "Mantener la sesión iniciada en este dispositivo"): ausente equivale a `true` y un valor no

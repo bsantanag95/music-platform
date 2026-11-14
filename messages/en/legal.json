@@ -7,7 +7,7 @@
         "id": "who",
         "title": "Who we are and who this applies to",
         "paragraphs": [
-          "{appName} is a service under development operated by its team (“we”). By creating an account or using the service you accept these terms, together with the [Privacy Policy](/privacy), the [Cookie Policy](/cookies) and the [Community guidelines](/guidelines). If you do not agree, do not use the service.",
+          "{appName} is a service under development operated by its team (“we”). By using the service you accept these terms, together with the [Privacy Policy](/privacy), the [Cookie Policy](/cookies) and the [Community guidelines](/guidelines). When you create an account we ask for it expressly: with email, by ticking the box on the sign-up form; with Google, by continuing after the notice next to the button. We store the date, the version of these terms and how you accepted them. If you do not agree, do not use the service.",
           "The legal entity that operates it (name, legal form, address) is not yet defined: it will be completed before the public launch, as noted under “To be defined” at the end."
         ]
       },
@@ -119,6 +119,7 @@
           "Minimum age to use the service and, where applicable, parental or guardian consent.",
           "Review of moderation decisions: how and within what time frame a suspension or hidden content can be reviewed.",
           "Commercial terms: if the service ever adds payments or advertising, these terms and the privacy policy will be updated beforehand.",
+          "Acceptance of the terms: with Google there is only a notice next to the button, not a checkbox; confirm whether that is enough or an explicit acceptance step is needed. Accounts created before the acceptance record existed have none stored: decide whether to ask them to accept on their next sign-in.",
           "Legal review: this text has not been reviewed by a legal professional; clauses such as the content license, the limitation of liability, acceptance by use and governing law must be validated for the relevant jurisdiction."
         ]
       }
@@ -150,6 +151,7 @@
             ["Password", "When you sign up with a password.", "Signing in.", "Nobody: only a hash (Argon2id) is stored, never the password."],
             ["Google account", "If you sign in with Google.", "Identifying you without a password. We receive your Google identifier, your email and the basic profile data Google shares.", "You and those who operate the service."],
             ["Optional profile data", "If you add them: bio, country, city, pronouns, time zone, links and photo.", "Showing them on your profile (see “Optional personal profile data”).", "Depending on your profile privacy."],
+            ["Acceptance of the Terms", "When you create the account.", "Knowing which version of the Terms you accepted and how: with the sign-up checkbox or with the Google notice.", "You, in your data download, and those who operate the service."],
             ["What you create", "When you log it: ratings, reviews, comments, listens and diary notes, favorites, lists, collection, concerts, follows, blocks and reports.", "Giving you the library and the community.", "Depending on the audience of each item (see “Who sees your data”). Diary notes are private."],
             ["Session data", "When you sign in.", "Keeping you signed in and showing you your active sessions: a token of which we only store the hash, dates, last activity and a device label.", "You, in Settings, and those who operate the service."],
             ["IP address", "On every request.", "Limiting sign-in and sign-up attempts to protect accounts. It is used in memory and is not stored in our database.", "Nobody, except infrastructure technical logs (see “To be defined”)."],

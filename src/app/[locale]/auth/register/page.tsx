@@ -5,6 +5,7 @@ import { AuthForm } from "@/components/auth/AuthForm";
 import { SocialSignIn } from "@/components/auth/SocialSignIn";
 import { resolveSession } from "@/services/auth/sessions";
 import { withClientMessages } from "@/i18n/client-messages";
+import { termsLinkTags } from "@/components/auth/terms-links";
 import { buildIntentAuthHref, buildIntentDestination, parseBuildIntent } from "@/lib/laminas/intent";
 
 async function RegisterPage({
@@ -31,6 +32,7 @@ async function RegisterPage({
           label={t("continueWithGoogle")}
           separator={t("orSeparator")}
           intent={intent}
+          notice={t.rich("googleTermsRegister", termsLinkTags(t("newTab")))}
         />
         <AuthForm mode="register" intent={intent} />
       </div>

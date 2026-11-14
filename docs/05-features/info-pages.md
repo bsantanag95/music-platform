@@ -56,6 +56,7 @@ procedimientos: si falta información, se agrega un punto a «Por definir».
 | Cambia la moderación, las sanciones o los reportes | `guidelines`, `terms › moderation`, `help › report` |
 | Agrega, quita o renombra una función o ajuste que `help` describe | `help` (y `about` si cambia lo que la plataforma es o no es) |
 | Cambia la edad mínima, la entidad, la jurisdicción, los proveedores o la retención | las secciones afectadas y la lista «Por definir» |
+| Cambia el alta de cuentas o la aceptación de los Términos (casilla, aviso de Google, qué se guarda) | `help › start`, `terms › who`, la fila «Aceptación de los Términos» de `privacy` y, si cambia el texto de `/terms`, `TERMS_VERSION` (`src/lib/terms.ts`) |
 | Agrega una página informativa | `INFO_PAGES` + `INFO_PAGE_ORDER`, los dos `json`, esta tabla y `openspec/specs/info-pages` |
 
 ## Pendiente de decisión humana (lo que el proyecto no sabe)

@@ -122,6 +122,7 @@ async function main() {
           username: `smoke_verify_${suffix}_a`,
           email: emailA,
           password: "initial-password-123",
+          acceptTerms: true,
           locale: "es",
         }),
       );
@@ -197,6 +198,7 @@ async function main() {
           username: `smoke_verify_${suffix}_b`,
           email: emailB,
           password: "initial-password-123",
+          acceptTerms: true,
           locale: "en",
         }),
       );

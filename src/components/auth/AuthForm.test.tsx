@@ -16,8 +16,17 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
+}));
 vi.mock("@/lib/hard-navigate", () => ({ hardNavigate: mocks.hardNavigate }));
 vi.mock("@/lib/api/client", () => ({ apiFetch: mocks.apiFetch, ApiError: mocks.ApiError }));
+
+const TERMS_LABEL = /Acepto los Términos del servicio/;
 
 describe("AuthForm", () => {
   it("un alta exitosa lleva a /welcome (onboarding guiado) con una navegación completa", async () => {
@@ -28,6 +37,7 @@ describe("AuthForm", () => {
     await user.type(screen.getByLabelText("Nombre de usuario"), "ana");
     await user.type(screen.getByLabelText("Email"), "ana@example.com");
     await user.type(screen.getByLabelText("Contraseña"), "unaClaveLarga1");
+    await user.click(screen.getByRole("checkbox", { name: TERMS_LABEL }));
     await user.click(screen.getByRole("button", { name: "Crear cuenta" }));
     expect(mocks.hardNavigate).toHaveBeenCalledWith("/es/welcome");
     expect(mocks.hardNavigate).toHaveBeenCalledTimes(1);
@@ -41,6 +51,7 @@ describe("AuthForm", () => {
     await user.type(screen.getByLabelText("Nombre de usuario"), "ana");
     await user.type(screen.getByLabelText("Email"), "ana@example.com");
     await user.type(screen.getByLabelText("Contraseña"), "unaClaveLarga1");
+    await user.click(screen.getByRole("checkbox", { name: TERMS_LABEL }));
     await user.click(screen.getByRole("button", { name: "Crear cuenta" }));
     expect(mocks.hardNavigate).toHaveBeenCalledWith("/es/me/cards?desde=8d2c0c34-6a0f-4f61-9d7b-1f8a2c3d4e5f");
   });
@@ -53,6 +64,7 @@ describe("AuthForm", () => {
     await user.type(screen.getByLabelText("Nombre de usuario"), "ana");
     await user.type(screen.getByLabelText("Email"), "ana@example.com");
     await user.type(screen.getByLabelText("Contraseña"), "unaClaveLarga1");
+    await user.click(screen.getByRole("checkbox", { name: TERMS_LABEL }));
     await user.click(screen.getByRole("button", { name: "Crear cuenta" }));
     expect(mocks.hardNavigate).toHaveBeenCalledWith("/es/users/ana/artist/10000000-0000-4000-8000-000000000001?valorar=1");
   });
@@ -133,6 +145,59 @@ describe("AuthForm", () => {
     expect(screen.getByLabelText("Contraseña")).toHaveAccessibleDescription("Usa al menos 8 caracteres.");
   });
 
+  describe("aceptación de los Términos", () => {
+    const registerBody = () => JSON.parse(mocks.apiFetch.mock.calls.at(-1)?.[2].body as string) as Record<string, unknown>;
+
+    it("el registro ofrece la casilla sin marcar, con enlaces a Términos y Privacidad en pestaña nueva", () => {
+      renderWithIntl(<AuthForm mode="register" />);
+      const checkbox = screen.getByRole("checkbox", { name: TERMS_LABEL });
+      expect(checkbox).not.toBeChecked();
+      for (const [name, href] of [
+        [/Términos del servicio/, "/terms"],
+        [/Política de privacidad/, "/privacy"],
+      ] as const) {
+        const link = screen.getByRole("link", { name });
+        expect(link).toHaveAttribute("href", href);
+        expect(link).toHaveAttribute("target", "_blank");
+        expect(link.getAttribute("rel")).toMatch(/noopener/);
+      }
+    });
+
+    it("sin marcarla no hay alta: explica por qué, enfoca la casilla y no llama a la API", async () => {
+      const user = userEvent.setup();
+      mocks.apiFetch.mockClear();
+      renderWithIntl(<AuthForm mode="register" />);
+      await user.type(screen.getByLabelText("Nombre de usuario"), "ana");
+      await user.type(screen.getByLabelText("Email"), "ana@example.com");
+      await user.type(screen.getByLabelText("Contraseña"), "unaClaveLarga1");
+      await user.click(screen.getByRole("button", { name: "Crear cuenta" }));
+      const checkbox = screen.getByRole("checkbox", { name: TERMS_LABEL });
+      expect(checkbox).toHaveAttribute("aria-invalid", "true");
+      expect(checkbox).toHaveAccessibleDescription("Para crear tu cuenta debes aceptar los Términos del servicio.");
+      expect(checkbox).toHaveFocus();
+      expect(mocks.apiFetch).not.toHaveBeenCalled();
+    });
+
+    it("marcarla quita el error y el alta envía acceptTerms: true", async () => {
+      const user = userEvent.setup();
+      mocks.apiFetch.mockResolvedValueOnce({ user: { id: "u1", username: "ana", email: "a@b.c", displayName: null } });
+      renderWithIntl(<AuthForm mode="register" />);
+      await user.type(screen.getByLabelText("Nombre de usuario"), "ana");
+      await user.type(screen.getByLabelText("Email"), "ana@example.com");
+      await user.type(screen.getByLabelText("Contraseña"), "unaClaveLarga1");
+      await user.click(screen.getByRole("button", { name: "Crear cuenta" }));
+      await user.click(screen.getByRole("checkbox", { name: TERMS_LABEL }));
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: "Crear cuenta" }));
+      expect(registerBody()).toMatchObject({ username: "ana", acceptTerms: true });
+    });
+
+    it("el login no ofrece la casilla", () => {
+      renderWithIntl(<AuthForm mode="login" />);
+      expect(screen.queryByRole("checkbox", { name: TERMS_LABEL })).not.toBeInTheDocument();
+    });
+  });
+
   it("un usuario ya tomado se muestra en su campo, no como error del formulario", async () => {
     const user = userEvent.setup();
     mocks.apiFetch.mockRejectedValueOnce(new mocks.ApiError("USERNAME_TAKEN"));
@@ -140,6 +205,7 @@ describe("AuthForm", () => {
     await user.type(screen.getByLabelText("Nombre de usuario"), "ana");
     await user.type(screen.getByLabelText("Email"), "ana@example.com");
     await user.type(screen.getByLabelText("Contraseña"), "unaClaveLarga1");
+    await user.click(screen.getByRole("checkbox", { name: TERMS_LABEL }));
     await user.click(screen.getByRole("button", { name: "Crear cuenta" }));
     const username = await screen.findByLabelText("Nombre de usuario");
     expect(username).toHaveAccessibleDescription("Elige otro nombre de usuario.");
@@ -185,6 +251,7 @@ describe("AuthForm", () => {
       await user.type(screen.getByLabelText("Nombre de usuario"), "ana");
       await user.type(screen.getByLabelText("Email"), "ana@example.com");
       await user.type(screen.getByLabelText("Contraseña"), "unaClaveLarga1");
+      await user.click(screen.getByRole("checkbox", { name: TERMS_LABEL }));
       await user.click(screen.getByRole("button", { name: "Crear cuenta" }));
       expect(loginBody()).not.toHaveProperty("remember");
     });

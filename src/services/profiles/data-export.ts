@@ -295,6 +295,10 @@ export async function buildDataExport(userId: string, now: Date = new Date()): P
       username: user.username,
       email: user.email,
       emailVerifiedAt: user.emailVerifiedAt,
+      // Aceptación de los Términos (ADR 0061): nulo en las cuentas anteriores.
+      termsAcceptedAt: user.termsAcceptedAt,
+      termsVersion: user.termsVersion,
+      termsAcceptedVia: user.termsAcceptedVia,
       displayName: user.displayName,
       profileVisibility: user.profileVisibility,
       defaultAudience: user.defaultAudience,

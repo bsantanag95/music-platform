@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { TERMS_VERSION } from "@/lib/terms";
 import {
   findIdentityByProvider,
   linkIdentityToUser,
@@ -121,6 +122,23 @@ describe("resolveOrCreateOAuthUser", () => {
     expect(mocks.db.transaction).toHaveBeenCalled();
     expect(mocks.db.insert).toHaveBeenCalledTimes(2);
     expect(chain.values.mock.calls[0]?.[0]).toMatchObject({ emailVerifiedAt: expect.any(Date) });
+  });
+
+  it("la cuenta nueva por Google registra la aceptación de los Términos por aviso, con la versión vigente", async () => {
+    mockSelectChain([]);
+    mocks.findUserByEmail.mockResolvedValueOnce(null);
+    mocks.findAvailableUsername.mockResolvedValueOnce("juanperez");
+    const chain = mockInsertChain();
+    chain.returning.mockResolvedValue([{ id: "new-1" }]);
+    mockTransaction();
+
+    await resolveOrCreateOAuthUser({ provider: "google", providerAccountId: "sub-1", email: "juan@gmail.com", emailVerified: true });
+
+    expect(chain.values.mock.calls[0]?.[0]).toMatchObject({
+      termsAcceptedAt: expect.any(Date),
+      termsVersion: TERMS_VERSION,
+      termsAcceptedVia: "notice",
+    });
   });
 });
 

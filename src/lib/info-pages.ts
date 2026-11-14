@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { InfoPageViewProps, InfoSection } from "@/components/legal/InfoPageView";
 import { CONTACT_EMAIL, COVER_TAKEDOWN_EMAIL } from "@/lib/site-links";
+import { TERMS_VERSION } from "@/lib/terms";
 
 // Páginas informativas y legales de la aplicación. Esta es la fuente única de verdad de CUÁLES
 // existen, dónde viven y en qué estado están; el texto vive en `messages/{es,en}/info.json` y
@@ -44,7 +45,8 @@ export const INFO_PAGES: Record<InfoPageId, InfoPageMeta> = {
     updated: "2026-11-14",
     pendingLegalReview: false,
   },
-  terms: { namespace: "legal", path: "/terms", updated: "2026-11-14", pendingLegalReview: true },
+  // La fecha de los Términos es también la versión que se guarda al aceptarlos (`src/lib/terms.ts`).
+  terms: { namespace: "legal", path: "/terms", updated: TERMS_VERSION, pendingLegalReview: true },
   privacy: { namespace: "legal", path: "/privacy", updated: "2026-11-14", pendingLegalReview: true },
   cookies: { namespace: "legal", path: "/cookies", updated: "2026-11-14", pendingLegalReview: true },
   guidelines: {

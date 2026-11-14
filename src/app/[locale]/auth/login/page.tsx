@@ -4,6 +4,7 @@ import { redirect } from "@/i18n/navigation";
 import { LoginPanel } from "@/components/auth/LoginPanel";
 import { resolveSession } from "@/services/auth/sessions";
 import { withClientMessages } from "@/i18n/client-messages";
+import { termsLinkTags } from "@/components/auth/terms-links";
 import { buildIntentAuthHref, buildIntentDestination, parseBuildIntent } from "@/lib/laminas/intent";
 
 async function LoginPage({
@@ -36,6 +37,7 @@ async function LoginPage({
           googleLabel={t("continueWithGoogle")}
           separator={t("orSeparator")}
           intent={intent}
+          googleNotice={t.rich("googleTermsLogin", termsLinkTags(t("newTab")))}
           passwordAside={
             <Link
               href="/auth/forgot-password"

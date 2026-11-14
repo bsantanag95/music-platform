@@ -445,6 +445,8 @@ export const RegisterRequestSchema = z.object({
     .regex(USERNAME_REGEX),
   email: z.email().transform((value) => value.toLowerCase()),
   password: z.string().min(PASSWORD_MIN).max(PASSWORD_MAX),
+  // Casilla de los Términos del servicio (openspec: add-terms-acceptance): sin ella no hay alta.
+  acceptTerms: z.literal(true),
   // Locale para el correo de verificación (change add-email-verification).
   locale: z.string().trim().max(10).optional(),
 });

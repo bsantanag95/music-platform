@@ -173,6 +173,11 @@ export const appUser = pgTable(
     // Última vez que abrió el feed de seguidos (migración 0078, openspec:
     // redesign-feed-people, D1); marca lo nuevo desde entonces. Nulo = nunca.
     feedSeenAt: timestamp("feed_seen_at", { withTimezone: true }),
+    // Aceptación de los Términos (migración 0096, openspec: add-terms-acceptance, ADR 0061): fecha, versión
+    // (`TERMS_VERSION`) y modo (`checkbox` o `notice`). Las tres juntas o ninguna; nulo en las cuentas anteriores.
+    termsAcceptedAt: timestamp("terms_accepted_at", { withTimezone: true }),
+    termsVersion: text("terms_version"),
+    termsAcceptedVia: text("terms_accepted_via"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -206,6 +211,10 @@ export const appUser = pgTable(
     check("chk_app_user_country", sql`${t.country} IS NULL OR ${t.country} ~ '^[A-Z]{2}$'`),
     check("chk_app_user_pronouns_exclusive", sql`${t.pronounSet} IS NULL OR ${t.pronouns} IS NULL`),
     check("chk_app_user_timezone", sql`${t.timezone} IS NULL OR length(${t.timezone}) <= 64`),
+    check(
+      "chk_app_user_terms_acceptance",
+      sql`(${t.termsAcceptedAt} IS NULL AND ${t.termsVersion} IS NULL AND ${t.termsAcceptedVia} IS NULL) OR (${t.termsAcceptedAt} IS NOT NULL AND ${t.termsVersion} IS NOT NULL AND char_length(${t.termsVersion}) BETWEEN 1 AND 40 AND ${t.termsAcceptedVia} IS NOT NULL AND ${t.termsAcceptedVia} IN ('checkbox', 'notice'))`,
+    ),
   ],
 );
 

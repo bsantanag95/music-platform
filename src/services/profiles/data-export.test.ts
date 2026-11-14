@@ -47,6 +47,9 @@ const user = {
   username: "ana",
   email: "ana@example.com",
   emailVerifiedAt: new Date("2026-01-02"),
+  termsAcceptedAt: new Date("2026-01-01"),
+  termsVersion: "2026-11-14",
+  termsAcceptedVia: "checkbox",
   displayName: "Ana",
   passwordHash: "$argon2id$SECRETO",
   profileVisibility: "public",
@@ -101,6 +104,7 @@ describe("buildDataExport", () => {
     expect(data.account).toMatchObject({ username: "ana", email: "ana@example.com", bio: "hola", selfRoles: ["dj"], genres: ["jazz"] });
     // Datos personales opcionales (spec profile-personal-info): la clave de pronombres, el
     // país y la ciudad o región salen en la cuenta.
+    expect(data.account).toMatchObject({ termsVersion: "2026-11-14", termsAcceptedVia: "checkbox" });
     expect(data.account).toMatchObject({ pronounSet: "she", pronouns: null, country: "CL", location: "Quilpué" });
     expect(data.library.diary).toEqual([expect.objectContaining({ body: "nota PRIVADA del diario", audience: "private" })]);
     expect(data.activity.ratings).toHaveLength(1);
