@@ -20,7 +20,7 @@ vi.mock("@/i18n/navigation", () => ({
   redirect: mocks.redirect,
 }));
 vi.mock("next-intl/server", () => ({
-  getTranslations: vi.fn().mockResolvedValue((key: string) => key),
+  getTranslations: vi.fn().mockResolvedValue(Object.assign((key: string) => key, { rich: (key: string) => key })),
 }));
 vi.mock("@/components/auth/AuthForm", () => ({
   AuthForm: ({ passwordAside }: { passwordAside?: React.ReactNode }) => <form>{passwordAside}</form>,
@@ -139,6 +139,19 @@ describe("páginas de autenticación", () => {
     render(await LoginPage({ params: Promise.resolve({ locale: "es" }) }));
     const googleLink = screen.getByRole("link", { name: /continueWithGoogle/i });
     expect(googleLink).toHaveAttribute("href", "/api/auth/google/start?locale=es");
+  });
+
+  it("el aviso de Términos acompaña al botón de Google en el registro y en el login (sin casilla)", async () => {
+    mocks.resolveSession.mockResolvedValue(null);
+
+    const register = render(await RegisterPage({ params: Promise.resolve({ locale: "es" }) }));
+    expect(screen.getByText("googleTermsRegister")).toBeInTheDocument();
+    register.unmount();
+
+    render(await LoginPage({ params: Promise.resolve({ locale: "es" }) }));
+    expect(screen.getByText("googleTermsLogin")).toBeInTheDocument();
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    mocks.resolveSession.mockReset();
   });
 
   it("muestra el botón de Continuar con Google en registro con el locale", async () => {

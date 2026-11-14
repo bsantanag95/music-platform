@@ -308,6 +308,14 @@ el envío es sincrónico al pedido. La página `/<locale>/auth/reset-password` p
 consumirlo y aplica `Referrer-Policy: no-referrer` para no filtrarlo por `Referer`. Los tokens
 vencidos se limpian con el mismo job que las sesiones (`pnpm run db:cleanup-sessions`).
 
+### 8b. Aceptación de los Términos al crear la cuenta (ADR 0061)
+
+El registro con email exige la casilla de los Términos (`acceptTerms: true`, validada en el cliente y en `RegisterRequestSchema`).
+El alta con Google, que se crea en el callback sin formulario nuestro, se apoya en un aviso junto al botón (en el registro y en el
+login, porque ambos pueden crear cuentas). En los dos casos se guardan fecha, versión (`TERMS_VERSION`) y modo (`checkbox` o
+`notice`) en `app_user`; las cuentas anteriores y los fixtures quedan sin aceptación (nulos). `registerUser(input, acceptance)`
+recibe el modo como argumento explícito: solo el handler de registro lo pasa.
+
 ### 9. Verificación de email
 
 Implementada por ADR 0015. `app_user.email_verified_at` registra si el email está verificado. La

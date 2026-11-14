@@ -7,7 +7,7 @@
         "id": "who",
         "title": "Quiénes somos y a quién aplican",
         "paragraphs": [
-          "{appName} es un servicio en desarrollo operado por su equipo (en adelante, «nosotros»). Al crear una cuenta o usar el servicio aceptas estos términos, junto con la [Política de privacidad](/privacy), la [Política de cookies](/cookies) y las [Directrices de la comunidad](/guidelines). Si no estás de acuerdo, no uses el servicio.",
+          "{appName} es un servicio en desarrollo operado por su equipo (en adelante, «nosotros»). Al usar el servicio aceptas estos términos, junto con la [Política de privacidad](/privacy), la [Política de cookies](/cookies) y las [Directrices de la comunidad](/guidelines). Al crear una cuenta te lo pedimos de forma expresa: con email, marcando la casilla del registro; con Google, al continuar tras el aviso junto al botón. Guardamos la fecha, la versión de estos términos y la forma en que los aceptaste. Si no estás de acuerdo, no uses el servicio.",
           "Todavía no está definida la entidad legal que lo opera (nombre, forma jurídica, domicilio): se completará antes de la apertura al público, como se indica en «Por definir» al final."
         ]
       },
@@ -119,6 +119,7 @@
           "Edad mínima para usar el servicio y, si corresponde, el consentimiento de madres, padres o tutores.",
           "Revisión de decisiones de moderación: cómo y en qué plazo se puede pedir que se revise una suspensión o un contenido oculto.",
           "Condiciones comerciales: si el servicio incorpora algún día pagos o publicidad, estos términos y la política de privacidad se actualizarán antes.",
+          "Aceptación de los términos: con Google solo hay un aviso junto al botón, no una casilla; confirmar si basta o si hace falta un paso de aceptación explícito. Las cuentas creadas antes de que existiera el registro de la aceptación no tienen ninguna guardada: decidir si se les pide aceptar en su próximo inicio de sesión.",
           "Revisión legal: este texto no ha sido revisado por una persona profesional del derecho; cláusulas como la licencia de contenido, la limitación de responsabilidad, la aceptación por uso y la ley aplicable deben validarse según la jurisdicción."
         ]
       }
@@ -150,6 +151,7 @@
             ["Contraseña", "Al registrarte con contraseña.", "Iniciar sesión.", "Nadie: solo se guarda un hash (Argon2id), nunca la contraseña."],
             ["Cuenta de Google", "Si inicias sesión con Google.", "Identificarte sin contraseña. Recibimos tu identificador de Google, tu email y los datos básicos de perfil que Google comparte.", "Tú y quienes operan el servicio."],
             ["Datos opcionales del perfil", "Si los agregas: bio, país, ciudad, pronombres, zona horaria, enlaces y foto.", "Mostrarlos en tu perfil (ver «Datos personales opcionales del perfil»).", "Según la privacidad de tu perfil."],
+            ["Aceptación de los Términos", "Al crear la cuenta.", "Saber qué versión de los Términos aceptaste y cómo: con la casilla del registro o con el aviso de Google.", "Tú, en la descarga de tus datos, y quienes operan el servicio."],
             ["Lo que creas", "Cuando lo registras: valoraciones, reseñas, comentarios, escuchas y notas del diario, favoritos, listas, colección, conciertos, seguimientos, bloqueos y reportes.", "Ofrecerte la biblioteca y la comunidad.", "Según la audiencia de cada cosa (ver «Quién ve tus datos»). Las notas del diario son privadas."],
             ["Datos de sesión", "Al iniciar sesión.", "Mantenerte identificado y mostrarte tus sesiones activas: un token del que solo guardamos el hash, fechas, última actividad y una etiqueta del dispositivo.", "Tú, en Ajustes, y quienes operan el servicio."],
             ["Dirección IP", "En cada solicitud.", "Limitar los intentos de inicio de sesión y registro para proteger las cuentas. Se usa en memoria y no se guarda en nuestra base de datos.", "Nadie, salvo los registros técnicos de la infraestructura (ver «Por definir»)."],

@@ -18,6 +18,12 @@ conserva su default (favoritos `public`, listas y colección `followers`, diario
 no hay `DEFAULT` de columna ni backfill. Se aplica solo al crear; nunca reescribe filas existentes.
 Precedencia al crear: valor explícito de la petición > `default_audience` > default del tipo.
 
+**Aceptación de los Términos (migración `0096`, cambio `add-terms-acceptance`, ADR 0061):** `terms_accepted_at`
+(TIMESTAMPTZ), `terms_version` (TEXT, la fecha de `/terms` vigente al aceptar: `TERMS_VERSION` en `src/lib/terms.ts`) y
+`terms_accepted_via` (TEXT, `checkbox` = casilla del registro con email, `notice` = aviso junto al botón de Google). El `CHECK`
+`chk_app_user_terms_acceptance` las exige juntas o ninguna. Nulas en las cuentas anteriores y en las creadas por scripts: no
+se inventa una aceptación; no hay backfill. `GET /api/me/export` las incluye.
+
 **Cuenta y seguridad (migración `0039`, cambio `rework-account-settings`):** `username_changed_at`
 (TIMESTAMPTZ nullable; nulo = nunca cambió el usuario; base del enfriamiento de 30 días) y `locale`
 (TEXT nullable, `CHECK IN ('es','en')`; nulo = sin preferencia, se conserva el idioma de la ruta).

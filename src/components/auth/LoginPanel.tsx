@@ -14,17 +14,26 @@ export function LoginPanel({
   separator,
   passwordAside,
   intent = null,
+  googleNotice,
 }: {
   locale: string;
   googleLabel: string;
   separator: string;
   passwordAside?: ReactNode;
   intent?: BuildIntent | null;
+  googleNotice?: ReactNode;
 }) {
   const [remember, setRemember] = useState(true);
   return (
     <>
-      <SocialSignIn locale={locale} label={googleLabel} separator={separator} remember={remember} intent={intent} />
+      <SocialSignIn
+        locale={locale}
+        label={googleLabel}
+        separator={separator}
+        remember={remember}
+        intent={intent}
+        notice={googleNotice}
+      />
       <AuthForm
         mode="login"
         passwordAside={passwordAside}

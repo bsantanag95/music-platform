@@ -19,7 +19,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   }
 
   try {
-    const user = await registerUser(body.data);
+    // El esquema ya exigió la casilla de los Términos (`acceptTerms: true`): se registra como aceptación por casilla.
+    const user = await registerUser(body.data, "checkbox");
     if (!user) throw new Error("No se pudo crear el usuario");
     // El alta no ofrece la casilla: la sesión es mantenida, como siempre.
     const session = await createSession(user.id, { remember: true });

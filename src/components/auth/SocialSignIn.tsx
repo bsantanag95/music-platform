@@ -2,6 +2,7 @@
 // Es un enlace (la ruta redirige al proveedor), no un botón de formulario.
 // `remember` (solo el login lo pasa) refleja la casilla de mantener la sesión:
 // desmarcada, el inicio del flujo recibe `remember=0`. `intent` es la intención "Arma la tuya" (ADR 0052 y 0054).
+import type { ReactNode } from "react";
 import { buildIntentQuery, type BuildIntent } from "@/lib/laminas/intent";
 
 export function SocialSignIn({
@@ -10,15 +11,19 @@ export function SocialSignIn({
   separator,
   remember = true,
   intent = null,
+  notice,
 }: {
   locale: string;
   label: string;
   separator: string;
   remember?: boolean;
   intent?: BuildIntent | null;
+  // Aviso bajo el botón: continuar con Google es aceptar los Términos (openspec: add-terms-acceptance).
+  notice?: ReactNode;
 }) {
   return (
     <>
+      <div className="flex flex-col gap-2">
       <a
         href={`/api/auth/google/start?locale=${locale}${remember ? "" : "&remember=0"}${intent ? `&${buildIntentQuery(intent)}` : ""}`}
         className="flex h-11 w-full items-center justify-center gap-3 rounded-md border border-ink-border bg-ink-surface px-4 font-display text-sm font-medium text-paper transition-colors duration-150 hover:border-amber"
@@ -31,6 +36,8 @@ export function SocialSignIn({
         </svg>
         {label}
       </a>
+      {notice ? <p className="font-data text-xs text-paper-muted">{notice}</p> : null}
+      </div>
       <div className="flex items-center gap-3" aria-hidden="true">
         <div className="h-px flex-1 bg-ink-border" />
         <span className="font-data text-xs text-paper-muted">{separator}</span>
