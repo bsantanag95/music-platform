@@ -14,8 +14,10 @@ Sin sesión, la página SHALL mostrar la propuesta de valor (tagline), el hero v
 llamada a la acción para registrarse o iniciar sesión, y el bloque de funcionalidades,
 y SHALL NOT mostrar accesos rápidos de usuario, saludo, ni ningún bloque de contenido
 propio (feed de seguidos, rastro reciente, retomar lista). La propuesta de valor del hero
-SHALL encuadrar el álbum como una obra —valorarla, reseñarla, volver a ella— y el
-descubrimiento como algo que pasa por personas, no por un algoritmo. El hero sin sesión
+SHALL presentar el producto como el diario de lo que una persona escucha —registrar cada
+álbum sin tener que opinar y valorarlo con estrellas o con un puntaje de 1 a 100 cuando
+quiera— y el descubrimiento como algo que pasa por lo que escuchan otras personas, no por un
+algoritmo. El hero sin sesión
 SHALL incluir un buscador del catálogo con el mismo selector de tipo, las mismas
 sugerencias y la misma navegación que la búsqueda del Header. El hero sin sesión SHALL
 mostrar una entrada de ejemplo fija —un álbum con estrellas, puntaje detallado de 1 a 100
@@ -48,6 +50,12 @@ elementos pendientes de valorar, rachas ni medallas de completitud.
 - **THEN** ve tagline, hero visual con llamada a la acción de registro/login y el
   bloque de funcionalidades, y no ve saludo, accesos rápidos de usuario, preview de
   feed, rastro reciente ni el acceso para retomar una lista
+
+#### Scenario: Propuesta de valor del hero
+- **WHEN** un visitante sin sesión abre `/[locale]`
+- **THEN** el titular del hero presenta el producto como el diario de lo que escucha y de lo
+  que escuchan otras personas, y la bajada explica que registrar no exige opinar y que la
+  valoración con estrellas o de 1 a 100 es opcional
 
 #### Scenario: Buscador en el hero sin sesión
 - **WHEN** un visitante sin sesión escribe un artista en el buscador del hero y envía la

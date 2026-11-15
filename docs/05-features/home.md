@@ -52,9 +52,10 @@ Ver "Inicio con sesión — estructura" para la jerarquía completa y los bloque
 
 ### Exclusivo de visitante anónimo
 
-- Tagline + propuesta de valor (ya existe), **reencuadrada hacia el álbum como obra** —
-  valorarla, reseñarla, volver a ella; descubrimiento por personas, no por algoritmo (ver
-  "Reencuadre album-forward del landing" más abajo).
+- Tagline + propuesta de valor: **el diario de lo que escuchas y de lo que escuchan los demás**
+  —registrar sin tener que opinar, valorar con estrellas o de 1 a 100 cuando se quiera,
+  descubrimiento por personas, no por algoritmo— (`update-anon-hero-copy`, 2026-11-15; antes,
+  "el álbum como obra", ver "Reencuadre album-forward del landing" más abajo).
 - CTA a registro/login.
 - **Bloque editorial de álbumes** debajo del hero (ver más abajo).
 - **Búsqueda:** el hero anónimo vuelve a tener buscador (`redesign-anon-home-phase1`,
@@ -178,8 +179,11 @@ de carátulas difuminado detrás de un titular centrado y un solo CTA «Comienza
 - **Banda a sangre completa** (`AnonHero`): rompe el ancho del `main` con
   `-mx-[calc(50vw-50%)] w-screen` y vuelve a un contenedor propio de `max-w-[88rem]`. Dos
   columnas desde `lg`; en móvil se apila (texto arriba, caja debajo).
-- **Columna de texto:** titular de una sola idea (`heroLine1` «El álbum es una obra.» +
-  `heroLine2` «Tu historial, también.» en ámbar), bajada (`anonSubtagline`) sobre fondo liso
+- **Columna de texto:** titular (`heroLine1` «El diario de todo lo que escuchas.» + `heroLine2`
+  «Y de lo que escuchan los demás.» en ámbar; desde `update-anon-hero-copy`, antes «El álbum es
+  una obra. / Tu historial, también.», que no decía qué es el sitio y cuya bajada empezaba por
+  opinar), bajada (`anonSubtagline`: registrar sin opinar → valorar si se quiere → descubrir por
+  personas) sobre fondo liso
   —ya no sobre las carátulas—, el buscador `HeaderSearch size="hero"`, los accesos «Prueba con …»
   (`HERO_SEARCH_EXAMPLES` en `src/lib/config/hero-covers.ts`, enlaces a
   `/search?type=artist&q=`) y las acciones **directas**: «Crear cuenta» → `/auth/register` y
@@ -203,7 +207,9 @@ landing anónimo lo refleja en dos piezas:
 - **Copy del hero** (originalmente `heroLine1-3`, `anonSubtagline`; hoy `heroLine1-2`, ver «Hero visual del visitante anónimo»): de "registrá / guardá favoritos /
   seguí" a *"El álbum es una obra · Valorala, reseñala, volvé a ella · Descubrí música por
   personas, no por un algoritmo"*. La `anonSubtagline` mantiene "registrar" (la capa de
-  baja fricción sigue presente). Estructura del hero y CTA sin cambios.
+  baja fricción sigue presente). Estructura del hero y CTA sin cambios. *Histórico:* desde
+  `update-anon-hero-copy` el hero ya no usa este encuadre (ver «Hero visual del visitante
+  anónimo»); el bloque editorial de álbumes de abajo sigue vigente.
 - **Bloque editorial de álbumes** en `AnonymousHome`, **debajo del hero y encima de los
   bloques de la comunidad** — la obra primero, la prueba social después. Desde
   `redesign-anon-home-phase2` (ver "Cuerpo de la portada sin sesión"):
