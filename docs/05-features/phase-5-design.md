@@ -253,10 +253,18 @@ actualización cuando una actividad cambia de audiencia.
 El Header separa dos zonas (cambio `regroup-authenticated-header`, spec
 `cross-view-navigation`):
 
-- **Barra general** — solo lo que el sitio ofrece a cualquiera: buscador del catálogo,
-  Listas (`/lists`, pública, distinta de `/me/lists`), Actividad (`/activity`, pública,
-  distinta de `/me/feed`) y, con el catálogo editorial habilitado, Explorar. El enlace de la sección actual va en tono principal con subrayado ámbar
-  (`aria-current="page"`). No lleva enlaces `/me/*` en el nivel superior. Moderación y
+- **Barra general** — solo lo que el sitio ofrece a cualquiera: con el catálogo editorial
+  habilitado, Explorar; Listas (`/lists`, pública, distinta de `/me/lists`); Comunidad
+  (`/activity`, pública, distinta de `/me/feed`), y el buscador del catálogo. Desde
+  `redesign-site-header` (2026-11-15, dirección «C · Disquería» de la portada) el escritorio
+  es una rejilla de tres zonas: marca (monograma + `appName` desde `sm`, oculto entre `lg` y `xl` porque con sesión la fila no cabe a 1024 px; `Logo withName`) y
+  enlaces a la izquierda, el buscador en el centro (`HeaderSearch wide`: ancho fluido hasta
+  30rem, 40 px, pista del atajo `/`) y la zona de cuenta o de usuario a la derecha. Los enlaces
+  van en Space Grotesk (antes en IBM Plex Mono); el de la sección actual va en tono principal
+  con subrayado ámbar (`aria-current="page"`). El atajo `/` enfoca el buscador en escritorio o
+  abre su fila por debajo de `lg`, salvo mientras se escribe en otro campo, con modificadores o
+  con un diálogo modal abierto. Sin sesión, la cuenta es «Iniciar sesión» (discreta) y «Crear
+  cuenta» (principal). No lleva enlaces `/me/*` en el nivel superior. Moderación y
   Administración salieron de la barra en `fix-header-overflow` (2026-09): ahora viven en el
   menú de usuario.
 - **Zona de usuario** — a la derecha: selector de idioma, el control **"+ Añadir"** (solo con

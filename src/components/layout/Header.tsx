@@ -105,6 +105,35 @@ export function Header({
     setSearchOpen(false);
   };
 
+  // Atajo `/` (redesign-site-header): lleva al buscador del Header —en escritorio enfoca el
+  // campo; debajo de `lg` abre la fila de búsqueda, que se enfoca sola—. No actúa mientras se
+  // escribe en otro campo, con modificadores ni con un diálogo modal abierto.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "/" || event.ctrlKey || event.altKey || event.metaKey || event.defaultPrevented) return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
+      ) {
+        return;
+      }
+      if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+      const desktopField = document.querySelector<HTMLInputElement>("#header-desktop-search input");
+      // `offsetParent` es null cuando el contenedor está oculto (debajo de `lg`).
+      if (desktopField && desktopField.offsetParent !== null) {
+        event.preventDefault();
+        desktopField.focus();
+        return;
+      }
+      event.preventDefault();
+      setMenuOpen(false);
+      setSearchOpen(true);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   const handleLocaleChange = (newLocale: string) => {
     // Preserva el query string (ej. `?q=` en /search): `usePathname` de next-intl
     // devuelve solo la ruta sin search, y el router no lo añade por sí solo.
@@ -128,13 +157,14 @@ export function Header({
     }
   };
 
-  // Enlace de la barra general; el de la sección actual queda en tono principal
-  // con un subrayado ámbar fino (`aria-current="page"`), para saber dónde se está.
+  // Enlace de la barra general, en la tipografía de interfaz (redesign-site-header;
+  // antes iba en monoespaciada): fondo suave al pasar el cursor y, en la sección
+  // actual, tono principal con un subrayado ámbar fino (`aria-current="page"`).
   const isCurrent = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
   const navLinkProps = (href: string) => ({
     href,
     "aria-current": isCurrent(href) ? ("page" as const) : undefined,
-    className: `relative rounded-sm py-1 font-data text-sm transition-colors after:absolute after:inset-x-0 after:-bottom-px after:h-px after:origin-left after:bg-amber after:transition-transform after:duration-200 ${
+    className: `relative rounded-md px-3 py-2 font-display text-[15px] transition-colors after:absolute after:inset-x-3 after:bottom-1 after:h-px after:origin-left after:bg-amber after:transition-transform after:duration-200 hover:bg-ink-surface ${
       isCurrent(href)
         ? "text-paper after:scale-x-100"
         : "text-paper-muted after:scale-x-0 hover:text-paper"
@@ -167,7 +197,7 @@ export function Header({
     return (
       <header className="border-b border-ink-border">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-3">
-          <Logo />
+          <Logo withName />
           <LocaleSwitcher t={t} currentLocale={currentLocale} onChange={handleLocaleChange} />
         </div>
       </header>
@@ -178,23 +208,27 @@ export function Header({
     // Fija arriba con fondo translúcido y desenfoque: la búsqueda y la
     // navegación quedan a mano al bajar por páginas largas (discografías, feed).
     <header className="sticky top-0 z-30 border-b border-ink-border bg-ink/85 backdrop-blur-md supports-[backdrop-filter]:bg-ink/70">
-      <div className="flex w-full items-center justify-between px-4 py-3">
-        <div className="flex min-w-0 items-center gap-4">
-          <Logo />
-          <div className="hidden lg:block">
-            <HeaderSearch />
-          </div>
+      {/* Escritorio en tres zonas (redesign-site-header, dirección «C · Disquería»): marca y
+          navegación | buscador fluido al centro | cuenta. Debajo de `lg` vuelve a ser una fila
+          flexible con los botones de búsqueda y menú. */}
+      <div className="flex w-full items-center justify-between gap-4 px-4 py-3 lg:grid lg:grid-cols-[auto_minmax(12rem,1fr)_auto] lg:gap-6 xl:px-6">
+        <div className="flex min-w-0 items-center gap-3 lg:gap-5">
+          <Logo withName />
           {/* Barra general: solo navegación de contenido que ofrece el sitio a
               cualquiera. Las superficies personales viven en el menú de usuario. */}
-          <nav aria-label={t("generalNav")} className="hidden items-center gap-5 lg:flex">
+          <nav aria-label={t("generalNav")} className="hidden items-center gap-0.5 lg:flex">
             {generalLinks}
           </nav>
+        </div>
+
+        <div id="header-desktop-search" className="hidden w-full max-w-[30rem] justify-self-center lg:block">
+          <HeaderSearch wide />
         </div>
 
         {/* Sesión e idioma van juntos al extremo derecho, separados de la navegación
             de contenido: no son "a dónde ir" sino "quién soy / preferencias de la
             app" — mismo patrón que Letterboxd, GitHub, etc. */}
-        <div className="hidden items-center gap-4 lg:flex">
+        <div className="hidden items-center justify-end gap-3 lg:flex">
           <LocaleSwitcher t={t} currentLocale={currentLocale} onChange={handleLocaleChange} />
           {currentUser ? (
             <>
@@ -270,7 +304,7 @@ export function Header({
           className="themed-scrollbar flex max-h-[calc(100dvh-3.75rem)] flex-col gap-4 overflow-y-auto border-t border-ink-border bg-ink px-4 py-4 lg:hidden"
         >
           {/* Bloque 1 — barra general (la búsqueda tiene su propio botón y fila). */}
-          <nav aria-label={t("generalNav")} className="flex flex-col items-start gap-3">
+          <nav aria-label={t("generalNav")} className="-mx-3 flex flex-col items-start gap-0.5">
             {generalLinks}
           </nav>
 
@@ -345,7 +379,7 @@ function LocaleSwitcher({
           key={locale}
           type="button"
           onClick={() => onChange(locale)}
-          className={`rounded px-1.5 py-0.5 font-data text-[11px] uppercase transition-colors ${
+          className={`rounded px-2 py-1 font-data text-xs uppercase transition-colors ${
             locale === currentLocale
               ? "bg-ink-surface text-paper"
               : "text-paper-muted hover:text-paper"
@@ -360,20 +394,22 @@ function LocaleSwitcher({
   );
 }
 
+// Cuenta sin sesión (redesign-site-header): «Iniciar sesión» discreta y «Crear cuenta»
+// principal, con el mismo texto que la acción de registro del hero de Inicio.
 function AuthActions({ t }: { t: HeaderT }) {
   return (
-    <div className="flex items-center gap-3 font-data text-xs">
+    <div className="flex items-center gap-1.5 font-display text-sm">
       <Link
         href="/auth/login"
-        className="rounded-md px-3 py-2 text-paper transition-colors hover:bg-ink-surface"
+        className="inline-flex h-10 items-center rounded-md px-3.5 text-paper-muted transition-colors hover:bg-ink-surface hover:text-paper"
       >
         {t("login")}
       </Link>
       <Link
         href="/auth/register"
-        className="rounded-md border border-accent bg-accent px-3 py-2 font-medium text-ink transition-colors hover:border-amber-hover hover:bg-amber-hover"
+        className="inline-flex h-10 items-center rounded-md bg-accent px-4 font-medium text-ink transition-colors hover:bg-amber-hover"
       >
-        {t("register")}
+        {t("createAccount")}
       </Link>
     </div>
   );

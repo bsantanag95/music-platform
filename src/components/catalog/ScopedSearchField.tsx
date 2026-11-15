@@ -33,6 +33,11 @@ interface ScopedSearchFieldProps {
   resetAfterNavigate?: boolean;
   /** Ocupa todo el ancho disponible (Header en el panel móvil). */
   fluid?: boolean;
+  /**
+   * Variante `compact` del Header de escritorio (redesign-site-header): ancho fluido, 40 px de alto,
+   * texto de cuerpo y la pista del atajo `/` mientras el campo está vacío y sin foco.
+   */
+  wide?: boolean;
   /** Aviso de una búsqueda enviada (búsquedas recientes de /search). */
   onSubmitSearch?: (query: string, type: SearchType) => void;
   /** Junto al botón de enviar (variante `full`): el enlace a la búsqueda avanzada de /search. */
@@ -82,6 +87,7 @@ export function ScopedSearchField({
   initialQuery = "",
   resetAfterNavigate = false,
   fluid = false,
+  wide = false,
   onSubmitSearch,
   trailing,
   labelHidden = false,
@@ -284,7 +290,7 @@ export function ScopedSearchField({
     <div
       className={`flex items-stretch rounded border bg-ink-surface transition-colors focus-within:border-amber/70 ${
         validationError ? "border-danger" : "border-ink-border"
-      } ${compact ? "h-8" : large ? "h-14 rounded-lg" : "h-11"}`}
+      } ${compact ? (wide ? "h-10 rounded-md" : "h-8") : large ? "h-14 rounded-lg" : "h-11"}`}
     >
       <button
         ref={typeButtonRef}
@@ -330,14 +336,26 @@ export function ScopedSearchField({
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={onInputKeyDown}
-        className={`min-w-0 flex-1 bg-transparent text-paper placeholder:text-paper-muted focus:outline-none ${
+        className={`peer min-w-0 flex-1 bg-transparent text-paper placeholder:text-paper-muted focus:outline-none ${
           compact
-            ? `px-2 font-data text-xs ${fluid ? "w-full" : "w-40 transition-[width] focus:w-56"}`
+            ? wide
+              ? "w-full px-3 font-body text-sm"
+              : `px-2 font-data text-xs ${fluid ? "w-full" : "w-40 transition-[width] focus:w-56"}`
             : large
               ? "px-4 font-body text-lg"
               : "px-3 font-body text-base"
         }`}
       />
+
+      {/* Pista del atajo `/` (la maneja el Header): se oculta con foco o con texto. */}
+      {wide ? (
+        <kbd
+          aria-hidden="true"
+          className="mr-1 hidden self-center rounded border border-ink-border px-1.5 font-data text-[11px] text-paper-muted peer-[:placeholder-shown:not(:focus)]:inline"
+        >
+          /
+        </kbd>
+      ) : null}
 
       {compact ? (
         <button
@@ -364,7 +382,7 @@ export function ScopedSearchField({
     <form
       onSubmit={handleSubmit}
       role="search"
-      className={`relative flex flex-col gap-1.5 ${fluid || !compact ? "w-full" : ""}`}
+      className={`relative flex flex-col gap-1.5 ${fluid || wide || !compact ? "w-full" : ""}`}
     >
       <label htmlFor={inputId} className={compact || labelHidden ? "sr-only" : "font-display text-sm text-paper-muted"}>
         {t("fieldLabel")}
@@ -426,7 +444,7 @@ export function ScopedSearchField({
         {showDropdown ? (
           <div
             className={`absolute left-0 top-full z-50 mt-1.5 overflow-hidden rounded-lg border border-ink-border bg-ink-surface shadow-lg shadow-black/40 ${
-              compact && !fluid ? "w-[min(24rem,calc(100vw-2rem))]" : "w-full"
+              compact && !fluid && !wide ? "w-[min(24rem,calc(100vw-2rem))]" : "w-full"
             }`}
           >
             <ul

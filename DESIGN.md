@@ -181,7 +181,7 @@ Interactive chrome is quiet and minimally weighted; content surfaces carry the o
 - **Internal Padding:** `p-3` (12px) for album cards, `p-4` (16px) for comment bubbles, `px-6 py-12` for empty states.
 
 ### Navigation
-- **Style:** A full-width bordered header (`border-b border-ink-border`), IBM Plex Mono `text-sm` links in Aged Linen, hover to paper. Locale switcher is `text-xs uppercase`; active locale is paper, inactive is Aged Linen. The user's name sits at far right with hover to VU Gold.
+- **Style:** A full-width bordered, sticky header (`border-b border-ink-border`, translucent ink with blur) in three zones on desktop: brand (amber monogram + the app name in Space Grotesk bold from `sm`, hidden between `lg` and `xl` where the row has no room) and the general navigation on the left, the catalog search filling the center (fluid, up to 30rem, 40px tall, with a `/` shortcut hint), and the account zone on the right. Navigation links are Space Grotesk 15px in Aged Linen with a soft Vinyl Surface background on hover; the current section is paper with a thin VU Gold underline. Monospace is not used for navigation: it stays for data (changed in `redesign-site-header`; before, links were IBM Plex Mono). Signed out, "Iniciar sesión" is a ghost action and "Crear cuenta" the VU Gold primary, both 40px tall. Locale switcher is `text-xs uppercase` mono (it is data); active locale is paper, inactive is Aged Linen. The user's name sits at far right with hover to VU Gold.
 
 ### Signature: Disc / Record
 - The vinyl placeholder and disc skeleton — concentric hairline circles with a filled center — appear anywhere imagery is missing (artist photos, covers, loading states). It is the system's most recognizable recurring object: a record, not an empty box.

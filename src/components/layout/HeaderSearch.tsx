@@ -5,6 +5,8 @@ import { ScopedSearchField } from "@/components/catalog/ScopedSearchField";
 interface HeaderSearchProps {
   /** Ocupa todo el ancho (fila de búsqueda del Header en pantallas angostas). */
   fluid?: boolean;
+  /** Escritorio: ancho fluido entre la navegación y la cuenta, 40 px y pista del atajo `/` (redesign-site-header). */
+  wide?: boolean;
   /**
    * `hero`: el mismo buscador en grande para el hero de Inicio sin sesión (campo alto y
    * botón "Buscar" visible). Misma navegación, sugerencias y reinicio que en el Header.
@@ -25,7 +27,7 @@ interface HeaderSearchProps {
 // pegada en el campo al pasar a otra sección. El hero de Inicio sin sesión usa
 // este mismo componente (`size="hero"`, redesign-anon-home-phase1) para que las
 // dos entradas no diverjan.
-export function HeaderSearch({ fluid = false, size = "header", autoFocus, onNavigate }: HeaderSearchProps) {
+export function HeaderSearch({ fluid = false, wide = false, size = "header", autoFocus, onNavigate }: HeaderSearchProps) {
   if (size === "hero") {
     return (
       <ScopedSearchField
@@ -42,6 +44,7 @@ export function HeaderSearch({ fluid = false, size = "header", autoFocus, onNavi
       variant="compact"
       resetAfterNavigate
       fluid={fluid}
+      wide={wide}
       autoFocus={autoFocus}
       onNavigate={onNavigate}
     />
