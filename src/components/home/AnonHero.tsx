@@ -26,11 +26,11 @@ export async function AnonHero() {
       aria-labelledby="home-hero-title"
       className="relative -mx-[calc(50vw-50%)] -mt-12 w-screen max-w-none overflow-hidden border-b border-ink-border"
     >
-      <div className="mx-auto grid w-full max-w-[88rem] items-center gap-8 px-4 pb-10 pt-10 sm:px-8 sm:pt-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-14 lg:py-20 xl:px-12">
+      <div className="mx-auto grid w-full max-w-[88rem] items-center gap-8 px-4 pb-10 pt-10 sm:px-8 sm:pt-14 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-14 lg:py-20 xl:px-12">
         <div className="flex min-w-0 flex-col">
           <h1
             id="home-hero-title"
-            className="text-balance font-display text-[clamp(2.6rem,5.2vw,4.75rem)] font-bold leading-[0.95] tracking-[-0.035em] text-paper"
+            className="text-balance font-display text-[clamp(2.25rem,4.2vw,4rem)] font-bold leading-[0.95] tracking-[-0.035em] text-paper"
           >
             <span className="block">{t("heroLine1")}</span>
             <span className="block text-amber">{t("heroLine2")}</span>
