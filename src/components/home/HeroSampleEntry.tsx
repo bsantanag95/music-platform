@@ -1,7 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { HERO_SAMPLE_ENTRY, HERO_WALL, heroWallTilePosition } from "@/lib/config/hero-covers";
-import { StarRatingDisplay } from "@/components/social/StarRatingDisplay";
-import { ScoreBadge } from "@/components/laminas/ScoreBadge";
+import { StarRatingValue } from "@/components/social/StarRatingValue";
 
 // Entrada de ejemplo del hero sin sesión (openspec: redesign-anon-home-phase1): enseña en el
 // primer viewport lo que distingue al producto —una escucha con su contexto, las estrellas y el
@@ -40,11 +39,15 @@ export async function HeroSampleEntry() {
           <p className="mt-1.5 font-data text-xs text-amber">{t("sampleContext")}</p>
         </div>
       </div>
-      <figcaption className="mt-3.5 flex items-center justify-between gap-3 border-t border-ink-border pt-3.5">
-        <StarRatingDisplay value={entry.stars} label={starsText} starClassName="size-4" decorative />
-        <ScoreBadge
-          score={{ stars: entry.stars, detailedScore: entry.detailedScore }}
-          className="px-2.5 py-1 !text-base"
+      {/* Forma de `rating-display`: fila de estrellas y `92/100` en lugar de `4,5`, número en tono
+          neutro (la nota no se codifica con color). Corrige la Fase 1, que usaba `ScoreBadge`. */}
+      <figcaption className="mt-3 border-t border-ink-border pt-2.5 [&>span>span:last-child]:text-sm">
+        <StarRatingValue
+          stars={String(entry.stars)}
+          detailedScore={entry.detailedScore}
+          label={t("sampleRatingLabel", { stars: starsText, score: entry.detailedScore })}
+          starClassName="size-4"
+          showScore
         />
       </figcaption>
     </figure>

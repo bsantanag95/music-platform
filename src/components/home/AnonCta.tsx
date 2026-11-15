@@ -11,8 +11,8 @@ export async function AnonCta() {
   ]);
 
   return (
-    <section className="flex w-full max-w-3xl flex-col items-center gap-4 rounded-lg border border-ink-border bg-ink-surface px-6 py-10 text-center">
-      <h2 className="max-w-md font-display text-lg text-paper">{tHome("anonClosingTitle")}</h2>
+    <section className="flex w-full flex-col items-center gap-5 rounded-xl border border-ink-border bg-ink-surface px-6 py-14 text-center">
+      <h2 className="max-w-xl text-balance font-display text-[clamp(1.875rem,2.8vw,2.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-paper">{tHome("anonClosingTitle")}</h2>
       <Link href="/auth/register">
         <Button variant="primary">{t("register")}</Button>
       </Link>

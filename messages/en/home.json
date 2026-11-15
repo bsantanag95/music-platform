@@ -83,5 +83,11 @@
   "sampleContext": "Rediscovery",
   "sampleStars": "{stars, number} stars",
   "sampleAria": "Example diary entry: {title}, {stars}, score {score} out of 100",
-  "communityPeopleLink": "Meet the listeners"
+  "communityPeopleLink": "Meet the listeners",
+  "featuredAlbumsDescription": "Curated selections to get into the catalog without knowing where to start.",
+  "collectionsSeeAll": "See all collections",
+  "topRatedDescription": "What the people logging their listens rate highest.",
+  "topRatedSeeAll": "See in Explore",
+  "communityPeopleHint": "Find people and follow what they listen to.",
+  "sampleRatingLabel": "{stars}, score {score} out of 100"
 }

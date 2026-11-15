@@ -8,6 +8,8 @@ import type { HomePublicList } from "@/services/home/home";
 
 interface PublicListsProps {
   entries: HomePublicList[];
+  /** `panel` (portada sin sesión): superficie propia y título `h3`, dentro de la sección de la comunidad. */
+  variant?: "section" | "panel";
 }
 
 // Listas públicas recientes de cualquier usuario con perfil público, sin
@@ -15,15 +17,23 @@ interface PublicListsProps {
 // se suman cuando exista el sistema de roles de plataforma. Bloque de prueba
 // social: siempre en layout denso, cada fila con el mini-mosaico de carátulas
 // de la lista (mismo de "Retoma una lista") para que se reconozca de un vistazo.
-export async function PublicLists({ entries }: PublicListsProps) {
+export async function PublicLists({ entries, variant = "section" }: PublicListsProps) {
   if (entries.length === 0) return null;
 
   const [tHome, tLists] = await Promise.all([getTranslations("home"), getTranslations("lists")]);
 
   return (
-    <section className="flex w-full min-w-0 flex-col gap-4">
+    <section
+      className={`flex w-full min-w-0 flex-col gap-4 ${
+        variant === "panel" ? "rounded-xl border border-ink-border bg-ink-surface p-5" : ""
+      }`}
+    >
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="min-w-0 truncate font-display text-xl text-paper">{tHome("publicListsTitle")}</h2>
+        {variant === "panel" ? (
+          <h3 className="min-w-0 truncate font-display text-lg text-paper">{tHome("publicListsTitle")}</h3>
+        ) : (
+          <h2 className="min-w-0 truncate font-display text-xl text-paper">{tHome("publicListsTitle")}</h2>
+        )}
         <Link
           href="/lists"
           className="shrink-0 whitespace-nowrap font-data text-xs text-paper-muted transition-colors hover:text-paper"
