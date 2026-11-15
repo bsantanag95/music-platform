@@ -36,8 +36,6 @@
   "collectionItems": "{count, plural, one {# album} other {# albums}}",
   "albumCoverLabel": "Album cover",
   "featuresTitle": "What you can do",
-  "featuresPrev": "See previous features",
-  "featuresNext": "See more features",
   "feature1Title": "Log what you listened to",
   "feature1Body": "Every listen goes into your diary with zero friction — first listen, relisten, rediscovery — plus private notes if you want.",
   "feature2Title": "Rate it your way",
@@ -89,5 +87,16 @@
   "topRatedDescription": "What the people logging their listens rate highest.",
   "topRatedSeeAll": "See in Explore",
   "communityPeopleHint": "Find people and follow what they listen to.",
-  "sampleRatingLabel": "{stars}, score {score} out of 100"
+  "sampleRatingLabel": "{stars}, score {score} out of 100",
+  "featuresDescription": "Listening never requires an opinion: rating and commenting are separate layers, whenever you want.",
+  "featureRatingDemoLabel": "4.5 stars, score 92 out of 100",
+  "featureRatingDemoDetailed": "Detailed score (optional)",
+  "releasesDescription": "What just came out and what is coming, from the most-listened artists. The calendar updates itself.",
+  "releasesRecent": "Recent",
+  "releasesUpcoming": "Upcoming",
+  "releasesPublishedBadge": "Out",
+  "releasesShowMore": "{count, plural, one {Show # more} other {Show # more}}",
+  "releasesShowLess": "Show less",
+  "anonClosingBody": "No streaks, no backlog, no pressure. Just what you listened to and what you thought of it.",
+  "closingExplore": "Explore the catalog"
 }

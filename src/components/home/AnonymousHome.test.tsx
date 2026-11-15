@@ -7,6 +7,7 @@ import { AnonymousHome } from "./AnonymousHome";
 import { AnonHero } from "./AnonHero";
 import { HowItWorks } from "./HowItWorks";
 import { AnonCta } from "./AnonCta";
+import { HomeReleases } from "./HomeReleases";
 import { QuickLinks } from "./QuickLinks";
 import { FeedPreview } from "./FeedPreview";
 import { CollectionMosaic } from "./CollectionMosaic";
@@ -137,6 +138,13 @@ describe("AnonymousHome", () => {
     expect(rail.layout).toBe("scroll");
     expect(rail.artistNames).toEqual({ [album.id]: "Radiohead" });
     expect(rail.stats).toEqual({ [album.id]: "★ 4,3" });
+  });
+
+  it("los lanzamientos van como horario y el cierre ofrece explorar si está habilitado", async () => {
+    const element = await AnonymousHome();
+
+    expect(findProps(element, HomeReleases)?.layout).toBe("timetable");
+    expect(findProps(element, AnonCta)?.exploreEnabled).toBe(true);
   });
 
   it("la comunidad va en tarjetas y el acceso a personas aparece aunque no haya actividad", async () => {

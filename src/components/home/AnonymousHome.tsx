@@ -31,7 +31,7 @@ export const PUBLIC_LIST_LIMIT = 6;
 // Inicio del visitante anónimo: hero (Fase 1) y, debajo, el cuerpo en el mismo contenedor ancho
 // (openspec: redesign-anon-home-phase2, dirección «C · Disquería»): colecciones en mosaico y el riel de
 // mejor valorados —la obra primero—, la comunidad en dos columnas como prueba social, y luego
-// lanzamientos, funciones y el cierre (su interior se rediseña en la Fase 3). Cada sección usa
+// lanzamientos como horario, funciones y el cierre (Fase 3). Cada sección usa
 // `HomeSectionHeading`. Ver docs/05-features/home.md.
 export async function AnonymousHome() {
   const [tHome, tCat, locale] = await Promise.all([
@@ -156,11 +156,11 @@ export async function AnonymousHome() {
           </div>
         </section>
 
-        {/* Fase 3: lanzamientos como horario, funciones y cierre. Por ahora solo pasan al contenedor
-            ancho; sus secciones traen su propio ancho de lectura. */}
-        <HomeReleases releases={homeReleases} />
+        {/* Cierre de la página (redesign-anon-home-phase3): lanzamientos como horario, las funciones a la
+            vista y el panel final. */}
+        <HomeReleases releases={homeReleases} layout="timetable" />
         <HowItWorks />
-        <AnonCta />
+        <AnonCta exploreEnabled={exploreEnabled} />
       </div>
     </main>
   );

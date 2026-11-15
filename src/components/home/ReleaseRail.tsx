@@ -6,18 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 import { albumHref } from "@/lib/catalog-links";
 import type { HomeRelease } from "@/services/home/home";
-
-// Fecha corta de lanzamiento: día y mes ("12 sept"), con el año solo cuando no
-// es el actual — en un riel alrededor de hoy el día importa más que el año.
-function formatReleaseDate(iso: string, locale: string) {
-  const date = new Date(`${iso}T00:00:00`);
-  const sameYear = date.getFullYear() === new Date().getFullYear();
-  return date.toLocaleDateString(locale, {
-    day: "numeric",
-    month: "short",
-    ...(sameYear ? {} : { year: "numeric" }),
-  });
-}
+import { formatReleaseDate } from "./release-dates";
 
 function prefersReducedMotion() {
   return (
@@ -38,7 +27,7 @@ const STAGGER_CAP = 6;
 // "hoy" (la única veta de ámbar del bloque, como una aguja de VU) entre lo
 // que ya salió y lo que viene. Las tarjetas futuras van atenuadas. Client
 // component por las flechas ‹ ›, que van *dentro* del riel montadas sobre los
-// bordes (mismo patrón que FeatureCarousel).
+// bordes.
 export function ReleaseRail({
   releases,
   locale,

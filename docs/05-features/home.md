@@ -216,25 +216,23 @@ landing anónimo lo refleja en dos piezas:
 - **El Inicio con sesión no cambia**: lidera con contenido propio; el bloque editorial es
   exclusivo del landing anónimo (test estructural en `AuthenticatedHome.test.tsx`).
 
-### "Qué podés hacer" — carrusel de funcionalidades
+### "Qué puedes hacer" — bloque de funcionalidades (`redesign-anon-home-phase3`)
 
-Reemplaza la tira de 3 pasos ("Cómo funciona") por un carrusel horizontal con las 9
-capacidades relevantes del producto: diario, rating dual, reseñas, favoritos, listas,
-colección física, seguir, catálogo preciso, privacidad.
+Las 9 capacidades del producto (diario, rating dual, reseñas, favoritos, listas, colección
+física, seguir, catálogo preciso, privacidad) se ven **todas a la vez**. Hasta
+`redesign-anon-home-phase3` eran un carrusel (`FeatureCarousel`, eliminado) que a 1440 px
+dejaba a la vista 3 de 9 y explicaba el doble puntaje solo con texto.
 
-- `HowItWorks` (`src/components/home/HowItWorks.tsx`) sigue siendo el server component: sólo
-  resuelve i18n (`feature{1..9}{Title,Body}`, `featuresTitle`, `featuresPrev/Next`) y delega
-  en `FeatureCarousel`.
-- `FeatureCarousel` (`src/components/home/FeatureCarousel.tsx`, **client**): `<ul>` con
-  `overflow-x-auto` + `snap-x snap-mandatory`, tarjetas de ancho fijo (`w-64`, `shrink-0`) —
-  **no bajan a una fila nueva**, siguen en horizontal. Flechas ‹ › (`scrollBy` de ~0.8 del
-  ancho visible) que sólo aparecen si hay overflow y se deshabilitan en cada extremo; el
-  contenedor también scrollea con trackpad/teclado (`tabIndex={0}`).
-- **Sin animación de scroll** (`scrollBy` directo, sin `behavior: "smooth"`): el sistema de
-  diseño evita el movimiento decorativo y el salto nítido entre grupos encaja mejor; además
-  no hace falta un caso especial para `prefers-reduced-motion`.
-- El estado de las flechas se refresca síncrono tras cada `step()` (no sólo por el evento
-  `scroll`) + un `ResizeObserver` para el caso de resize.
+- `HowItWorks` (server) arma `feature{1..9}{Title,Body}` bajo `HomeSectionHeading`
+  (`featuresTitle`, `featuresDescription`).
+- **Tres paneles con demostración** (`DEMO_FEATURES = [1, 2, 6]`): diario (tres filas con
+  carátulas del mosaico del hero y los contextos de escucha de `diary.context`), doble puntaje
+  (`StarRatingValue` con `92/100`, forma de `rating-display`, y una barra 1–100 decorativa) y
+  colección física (una copia con el formato y dos atributos de `collection.attribute`, el
+  vocabulario cerrado real). Las demostraciones son `aria-hidden`, fijas, sin usuarios ni
+  controles.
+- **Las otras seis** (`LISTED_FEATURES`) van en una lista con icono SVG propio, título y una
+  línea.
 
 ### Cuerpo de la portada sin sesión (`redesign-anon-home-phase2`)
 
@@ -261,9 +259,11 @@ sesión no cambian.
   `PublicLists variant="panel"` y `PeopleCard`. Sin actividad, la columna lateral ocupa el ancho.
 - **Entrada de ejemplo del hero:** desde esta fase usa `StarRatingValue` (fila de estrellas +
   `92/100` en tono neutro) en lugar de `ScoreBadge`, que coloreaba el puntaje según su valor.
-- Lanzamientos (`ReleaseRail`, compartido con el Inicio con sesión), «Qué puedes hacer» y el
-  cierre pasan al contenedor ancho; los dos últimos, exclusivos de la portada sin sesión, ya usan
-  la escala de título nueva. Su rediseño interior es la Fase 3.
+- Lanzamientos, «Qué puedes hacer» y el cierre pasan al contenedor ancho. Su rediseño interior
+  es la Fase 3 (`redesign-anon-home-phase3`): horario de lanzamientos, bloque de funcionalidades
+  (ver sus secciones) y **cierre en panel** (`AnonCta`): el mosaico de carátulas de fondo,
+  atenuado y enmascarado; `anonClosingTitle`, `anonClosingBody` y dos acciones, «Crear cuenta» →
+  `/auth/register` y, con el descubrimiento habilitado, «Explorar el catálogo» → `/explore`.
 
 ### Actividad de la comunidad y listas públicas — layout
 
@@ -390,7 +390,18 @@ todavía sin salir (futuro). La distinción es limpia y no se solapa. El recorri
 **Estado:** implementado. El diseño/layout viene de `redesign-frontend`; los datos reales, de
 `add-home-release-calendar` (calendario desde ListenBrainz, ADR 0029).
 
-### Diseño: un solo riel en línea de tiempo
+### Portada sin sesión: horario (`redesign-anon-home-phase3`)
+
+Sin sesión, `HomeReleases layout="timetable"` presenta la selección anónima (la misma, con los
+mismos filtros y topes) como `ReleaseTimetable`: dos partes, «Recientes» (fecha descendente) y
+«Próximos» (ascendente), lado a lado desde `lg`; cada fila es fecha corta (`formatReleaseDate`,
+compartida con el riel en `release-dates.ts`), miniatura, título, artista y estado
+(«Publicado» / «Próximo»), enlazada a `albumHref`. Seis filas por parte y el resto dentro de un
+`<details>` nativo («Ver N más»). Una parte sin discos no se muestra. Préstamo de la propuesta A
+de la auditoría: el riel ponía flechas sobre las carátulas y cortaba tarjetas en los bordes. **Con
+sesión no cambia**: el riel y el selector de abajo siguen igual.
+
+### Diseño: un solo riel en línea de tiempo (Inicio con sesión)
 
 En vez de dos rieles de carátulas casi idénticos apilados, **un único riel horizontal
 ordenado por fecha** con un marcador "hoy" en el medio:
@@ -510,11 +521,9 @@ título y fecha en vez del error "Sin ediciones disponibles".
   habilitarlas es una decisión de producto aparte.
 - Copy y diseño visual concreto de cada bloque (fuera del alcance de este documento, que
   cierra la estructura de contenido, no el layout).
-- **Modernización de la portada pública en tres fases** (dirección «C · Disquería», auditoría
-  del 2026-11-14, mockups en `mockups/home-2026-11/`): Fase 1 `redesign-anon-home-phase1`
-  (Header con búsqueda en pantallas angostas, hero con buscador, caja de carátulas y entrada de
-  ejemplo, acciones directas); Fase 2 cuerpo a ancho completo; Fase 3 lanzamientos como horario,
-  funciones y cierre. El plan completo está en el `design.md` de la Fase 1.
+- **Pie de página en móvil:** la auditoría de la portada midió 1105 px de alto a 390 px. Es
+  global (todas las páginas), así que quedó fuera de las tres fases; plegar sus columnas en
+  móvil sería un cambio aparte.
 - **Tipografías — implementación futura a analizar.** La dirección C proponía Bricolage
   Grotesque para titulares y Geist / Geist Mono para interfaz y datos. Las tres fases mantienen
   la tríada actual (Space Grotesk, Source Serif 4, IBM Plex Mono). Antes de decidir un cambio

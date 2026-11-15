@@ -39,11 +39,10 @@
   --radius-lg: 10px;
 }
 
-/* Movimiento de los carruseles de Inicio (FeatureCarousel, ReleaseRail).
+/* Movimiento del riel de lanzamientos de Inicio (ReleaseRail, con sesión).
    Deliberadamente escaso: una entrada escalonada de las tarjetas cuando el
-   bloque aparece y un surco de vinilo que gira despacio al pasar el cursor.
-   Ambos quedan neutralizados por el bloque `prefers-reduced-motion` de más
-   abajo y por el prefijo `motion-safe:` en las utilidades que los aplican. */
+   bloque aparece. Queda neutralizada por el bloque `prefers-reduced-motion` de más
+   abajo y por el prefijo `motion-safe:` en la utilidad que la aplica. */
 @keyframes card-reveal {
   from {
     opacity: 0;
@@ -74,12 +73,6 @@
   }
   to {
     stroke-dashoffset: 0;
-  }
-}
-
-@keyframes groove-turn {
-  to {
-    transform: rotate(360deg);
   }
 }
 
