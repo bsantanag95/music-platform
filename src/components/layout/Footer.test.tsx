@@ -26,8 +26,10 @@ vi.mock("next-intl/server", () => ({
 }));
 
 vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
-    <a href={href}>{children}</a>
+  Link: ({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) => (
+    <a href={href} className={className}>
+      {children}
+    </a>
   ),
 }));
 
@@ -47,6 +49,49 @@ describe("Footer", () => {
   it("renderiza un único landmark contentinfo", async () => {
     await renderFooter();
     expect(screen.getAllByRole("contentinfo")).toHaveLength(1);
+  });
+
+  // jsdom no aplica media queries: estos tests fijan las clases que hacen compacto el pie por debajo
+  // de `md` (openspec: compact-mobile-footer); la medida real (890 px a 390) se verificó en el navegador.
+  describe("compacto en móvil", () => {
+    it("los títulos de grupo siguen siendo encabezados, ocultos a la vista solo por debajo de md", async () => {
+      await renderFooter();
+      for (const label of ["Explorar", "Tu cuenta", "Recursos", "Conectar"]) {
+        const nav = screen.getByRole("navigation", { name: label });
+        const heading = within(nav).getByRole("heading", { level: 2 });
+        expect(heading.className).toContain("sr-only");
+        expect(heading.className).toContain("md:not-sr-only");
+      }
+    });
+
+    it("los enlaces de cada grupo van en dos columnas por debajo de md", async () => {
+      await renderFooter();
+      const list = within(screen.getByRole("navigation", { name: "Explorar" })).getByRole("list");
+      expect(list.className).toContain("grid-cols-2");
+      expect(list.className).toContain("md:flex-col");
+    });
+
+    it("cada enlace de navegación, contacto, redes, políticas y volver arriba tiene 40 px de área táctil en móvil", async () => {
+      await renderFooter();
+      const footer = screen.getByRole("contentinfo");
+      const attribution = screen.getByRole("region", { name: footerEs.attribution.label });
+      const links = within(footer)
+        .getAllByRole("link")
+        .filter((link) => !attribution.contains(link));
+      expect(links.length).toBeGreaterThan(10);
+      for (const link of links) {
+        expect(link.className).toContain("min-h-10");
+        expect(link.className).toContain("md:min-h-0");
+      }
+    });
+
+    it("en móvil oculta la tagline y conserva la frase de que no es un servicio de streaming", async () => {
+      await renderFooter();
+      const tagline = screen.getByText(commonEs.tagline);
+      expect(tagline.className).toContain("hidden");
+      expect(tagline.className).toContain("md:block");
+      expect(screen.getByText(footerEs.mission).className).not.toContain("hidden");
+    });
   });
 
   it("expone cada grupo como nav con aria-label localizado", async () => {

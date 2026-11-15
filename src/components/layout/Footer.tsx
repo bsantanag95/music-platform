@@ -36,19 +36,23 @@ export async function Footer({ user = null, exploreEnabled = false, variant = "f
   const minimal = variant === "minimal";
 
   return (
-    <footer className="w-full overflow-x-clip border-t border-ink-border bg-ink px-4 py-12 font-data text-sm">
-      <div className={`mx-auto flex flex-col gap-10 ${minimal ? "max-w-3xl" : "max-w-6xl"}`}>
+    // En móvil (por debajo de `md`) el pie es compacto (openspec: compact-mobile-footer): márgenes menores,
+    // enlaces de cada grupo en dos columnas con 40 px de área táctil, títulos de grupo solo para lectores de
+    // pantalla y sin la tagline. Desde `md` no cambia.
+    <footer className="w-full overflow-x-clip border-t border-ink-border bg-ink px-4 py-8 font-data text-sm md:py-12">
+      <div className={`mx-auto flex flex-col gap-6 md:gap-10 ${minimal ? "max-w-3xl" : "max-w-6xl"}`}>
         {minimal ? null : (
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1.2fr]">
+        <div className="grid gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-[1.6fr_1fr_1fr_1.2fr]">
           {/* Identidad */}
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2 md:gap-3">
             <div className="flex items-center gap-2">
               <Logo />
               <span className="font-display text-base font-bold text-paper">
                 {appName}
               </span>
             </div>
-            <p className="font-body text-paper-muted">{tCommon("tagline")}</p>
+            {/* En móvil queda solo la frase de abajo, que lleva la aclaración de que no es streaming. */}
+            <p className="hidden font-body text-paper-muted md:block">{tCommon("tagline")}</p>
             <p className="max-w-xs font-body text-xs text-paper-muted">
               {t("mission")}
             </p>
@@ -85,23 +89,21 @@ export async function Footer({ user = null, exploreEnabled = false, variant = "f
           </FooterNav>
 
           {/* Recursos + Conectar */}
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-6 md:gap-8">
             <FooterNav label={t("resources.label")}>
               <FooterLink href="/about">{t("resources.about")}</FooterLink>
               <FooterLink href="/help">{t("resources.help")}</FooterLink>
             </FooterNav>
 
-            <nav aria-label={t("connect.label")} className="flex flex-col gap-2">
-              <h2 className="font-display text-xs font-bold uppercase tracking-wide text-paper">
-                {t("connect.label")}
-              </h2>
+            <nav aria-label={t("connect.label")} className="flex flex-col md:gap-2">
+              <h2 className={GROUP_HEADING_CLASS}>{t("connect.label")}</h2>
               <a
                 href={`mailto:${CONTACT_EMAIL}`}
-                className="text-paper-muted transition-colors hover:text-paper"
+                className={`text-paper-muted transition-colors hover:text-paper ${TAP_TARGET_CLASS}`}
               >
                 {t("connect.contact")}: {CONTACT_EMAIL}
               </a>
-              <ul className="flex flex-wrap gap-x-4 gap-y-2">
+              <ul className="flex flex-wrap gap-x-4 md:gap-y-2">
                 {SOCIAL_LINKS.map((link) => (
                   <li key={link.id}>
                     <a
@@ -109,7 +111,7 @@ export async function Footer({ user = null, exploreEnabled = false, variant = "f
                       target="_blank"
                       rel="noopener noreferrer me"
                       aria-label={`${t(`connect.social.${link.id}`)} (${t("newTab")})`}
-                      className="text-paper-muted transition-colors hover:text-amber"
+                      className={`text-paper-muted transition-colors hover:text-amber ${TAP_TARGET_CLASS}`}
                     >
                       {t(`connect.social.${link.id}`)}
                     </a>
@@ -125,7 +127,7 @@ export async function Footer({ user = null, exploreEnabled = false, variant = "f
             (qué viene de dónde, licencias, límites) vive en `/about/data-sources`, que no se enlaza desde acá. */}
         <section
           aria-label={t("attribution.label")}
-          className={`flex flex-col gap-2 font-body text-sm text-paper-muted ${minimal ? "" : "border-t border-ink-border pt-6"}`}
+          className={`flex flex-col gap-2 font-body text-sm text-paper-muted ${minimal ? "" : "border-t border-ink-border pt-5 md:pt-6"}`}
         >
           <p>
             {t.rich("attribution.summary", {
@@ -162,10 +164,11 @@ export async function Footer({ user = null, exploreEnabled = false, variant = "f
         </section>
 
         {/* Barra inferior */}
-        <div className="flex flex-col gap-3 border-t border-ink-border pt-6 text-xs text-paper-muted sm:flex-row sm:items-center sm:justify-between">
+        {/* En móvil, copyright y "volver arriba" comparten la primera línea y las políticas van debajo. */}
+        <div className="flex flex-wrap items-center justify-between gap-x-4 border-t border-ink-border pt-5 text-xs text-paper-muted sm:flex-nowrap sm:gap-3 md:pt-6">
           <p>{t("bottom.copyright", { year, appName })}</p>
-          <nav aria-label={t("bottom.label")}>
-            <ul className="flex flex-wrap gap-x-4 gap-y-1">
+          <nav aria-label={t("bottom.label")} className="order-last w-full sm:order-none sm:w-auto">
+            <ul className="flex flex-wrap gap-x-4 md:gap-y-1">
               <FooterLink href="/terms">{t("bottom.terms")}</FooterLink>
               <FooterLink href="/privacy">{t("bottom.privacy")}</FooterLink>
               <FooterLink href="/cookies">{t("bottom.cookies")}</FooterLink>
@@ -173,7 +176,7 @@ export async function Footer({ user = null, exploreEnabled = false, variant = "f
             </ul>
           </nav>
           {minimal ? null : (
-            <a href="#top" className="transition-colors hover:text-paper">
+            <a href="#top" className={`w-fit transition-colors hover:text-paper ${TAP_TARGET_CLASS}`}>
               {t("backToTop")} ↑
             </a>
           )}
@@ -183,13 +186,19 @@ export async function Footer({ user = null, exploreEnabled = false, variant = "f
   );
 }
 
+/** Área táctil de 40 px por debajo de `md`; desde `md`, el enlace vuelve a su alto de texto. */
+const TAP_TARGET_CLASS = "flex min-h-10 items-center md:inline md:min-h-0";
+
+/** Título de grupo: encabezado real siempre; en móvil solo para lectores de pantalla. */
+const GROUP_HEADING_CLASS =
+  "sr-only font-display text-xs font-bold uppercase tracking-wide text-paper md:not-sr-only";
+
 function FooterNav({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <nav aria-label={label} className="flex flex-col gap-2">
-      <h2 className="font-display text-xs font-bold uppercase tracking-wide text-paper">
-        {label}
-      </h2>
-      <ul className="flex flex-col gap-1.5">{children}</ul>
+    <nav aria-label={label} className="flex flex-col md:gap-2">
+      <h2 className={GROUP_HEADING_CLASS}>{label}</h2>
+      {/* En móvil, dos columnas: el grupo ocupa la mitad de filas. */}
+      <ul className="grid grid-cols-2 gap-x-4 md:flex md:flex-col md:gap-1.5">{children}</ul>
     </nav>
   );
 }
@@ -205,7 +214,7 @@ function FooterLink({
     <li>
       <Link
         href={href}
-        className="text-paper-muted transition-colors hover:text-paper"
+        className={`text-paper-muted transition-colors hover:text-paper ${TAP_TARGET_CLASS}`}
       >
         {children}
       </Link>
