@@ -1,6 +1,8 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { ReleaseRail } from "./ReleaseRail";
 import { ReleaseSwitcher } from "./ReleaseSwitcher";
+import { ReleaseTimetable } from "./ReleaseTimetable";
+import { HomeSectionHeading } from "./HomeSectionHeading";
 import { PERSONAL_DEFAULT_MIN } from "@/services/home/release-calendar";
 import type { HomeRelease } from "@/services/home/home";
 
@@ -16,11 +18,43 @@ import type { HomeRelease } from "@/services/home/home";
 export async function HomeReleases({
   releases,
   personalReleases,
+  layout = "rail",
 }: {
   releases: HomeRelease[];
   personalReleases?: HomeRelease[];
+  /**
+   * `timetable` (solo la portada sin sesión, redesign-anon-home-phase3): la selección anónima como
+   * horario de dos partes bajo `HomeSectionHeading`. Por defecto, el riel (o el selector con sesión).
+   */
+  layout?: "rail" | "timetable";
 }) {
   const [t, locale] = await Promise.all([getTranslations("home"), getLocale()]);
+
+  if (layout === "timetable") {
+    if (releases.length === 0) return null;
+    return (
+      <section aria-labelledby="home-releases" className="flex flex-col gap-6">
+        <HomeSectionHeading
+          id="home-releases"
+          title={t("releasesTitle")}
+          description={t("releasesDescription")}
+        />
+        <ReleaseTimetable
+          releases={releases}
+          locale={locale}
+          labelledBy="home-releases"
+          labels={{
+            recent: t("releasesRecent"),
+            upcoming: t("releasesUpcoming"),
+            published: t("releasesPublishedBadge"),
+            upcomingBadge: t("releasesUpcomingBadge"),
+            showMore: (count) => t("releasesShowMore", { count }),
+            showLess: t("releasesShowLess"),
+          }}
+        />
+      </section>
+    );
+  }
 
   const railProps = {
     locale,

@@ -12,6 +12,7 @@ import { WelcomeLink } from "./WelcomeLink";
 import { RecentSelfActivity } from "./RecentSelfActivity";
 import { ResumeList } from "./ResumeList";
 import { WelcomePanel } from "./WelcomePanel";
+import { HomeReleases } from "./HomeReleases";
 import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
 
 vi.mock("@/lib/year-invitation-request", () => ({ yearInvitationForRequest: vi.fn(async () => null) }));
@@ -79,6 +80,17 @@ describe("AuthenticatedHome", () => {
     expect(feed.listFeed).toHaveBeenCalledWith("u1", 1, 10);
     expect(findElement(element, FeedPreview)).not.toBeNull();
     expect(findElement(element, OnboardingPrompt)).toBeNull();
+  });
+
+  it("los lanzamientos siguen en el riel con selector, no en el horario de la portada sin sesión", async () => {
+    vi.mocked(following.listFollowing).mockResolvedValue({ users: [], page: 1, pageSize: 1, hasNext: false });
+
+    const element = await AuthenticatedHome({ user });
+
+    const releases = findElement(element, HomeReleases);
+    expect(releases).not.toBeNull();
+    expect(releases!.props?.layout).toBeUndefined();
+    expect(releases!.props?.personalReleases).toBeDefined();
   });
 
   it("sin seguidos: muestra el onboarding y no pide el preview de feed", async () => {
