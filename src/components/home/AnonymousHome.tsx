@@ -5,9 +5,11 @@ import { HowItWorks } from "@/components/home/HowItWorks";
 import { HomeReleases } from "@/components/home/HomeReleases";
 import { PopularComments } from "@/components/home/PopularComments";
 import { AnonCta } from "@/components/home/AnonCta";
-import { CollectionRail } from "@/components/discovery/CollectionRail";
+import { HomeSectionHeading } from "@/components/home/HomeSectionHeading";
+import { CollectionMosaic } from "@/components/home/CollectionMosaic";
+import { PeopleCard } from "@/components/home/PeopleCard";
 import { AlbumRail } from "@/components/discovery/AlbumRail";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import {
   ensureReleaseCalendarFresh,
   listHomeReleases,
@@ -15,22 +17,28 @@ import {
   listPublicLists,
 } from "@/services/home/home";
 import { listCommunityActivity } from "@/services/activity/community-activity";
-import { listFeaturedCollections, listTopRated } from "@/services/discovery/discovery";
+import { albumArtistNames, listFeaturedCollections, listTopRated } from "@/services/discovery/discovery";
 import { CURATOR_USERNAME } from "@/services/discovery/constants";
 import { isExploreEnabled } from "@/lib/config/discovery";
+import { formatStars } from "@/components/album/album-format";
 import type { ReleaseGroupCategory } from "@/lib/api/schemas";
 
-// Inicio del visitante anónimo: hero visual + propuesta de valor (el álbum como
-// obra) + un bloque editorial de álbumes que asoma /explore, con los bloques de
-// la comunidad como prueba social debajo, el carrusel de funcionalidades y el
-// CTA de registro. Ver docs/05-features/home.md.
+/** Entradas de actividad en tarjetas: la primera va a lo ancho y las otras seis llenan tres filas de dos. */
+export const ACTIVITY_CARD_LIMIT = 7;
+/** Listas públicas en el panel lateral: prueba social, no contenido central. */
+export const PUBLIC_LIST_LIMIT = 6;
+
+// Inicio del visitante anónimo: hero (Fase 1) y, debajo, el cuerpo en el mismo contenedor ancho
+// (openspec: redesign-anon-home-phase2, dirección «C · Disquería»): colecciones en mosaico y el riel de
+// mejor valorados —la obra primero—, la comunidad en dos columnas como prueba social, y luego
+// lanzamientos, funciones y el cierre (su interior se rediseña en la Fase 3). Cada sección usa
+// `HomeSectionHeading`. Ver docs/05-features/home.md.
 export async function AnonymousHome() {
-  const [tHome, tCat] = await Promise.all([
+  const [tHome, tCat, locale] = await Promise.all([
     getTranslations("home"),
     getTranslations("catalog.artist"),
+    getLocale(),
   ]);
-  // Prueba social, no contenido central: top-N más corto y layout compacto.
-  const previewLimit = 6;
   const exploreEnabled = isExploreEnabled();
 
   const [
@@ -41,8 +49,8 @@ export async function AnonymousHome() {
     topRated,
     featuredCollections,
   ] = await Promise.all([
-    listCommunityActivity(null, 1, previewLimit).then((page) => page.entries),
-    listPublicLists(null, previewLimit),
+    listCommunityActivity(null, 1, ACTIVITY_CARD_LIMIT).then((page) => page.entries),
+    listPublicLists(null, PUBLIC_LIST_LIMIT),
     listPopularComments(),
     listHomeReleases(),
     listTopRated(),
@@ -60,40 +68,100 @@ export async function AnonymousHome() {
     live_other: tCat("categories.live_other"),
   } satisfies Record<ReleaseGroupCategory, string>;
 
+  // El riel de mejor valorados muestra el artista y el promedio de estrellas (lo que ordena el
+  // ranking), como en /explore.
+  const topRatedArtists = topRated.length > 0 ? await albumArtistNames(topRated.map((album) => album.id)) : {};
+  const topRatedStats = Object.fromEntries(
+    topRated.map((album) => [album.id, `★ ${formatStars(album.avgStars, locale)}`]),
+  );
+
+  const totalComments =
+    popularComments.artist.length + popularComments["release-group"].length + popularComments.recording.length;
+  const hasSideContent = totalComments > 0 || publicLists.length > 0;
+
   return (
     <main className="flex min-h-screen flex-col items-center gap-12 overflow-x-clip px-4 py-12">
       <AnonHero />
 
-      {/* Bloque editorial de álbumes: la obra primero, la prueba social después.
-          Cada riel colapsa por su cuenta; si ambos vienen vacíos no hay bloque. */}
-      {(featuredCollections.length > 0 || topRated.length > 0) && (
-        <div className="flex w-full max-w-3xl flex-col gap-10">
-          <CollectionRail
-            heading={tHome("featuredAlbumsHeading")}
-            collections={featuredCollections}
-            curatorUsername={CURATOR_USERNAME}
-            itemsLabel={(count) => tHome("collectionItems", { count })}
-          />
-          <AlbumRail
-            heading={tHome("communityTopRatedHeading")}
-            albums={topRated}
-            categoryLabels={categoryLabels}
-            coverLabel={tHome("albumCoverLabel")}
-          />
-        </div>
-      )}
+      <div className="flex w-full max-w-[88rem] flex-col gap-16 sm:px-4 lg:gap-24 xl:px-8">
+        {/* La obra primero: cada parte colapsa por su cuenta. */}
+        {featuredCollections.length > 0 ? (
+          <section aria-labelledby="home-collections" className="flex flex-col gap-6">
+            <HomeSectionHeading
+              id="home-collections"
+              title={tHome("featuredAlbumsHeading")}
+              description={tHome("featuredAlbumsDescription")}
+              seeAll={{ href: "/explore/collections", label: tHome("collectionsSeeAll") }}
+            />
+            <CollectionMosaic
+              collections={featuredCollections}
+              curatorUsername={CURATOR_USERNAME}
+              itemsLabel={(count) => tHome("collectionItems", { count })}
+              labelledBy="home-collections"
+            />
+          </section>
+        ) : null}
 
-      <div className="grid w-full max-w-3xl gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-start">
-        <CommunityActivity entries={communityActivity} showPeopleLink />
-        <PublicLists entries={publicLists} />
+        {topRated.length > 0 ? (
+          <section aria-labelledby="home-top-rated" className="flex flex-col gap-6">
+            <HomeSectionHeading
+              id="home-top-rated"
+              title={tHome("communityTopRatedHeading")}
+              description={tHome("topRatedDescription")}
+              seeAll={exploreEnabled ? { href: "/explore", label: tHome("topRatedSeeAll") } : undefined}
+            />
+            <AlbumRail
+              heading={tHome("communityTopRatedHeading")}
+              albums={topRated}
+              categoryLabels={categoryLabels}
+              coverLabel={tHome("albumCoverLabel")}
+              layout="scroll"
+              headerless
+              artistNames={topRatedArtists}
+              stats={topRatedStats}
+            />
+          </section>
+        ) : null}
+
+        {/* Prueba social: la actividad en la columna principal; comentarios y listas al costado. El
+            acceso a personas va siempre, aunque la comunidad venga vacía. */}
+        <section aria-labelledby="home-community" className="flex flex-col gap-6">
+          <HomeSectionHeading
+            id="home-community"
+            title={tHome("communityActivityTitle")}
+            description={tHome("communityActivitySubtitle")}
+            seeAll={communityActivity.length > 0 ? { href: "/activity", label: tHome("feedPreviewSeeAll") } : undefined}
+          />
+          <div
+            className={`grid gap-6 ${
+              communityActivity.length > 0 ? "lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:items-start" : ""
+            }`}
+          >
+            <CommunityActivity
+              entries={communityActivity}
+              layout="cards"
+              label={tHome("communityActivityTitle")}
+            />
+            <div
+              className={
+                communityActivity.length > 0 || !hasSideContent
+                  ? "flex flex-col gap-6"
+                  : "grid gap-6 lg:grid-cols-2 lg:items-start"
+              }
+            >
+              <PopularComments comments={popularComments} variant="panel" />
+              <PublicLists entries={publicLists} variant="panel" />
+              <PeopleCard />
+            </div>
+          </div>
+        </section>
+
+        {/* Fase 3: lanzamientos como horario, funciones y cierre. Por ahora solo pasan al contenedor
+            ancho; sus secciones traen su propio ancho de lectura. */}
+        <HomeReleases releases={homeReleases} />
+        <HowItWorks />
+        <AnonCta />
       </div>
-
-      <PopularComments comments={popularComments} />
-
-      <HomeReleases releases={homeReleases} />
-
-      <HowItWorks />
-      <AnonCta />
     </main>
   );
 }

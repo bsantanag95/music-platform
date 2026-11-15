@@ -9,7 +9,9 @@ import { HowItWorks } from "./HowItWorks";
 import { AnonCta } from "./AnonCta";
 import { QuickLinks } from "./QuickLinks";
 import { FeedPreview } from "./FeedPreview";
-import { CollectionRail } from "@/components/discovery/CollectionRail";
+import { CollectionMosaic } from "./CollectionMosaic";
+import { CommunityActivity } from "./CommunityActivity";
+import { PeopleCard } from "./PeopleCard";
 import { AlbumRail } from "@/components/discovery/AlbumRail";
 
 vi.mock("next-intl/server", () => ({
@@ -37,11 +39,9 @@ vi.mock("@/services/activity/community-activity", () => ({
 vi.mock("@/services/discovery/discovery", () => ({
   listTopRated: vi.fn().mockResolvedValue([]),
   listFeaturedCollections: vi.fn().mockResolvedValue([]),
+  albumArtistNames: vi.fn().mockResolvedValue({}),
 }));
 vi.mock("@/lib/config/discovery", () => ({ isExploreEnabled: vi.fn().mockReturnValue(true) }));
-vi.mock("@/components/discovery/CollectionRail", () => ({
-  CollectionRail: () => null,
-}));
 vi.mock("@/components/discovery/AlbumRail", () => ({ AlbumRail: () => null }));
 
 function includesType(node: unknown, type: unknown): boolean {
@@ -75,7 +75,7 @@ describe("AnonymousHome", () => {
   it("el muro del hero es estático y no consulta datos de usuario", async () => {
     await AnonymousHome();
 
-    expect(communityActivity.listCommunityActivity).toHaveBeenCalledWith(null, 1, 6);
+    expect(communityActivity.listCommunityActivity).toHaveBeenCalledWith(null, 1, 7);
   });
 
   const album = {
@@ -98,7 +98,7 @@ describe("AnonymousHome", () => {
 
     const element = await AnonymousHome();
 
-    expect(includesType(element, CollectionRail)).toBe(true);
+    expect(includesType(element, CollectionMosaic)).toBe(true);
     expect(includesType(element, AlbumRail)).toBe(true);
   });
 
@@ -109,15 +109,49 @@ describe("AnonymousHome", () => {
     const element = await AnonymousHome();
 
     expect(discovery.listFeaturedCollections).not.toHaveBeenCalled();
-    expect(includesType(element, CollectionRail)).toBe(true); // se renderiza con []
+    expect(includesType(element, CollectionMosaic)).toBe(false);
     expect(includesType(element, AlbumRail)).toBe(true);
+  });
+
+  function findProps(node: unknown, type: unknown): Record<string, unknown> | null {
+    if (node == null || typeof node !== "object") return null;
+    if (Array.isArray(node)) {
+      for (const child of node) {
+        const found = findProps(child, type);
+        if (found) return found;
+      }
+      return null;
+    }
+    const element = node as { type?: unknown; props?: Record<string, unknown> & { children?: unknown } };
+    if (element.type === type) return element.props ?? {};
+    return findProps(element.props?.children, type);
+  }
+
+  it("mejor valorados va en riel con el artista y el promedio de estrellas", async () => {
+    vi.mocked(discovery.listTopRated).mockResolvedValue([{ ...album, avgStars: 4.25, ratingCount: 5 }]);
+    vi.mocked(discovery.albumArtistNames).mockResolvedValue({ [album.id]: "Radiohead" });
+
+    const element = await AnonymousHome();
+
+    const rail = findProps(element, AlbumRail)!;
+    expect(rail.layout).toBe("scroll");
+    expect(rail.artistNames).toEqual({ [album.id]: "Radiohead" });
+    expect(rail.stats).toEqual({ [album.id]: "★ 4,3" });
+  });
+
+  it("la comunidad va en tarjetas y el acceso a personas aparece aunque no haya actividad", async () => {
+    // los mocks por defecto devuelven [] en actividad, comentarios y listas
+    const element = await AnonymousHome();
+
+    expect(findProps(element, CommunityActivity)?.layout).toBe("cards");
+    expect(includesType(element, PeopleCard)).toBe(true);
   });
 
   it("sin colecciones ni mejor valorados, el bloque editorial no se renderiza", async () => {
     // los mocks por defecto devuelven []
     const element = await AnonymousHome();
 
-    expect(includesType(element, CollectionRail)).toBe(false);
+    expect(includesType(element, CollectionMosaic)).toBe(false);
     expect(includesType(element, AlbumRail)).toBe(false);
     // el resto del Inicio anónimo sigue
     expect(includesType(element, AnonHero)).toBe(true);

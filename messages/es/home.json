@@ -1,6 +1,6 @@
 {
   "communityActivityTitle": "Actividad de la comunidad",
-  "communityActivitySubtitle": "Reseñas y puntuaciones recientes de toda la comunidad. El descubrimiento acá pasa por personas, no por un algoritmo.",
+  "communityActivitySubtitle": "Reseñas y puntuaciones recientes de toda la comunidad. Aquí el descubrimiento pasa por personas, no por un algoritmo.",
   "publicListsTitle": "Listas públicas recientes",
   "greetingMorning": "Buenos días",
   "greetingAfternoon": "Buenas tardes",
@@ -83,5 +83,11 @@
   "sampleContext": "Redescubrimiento",
   "sampleStars": "{stars, number} estrellas",
   "sampleAria": "Ejemplo de entrada del diario: {title}, {stars}, puntaje {score} de 100",
-  "communityPeopleLink": "Conoce a quienes escuchan"
+  "communityPeopleLink": "Conoce a quienes escuchan",
+  "featuredAlbumsDescription": "Selecciones curadas para entrar al catálogo sin saber por dónde empezar.",
+  "collectionsSeeAll": "Ver todas las colecciones",
+  "topRatedDescription": "Lo que más alto puntúan quienes registran sus escuchas.",
+  "topRatedSeeAll": "Ver en Explorar",
+  "communityPeopleHint": "Busca personas y sigue lo que escuchan.",
+  "sampleRatingLabel": "{stars}, puntaje {score} de 100"
 }

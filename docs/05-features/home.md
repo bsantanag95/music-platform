@@ -95,10 +95,10 @@ Ver "Inicio con sesión — estructura" para la jerarquía completa y los bloque
   barra con el foco en el campo; el menú desplegable ya no la contiene. Menú y búsqueda se
   excluyen; Escape, el mismo botón o navegar la cierran (spec `header-search`).
 - La búsqueda de usuarios es una superficie separada en `/users`: no se mezcla con el
-  buscador musical del Header. Inicio ofrece a los visitantes un acceso contextual a Usuarios
-  como enlace "Conoce a quienes escuchan" en la cabecera del bloque de actividad de la
-  comunidad (`CommunityActivity showPeopleLink`; antes era un botón suelto entre secciones);
-  con sesión, se llega eligiendo el tipo "Usuarios" en el buscador por ámbito, y el Footer
+  buscador musical del Header. Inicio ofrece a los visitantes un acceso contextual a Usuarios:
+  la tarjeta "Conoce a quienes escuchan" (`PeopleCard`) al final de la columna lateral de la
+  comunidad, visible aunque no haya actividad (`redesign-anon-home-phase2`; en la Fase 1 era un
+  enlace en la cabecera de la actividad y antes un botón suelto entre secciones); con sesión, se llega eligiendo el tipo "Usuarios" en el buscador por ámbito, y el Footer
   conserva el enlace permanente para todos.
 - "Listas públicas recientes" descarta las listas sin elementos en la propia consulta
   (`EXISTS` sobre `user_list_item`, antes del `limit`), así una lista vacía no ocupa lugar.
@@ -205,12 +205,13 @@ landing anónimo lo refleja en dos piezas:
   personas, no por un algoritmo"*. La `anonSubtagline` mantiene "registrar" (la capa de
   baja fricción sigue presente). Estructura del hero y CTA sin cambios.
 - **Bloque editorial de álbumes** en `AnonymousHome`, **debajo del hero y encima de los
-  bloques de la comunidad** — la obra primero, la prueba social después. Reutiliza
-  `CollectionRail` y `AlbumRail` de `/explore` **verbatim**:
-  - `CollectionRail` con `listFeaturedCollections()` — **solo si `isExploreEnabled()`**
-    (con el flag apagado, sus listas enlazarían a rutas que redirigen a Inicio).
-  - `AlbumRail` con `listTopRated()` ("Mejor valorados por la comunidad") — sin gate;
-    `listTopRated` ya devuelve `[]` bajo el umbral de álbumes elegibles.
+  bloques de la comunidad** — la obra primero, la prueba social después. Desde
+  `redesign-anon-home-phase2` (ver "Cuerpo de la portada sin sesión"):
+  - `CollectionMosaic` (solo Inicio) con `listFeaturedCollections()` — **solo si
+    `isExploreEnabled()`** (con el flag apagado, sus listas enlazarían a rutas que redirigen a
+    Inicio).
+  - `AlbumRail layout="scroll"` de `/explore` con `listTopRated()` ("Mejor valorados por la
+    comunidad") — sin gate; `listTopRated` ya devuelve `[]` bajo el umbral de álbumes elegibles.
   - Cada riel colapsa por su cuenta; si ambos vienen vacíos, no se renderiza el contenedor.
 - **El Inicio con sesión no cambia**: lidera con contenido propio; el bloque editorial es
   exclusivo del landing anónimo (test estructural en `AuthenticatedHome.test.tsx`).
@@ -235,13 +236,42 @@ colección física, seguir, catálogo preciso, privacidad.
 - El estado de las flechas se refresca síncrono tras cada `step()` (no sólo por el evento
   `scroll`) + un `ResizeObserver` para el caso de resize.
 
+### Cuerpo de la portada sin sesión (`redesign-anon-home-phase2`)
+
+Fase 2 de la dirección «C · Disquería» (plan en el `design.md` de
+`2026-11-15-redesign-anon-home-phase1`). Solo la portada sin sesión: `/explore` y el Inicio con
+sesión no cambian.
+
+- **Contenedor ancho:** el cuerpo usa el mismo `max-w-[88rem]` del hero, con `gap-16 lg:gap-24`
+  entre secciones. Cada sección lleva `HomeSectionHeading` (`h2` de 32–40 px, descripción de una
+  línea y enlace «Ver …»), propio de Inicio porque `SectionHeader` lo comparte `/explore`.
+- **Colecciones:** `CollectionMosaic` muestra hasta 6 (`mosaicTiles`): con 6 o más, destacada 2×2
+  (cuadrícula 4×2 de carátulas) + cuatro medianas (`SleeveStack`) + la sexta a lo ancho; con 5,
+  destacada + cuatro; con 4 o menos, todas medianas en una fila. Por debajo de `lg` las mismas
+  fichas forman una fila con desplazamiento horizontal (`snap-x`), en vez de apilarse. Enlace a
+  `/explore/collections`.
+- **Mejor valorados:** `AlbumRail layout="scroll" headerless` con `albumArtistNames()` y
+  `★ <promedio de estrellas>` sobre la carátula, como en `/explore`. El mockup mostraba un puntaje
+  1–100, pero el ranking se calcula con el promedio de estrellas y no hay un promedio del puntaje
+  detallado.
+- **Comunidad en dos columnas** (`2fr 1fr` desde `lg`): `CommunityActivity layout="cards"` con
+  `ActivityCard` (carátula, autor, nota compacta `★ 86/100` o `★ 4,5` según `rating-display`,
+  extracto de 2–3 líneas en comentarios y reseñas; la primera tarjeta a lo ancho; 7 entradas para
+  llenar tres filas de dos) y, al costado, `PopularComments variant="panel"`,
+  `PublicLists variant="panel"` y `PeopleCard`. Sin actividad, la columna lateral ocupa el ancho.
+- **Entrada de ejemplo del hero:** desde esta fase usa `StarRatingValue` (fila de estrellas +
+  `92/100` en tono neutro) en lugar de `ScoreBadge`, que coloreaba el puntaje según su valor.
+- Lanzamientos (`ReleaseRail`, compartido con el Inicio con sesión), «Qué puedes hacer» y el
+  cierre pasan al contenedor ancho; los dos últimos, exclusivos de la portada sin sesión, ya usan
+  la escala de título nueva. Su rediseño interior es la Fase 3.
+
 ### Actividad de la comunidad y listas públicas — layout
 
-En **los dos estados** estos bloques son secundarios (prueba social en el anónimo, contenido
-de descubrimiento debajo del contenido propio en el logueado), así que van en el mismo
-layout denso: grilla `lg:grid-cols-[1.5fr_1fr]` (apilados en < `lg`) con `compact` y
-`previewLimit = 6`. Lo arma cada componente de página (`AnonymousHome`, `AuthenticatedHome`),
-no `page.tsx`.
+En el Inicio **con sesión** estos bloques son contenido de descubrimiento debajo del contenido
+propio, en layout denso: grilla `lg:grid-cols-[1.5fr_1fr]` (apilados en < `lg`) con
+`previewLimit = 6`. La portada **sin sesión** los presenta como tarjetas y paneles desde
+`redesign-anon-home-phase2` (ver la sección anterior). Lo arma cada componente de página
+(`AnonymousHome`, `AuthenticatedHome`), no `page.tsx`.
 
 - `CommunityActivity` renderiza `CompactActivityRow`: carátula 40px + una línea mono
   `@autor · ★ 86/100` (o `★ 4,5` sin puntaje detallado; `Reseñó`/`Comentó` con su glifo) y la

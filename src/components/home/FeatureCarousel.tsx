@@ -105,8 +105,8 @@ export function FeatureCarousel({
   const maskImage = `linear-gradient(to right, ${leftStop}, #000 ${EDGE_FADE}, #000 calc(100% - ${EDGE_FADE}), ${rightStop})`;
 
   return (
-    <section ref={sectionRef} className="flex w-full max-w-3xl flex-col gap-4">
-      <h2 className="font-display text-xl text-paper">{title}</h2>
+    <section ref={sectionRef} className="flex w-full flex-col gap-6">
+      <h2 className="font-display text-[clamp(1.875rem,2.8vw,2.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-paper">{title}</h2>
 
       <div className="relative">
         <ul

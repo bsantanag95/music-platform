@@ -5,6 +5,8 @@ import { HeroSampleEntry } from "./HeroSampleEntry";
 import { HeroCrate } from "./HeroCrate";
 import { HeaderSearch } from "@/components/layout/HeaderSearch";
 import { HERO_SEARCH_EXAMPLES } from "@/lib/config/hero-covers";
+import { StarRatingValue } from "@/components/social/StarRatingValue";
+import { ScoreBadge } from "@/components/laminas/ScoreBadge";
 
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn().mockResolvedValue((key: string) => key),
@@ -72,5 +74,14 @@ describe("HeroSampleEntry", () => {
     expect(texts).toContain("sampleLabel");
     expect(texts.some((text) => String(text).startsWith("@"))).toBe(false);
     expect(find(element, (el) => typeof el.props?.href === "string")).toHaveLength(0);
+  });
+
+  it("muestra la nota con la forma de rating-display: estrellas y 92/100, sin escala de color", async () => {
+    const element = await HeroSampleEntry();
+
+    const values = find(element, (el) => el.type === StarRatingValue);
+    expect(values).toHaveLength(1);
+    expect(values[0]!.props).toMatchObject({ detailedScore: 92, showScore: true });
+    expect(find(element, (el) => el.type === ScoreBadge)).toHaveLength(0);
   });
 });
