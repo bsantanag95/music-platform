@@ -11,7 +11,7 @@ para usuarios autenticados.
 El sistema SHALL componer el contenido de `/[locale]` según haya una sesión activa o no.
 
 Sin sesión, la página SHALL mostrar la propuesta de valor (tagline), el hero visual con
-llamada a la acción para registrarse o iniciar sesión, y el carrusel de funcionalidades,
+llamada a la acción para registrarse o iniciar sesión, y el bloque de funcionalidades,
 y SHALL NOT mostrar accesos rápidos de usuario, saludo, ni ningún bloque de contenido
 propio (feed de seguidos, rastro reciente, retomar lista). La propuesta de valor del hero
 SHALL encuadrar el álbum como una obra —valorarla, reseñarla, volver a ella— y el
@@ -34,7 +34,7 @@ preview del feed de seguidos como bloque principal o, si el usuario no sigue a n
 bloque de onboarding en su lugar; un bloque con la actividad reciente del propio usuario
 si existe; y un acceso para retomar su lista editada más recientemente si tiene al menos
 una lista. La página con sesión SHALL NOT mostrar la tagline de propuesta de valor, el
-hero visual del visitante anónimo, el carrusel de funcionalidades, ninguna llamada a la
+hero visual del visitante anónimo, el bloque de funcionalidades, ninguna llamada a la
 acción de registro o inicio de sesión, ni el buscador del hero (esa entrada queda
 cubierta por la búsqueda persistente del Header y por el acceso rápido "buscar"). El
 bloque editorial de álbumes descrito para la vista sin sesión NO SHALL mostrarse en la
@@ -46,7 +46,7 @@ elementos pendientes de valorar, rachas ni medallas de completitud.
 #### Scenario: Visitante sin sesión
 - **WHEN** un visitante sin sesión abre `/[locale]`
 - **THEN** ve tagline, hero visual con llamada a la acción de registro/login y el
-  carrusel de funcionalidades, y no ve saludo, accesos rápidos de usuario, preview de
+  bloque de funcionalidades, y no ve saludo, accesos rápidos de usuario, preview de
   feed, rastro reciente ni el acceso para retomar una lista
 
 #### Scenario: Buscador en el hero sin sesión
@@ -89,7 +89,7 @@ elementos pendientes de valorar, rachas ni medallas de completitud.
   abre `/[locale]`
 - **THEN** ve un saludo breve, los accesos rápidos, y un preview del feed de seguidos con
   link a `/me/feed` como bloque principal, y no ve la tagline de propuesta de valor, el
-  hero anónimo, el carrusel de funcionalidades, el buscador del hero ni el bloque editorial
+  hero anónimo, el bloque de funcionalidades, el buscador del hero ni el bloque editorial
   de álbumes del landing anónimo
 
 #### Scenario: Usuario con sesión sin seguidos
@@ -397,4 +397,43 @@ de la comunidad.
 - **WHEN** un visitante sin sesión abre `/[locale]` y no hay actividad reciente de la
   comunidad, comentarios populares ni listas públicas
 - **THEN** sigue viendo el acceso «Conoce a quienes escuchan» que abre `/users`
+
+### Requirement: Bloque de funcionalidades de la portada sin sesión
+
+La portada sin sesión SHALL presentar las funcionalidades del producto en un bloque que
+muestra todas a la vez, sin carrusel ni controles de desplazamiento: tres demostraciones
+—registrar una escucha en el diario con su contexto, valorar con estrellas y un puntaje
+detallado de 1 a 100, y catalogar una copia de la colección física con sus atributos— y
+el resto de las funcionalidades en una lista con su título y una línea de descripción. Las
+demostraciones SHALL ser ilustraciones fijas que no muestran datos ni nombres de usuarios
+reales, SHALL usar los mismos nombres de contexto de escucha y de atributos de la colección
+que la aplicación, y SHALL NOT ser controles interactivos. La nota de la demostración
+SHALL seguir la forma de `rating-display` (fila de estrellas y `92/100` en tono neutro).
+
+#### Scenario: Todas las funcionalidades a la vista
+- **WHEN** un visitante sin sesión llega al bloque de funcionalidades en una pantalla de
+  1440 px
+- **THEN** ve las tres demostraciones y las demás funcionalidades sin tener que desplazar
+  ni pulsar flechas
+
+#### Scenario: Demostraciones ilustrativas
+- **WHEN** un visitante sin sesión ve la demostración de la colección física
+- **THEN** los atributos que muestra usan los nombres que la aplicación da a esos atributos
+  y la demostración no ofrece controles
+
+### Requirement: Cierre de la portada sin sesión
+
+La portada sin sesión SHALL terminar con un cierre que repite la invitación a crear una
+cuenta con un enlace directo a `/auth/register` y, cuando la superficie de descubrimiento
+está habilitada, un enlace secundario a `/explore`.
+
+#### Scenario: Cierre con descubrimiento habilitado
+- **WHEN** un visitante sin sesión llega al final de `/[locale]` con el descubrimiento
+  habilitado
+- **THEN** ve «Crear cuenta», que abre `/auth/register` sin diálogo, y un enlace a `/explore`
+
+#### Scenario: Cierre con descubrimiento deshabilitado
+- **WHEN** un visitante sin sesión llega al final de `/[locale]` con el descubrimiento
+  deshabilitado
+- **THEN** ve «Crear cuenta» y no ve un enlace a `/explore`
 
