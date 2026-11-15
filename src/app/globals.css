@@ -83,6 +83,18 @@
   }
 }
 
+/* Caja de carátulas del hero sin sesión (HeroCrate): cada carril repite su fila
+   dos veces, así que desplazarlo la mitad de su ancho cierra el ciclo sin salto.
+   Muy lento (80–110 s por vuelta) y solo con `motion-safe:`. */
+@keyframes crate-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 /* Scrollbar propia para los contenedores con scroll interno de Inicio ("Tu
    feed", "Tu rastro reciente") y la franja de discografía del álbum: reposo en ink-border, ámbar solo al pasar el
    mouse — la barra nativa sin estilizar rompe la identidad visual del

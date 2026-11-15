@@ -35,7 +35,7 @@ interface QuickActionsDialogProps {
 // Diálogo de acciones rápidas del Header (openspec: add-header-quick-actions): un solo diálogo con
 // las acciones como chips. Abre siempre en Escucha con el foco en el buscador, de modo que
 // registrar una escucha cuesta lo mismo que antes (abrir y escribir). Las acciones con objetivo
-// comparten el buscador; Nueva lista no lo necesita. A11y al nivel de `GetStartedModal`: portal,
+// comparten el buscador; Nueva lista no lo necesita. A11y al nivel de `RegisterListenDialog`: portal,
 // focus-trap, Escape, retorno de foco (lo hace el botón que lo monta).
 export function QuickActionsDialog({ onClose, initialAction = "listen" }: QuickActionsDialogProps) {
   const t = useTranslations("quickActions");

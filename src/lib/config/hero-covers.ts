@@ -4,7 +4,7 @@
 // consulta la base ni resuelve imágenes en runtime: es un único archivo estático.
 // Ver docs/05-features/home.md.
 
-/** Cuadrícula del mosaico. `HeroCoverWall` y el script comparten estas cifras. */
+/** Cuadrícula del mosaico. `HeroCrate`, `HeroSampleEntry` y el script comparten estas cifras. */
 export const HERO_WALL = {
   cols: 8,
   rows: 4,
@@ -70,4 +70,35 @@ export const HERO_COVERS: readonly HeroCover[] = [
   { mbid: "5cbd9d7b-597a-3c5e-bfd1-c2b364215560", title: "The Velvet Underground & Nico", artist: "The Velvet Underground" },
   { mbid: "f2f954cb-3083-3261-bef1-e97bfe80987a", title: "To Mega Therion", artist: "Celtic Frost" },
   { mbid: "50f8710f-3ae6-319b-85a7-afe783f13449", title: "Aladdin Sane", artist: "David Bowie" },
+];
+
+/**
+ * Posición de background-position (en %) de la carátula `index` dentro del mosaico: el
+ * hero recorta cada portada del mismo archivo, sin pedir imágenes nuevas.
+ */
+export function heroWallTilePosition(index: number): string {
+  const col = index % HERO_WALL.cols;
+  const row = Math.floor(index / HERO_WALL.cols);
+  return `${(col * 100) / (HERO_WALL.cols - 1)}% ${(row * 100) / (HERO_WALL.rows - 1)}%`;
+}
+
+/**
+ * Entrada de ejemplo del hero sin sesión (openspec: redesign-anon-home-phase1): fija e
+ * ilustrativa, sin usuario real. `coverIndex` apunta a una portada de `HERO_COVERS`.
+ */
+export const HERO_SAMPLE_ENTRY = {
+  coverIndex: 20,
+  title: "Loveless",
+  artist: "My Bloody Valentine",
+  year: 1991,
+  stars: 4.5,
+  detailedScore: 92,
+} as const;
+
+/** Accesos «Prueba con …» bajo el buscador del hero: artistas del muro, curados a mano. */
+export const HERO_SEARCH_EXAMPLES: readonly string[] = [
+  "Rosalía",
+  "Black Sabbath",
+  "Miles Davis",
+  "Rubén Blades",
 ];

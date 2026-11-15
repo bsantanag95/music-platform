@@ -1,4 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { PgDialect } from "drizzle-orm/pg-core";
+import type { SQL } from "drizzle-orm";
 import {
   getMostRecentEditedList,
   listMyRecentActivity,
@@ -48,6 +50,26 @@ describe("servicio de datos de Inicio", () => {
   beforeEach(() => vi.clearAllMocks());
 
   describe("listPublicLists", () => {
+    it.each([
+      ["sin sesión", null],
+      ["con sesión", "00000000-0000-4000-8000-000000000009"],
+    ])("%s, descarta las listas vacías en la consulta, antes del límite", async (_label, viewerId) => {
+      const source = sourceQuery([]);
+      mocks.db.select.mockReturnValueOnce(source);
+
+      await listPublicLists(viewerId, 6);
+
+      const chain = source.from.mock.results[0]!.value as { where: ReturnType<typeof vi.fn> };
+      const condition = chain.where.mock.calls[0]![0] as SQL;
+      const rendered = new PgDialect().sqlToQuery(condition).sql;
+      expect(rendered).toContain(
+        'exists (select 1 from "user_list_item" where "user_list_item"."list_id" = "user_list"."id")',
+      );
+      const limit = (chain.where.mock.results[0]!.value as { orderBy: ReturnType<typeof vi.fn> }).orderBy.mock
+        .results[0]!.value.limit as ReturnType<typeof vi.fn>;
+      expect(limit).toHaveBeenCalledWith(6);
+    });
+
     it("distingue evento creado/actualizado por fecha y castea el tipo de entidad", async () => {
       mocks.db.select.mockReturnValueOnce(sourceQuery([{
         id: "00000000-0000-4000-8000-000000000007",

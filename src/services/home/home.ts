@@ -55,6 +55,10 @@ import { COMMENT_LIKE_COUNT_SQL, thresholdedLikeCount } from "@/services/social/
 // Perfil público Y cuenta activa: una cuenta desactivada no aparece en Home.
 const PUBLIC_PROFILE = and(eq(appUser.profileVisibility, "public"), activeUserCondition());
 
+// La lista tiene al menos un elemento. Correlación con el literal `"user_list"."id"`: a nivel
+// de módulo, una columna interpolada podría salir sin calificar y ligarse a `user_list_item`.
+const HAS_ITEMS = sql`exists (select 1 from ${userListItem} where ${userListItem.listId} = "user_list"."id")`;
+
 const NOT_BLOCKED_SQL = (viewerId: string, authorId: unknown) =>
   sql`NOT EXISTS (
     SELECT 1 FROM user_block b
@@ -625,14 +629,17 @@ export async function listPublicLists(viewerId: string | null, limit = 10): Prom
     .from(userList)
     .innerJoin(appUser, eq(userList.ownerId, appUser.id))
     .where(
+      // Solo listas con al menos un elemento, antes del `limit`: una lista vacía no ocupa
+      // lugar de una con contenido (redesign-anon-home-phase1).
       viewerId
         ? and(
             eq(userList.audience, "public"),
             eq(userList.kind, "standard"),
             PUBLIC_PROFILE,
+            HAS_ITEMS,
             NOT_BLOCKED_SQL(viewerId, userList.ownerId),
           )
-        : and(eq(userList.audience, "public"), eq(userList.kind, "standard"), PUBLIC_PROFILE),
+        : and(eq(userList.audience, "public"), eq(userList.kind, "standard"), PUBLIC_PROFILE, HAS_ITEMS),
     )
     .orderBy(desc(userList.updatedAt), desc(userList.id))
     .limit(limit);

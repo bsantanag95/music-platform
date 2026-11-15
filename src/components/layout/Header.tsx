@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations, useLocale } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, usePathname, useSearchParams, useRouter } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { AuthUser } from "@/lib/api/schemas";
@@ -53,14 +53,20 @@ export function Header({
   // se pliegan en este panel. Ver critique 2026-09-04, hallazgo P1, y
   // fix-header-overflow (con sesión la fila necesita ~835 px).
   const [menuOpen, setMenuOpen] = useState(false);
+  // Debajo de `lg` la búsqueda no va dentro del menú: tiene su propio botón y se
+  // abre en una fila bajo la barra (openspec: redesign-anon-home-phase1,
+  // header-search). Menú y búsqueda son mutuamente excluyentes.
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchToggleRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setCurrentUser(user);
   }, [user]);
 
-  // Cierra el panel mobile al navegar — cada Link es un cambio de ruta.
+  // Cierra el panel mobile y la búsqueda al navegar — cada Link es un cambio de ruta.
   useEffect(() => {
     setMenuOpen(false);
+    setSearchOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -71,6 +77,33 @@ export function Header({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [menuOpen]);
+
+  // Escape cierra la fila de búsqueda y devuelve el foco a su botón. Si el campo
+  // ya usó el Escape para cerrar sus sugerencias (`preventDefault`), la fila sigue.
+  useEffect(() => {
+    if (!searchOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      setSearchOpen(false);
+      searchToggleRef.current?.focus();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [searchOpen]);
+
+  const toggleSearch = () => {
+    setMenuOpen(false);
+    setSearchOpen((open) => !open);
+  };
+
+  const toggleMenu = () => {
+    setSearchOpen(false);
+    setMenuOpen((open) => !open);
+  };
+
+  const closeSearchAfterNavigate = () => {
+    setSearchOpen(false);
+  };
 
   const handleLocaleChange = (newLocale: string) => {
     // Preserva el query string (ej. `?q=` en /search): `usePathname` de next-intl
@@ -186,11 +219,23 @@ export function Header({
           )}
         </div>
 
-        {/* Debajo de `lg`, la fila de arriba se reduce a logo + campana + este
-            botón: el buscador, la navegación y la zona de usuario se pliegan en
-            el panel de abajo en vez de desbordar a 375px. La campana móvil es un
-            enlace a la página (D8), no un panel flotante. */}
+        {/* Debajo de `lg`, la fila de arriba se reduce a logo + búsqueda + campana
+            + menú: la navegación y la zona de usuario se pliegan en el panel de
+            abajo en vez de desbordar a 375px; la búsqueda se abre en su propia
+            fila. La campana móvil es un enlace a la página (D8), no un panel
+            flotante. */}
         <div className="flex items-center gap-1 lg:hidden">
+          <button
+            ref={searchToggleRef}
+            type="button"
+            className="flex size-11 shrink-0 items-center justify-center rounded-md text-paper-muted transition-colors hover:bg-ink-surface hover:text-paper"
+            aria-expanded={searchOpen}
+            aria-controls="header-mobile-search"
+            aria-label={searchOpen ? t("closeSearch") : t("openSearch")}
+            onClick={toggleSearch}
+          >
+            <SearchIcon open={searchOpen} />
+          </button>
           {currentUser ? (
             <NotificationBell
               variant="mobile"
@@ -204,12 +249,18 @@ export function Header({
             aria-expanded={menuOpen}
             aria-controls="header-mobile-menu"
             aria-label={menuOpen ? t("closeMenu") : t("openMenu")}
-            onClick={() => setMenuOpen((open) => !open)}
+            onClick={toggleMenu}
           >
             <MenuIcon open={menuOpen} />
           </button>
         </div>
       </div>
+
+      {searchOpen ? (
+        <div id="header-mobile-search" className="border-t border-ink-border bg-ink px-4 py-3 lg:hidden">
+          <HeaderSearch fluid autoFocus onNavigate={closeSearchAfterNavigate} />
+        </div>
+      ) : null}
 
       {menuOpen ? (
         <div
@@ -218,8 +269,7 @@ export function Header({
           // la pantalla dejaría fuera de alcance las últimas opciones (cerrar sesión).
           className="themed-scrollbar flex max-h-[calc(100dvh-3.75rem)] flex-col gap-4 overflow-y-auto border-t border-ink-border bg-ink px-4 py-4 lg:hidden"
         >
-          {/* Bloque 1 — barra general. */}
-          <HeaderSearch fluid />
+          {/* Bloque 1 — barra general (la búsqueda tiene su propio botón y fila). */}
           <nav aria-label={t("generalNav")} className="flex flex-col items-start gap-3">
             {generalLinks}
           </nav>
@@ -326,6 +376,34 @@ function AuthActions({ t }: { t: HeaderT }) {
         {t("register")}
       </Link>
     </div>
+  );
+}
+
+function SearchIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {open ? (
+        <>
+          <line x1="5" y1="5" x2="19" y2="19" />
+          <line x1="19" y1="5" x2="5" y2="19" />
+        </>
+      ) : (
+        <>
+          <circle cx="11" cy="11" r="7" />
+          <line x1="20" y1="20" x2="16.5" y2="16.5" />
+        </>
+      )}
+    </svg>
   );
 }
 

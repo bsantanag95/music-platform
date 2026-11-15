@@ -28,6 +28,8 @@
   "localeSwitcher": "Language",
   "openMenu": "Open menu",
   "closeMenu": "Close menu",
+  "openSearch": "Open search",
+  "closeSearch": "Close search",
   "userMenu": "User menu",
   "generalNav": "General navigation",
   "moderation": "Moderation",
