@@ -527,9 +527,6 @@ título y fecha en vez del error "Sin ediciones disponibles".
   habilitarlas es una decisión de producto aparte.
 - Copy y diseño visual concreto de cada bloque (fuera del alcance de este documento, que
   cierra la estructura de contenido, no el layout).
-- **Pie de página en móvil:** la auditoría de la portada midió 1105 px de alto a 390 px. Es
-  global (todas las páginas), así que quedó fuera de las tres fases; plegar sus columnas en
-  móvil sería un cambio aparte.
 - **Tipografías — implementación futura a analizar.** La dirección C proponía Bricolage
   Grotesque para titulares y Geist / Geist Mono para interfaz y datos. Las tres fases mantienen
   la tríada actual (Space Grotesk, Source Serif 4, IBM Plex Mono). Antes de decidir un cambio
