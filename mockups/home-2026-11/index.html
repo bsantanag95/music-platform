@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portada pública · Auditoría y tres direcciones — music-platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f6f5f2; --card: #fff; --tx: #17161a; --tx-2: #4b4a50; --tx-3: #6b6a70; --line: #e2e0da; --ok: #1f7a4d; --no: #b23a2e; --hi: #2433d1; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--tx); font: 16px/1.6 "Geist", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--hi); text-underline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--hi); outline-offset: 3px; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 48px); }
+  header.doc { padding: 64px 0 40px; border-bottom: 1px solid var(--line); }
+  h1 { font-size: clamp(34px, 4.4vw, 56px); line-height: 1.05; letter-spacing: -.03em; font-weight: 700; max-width: 22ch; }
+  .intro { margin-top: 18px; font-size: 19px; color: var(--tx-2); max-width: 64ch; }
+  .meta { margin-top: 20px; font: 500 13px "Geist Mono", monospace; color: var(--tx-3); display: flex; flex-wrap: wrap; gap: 8px 20px; }
+  nav.toc { position: sticky; top: 0; z-index: 5; background: rgba(246,245,242,.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  nav.toc .wrap { display: flex; gap: 6px; overflow-x: auto; padding-top: 10px; padding-bottom: 10px; }
+  nav.toc a { white-space: nowrap; color: var(--tx-2); text-decoration: none; font-size: 14px; font-weight: 500; padding: 6px 12px; border-radius: 8px; }
+  nav.toc a:hover { background: #ebe9e3; color: var(--tx); }
+  nav.toc a.cta { background: var(--tx); color: #fff; }
+  section { padding: 72px 0 0; }
+  h2 { font-size: clamp(26px, 2.6vw, 36px); letter-spacing: -.02em; line-height: 1.1; font-weight: 700; }
+  h2 + p { margin-top: 10px; color: var(--tx-2); max-width: 70ch; font-size: 17px; }
+  h3 { font-size: 19px; letter-spacing: -.01em; font-weight: 650; }
+  .shots { margin-top: 28px; display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; }
+  figure { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  figure img { display: block; width: 100%; height: auto; }
+  figcaption { padding: 12px 16px; font-size: 14px; color: var(--tx-3); border-top: 1px solid var(--line); }
+  .stats { margin-top: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+  .stat b { display: block; font-size: 30px; letter-spacing: -.02em; line-height: 1.1; }
+  .stat span { font-size: 14px; color: var(--tx-2); }
+  .issues { margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .issue { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; }
+  .issue h3 { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .sev { font: 500 12px "Geist Mono", monospace; padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+  .sev.alta { background: #fbe4e1; color: var(--no); }
+  .sev.media { background: #fdf0d6; color: #8a5a00; }
+  .sev.baja { background: #e9ece9; color: #4b5a4f; }
+  .issue ul { margin-top: 10px; padding-left: 18px; color: var(--tx-2); font-size: 15px; }
+  .issue li + li { margin-top: 6px; }
+  .issue li b { color: var(--tx); font-weight: 600; }
+  .criteria { margin-top: 28px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 40px; counter-reset: c; }
+  .criteria li { list-style: none; padding: 16px 0; border-top: 1px solid var(--line); }
+  .criteria h3 { font-size: 17px; }
+  .criteria p { color: var(--tx-2); font-size: 15px; margin-top: 4px; }
+  .props { margin-top: 28px; display: grid; gap: 24px; }
+  .prop { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: grid; grid-template-columns: 1.1fr 1fr; }
+  .prop .img { display: block; border-right: 1px solid var(--line); }
+  .prop .img img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+  .prop .body { padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+  .prop h3 { font-size: 24px; letter-spacing: -.02em; }
+  .prop .thesis { color: var(--tx-2); }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tags span { font-size: 13px; padding: 3px 9px; border-radius: 6px; background: #efede8; color: var(--tx-2); }
+  .pc { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 14px; }
+  .pc h4 { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .pc .pro h4 { color: var(--ok); } .pc .con h4 { color: var(--no); }
+  .pc ul { padding-left: 16px; color: var(--tx-2); }
+  .pc li + li { margin-top: 4px; }
+  .open { margin-top: auto; display: inline-flex; align-self: start; align-items: center; gap: 8px; background: var(--tx); color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 15px; }
+  .open:hover { background: var(--hi); }
+  table { margin-top: 28px; width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: 15px; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { background: #efede8; font-size: 13px; font-weight: 600; color: var(--tx-2); }
+  td.s { font: 500 14px "Geist Mono", monospace; white-space: nowrap; }
+  tr.best td.s { color: var(--tx); }
+  .rec { margin-top: 28px; background: var(--tx); color: #f4f3ef; border-radius: 16px; padding: clamp(28px, 4vw, 48px); display: grid; grid-template-columns: 1fr 1.3fr; gap: 40px; }
+  .rec h3 { font-size: clamp(26px, 2.8vw, 38px); letter-spacing: -.02em; line-height: 1.1; }
+  .rec p, .rec li { color: #cfcdc7; }
+  .rec ul { padding-left: 18px; margin-top: 10px; }
+  .rec li + li { margin-top: 8px; }
+  .rec b { color: #fff; }
+  .rec a { color: #ffcd5e; }
+  .notes { margin: 56px 0 80px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 14px; color: var(--tx-3); max-width: 90ch; }
+  .notes p + p { margin-top: 8px; }
+  @media (max-width: 900px) {
+    .shots, .issues, .criteria, .prop, .rec, .pc { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .prop .img { border-right: 0; border-bottom: 1px solid var(--line); aspect-ratio: 16/10; }
+    table { display: block; overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+<header class="doc">
+  <div class="wrap">
+    <h1>Portada pública: auditoría y tres direcciones de modernización</h1>
+    <p class="intro">Revisión de la página de inicio tal como la ve un visitante sin sesión, con tres mockups completos que replantean su composición, jerarquía e identidad sin cambiar su propósito ni su contenido.</p>
+    <p class="meta"><span>14 nov 2026</span><span>Rama main · /es sin sesión</span><span>Revisado a 1440, 820 y 390 px</span></p>
+  </div>
+</header>
+<nav class="toc" aria-label="Contenido"><div class="wrap"><a href="#estado">Estado actual</a><a href="#problemas">Problemas</a><a href="#criterios">Criterios</a><a href="#propuestas">Propuestas</a><a href="#comparacion">Comparación</a><a href="#recomendacion">Recomendación</a><a class="cta" href="c-disqueria.html">Abrir la recomendada</a></div></nav>
+
+<main class="wrap">
+  <section id="estado" aria-labelledby="h-estado">
+    <h2 id="h-estado">Estado actual</h2>
+    <p>La identidad cálida y oscura (tinta, papel, ámbar) es coherente y el muro de carátulas del hero da una buena primera impresión. El problema está en lo que viene después: una sola columna estrecha de bloques iguales, apilados con el mismo peso y la misma separación.</p>
+    <div class="shots">
+      <figure><img src="shots/actual.png" alt="Primer viewport actual a 1440 px: cabecera, muro de carátulas atenuado y titular centrado de tres líneas con un botón Comienza"><figcaption>Primer viewport a 1440 px. Cuatro ideas en el titular, un solo botón pequeño y ninguna búsqueda en el hero.</figcaption></figure>
+      <figure><img src="shots/actual-cuerpo.png" alt="Cuerpo actual a 1440 px: columna de 768 px con colecciones en cuatro columnas, dos huérfanas, y debajo actividad y listas"><figcaption>Cuerpo a 1440 px. El contenido ocupa 768 px; las colecciones dejan dos tarjetas huérfanas.</figcaption></figure>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>53 %</b><span>del ancho usado a 1440 px (768 px de contenido, 336 px vacíos a cada lado)</span></div>
+      <div class="stat"><b>20 px</b><span>todos los títulos de sección: 1,25 veces el texto base</span></div>
+      <div class="stat"><b>3 de 9</b><span>funciones visibles sin desplazar el carrusel “Qué puedes hacer”</span></div>
+      <div class="stat"><b>1404 px</b><span>ocupan las 6 colecciones apiladas en móvil (26 % de la página)</span></div>
+    </div>
+  </section>
+
+  <section id="problemas" aria-labelledby="h-prob">
+    <h2 id="h-prob">Problemas detectados</h2>
+    <p>Ordenados por el impacto que tienen en un visitante que llega por primera vez y tiene que entender qué es el sitio y qué hacer.</p>
+    <div class="issues">
+      <article class="issue"><h3>Estructura y ancho <span class="sev alta">Alta</span></h3><ul>
+        <li><b>Columna única de 768 px</b> (<code>max-w-3xl</code>) en todo el cuerpo: a 1440 px se desaprovecha casi la mitad de la pantalla, y a 1920 px más de la mitad.</li>
+        <li>El hero va a sangre completa y el resto queda encajonado: la página parece hecha de dos sistemas distintos.</li>
+        <li>Ocho bloques con el mismo hueco de 48 px entre sí: no hay ritmo, pausas ni un bloque protagonista.</li>
+      </ul></article>
+      <article class="issue"><h3>Jerarquía y mensaje <span class="sev alta">Alta</span></h3><ul>
+        <li>El titular junta <b>cuatro ideas</b> en tres líneas (obra, valorar, reseñar, descubrir por personas): se lee como manifiesto, no como promesa.</li>
+        <li>La bajada de 14 px en serif va sobre carátulas al 45 % de opacidad: baja legibilidad justo en el texto que explica el producto.</li>
+        <li>Todas las secciones (H2 de 20 px) pesan igual que un título de tarjeta: “Colecciones” y “Comentarios populares” compiten al mismo nivel.</li>
+      </ul></article>
+      <article class="issue"><h3>El mecanismo no se ve <span class="sev alta">Alta</span></h3><ul>
+        <li>Lo que distingue al producto (doble valoración: estrellas + 1–100, diario sin fricción) <b>solo aparece como texto</b> en la segunda tarjeta del carrusel, casi al final.</li>
+        <li>“Qué puedes hacer” está debajo de toda la prueba social: se explica el producto después de pedir confianza.</li>
+        <li>El único botón del hero (“Comienza”) abre un modal: un paso extra y ninguna alternativa para quien solo quiere mirar o buscar.</li>
+      </ul></article>
+      <article class="issue"><h3>Navegación y búsqueda <span class="sev alta">Alta</span></h3><ul>
+        <li>La tarea principal según el producto es <b>buscar un artista</b>, pero el buscador vive solo en la cabecera y a 820 px o menos desaparece dentro del menú hamburguesa.</li>
+        <li>El enlace “Usuarios” flota solo entre dos secciones, como un botón huérfano sin contexto.</li>
+        <li>El carrusel de lanzamientos pone las flechas encima de las carátulas y corta tarjetas en los bordes.</li>
+      </ul></article>
+      <article class="issue"><h3>Componentes y presentación <span class="sev media">Media</span></h3><ul>
+        <li>Actividad y listas son filas idénticas con avatar genérico (el mismo disco), metadatos de 11–12 px y la puntuación perdida en la línea.</li>
+        <li>Las colecciones repiten seis veces el mismo marco; en escritorio quedan 4 + 2 huérfanas y en móvil se apilan a ancho completo.</li>
+        <li>Comentarios populares ocupa un bloque con un solo comentario de una línea: la sección parece vacía.</li>
+      </ul></article>
+      <article class="issue"><h3>Tipografía <span class="sev media">Media</span></h3><ul>
+        <li>La monoespaciada se usa para todo (menú, usuarios, fechas, botones, contadores): pierde su función de “dato” y añade ruido.</li>
+        <li>Abundan tamaños de 10, 11 y 12 px: por debajo de lo cómodo para metadatos que hay que leer.</li>
+        <li>Escala muy corta: 36 px el titular, 20 px las secciones, 14–16 px el resto.</li>
+      </ul></article>
+      <article class="issue"><h3>Color y estética <span class="sev media">Media</span></h3><ul>
+        <li>Paleta coherente pero monótona: todo es marrón oscuro con un único acento, sin superficies que separen o destaquen bloques.</li>
+        <li>Sin variación de densidad ni de escala, la página se percibe plana y uniforme, propia de una “plantilla oscura”.</li>
+      </ul></article>
+      <article class="issue"><h3>Contenido y texto <span class="sev media">Media</span></h3><ul>
+        <li>Mezcla de voseo y tuteo (“Valorala, reseñala, <b>vuelve</b>”, “<b>Registrá</b>” junto a “<b>Puntúa</b>”) y una errata en la bajada (“contruyes”).</li>
+        <li>La portada pública muestra listas vacías (“Aún vacía”) y, en este entorno, cuatro listas de prueba “Smoke CHECK 3”: falta filtrar listas sin elementos.</li>
+      </ul></article>
+      <article class="issue"><h3>Responsive <span class="sev baja">Baja</span></h3><ul>
+        <li>En móvil la página mide ~5350 px y el pie ocupa 1105 px.</li>
+        <li>Sin desbordes horizontales (medido a 390 px), pero los rieles horizontales no indican que hay más contenido a la derecha.</li>
+      </ul></article>
+    </div>
+  </section>
+
+  <section id="criterios" aria-labelledby="h-crit">
+    <h2 id="h-crit">Criterios de diseño de las propuestas</h2>
+    <p>Las tres conservan el propósito, las secciones y el contenido actuales. Lo que cambia es cómo se componen, en qué orden y con qué peso.</p>
+    <ul class="criteria">
+      <li><h3>Usar la pantalla</h3><p>Contenedor de 1360–1440 px con márgenes fluidos (20–64 px) y rejilla de 12 columnas; dos columnas donde el contenido lo pide.</p></li>
+      <li><h3>Una idea en el titular</h3><p>“El álbum es una obra.” como titular; el resto pasa a una bajada legible sobre fondo liso.</p></li>
+      <li><h3>Mostrar el mecanismo arriba</h3><p>Una entrada de diario con estrellas + puntaje 1–100 en el primer viewport, en lugar de describirlo al final.</p></li>
+      <li><h3>Búsqueda siempre a mano</h3><p>Buscador visible en la cabecera de escritorio y repetido en el hero en tablet y móvil.</p></li>
+      <li><h3>Dos acciones claras</h3><p>“Crear cuenta” (directo, sin modal) y “Explorar el catálogo” para quien solo quiere mirar.</p></li>
+      <li><h3>Ritmo y escala</h3><p>Títulos de sección de 32–64 px, un bloque protagonista por tramo y alternancia de densidad (banda, lista, rejilla).</p></li>
+      <li><h3>Cada fuente con su función</h3><p>Una voz para titulares, una para leer y cifras tabulares solo para datos; nada por debajo de 13 px.</p></li>
+      <li><h3>Móvil propio, no apilado</h3><p>Rieles con desplazamiento horizontal para colecciones y rankings, tabla compacta para lanzamientos.</p></li>
+    </ul>
+  </section>
+
+  <section id="propuestas" aria-labelledby="h-props">
+    <h2 id="h-props">Las tres propuestas</h2>
+    <p>Tres direcciones visuales distintas, construidas como páginas completas y adaptables. Todas usan carátulas reales del muro del hero (miniaturas de 224 px, dentro del límite de 250 px de la licencia) y datos de comunidad de ejemplo.</p>
+    <div class="props">
+      <article class="prop">
+        <a class="img" href="a-resena.html"><img src="shots/a.png" alt="Propuesta A: fondo claro, titular condensado enorme y ficha de reseña con puntaje 92 en azul"></a>
+        <div class="body">
+          <h3>A · Reseña</h3>
+          <p class="thesis">La portada como revista de crítica musical. Titular condensado de gran tamaño, papel claro y un azul ultramar que ocupa bandas enteras (ranking y cierre). La ficha de reseña del hero enseña el doble puntaje como si fuera la nota de una revista.</p>
+          <div class="tags"><span>Claro</span><span>Archivo + Literata</span><span>Azul ultramar</span><span>Editorial</span></div>
+          <div class="pc"><div class="pro"><h4>Ventajas</h4><ul><li>La jerarquía más fuerte de las tres: cada sección se lee a un vistazo.</li><li>La reseña y el puntaje son protagonistas, coherente con “la subjetividad es el producto”.</li><li>Lanzamientos como horario: legible y denso a la vez.</li></ul></div><div class="con"><h4>Desventajas</h4><ul><li>Rompe con la identidad oscura y ámbar: obligaría a rediseñar toda la aplicación, no solo la portada.</li><li>Un fondo claro resta protagonismo a las carátulas.</li><li>El tono de revista puede sentirse más lectura que herramienta.</li></ul></div></div>
+          <a class="open" href="a-resena.html">Abrir propuesta A</a>
+        </div>
+      </article>
+      <article class="prop">
+        <a class="img" href="b-catalogo.html"><img src="shots/b.png" alt="Propuesta B: fondo negro mate, titular ligero y un gráfico de crestas con la distribución de puntajes de 18 álbumes"></a>
+        <div class="body">
+          <h3>B · Catálogo</h3>
+          <p class="thesis">La portada como catálogo de un sello independiente: negro mate, líneas blancas, números de catálogo y códigos de color por colección. El hero es un gráfico de crestas con cómo puntúa la comunidad cada álbum de 1 a 100; al pasar el cursor, la línea se lee y la carátula recupera el color.</p>
+          <div class="tags"><span>Negro mate</span><span>Jost</span><span>Códigos de color</span><span>Gráfico interactivo</span></div>
+          <div class="pc"><div class="pro"><h4>Ventajas</h4><ul><li>La identidad más propia y memorable; habla el idioma de quien colecciona discos.</li><li>Convierte el puntaje 1–100 en algo visible y explorable.</li><li>El índice de colecciones es muy fácil de recorrer.</li></ul></div><div class="con"><h4>Desventajas</h4><ul><li>La menos clara para quien llega sin contexto: mayúsculas espaciadas y textos finos se leen peor.</li><li>El gráfico necesita bastantes puntuaciones reales por álbum para no verse vacío.</li><li>Carátulas en gris hasta el cursor: en táctil se pierde el gesto.</li></ul></div></div>
+          <a class="open" href="b-catalogo.html">Abrir propuesta B</a>
+        </div>
+      </article>
+      <article class="prop">
+        <a class="img" href="c-disqueria.html"><img src="shots/c.png" alt="Propuesta C: fondo oscuro cálido, titular en ámbar, buscador grande y caja de carátulas en perspectiva con una entrada de diario flotante"></a>
+        <div class="body">
+          <h3>C · Disquería</h3>
+          <p class="thesis">Evolución de la identidad actual hacia un producto moderno: el mismo tono oscuro y ámbar, pero a todo el ancho, con el buscador como protagonista del hero, una caja de carátulas en movimiento lento y una entrada de diario flotante que muestra el doble puntaje. Mosaico de colecciones, actividad en tarjetas y funciones demostradas con mini interfaces.</p>
+          <div class="tags"><span>Oscuro cálido</span><span>Bricolage Grotesque + Geist</span><span>Ámbar</span><span>Producto</span></div>
+          <div class="pc"><div class="pro"><h4>Ventajas</h4><ul><li>La más clara: busca, mira o crea cuenta desde el primer viewport.</li><li>Conserva la identidad (ámbar, disco, tinta): se puede llevar al resto de la app de forma gradual.</li><li>Las carátulas mandan, como en una disquería.</li></ul></div><div class="con"><h4>Desventajas</h4><ul><li>La más familiar: se parece a otros productos del sector.</li><li>Más superficies y tarjetas: hay que vigilar que no se recargue.</li><li>La caja en movimiento añade peso visual (respeta “reducir movimiento”).</li></ul></div></div>
+          <a class="open" href="c-disqueria.html">Abrir propuesta C</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="comparacion" aria-labelledby="h-comp">
+    <h2 id="h-comp">Comparación</h2>
+    <p>Valoración de 1 a 5 contra los problemas detectados y el coste de llevarla al producto real.</p>
+    <table>
+      <thead><tr><th>Criterio</th><th>A · Reseña</th><th>B · Catálogo</th><th>C · Disquería</th></tr></thead>
+      <tbody>
+        <tr><td>Claridad para quien llega por primera vez</td><td class="s">4</td><td class="s">2</td><td class="s">5</td></tr>
+        <tr><td>Jerarquía visual</td><td class="s">5</td><td class="s">3</td><td class="s">4</td></tr>
+        <tr><td>Mecanismo (diario + doble puntaje) visible</td><td class="s">5</td><td class="s">4</td><td class="s">4</td></tr>
+        <tr><td>Búsqueda y navegación</td><td class="s">4</td><td class="s">3</td><td class="s">5</td></tr>
+        <tr><td>Identidad propia y memorable</td><td class="s">4</td><td class="s">5</td><td class="s">3</td></tr>
+        <tr><td>Protagonismo de las carátulas</td><td class="s">3</td><td class="s">3</td><td class="s">5</td></tr>
+        <tr><td>Continuidad con el resto de la app</td><td class="s">1</td><td class="s">2</td><td class="s">5</td></tr>
+        <tr><td>Coste de implementación</td><td class="s">Alto</td><td class="s">Alto</td><td class="s">Medio</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="recomendacion" aria-labelledby="h-rec">
+    <div class="rec">
+      <div><h3 id="h-rec">Recomendación: C · Disquería, con dos préstamos de A</h3></div>
+      <div>
+        <p><b>C resuelve los problemas de mayor impacto sin romper lo que ya funciona.</b> Pone la búsqueda y las dos acciones en el primer viewport, usa todo el ancho, muestra el doble puntaje arriba y conserva la identidad oscura y ámbar que ya comparten decenas de páginas rediseñadas. Se puede implementar por fases, empezando por la portada y los tokens, sin rehacer la aplicación.</p>
+        <ul>
+          <li><b>Tomar de A la escala de títulos</b> (secciones de 40–64 px, más espacio encima que debajo): es lo que más ordena la página y C todavía es tímida ahí.</li>
+          <li><b>Tomar de A los lanzamientos como horario</b> (fecha · título · artista · estado) en lugar del carrusel: más denso, sin flechas encima del contenido y con un “Hoy” claro.</li>
+          <li><b>Guardar B para una sección</b>: el gráfico de distribución de puntajes encaja muy bien en la página de álbum o en Explorar cuando haya suficientes valoraciones.</li>
+          <li><b>Independiente de la dirección elegida:</b> corregir el texto (tuteo consistente, “construyes”), ocultar listas vacías en la portada pública y dejar visible la búsqueda en tablet.</li>
+        </ul>
+        <p style="margin-top:16px"><a href="c-disqueria.html">Abrir la propuesta C →</a></p>
+      </div>
+    </div>
+  </section>
+
+  <div class="notes">
+    <p><b>Sobre los mockups.</b> Son páginas estáticas independientes; no modifican el sitio. Usuarios, reseñas, comentarios, puntajes y recuentos son datos de ejemplo. Los nombres de colecciones, las funciones y los lanzamientos vienen del sitio actual. Las carátulas se recortan del mosaico real del hero (<code>public/hero/wall.webp</code>).</p>
+    <p>Las tipografías se cargan desde Google Fonts. Cada mockup se revisó a 1440, 1280, 820 y 390 px sin desbordes horizontales y respeta <code>prefers-reduced-motion</code>.</p>
+  </div>
+</main>
+</body>
+</html>

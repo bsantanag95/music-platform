@@ -57,11 +57,13 @@ Ver "Inicio con sesión — estructura" para la jerarquía completa y los bloque
   "Reencuadre album-forward del landing" más abajo).
 - CTA a registro/login.
 - **Bloque editorial de álbumes** debajo del hero (ver más abajo).
-- **Búsqueda:** ya no hay buscador propio en Inicio. Nace con `add-header-search` como
-  exclusivo del estado anónimo, pero `redesign-frontend` mueve `HeaderSearch` al Header en
-  **todos** los estados, así que un buscador en el hero anónimo duplicaría la entrada y
-  volvería a instalarlo como protagonista de Inicio — justo lo que este diseño evita. El
-  visitante anónimo busca desde el Header, igual que un usuario con sesión.
+- **Búsqueda:** el hero anónimo vuelve a tener buscador (`redesign-anon-home-phase1`,
+  2026-11-14). `redesign-frontend` lo había quitado para no duplicar el del Header ni
+  convertir Inicio en "un buscador"; la auditoría de la portada mostró el problema contrario:
+  buscar un artista es la tarea principal y, por debajo de `lg`, el buscador del Header
+  quedaba escondido en el menú. Para no repetir la duplicación de entonces, el del hero **es
+  el mismo componente** (`HeaderSearch size="hero"`): mismo selector de tipo, sugerencias y
+  navegación a `/search`. Solo existe sin sesión; con sesión se busca desde el Header.
 
 ## Notas técnicas de la implementación
 
@@ -87,14 +89,19 @@ Ver "Inicio con sesión — estructura" para la jerarquía completa y los bloque
   se eliminó — "Tu feed" llama `listFeed` directo, igual que `/me/feed`.
 - No hizo falta ningún rol/permiso nuevo — "listas públicas recientes" usa el mismo campo
   `audience` que ya expone `userList`.
-- El hero ya no monta un `SearchForm` propio (lo hacía gateado a `!user` en
-  `src/app/[locale]/page.tsx`). Con el rediseño, la única entrada de búsqueda es
-  `HeaderSearch` en el Header, visible en todos los estados (ver
-  `openspec/changes/add-header-search` para el origen del componente).
+- El hero sin sesión monta `HeaderSearch size="hero"` (variante `full`/`large` de
+  `ScopedSearchField`), no un `SearchForm` propio. En el Header, por debajo de `lg` la
+  búsqueda tiene su propio botón (`Abrir búsqueda`, 44 × 44 px) y se abre en una fila bajo la
+  barra con el foco en el campo; el menú desplegable ya no la contiene. Menú y búsqueda se
+  excluyen; Escape, el mismo botón o navegar la cierran (spec `header-search`).
 - La búsqueda de usuarios es una superficie separada en `/users`: no se mezcla con el
-  buscador musical del Header. Inicio ofrece un acceso contextual a Usuarios para
-  visitantes; con sesión, se llega eligiendo el tipo "Usuarios" en el buscador por ámbito, y el
-  Footer conserva el enlace permanente para todos.
+  buscador musical del Header. Inicio ofrece a los visitantes un acceso contextual a Usuarios
+  como enlace "Conoce a quienes escuchan" en la cabecera del bloque de actividad de la
+  comunidad (`CommunityActivity showPeopleLink`; antes era un botón suelto entre secciones);
+  con sesión, se llega eligiendo el tipo "Usuarios" en el buscador por ámbito, y el Footer
+  conserva el enlace permanente para todos.
+- "Listas públicas recientes" descarta las listas sin elementos en la propia consulta
+  (`EXISTS` sobre `user_list_item`, antes del `limit`), así una lista vacía no ocupa lugar.
 
 ## Inicio con sesión — estructura (`redesign-home-authenticated`)
 
@@ -106,7 +113,7 @@ entró) seguido de los mismos bloques de descubrimiento. Este cambio cierra su j
 
 - Encabezado visible `appName` + `tagline` — queda solo un `<h1 class="sr-only">` para el
   landmark del documento.
-- El hero visual (`AnonHero`, `HeroCoverWall`), el carrusel de funcionalidades
+- El hero visual (`AnonHero`, hoy con `HeroCrate` y `HeroSampleEntry`), el carrusel de funcionalidades
   (`FeatureCarousel`/`HowItWorks`) y el CTA de registro (`AnonCta`) son exclusivos del
   estado anónimo: `page.tsx` delega en `AnonymousHome` o `AuthenticatedHome` según sesión
   y ninguno de esos componentes se monta con sesión.
@@ -161,29 +168,39 @@ van a `user_list_item`). Por eso `getMostRecentEditedList` ordena por
 - **Favoritos en el rastro reciente**: se excluyen en v1, por simetría con
   `listCommunityActivity` (los favoritos son señal de baja carga de contenido).
 
-## Hero visual del visitante anónimo (`redesign-frontend`)
+## Hero visual del visitante anónimo (`redesign-anon-home-phase1`)
 
-El rediseño reemplazó el hero plano (tagline + botones sueltos) por una primera impresión
-visual, en la línea de Letterboxd/Musicboard, sin salir de "The Vinyl Listening Room":
+`redesign-frontend` había reemplazado el hero plano por una banda a sangre completa con el muro
+de carátulas difuminado detrás de un titular centrado y un solo CTA «Comienza» que abría
+`GetStartedModal`. La auditoría de la portada (2026-11-14, dirección «C · Disquería», mockups en
+`mockups/home-2026-11/`) lo rehízo en dos columnas, sin salir de "The Vinyl Listening Room":
 
-- **Banda a sangre completa** (`AnonHero`, `src/components/home/AnonHero.tsx`): rompe el
-  ancho de columna del `main` con `-mx-[calc(50vw-50%)] w-screen` (+ `overflow-x-clip` en el
-  `main`), sin bordes ni esquinas.
-- **Muro de carátulas** (`HeroCoverWall`, `src/components/home/HeroCoverWall.tsx`): mosaico
-  estático de 32 portadas fijas (ver "Fuente de las carátulas del muro"), `opacity` baja, que se **difumina a transparente** hacia los bordes
-  con una máscara alfa radial (`mask-image`) y un degradado `from-ink via-ink/55 to-ink` de
-  legibilidad encima. Es decorativo: `aria-hidden`, `alt=""`.
-- **Un solo CTA "Comenzá"** que abre `GetStartedModal`
-  (`src/components/home/GetStartedModal.tsx`) con las dos rutas de entrada
-  (`/auth/register`, `/auth/login`). No hay buscador en el hero — la búsqueda vive en el
-  Header (`HeaderSearch`) para todos los estados.
+- **Banda a sangre completa** (`AnonHero`): rompe el ancho del `main` con
+  `-mx-[calc(50vw-50%)] w-screen` y vuelve a un contenedor propio de `max-w-[88rem]`. Dos
+  columnas desde `lg`; en móvil se apila (texto arriba, caja debajo).
+- **Columna de texto:** titular de una sola idea (`heroLine1` «El álbum es una obra.» +
+  `heroLine2` «Tu historial, también.» en ámbar), bajada (`anonSubtagline`) sobre fondo liso
+  —ya no sobre las carátulas—, el buscador `HeaderSearch size="hero"`, los accesos «Prueba con …»
+  (`HERO_SEARCH_EXAMPLES` en `src/lib/config/hero-covers.ts`, enlaces a
+  `/search?type=artist&q=`) y las acciones **directas**: «Crear cuenta» → `/auth/register` y
+  «¿Ya tienes una cuenta? Inicia sesión» → `/auth/login`. `GetStartedModal` se eliminó.
+- **Caja de carátulas** (`HeroCrate`): las cuatro filas del mosaico fijo como carriles en un
+  plano con perspectiva y máscara radial. Cada portada se recorta del mismo `wall.webp` con
+  `background-position` (`heroWallTilePosition`): un solo archivo, que `AnonHero` precarga con
+  `preload(..., { fetchPriority: "high" })` porque ya no es un `<img>`. Los carriles se deslizan
+  muy despacio (`crate-drift`, 80–110 s por vuelta, solo `motion-safe:`); con movimiento
+  reducido quedan quietos. Decorativa: `aria-hidden`. Reemplaza a `HeroCoverWall`, que se eliminó.
+- **Entrada de ejemplo** (`HeroSampleEntry`, datos en `HERO_SAMPLE_ENTRY`): Loveless, 4,5
+  estrellas (`StarRatingDisplay`), 92/100 (`ScoreBadge`, escala de la casa) y el contexto
+  «Redescubrimiento», con el rótulo visible «Ejemplo». Fija, sin usuario real y sin enlace:
+  enseña el doble puntaje en el primer viewport.
 
 ## Reencuadre album-forward del landing (`reframe-anon-landing-album-forward`)
 
 La dirección `redefine-content-hierarchy` fija el álbum como unidad cultural central. El
 landing anónimo lo refleja en dos piezas:
 
-- **Copy del hero** (`heroLine1-3`, `anonSubtagline`): de "registrá / guardá favoritos /
+- **Copy del hero** (originalmente `heroLine1-3`, `anonSubtagline`; hoy `heroLine1-2`, ver «Hero visual del visitante anónimo»): de "registrá / guardá favoritos /
   seguí" a *"El álbum es una obra · Valorala, reseñala, volvé a ella · Descubrí música por
   personas, no por un algoritmo"*. La `anonSubtagline` mantiene "registrar" (la capa de
   baja fricción sigue presente). Estructura del hero y CTA sin cambios.
@@ -319,10 +336,10 @@ en orden de lectura izquierda→derecha, arriba→abajo; el orden es parte del d
 - **Por qué mosaico y no 32 archivos.** Antes el hero hacía una consulta
   (`listRecentCoverArt`, que bloqueaba el SSR) y hasta 60 requests de imagen por
   `/_next/image`, cada una con la cadena CAA → archive.org en frío. Ahora: cero consultas, un
-  request, una decodificación, caché inmutable de `public/`. `HeroCoverWall` es un `<img>`
-  con `fetchPriority="high"` y `object-cover`; la máscara radial y el degradado de
-  legibilidad no cambian. El recorte por `object-cover` hace que en móvil se vea el centro
-  del mosaico.
+  request, una decodificación, caché inmutable de `public/`. Desde
+  `redesign-anon-home-phase1` el mosaico ya no se muestra entero: `HeroCrate` y
+  `HeroSampleEntry` recortan cada portada del mismo archivo con `background-position`, y
+  `AnonHero` lo precarga con prioridad alta (antes lo hacía el `<img>` de `HeroCoverWall`).
 - **Licencia, aplicada en código.** El mosaico es una copia almacenada de carátulas, así que
   rige la regla del espejo (ADR 0018): solo miniaturas ≤250px y retiro a pedido. El script
   **rechaza** cualquier release-group con `cover_blocked_at`, aborta si falta o falla una
@@ -463,3 +480,15 @@ título y fecha en vez del error "Sin ediciones disponibles".
   habilitarlas es una decisión de producto aparte.
 - Copy y diseño visual concreto de cada bloque (fuera del alcance de este documento, que
   cierra la estructura de contenido, no el layout).
+- **Modernización de la portada pública en tres fases** (dirección «C · Disquería», auditoría
+  del 2026-11-14, mockups en `mockups/home-2026-11/`): Fase 1 `redesign-anon-home-phase1`
+  (Header con búsqueda en pantallas angostas, hero con buscador, caja de carátulas y entrada de
+  ejemplo, acciones directas); Fase 2 cuerpo a ancho completo; Fase 3 lanzamientos como horario,
+  funciones y cierre. El plan completo está en el `design.md` de la Fase 1.
+- **Tipografías — implementación futura a analizar.** La dirección C proponía Bricolage
+  Grotesque para titulares y Geist / Geist Mono para interfaz y datos. Las tres fases mantienen
+  la tríada actual (Space Grotesk, Source Serif 4, IBM Plex Mono). Antes de decidir un cambio
+  —que afectaría a toda la aplicación y necesitaría su propio ADR— hay que analizar: la
+  legibilidad de Source Serif 4 en textos cortos de interfaz, el uso de IBM Plex Mono más allá
+  de los datos, el coste de revisar todas las páginas ya rediseñadas, el peso de carga y el
+  impacto en `DESIGN.md` y `docs/02-architecture/design-tokens-naming.md`.

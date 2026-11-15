@@ -7,7 +7,6 @@ import { PopularComments } from "@/components/home/PopularComments";
 import { AnonCta } from "@/components/home/AnonCta";
 import { CollectionRail } from "@/components/discovery/CollectionRail";
 import { AlbumRail } from "@/components/discovery/AlbumRail";
-import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import {
   ensureReleaseCalendarFresh,
@@ -26,8 +25,7 @@ import type { ReleaseGroupCategory } from "@/lib/api/schemas";
 // la comunidad como prueba social debajo, el carrusel de funcionalidades y el
 // CTA de registro. Ver docs/05-features/home.md.
 export async function AnonymousHome() {
-  const [t, tHome, tCat] = await Promise.all([
-    getTranslations("common"),
+  const [tHome, tCat] = await Promise.all([
     getTranslations("home"),
     getTranslations("catalog.artist"),
   ]);
@@ -86,16 +84,9 @@ export async function AnonymousHome() {
       )}
 
       <div className="grid w-full max-w-3xl gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-start">
-        <CommunityActivity entries={communityActivity} />
+        <CommunityActivity entries={communityActivity} showPeopleLink />
         <PublicLists entries={publicLists} />
       </div>
-
-      <Link
-        href="/users"
-        className="rounded-md border border-ink-border px-4 py-2 font-data text-sm text-paper transition-colors hover:border-amber hover:text-amber"
-      >
-        {t("users")}
-      </Link>
 
       <PopularComments comments={popularComments} />
 

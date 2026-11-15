@@ -100,6 +100,8 @@ vi.mock("next-intl", async () => {
         administration: "Administración",
         openMenu: "Abrir menú",
         closeMenu: "Cerrar menú",
+        openSearch: "Abrir búsqueda",
+        closeSearch: "Cerrar búsqueda",
         trigger: "Añadir",
       };
       if (map[key]) return map[key];
@@ -228,6 +230,75 @@ describe("Header", () => {
       "true",
     );
     expect(screen.getByRole("link", { name: "Diario" })).toBeInTheDocument();
+  });
+
+  describe("búsqueda en pantallas angostas", () => {
+    it.each([
+      ["sin sesión", null],
+      ["con sesión", { id: "u1", username: "ana", displayName: "Ana" }],
+    ])("%s, el botón abre la búsqueda en su fila con el foco en el campo", (_label, user) => {
+      renderWithIntl(<Header user={user} />);
+
+      const toggle = screen.getByRole("button", { name: "Abrir búsqueda" });
+      expect(toggle).toHaveAttribute("aria-expanded", "false");
+      expect(document.getElementById("header-mobile-search")).toBeNull();
+
+      fireEvent.click(toggle);
+
+      const row = document.getElementById("header-mobile-search")!;
+      expect(row).not.toBeNull();
+      expect(within(row).getByLabelText("Buscar artista")).toHaveFocus();
+      expect(screen.getByRole("button", { name: "Cerrar búsqueda" })).toHaveAttribute(
+        "aria-expanded",
+        "true",
+      );
+      expect(document.getElementById("header-mobile-menu")).toBeNull();
+    });
+
+    it("Escape cierra la fila y devuelve el foco al botón", () => {
+      renderWithIntl(<Header />);
+
+      fireEvent.click(screen.getByRole("button", { name: "Abrir búsqueda" }));
+      fireEvent.keyDown(window, { key: "Escape" });
+
+      expect(document.getElementById("header-mobile-search")).toBeNull();
+      expect(screen.getByRole("button", { name: "Abrir búsqueda" })).toHaveFocus();
+    });
+
+    it("Escape con el foco en el campo vacío también cierra la fila", () => {
+      renderWithIntl(<Header />);
+
+      fireEvent.click(screen.getByRole("button", { name: "Abrir búsqueda" }));
+      const row = document.getElementById("header-mobile-search")!;
+      fireEvent.keyDown(within(row).getByLabelText("Buscar artista"), { key: "Escape" });
+
+      expect(document.getElementById("header-mobile-search")).toBeNull();
+      expect(screen.getByRole("button", { name: "Abrir búsqueda" })).toHaveFocus();
+    });
+
+    it("menú y búsqueda se excluyen: abrir uno cierra el otro", () => {
+      renderWithIntl(<Header />);
+
+      fireEvent.click(screen.getByRole("button", { name: "Abrir búsqueda" }));
+      fireEvent.click(screen.getByRole("button", { name: "Abrir menú" }));
+
+      expect(document.getElementById("header-mobile-search")).toBeNull();
+      expect(document.getElementById("header-mobile-menu")).not.toBeNull();
+
+      fireEvent.click(screen.getByRole("button", { name: "Abrir búsqueda" }));
+
+      expect(document.getElementById("header-mobile-menu")).toBeNull();
+      expect(document.getElementById("header-mobile-search")).not.toBeNull();
+    });
+
+    it("el menú ya no contiene un campo de búsqueda", () => {
+      renderWithIntl(<Header />);
+
+      fireEvent.click(screen.getByRole("button", { name: "Abrir menú" }));
+
+      const panel = document.getElementById("header-mobile-menu")!;
+      expect(within(panel).queryByRole("search")).not.toBeInTheDocument();
+    });
   });
 
   it("la barra general de escritorio no muestra enlaces a superficies personales", () => {

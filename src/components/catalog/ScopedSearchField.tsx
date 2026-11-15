@@ -39,6 +39,12 @@ interface ScopedSearchFieldProps {
   trailing?: ReactNode;
   /** Variante `full` con resultados debajo: la etiqueta solo para lectores de pantalla. */
   labelHidden?: boolean;
+  /** Variante `full`: `large` es el buscador del hero de Inicio (campo y botón más altos). */
+  size?: "default" | "large";
+  /** Lleva el foco al campo al montarse (fila de búsqueda del Header en pantallas angostas). */
+  autoFocus?: boolean;
+  /** Aviso de que el buscador navegó (el Header cierra su fila de búsqueda). */
+  onNavigate?: () => void;
 }
 
 type Option =
@@ -79,6 +85,9 @@ export function ScopedSearchField({
   onSubmitSearch,
   trailing,
   labelHidden = false,
+  size = "default",
+  autoFocus = false,
+  onNavigate,
 }: ScopedSearchFieldProps) {
   const t = useTranslations("catalog.search");
   const tArtist = useTranslations("catalog.artist");
@@ -176,8 +185,13 @@ export function ScopedSearchField({
 
   const navigate = (href: string) => {
     reset();
+    onNavigate?.();
     startTransition(() => router.push(href));
   };
+
+  useEffect(() => {
+    if (autoFocus) inputRef.current?.focus();
+  }, [autoFocus]);
 
   const changeType = (next: SearchType) => {
     setType(next);
@@ -217,7 +231,9 @@ export function ScopedSearchField({
       });
     } else if (event.key === "Escape") {
       if (open) {
-        event.preventDefault();
+        // Solo se "consume" el Escape si cerró un desplegable visible: con el campo vacío
+        // tiene que llegar al Header, que cierra su fila de búsqueda (redesign-anon-home-phase1).
+        if (showDropdown) event.preventDefault();
         setOpen(false);
         setActiveIndex(-1);
       }
@@ -259,6 +275,7 @@ export function ScopedSearchField({
   };
 
   const compact = variant === "compact";
+  const large = !compact && size === "large";
   const typeLabel = t(`types.${type}`);
   const countText =
     showDropdown && loadedFor === suggestKey ? t("suggestions.count", { count: visibleSuggestions.length }) : "";
@@ -267,7 +284,7 @@ export function ScopedSearchField({
     <div
       className={`flex items-stretch rounded border bg-ink-surface transition-colors focus-within:border-amber/70 ${
         validationError ? "border-danger" : "border-ink-border"
-      } ${compact ? "h-8" : "h-11"}`}
+      } ${compact ? "h-8" : large ? "h-14 rounded-lg" : "h-11"}`}
     >
       <button
         ref={typeButtonRef}
@@ -316,7 +333,9 @@ export function ScopedSearchField({
         className={`min-w-0 flex-1 bg-transparent text-paper placeholder:text-paper-muted focus:outline-none ${
           compact
             ? `px-2 font-data text-xs ${fluid ? "w-full" : "w-40 transition-[width] focus:w-56"}`
-            : "px-3 font-body text-base"
+            : large
+              ? "px-4 font-body text-lg"
+              : "px-3 font-body text-base"
         }`}
       />
 
@@ -359,7 +378,9 @@ export function ScopedSearchField({
             <button
               type="submit"
               disabled={isNavigating}
-              className="h-11 shrink-0 rounded bg-amber px-4 font-display text-sm text-ink transition-colors hover:bg-amber-hover disabled:opacity-60 sm:px-5"
+              className={`shrink-0 bg-amber px-4 font-display text-ink transition-colors hover:bg-amber-hover disabled:opacity-60 sm:px-5 ${
+                large ? "h-14 rounded-lg text-base sm:px-6" : "h-11 rounded text-sm"
+              }`}
             >
               {isNavigating ? t("submitting") : t("submit")}
             </button>

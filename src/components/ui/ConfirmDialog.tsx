@@ -18,7 +18,7 @@ interface ConfirmDialogProps {
 
 // Diálogo de confirmación propio, en vez del `window.confirm` nativo del
 // navegador: portal, focus-trap, Escape y bloqueo de scroll — mismo nivel de
-// accesibilidad que `RegisterListenDialog`/`GetStartedModal`.
+// accesibilidad que `RegisterListenDialog`.
 export function ConfirmDialog({
   open,
   title,

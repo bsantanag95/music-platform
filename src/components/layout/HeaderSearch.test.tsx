@@ -61,4 +61,37 @@ describe("HeaderSearch", () => {
 
     expect(field().value).toBe("");
   });
+
+  it("avisa al navegar, para que el Header cierre su fila de búsqueda", () => {
+    const onNavigate = vi.fn();
+    renderWithIntl(<HeaderSearch fluid autoFocus onNavigate={onNavigate} />);
+
+    expect(field()).toHaveFocus();
+    fireEvent.change(field(), { target: { value: "Rosalía" } });
+    fireEvent.submit(field().closest("form")!);
+
+    expect(onNavigate).toHaveBeenCalledTimes(1);
+    expect(mockPush).toHaveBeenCalledWith("/search?type=artist&q=Rosal%C3%ADa");
+  });
+
+  describe("variante del hero", () => {
+    it("misma navegación que el Header, con botón Buscar visible", () => {
+      renderWithIntl(<HeaderSearch size="hero" />);
+
+      expect(screen.getByRole("button", { name: catalogEs.search.submit })).toBeInTheDocument();
+      fireEvent.change(field(), { target: { value: "  Black Sabbath " } });
+      fireEvent.submit(field().closest("form")!);
+
+      expect(mockPush).toHaveBeenCalledWith("/search?type=artist&q=Black+Sabbath");
+      expect(field().value).toBe("");
+    });
+
+    it("no navega con el campo vacío", () => {
+      renderWithIntl(<HeaderSearch size="hero" />);
+
+      fireEvent.submit(field().closest("form")!);
+
+      expect(mockPush).not.toHaveBeenCalled();
+    });
+  });
 });
