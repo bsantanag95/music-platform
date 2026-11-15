@@ -69,6 +69,8 @@ vi.mock("next-intl", async () => {
     useTranslations: () => (key: string, values?: Record<string, unknown>) => {
       const map: Record<string, string> = {
         home: "Inicio",
+        appName: "music-platform",
+        createAccount: "Crear cuenta",
         search: "Buscar",
         fieldLabel: "Buscar artista",
         "placeholder.artist": "Buscar artistas",
@@ -127,7 +129,7 @@ describe("Header", () => {
   it("muestra un logo que enlaza al inicio", () => {
     renderWithIntl(<Header />);
 
-    expect(screen.getByRole("link", { name: "Inicio" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "music-platform — Inicio" })).toHaveAttribute("href", "/");
   });
 
   it("no muestra el buscador de usuarios como navegación principal", () => {
@@ -143,7 +145,7 @@ describe("Header", () => {
       "href",
       "/auth/login",
     );
-    expect(screen.getByRole("link", { name: "Registrarse" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Crear cuenta" })).toHaveAttribute(
       "href",
       "/auth/register",
     );
@@ -230,6 +232,64 @@ describe("Header", () => {
       "true",
     );
     expect(screen.getByRole("link", { name: "Diario" })).toBeInTheDocument();
+  });
+
+  describe("composición de escritorio (redesign-site-header)", () => {
+    it("ordena marca, navegación y buscador, con el buscador en su propia zona", () => {
+      renderWithIntl(<Header exploreEnabled />);
+
+      const brand = screen.getByRole("link", { name: "music-platform — Inicio" });
+      const nav = screen.getAllByRole("navigation", { name: "Navegación general" })[0]!;
+      const search = document.getElementById("header-desktop-search")!;
+      expect(brand.compareDocumentPosition(nav) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(nav.compareDocumentPosition(search) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(within(search).getByLabelText("Buscar artista")).toBeInTheDocument();
+      expect(within(nav).queryByRole("search")).not.toBeInTheDocument();
+    });
+
+    it("muestra el nombre de la aplicación junto al monograma", () => {
+      renderWithIntl(<Header />);
+
+      expect(screen.getByRole("link", { name: "music-platform — Inicio" })).toHaveTextContent("music-platform");
+    });
+  });
+
+  describe("atajo /", () => {
+    it("lleva el foco al buscador de escritorio cuando está visible", () => {
+      renderWithIntl(<Header />);
+      const field = within(document.getElementById("header-desktop-search")!).getByLabelText("Buscar artista");
+      // jsdom no calcula layout: se simula que el contenedor de escritorio está visible.
+      Object.defineProperty(field, "offsetParent", { configurable: true, get: () => document.body });
+
+      fireEvent.keyDown(window, { key: "/" });
+
+      expect(field).toHaveFocus();
+    });
+
+    it("debajo de lg abre la fila de búsqueda", () => {
+      renderWithIntl(<Header />);
+
+      fireEvent.keyDown(window, { key: "/" });
+
+      expect(document.getElementById("header-mobile-search")).not.toBeNull();
+    });
+
+    it("no actúa mientras se escribe en otro campo ni con Ctrl", () => {
+      renderWithIntl(
+        <>
+          <textarea aria-label="Reseña" />
+          <Header />
+        </>,
+      );
+      const textarea = screen.getByLabelText("Reseña");
+      textarea.focus();
+
+      fireEvent.keyDown(textarea, { key: "/" });
+      fireEvent.keyDown(window, { key: "/", ctrlKey: true });
+
+      expect(textarea).toHaveFocus();
+      expect(document.getElementById("header-mobile-search")).toBeNull();
+    });
   });
 
   describe("búsqueda en pantallas angostas", () => {
@@ -559,7 +619,7 @@ describe("Header", () => {
       try {
         renderWithIntl(<Header user={{ id: "u1", username: "ana", displayName: "Ana" }} exploreEnabled />);
 
-        expect(screen.getByRole("link", { name: "Inicio" })).toHaveAttribute("href", "/");
+        expect(screen.getByRole("link", { name: "music-platform — Inicio" })).toHaveAttribute("href", "/");
         expect(screen.getByRole("navigation", { name: "Idioma" })).toBeInTheDocument();
         expect(screen.queryByLabelText("Buscar artista")).not.toBeInTheDocument();
         expect(screen.queryByRole("navigation", { name: "Navegación general" })).not.toBeInTheDocument();

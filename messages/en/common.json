@@ -22,6 +22,7 @@
   "settings": "Settings",
   "login": "Log in",
   "register": "Sign up",
+  "createAccount": "Create account",
   "logout": "Log out",
   "logoutPending": "Logging out...",
   "signedInAs": "Signed in as",

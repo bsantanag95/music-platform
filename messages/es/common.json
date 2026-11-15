@@ -22,6 +22,7 @@
   "settings": "Ajustes",
   "login": "Iniciar sesión",
   "register": "Registrarse",
+  "createAccount": "Crear cuenta",
   "logout": "Cerrar sesión",
   "logoutPending": "Cerrando sesión...",
   "signedInAs": "Sesión iniciada como",

@@ -18,4 +18,12 @@ describe("Logo", () => {
 
     expect(screen.getByRole("link", { name: commonEs.home })).toHaveAttribute("href", "/");
   });
+
+  it("con withName muestra el nombre de la aplicación y lo incluye en el nombre accesible", () => {
+    renderWithIntl(<Logo withName />);
+
+    const link = screen.getByRole("link", { name: `${commonEs.appName} — ${commonEs.home}` });
+    expect(link).toHaveAttribute("href", "/");
+    expect(link).toHaveTextContent(commonEs.appName);
+  });
 });

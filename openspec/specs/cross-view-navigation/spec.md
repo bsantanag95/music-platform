@@ -83,10 +83,12 @@ Cuando existe sesión, el Header SHALL separar dos zonas: una **barra general** 
 navegación de contenido y un **menú de usuario** anclado al nombre visible, cuyo control
 SHALL mostrar un indicador de despliegue (cheurón hacia abajo) junto al nombre.
 
-La barra general SHALL contener, en este orden, el acceso al buscador del catálogo, el enlace
-a Explorar (cuando el catálogo editorial esté habilitado), el enlace a la superficie pública
-de Listas de la comunidad (`/lists`) y el enlace a la superficie pública de actividad de la
-comunidad (`/activity`), etiquetado **"Comunidad"**. El enlace "Listas" de la barra general
+La barra general SHALL contener, en este orden, el enlace a Explorar (cuando el catálogo
+editorial esté habilitado), el enlace a la superficie pública de Listas de la comunidad
+(`/lists`), el enlace a la superficie pública de actividad de la comunidad (`/activity`),
+etiquetado **"Comunidad"**, y el acceso al buscador del catálogo. En escritorio, la marca y
+esos enlaces SHALL ir a la izquierda, el buscador SHALL ocupar el centro con el ancho
+disponible y la zona de cuenta (o de usuario) SHALL ir a la derecha. El enlace "Listas" de la barra general
 SHALL apuntar a la superficie pública `/lists`, distinta de la gestión personal en
 `/me/lists`. El enlace "Comunidad" SHALL apuntar a `/activity`, distinta del feed de
 seguidos en `/me/feed`. La barra general SHALL NOT mostrar un enlace al descubrimiento de
@@ -140,8 +142,8 @@ colapsado, en un grupo propio antes de los ajustes, y SHALL NOT ocupar un lugar 
 general.
 
 En viewports por debajo del punto de corte `lg`, el Header SHALL colapsar en un panel único
-que conserve la misma división: un bloque de barra general (buscador, Explorar, Listas y
-Comunidad) y un bloque de usuario que empieza por el control "Añadir" y sigue con los mismos
+que conserve la misma división: un bloque de barra general (Explorar, Listas y Comunidad; la
+búsqueda se abre desde su propio control en la barra, ver `header-search`) y un bloque de usuario que empieza por el control "Añadir" y sigue con los mismos
 accesos y títulos de grupo del menú, el selector de locale y el cierre de sesión.
 
 #### Scenario: Barra general sin superficies personales
@@ -246,8 +248,8 @@ accesos y títulos de grupo del menú, el selector de locale y el cierre de sesi
 #### Scenario: Panel colapsado en viewport móvil
 
 - **WHEN** un usuario con sesión abre el panel del Header en un viewport por debajo de `lg`
-- **THEN** ve un bloque de barra general con el buscador, Explorar, el enlace a `/lists` y el
-  enlace "Comunidad" a `/activity`, y un bloque de usuario que empieza por el control
+- **THEN** ve un bloque de barra general con Explorar, el enlace a `/lists` y el enlace
+  "Comunidad" a `/activity`, sin campo de búsqueda, y un bloque de usuario que empieza por el control
   "Añadir" y sigue con los mismos accesos y rótulos de grupo del menú más el selector de
   locale y el cierre de sesión
 
@@ -274,4 +276,37 @@ accesos y títulos de grupo del menú, el selector de locale y el cierre de sesi
 #### Scenario: El menú de usuario incluye Mis valoraciones
 - **WHEN** un usuario autenticado abre el menú de usuario del Header o el panel móvil
 - **THEN** encuentra el acceso "Valoraciones", después de Diario, que lleva a `/me/ratings`
+
+### Requirement: Marca en el Header
+
+El Header SHALL mostrar como marca el monograma de la aplicación y, desde el punto de corte
+`sm`, el nombre de la aplicación junto a él, tomado de un único texto localizado (`appName`),
+de modo que cambiar el nombre provisional no exija tocar componentes. Entre los puntos de corte
+`lg` y `xl`, donde la fila de escritorio no tiene margen para el buscador, el nombre SHALL
+ocultarse y la marca SHALL quedar en el monograma. La marca SHALL enlazar
+a Inicio y SHALL tener como nombre accesible el nombre de la aplicación seguido de «Inicio».
+En la pantalla reducida de foco (onboarding) la marca SHALL mantener el mismo aspecto.
+
+#### Scenario: Marca en escritorio
+- **WHEN** una persona abre cualquier página en una pantalla de 1440 px
+- **THEN** el Header muestra el monograma y el nombre de la aplicación, enlazados a Inicio
+
+#### Scenario: Marca en escritorio estrecho
+- **WHEN** una persona con sesión abre cualquier página en una pantalla de 1024 px
+- **THEN** el Header muestra solo el monograma y la fila no desborda
+
+#### Scenario: Marca en un teléfono
+- **WHEN** una persona abre cualquier página en una pantalla de 390 px
+- **THEN** el Header muestra solo el monograma, con el mismo enlace y nombre accesible
+
+### Requirement: Acciones de cuenta en el Header sin sesión
+
+Sin sesión, la zona de cuenta del Header SHALL ofrecer «Iniciar sesión» como acción
+secundaria y «Crear cuenta» como acción principal, con el mismo texto que la acción de
+registro del hero de Inicio y un área táctil de al menos 40 px de alto.
+
+#### Scenario: Acciones sin sesión
+- **WHEN** un visitante sin sesión abre cualquier página en escritorio
+- **THEN** el Header muestra «Iniciar sesión», que abre `/auth/login`, y «Crear cuenta», que
+  abre `/auth/register`
 
