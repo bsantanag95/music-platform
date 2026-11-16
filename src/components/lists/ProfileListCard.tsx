@@ -15,10 +15,13 @@ export function ProfileListCard({
   list,
   username,
   className,
+  canAct = true,
 }: {
   list: UserListSummary;
   username: string;
   className?: string;
+  /** Guardar/Seguir solo para un visitante con sesión que no es el dueño (spec social-profiles). */
+  canAct?: boolean;
 }) {
   const t = useTranslations("lists");
 
@@ -41,12 +44,14 @@ export function ProfileListCard({
         </>
       }
       action={
-        <SaveListButton
+        canAct ? (
+          <SaveListButton
           key={`${list.id}:${list.saved ?? false}:${list.following ?? false}`}
           listId={list.id}
           initialSaved={list.saved ?? false}
           initialFollowing={list.following ?? false}
-        />
+          />
+        ) : null
       }
     />
   );

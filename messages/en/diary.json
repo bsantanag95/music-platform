@@ -12,7 +12,6 @@
   "emptyDescription": "Log a listen of an artist, album or song and it will show up here.",
   "profileEmptyTitle": "No diary entries",
   "profileEmptyDescription": "This user hasn't recorded any visible listens yet.",
-  "profileViewFull": "See full diary",
   "scrollRegionLabel": "Diary entries",
   "logInDiary": "Add to diary",
   "signInToListen": "Log in to record listens",
@@ -105,5 +104,9 @@
     "asOthersDescription": "Each listen is shown according to its audience: private ones are only visible to you.",
     "asOthersLink": "See your diary on your profile"
   },
-  "yearInDiscs": "Your {year} in albums"
+  "yearInDiscs": "Your {year} in albums",
+  "profilePreviewCaption": "Recent diary entries",
+  "profilePreviewDate": "Date",
+  "profilePreviewWork": "Work",
+  "profilePreviewContext": "Listen"
 }

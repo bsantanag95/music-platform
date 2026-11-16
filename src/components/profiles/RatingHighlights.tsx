@@ -4,6 +4,7 @@ import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { StarRatingValue } from "@/components/social/StarRatingValue";
 import { formatStars } from "@/components/album/album-format";
 import { targetHref } from "@/components/feed/feed-target";
+import { ProfileSectionHeading } from "./ProfileSectionHeading";
 import type { RatingHighlightEntry } from "@/services/rating-highlights/rating-highlights";
 
 interface RatingHighlightsProps {
@@ -21,10 +22,10 @@ export async function RatingHighlights({ highlights }: RatingHighlightsProps) {
 
   return (
     <section className="flex w-full flex-col gap-4">
-      <h2 className="font-display text-xl text-paper">{t("ratingHighlights.heading")}</h2>
-      <ul className="flex flex-col gap-3">
+      <ProfileSectionHeading title={t("ratingHighlights.heading")} />
+      <ul className="flex flex-col divide-y divide-ink-border">
         {highlights.map((highlight) => (
-          <li key={highlight.id}>
+          <li key={highlight.id} className="py-3 first:pt-0 last:pb-0">
             <Link
               href={targetHref(
                 highlight.entity.type,
@@ -32,9 +33,13 @@ export async function RatingHighlights({ highlights }: RatingHighlightsProps) {
                 highlight.entity.title,
                 highlight.entity.artistName ?? null,
               )}
-              className="group flex items-center gap-3 rounded-lg border border-ink-border bg-ink-surface p-3 transition-colors hover:border-amber"
+              className="group flex items-center gap-3"
             >
-              <CoverThumb cover={highlight.entity.coverThumbUrl} label="" className="size-12 rounded" />
+              <CoverThumb
+                cover={highlight.entity.coverThumbUrl}
+                label=""
+                className="size-14 rounded border border-ink-border transition-colors group-hover:border-amber"
+              />
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-display text-base text-paper transition-colors group-hover:text-amber">
                   {highlight.entity.title}

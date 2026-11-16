@@ -20,14 +20,14 @@ llegando que el anterior.
 | Nivel | Responde | Tiempo | Contenido |
 |---|---|---|---|
 | **1 — Identidad** | ¿Quién es, musicalmente? | Segundos | **Cabecera** (identidad, acciones y **Tarjeta de Identidad** bajo «Identidad musical») + **franja de identidad** (ficha, resumen de la huella con su década, «Artistas seguidos») |
-| **2 — Exploración** | ¿Qué más hay para ver? | Minutos | **Empieza por aquí**, valoraciones destacadas, reseñas, en rotación, estantes (diario/favoritos/listas/colección) |
+| **2 — Exploración** | ¿Qué más hay para ver? | Minutos | En filas: en rotación; **Empieza por aquí** \| valoraciones destacadas; reseñas \| diario; favoritos; listas \| colección; conciertos |
 | **3 — Inmersión** | Quiero el detalle completo | Bajo demanda | Huella de gusto completa (`/users/{username}/fingerprint`), cada estante en su propia vista |
 
 Los niveles 1 y 2 son la misma página (`page.tsx`), compuesta de arriba hacia abajo en ese
 orden, con el mismo árbol para dueño y visitante (solo cambian los editores inline). Debajo de
 la cabecera, una barra de anclas fija lleva a las secciones con contenido (ver "Cabecera, anclas
-y franja de identidad"). El nivel 3 son enlaces explícitos al final (`ProfileLevel3Links`), sin
-duplicar contenido — anclas a los estantes ya visibles más el enlace real a la huella completa.
+y franja de identidad"). El nivel 3 se alcanza desde el «Ver todo →» de cada sección y desde el
+rótulo de la huella en la franja; desde la Fase 2 no hay bloque de enlaces al final.
 
 ## Tres niveles de acceso
 
@@ -172,8 +172,19 @@ el tono por perfil y el vinilo que asoma. Reemplaza a la **Placa** de la barra l
   solo la columna de datos de la cabecera (`wrapDetails`) y abre el mismo panel de siempre
   (identidad, identidad musical, preguntas y enlaces: también edita la ficha de la franja); la
   Tarjeta de Identidad conserva su propio lápiz.
-- El cuerpo (Empieza por aquí, valoraciones, reseñas, en rotación, estantes) conserva su
-  contenido y orden en la Fase 1, ya sin el tope de 42 rem por sección.
+- **Cuerpo en filas (Fase 2, `redesign-user-profile-phase2`)**: «En rotación» → «Empieza por aquí» |
+  «Valoraciones destacadas» → «Reseñas» | Diario → Favoritos → Listas | Colección física → Conciertos.
+  Cada fila la compone una sección de servidor (`StartRow`, `ReviewsDiaryRow`, `ListsCollectionRow`) que
+  decide con datos si lleva una o dos columnas (`ProfileRow`): con una sola, ocupa la fila; debajo de
+  `lg` se apilan. Encabezado común (`ProfileSectionHeading`): título, recuento y «Ver todo →» a la vista
+  completa, sin subtítulos. Vistas previas: reseñas como filas compactas (cuerpo en 2 líneas); diario como
+  tabla de sus 5 entradas más recientes (`DiaryPreviewTable`: fecha | obra e impresión | contexto), sin
+  caja con scroll; Favoritos con las carátulas de álbum a la izquierda y artistas y canciones al lado;
+  «Listas» con hasta 4 tarjetas —listas fijadas primero y hasta 2 listas para completar (Caminos)— y un
+  «+N» a cada página; colección con sus 4 copias más recientes sin selector de vista
+  (`CollectionPreview`, ahora Server Component). Guardar/Seguir y Seguir mi progreso solo para un
+  visitante con sesión que no es el dueño ni la previsualización (`canAct`). «Empieza por aquí» sigue
+  mostrando lo que repite la Tarjeta de Identidad (decisión confirmada el 2026-11-16).
 
 Las menciones a «la Placa» en el resto de este documento son históricas: hoy corresponden a la
 cabecera (datos de la persona, acciones, recuentos) y a la franja de identidad (la ficha).
@@ -833,6 +844,11 @@ la insignia "tú también" de «Artistas seguidos». En la cabecera se muestra e
 miniaturas con el nombre de tooltip (fotos de artista incluidas).
 
 ## Diario
+
+> **Desde 2026-11 (`redesign-user-profile-phase2`)** el perfil ya no usa la caja con scroll ni el
+> riel horizontal descritos abajo: el diario es una tabla de 5 entradas (`DiaryPreviewTable`) y las
+> listas, una grilla de tarjetas junto a la colección (ver "Cabecera, anclas y franja de identidad").
+> Lo que sigue queda como historia de esas decisiones.
 
 Igual que Exploración y Favoritos, el diario del perfil dejó de mostrar todo sin tope (antes
 `DiaryRail` embebía el listado completo, con un "Cargar más" ilimitado, directo en el flujo

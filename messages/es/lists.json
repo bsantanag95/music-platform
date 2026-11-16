@@ -7,7 +7,6 @@
   "profileCount": "{count, plural, =0 {Sin listas} one {# lista} other {# listas}}",
   "profileSearchPlaceholder": "Buscar listas",
   "profileNoResultsDescription": "Ninguna lista coincide con esos filtros.",
-  "profileSeeAll": "Ver las {count} listas",
   "railLabel": "Listas del perfil",
   "railPrev": "Listas anteriores",
   "railNext": "Listas siguientes",

@@ -2,24 +2,23 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AffinitySection,
   AnchorsSection,
-  CaminosRail,
-  CollectionRail,
-  DiaryRail,
   EditablePlaca,
   FavoritesRail,
-  FeaturedReviewsSection,
   HeaderBackdropSection,
   IdentityCardSection,
   IdentityStripSection,
   InRotationSection,
-  ListsRail,
+  ListsCollectionRow,
   PinnedSection,
-  RatingHighlightsSection,
+  ReviewsDiaryRow,
   SettingsCardSection,
+  StartRow,
+  DIARY_PROFILE_PREVIEW,
 } from "./sections";
 import { ProfileRail } from "@/components/profiles/ProfileRail";
-import { ListsCarousel } from "@/components/lists/ListsCarousel";
-import { CaminosCarousel } from "@/components/camino/CaminosCarousel";
+import { ProfileRow } from "@/components/profiles/ProfileRow";
+import { DiaryPreviewTable } from "@/components/diary/DiaryPreviewTable";
+import { ListsAndCaminosPreview, LISTS_AND_CAMINOS_PREVIEW } from "@/components/profiles/ListsAndCaminosPreview";
 import { CollectionPreview } from "@/components/collection/CollectionPreview";
 import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
 import { InRotation } from "@/components/profiles/InRotation";
@@ -108,7 +107,7 @@ vi.mock("@/services/rating-highlights/rating-highlights", () => ({
 vi.mock("@/services/social/following", () => ({ countPendingFollowRequests: svc.countPendingFollowRequests }));
 
 // Stubs de los componentes de lectura para no arrastrar sus imports cliente.
-vi.mock("@/components/diary/DiaryReadList", () => ({ DiaryReadList: () => null }));
+vi.mock("@/components/diary/DiaryPreviewTable", () => ({ DiaryPreviewTable: () => null }));
 vi.mock("@/components/favorites/FavoritesPreview", () => ({ FavoritesPreview: () => null }));
 vi.mock("@/components/lists/ListsCarousel", () => ({ ListsCarousel: () => null }));
 vi.mock("@/components/camino/CaminosCarousel", () => ({ CaminosCarousel: () => null }));
@@ -125,30 +124,61 @@ const section = { username: "ana", viewerId: null, isOwn: false };
 
 beforeEach(() => vi.clearAllMocks());
 
-describe("estantes vacíos", () => {
-  it("DiaryRail colapsa (null) cuando no hay entradas y el visitante no es el dueño", async () => {
-    svc.listUserDiary.mockResolvedValue({ entries: [], page: 1, hasNext: false });
-    expect(await DiaryRail(section)).toBeNull();
+type Node = { type?: unknown; props?: Record<string, unknown> } | null;
+const rowOf = (tree: unknown) => tree as { type?: unknown; props: { start: Node; end: Node } };
+
+describe("filas del cuerpo (openspec: redesign-user-profile-phase2)", () => {
+  it("StartRow: Empieza por aquí junto a Valoraciones destacadas", async () => {
+    svc.getShowcase.mockResolvedValue({ pinned: [{ id: "p1" }], identityCard: { artist: null, album: null, anthem: null } });
+    svc.getProfileRatingHighlights.mockResolvedValue([{ id: "h1" }]);
+    const row = rowOf(await StartRow({ ownerId: "owner", ...section }));
+    expect(row.type).toBe(ProfileRow);
+    expect(row.props.start?.type).toBe(PinnedSection);
+    expect(row.props.end?.type).toBe(RatingHighlights);
+    expect(svc.getProfileRatingHighlights).toHaveBeenCalledWith("ana", null);
   });
 
-  it("DiaryRail muestra algo para el dueño aunque el diario esté vacío", async () => {
-    svc.listUserDiary.mockResolvedValue({ entries: [], page: 1, hasNext: false });
-    const tree = await DiaryRail({ ...section, isOwn: true });
-    expect(tree).not.toBeNull();
+  it("StartRow: sin valoraciones destacadas, Empieza por aquí ocupa la fila", async () => {
+    svc.getShowcase.mockResolvedValue({ pinned: [{ id: "p1" }], identityCard: { artist: null, album: null, anthem: null } });
+    svc.getProfileRatingHighlights.mockResolvedValue([]);
+    const row = rowOf(await StartRow({ ownerId: "owner", ...section }));
+    expect(row.props.start?.type).toBe(PinnedSection);
+    expect(row.props.end).toBeNull();
   });
 
-  it("DiaryRail renderiza el estante con el conteo cuando hay entradas", async () => {
-    // El conteo del encabezado es el total real (57), no lo traído en la
-    // primera página (2) — con tope de scroll + "Cargar más" ya no son lo mismo.
-    svc.listUserDiary.mockResolvedValue({
-      entries: [{ id: "e1" }, { id: "e2" }],
-      page: 1,
-      hasNext: true,
-      totalCount: 57,
-    });
-    const tree = (await DiaryRail(section)) as { type?: unknown; props?: Record<string, unknown> };
-    expect(tree?.type).toBe(ProfileRail);
-    expect(tree?.props?.count).toBe(57);
+  it("StartRow: sin ítems fijados, el bloque vacío del dueño va solo y las valoraciones ocupan la fila", async () => {
+    svc.getShowcase.mockResolvedValue({ pinned: [], identityCard: { artist: null, album: null, anthem: null } });
+    svc.getProfileRatingHighlights.mockResolvedValue([{ id: "h1" }]);
+    const visitor = (await StartRow({ ownerId: "owner", ...section })) as { props: { children: unknown[] } };
+    expect(visitor.props.children[0]).toBe(false);
+    const own = (await StartRow({ ownerId: "owner", ...section, isOwn: true })) as { props: { children: Node[] } };
+    expect(own.props.children[0]?.type).toBe(PinnedSection);
+    expect(rowOf(own.props.children[1]).props.start).toBeNull();
+    expect(rowOf(own.props.children[1]).props.end?.type).toBe(RatingHighlights);
+  });
+
+  it("ReviewsDiaryRow: reseñas junto al diario, que pide sus 5 entradas recientes", async () => {
+    const reviews = { reviews: [{ id: "r1" }], total: 13 };
+    svc.getProfileReviews.mockResolvedValue(reviews);
+    svc.listUserDiary.mockResolvedValue({ entries: [{ id: "e1" }], page: 1, hasNext: true, totalCount: 57 });
+    const row = rowOf(await ReviewsDiaryRow(section));
+    expect(svc.listUserDiary).toHaveBeenCalledWith("ana", null, 1, DIARY_PROFILE_PREVIEW);
+    expect(row.props.start?.type).toBe(ProfileReviews);
+    expect(row.props.start?.props?.data).toBe(reviews);
+    const diary = row.props.end as { type?: unknown; props: Record<string, unknown> & { children: Node } };
+    expect(diary.type).toBe(ProfileRail);
+    expect(diary.props).toMatchObject({ id: "diario", count: 57, more: { href: "/users/ana/diary", label: "seeAll" } });
+    expect(diary.props.children?.type).toBe(DiaryPreviewTable);
+  });
+
+  it("ReviewsDiaryRow: sin reseñas ni diario no dibuja nada para un visitante; el dueño ve su diario vacío", async () => {
+    svc.getProfileReviews.mockResolvedValue(null);
+    svc.listUserDiary.mockResolvedValue({ entries: [], page: 1, hasNext: false, totalCount: 0 });
+    const visitor = rowOf(await ReviewsDiaryRow(section));
+    expect(visitor.props.start).toBeNull();
+    expect(visitor.props.end).toBeNull();
+    const own = rowOf(await ReviewsDiaryRow({ ...section, isOwn: true }));
+    expect(own.props.end).not.toBeNull();
   });
 
   it("FavoritesRail colapsa sin favoritos visibles para un visitante", async () => {
@@ -161,7 +191,7 @@ describe("estantes vacíos", () => {
     expect(await FavoritesRail(section)).toBeNull();
   });
 
-  it("FavoritesRail renderiza el estante con el total real entre los 3 tipos", async () => {
+  it("FavoritesRail usa el total real entre los 3 tipos y enlaza la vista completa", async () => {
     svc.getFavoritesPreview.mockResolvedValue({
       artists: [{ id: "f1" }],
       albums: [{ id: "f2" }, { id: "f3" }],
@@ -170,87 +200,61 @@ describe("estantes vacíos", () => {
     });
     const tree = (await FavoritesRail(section)) as { type?: unknown; props?: Record<string, unknown> };
     expect(tree?.type).toBe(ProfileRail);
-    expect(tree?.props?.count).toBe(3);
+    expect(tree?.props).toMatchObject({ count: 3, more: { href: "/users/ana/favorites" } });
   });
 
-  it("ListsRail colapsa (null) sin listas visibles para un visitante, pero no para el dueño", async () => {
-    svc.listUserLists.mockResolvedValue({ lists: [], page: 1, pageSize: 10, hasNext: false, totalCount: 0 });
-    expect(await ListsRail(section)).toBeNull();
-    expect(await ListsRail({ ...section, isOwn: true })).not.toBeNull();
+  const lists = (n: number, total: number) => ({
+    lists: Array.from({ length: n }, (_, i) => ({ id: `l${i}` })),
+    page: 1,
+    pageSize: 4,
+    hasNext: total > n,
+    totalCount: total,
+  });
+  const caminos = (n: number, total: number) => ({
+    caminos: Array.from({ length: n }, (_, i) => ({ id: `c${i}` })),
+    page: 1,
+    pageSize: 4,
+    totalCount: total,
   });
 
-  it("ListsRail pide solo las primeras 10 y usa el total real en el encabezado", async () => {
-    // 23 listas visibles pero el riel trae 10: el "23" del encabezado y el
-    // "+13" de la tarjeta-puerta salen de `totalCount`, no de `lists.length`.
-    const lists = Array.from({ length: 10 }, (_, i) => ({ id: `l${i}` }));
-    svc.listUserLists.mockResolvedValue({ lists, page: 1, pageSize: 10, hasNext: true, totalCount: 23 });
-
-    const tree = (await ListsRail(section)) as {
-      type?: unknown;
-      props?: { count?: number; children?: { type?: unknown; props?: Record<string, unknown> } };
-    };
-
-    expect(svc.listUserLists).toHaveBeenCalledWith("ana", null, 1, 10);
-    expect(tree?.type).toBe(ProfileRail);
-    expect(tree?.props?.count).toBe(23);
-    const carousel = tree?.props?.children;
-    expect(carousel?.type).toBe(ListsCarousel);
-    expect(carousel?.props).toMatchObject({ username: "ana", totalCount: 23 });
-    expect(carousel?.props?.lists).toHaveLength(10);
-  });
-
-  it("CaminosRail colapsa (null) sin Caminos visibles para un visitante, pero no para el dueño", async () => {
-    svc.listVisibleCaminos.mockResolvedValue({ caminos: [], page: 1, pageSize: 10, totalCount: 0 });
-    expect(await CaminosRail(section)).toBeNull();
-    expect(await CaminosRail({ ...section, isOwn: true })).not.toBeNull();
-  });
-
-  it("CaminosRail pide solo los primeros 10, usa el total real y desactiva tracking para el dueño", async () => {
-    const caminos = Array.from({ length: 10 }, (_, i) => ({ id: `c${i}` }));
-    svc.listVisibleCaminos.mockResolvedValue({ caminos, page: 1, pageSize: 10, totalCount: 14 });
-
-    const tree = (await CaminosRail(section)) as {
-      type?: unknown;
-      props?: { count?: number; children?: { type?: unknown; props?: Record<string, unknown> } };
-    };
-
-    expect(svc.listVisibleCaminos).toHaveBeenCalledWith("ana", null, 1, 10);
-    expect(tree?.type).toBe(ProfileRail);
-    expect(tree?.props?.count).toBe(14);
-    const carousel = tree?.props?.children;
-    expect(carousel?.type).toBe(CaminosCarousel);
-    expect(carousel?.props).toMatchObject({ username: "ana", totalCount: 14, canTrack: true });
-
-    const ownTree = (await CaminosRail({ ...section, isOwn: true })) as {
-      props?: { children?: { props?: Record<string, unknown> } };
-    };
-    expect(ownTree?.props?.children?.props).toMatchObject({ canTrack: false });
-  });
-
-  it("CollectionRail colapsa (null) sin copias visibles para un visitante, pero no para el dueño", async () => {
-    svc.getCollectionPreview.mockResolvedValue({ artists: [], totalEntries: 0, totalArtists: 0 });
-    expect(await CollectionRail(section)).toBeNull();
-    expect(await CollectionRail({ ...section, isOwn: true })).not.toBeNull();
-  });
-
-  it("CollectionRail usa el total real de copias en el encabezado y le pasa la previsualización", async () => {
-    // 87 copias visibles pero el estante trae solo 5 artistas x 4: el "87" sale
-    // de `totalEntries`, no de lo traído.
+  it("ListsCollectionRow: Listas (listas y listas para completar) junto a la colección", async () => {
+    svc.listUserLists.mockResolvedValue(lists(4, 6));
+    svc.listVisibleCaminos.mockResolvedValue(caminos(1, 3));
     const artists = [{ name: "Queen", total: 12, entries: [{ id: "e1" }] }];
     svc.getCollectionPreview.mockResolvedValue({ artists, totalEntries: 87, totalArtists: 31 });
 
-    const tree = (await CollectionRail(section)) as {
-      type?: unknown;
-      props?: { id?: string; count?: number; children?: { type?: unknown; props?: Record<string, unknown> } };
-    };
+    const row = rowOf(await ListsCollectionRow({ ...section, canAct: true }));
+    expect(svc.listUserLists).toHaveBeenCalledWith("ana", null, 1, LISTS_AND_CAMINOS_PREVIEW);
+    const listsRail = row.props.start as { props: Record<string, unknown> & { children: Node } };
+    expect(listsRail.props).toMatchObject({ id: "listas", label: "listsTitle", count: 9 });
+    expect(listsRail.props.children?.type).toBe(ListsAndCaminosPreview);
+    expect(listsRail.props.children?.props).toMatchObject({ listsTotal: 6, caminosTotal: 3, canAct: true });
+    const collection = row.props.end as { props: Record<string, unknown> & { children: Node } };
+    expect(collection.props).toMatchObject({ id: "coleccion", count: 87, more: { href: "/users/ana/collection" } });
+    expect(collection.props.children?.type).toBe(CollectionPreview);
+    expect(collection.props.children?.props).toMatchObject({ artists });
+  });
 
-    expect(svc.getCollectionPreview).toHaveBeenCalledWith("ana", null);
-    expect(tree?.type).toBe(ProfileRail);
-    expect(tree?.props?.id).toBe("coleccion");
-    expect(tree?.props?.count).toBe(87);
-    const preview = tree?.props?.children;
-    expect(preview?.type).toBe(CollectionPreview);
-    expect(preview?.props).toMatchObject({ username: "ana", totalEntries: 87, artists });
+  it("ListsCollectionRow: sin acciones con sesión cuando canAct es falso", async () => {
+    svc.listUserLists.mockResolvedValue(lists(1, 1));
+    svc.listVisibleCaminos.mockResolvedValue(caminos(0, 0));
+    svc.getCollectionPreview.mockResolvedValue({ artists: [], totalEntries: 0, totalArtists: 0 });
+    const row = rowOf(await ListsCollectionRow({ ...section, canAct: false }));
+    const listsRail = row.props.start as { props: { children: Node } };
+    expect(listsRail.props.children?.props).toMatchObject({ canAct: false });
+    expect(row.props.end).toBeNull();
+  });
+
+  it("ListsCollectionRow: vacía para un visitante, con estantes vacíos para el dueño", async () => {
+    svc.listUserLists.mockResolvedValue(lists(0, 0));
+    svc.listVisibleCaminos.mockResolvedValue(caminos(0, 0));
+    svc.getCollectionPreview.mockResolvedValue({ artists: [], totalEntries: 0, totalArtists: 0 });
+    const visitor = rowOf(await ListsCollectionRow({ ...section, canAct: false }));
+    expect(visitor.props.start).toBeNull();
+    expect(visitor.props.end).toBeNull();
+    const own = rowOf(await ListsCollectionRow({ ...section, isOwn: true, canAct: false }));
+    expect(own.props.start).not.toBeNull();
+    expect(own.props.end).not.toBeNull();
   });
 });
 
@@ -301,19 +305,6 @@ describe("secciones del Nivel 1 y 2", () => {
     expect(tree?.type).toBe(IdentityCard);
   });
 
-  it("RatingHighlightsSection pasa las valoraciones destacadas a RatingHighlights", async () => {
-    svc.getProfileRatingHighlights.mockResolvedValue([
-      { id: "rt1", stars: "5.0", detailedScore: null, entity: { type: "release-group", id: "rg1", title: "A", artistName: null, coverThumbUrl: null } },
-    ]);
-    const tree = (await RatingHighlightsSection({ username: "ana", viewerId: "v" })) as {
-      type?: unknown;
-      props?: { highlights?: unknown[] };
-    };
-    expect(svc.getProfileRatingHighlights).toHaveBeenCalledWith("ana", "v");
-    expect(tree?.type).toBe(RatingHighlights);
-    expect(tree?.props?.highlights).toHaveLength(1);
-  });
-
   it("InRotationSection renderiza InRotation con los datos resueltos", async () => {
     svc.getProfileInRotation.mockResolvedValue({
       songs: [{ id: "s1", title: "S1", artistName: "A" }],
@@ -331,38 +322,6 @@ describe("secciones del Nivel 1 y 2", () => {
   it("InRotationSection es null cuando getProfileInRotation devuelve null", async () => {
     svc.getProfileInRotation.mockResolvedValue(null);
     expect(await InRotationSection({ username: "ana", viewerId: null })).toBeNull();
-  });
-
-  it("FeaturedReviewsSection pasa las reseñas resueltas a ProfileReviews", async () => {
-    svc.getProfileReviews.mockResolvedValue({
-      reviews: [
-        {
-          id: "rv1",
-          title: null,
-          body: "x",
-          stars: "4.0",
-          detailedScore: null,
-          updatedAt: "2026-09-08T00:00:00.000Z",
-          album: { id: "rg1", title: "A", artistName: null, coverThumbUrl: null },
-        },
-      ],
-      total: 1,
-    });
-    const tree = (await FeaturedReviewsSection({ username: "ana", viewerId: "v" })) as {
-      type?: unknown;
-      props?: { data?: { total?: number } };
-    };
-    expect(svc.getProfileReviews).toHaveBeenCalledWith("ana", "v");
-    expect(tree?.type).toBe(ProfileReviews);
-    expect(tree?.props?.data?.total).toBe(1);
-  });
-
-  it("FeaturedReviewsSection pasa null cuando no hay reseñas", async () => {
-    svc.getProfileReviews.mockResolvedValue(null);
-    const tree = (await FeaturedReviewsSection({ username: "ana", viewerId: null })) as {
-      props?: { data?: unknown };
-    };
-    expect(tree?.props?.data).toBeNull();
   });
 
   const stripProfile = {
@@ -456,6 +415,7 @@ describe("secciones del Nivel 1 y 2", () => {
       counts: { artist: 0, "release-group": 0, recording: 0 },
     });
     svc.listUserLists.mockResolvedValue({ lists: [{ id: "l1" }], totalCount: 6 });
+    svc.listVisibleCaminos.mockResolvedValue({ caminos: [{ id: "c1" }], totalCount: 2 });
     svc.getCollectionPreview.mockResolvedValue({ artists: [], totalEntries: 0 });
     const tree = (await AnchorsSection({ username: "ana", viewerId: null })) as {
       type?: unknown;
@@ -466,7 +426,7 @@ describe("secciones del Nivel 1 y 2", () => {
       { id: "perfil", label: "anchors.summary" },
       { id: "diario", label: "anchors.diary", count: 5 },
       { id: "resenas", label: "anchors.reviews", count: 13 },
-      { id: "listas", label: "anchors.lists", count: 6 },
+      { id: "listas", label: "anchors.lists", count: 8 },
     ]);
   });
 

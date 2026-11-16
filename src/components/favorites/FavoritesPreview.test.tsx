@@ -30,67 +30,53 @@ function favorite(over: Partial<FavoriteEntry> = {}): FavoriteEntry {
 describe("FavoritesPreview", () => {
   it("no renderiza nada cuando los counts están todos en cero", async () => {
     const tree = await FavoritesPreview({
-      username: "ana",
       preview: { artists: [], albums: [], songs: [], counts: { artist: 0, "release-group": 0, recording: 0 } },
     });
     expect(tree).toBeNull();
   });
 
-  it("solo renderiza las secciones de tipos con al menos un favorito", async () => {
+  it("álbumes como carátulas y, al lado, artistas y canciones", async () => {
     render(
       await FavoritesPreview({
-        username: "ana",
-        preview: {
-          artists: [],
-          albums: [favorite()],
-          songs: [],
-          counts: { artist: 0, "release-group": 1, recording: 0 },
-        },
-      }),
-    );
-    expect(screen.getByText("sectionAlbums")).toBeInTheDocument();
-    expect(screen.queryByText("sectionArtists")).not.toBeInTheDocument();
-    expect(screen.queryByText("sectionSongs")).not.toBeInTheDocument();
-    expect(screen.getByText("Blonde")).toBeInTheDocument();
-  });
-
-  it("muestra el conteo real de cada tipo, no la cantidad traída", async () => {
-    render(
-      await FavoritesPreview({
-        username: "ana",
-        preview: {
-          artists: [],
-          albums: [favorite()],
-          songs: [],
-          counts: { artist: 0, "release-group": 40, recording: 0 },
-        },
-      }),
-    );
-    expect(screen.getByText("40")).toBeInTheDocument();
-  });
-
-  it("siempre incluye el botón 'ver más favoritos' hacia la vista completa del perfil", async () => {
-    render(
-      await FavoritesPreview({
-        username: "ana",
         preview: {
           artists: [favorite({ id: "f2", targetType: "artist", target: { id: "a1", title: "Radiohead", coverThumbUrl: null, artistName: null, artistId: null } })],
-          albums: [],
-          songs: [],
-          counts: { artist: 1, "release-group": 0, recording: 0 },
+          albums: [favorite()],
+          songs: [
+            favorite({
+              id: "f3",
+              targetType: "recording",
+              target: { id: "rec1", title: "Idioteque", coverThumbUrl: null, artistName: "Radiohead", artistId: "a1" },
+            }),
+          ],
+          counts: { artist: 1, "release-group": 1, recording: 1 },
         },
       }),
     );
-    expect(screen.getByRole("link", { name: "profileMoreButton" })).toHaveAttribute(
-      "href",
-      "/users/ana/favorites",
+    expect(screen.getByRole("list", { name: "sectionAlbums" })).toHaveTextContent("Blonde");
+    expect(screen.getAllByTestId("cover")).toHaveLength(1);
+    expect(screen.getByText("Radiohead", { selector: "span.flex-1" })).toBeInTheDocument();
+    expect(screen.getByText("profileArtistKind")).toBeInTheDocument();
+    expect(screen.getByText("Idioteque")).toBeInTheDocument();
+  });
+
+  it("sin álbumes, solo la lista de artistas y canciones", async () => {
+    render(
+      await FavoritesPreview({
+        preview: {
+          artists: [],
+          albums: [],
+          songs: [favorite({ id: "f3", targetType: "recording", target: { id: "rec1", title: "Idioteque", coverThumbUrl: null, artistName: "Radiohead", artistId: "a1" } })],
+          counts: { artist: 0, "release-group": 0, recording: 1 },
+        },
+      }),
     );
+    expect(screen.queryByRole("list", { name: "sectionAlbums" })).not.toBeInTheDocument();
+    expect(screen.getByText("Idioteque")).toBeInTheDocument();
   });
 
   it("canciones se listan como filas, sin grilla de carátulas", async () => {
     render(
       await FavoritesPreview({
-        username: "ana",
         preview: {
           artists: [],
           albums: [],
