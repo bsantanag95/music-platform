@@ -19,7 +19,7 @@ export async function InRotation({ data }: InRotationProps) {
   if (data.songs.length === 0 && data.albums.length === 0) return null;
 
   return (
-    <section className="flex w-full max-w-2xl flex-col gap-5">
+    <section className="flex w-full flex-col gap-5">
       <h2 className="font-display text-xl text-paper">{t("inRotation.heading")}</h2>
 
       {data.songs.length > 0 && (

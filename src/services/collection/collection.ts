@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { and, asc, count, desc, eq, inArray, isNull, max, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, collectionEntry, credit, releaseGroup } from "@/db/schema";
@@ -492,7 +493,8 @@ export async function listProfileCollection(
 // totales (por artista y del perfil) son reales, no el largo de lo traído. Mismo
 // filtro de audiencia que `listProfileCollection`; el agrupado se hace acá y no en
 // el cliente porque un tope por artista no se puede aplicar sobre una página plana.
-export async function getCollectionPreview(
+// `cache()` deduplica dentro del mismo request: la barra de anclas del perfil y su estante piden lo mismo.
+export const getCollectionPreview = cache(async function getCollectionPreview(
   username: string,
   viewerId: string | null,
 ): Promise<CollectionPreview> {
@@ -568,7 +570,7 @@ export async function getCollectionPreview(
     totalEntries: Number(totals?.entries ?? 0),
     totalArtists: totals?.artists ?? 0,
   };
-}
+});
 
 /** Entradas propias del usuario para un álbum concreto (acción en la página de álbum). */
 export async function listOwnEntriesForReleaseGroup(

@@ -27,7 +27,7 @@ export async function PinnedShowcase({ pinned }: PinnedShowcaseProps) {
   if (pinned.length === 0) return null;
 
   return (
-    <section className="flex w-full max-w-2xl flex-col gap-4">
+    <section className="flex w-full flex-col gap-4">
       <h2 className="font-display text-xl text-paper">{t("showcase.pinnedHeading")}</h2>
       <ul className="flex flex-col">
         {pinned.map((item) => (

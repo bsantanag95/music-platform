@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta B · Funda — perfil de besantanag95</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,400..700&family=Literata:ital,opsz,wght@0,7..72,400..600;1,7..72,400..500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #b8261d; --red-deep: #8e1a13; --red-ink: #ffe9e4;
+    --night: #100e0d; --night-2: #1a1716; --rule: #34302d; --rule-2: #4a4440;
+    --bone: #f1ece6; --bone-2: #b9b0a6; --bone-3: #8c837a;
+    --f: "Archivo", "Arial Narrow", sans-serif; --serif: "Literata", Georgia, serif;
+    --wrap: 1280px; --pad: clamp(16px, 3.5vw, 48px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--night); color: var(--bone); font-family: var(--f); font-size: 16px; line-height: 1.5; font-variation-settings: "wdth" 100; }
+  ::selection { background: var(--red); color: var(--bone); }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 2px solid var(--bone); outline-offset: 3px; }
+  ul, ol { list-style: none; }
+  img { display: block; }
+  .wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 var(--pad); }
+  .num { font-variant-numeric: tabular-nums; }
+  .cv { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--night-2); }
+
+  header.site { border-bottom: 1px solid var(--rule); }
+  header.site .wrap { display: flex; align-items: center; gap: 28px; height: 58px; font-size: 14px; }
+  .brand { font-weight: 800; font-variation-settings: "wdth" 78; font-size: 18px; letter-spacing: -.01em; }
+  header nav { display: flex; gap: 22px; color: var(--bone-2); }
+  .hs { margin-left: auto; border-bottom: 1px solid var(--rule-2); width: 300px; padding: 6px 0; color: var(--bone-3); }
+  .hauth { display: flex; gap: 16px; align-items: center; }
+  .hauth b { background: var(--bone); color: var(--night); padding: 8px 14px; font-weight: 700; }
+
+  /* La funda: cabecera del perfil en rojo laca */
+  .sleeve { background: var(--red); color: var(--red-ink); }
+  .sleeve .wrap { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(28px, 4vw, 64px); padding-top: clamp(32px, 4vw, 56px); padding-bottom: clamp(32px, 4vw, 56px); }
+  .cover { position: relative; aspect-ratio: 1; background: var(--red-deep); overflow: hidden; }
+  .cover img.photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.15); mix-blend-mode: multiply; opacity: .9; }
+  .cover .title { position: absolute; left: 0; right: 0; bottom: 0; padding: 22px; background: linear-gradient(transparent, rgba(80,10,6,.85)); }
+  .cover h1 { font-size: clamp(40px, 5vw, 76px); line-height: .9; font-weight: 900; font-variation-settings: "wdth" 62; letter-spacing: -.02em; color: #fff; overflow-wrap: break-word; }
+  .cover .cat { margin-top: 10px; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; font-weight: 600; }
+  .credits { display: flex; flex-direction: column; gap: 22px; }
+  .credits .lede { font-family: var(--serif); font-size: clamp(20px, 2vw, 26px); line-height: 1.35; color: #fff; }
+  .credits .lede small { display: block; margin-top: 6px; font-family: var(--f); font-size: 14px; color: var(--red-ink); opacity: .85; }
+  .ctable { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); border-top: 1px solid rgba(255,233,228,.35); }
+  .ctable div { padding: 12px 16px 12px 0; border-bottom: 1px solid rgba(255,233,228,.25); }
+  .ctable dt { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; font-weight: 600; opacity: .8; }
+  .ctable dd { font-family: var(--serif); font-size: 16px; color: #fff; margin-top: 2px; }
+  .ctable dd i { font-style: italic; }
+  .acts { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .b1 { background: var(--night); color: var(--bone); padding: 0 22px; height: 48px; display: inline-flex; align-items: center; font-weight: 800; font-variation-settings: "wdth" 85; letter-spacing: .04em; text-transform: uppercase; font-size: 14px; }
+  .b1:hover { background: #000; }
+  .b2 { border: 1.5px solid var(--red-ink); padding: 0 18px; height: 48px; display: inline-flex; align-items: center; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 13px; }
+  .b2:hover { background: rgba(0,0,0,.12); }
+  .acts .note { font-family: var(--serif); font-size: 14px; }
+  .counts { display: flex; flex-wrap: wrap; gap: 4px 22px; font-size: 14px; }
+  .counts b { font-size: 22px; font-weight: 800; font-variation-settings: "wdth" 70; margin-right: 4px; color: #fff; }
+
+  /* Índice por caras */
+  .index { border-bottom: 1px solid var(--rule); background: var(--night-2); position: sticky; top: 0; z-index: 10; }
+  .index .wrap { display: flex; gap: 0; overflow-x: auto; scrollbar-width: none; }
+  .index a { display: flex; align-items: baseline; gap: 8px; padding: 14px 18px 12px 0; margin-right: 18px; white-space: nowrap; font-weight: 600; font-size: 15px; color: var(--bone-2); border-bottom: 2px solid transparent; }
+  .index a span { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--bone-3); }
+  .index a.side { color: var(--red); font-weight: 800; font-variation-settings: "wdth" 70; letter-spacing: .06em; text-transform: uppercase; font-size: 13px; }
+  .index a:hover { color: var(--bone); }
+  .index a[aria-current] { color: var(--bone); border-color: var(--red); }
+
+  /* Páginas de notas */
+  .page { padding: clamp(48px, 6vw, 88px) 0; border-bottom: 1px solid var(--rule); }
+  .ph { display: grid; grid-template-columns: 120px minmax(0,1fr) auto; gap: 24px; align-items: baseline; margin-bottom: 32px; }
+  .ph .n { font-size: 54px; line-height: .8; font-weight: 900; font-variation-settings: "wdth" 62; color: var(--red); }
+  .ph h2 { font-size: clamp(30px, 3.6vw, 48px); line-height: 1; font-weight: 800; font-variation-settings: "wdth" 72; letter-spacing: -.01em; }
+  .ph p { font-family: var(--serif); color: var(--bone-2); margin-top: 8px; font-size: 16px; }
+  .ph a { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; border-bottom: 1px solid var(--red); padding-bottom: 2px; }
+
+  .trio { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: clamp(16px, 2.5vw, 36px); }
+  .trio .lbl { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; font-weight: 700; color: var(--red); margin-top: 14px; }
+  .trio h3 { font-size: clamp(20px, 2vw, 28px); line-height: 1.05; font-weight: 800; font-variation-settings: "wdth" 76; margin-top: 4px; }
+  .trio p { font-family: var(--serif); color: var(--bone-2); margin-top: 4px; }
+
+  .tracks { border-top: 2px solid var(--bone); }
+  .tracks li { display: grid; grid-template-columns: 56px 64px minmax(0,1fr) minmax(0, 220px); gap: 18px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+  .tracks .no { font-size: 26px; font-weight: 800; font-variation-settings: "wdth" 66; color: var(--bone-3); }
+  .tracks .k { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: var(--red); }
+  .tracks .t { font-size: 20px; font-weight: 700; font-variation-settings: "wdth" 85; line-height: 1.15; }
+  .tracks .a { font-family: var(--serif); color: var(--bone-2); font-size: 15px; }
+  .tracks .r { font-family: var(--serif); font-size: 14px; color: var(--bone-3); text-align: right; }
+  .tracks .r b { font-family: var(--f); font-size: 22px; font-weight: 800; font-variation-settings: "wdth" 70; color: var(--bone); }
+  .tracks .r .st { color: #e8b84b; letter-spacing: 1px; }
+  .ph-disc { aspect-ratio: 1; background: var(--night-2); border: 1px solid var(--rule); display: grid; place-items: center; font-weight: 800; color: var(--bone-3); font-size: 26px; }
+
+  .notes { columns: 2 340px; column-gap: 40px; }
+  .notes article { break-inside: avoid; margin-bottom: 28px; display: grid; grid-template-columns: 84px minmax(0,1fr); gap: 16px; }
+  .notes h3 { font-size: 20px; font-weight: 800; font-variation-settings: "wdth" 80; line-height: 1.1; }
+  .notes .by { font-family: var(--serif); color: var(--bone-2); font-size: 14px; }
+  .notes .st { color: #e8b84b; letter-spacing: 1px; font-size: 14px; }
+  .lines { margin-top: 10px; display: flex; flex-direction: column; gap: 7px; }
+  .lines i { display: block; height: 6px; background: var(--rule); }
+
+  .table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .table th { text-align: left; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--bone-3); font-weight: 700; padding: 0 12px 10px 0; border-bottom: 2px solid var(--bone); }
+  .table td { padding: 12px 12px 12px 0; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+  .table .d { width: 130px; color: var(--bone-2); font-size: 14px; }
+  .table .cx { width: 170px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+  .table .cx.first { color: var(--red); }
+  .table .w { display: flex; gap: 12px; align-items: center; }
+  .table .w img { width: 44px; height: 44px; object-fit: cover; }
+  .table .w b { font-size: 17px; }
+  .table .w span { font-family: var(--serif); color: var(--bone-2); font-size: 14px; }
+  .table q { font-family: var(--serif); font-style: italic; }
+
+  .two { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(24px, 4vw, 64px); }
+  .sleeves { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 12px; }
+  .sleeves p { margin-top: 8px; font-weight: 700; font-size: 14px; line-height: 1.2; }
+  .sleeves span { font-family: var(--serif); color: var(--bone-2); font-size: 13px; }
+  .songlist { counter-reset: s; border-top: 2px solid var(--bone); }
+  .songlist li { counter-increment: s; display: grid; grid-template-columns: 36px minmax(0,1fr) auto; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+  .songlist li::before { content: counter(s, decimal-leading-zero); color: var(--bone-3); font-variant-numeric: tabular-nums; font-size: 13px; padding-top: 2px; }
+  .songlist b { font-weight: 700; }
+  .songlist span { font-family: var(--serif); color: var(--bone-2); font-size: 14px; }
+
+  .boxes { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
+  .box { border: 1px solid var(--rule-2); padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+  .box .mos { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+  .box .mos img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+  .box .solo { width: 100%; aspect-ratio: 2; object-fit: cover; filter: grayscale(.2); }
+  .box .k { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: var(--red); }
+  .box h3 { font-size: 22px; font-weight: 800; font-variation-settings: "wdth" 78; line-height: 1.05; }
+  .box p { font-family: var(--serif); color: var(--bone-2); font-size: 14px; }
+
+  .back { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 32px; }
+  .back h3 { font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: var(--red); font-weight: 800; margin-bottom: 12px; }
+  .back p { font-family: var(--serif); font-size: 18px; line-height: 1.4; }
+  .artists { display: flex; flex-wrap: wrap; gap: 8px; }
+  .artists a { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--rule-2); padding: 4px 12px 4px 4px; border-radius: 999px; font-weight: 600; font-size: 14px; }
+  .artists img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+
+  .mock-bar { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 60; display: flex; gap: 4px; align-items: center; padding: 5px; background: #f1ece6; color: #100e0d; border-radius: 999px; font: 13px system-ui, sans-serif; box-shadow: 0 10px 30px -10px #000; white-space: nowrap; }
+  .mock-bar a { padding: 6px 12px; border-radius: 999px; }
+  .mock-bar a:hover { background: #ddd5c8; }
+  .mock-bar [aria-current="page"] { background: #100e0d; color: #f1ece6; }
+
+  @media (max-width: 1000px) {
+    .sleeve .wrap, .two { grid-template-columns: 1fr; }
+    .cover { max-width: 520px; }
+    header nav, .hs { display: none; }
+    .hauth { margin-left: auto; }
+    .back, .boxes { grid-template-columns: 1fr 1fr; }
+    .sleeves { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  }
+  @media (max-width: 680px) {
+    .ctable { grid-template-columns: 1fr; }
+    .ph { grid-template-columns: 56px minmax(0,1fr); }
+    .ph .n { font-size: 40px; }
+    .ph a { grid-column: 2; }
+    .trio { grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .trio h3 { font-size: 15px; }
+    .trio p { font-size: 13px; }
+    .tracks li { grid-template-columns: 30px 52px minmax(0,1fr); }
+    .tracks .r { grid-column: 3; text-align: left; }
+    .tracks .no { font-size: 18px; }
+    .notes { columns: 1; }
+    .table .d { width: auto; display: block; padding-bottom: 0; border: 0; }
+    .table tr { display: grid; grid-template-columns: 1fr auto; border-bottom: 1px solid var(--rule); padding: 8px 0; }
+    .table td { border: 0; padding: 2px 0; }
+    .table td.w-cell { grid-column: 1 / -1; grid-row: 1; }
+    .table thead { display: none; }
+    .back, .boxes { grid-template-columns: 1fr; }
+    .sleeves { display: flex; overflow-x: auto; margin: 0 calc(-1 * var(--pad)); padding: 0 var(--pad) 6px; }
+    .sleeves li { flex: 0 0 40%; }
+    .hauth span { display: none; }
+  }
+</style>
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <a class="brand" href="#">music-platform</a>
+  <nav><a href="#">Explorar</a><a href="#">Listas</a><a href="#">Comunidad</a></nav>
+  <div class="hs">Buscar artistas</div>
+  <div class="hauth"><span>Iniciar sesión</span><b>Crear cuenta</b></div>
+</div></header>
+
+<section class="sleeve" aria-labelledby="name">
+  <div class="wrap">
+    <div class="cover">
+      <img class="photo" src="assets/avatar.webp" alt="">
+      <div class="title">
+        <h1 id="name">besantanag95</h1>
+        <p class="cat">@besantanag95 · él · Quilpue</p>
+      </div>
+    </div>
+    <div class="credits">
+      <p class="lede">«Me gusta la musica ochentera»<small>En la comunidad desde agosto de 2026</small></p>
+      <p class="counts num"><a href="#"><b>2</b>seguidores</a><a href="#"><b>3</b>siguiendo</a><a href="#"><b>13</b>reseñas</a><a href="#"><b>15</b>favoritos</a></p>
+      <dl class="ctable">
+        <div><dt>Soy</dt><dd>Oyente, coleccionista</dd></div>
+        <div><dt>Géneros</dt><dd>Rock, metal, hard rock</dd></div>
+        <div><dt>Escucha en</dt><dd>Vinilo, CD, streaming, archivos digitales</dd></div>
+        <div><dt>Enlaces</dt><dd>Instagram</dd></div>
+        <div><dt>Primer show</dt><dd><i>Deep Purple</i></dd></div>
+        <div><dt>Primer disco</dt><dd><i>Def Leppard — On Through the Night</i></dd></div>
+      </dl>
+      <div class="acts"><a class="b1" href="#">Seguir</a><a class="b2" href="#">Compartir</a><span class="note">Inicia sesión para seguirlo y ver su diario completo.</span></div>
+    </div>
+  </div>
+</section>
+
+<nav class="index" aria-label="Índice del perfil"><div class="wrap">
+  <a class="side" href="#">Cara A</a><a href="#a1" aria-current="true"><span>01</span>Su música</a><a href="#a2"><span>02</span>Empieza por aquí</a><a href="#a3"><span>03</span>Reseñas</a>
+  <a class="side" href="#">Cara B</a><a href="#b1"><span>04</span>Diario</a><a href="#b2"><span>05</span>Favoritos</a><a href="#b3"><span>06</span>Listas</a><a href="#b4"><span>07</span>Notas de la funda</a>
+</div></nav>
+
+<main>
+  <section class="page" id="a1"><div class="wrap">
+    <div class="ph"><span class="n num">01</span><div><h2>Su música, en tres</h2><p>El artista, el álbum y la canción que eligió para presentarse.</p></div></div>
+    <div class="trio">
+      <a href="#"><img class="cv" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/Chappell_Roan%2C_20_August_2025_106_%28cropped%29.jpg/500px-Chappell_Roan%2C_20_August_2025_106_%28cropped%29.jpg" alt="" style="filter:grayscale(.15)"><p class="lbl">Artista</p><h3>Chappell Roan</h3></a>
+      <a href="#"><img class="cv" src="assets/rise.webp" alt=""><p class="lbl">Álbum</p><h3>The Rise and Fall of a Midwest Princess</h3><p>Chappell Roan</p></a>
+      <a href="#"><img class="cv" src="assets/taste.webp" alt=""><p class="lbl">Himno</p><h3>Taste</h3><p>Sabrina Carpenter</p></a>
+    </div>
+  </div></section>
+
+  <section class="page" id="a2"><div class="wrap">
+    <div class="ph"><span class="n num">02</span><div><h2>Empieza por aquí</h2><p>Lo que recomienda escuchar primero, y su valoración más destacada.</p></div></div>
+    <ol class="tracks">
+      <li><span class="no num">1</span><img class="cv" src="assets/ocean.webp" alt=""><div><p class="k">Álbum</p><p class="t">Did you know that there's a tunnel under Ocean Blvd</p><p class="a">Lana Del Rey</p></div><span></span></li>
+      <li><span class="no num">2</span><span class="ph-disc">AA</span><div><p class="k">Canción</p><p class="t">Alone Again</p><p class="a">Dokken</p></div><span></span></li>
+      <li><span class="no num">3</span><span class="ph-disc">T</span><div><p class="k">Artista</p><p class="t">Tigertailz</p></div><span></span></li>
+      <li><span class="no num">4</span><img class="cv" src="assets/toofast.webp" alt=""><div><p class="k">Valoración destacada</p><p class="t">Too Fast for Love</p><p class="a">Mötley Crüe</p></div><p class="r"><span class="st">★★★★☆</span><br><b class="num">77</b>/100</p></li>
+    </ol>
+  </div></section>
+
+  <section class="page" id="a3"><div class="wrap">
+    <div class="ph"><span class="n num">03</span><div><h2>Reseñas</h2><p>Las cuatro más recientes de 13.</p></div><a href="#">Las 13 reseñas</a></div>
+    <div class="notes">
+      <article><img class="cv" src="assets/badanimals.webp" alt=""><div><h3>Bad Animals</h3><p class="by">Heart · <span class="st">★★★★☆</span> 4,0</p><div class="lines"><i style="width:94%"></i><i style="width:70%"></i><i style="width:44%"></i></div></div></article>
+      <article><img class="cv" src="assets/xmas.webp" alt=""><div><h3>Christmas the Whole Year Round</h3><p class="by">Sabrina Carpenter · <span class="st">★☆☆☆☆</span> 1,0</p><div class="lines"><i style="width:84%"></i><i style="width:52%"></i></div></div></article>
+      <article><img class="cv" src="assets/standout.webp" alt=""><div><h3>Stand Out</h3><p class="by">Sabrina Carpenter · <span class="st">★☆☆☆☆</span> 1,0</p><div class="lines"><i style="width:90%"></i><i style="width:60%"></i></div></div></article>
+      <article><img class="cv" src="assets/cantblame.webp" alt=""><div><h3>Can't Blame a Girl for Trying</h3><p class="by">Sabrina Carpenter · <span class="st">★★★★☆</span> 4,0</p><div class="lines"><i style="width:76%"></i><i style="width:38%"></i></div></div></article>
+    </div>
+  </div></section>
+
+  <section class="page" id="b1"><div class="wrap">
+    <div class="ph"><span class="n num">04</span><div><h2>Diario</h2><p>Sus escuchas más recientes, con el contexto de cada una.</p></div><a href="#">Diario completo</a></div>
+    <table class="table">
+      <thead><tr><th>Fecha</th><th>Contexto</th><th>Disco</th></tr></thead>
+      <tbody>
+        <tr><td class="d">24 sept 2026</td><td class="cx">Repetición</td><td class="w-cell"><span class="w"><img src="assets/mansbest.webp" alt=""><span><b>Man's Best Friend</b><br><span>Sabrina Carpenter</span></span></span></td></tr>
+        <tr><td class="d">14 sept 2026</td><td class="cx first">Primera escucha</td><td class="w-cell"><span class="w"><img src="assets/f7800.webp" alt=""><span><b>7800° Fahrenheit</b><br><span>Bon Jovi · <q>Discazo</q></span></span></span></td></tr>
+        <tr><td class="d">14 sept 2026</td><td class="cx first">Primera escucha</td><td class="w-cell"><span class="w"><img src="assets/icon.webp" alt=""><span><b>Icon</b><br><span>Icon</span></span></span></td></tr>
+        <tr><td class="d">22 ago 2026</td><td class="cx">Repetición</td><td class="w-cell"><span class="w"><img src="assets/mansbest.webp" alt=""><span><b>Tears</b><br><span>Sabrina Carpenter</span></span></span></td></tr>
+      </tbody>
+    </table>
+  </div></section>
+
+  <section class="page" id="b2"><div class="wrap">
+    <div class="ph"><span class="n num">05</span><div><h2>Favoritos</h2><p>1 artista, 5 álbumes y 9 canciones.</p></div><a href="#">Los 15 favoritos</a></div>
+    <div class="two">
+      <ul class="sleeves">
+        <li><img class="cv" src="assets/ratt.webp" alt=""><p>Ratt</p><span>Ratt</span></li>
+        <li><img class="cv" src="assets/mansbest.webp" alt=""><p>Man's Best Friend</p><span>Sabrina Carpenter</span></li>
+        <li><img class="cv" src="assets/feelgood.webp" alt=""><p>Dr. Feelgood</p><span>Mötley Crüe</span></li>
+        <li><img class="cv" src="assets/rise.webp" alt=""><p>The Rise and Fall…</p><span>Chappell Roan</span></li>
+        <li><img class="cv" src="assets/ocean.webp" alt=""><p>Did you know…</p><span>Lana Del Rey</span></li>
+      </ul>
+      <ol class="songlist">
+        <li><b>Love Bites</b><span>Def Leppard</span></li><li><b>After Midnight</b><span>Chappell Roan</span></li><li><b>Read your Mind</b><span>Sabrina Carpenter</span></li><li><b>Kickstart My Heart</b><span>Mötley Crüe</span></li><li><b>Rattlesnake Shake</b><span>Mötley Crüe</span></li>
+      </ol>
+    </div>
+  </div></section>
+
+  <section class="page" id="b3"><div class="wrap">
+    <div class="ph"><span class="n num">06</span><div><h2>Listas y recorridos</h2><p>3 listas y 3 recorridos de discografía.</p></div><a href="#">Todas</a></div>
+    <div class="boxes">
+      <a class="box" href="#"><div class="mos"><img src="assets/aor1.webp" alt=""><img src="assets/aor2.webp" alt=""><img src="assets/aor3.webp" alt=""><img src="assets/aor4.webp" alt=""></div><p class="k">Lista fijada · canciones</p><h3>Best AOR songs</h3><p>4 elementos · «Aguante Survivor!!»</p></a>
+      <a class="box" href="#"><img class="solo" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/DefLeppard1.JPG/500px-DefLeppard1.JPG" alt=""><p class="k">Lista · artistas</p><h3>Glam Metal Bands</h3><p>1 elemento</p></a>
+      <a class="box" href="#"><img class="solo" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/6/61/Sabrina_Carpenter_-_O2_Arena_2025_-_086_%28cropped_2%29.jpg/500px-Sabrina_Carpenter_-_O2_Arena_2025_-_086_%28cropped_2%29.jpg" alt=""><p class="k">Recorrido · completo</p><h3>Best of Sabrina</h3><p>2 álbumes</p></a>
+    </div>
+  </div></section>
+
+  <section class="page" id="b4"><div class="wrap">
+    <div class="ph"><span class="n num">07</span><div><h2>Notas de la funda</h2><p>Su huella de gusto, los artistas que sigue y su colección.</p></div></div>
+    <div class="back">
+      <div><h3>Huella de gusto</h3><p>Escucha sobre todo música de los 2020s. Su familia más presente es Rock, sobre todo glam metal.</p></div>
+      <div><h3>Sigue a 10 artistas</h3><div class="artists">
+        <a href="#"><img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/5/55/Glam_metal_band_Ratt.jpg/500px-Glam_metal_band_Ratt.jpg" alt="">Ratt</a>
+        <a href="#"><img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b5/Belinda_Carlisle_1987_photo.jpg/500px-Belinda_Carlisle_1987_photo.jpg" alt="">Belinda Carlisle</a>
+        <a href="#"><img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b1/Europe_the_band_in_Stockholm_2016.jpg/500px-Europe_the_band_in_Stockholm_2016.jpg" alt="">Europe</a>
+        <a href="#"><img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Queen_A_Night_At_The_Opera_%281975_Elektra_publicity_photo_02%29.jpg/500px-Queen_A_Night_At_The_Opera_%281975_Elektra_publicity_photo_02%29.jpg" alt="">Queen</a>
+        <a href="#"><img src="https://upload.wikimedia.org/wikipedia/commons/1/11/Lana_Del_Rey_Seattle.jpg" alt="">Lana Del Rey</a>
+        <a href="#">+5 más</a>
+      </div></div>
+      <div><h3>Colección física</h3><div style="display:grid;grid-template-columns:72px 1fr;gap:12px;align-items:center"><img class="cv" src="assets/toothnail.webp" alt=""><p style="font-size:16px">Tooth and Nail<br><span style="color:var(--bone-2);font-size:14px">Dokken · 1984 · vinilo</span></p></div></div>
+    </div>
+  </div></section>
+</main>
+
+<nav class="mock-bar" aria-label="Mockups"><a href="index.html">Resumen</a><a href="a-escenario.html">A · Escenario</a><a href="b-funda.html" aria-current="page">B · Funda</a><a href="c-muro.html">C · Muro</a><a href="d-mezcla.html">D · Mezcla</a></nav>
+</body>
+</html>

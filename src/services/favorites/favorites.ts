@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { and, asc, desc, eq, inArray, isNotNull, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, favorite, recording, releaseGroup } from "@/db/schema";
@@ -477,7 +478,8 @@ export interface FavoritesPreview {
  * canción, así que un `limit` simple sobre esa lista podría agotarse antes
  * de llegar a canciones).
  */
-export async function getFavoritesPreview(
+// `cache()` deduplica dentro del mismo request: la barra de anclas del perfil y su estante piden lo mismo.
+export const getFavoritesPreview = cache(async function getFavoritesPreview(
   username: string,
   viewerId: string | null,
 ): Promise<FavoritesPreview> {
@@ -522,7 +524,7 @@ export async function getFavoritesPreview(
     songs,
     counts,
   };
-}
+});
 
 /**
  * Espeja, después de responder, las carátulas de estos favoritos que todavía son un hotlink a Cover

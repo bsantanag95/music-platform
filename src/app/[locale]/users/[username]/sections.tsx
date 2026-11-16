@@ -31,11 +31,11 @@ import { OwnerMusicIdentityEditor } from "@/components/profiles/OwnerMusicIdenti
 import { OwnerPromptsEditor } from "@/components/profiles/OwnerPromptsEditor";
 import { OwnerShowcaseEditor } from "@/components/profiles/OwnerShowcaseEditor";
 import { OwnerIdentityCardEditor } from "@/components/profiles/OwnerIdentityCardEditor";
-import { FingerprintSummary } from "@/components/profiles/FingerprintSummary";
+import { IdentityStrip } from "@/components/profiles/IdentityStrip";
+import { ProfileAnchors, type ProfileAnchor } from "@/components/profiles/ProfileAnchors";
 import { ProfileReviews } from "@/components/profiles/ProfileReviews";
 import { RatingHighlights } from "@/components/profiles/RatingHighlights";
 import { InRotation } from "@/components/profiles/InRotation";
-import { ExploreSection } from "@/components/profiles/ExploreSection";
 import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
 import { IdentityCard } from "@/components/profiles/IdentityCard";
 import { ProfileLevel3Links } from "@/components/profiles/ProfileLevel3Links";
@@ -49,7 +49,7 @@ import { CollectionPreview } from "@/components/collection/CollectionPreview";
 import { ConcertsPreview } from "@/components/concerts/ConcertsPreview";
 
 // Secciones asíncronas del perfil, cada una envuelta por su propio <Suspense>
-// en `page.tsx` para que nada bloquee la Placa. Un estante colapsa cuando no
+// en `page.tsx` para que nada bloquee la cabecera. Un estante colapsa cuando no
 // tiene contenido visible y el visitante no es el dueño (spec social-profiles,
 // "Estante de contenido vacío"); el dueño ve el estante vacío para agregar.
 
@@ -78,15 +78,24 @@ export async function SettingsCardSection({ ownerId }: { ownerId: string }) {
 // (spec profile-edit-mode). Para el resto de visitantes la sección es la de
 // siempre. El `editor` se construye acá, en el servidor, con su `initial`.
 
-// La Placa: bio, pronombres, país, ciudad o región, zona horaria, enlaces y la ficha musical
-// (roles, géneros, formatos y preguntas) — todo lo que dibuja la Placa se edita en
-// un mismo panel.
-export async function EditablePlaca({ profile, children }: { profile: ProfileView; children: ReactNode }) {
+// Los datos de la persona en la cabecera (bio, pronombres, país, ciudad o región, zona
+// horaria, enlaces) y la ficha musical de la franja de identidad (roles, géneros,
+// formatos y preguntas): todo se edita en un mismo panel, el que antes abría la Placa.
+export async function EditablePlaca({
+  profile,
+  className,
+  children,
+}: {
+  profile: ProfileView;
+  className?: string;
+  children: ReactNode;
+}) {
   const t = await getTranslations("users");
   const genreLabels = await identityGenreLabels(profile.genres, genreLocaleOf(await getLocale()));
   return (
     <EditableBlock
       label={t("editMode.placa")}
+      className={className}
       editor={
         <div className="flex flex-col gap-6">
           <OwnerAvatarEditor
@@ -148,26 +157,102 @@ export async function InRotationSection({
   return data ? <InRotation data={data} /> : null;
 }
 
-// "Exploración": los artistas que el dueño sigue, en el Nivel 2. Único
-// momento visualmente "alto" del perfil (openspec: rework-user-profile) — de
-// ahí que además reciba el subconjunto de artistas seguidos en común con el
-// visitante (ya calculado por el bloque de afinidad, `cache()` evita la
-// doble consulta) para marcarlos con la insignia "tú también". No aparece si
-// el dueño no sigue a ningún artista (spec artist-following).
-export async function ExplorationSection({
-  username,
+// Franja de identidad — Nivel 1 (spec social-profiles, "Franja de identidad";
+// openspec: redesign-user-profile-phase1): la ficha musical, el resumen de la
+// huella con su década predominante y «Artistas seguidos». Los artistas reciben
+// el subconjunto seguido en común con el visitante, ya calculado por el bloque
+// de afinidad (`cache()` evita la doble consulta), para marcarlos con la
+// insignia "tú también" (spec profile-affinity).
+export async function IdentityStripSection({
+  profile,
   viewerId,
-}: Omit<SectionProps, "isOwn">) {
-  const [{ artists, totalCount }, affinity] = await Promise.all([
-    listProfileFollowedArtists(username, viewerId),
-    getProfileAffinity(username, viewerId),
+}: {
+  profile: ProfileView;
+  viewerId: string | null;
+}) {
+  const [{ artists, totalCount }, affinity, fingerprint, genreLabels] = await Promise.all([
+    listProfileFollowedArtists(profile.username, viewerId),
+    getProfileAffinity(profile.username, viewerId),
+    getTasteFingerprint(profile.username, viewerId),
+    identityGenreLabels(profile.genres, genreLocaleOf(await getLocale())),
   ]);
   const sharedArtistIds = affinity
     ? new Set(affinity.sharedFollowedArtists.map((entity) => entity.id))
     : undefined;
+  // La década predominante va como dato grande: su frase del resumen sobra al lado.
+  const topDecade = fingerprint
+    ? ([...fingerprint.decades].sort((a, b) => b.count - a.count)[0]?.label ?? null)
+    : null;
+  const phrases = fingerprint
+    ? fingerprint.summary.filter((phrase) => !(topDecade && phrase.includes(topDecade)))
+    : [];
+
   return (
-    <ExploreSection username={username} artists={artists} totalCount={totalCount} sharedArtistIds={sharedArtistIds} />
+    <IdentityStrip
+      username={profile.username}
+      identity={{
+        selfRoles: profile.selfRoles,
+        genres: profile.genres,
+        listeningFormats: profile.listeningFormats,
+        prompts: profile.prompts,
+      }}
+      genreLabels={genreLabels}
+      fingerprint={fingerprint ? { topDecade, phrases } : null}
+      artists={artists}
+      artistsTotal={totalCount}
+      sharedArtistIds={sharedArtistIds}
+    />
   );
+}
+
+// Fondo decorativo de la cabecera: la carátula del álbum definitorio,
+// difuminada y fundida con la tinta (spec social-profiles, "Cabecera del
+// perfil"). Usa la misma miniatura de ≤250 px que ya muestra la Tarjeta de
+// Identidad: no pide ninguna imagen nueva. Sin álbum no dibuja nada y la
+// cabecera queda con su fondo neutro.
+export async function HeaderBackdropSection({ ownerId }: { ownerId: string }) {
+  const { identityCard } = await getShowcase(ownerId);
+  const cover = identityCard.album?.coverThumbUrl;
+  if (!cover) return null;
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+      <div
+        className="absolute -inset-16 bg-cover bg-[center_30%] opacity-30 blur-[52px] saturate-[1.1]"
+        style={{ backgroundImage: `url(${JSON.stringify(cover)})` }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-ink/40 to-ink" />
+    </div>
+  );
+}
+
+// Barra de anclas (spec social-profiles, "Cabecera del perfil"): comprueba
+// livianamente qué secciones tienen contenido visible para no ofrecer un ancla
+// vacía, con su recuento. Mismas consultas de una fila que las puertas al
+// Nivel 3; independiente y con su propio <Suspense> en `page.tsx`.
+export async function AnchorsSection({ username, viewerId }: Omit<SectionProps, "isOwn">) {
+  const t = await getTranslations("users");
+  const [diary, reviews, favorites, lists, collection] = await Promise.all([
+    listUserDiary(username, viewerId, 1, 1),
+    getProfileReviews(username, viewerId),
+    getFavoritesPreview(username, viewerId),
+    listUserLists(username, viewerId, 1, 1),
+    getCollectionPreview(username, viewerId),
+  ]);
+  const favoritesTotal =
+    favorites.counts.artist + favorites.counts["release-group"] + favorites.counts.recording;
+
+  const items: ProfileAnchor[] = [{ id: "perfil", label: t("anchors.summary") }];
+  if (diary.entries.length > 0) items.push({ id: "diario", label: t("anchors.diary"), count: diary.totalCount });
+  if (reviews && reviews.reviews.length > 0) {
+    items.push({ id: "resenas", label: t("anchors.reviews"), count: reviews.total });
+  }
+  if (favoritesTotal > 0) items.push({ id: "favoritos", label: t("anchors.favorites"), count: favoritesTotal });
+  if (lists.lists.length > 0) items.push({ id: "listas", label: t("anchors.lists"), count: lists.totalCount });
+  if (collection.totalEntries > 0) {
+    items.push({ id: "coleccion", label: t("anchors.collection"), count: collection.totalEntries });
+  }
+
+  return <ProfileAnchors label={t("anchors.label")} items={items} />;
 }
 
 // Tarjeta de Identidad — Nivel 1 (openspec: rework-user-profile): el artista y
@@ -221,18 +306,6 @@ export async function RatingHighlightsSection({
   return <RatingHighlights highlights={highlights} />;
 }
 
-// Resumen cualitativo de la huella de gusto — Nivel 1-2 (spec
-// `taste-fingerprint`, "Resumen cualitativo"): hasta 3 frases, sin gráficos.
-// La huella completa (curvas, crestas) vive en /users/[username]/fingerprint.
-export async function FingerprintSummarySection({
-  username,
-  viewerId,
-}: Omit<SectionProps, "isOwn">) {
-  const fingerprint = await getTasteFingerprint(username, viewerId);
-  if (!fingerprint) return null;
-  return <FingerprintSummary summary={fingerprint.summary} />;
-}
-
 export async function RecencySection({ username, viewerId }: Omit<SectionProps, "isOwn">) {
   return <ProfileRecency at={await getProfileRecency(username, viewerId)} />;
 }
@@ -240,7 +313,7 @@ export async function RecencySection({ username, viewerId }: Omit<SectionProps, 
 export async function AffinitySection({ username, viewerId }: Omit<SectionProps, "isOwn">) {
   const affinity = await getProfileAffinity(username, viewerId);
   if (!affinity) return null;
-  return <ProfileAffinity affinity={affinity} />;
+  return <ProfileAffinity affinity={affinity} compact />;
 }
 
 export async function DiaryRail({ username, viewerId, isOwn }: SectionProps) {

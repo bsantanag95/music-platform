@@ -100,14 +100,15 @@ describe("ExploreSection — insignia de afinidad 'tú también' (openspec: rewo
 describe("ExploreSection — tope de 8 celdas con link '+N' (Opción B)", () => {
   it("totalCount igual a lo traído: muestra todos los artistas, sin celda de link", async () => {
     render(await ExploreSection({ username: "ana", artists: artists(8), totalCount: 8 }));
-    expect(screen.getAllByRole("link")).toHaveLength(8);
+    // 8 artistas + el enlace del rótulo a la lista completa.
+    expect(screen.getAllByRole("listitem")).toHaveLength(8);
+    expect(screen.getAllByRole("link")).toHaveLength(9);
     expect(screen.queryByText(/^\+\d+$/)).not.toBeInTheDocument();
   });
 
   it("totalCount mayor a lo traído: 7 artistas + celda '+N' al listado completo", async () => {
     render(await ExploreSection({ username: "ana", artists: artists(8), totalCount: 9 }));
-    const links = screen.getAllByRole("link");
-    expect(links).toHaveLength(8); // 7 artistas + 1 celda de link
+    expect(screen.getAllByRole("listitem")).toHaveLength(8); // 7 artistas + 1 celda de link
     expect(screen.getByText("+2")).toBeInTheDocument();
     expect(screen.getByText("explorationMoreLabel")).toBeInTheDocument();
     const moreLink = screen.getByText("+2").closest("a");
@@ -115,5 +116,13 @@ describe("ExploreSection — tope de 8 celdas con link '+N' (Opción B)", () => 
     // El octavo artista fetcheado no se muestra — la celda de link ocupa su lugar.
     expect(screen.queryByText("Artist 7")).not.toBeInTheDocument();
     expect(screen.getByText("Artist 6")).toBeInTheDocument();
+  });
+});
+
+describe("ExploreSection — «Artistas seguidos» en la franja de identidad", () => {
+  it("rotula la sección y enlaza el total a la lista completa", async () => {
+    render(await ExploreSection({ username: "ana", artists: artists(3), totalCount: 10 }));
+    expect(screen.getByRole("heading", { name: /explorationHeading/ })).toBeInTheDocument();
+    expect(screen.getByText("10").closest("a")).toHaveAttribute("href", "/users/ana/artists");
   });
 });

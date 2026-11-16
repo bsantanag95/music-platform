@@ -104,7 +104,7 @@
     "railLabel": "Lanzamientos de tus artistas",
     "railTitle": "Próximos lanzamientos"
   },
-  "explorationHeading": "Exploración",
+  "explorationHeading": "Artistas seguidos",
   "explorationMutualBadge": "Tú también",
   "explorationMoreLabel": "Ver más",
   "explorationFullTitle": "Artistas que sigue {name}",
@@ -194,6 +194,7 @@
     }
   },
   "identityCard": {
+    "heading": "Identidad musical",
     "artistHeading": "Artista que me define",
     "albumHeading": "Álbum que me define",
     "songHeading": "Canción que me define",
@@ -932,5 +933,20 @@
     "listens": "Escuchas",
     "favorite": "Favorito",
     "readReview": "Leer la reseña"
+  },
+  "strip": {
+    "ficha": "Ficha",
+    "fingerprint": "Huella de gusto",
+    "fingerprintFull": "Completa",
+    "topDecade": "Década más escuchada"
+  },
+  "anchors": {
+    "label": "Secciones del perfil",
+    "summary": "Resumen",
+    "diary": "Diario",
+    "reviews": "Reseñas",
+    "favorites": "Favoritos",
+    "lists": "Listas",
+    "collection": "Colección"
   }
 }

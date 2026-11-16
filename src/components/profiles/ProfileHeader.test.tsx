@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { getLocale } from "next-intl/server";
-import { Placa } from "./Placa";
+import { ProfileHeader } from "./ProfileHeader";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import type { ProfileView } from "@/services/profiles/profile-view";
 
@@ -24,12 +24,6 @@ vi.mock("next-intl/server", () => ({
   }),
   getFormatter: vi.fn().mockResolvedValue({ dateTime: () => "septiembre de 2025" }),
   getLocale: vi.fn().mockResolvedValue("es"),
-}));
-
-// Nombres de la taxonomía (openspec: add-genre-taxonomy): la base no se toca en este test.
-vi.mock("@/services/genres/read", () => ({
-  identityGenreLabels: async (slugs: string[]) =>
-    Object.fromEntries(slugs.map((slug) => [slug, ({ "post-punk": "post-punk", jazz: "jazz" } as Record<string, string>)[slug] ?? slug])),
 }));
 
 vi.mock("@/components/social/FollowButton", () => ({
@@ -73,48 +67,12 @@ const base: ProfileView = {
 
 afterEach(() => vi.useRealTimers());
 
-describe("Placa: ficha musical y hora local", () => {
-  const withMusic = {
-    ...base,
-    selfRoles: ["collector", "dj"],
-    genres: ["post-punk", "jazz"],
-    listeningFormats: ["vinyl", "streaming"],
-    prompts: [{ promptKey: "first-record", answer: "Un casete de Los Prisioneros", position: 0 }],
-  } as ProfileView;
-
-  it("perfil completo: la ficha muestra soy, géneros, escucho en y las preguntas", async () => {
-    renderWithIntl(await Placa({ profile: withMusic, authenticated: true }));
-
-    const ficha = screen.getByLabelText("musicIdentity.ficha.aria");
-    expect(ficha).toBeInTheDocument();
-    expect(screen.getByText("musicIdentity.ficha.roles")).toBeInTheDocument();
-    expect(screen.getByText("musicIdentity.roles.collector · musicIdentity.roles.dj")).toBeInTheDocument();
-    expect(screen.getByText("post-punk · jazz")).toBeInTheDocument();
-    expect(screen.getByText("musicIdentity.formats.vinyl · musicIdentity.formats.streaming")).toBeInTheDocument();
-    expect(screen.getByText("musicIdentity.prompts.first-record.short")).toBeInTheDocument();
-    expect(screen.getByText("Un casete de Los Prisioneros")).toBeInTheDocument();
-  });
-
-  it("perfil sin datos nuevos: la Placa se ve como antes, sin ficha ni divisor vacío", async () => {
-    const { container } = renderWithIntl(await Placa({ profile: base, authenticated: true }));
-    expect(screen.queryByLabelText("musicIdentity.ficha.aria")).not.toBeInTheDocument();
-    expect(container.querySelector("hr")).toBeNull();
-  });
-
-  it("solo géneros: la ficha muestra únicamente esa fila", async () => {
-    renderWithIntl(
-      await Placa({ profile: { ...base, genres: ["jazz"] } as ProfileView, authenticated: true }),
-    );
-    expect(screen.getByText("musicIdentity.ficha.genres")).toBeInTheDocument();
-    expect(screen.queryByText("musicIdentity.ficha.roles")).not.toBeInTheDocument();
-    expect(screen.queryByText("musicIdentity.ficha.formats")).not.toBeInTheDocument();
-  });
-
+describe("ProfileHeader: hora local", () => {
   it("muestra la hora local junto a la ubicación cuando su dueño la activó", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-09-21T17:32:00Z"));
     renderWithIntl(
-      await Placa({
+      await ProfileHeader({
         profile: { ...base, location: "Quilpué", timezone: "America/Santiago", showLocalTime: true } as ProfileView,
         authenticated: true,
       }),
@@ -125,7 +83,7 @@ describe("Placa: ficha musical y hora local", () => {
 
   it("con la opción desactivada no muestra ninguna hora aunque haya zona", async () => {
     renderWithIntl(
-      await Placa({
+      await ProfileHeader({
         profile: { ...base, timezone: "America/Santiago", showLocalTime: false } as ProfileView,
         authenticated: true,
       }),
@@ -133,9 +91,9 @@ describe("Placa: ficha musical y hora local", () => {
     expect(screen.queryByText(/profileLocalTime/)).not.toBeInTheDocument();
   });
 
-  it("una zona inválida guardada no rompe la Placa ni muestra hora", async () => {
+  it("una zona inválida guardada no rompe la cabecera ni muestra hora", async () => {
     renderWithIntl(
-      await Placa({
+      await ProfileHeader({
         profile: { ...base, timezone: "hora de mi casa", showLocalTime: true } as ProfileView,
         authenticated: true,
       }),
@@ -145,9 +103,9 @@ describe("Placa: ficha musical y hora local", () => {
   });
 });
 
-describe("Placa", () => {
+describe("ProfileHeader", () => {
   it("vista pública: identidad, contadores y botón de seguir", async () => {
-    renderWithIntl(await Placa({ profile: base, authenticated: true }));
+    renderWithIntl(await ProfileHeader({ profile: base, authenticated: true }));
     expect(screen.getByRole("heading", { name: "Ana Torres" })).toBeInTheDocument();
     expect(screen.getByText("@ana")).toBeInTheDocument();
     expect(screen.getByText("12")).toBeInTheDocument();
@@ -158,7 +116,7 @@ describe("Placa", () => {
 
   it("muestra la identidad extendida: bio, pronombres, ubicación, enlaces y contadores", async () => {
     renderWithIntl(
-      await Placa({
+      await ProfileHeader({
         profile: {
           ...base,
           profileVisibility: "private",
@@ -183,7 +141,7 @@ describe("Placa", () => {
 
   it("muestra «Ciudad, País» con el país en el idioma de la ruta, y los pronombres de la lista como etiqueta", async () => {
     renderWithIntl(
-      await Placa({
+      await ProfileHeader({
         profile: { ...base, location: "Santiago", country: "CL", pronounSet: "she" },
         authenticated: true,
       }),
@@ -196,14 +154,14 @@ describe("Placa", () => {
   it("el nombre del país sigue el idioma de la ruta (Spain en inglés)", async () => {
     vi.mocked(getLocale).mockResolvedValueOnce("en");
     renderWithIntl(
-      await Placa({ profile: { ...base, location: "Madrid", country: "ES" }, authenticated: true }),
+      await ProfileHeader({ profile: { ...base, location: "Madrid", country: "ES" }, authenticated: true }),
       "en",
     );
     expect(screen.getByText("Madrid, Spain")).toBeInTheDocument();
   });
 
-  it("sin país, ciudad ni pronombres la Placa no dibuja etiqueta ni ubicación", async () => {
-    renderWithIntl(await Placa({ profile: base, authenticated: true }));
+  it("sin país, ciudad ni pronombres la cabecera no dibuja etiqueta ni ubicación", async () => {
+    renderWithIntl(await ProfileHeader({ profile: base, authenticated: true }));
     expect(screen.queryByText(/^pronounSet\./)).not.toBeInTheDocument();
     expect(screen.queryByText(/·.*Miembro/)).not.toBeInTheDocument();
     expect(screen.getByText(/^Miembro desde/)).toBeInTheDocument();
@@ -211,7 +169,7 @@ describe("Placa", () => {
 
   it("vista del dueño: sin botón de bloqueo", async () => {
     renderWithIntl(
-      await Placa({
+      await ProfileHeader({
         profile: { ...base, relation: "self", isOwner: true },
         authenticated: true,
       }),
@@ -221,23 +179,23 @@ describe("Placa", () => {
   });
 
   it("visitante anónimo: sin botón de bloqueo", async () => {
-    renderWithIntl(await Placa({ profile: base, authenticated: false }));
+    renderWithIntl(await ProfileHeader({ profile: base, authenticated: false }));
     expect(screen.queryByTestId("block-button")).not.toBeInTheDocument();
   });
 
   it("otro usuario autenticado: muestra el botón de bloqueo", async () => {
-    renderWithIntl(await Placa({ profile: base, authenticated: true }));
+    renderWithIntl(await ProfileHeader({ profile: base, authenticated: true }));
     expect(screen.getByTestId("block-button")).toBeInTheDocument();
   });
 
   it("previsualización: pasa preview al FollowButton y oculta el bloqueo", async () => {
-    renderWithIntl(await Placa({ profile: base, authenticated: true, preview: true }));
+    renderWithIntl(await ProfileHeader({ profile: base, authenticated: true, preview: true }));
     expect(screen.getByTestId("follow-button")).toHaveAttribute("data-preview", "true");
     expect(screen.queryByTestId("block-button")).not.toBeInTheDocument();
   });
 
   it("los contadores enlazan a las vistas de conexiones", async () => {
-    renderWithIntl(await Placa({ profile: base, authenticated: true }));
+    renderWithIntl(await ProfileHeader({ profile: base, authenticated: true }));
     expect(screen.getByText("12").closest("a")).toHaveAttribute(
       "href",
       "/users/ana/connections/followers",
@@ -249,13 +207,13 @@ describe("Placa", () => {
   });
 
   it("sin seguidores en común: no renderiza la fila", async () => {
-    renderWithIntl(await Placa({ profile: base, authenticated: true }));
+    renderWithIntl(await ProfileHeader({ profile: base, authenticated: true }));
     expect(screen.queryByTestId("mutual-followers-row")).not.toBeInTheDocument();
   });
 
   it("con seguidores en común: renderiza la fila", async () => {
     renderWithIntl(
-      await Placa({
+      await ProfileHeader({
         profile: base,
         authenticated: true,
         mutualFollowers: {
@@ -265,5 +223,41 @@ describe("Placa", () => {
       }),
     );
     expect(screen.getByTestId("mutual-followers-row")).toHaveTextContent("ana");
+  });
+
+  it("la bio se presenta como cita", async () => {
+    renderWithIntl(await ProfileHeader({ profile: { ...base, bio: "Me gusta la música ochentera" }, authenticated: false }));
+    expect(screen.getByText("Me gusta la música ochentera").closest("blockquote")).not.toBeNull();
+  });
+
+  it("muestra la identidad musical, el fondo y los extras que recibe", async () => {
+    renderWithIntl(
+      await ProfileHeader({
+        profile: base,
+        authenticated: false,
+        identity: <div data-testid="identity" />,
+        backdrop: <div data-testid="backdrop" />,
+        share: <button type="button">share</button>,
+        extras: <p data-testid="extras" />,
+      }),
+    );
+    expect(screen.getByTestId("identity")).toBeInTheDocument();
+    expect(screen.getByTestId("backdrop")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "share" })).toBeInTheDocument();
+    expect(screen.getByTestId("extras")).toBeInTheDocument();
+  });
+
+  it("vista del dueño: la capa de edición envuelve solo los datos de la persona", async () => {
+    renderWithIntl(
+      await ProfileHeader({
+        profile: { ...base, relation: "self", isOwner: true },
+        authenticated: true,
+        identity: <div data-testid="identity" />,
+        wrapDetails: (details) => <div data-testid="editable">{details}</div>,
+      }),
+    );
+    const editable = screen.getByTestId("editable");
+    expect(editable).toContainElement(screen.getByRole("heading", { name: "Ana Torres" }));
+    expect(editable).not.toContainElement(screen.getByTestId("identity"));
   });
 });

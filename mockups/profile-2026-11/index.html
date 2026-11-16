@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Perfil público · Auditoría y tres direcciones — music-platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f6f5f2; --card: #fff; --tx: #17161a; --tx-2: #4b4a50; --tx-3: #6b6a70; --line: #e2e0da; --ok: #1f7a4d; --no: #b23a2e; --hi: #2433d1; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--tx); font: 16px/1.6 "Geist", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--hi); text-underline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--hi); outline-offset: 3px; }
+  code { font: 500 .9em "Geist Mono", monospace; background: #ecebe6; padding: 1px 5px; border-radius: 4px; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 48px); }
+  header.doc { padding: 64px 0 40px; border-bottom: 1px solid var(--line); }
+  h1 { font-size: clamp(34px, 4.4vw, 56px); line-height: 1.05; letter-spacing: -.03em; font-weight: 700; max-width: 22ch; }
+  .intro { margin-top: 18px; font-size: 19px; color: var(--tx-2); max-width: 66ch; }
+  .meta { margin-top: 20px; font: 500 13px "Geist Mono", monospace; color: var(--tx-3); display: flex; flex-wrap: wrap; gap: 8px 20px; }
+  nav.toc { position: sticky; top: 0; z-index: 5; background: rgba(246,245,242,.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  nav.toc .wrap { display: flex; gap: 6px; overflow-x: auto; padding-top: 10px; padding-bottom: 10px; }
+  nav.toc a { white-space: nowrap; color: var(--tx-2); text-decoration: none; font-size: 14px; font-weight: 500; padding: 6px 12px; border-radius: 8px; }
+  nav.toc a:hover { background: #ebe9e3; color: var(--tx); }
+  nav.toc a.cta { background: var(--tx); color: #fff; }
+  section { padding: 72px 0 0; }
+  h2 { font-size: clamp(26px, 2.6vw, 36px); letter-spacing: -.02em; line-height: 1.1; font-weight: 700; }
+  h2 + p { margin-top: 10px; color: var(--tx-2); max-width: 72ch; font-size: 17px; }
+  h3 { font-size: 19px; letter-spacing: -.01em; font-weight: 650; }
+  .shots { margin-top: 28px; display: grid; grid-template-columns: 1.2fr 1.2fr .55fr; gap: 16px; align-items: start; }
+  figure { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  figure img { display: block; width: 100%; height: auto; }
+  figcaption { padding: 12px 16px; font-size: 14px; color: var(--tx-3); border-top: 1px solid var(--line); }
+  .stats { margin-top: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+  .stat b { display: block; font-size: 30px; letter-spacing: -.02em; line-height: 1.1; }
+  .stat span { font-size: 14px; color: var(--tx-2); }
+  .issues { margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .issue { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; }
+  .issue h3 { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .sev { font: 500 12px "Geist Mono", monospace; padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+  .sev.alta { background: #fbe4e1; color: var(--no); }
+  .sev.media { background: #fdf0d6; color: #8a5a00; }
+  .sev.baja { background: #e9ece9; color: #4b5a4f; }
+  .issue ul { margin-top: 10px; padding-left: 18px; color: var(--tx-2); font-size: 15px; }
+  .issue li + li { margin-top: 6px; }
+  .issue li b { color: var(--tx); font-weight: 600; }
+  .callout { margin-top: 24px; background: #eef0fb; border: 1px solid #cfd4f5; border-radius: 12px; padding: 18px 22px; color: var(--tx-2); font-size: 15px; }
+  .callout b { color: var(--tx); }
+  .criteria { margin-top: 28px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 40px; }
+  .criteria li { list-style: none; padding: 16px 0; border-top: 1px solid var(--line); }
+  .criteria h3 { font-size: 17px; }
+  .criteria p { color: var(--tx-2); font-size: 15px; margin-top: 4px; }
+  .props { margin-top: 28px; display: grid; gap: 24px; }
+  .prop { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: grid; grid-template-columns: 1.1fr 1fr; }
+  .prop .img { display: block; border-right: 1px solid var(--line); }
+  .prop .img img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+  .prop .body { padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+  .prop h3 { font-size: 24px; letter-spacing: -.02em; }
+  .prop .thesis { color: var(--tx-2); }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tags span { font-size: 13px; padding: 3px 9px; border-radius: 6px; background: #efede8; color: var(--tx-2); }
+  .pc { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 14px; }
+  .pc h4 { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .pc .pro h4 { color: var(--ok); } .pc .con h4 { color: var(--no); }
+  .pc ul { padding-left: 16px; color: var(--tx-2); }
+  .pc li + li { margin-top: 4px; }
+  .open { margin-top: auto; display: inline-flex; align-self: start; align-items: center; gap: 8px; background: var(--tx); color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 15px; }
+  .open:hover { background: var(--hi); }
+  table { margin-top: 28px; width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: 15px; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { background: #efede8; font-size: 13px; font-weight: 600; color: var(--tx-2); }
+  td.s { font: 500 14px "Geist Mono", monospace; white-space: nowrap; }
+  .rec { margin-top: 28px; background: var(--tx); color: #f4f3ef; border-radius: 16px; padding: clamp(28px, 4vw, 48px); display: grid; grid-template-columns: 1fr 1.3fr; gap: 40px; }
+  .rec h3 { font-size: clamp(26px, 2.8vw, 38px); letter-spacing: -.02em; line-height: 1.1; }
+  .rec p, .rec li { color: #cfcdc7; }
+  .rec ul { padding-left: 18px; margin-top: 10px; }
+  .rec li + li { margin-top: 8px; }
+  .rec b { color: #fff; }
+  .rec a { color: #ffcd5e; }
+  .notes { margin: 56px 0 80px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 14px; color: var(--tx-3); max-width: 92ch; }
+  .notes p + p { margin-top: 8px; }
+  @media (max-width: 900px) {
+    .shots, .issues, .criteria, .prop, .rec, .pc { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .prop .img { border-right: 0; border-bottom: 1px solid var(--line); aspect-ratio: 16/10; }
+    table { display: block; overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+<header class="doc">
+  <div class="wrap">
+    <h1>Perfil público: auditoría y tres direcciones de modernización</h1>
+    <p class="intro">Revisión del perfil de <code>@besantanag95</code> tal como lo ve un visitante sin sesión, con tres mockups completos que replantean la página manteniendo su propósito: que en segundos se entienda quién es esta persona musicalmente.</p>
+    <p class="meta"><span>15 nov 2026</span><span>main · /es/users/besantanag95 sin sesión</span><span>Revisado a 1440, 1024, 820 y 390 px</span></p>
+  </div>
+</header>
+<nav class="toc" aria-label="Contenido"><div class="wrap"><a href="#estado">Estado actual</a><a href="#problemas">Problemas</a><a href="#criterios">Criterios</a><a href="#propuestas">Propuestas</a><a href="#comparacion">Comparación</a><a href="#recomendacion">Recomendación</a><a class="cta" href="d-mezcla.html">Abrir la recomendada</a></div></nav>
+
+<main class="wrap">
+  <section id="estado" aria-labelledby="h-estado">
+    <h2 id="h-estado">Estado actual</h2>
+    <p>Las piezas son buenas y la información es rica: tarjeta de identidad, «Empieza por aquí», reseñas, huella de gusto, diario, favoritos, listas y colección. El problema es cómo se presentan: trece bloques del mismo peso en una columna estrecha, sin un primer impacto que diga quién es la persona.</p>
+    <div class="shots">
+      <figure><img src="shots/actual.png" alt="Perfil actual a 1440 px: barra lateral con la Placa a la izquierda; a la derecha tres círculos pequeños de identidad y la lista Empieza por aquí"><figcaption>Primer viewport a 1440 px. El nombre mide 20 px y la identidad musical son tres círculos pequeños sin título.</figcaption></figure>
+      <figure><img src="shots/actual-medio.png" alt="Tramo medio del perfil actual: diario con desplazamiento interno, favoritos y la columna izquierda vacía"><figcaption>Tramo medio. La barra lateral terminó hace rato y la columna izquierda queda vacía.</figcaption></figure>
+      <figure><img src="shots/actual-movil.png" alt="Perfil actual a 390 px: Placa a lo ancho y una tarjeta de identidad que solo muestra dos de sus tres elementos"><figcaption>390 px. El himno de la tarjeta de identidad queda fuera de la pantalla.</figcaption></figure>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>71 %</b><span>del ancho usado a 1440 px (contenedor de 1024 px)</span></div>
+      <div class="stat"><b>~1:8</b><span>alto de la barra lateral (514 px) frente a la columna principal (~4000 px)</span></div>
+      <div class="stat"><b>20 px</b><span>el nombre de la persona: el mismo tamaño que cualquier título de sección</span></div>
+      <div class="stat"><b>3 veces</b><span>aparece <i>The Rise and Fall of a Midwest Princess</i> (identidad, Empieza por aquí, Favoritos)</span></div>
+    </div>
+  </section>
+
+  <section id="problemas" aria-labelledby="h-prob">
+    <h2 id="h-prob">Problemas detectados</h2>
+    <p>Ordenados por el impacto en quien llega al perfil y quiere entender, en pocos segundos, qué escucha y por qué seguirlo.</p>
+    <div class="issues">
+      <article class="issue"><h3>Sin primer impacto <span class="sev alta">Alta</span></h3><ul>
+        <li>El <b>nombre (h1) mide 20 px</b> y el avatar 56 px: la página no tiene cabecera; arranca directamente con una tarjeta lateral.</li>
+        <li>La <b>tarjeta de identidad</b> (artista, álbum y himno), que el diseño define como Nivel 1, son tres círculos de 80 px sin título ni explicación.</li>
+        <li>El artista definitorio (Chappell Roan) sale como disco vacío en la tarjeta, aunque su foto sí aparece más abajo en «Exploración».</li>
+      </ul></article>
+      <article class="issue"><h3>Estructura y ancho <span class="sev alta">Alta</span></h3><ul>
+        <li>Contenedor de <b>1024 px</b> a 1440 px; la columna principal tiene ~670 px.</li>
+        <li>La barra lateral mide 514 px y la columna ~4000 px: <b>después del primer viewport la columna izquierda queda vacía</b> el resto de la página.</li>
+        <li><b>Trece bloques apilados</b> con el mismo título de 20 px y el mismo espacio entre ellos: los niveles 1-2-3 del diseño no se distinguen.</li>
+      </ul></article>
+      <article class="issue"><h3>Repeticiones <span class="sev media">Media</span></h3><ul>
+        <li>El mismo álbum en identidad, «Empieza por aquí» y Favoritos; Chappell Roan en tres sitios; <i>Ocean Blvd</i> dos veces.</li>
+        <li>Los enlaces de Nivel 3 al final repiten los «Ver todo» que ya tiene cada estante.</li>
+      </ul></article>
+      <article class="issue"><h3>Bloques débiles <span class="sev media">Media</span></h3><ul>
+        <li>«Empieza por aquí» sin notas: filas de 88 px casi vacías.</li>
+        <li>La <b>huella de gusto</b> son dos frases sueltas sin título entre Reseñas y Exploración.</li>
+        <li>Una sola valoración destacada ocupa todo el ancho; «Artistas 1» en Favoritos es un cuadrado gigante con una letra.</li>
+        <li>La vista previa de la colección tiene un selector de tres vistas para <b>una sola copia</b>.</li>
+      </ul></article>
+      <article class="issue"><h3>Interacción <span class="sev media">Media</span></h3><ul>
+        <li>El diario tiene <b>desplazamiento interno</b> y corta la quinta fila a la mitad.</li>
+        <li>Los carruseles de listas ponen las flechas encima de las tarjetas.</li>
+        <li>La única acción para el visitante es «Iniciar sesión para seguir», un botón secundario dentro de la tarjeta, sin decir qué gana al seguir.</li>
+      </ul></article>
+      <article class="issue"><h3>Nombres y tipografía <span class="sev baja">Baja</span></h3><ul>
+        <li>«Exploración» (artistas que sigue) y «Listas para completar» (recorridos) no dicen qué contienen.</li>
+        <li>Etiquetas en monoespaciada de 11 px (ARTISTA, SOY, GÉNEROS…), difíciles de leer.</li>
+      </ul></article>
+      <article class="issue"><h3>Responsive <span class="sev alta">Alta</span></h3><ul>
+        <li>A 390 px la tarjeta de identidad no cabe: sus columnas (<code>flex-1</code> sin <code>min-w-0</code>) empujan el <b>himno fuera de la pantalla</b> y el título del álbum se sale.</li>
+        <li>En pantallas angostas la Placa completa (~600 px) va antes que cualquier música.</li>
+      </ul></article>
+      <article class="issue"><h3>Robustez <span class="sev baja">Baja</span></h3><ul>
+        <li>El avatar no tiene alternativa si la imagen falla: en este worktree, sin el espejo de <code>public/uploads</code>, se veía el icono de imagen rota del navegador (las carátulas sí caen al disco).</li>
+        <li>Los textos de las reseñas de esta cuenta son de prueba; en los mockups se representan como líneas grises.</li>
+      </ul></article>
+    </div>
+    <p class="callout"><b>Vista de seguidor.</b> No se pudo observar sin iniciar sesión, como pedía la tarea. Según el código, quien sigue al perfil ve además el contenido con audiencia «seguidores» (diario completo, «En rotación» y actividad reciente), así que la página sería todavía más larga con la misma estructura. La propuesta A incluye un interruptor «Visitante / Seguidor» ilustrativo para mostrar cómo encajaría.</p>
+  </section>
+
+  <section id="criterios" aria-labelledby="h-crit">
+    <h2 id="h-crit">Criterios de diseño de las propuestas</h2>
+    <p>Las tres conservan todo el contenido y las reglas de privacidad actuales. Cambian la composición, la jerarquía y el orden.</p>
+    <ul class="criteria">
+      <li><h3>Una cabecera que presente a la persona</h3><p>Nombre grande, avatar, bio, cifras y las acciones (seguir, compartir) juntas, arriba.</p></li>
+      <li><h3>La identidad musical como protagonista</h3><p>Artista, álbum e himno en grande y con título («Su música, en tres»), en el primer viewport.</p></li>
+      <li><h3>Cada cosa una vez</h3><p>Lo que ya está en la identidad no se repite en «Empieza por aquí»; los «ver todo» viven en cada sección.</p></li>
+      <li><h3>Navegación por secciones</h3><p>Pestañas o índice para saltar a diario, reseñas, favoritos, listas y colección en vez de trece estantes seguidos.</p></li>
+      <li><h3>Usar el ancho</h3><p>Contenedor de 1280–1320 px; la información de la persona acompaña al contenido en vez de dejar una columna vacía.</p></li>
+      <li><h3>Sin desplazamientos internos</h3><p>Diario como lista o tabla completa de pocas filas; listas en rejilla sin flechas encima.</p></li>
+      <li><h3>Nombres que expliquen</h3><p>«Sigue a 10 artistas», «Listas y recorridos», «Huella de gusto» con su dato principal.</p></li>
+      <li><h3>Móvil propio</h3><p>Identidad visible completa a 390 px, rieles horizontales donde ahorran alto.</p></li>
+    </ul>
+  </section>
+
+  <section id="propuestas" aria-labelledby="h-props">
+    <h2 id="h-props">Las propuestas</h2>
+    <p>Usan los datos reales del perfil, sus carátulas (miniaturas del espejo, ≤250 px) y las fotos de artistas de Commons que ya muestra la app. Solo los textos de reseña se sustituyen por líneas grises. D mezcla lo mejor de A, B y C según la revisión.</p>
+    <div class="props">
+      <article class="prop" style="border-color:#17161a;border-width:2px">
+        <a class="img" href="d-mezcla.html"><img src="shots/d.png" alt="Propuesta D: cabecera de A con la identidad musical arriba a la derecha y, debajo, una franja con ficha, huella de gusto y artistas seguidos"></a>
+        <div class="body">
+          <h3>D · Mezcla (recomendada)</h3>
+          <p class="thesis">La cabecera de A con la identidad musical arriba, junto a los datos de la persona. Sin columna lateral fija: ficha, huella de gusto y artistas seguidos pasan a una franja a todo el ancho, separada por filetes y sin tarjetas. Favoritos aprovecha el ancho como en B (portadas y canciones lado a lado), y Reseñas con Diario, y Listas con Colección, comparten fila como en C. Sin números de sección ni subtítulos; títulos neutros («Artistas seguidos»). Mismos colores y tipografías que el sitio actual.</p>
+          <div class="tags"><span>Oscuro cálido</span><span>Space Grotesk · Source Serif 4 · Plex Mono</span><span>Ámbar</span><span>Sin barra lateral</span></div>
+          <div class="pc"><div class="pro"><h4>De cada propuesta</h4><ul><li>A: cabecera con la identidad musical arriba.</li><li>B: créditos de la ficha y Favoritos a lo ancho.</li><li>C: filas compartidas y la huella con su dato en grande.</li></ul></div><div class="con"><h4>Lo que deja fuera</h4><ul><li>A: la columna lateral pegajosa.</li><li>B: la numeración 01, 02… y el rojo.</li><li>C: los mosaicos grandes, las cifras y los colores por perfil.</li></ul></div></div>
+          <a class="open" href="d-mezcla.html">Abrir propuesta D</a>
+        </div>
+      </article>
+      <article class="prop">
+        <a class="img" href="d2-personalidad.html#disco"><img src="shots/d2.png" alt="Propuesta D2: la misma página que D con la bio como cita en cursiva y vinilos asomando de las portadas del álbum y del himno"></a>
+        <div class="body">
+          <h3>D2 · Mezcla con personalidad</h3>
+          <p class="thesis">D con tres detalles: al pasar el cursor por el álbum y el himno, el vinilo asoma de la funda (de B); la bio como cita de contraportada en cursiva; y un tono propio de cada perfil, sacado del color dominante de su álbum definitorio, solo en la línea bajo la cabecera, las comillas, la pestaña activa y la etiqueta del vinilo (de C). Si la portada es casi gris, el tono cae al ámbar. El giro del avatar queda como opción.</p>
+          <div class="tags"><span>Mismos colores y tipografías</span><span>Tono por perfil</span><span>Un solo movimiento</span></div>
+          <div class="pc"><div class="pro"><h4>Aporta</h4><ul><li>Cada perfil se siente distinto sin cambiar la paleta.</li><li>Un gesto memorable y propio del vinilo, en la pieza más importante.</li></ul></div><div class="con"><h4>A vigilar</h4><ul><li>El tono se calcula de la carátula: hay que fijar la regla de contraste y su caída al ámbar.</li><li>En táctil el disco asoma quieto (sin cursor no hay gesto).</li></ul></div></div>
+          <a class="open" href="d2-personalidad.html">Abrir propuesta D2</a>
+        </div>
+      </article>
+      <article class="prop">
+        <a class="img" href="a-escenario.html"><img src="shots/a.png" alt="Propuesta A: cabecera con fondo difuminado de la carátula del álbum definitorio, avatar grande, nombre grande y a la derecha tres portadas de identidad"></a>
+        <div class="body">
+          <h3>A · Escenario</h3>
+          <p class="thesis">Evolución del sistema actual (misma paleta, mismas tipografías, la línea de la portada C). Una cabecera tipo escenario con el álbum definitorio difuminado de fondo, el nombre en grande, cifras y «Seguir» en ámbar; a la derecha «Su música, en tres» en grande. Debajo, pestañas fijas y un cuerpo en dos columnas: contenido a la izquierda y la ficha, la huella, los artistas y la colección a la derecha.</p>
+          <div class="tags"><span>Oscuro cálido</span><span>Space Grotesk · Source Serif 4 · Plex Mono</span><span>Ámbar</span><span>Pestañas</span></div>
+          <div class="pc"><div class="pro"><h4>Ventajas</h4><ul><li>Primer viewport que presenta a la persona y su música.</li><li>Coherente con la portada ya rediseñada: se implementa sin tocar tokens.</li><li>La columna lateral acompaña todo el recorrido; nada queda vacío.</li></ul></div><div class="con"><h4>Desventajas</h4><ul><li>La más familiar (patrón de perfil social conocido).</li><li>En móvil la ficha queda al final.</li><li>Las pestañas implican rutas o anclas por sección.</li></ul></div></div>
+          <a class="open" href="a-escenario.html">Abrir propuesta A</a>
+        </div>
+      </article>
+      <article class="prop">
+        <a class="img" href="b-funda.html"><img src="shots/b.png" alt="Propuesta B: cabecera roja como contraportada de vinilo con el avatar en duotono, créditos en tabla y un índice por caras"></a>
+        <div class="body">
+          <h3>B · Funda</h3>
+          <p class="thesis">El perfil como la contraportada de un vinilo: una funda roja laca con el avatar en duotono, la Placa convertida en créditos («Soy», «Géneros», «Primer show»…), y un índice por caras (Cara A: su música, empieza por aquí, reseñas; Cara B: diario, favoritos, listas, notas). Cada sección es una página de notas con número grande, tablas y tipografía condensada.</p>
+          <div class="tags"><span>Rojo laca</span><span>Archivo condensada + Literata</span><span>Índice numerado</span><span>Editorial</span></div>
+          <div class="pc"><div class="pro"><h4>Ventajas</h4><ul><li>La identidad más propia y memorable; muy del mundo del coleccionista.</li><li>La Placa como créditos se lee de un vistazo.</li><li>El diario como tabla (fecha · contexto · disco) es muy claro.</li></ul></div><div class="con"><h4>Desventajas</h4><ul><li>Nueva paleta y tipografías: rompe con el resto de la app.</li><li>El duotono del avatar no favorece a todas las fotos.</li><li>Página larga: una sección por pantalla.</li></ul></div></div>
+          <a class="open" href="b-funda.html">Abrir propuesta B</a>
+        </div>
+      </article>
+      <article class="prop">
+        <a class="img" href="c-muro.html"><img src="shots/c.png" alt="Propuesta C: muro de mosaicos con el nombre en grande, portadas como mosaicos y cifras en colores rosa, amarillo y celeste"></a>
+        <div class="body">
+          <h3>C · Muro</h3>
+          <p class="thesis">Un muro de mosaicos de tamaños distintos, con colores sacados de sus propias carátulas (rosa de Chappell, celeste de Sabrina, amarillo de Ratt): el nombre en un mosaico grande, cada pieza de identidad como portada a sangre, cifras grandes, la huella como «2020s» gigante y todo lo demás en mosaicos que caben en dos o tres pantallas.</p>
+          <div class="tags"><span>Azul noche + rosa, amarillo, celeste</span><span>Bricolage Grotesque + Geist</span><span>Mosaicos</span><span>Expresivo</span></div>
+          <div class="pc"><div class="pro"><h4>Ventajas</h4><ul><li>La más compacta: todo el perfil en ~2,5 pantallas a 1440 px.</li><li>Muy compartible y personal; se siente «de la persona».</li><li>Funciona bien en móvil (2 columnas).</li></ul></div><div class="con"><h4>Desventajas</h4><ul><li>Las cifras grandes rozan la «gamificación» que el producto evita.</li><li>Colores por perfil: difícil de sostener con carátulas variadas y en accesibilidad.</li><li>La más alejada del sistema actual.</li></ul></div></div>
+          <a class="open" href="c-muro.html">Abrir propuesta C</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="comparacion" aria-labelledby="h-comp">
+    <h2 id="h-comp">Comparación</h2>
+    <p>Valoración de 1 a 5 contra los problemas detectados y el coste de llevarla al producto.</p>
+    <table>
+      <thead><tr><th>Criterio</th><th>A · Escenario</th><th>B · Funda</th><th>C · Muro</th></tr></thead>
+      <tbody>
+        <tr><td>Se entiende quién es en el primer viewport</td><td class="s">5</td><td class="s">4</td><td class="s">5</td></tr>
+        <tr><td>Jerarquía y orden de lectura</td><td class="s">5</td><td class="s">4</td><td class="s">3</td></tr>
+        <tr><td>Navegación entre secciones</td><td class="s">5</td><td class="s">4</td><td class="s">3</td></tr>
+        <tr><td>Uso del ancho y longitud de página</td><td class="s">4</td><td class="s">3</td><td class="s">5</td></tr>
+        <tr><td>Identidad propia y memorable</td><td class="s">3</td><td class="s">5</td><td class="s">4</td></tr>
+        <tr><td>Coherencia con el resto de la app y la portada</td><td class="s">5</td><td class="s">2</td><td class="s">2</td></tr>
+        <tr><td>Fiel a «sin gamificación» y a rating-display</td><td class="s">5</td><td class="s">5</td><td class="s">3</td></tr>
+        <tr><td>Coste de implementación</td><td class="s">Medio</td><td class="s">Alto</td><td class="s">Alto</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="recomendacion" aria-labelledby="h-rec">
+    <div class="rec">
+      <div><h3 id="h-rec">Recomendación: D · Mezcla</h3></div>
+      <div>
+        <p><b>D toma la cabecera de A, la claridad de B y las filas compartidas de C, con los colores y tipografías actuales.</b> Al quitar la columna lateral pegajosa, el contenido usa todo el ancho; la ficha, la huella y los artistas seguidos quedan en una franja propia justo después de la cabecera.</p>
+        <ul>
+          <li><b>Sin números de sección ni subtítulos</b>, y títulos neutros: «Artistas seguidos», «Identidad musical», «Listas y recorridos».</li>
+          <li><b>Diario como tabla</b> (fecha · disco · contexto), que en móvil pone la fecha en su propia línea.</li>
+          <li><b>Arreglos que conviene hacer ya, con cualquier dirección:</b> la tarjeta de identidad a 390 px (<code>min-w-0</code> en sus columnas), la foto del artista definitorio, la alternativa del avatar cuando falla la imagen, ocultar a visitantes «Guardar» y «Seguir mi progreso» si llevan a iniciar sesión, y el diario sin desplazamiento interno.</li>
+        </ul>
+        <p style="margin-top:16px"><a href="d-mezcla.html">Abrir la propuesta D →</a> · <a href="d-mezcla.html#seguidor">ver como seguidor →</a></p>
+      </div>
+    </div>
+  </section>
+
+  <div class="notes">
+    <p><b>Sobre los mockups.</b> Páginas estáticas independientes; no modifican el sitio. Los datos son los reales de <code>@besantanag95</code> a la fecha; las carátulas salen del espejo local (<code>public/uploads</code>) y las fotos de artistas, de Wikimedia Commons, como en la app. Los textos de reseña se muestran como líneas grises porque los actuales son de prueba. La sección «En rotación» de la vista de seguidor de A es ilustrativa.</p>
+    <p>Revisados a 1440, 820 y 390 px sin desbordes horizontales (A, B, C y D).</p>
+  </div>
+</main>
+</body>
+</html>

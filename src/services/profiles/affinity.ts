@@ -258,7 +258,10 @@ async function resolveEntities(refs: EntityRef[]): Promise<ShowcaseEntity[]> {
 
   const [artists, releaseGroups, recordings] = await Promise.all([
     artistIds.length
-      ? db.select({ id: artist.id, name: artist.name }).from(artist).where(inArray(artist.id, artistIds))
+      ? db
+          .select({ id: artist.id, name: artist.name, photoUrl: artist.photoUrl })
+          .from(artist)
+          .where(inArray(artist.id, artistIds))
       : Promise.resolve([]),
     rgIds.length
       ? db
@@ -287,7 +290,8 @@ async function resolveEntities(refs: EntityRef[]): Promise<ShowcaseEntity[]> {
 
   const byId = new Map<string, ShowcaseEntity>();
   for (const a of artists) {
-    byId.set(a.id, { type: "artist", id: a.id, title: a.name, artistName: null, coverThumbUrl: null });
+    // La foto del artista (Commons con licencia verificada) hace de miniatura, como en el resto del perfil.
+    byId.set(a.id, { type: "artist", id: a.id, title: a.name, artistName: null, coverThumbUrl: a.photoUrl ?? null });
   }
   for (const rg of releaseGroups) {
     byId.set(rg.id, {

@@ -40,7 +40,7 @@ export function EditableBlock({ label, editor, children, empty = false, classNam
       } ${className ?? ""}`}
     >
       {empty ? (
-        <p className="w-full max-w-2xl rounded-lg border border-dashed border-ink-border px-4 py-6 font-body text-sm text-paper-muted">
+        <p className="w-full rounded-lg border border-dashed border-ink-border px-4 py-6 font-body text-sm text-paper-muted">
           {t("editMode.emptyBlock", { block: label })}
         </p>
       ) : (

@@ -20,7 +20,7 @@ export async function RatingHighlights({ highlights }: RatingHighlightsProps) {
   const [t, locale] = await Promise.all([getTranslations("users"), getLocale()]);
 
   return (
-    <section className="flex w-full max-w-2xl flex-col gap-4">
+    <section className="flex w-full flex-col gap-4">
       <h2 className="font-display text-xl text-paper">{t("ratingHighlights.heading")}</h2>
       <ul className="flex flex-col gap-3">
         {highlights.map((highlight) => (
