@@ -185,6 +185,18 @@ el tono por perfil y el vinilo que asoma. Reemplaza a la **Placa** de la barra l
   (`CollectionPreview`, ahora Server Component). Guardar/Seguir y Seguir mi progreso solo para un
   visitante con sesión que no es el dueño ni la previsualización (`canAct`). «Empieza por aquí» sigue
   mostrando lo que repite la Tarjeta de Identidad (decisión confirmada el 2026-11-16).
+- **Tono del perfil (Fase 3, `redesign-user-profile-phase3`)**: al elegir o cambiar el álbum
+  definitorio, la ruta `PUT /api/me/profile/pinned/defining` agenda con `after()` el cálculo
+  (`src/services/profiles/tone.ts`): la miniatura de la carátula, reducida a 48 px con `sharp`, da
+  el matiz dominante (12 sectores ponderados por s², sin casi negros ni casi blancos); saturación
+  ≥ 0,5, luminosidad 64 % y, si contrasta menos de 3:1 con la tinta, más clara. Se guarda en
+  `user_showcase.profile_tone`; sin álbum, sin arte o sin matiz saturado, `NULL` = ámbar. Quitar el
+  álbum lo borra. Visitar el perfil solo lo lee (`getProfileTone`) y lo pone en `--profile-tone`:
+  tiñe la línea inferior de la cabecera, las comillas de la bio, la marca de la sección activa de
+  las anclas y la etiqueta del vinilo. Perfiles anteriores: `scripts/backfill-profile-tone.ts`.
+- **Vinilo que asoma**: el álbum y el himno de «Identidad musical» tienen un disco detrás de la
+  carátula que sale a medias con el cursor o el foco (`translateX(36%)` y giro), asoma quieto un
+  14 % sin cursor (`hover: none`) y no se anima con movimiento reducido. El artista no lleva vinilo.
 
 Las menciones a «la Placa» en el resto de este documento son históricas: hoy corresponden a la
 cabecera (datos de la persona, acciones, recuentos) y a la franja de identidad (la ficha).

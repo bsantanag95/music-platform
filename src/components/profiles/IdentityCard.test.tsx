@@ -88,4 +88,17 @@ describe("IdentityCard", () => {
     expect(artistCover).toHaveClass("rounded-full");
     expect(albumCover).not.toHaveClass("rounded-full");
   });
+
+  it("vinilo detrás del álbum y del himno, decorativo, que asoma con cursor o foco y respeta el movimiento reducido", async () => {
+    const { container } = renderWithIntl(await IdentityCard({ identityCard: { artist, album, anthem } }));
+    const vinyls = container.querySelectorAll("[data-vinyl]");
+    expect(vinyls).toHaveLength(2); // el artista no lleva vinilo
+    for (const vinyl of vinyls) {
+      expect(vinyl).toHaveAttribute("aria-hidden", "true");
+      expect(vinyl).toHaveClass("group-hover:translate-x-[36%]", "group-focus-visible:translate-x-[36%]");
+      expect(vinyl).toHaveClass("motion-reduce:transition-none", "[@media(hover:none)]:translate-x-[14%]");
+    }
+    // La etiqueta usa el tono del perfil.
+    expect(vinyls[0]!.querySelector("span")).toHaveClass("bg-[var(--profile-tone,var(--color-amber))]");
+  });
 });

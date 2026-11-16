@@ -42,18 +42,22 @@ export async function IdentityCard({ identityCard }: IdentityCardProps) {
       </h2>
       <ul className="grid grid-cols-3 gap-3 sm:gap-4">
         {slots.map((slot) => (
-          <li key={slot.key} className="min-w-0">
+          // El elemento con el cursor o el foco sube de capa: su vinilo pasa por encima del vecino.
+          <li key={slot.key} className="relative min-w-0 hover:z-10 focus-within:z-10">
             <Link
               href={targetHref(slot.entity.type, slot.entity.id, slot.entity.title, slot.entity.artistName ?? null)}
               className="group flex min-w-0 flex-col gap-2"
             >
-              <CoverThumb
-                cover={slot.entity.coverThumbUrl}
-                label=""
-                className={`aspect-square w-full border border-ink-border shadow-[0_18px_32px_-20px_#000] transition-colors group-hover:border-amber ${
-                  slot.key === "artist" ? "rounded-full" : "rounded-md"
-                }`}
-              />
+              <span className="relative block">
+                {slot.key !== "artist" && <Vinyl />}
+                <CoverThumb
+                  cover={slot.entity.coverThumbUrl}
+                  label=""
+                  className={`z-[1] aspect-square w-full border border-ink-border shadow-[0_18px_32px_-20px_#000] transition-colors group-hover:border-amber ${
+                    slot.key === "artist" ? "rounded-full" : "rounded-md"
+                  }`}
+                />
+              </span>
               <span className="flex min-w-0 flex-col gap-0.5">
                 <span className="font-data text-[0.625rem] uppercase tracking-wide text-paper-muted">
                   {slot.label}
@@ -70,5 +74,27 @@ export async function IdentityCard({ identityCard }: IdentityCardProps) {
         ))}
       </ul>
     </section>
+  );
+}
+
+// Vinilo que asoma de la funda (spec profile-showcase, "Vinilo que asoma en la Tarjeta de
+// Identidad"; openspec: redesign-user-profile-phase3): un disco detrás de la carátula del
+// álbum y del himno, con la etiqueta en el tono del perfil, que sale a medias con el cursor
+// o el foco del teclado. Sin cursor (táctil) asoma apenas y quieto; con movimiento reducido
+// no se anima. Decorativo: oculto a lectores de pantalla.
+function Vinyl() {
+  return (
+    <span
+      aria-hidden="true"
+      data-vinyl=""
+      className="absolute inset-[4%] rounded-full shadow-[0_10px_24px_-12px_#000] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-[36%] group-hover:rotate-[40deg] group-focus-visible:translate-x-[36%] group-focus-visible:rotate-[40deg] motion-reduce:transition-none [@media(hover:none)]:translate-x-[14%]"
+      style={{
+        background:
+          "repeating-radial-gradient(circle at center, #0d0c0a 0 1.5px, #1d1a16 1.5px 3px)",
+      }}
+    >
+      <span className="absolute inset-[34%] rounded-full bg-[var(--profile-tone,var(--color-amber))]" />
+      <span className="absolute inset-[48%] rounded-full bg-ink" />
+    </span>
   );
 }

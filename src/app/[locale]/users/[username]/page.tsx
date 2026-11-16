@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { cache, Suspense, type ReactNode } from "react";
+import { cache, Suspense, type CSSProperties, type ReactNode } from "react";
+import { getProfileTone } from "@/services/profiles/showcase";
 import { notFound } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { getProfileView } from "@/services/profiles/profile-view";
@@ -135,9 +136,12 @@ async function UserProfilePage({ params, searchParams }: UserProfilePageProps) {
   // acceso a Ajustes, lápices por bloque) se superponen a esa misma estructura,
   // no la reemplazan: hasta que el dueño activa el modo edición, su perfil se ve
   // igual que el de un visitante (spec `profile-edit-mode`).
-  const mutualFollowers = effectiveViewerId
-    ? await getMutualFollowersPreview(profile.username, effectiveViewerId)
-    : null;
+  const [mutualFollowers, tone] = await Promise.all([
+    effectiveViewerId ? getMutualFollowersPreview(profile.username, effectiveViewerId) : null,
+    // Tono del perfil (spec social-profiles, "Tono del perfil"): guardado, nunca calculado al visitar.
+    getProfileTone(profile.id),
+  ]);
+  const toneStyle = tone ? ({ "--profile-tone": tone } as CSSProperties) : undefined;
 
   const header = (
     <ProfileHeader
@@ -228,7 +232,11 @@ async function UserProfilePage({ params, searchParams }: UserProfilePageProps) {
   return (
     // Alturas de la cabecera del sitio y de la barra de anclas: la barra queda fija debajo de la
     // primera y los estantes reservan las dos al saltar a su ancla.
-    <main className="flex min-h-screen flex-col pb-12 [--profile-anchors-h:2.875rem] [--site-header-h:3.625rem]">
+    // `--profile-tone` (si existe) tiñe los detalles del perfil; sin él, cada uso cae al ámbar.
+    <main
+      style={toneStyle}
+      className="flex min-h-screen flex-col pb-12 [--profile-anchors-h:2.875rem] [--site-header-h:3.625rem]"
+    >
       {previewing && (
         <div className="mx-auto w-full max-w-7xl px-4 pt-6 xl:px-6">
           <ViewAsBanner username={profile.username} />

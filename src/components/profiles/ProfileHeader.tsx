@@ -12,6 +12,12 @@ import { countryName, isPronounSet } from "@/lib/personal-info";
 import type { ProfileView } from "@/services/profiles/profile-view";
 import type { MutualFollowersPreview } from "@/services/profiles/affinity";
 
+// Tono del perfil (spec social-profiles, "Tono del perfil"): `--profile-tone` lo pone la página;
+// sin él, el ámbar. Solo en detalles: las comillas de la bio y la línea inferior de la cabecera.
+const TONE_TEXT = "text-[var(--profile-tone,var(--color-amber))]";
+const TONE_LINE =
+  "shadow-[inset_0_-2px_0_color-mix(in_srgb,var(--profile-tone,var(--color-amber))_70%,transparent)]";
+
 interface ProfileHeaderProps {
   profile: ProfileView;
   authenticated: boolean;
@@ -112,11 +118,11 @@ export async function ProfileHeader({
       {profile.bio && (
         <blockquote className="max-w-[36ch] font-body text-lg italic leading-snug text-paper sm:text-[1.375rem]">
           <p>
-            <span aria-hidden="true" className="mr-0.5 not-italic text-amber">
+            <span aria-hidden="true" className={`mr-0.5 not-italic ${TONE_TEXT}`}>
               «
             </span>
             {profile.bio}
-            <span aria-hidden="true" className="ml-0.5 not-italic text-amber">
+            <span aria-hidden="true" className={`ml-0.5 not-italic ${TONE_TEXT}`}>
               »
             </span>
           </p>
@@ -173,7 +179,7 @@ export async function ProfileHeader({
     <section
       id="perfil"
       aria-labelledby="profile-name"
-      className="relative isolate w-full scroll-mt-[var(--site-header-h)] overflow-hidden border-b border-ink-border bg-gradient-to-b from-ink-surface/50 to-ink"
+      className={`relative isolate w-full scroll-mt-[var(--site-header-h)] overflow-hidden border-b border-ink-border bg-gradient-to-b from-ink-surface/50 to-ink ${TONE_LINE}`}
     >
       {backdrop}
       <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 pb-8 pt-8 sm:pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,27.5rem)] lg:items-center lg:gap-16 xl:px-6">
