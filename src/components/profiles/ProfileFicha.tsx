@@ -4,7 +4,7 @@ interface ProfileFichaProps {
   identity: MusicIdentityData;
   /**
    * Traductor del namespace `users`, resuelto una sola vez por el Server Component
-   * que lo compone (síncrono a propósito, igual que `ProfileIdentity`: un
+   * que lo compone (síncrono a propósito, igual que `ProfileLinks`: un
    * componente async anidado no se resuelve al testear con `render()`).
    */
   t: (key: string, values?: Record<string, string | number>) => string;

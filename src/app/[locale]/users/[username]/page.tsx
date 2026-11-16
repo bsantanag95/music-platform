@@ -10,7 +10,8 @@ import { getMutualFollowersPreview, mutualFollowersHint } from "@/services/profi
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
 import { ProfileHeader } from "@/components/profiles/ProfileHeader";
-import { PrivateProfileCard } from "@/components/profiles/PrivateProfileCard";
+import { PrivateProfileDoor } from "@/components/profiles/PrivateProfileDoor";
+import { privateState } from "@/components/profiles/private-state";
 import { ViewAsBanner } from "@/components/profiles/ViewAsBanner";
 import { OwnerEditProvider } from "@/components/profiles/OwnerEditProvider";
 import { OwnerProfileBar } from "@/components/profiles/OwnerProfileBar";
@@ -102,26 +103,40 @@ async function UserProfilePage({ params, searchParams }: UserProfilePageProps) {
   // Guardar/Seguir y Seguir mi progreso: solo para quien tiene sesión y no es el dueño (ni lo simula).
   const canAct = authenticated && !isOwn && !previewing;
 
-  // Perfil privado sin acceso: una sola tarjeta con la identidad extendida y el
-  // estado exacto del visitante (`PrivateProfileCard`), nada más — no hay
-  // contenido rico que componer para este nivel de acceso. Un dueño que
-  // previsualiza su perfil privado ("cómo te ven") cae acá con la sesión
-  // activa: necesita el banner para volver a su vista, igual que en la vista
-  // accesible.
+  // Perfil privado sin acceso (openspec: redesign-private-profile-phase1): la misma cabecera
+  // del perfil accesible en su variante sin acceso y, en lugar del cuerpo, la franja «Solo
+  // para seguidores» con el estado exacto de quien mira (`PrivateProfileDoor`). Un dueño que
+  // previsualiza su perfil privado ("cómo te ven") cae acá con la sesión activa: necesita el
+  // banner para volver a su vista, igual que en la vista accesible.
   if (lockedOut) {
+    const state = privateState(profile, authenticated, previewing);
     return (
-      <main className="flex min-h-screen flex-col items-center gap-8 px-4 py-12">
-        <div className="flex w-full max-w-2xl flex-col items-start gap-4">
-          {previewing && <ViewAsBanner username={profile.username} />}
-          <PrivateProfileCard
-            profile={profile}
-            authenticated={authenticated}
-            mutualFollowers={mutualFollowersCount}
-            preview={previewing}
-            canModerate={canModerate}
-          />
-          <ShareAction kind="profile" username={profile.username} />
-        </div>
+      <main className="flex min-h-screen flex-col pb-12">
+        {previewing && (
+          <div className="mx-auto w-full max-w-7xl px-4 pt-6 xl:px-6">
+            <ViewAsBanner username={profile.username} />
+          </div>
+        )}
+        <ProfileHeader
+          profile={profile}
+          authenticated={authenticated}
+          preview={previewing}
+          locked={{ state }}
+          share={
+            state === "blockedByThem" ? undefined : (
+              <Suspense fallback={null}>
+                <ShareAction kind="profile" username={profile.username} />
+              </Suspense>
+            )
+          }
+        />
+        <PrivateProfileDoor
+          profile={profile}
+          authenticated={authenticated}
+          mutualFollowers={mutualFollowersCount}
+          preview={previewing}
+          canModerate={canModerate}
+        />
       </main>
     );
   }

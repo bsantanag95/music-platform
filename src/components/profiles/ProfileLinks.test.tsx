@@ -4,7 +4,7 @@ import { createTranslator } from "next-intl";
 import { render, screen, within } from "@testing-library/react";
 import usersEs from "../../../messages/es/users.json";
 import usersEn from "../../../messages/en/users.json";
-import { ProfileIdentity } from "./ProfileIdentity";
+import { ProfileLinks } from "./ProfileLinks";
 import type { ProfileView } from "@/services/profiles/profile-view";
 
 vi.mock("@/i18n/navigation", () => ({
@@ -20,39 +20,13 @@ const translator = (locale: "es" | "en") =>
     namespace: "users",
   }) as unknown as (key: string, values?: Record<string, string | number>) => string;
 
-const base: ProfileView = {
-  id: "u1",
-  username: "ana",
-  displayName: "Ana",
-  profileVisibility: "public",
-  bio: null,
-  pronouns: null,
-  pronounSet: null,
-  country: null,
-  location: null,
-  timezone: null,
-  showLocalTime: false,
-  selfRoles: [],
-  genres: [],
-  listeningFormats: [],
-  prompts: [],
-  avatarUrl: null,
-  memberSince: new Date("2025-01-01T00:00:00Z"),
-  links: [],
-  followerCount: 0,
-  followingCount: 0,
-  relation: "none",
-  accessible: true,
-  blockedByMe: false,
-  isOwner: false,
-};
 
 type LinkRow = ProfileView["links"][number];
 const link = (kind: LinkRow["kind"], url: string, id: string = kind): LinkRow => ({ id, kind, url, position: 0 });
 
 function renderLinks(links: LinkRow[], locale: "es" | "en" = "es") {
   return render(
-    <ProfileIdentity profile={{ ...base, links }} t={translator(locale)} memberSinceDate="enero de 2025" />,
+    <ProfileLinks links={links} t={translator(locale)} />,
   );
 }
 

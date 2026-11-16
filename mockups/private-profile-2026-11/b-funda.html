@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta B · Funda cerrada — perfil privado y limitado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<style>
+  /* La funda: el avatar como carátula, con el vinilo dentro y la etiqueta «Privado» */
+  .closed { padding: clamp(40px, 7vw, 88px) 0 48px; }
+  .closed .wrap { display: grid; grid-template-columns: minmax(0, 480px) minmax(0, 1fr); gap: clamp(24px, 4vw, 56px); align-items: center; }
+  .sleeve { position: relative; width: 100%; max-width: 360px; aspect-ratio: 1; margin-right: 34%; }
+  .sleeve .art { position: relative; z-index: 2; width: 100%; height: 100%; border-radius: 6px; overflow: hidden; box-shadow: 0 30px 50px -28px #000; border: 1px solid var(--line-2); background: var(--s1); }
+  .sleeve .art img { width: 100%; height: 100%; object-fit: cover; }
+  .sleeve .art .mono-art { width: 100%; height: 100%; display: grid; place-items: center; background: #2a2318; color: var(--amber); font-family: var(--body); font-size: 140px; }
+  .vinyl { position: absolute; z-index: 1; top: 4%; left: 4%; width: 92%; height: 92%; border-radius: 50%; transform: translateX(42%); background: repeating-radial-gradient(circle at center, #121110 0 1.5px, #2a2620 1.5px 3px); box-shadow: 0 16px 30px -18px #000, inset 0 0 0 1px #3b362f; }
+  .vinyl .label { position: absolute; inset: 33%; border-radius: 50%; background: var(--amber); display: grid; place-items: center; color: var(--ink); font-family: var(--data); font-size: 11px; text-align: center; }
+  .vinyl .label span { display: flex; flex-direction: column; align-items: center; gap: 2px; transform: translateX(42%); }
+  .vinyl .label svg { width: 16px; height: 16px; }
+
+  .who h1 { font-size: clamp(34px, 4vw, 54px); line-height: .95; letter-spacing: -.03em; font-weight: 700; overflow-wrap: anywhere; }
+  .who .handle { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px 14px; font-family: var(--data); font-size: 13px; color: var(--muted); }
+  .who .stats { margin-top: 14px; display: flex; gap: 16px; font-size: 14px; color: var(--muted); }
+  .who .stats b { color: var(--paper); font-weight: 600; margin-right: 4px; }
+  .who .links { margin-top: 16px; display: flex; gap: 8px; }
+  .side { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line); max-width: 520px; }
+  .side h2 { font-size: 22px; }
+  .side p { margin-top: 6px; font-family: var(--body); font-size: 17px; color: var(--muted); }
+  .tracks { margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+  .tracks li { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px dotted var(--line-2); font-family: var(--data); font-size: 13px; color: var(--muted); }
+  .tracks li svg { width: 12px; height: 12px; }
+  .cta { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+  .note { margin-top: 12px; font-family: var(--data); font-size: 12px; color: var(--muted); }
+
+  /* Perfil público con poco visible: la página de siempre y, al final, una funda chica «Lado B» */
+  .stage { border-bottom: 1px solid var(--line); }
+  .stage .wrap { padding-top: 40px; padding-bottom: 32px; display: flex; align-items: center; gap: 22px; }
+  .stage .mono-av { width: 112px; height: 112px; }
+  .stage h1 { font-size: clamp(34px, 4vw, 52px); line-height: .95; letter-spacing: -.03em; font-weight: 700; overflow-wrap: anywhere; }
+  .stage .handle { margin-top: 8px; font-family: var(--data); font-size: 13px; color: var(--muted); }
+  .stage .acts { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .body { padding-top: 32px; display: flex; flex-direction: column; gap: 36px; }
+  .sh h2 { font-size: 20px; font-weight: 500; margin-bottom: 14px; }
+  .sh h2 span { font-family: var(--data); font-size: 12px; color: var(--muted); margin-left: 8px; }
+  .row { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+  .fav { width: 130px; } .fav p { font-size: 14px; margin-top: 6px; } .fav span { font-family: var(--data); font-size: 12px; color: var(--muted); }
+  .side-b { display: flex; align-items: center; gap: 22px; padding: 22px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .mini { position: relative; width: 96px; height: 96px; flex: none; margin-right: 22px; }
+  .mini .art { position: relative; z-index: 2; width: 100%; height: 100%; border-radius: 5px; background: var(--s2); border: 1px solid var(--line-2); display: grid; place-items: center; color: var(--muted); }
+  .mini .art svg { width: 22px; height: 22px; }
+  .mini .vinyl { transform: translateX(26%); }
+  .mini .vinyl .label { inset: 36%; }
+  .side-b h2 { font-size: 18px; }
+  .side-b p { font-family: var(--body); font-size: 16px; color: var(--muted); margin-top: 2px; }
+  .side-b .btn { margin-left: auto; }
+
+  @media (max-width: 860px) {
+    .closed .wrap { grid-template-columns: 1fr; }
+    .sleeve { max-width: 280px; margin: 0 auto; transform: translateX(-17%); }
+  }
+  @media (max-width: 520px) {
+    .sleeve { max-width: 200px; }
+    .sleeve .art .mono-art { font-size: 90px; }
+    .tracks { grid-template-columns: 1fr; }
+    .stage .wrap { gap: 16px; } .stage .mono-av { width: 76px; height: 76px; font-size: 30px; }
+    .side-b { flex-wrap: wrap; } .side-b .btn { margin-left: 0; }
+  }
+</style>
+</head>
+<body data-state="anon">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 13v6h14v-6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 8v4l3 2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M5 4l14 16M19 4 5 20" stroke="currentColor" stroke-width="1.7"/></symbol>
+  <symbol id="i-ig" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3.6" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+</svg>
+
+<header class="site"><div class="wrap">
+  <a class="brand" href="#"><i>♪</i>music-platform</a>
+  <nav><a href="#">Explorar</a><a href="#">Listas</a><a href="#">Comunidad</a></nav>
+  <div class="hsearch">Buscar artistas</div>
+  <div class="hauth"><span class="lang mono">ES · EN</span><a class="login" href="#">Iniciar sesión</a><a class="btn btn-amber" href="#">Crear cuenta</a></div>
+</div></header>
+
+<!-- ===== Perfil privado: la funda cerrada ===== -->
+<main class="closed" data-only="anon logged requested"><div class="wrap">
+  <div class="sleeve" aria-hidden="true">
+    <div class="vinyl"><div class="label"><span><svg><use href="#i-lock"/></svg>Privado</span></div></div>
+    <div class="art"><img src="assets/avatar.webp" alt=""></div>
+  </div>
+  <div class="who">
+    <h1>Nombre Cambiado</h1>
+    <p class="handle"><span>@pruebatesting</span><span>Perfil privado</span><span>Desde agosto de 2026</span></p>
+    <p class="stats"><span><b>2</b>seguidores</span><span><b>3</b>siguiendo</span></p>
+    <div class="links">
+      <a class="icon-btn" href="#" aria-label="X"><svg><use href="#i-x"/></svg></a>
+      <a class="icon-btn" href="#" aria-label="Instagram"><svg><use href="#i-ig"/></svg></a>
+      <a class="icon-btn" href="#" aria-label="Sitio web"><svg><use href="#i-link"/></svg></a>
+      <a class="btn btn-line" href="#"><svg><use href="#i-share"/></svg>Compartir</a>
+    </div>
+    <section class="side" aria-labelledby="side-t">
+      <h2 id="side-t"><span data-only="anon logged">Al seguir se abre</span><span data-only="requested">Solicitud enviada</span></h2>
+      <p data-only="requested">Cuando acepte, la funda se abre aquí mismo. Te avisaremos.</p>
+      <ul class="tracks" data-only="anon logged">
+        <li>Diario<svg aria-hidden="true"><use href="#i-lock"/></svg></li>
+        <li>Favoritos<svg aria-hidden="true"><use href="#i-lock"/></svg></li>
+        <li>Listas<svg aria-hidden="true"><use href="#i-lock"/></svg></li>
+        <li>Colección física<svg aria-hidden="true"><use href="#i-lock"/></svg></li>
+      </ul>
+      <div class="cta">
+        <a class="btn btn-amber" href="#" data-only="anon">Iniciar sesión para seguir</a>
+        <a class="link-mono" href="#" data-only="anon">Crear cuenta</a>
+        <a class="btn btn-amber" href="#" data-only="logged">Pedir seguir</a>
+        <span class="btn btn-quiet" data-only="requested"><svg><use href="#i-clock"/></svg>Pendiente</span>
+        <a class="link-mono" href="#" data-only="requested">Cancelar solicitud</a>
+      </div>
+      <p class="note" data-only="logged requested">Seguidores en común: 1</p>
+    </section>
+  </div>
+</div></main>
+
+<!-- ===== Perfil público con poco visible ===== -->
+<div data-only="limited">
+  <section class="stage"><div class="wrap">
+    <span class="mono-av" aria-hidden="true">B</span>
+    <div style="min-width:0">
+      <h1>besantanag95000</h1>
+      <p class="handle">@besantanag95000 · Desde noviembre de 2026 · 0 seguidores · 0 siguiendo</p>
+      <div class="acts"><a class="btn btn-amber" href="#">Iniciar sesión para seguir</a><a class="btn btn-line" href="#"><svg><use href="#i-share"/></svg>Compartir</a></div>
+    </div>
+  </div></section>
+  <main class="wrap body">
+    <section class="sh">
+      <h2>Favoritos<span>1</span></h2>
+      <div class="row"><div class="fav"><img class="cv" src="assets/inrainbows.webp" alt=""><p>In Rainbows</p><span>Radiohead</span></div></div>
+    </section>
+    <section class="side-b" aria-labelledby="sb-t">
+      <div class="mini" aria-hidden="true"><div class="vinyl"><div class="label"></div></div><div class="art"><svg><use href="#i-lock"/></svg></div></div>
+      <div><h2 id="sb-t">Lado B</h2><p>Si sigues a @besantanag95000, verás también lo que comparte solo con sus seguidores.</p></div>
+      <a class="btn btn-line" href="#">Iniciar sesión para seguir</a>
+    </section>
+  </main>
+</div>
+
+<!-- ===== Perfil público sin nada visible: la funda vacía ===== -->
+<main class="closed" data-only="empty"><div class="wrap">
+  <div class="sleeve" aria-hidden="true">
+    <div class="vinyl"><div class="label"></div></div>
+    <div class="art"><span class="mono-art">B</span></div>
+  </div>
+  <div class="who">
+    <h1>bsantana</h1>
+    <p class="handle"><span>@bsantana</span><span>Desde octubre de 2026</span></p>
+    <p class="stats"><span><b>0</b>seguidores</span><span><b>0</b>siguiendo</span></p>
+    <section class="side">
+      <h2>Nada público por ahora</h2>
+      <p>Si sigues a @bsantana, verás lo que comparte solo con sus seguidores.</p>
+      <div class="cta"><a class="btn btn-amber" href="#">Iniciar sesión para seguir</a><a class="btn btn-line" href="#"><svg><use href="#i-share"/></svg>Compartir</a></div>
+    </section>
+  </div>
+</div></main>
+
+<nav class="mock-bar" aria-label="Mockups">
+  <a href="index.html">Resumen</a><a href="a-continua.html">A</a><a href="b-funda.html" aria-current="page">B</a><a href="c-pasos.html">C</a>
+  <span class="sep"></span>
+  <button type="button" data-set="anon">Privado · sin sesión</button>
+  <button type="button" data-set="logged">Privado · con sesión</button>
+  <button type="button" data-set="requested">Solicitud enviada</button>
+  <button type="button" data-set="limited">Público limitado</button>
+  <button type="button" data-set="empty">Nada público</button>
+</nav>
+<script src="demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Perfil privado y limitado — auditoría y propuestas (2026-11)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<style>
+  main { padding: 48px 0 40px; }
+  h1 { font-size: clamp(30px, 4vw, 46px); letter-spacing: -.02em; line-height: 1.05; }
+  .lead { margin-top: 12px; font-family: var(--body); font-size: 18px; color: var(--muted); max-width: 70ch; }
+  h2 { margin-top: 48px; font-size: 24px; }
+  h3 { font-size: 17px; margin-bottom: 6px; }
+  p, li { font-family: var(--body); font-size: 16px; color: #d6cfc3; }
+  .grid2 { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .grid3 { margin-top: 18px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+  figure img { width: 100%; border: 1px solid var(--line); border-radius: 8px; }
+  figcaption { margin-top: 8px; font-family: var(--data); font-size: 12px; color: var(--muted); }
+  ol.find { margin-top: 14px; display: grid; gap: 10px; counter-reset: f; }
+  ol.find li { position: relative; padding-left: 34px; }
+  ol.find li::before { counter-increment: f; content: counter(f); position: absolute; left: 0; top: 1px; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--line-2); font-family: var(--data); font-size: 11px; color: var(--muted); display: grid; place-items: center; }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 18px; background: var(--s1); display: flex; flex-direction: column; gap: 10px; }
+  .card a.open { margin-top: auto; }
+  .tag { align-self: flex-start; font-family: var(--data); font-size: 11px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--muted); }
+  .rec { border-color: var(--amber); }
+  .rec .tag { border-color: var(--amber); color: var(--amber); }
+  table { margin-top: 16px; width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--data); font-size: 12px; color: var(--muted); font-weight: 500; }
+  td { font-family: var(--body); color: #d6cfc3; }
+  .callout { margin-top: 18px; border-left: 3px solid var(--amber); padding: 6px 0 6px 16px; }
+  @media (max-width: 860px) { .grid2, .grid3 { grid-template-columns: 1fr; } table { font-size: 13px; } }
+</style>
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <a class="brand" href="#"><i>♪</i>music-platform</a>
+  <span class="mono" style="margin-left:auto">Mockups · perfil privado y limitado · 2026-11</span>
+</div></header>
+
+<main class="wrap">
+  <h1>Perfil privado y perfil con contenido solo para seguidores</h1>
+  <p class="lead">Auditoría sin sesión de <b>@pruebatesting</b> (privado), <b>@besantanag95000</b> (público, con parte del diario solo para seguidores) y <b>@bsantana</b> (público, todo su contenido solo para seguidores), con el código desplegado tras el rediseño del perfil (Fases 1–3). Tres propuestas en el navegador, con los colores y tipografías actuales.</p>
+
+  <h2>Cómo se ve hoy</h2>
+  <div class="grid3">
+    <figure><img src="shots/actual-pruebatesting-1440.png" alt="Perfil privado actual a 1440 px"><figcaption>Privado, sin sesión · 1440 px</figcaption></figure>
+    <figure><img src="shots/actual-besantanag95000-1440.png" alt="Perfil público con poco visible"><figcaption>Público con parte solo para seguidores</figcaption></figure>
+    <figure><img src="shots/actual-bsantana-1440.png" alt="Perfil público sin nada visible"><figcaption>Público con todo solo para seguidores</figcaption></figure>
+  </div>
+
+  <h2>Hallazgos</h2>
+  <h3 style="margin-top:16px">Perfil privado</h3>
+  <ol class="find">
+    <li><b>Otro lenguaje que el perfil rediseñado.</b> Es la tarjeta de antes: 672 px, nombre de 24 px, contadores como píldoras con números ámbar. Al aprobar la solicitud, la misma persona aparece con otra cabecera (112 px de avatar, nombre de 52 px).</li>
+    <li><b>La mitad de la pantalla vacía.</b> A 1440 px la tarjeta ocupa el 47 % del ancho y todo lo demás queda en blanco.</li>
+    <li><b>«Privado» tres veces.</b> El chip «Privado», el rótulo «PERFIL PRIVADO» y el título «Este perfil es privado», más una oración larga que repite la lista de secciones que aparece justo debajo.</li>
+    <li><b>Las secciones bloqueadas parecen botones deshabilitados</b>: cuatro cajas punteadas con candado, sin la forma de lo que se abre.</li>
+    <li><b>Compartir queda fuera de la tarjeta</b>, suelto debajo, desalineado del resto de acciones.</li>
+    <li><b>«Solicitud enviada» solo cambia el texto del botón</b>: no dice qué pasa después ni que el perfil se abrirá ahí mismo.</li>
+  </ol>
+  <h3 style="margin-top:22px">Perfil público con contenido solo para seguidores</h3>
+  <ol class="find" start="7" style="counter-reset: f 6">
+    <li><b>Con todo solo para seguidores, la página parece rota</b> (@bsantana): cabecera y luego un vacío, sin ninguna explicación.</li>
+    <li><b>Con parte visible, nada indica que seguir abre más</b> (@besantanag95000): la página termina tras un favorito; se pierde la razón para seguir.</li>
+    <li><b>Restricción de privacidad.</b> El diario y los favoritos de otra persona no pueden revelar si existe contenido oculto (spec <code>diary-visibility</code>: «no revela si el usuario tiene entradas»). Cualquier aviso tiene que ser genérico y mostrarse igual tenga o no contenido oculto: «Si sigues a @x, verás también lo que comparte solo con sus seguidores».</li>
+  </ol>
+
+  <h2>Propuestas</h2>
+  <div class="grid3">
+    <div class="card rec">
+      <span class="tag">Recomendada</span>
+      <h3>A · Cabecera continua</h3>
+      <p>La misma cabecera del perfil rediseñado, con el chip «Privado». Debajo, una franja a todo el ancho: «Solo para seguidores», una oración y la acción; a la derecha, las siluetas de Diario, Favoritos, Listas y Colección (la forma de lo que se abre, sin datos). En perfiles públicos, el aviso genérico al final y un estado vacío claro.</p>
+      <figure><img src="shots/a-anon.png" alt="Propuesta A"></figure>
+      <a class="btn btn-line open" href="a-continua.html#anon">Abrir A</a>
+    </div>
+    <div class="card">
+      <span class="tag">Con personalidad</span>
+      <h3>B · Funda cerrada</h3>
+      <p>El avatar como carátula de una funda cerrada, con el vinilo asomando y la etiqueta «Privado». Al lado, quién es y «Al seguir se abre» como lista de créditos. En perfiles públicos, una funda chica «Lado B» al final con el aviso.</p>
+      <figure><img src="shots/b-anon.png" alt="Propuesta B"></figure>
+      <a class="btn btn-line open" href="b-funda.html#anon">Abrir B</a>
+    </div>
+    <div class="card">
+      <span class="tag">Guiada</span>
+      <h3>C · Camino a seguir</h3>
+      <p>Quién es a la izquierda; a la derecha, los pasos que faltan según quien mira: iniciar sesión → pedir seguir → esperar que acepte, con el paso actual marcado. En perfiles públicos, un aviso en línea bajo la cabecera: «Estás viendo lo público».</p>
+      <figure><img src="shots/c-requested.png" alt="Propuesta C, solicitud enviada"></figure>
+      <a class="btn btn-line open" href="c-pasos.html#requested">Abrir C</a>
+    </div>
+  </div>
+
+  <h2>Comparación</h2>
+  <table>
+    <thead><tr><th></th><th>A · Cabecera continua</th><th>B · Funda cerrada</th><th>C · Camino a seguir</th></tr></thead>
+    <tbody>
+      <tr><th>Continuidad con el perfil rediseñado</th><td>Total: misma cabecera; al aceptar, solo se abre la franja.</td><td>Baja: otra composición; al aceptar, cambia toda la página.</td><td>Media: misma identidad, otra columna.</td></tr>
+      <tr><th>Uso del ancho</th><td>Cabecera y franja a todo el ancho.</td><td>Centrado, deja aire a los lados.</td><td>Dos columnas equilibradas.</td></tr>
+      <tr><th>Claridad del estado</th><td>Buena; «Solicitud enviada» con «Pendiente» y «Te avisaremos».</td><td>Buena, más discreta.</td><td>La mejor: el paso actual se ve de un vistazo.</td></tr>
+      <tr><th>Texto</th><td>Mínimo: un título, una oración.</td><td>Mínimo.</td><td>Más texto (tres pasos).</td></tr>
+      <tr><th>Personalidad</th><td>Sobria (comparte la del perfil: tono y vinilo).</td><td>Alta: la funda y el vinilo cuentan «cerrado».</td><td>Funcional.</td></tr>
+      <tr><th>Perfil público limitado</th><td>Aviso al final + estado vacío.</td><td>Funda «Lado B» al final.</td><td>Aviso bajo la cabecera (repite la acción de la cabecera).</td></tr>
+      <tr><th>Costo de implementación</th><td>Bajo: reutiliza <code>ProfileHeader</code>.</td><td>Medio: composición nueva.</td><td>Medio: componente de pasos por estado.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Recomendación</h2>
+  <p class="callout"><b>A · Cabecera continua</b>, tomando de C el tratamiento de «Solicitud enviada» (decir qué pasa después). Es la que mejor continúa el rediseño del perfil, usa el ancho, elimina el texto repetido y resuelve el caso que hoy parece roto (público sin nada visible) sin revelar si hay contenido oculto. B queda como alternativa si se quiere más personalidad; su funda se podría reservar al estado vacío.</p>
+  <h3 style="margin-top:22px">Decisiones a confirmar antes de planificar</h3>
+  <ol class="find">
+    <li><b>Aviso genérico en perfiles públicos</b> («Si sigues a @x, verás también lo que comparte solo con sus seguidores»): mostrarlo a todo visitante que no sigue, aunque no haya nada oculto, para no revelar nada.</li>
+    <li><b>Identidad musical en el perfil privado</b>: hoy se oculta (solo nombre, bio, enlaces y contadores). Mostrarla daría razones para seguir, pero cambia lo que un perfil privado expone; las propuestas la dejan oculta.</li>
+    <li><b>Siluetas de secciones</b>: A muestra las cuatro siempre (sin datos). Mostrar solo las que tienen contenido revelaría actividad de una cuenta privada.</li>
+  </ol>
+</main>
+</body>
+</html>

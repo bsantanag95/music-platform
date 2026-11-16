@@ -36,7 +36,7 @@ visitante:
 
 | Nivel | Quién | Qué ve |
 |---|---|---|
-| **No autorizado** | Anónimo, sin relación aceptada, o solicitud pendiente sobre un perfil privado | Una sola tarjeta (`PrivateProfileCard`): identidad extendida + estado exacto del visitante + una acción. Nada más. Ver "Perfil privado". |
+| **No autorizado** | Anónimo, sin relación aceptada, o solicitud pendiente sobre un perfil privado | La cabecera del perfil sin acceso (`ProfileHeader` con `locked`) + la franja «Solo para seguidores» (`PrivateProfileDoor`): estado exacto del visitante + una acción + siluetas sin datos. Nada más. Ver "Perfil privado". |
 | **Autorizado** | Cuenta pública, o seguidor aprobado de una privada | Identidad + Tarjeta de Identidad + resumen de huella + Empieza por aquí + valoraciones destacadas + reseñas + en rotación + huella completa (nivel 3) + afinidad + estantes (diario / favoritos / listas / colección) + recencia. |
 | **Dueño** | La persona | Lo mismo que "autorizado" + modo edición ("Editar perfil": lápiz por bloque y panel lateral con los editores de identidad/enlaces, de la Tarjeta de Identidad —artista, álbum e himno— y de Empieza por aquí) + acción de destacar valoraciones y entradas de diario + tarjeta de Ajustes + previsualizador "cómo te ven". Ver "Gestión del propio perfil". |
 
@@ -77,7 +77,7 @@ en tarjetas de perfiles sin acceso los filtraría).
 musical. Solo los ve quien tiene acceso al perfil (dueño, cualquier visitante de un perfil público,
 seguidor aprobado de uno privado). A un anónimo, a alguien sin relación o con solicitud pendiente **no
 se les entrega**: `getProfileView` los vacía junto con la ficha, en el mismo punto (`hidden`), y
-`PrivateProfileCard` además los ignora aunque el objeto los traiga. Antes ubicación y pronombres se
+la cabecera sin acceso además los ignora aunque el objeto los traiga. Antes ubicación y pronombres se
 veían en la tarjeta de un perfil privado; **la bio, los enlaces y los contadores siguen siendo
 públicos**. Se verifica contra un build de producción (en desarrollo el payload RSC incluye las filas
 crudas de las consultas).
@@ -244,7 +244,7 @@ la ficha entera si no hay nada, sin dejar hueco en la franja.
 
 **Privacidad.** Es identidad de "quién soy", no de "cómo me encuentro": solo la dibuja la franja de un
 perfil **accesible**. `getProfileView` **vacía** roles, géneros, formatos, preguntas y hora local para
-quien no tiene acceso a un perfil privado (además de que `PrivateProfileCard` no los dibuja), de modo que
+quien no tiene acceso a un perfil privado (además de que la cabecera sin acceso no los dibuja), de modo que
 ni siquiera viajan en el HTML de producción — verificado contra un build de producción con un perfil
 privado sembrado. (En **desarrollo**, React incluye en el payload información de depuración con filas
 crudas de las consultas; es solo de dev y no existe en producción.)
@@ -258,40 +258,47 @@ mismo panel que ya alojaba identidad y enlaces—, con el contrato `editor-host`
 
 ## Perfil privado
 
-Lo que ve quien no tiene acceso. Antes eran dos tarjetas apiladas (la Placa + el aviso "Este
-perfil es privado") sobre una pantalla vacía, con el botón de seguir repetido. Elegido entre 3
-mockups ("Opción A: una sola tarjeta"; se descartaron una página de dos columnas con estantes
-fantasma y una carta centrada mínima):
+Lo que ve quien no tiene acceso (openspec: `redesign-private-profile-phase1`, 2026-11; propuesta
+«A · Cabecera continua» de los mockups `mockups/private-profile-2026-11/`, con la «Solicitud enviada»
+de la propuesta C). Antes era una tarjeta de 672 px (`PrivateProfileCard`) distinta de la cabecera
+del perfil accesible, que decía «privado» tres veces y dejaba media pantalla vacía.
 
-- **`PrivateProfileCard`**: una sola tarjeta. Arriba la identidad extendida
-  (`ProfileIdentity`, compartida con la Placa) con un chip de candado "Privado"; debajo de un
-  divisor, el estado del visitante, "Se abre al seguir" (los 4 estantes como huecos con candado,
-  **sin cifras de contenido** — mostrarían actividad de una cuenta privada) y **una** acción.
-  Mantiene el disco de vinilo como marca de agua. Sigue siendo visible por decisión de producto
-  la bio, los enlaces y los contadores (dan razones reales para seguir); **país, ciudad y
-  pronombres ya no** (ver "Datos personales opcionales").
-- **Los contadores no son enlaces** en esta vista: los listados de conexiones de un perfil
-  privado solo mostraban "es privado" (callejón sin salida).
-- **Estados** (`privateState`): anónimo (Iniciar sesión para seguir + Crear cuenta), sin relación
-  (**"Solicitar seguir"** — `FollowButton requestApproval` — con aviso de que hay que esperar la
-  aprobación), solicitud enviada (Cancelar solicitud), te envió una solicitud (mensaje propio +
-  Aprobar/Rechazar, sin vitrina de estantes), bloqueaste a la cuenta (**Desbloquear** como acción
-  principal, ya no dice "Seguí a…"), te bloqueó y "cómo te ven" (dueño; acción inerte).
-- **Te bloqueó**: solo nombre y usuario — sin pronombres, contadores, bio, enlaces ni acciones
-  (`minimal`). Antes se mostraba la identidad completa a quien había sido bloqueado. Es una
-  decisión de presentación: `GET /api/users/[username]` no devuelve esos campos de todas
-  formas (solo la relación).
-- **"Cómo te ven" con perfil privado** (bug corregido): la rama privada no montaba `ViewAsBanner`,
-  así que un dueño con perfil privado que probaba "Ver cómo te ven" quedaba sin botón para
-  volver a su vista. Ahora el banner se monta cuando `previewing`.
+- **La misma cabecera** (`ProfileHeader` con `locked={{ state }}`): avatar, nombre, usuario, alta,
+  bio, enlaces, Compartir y recuentos, con una marca de candado «Privado» (o «Bloqueada») junto al
+  nombre. Sin Tarjeta de Identidad, fondo de carátula, afinidad, hora local, **país, ciudad ni
+  pronombres** (ver "Datos personales opcionales"). La bio, los enlaces y los recuentos siguen
+  visibles por decisión de producto: dan razones reales para seguir.
+- **Los recuentos no son enlaces** en esta vista: los listados de conexiones de un perfil privado
+  solo mostraban "es privado" (callejón sin salida).
+- **La franja** (`PrivateProfileDoor`), a todo el ancho debajo de la cabecera: título con candado,
+  una oración y **una** acción; a la derecha, las siluetas de Diario, Favoritos, Listas y Colección
+  física (barras o cuadros, `aria-hidden`). **Siempre las cuatro y sin ningún dato, recuento ni
+  carátula**: mostrarían actividad de una cuenta privada. Seguir y bloquear dejan la cabecera y
+  viven en la franja; Bloquear y las acciones de moderación van al pie.
+- **Estados** (`privateState`, `src/components/profiles/private-state.ts`):
+  - anónimo: «Solo para seguidores», Iniciar sesión para seguir + Crear cuenta;
+  - sin relación: **«Solicitar seguir»** (`FollowButton requestApproval`) y, si hay, los
+    seguidores en común;
+  - solicitud enviada: «Solicitud enviada», «Pendiente» + Cancelar solicitud y la oración «Cuando
+    acepte, este perfil se abrirá aquí mismo. Te avisaremos» (la notificación `follow_accepted`);
+  - te envió una solicitud: «Quiere seguirte», Aprobar/Rechazar, sin siluetas;
+  - bloqueaste a la cuenta: **Desbloquear** como acción, sin siluetas;
+  - te bloqueó: la cabecera se reduce a avatar, nombre y usuario — sin bio, enlaces, recuentos,
+    Compartir, siluetas ni acciones. Es presentación: `GET /api/users/[username]` no devuelve esos
+    campos de todas formas;
+  - "cómo te ven" (dueño): la vista anónima con la acción inerte y `ViewAsBanner` para volver.
+- **Textos** sin voseo, en ambos idiomas (`users.privateProfile.*`).
 - **También la ven los bloqueados de un perfil público**: `getProfileByUsername` marca
   `accessible: false` para la relación `blocked`, así que quien bloqueó (o fue bloqueado por) una
-  cuenta pública cae en esta misma tarjeta, con los estados "bloqueaste"/"te bloqueó" (por eso
-  el mensaje de "bloqueaste" no habla solo de "pedir seguir").
+  cuenta pública cae en esta misma vista, con los estados de bloqueo.
 - **Refresco**: `FollowButton refreshOnAnyChange` y `BlockButton refreshOnChange` refrescan la
-  página tras cualquier cambio de relación/bloqueo, porque el mensaje del servidor depende del
-  estado exacto y sin refresco quedaba desactualizado junto al botón nuevo. Se conservan Bloquear
-  y las acciones de moderación en una fila discreta al pie de la tarjeta.
+  página tras cualquier cambio de relación/bloqueo, porque el texto del servidor depende del estado
+  exacto.
+- **Fase 2** (`redesign-private-profile-phase2`, pendiente): en un perfil **público** visto por quien
+  no sigue, un aviso genérico al final («Si sigues a @x, verás también lo que comparte solo con sus
+  seguidores»), mostrado a todo visitante que no sigue aunque no haya nada oculto (no debe revelar si
+  existe contenido oculto), y el estado vacío «Nada público por ahora» cuando no hay ninguna sección
+  visible.
 
 ## Seguidores en común y listados de conexiones
 

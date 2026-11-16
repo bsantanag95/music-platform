@@ -117,7 +117,6 @@
   "emptyBlocks": "No bloqueaste a nadie.",
   "removeFollower": "Eliminar seguidor",
   "backToProfile": "Volver a mi perfil",
-  "privateNoticeEyebrow": "Perfil privado",
   "privateNoticeTitle": "Este perfil es privado",
   "privateNoticeMutual": "{count, plural, one {Una persona que sigues también sigue esta cuenta.} other {# personas que sigues también siguen esta cuenta.}}",
   "requestFollow": "Solicitar seguir",
@@ -125,18 +124,24 @@
   "privateProfile": {
     "chipPrivate": "Privado",
     "chipBlocked": "Bloqueada",
-    "eyebrowBlocked": "Cuenta bloqueada",
-    "titleBlockedByMe": "Bloqueaste a esta cuenta",
-    "titleBlockedByThem": "No puedes ver este perfil",
-    "opensOnFollow": "Se abre al seguir",
+    "pending": "Pendiente",
+    "title": {
+      "anonymous": "Solo para seguidores",
+      "none": "Solo para seguidores",
+      "requested": "Solicitud enviada",
+      "incoming": "Quiere seguirte",
+      "blockedByMe": "Bloqueaste a esta cuenta",
+      "blockedByThem": "No puedes ver este perfil",
+      "preview": "Solo para seguidores"
+    },
     "body": {
-      "anonymous": "Inicia sesión y pide seguir a @{username} para ver su diario, sus favoritos, sus listas y su colección.",
-      "none": "Pedile seguir a @{username} para ver su diario, sus favoritos, sus listas y su colección. Tiene que aprobar tu solicitud.",
-      "requested": "Tu solicitud está enviada. @{username} tiene que aprobarla antes de que puedas ver su contenido.",
-      "incoming": "@{username} te envió una solicitud para seguirte. Su contenido sigue privado; puedes responder la solicitud desde acá.",
-      "blockedByMe": "Bloqueaste a esta cuenta. Desbloqueala para volver a ver su perfil o seguirla.",
+      "anonymous": "Inicia sesión y pide seguir para ver su diario, favoritos, listas y colección.",
+      "none": "Pide seguir. Cuando @{username} acepte, verás su diario, favoritos, listas y colección.",
+      "requested": "Cuando @{username} acepte, este perfil se abrirá aquí mismo. Te avisaremos.",
+      "incoming": "@{username} pidió seguirte. Puedes responder desde aquí; su perfil sigue siendo privado.",
+      "blockedByMe": "Desbloquea la cuenta para volver a ver su perfil o seguirla.",
       "blockedByThem": "No puedes ver ni seguir a esta cuenta.",
-      "preview": "Pedile seguir a @{username} para ver su diario, sus favoritos, sus listas y su colección. Tiene que aprobar tu solicitud."
+      "preview": "Inicia sesión y pide seguir para ver su diario, favoritos, listas y colección."
     }
   },
   "memberSince": "Miembro desde {date}",
