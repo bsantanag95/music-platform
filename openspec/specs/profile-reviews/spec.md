@@ -6,7 +6,6 @@ La sección "Reseñas" del perfil: las reseñas de álbum más recientes del due
 de identidad cultural (después de "Empieza por aquí", antes de "En rotación"). Automática (las
 últimas N por fecha de edición, sin curación), gateada por la accesibilidad del perfil, con
 cada tarjeta enlazada al álbum donde vive la reseña completa.
-
 ## Requirements
 ### Requirement: Sección "Reseñas" del perfil
 
@@ -36,8 +35,10 @@ del álbum); la sección no SHALL filtrar además por relación de seguimiento c
 los ratings sueltos. Cuando el dueño no tiene ninguna reseña visible para el lector, la
 sección NO SHALL renderizarse (sin encabezado ni hueco).
 
-**Ubicación.** La sección SHALL ubicarse después de los destacados y antes de la sección
-"En rotación", tanto en la vista del dueño como en la de un visitante autorizado.
+**Ubicación.** La sección SHALL ubicarse después de "Valoraciones destacadas", en la misma
+fila que el diario del perfil (ver `social-profiles`, "Cuerpo del perfil en filas"), tanto en
+la vista del dueño como en la de un visitante autorizado. Cada tarjeta SHALL ser compacta: una
+fila con la carátula a la izquierda y el rating alineado con el título.
 
 #### Scenario: Perfil con reseñas visibles
 

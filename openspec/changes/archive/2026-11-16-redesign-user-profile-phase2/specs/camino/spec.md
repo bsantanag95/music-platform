@@ -29,7 +29,7 @@ trackear el propio Camino —, y a un visitante sin sesión, al que tampoco SHAL
 - **WHEN** el propio dueño ve el estante "Caminos" de su perfil
 - **THEN** ninguna tarjeta ofrece la acción de tracking
 
-#### Scenario: Página dedicada cuando hay más de los que caben en el estante
+#### Scenario: Página dedicada cuando hay más de los que caben en el riel
 - **WHEN** un perfil tiene más Caminos visibles que el tope del estante
 - **THEN** el estante cierra con un enlace "+N" que lleva a `/users/[username]/caminos`, el
   listado completo paginado

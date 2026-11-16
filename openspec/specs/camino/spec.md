@@ -230,18 +230,19 @@ anónima, en la capability `camino-discovery`.
 ### Requirement: Estante "Caminos" en el perfil de un usuario
 El sistema SHALL mostrar, en el perfil de un usuario (`/users/[username]`), un estante "Caminos"
 con los Caminos propios visibles para quien mira — no archivados, filtrados por la misma matriz
-de audiencia que el resto del perfil —, con el mismo tratamiento que el estante "Listas": riel
-horizontal acotado con una tarjeta-puerta "+N" hacia una página dedicada
-`/users/[username]/caminos` cuando hay más Caminos de los que caben, y colapsado (sin
+de audiencia que el resto del perfil —, dentro de la sección "Listas", junto a
+las listas (ver `social-profiles`, "Cuerpo del perfil en filas"): filas compactas acotadas con
+un enlace "+N" hacia una página dedicada `/users/[username]/caminos` cuando hay más Caminos de
+los que caben, y colapsado (sin
 renderizarse) para un visitante cuando no hay ninguno visible, mostrando en cambio un estante
 vacío invitando a crear uno cuando quien mira es el propio dueño. Cada tarjeta SHALL ofrecer la
 acción de tracking (Requirement "Trackear el progreso propio sobre una lista ajena" de
 `list-saves`) excepto en el propio perfil del dueño, donde SHALL NOT ofrecerse — no es posible
-trackear el propio Camino.
+trackear el propio Camino —, y a un visitante sin sesión, al que tampoco SHALL ofrecerse.
 
 #### Scenario: Visitante ve los Caminos públicos de un perfil
 - **WHEN** un visitante abre el perfil de un usuario con Caminos visibles para él
-- **THEN** ve el estante "Caminos" con esos Caminos, cada uno con la acción de tracking
+- **THEN** ve esos Caminos en "Listas", cada uno con la acción de tracking
 
 #### Scenario: Estante ausente para un visitante sin Caminos visibles
 - **WHEN** un visitante abre el perfil de un usuario sin ningún Camino visible para él
@@ -256,9 +257,13 @@ trackear el propio Camino.
 - **THEN** ninguna tarjeta ofrece la acción de tracking
 
 #### Scenario: Página dedicada cuando hay más de los que caben en el riel
-- **WHEN** un perfil tiene más Caminos visibles que el tope del riel
-- **THEN** el riel cierra con una tarjeta-puerta "+N" que lleva a
-  `/users/[username]/caminos`, el listado completo paginado
+- **WHEN** un perfil tiene más Caminos visibles que el tope del estante
+- **THEN** el estante cierra con un enlace "+N" que lleva a `/users/[username]/caminos`, el
+  listado completo paginado
+
+#### Scenario: Sin acción de tracking para un visitante sin sesión
+- **WHEN** un visitante sin sesión ve los Caminos de un perfil público
+- **THEN** ninguno ofrece la acción de tracking
 
 ### Requirement: Acceso general desde el Header
 El sistema SHALL incluir un acceso a `/caminos` (descubrimiento público) en la barra general de
