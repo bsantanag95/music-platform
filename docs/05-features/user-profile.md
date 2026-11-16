@@ -19,14 +19,15 @@ llegando que el anterior.
 
 | Nivel | Responde | Tiempo | Contenido |
 |---|---|---|---|
-| **1 — Identidad** | ¿Quién es, musicalmente? | Segundos | Placa + **Tarjeta de Identidad** (artista, álbum y canción definitorios) + resumen cualitativo de la huella de gusto |
-| **2 — Exploración** | ¿Qué más hay para ver? | Minutos | **Empieza por aquí**, valoraciones destacadas, reseñas, en rotación, afinidad, estantes (diario/favoritos/listas/colección) |
+| **1 — Identidad** | ¿Quién es, musicalmente? | Segundos | **Cabecera** (identidad, acciones y **Tarjeta de Identidad** bajo «Identidad musical») + **franja de identidad** (ficha, resumen de la huella con su década, «Artistas seguidos») |
+| **2 — Exploración** | ¿Qué más hay para ver? | Minutos | **Empieza por aquí**, valoraciones destacadas, reseñas, en rotación, estantes (diario/favoritos/listas/colección) |
 | **3 — Inmersión** | Quiero el detalle completo | Bajo demanda | Huella de gusto completa (`/users/{username}/fingerprint`), cada estante en su propia vista |
 
 Los niveles 1 y 2 son la misma página (`page.tsx`), compuesta de arriba hacia abajo en ese
-orden, con el mismo árbol para dueño y visitante (solo cambian los editores inline). El nivel
-3 son enlaces explícitos al final (`ProfileLevel3Links`), sin duplicar contenido — anclas a
-los estantes ya visibles más el enlace real a la huella completa.
+orden, con el mismo árbol para dueño y visitante (solo cambian los editores inline). Debajo de
+la cabecera, una barra de anclas fija lleva a las secciones con contenido (ver "Cabecera, anclas
+y franja de identidad"). El nivel 3 son enlaces explícitos al final (`ProfileLevel3Links`), sin
+duplicar contenido — anclas a los estantes ya visibles más el enlace real a la huella completa.
 
 ## Tres niveles de acceso
 
@@ -139,18 +140,43 @@ Zod, el editor y la vista):
 que no es información lo bastante sensible como para ocultarla, y da razones reales para
 seguir. Solo las actividades y los listados sociales quedan ocultos.
 
-## Diseño de la Placa
+## Cabecera, anclas y franja de identidad
 
-`Placa.tsx` es la identidad de un perfil **accesible** (público, seguidor aprobado o dueño),
-siempre en la barra lateral: una card con borde (`border-ink-border` / `bg-ink-surface`,
-`rounded-lg`), no un bloque suelto — la identidad (`ProfileIdentity`: monograma **circular**,
-mismo lenguaje que la Tarjeta de Identidad y el hover card, contadores de seguidores/seguidos
-como **pills** con borde redondeado, alta, bio y enlaces) y, separado por un divisor, el clúster
-de acciones (botón Seguir + bloqueo/moderación). Elegido entre 4 mockups estáticos ("Opción B:
-Tarjeta contenida") comparados con un refresco mínimo sin card, una versión centrada tipo carta
-de identidad, y contadores como bloques de estadística en vez de pills. Antes tenía además una
-variante `full` para la vista de perfil privado; esa vista ahora tiene su propia tarjeta y la
-variante se eliminó.
+Rediseño de 2026-11 (dirección «D2 · Mezcla con personalidad», elegida entre los mockups
+A/B/C/D/D2 de `mockups/profile-2026-11/`), en tres fases: la **Fase 1**
+(`redesign-user-profile-phase1`) cambia el marco; la Fase 2 rediseña el cuerpo y la Fase 3 suma
+el tono por perfil y el vinilo que asoma. Reemplaza a la **Placa** de la barra lateral pegajosa
+(una card de 19 rem que dejaba vacía la columna de contenido durante miles de píxeles).
+
+- **Cabecera** (`ProfileHeader.tsx`), a todo el ancho y con el contenedor de 80 rem: avatar
+  grande (`UserAvatar` `xl`, cae al monograma si la imagen falla), el nombre como título
+  principal, una línea de datos (`@usuario`, pronombres, «Ciudad, País», «Miembro desde…», hora
+  local), la bio como **cita** entre comillas angulares, el botón Seguir, Compartir y los
+  enlaces como íconos, los recuentos de seguidores/seguidos (enlazados a las conexiones), los
+  seguidores en común, la afinidad en una línea (`ProfileAffinity compact`), la última señal y,
+  para el dueño, la tarjeta de Ajustes con su bandeja de solicitudes. Bloquear, reportar y
+  suspender van en una fila discreta debajo, siempre a la vista (no en un menú). A la derecha,
+  la Tarjeta de Identidad bajo «Identidad musical». De fondo, la carátula del álbum definitorio
+  difuminada (`HeaderBackdropSection`, la misma miniatura de ≤250 px, decorativa); sin álbum, un
+  fondo neutro.
+- **Barra de anclas** (`ProfileAnchors.tsx`, `AnchorsSection`): fija bajo la cabecera del sitio
+  (`--site-header-h`), con Resumen, Diario, Reseñas, Favoritos, Listas y Colección —cada una
+  solo si tiene contenido visible y con su recuento—. Son enlaces `#ancla` normales; la activa
+  se calcula al desplazarse (las secciones llegan en streaming, así que se buscan en cada
+  cálculo). Las secciones reservan la altura de las dos barras con `scroll-margin-top`.
+- **Franja de identidad** (`IdentityStrip.tsx`, `IdentityStripSection`): debajo de las anclas,
+  tres partes separadas por filetes y sin tarjetas — la ficha musical, el resumen de la huella
+  con su década predominante como dato grande y «Artistas seguidos». Cada parte se omite sin
+  contenido, y la franja entera si no queda ninguna. Debajo de `lg` se apilan.
+- **Capas del dueño**: la barra del dueño va encima de la cabecera; el lápiz «Tu perfil» envuelve
+  solo la columna de datos de la cabecera (`wrapDetails`) y abre el mismo panel de siempre
+  (identidad, identidad musical, preguntas y enlaces: también edita la ficha de la franja); la
+  Tarjeta de Identidad conserva su propio lápiz.
+- El cuerpo (Empieza por aquí, valoraciones, reseñas, en rotación, estantes) conserva su
+  contenido y orden en la Fase 1, ya sin el tope de 42 rem por sección.
+
+Las menciones a «la Placa» en el resto de este documento son históricas: hoy corresponden a la
+cabecera (datos de la persona, acciones, recuentos) y a la franja de identidad (la ficha).
 
 ## Identidad musical (`rework-account-settings`, Fase 2)
 
@@ -187,13 +213,13 @@ pista de contexto, no un reloj). Sin zona la opción no significa nada: se apaga
 el servicio rechaza activarla sin zona y un `CHECK` de la base lo impide. La migración `0040` deja en
 `NULL` las zonas previas que no sean una zona real (`pg_timezone_names`).
 
-**Ficha de la Placa (mockup B, "ficha de disco").** `ProfileFicha` (síncrono, recibe `t`) se dibuja
-dentro de `Placa`, después de los enlaces y separada por un divisor: un `<dl>` con etiquetas en
-tipografía de datos (`Soy`, `Géneros`, `Escucho en` y las etiquetas cortas de las preguntas, con la
-pregunta completa de tooltip) y sus valores a la derecha. Cada fila se omite si está vacía y el bloque
-—con su divisor— si no hay nada: un perfil sin completar se ve igual que antes.
+**Ficha ("ficha de disco").** `ProfileFicha` (síncrono, recibe `t`) se dibuja en la franja de
+identidad, bajo el rótulo «Ficha» (antes iba dentro de la Placa): un `<dl>` en dos columnas con
+etiquetas en tipografía de datos (`Soy`, `Géneros`, `Escucho en` y las etiquetas cortas de las
+preguntas, con la pregunta completa de tooltip) sobre sus valores. Cada fila se omite si está vacía y
+la ficha entera si no hay nada, sin dejar hueco en la franja.
 
-**Privacidad.** Es identidad de "quién soy", no de "cómo me encuentro": solo la dibuja la Placa de un
+**Privacidad.** Es identidad de "quién soy", no de "cómo me encuentro": solo la dibuja la franja de un
 perfil **accesible**. `getProfileView` **vacía** roles, géneros, formatos, preguntas y hora local para
 quien no tiene acceso a un perfil privado (además de que `PrivateProfileCard` no los dibuja), de modo que
 ni siquiera viajan en el HTML de producción — verificado contra un build de producción con un perfil
@@ -417,9 +443,15 @@ Seguidos y Seguidores comparten `ProfileConnectionsView`.
 
 ## Tarjeta de Identidad
 
-Primer bloque del Nivel 1, justo bajo la Placa (`IdentityCard.tsx`): hasta **3 elementos
-definitorios** — un artista, un álbum y una canción (el himno). Reemplaza al antiguo bloque
-único de "Himno": tres decisiones conscientes en vez de una sola.
+Parte del Nivel 1, en la cabecera bajo el rótulo «Identidad musical» (`IdentityCard.tsx`): hasta
+**3 elementos definitorios** — un artista, un álbum y una canción (el himno). Reemplaza al antiguo
+bloque único de "Himno": tres decisiones conscientes en vez de una sola.
+
+- **Diseño de cabecera (2026-11, `redesign-user-profile-phase1`)**: tres columnas de igual ancho
+  (`min-w-0`, títulos en dos líneas como máximo) con la foto del artista en círculo —la de Commons
+  con licencia verificada, `artist.photo_url`; sin ella, el disco— y las carátulas del álbum y del
+  himno cuadradas. A 390 px los tres elementos caben completos; el bloque se acota a 32,5 rem para
+  que en tableta las carátulas no crezcan de más. Lo que sigue describe el diseño anterior.
 
 - **Diseño circular (revisión 2026-09-17, "Opción A" de los mockups comparados con el
   usuario)**: carátula/foto circular por elemento (mismo tratamiento que los avatares de
@@ -711,9 +743,11 @@ Retrato de gusto calculado bajo demanda (`src/services/profiles/stats.ts`, envue
 `cache()` por request), filtrado por lo que el visitante puede ver. Se expone en dos
 profundidades distintas:
 
-- **Niveles 1–2 (esta página): resumen cualitativo.** Hasta **3 frases** derivadas de los
-  mismos datos ya calculados — década dominante, género dominante, patrón de calificación —
-  sin gráficos ni cifras (`FingerprintSummary.tsx`). **Nunca expone el promedio numérico de
+- **Niveles 1–2 (esta página): resumen cualitativo.** En la franja de identidad, la **década
+  dominante** como dato grande ("2020s", "Década más escuchada") y debajo las frases derivadas de
+  los mismos datos ya calculados — género dominante, patrón de calificación — sin gráficos
+  (`FingerprintSummary.tsx`); la frase de la década no se repite. El rótulo enlaza a la huella
+  completa. **Nunca expone el promedio numérico de
   estrellas**, solo una lectura cualitativa ("es un calificador exigente", no "3.2★ de
   promedio"). Queda vacío, sin renderizarse, si no hay datos suficientes.
 - **Nivel 3 (`/users/{username}/fingerprint`): el detalle completo.**
@@ -734,10 +768,12 @@ profundidades distintas:
     depende del gráfico ni del color. Es la única superficie donde el ámbar se usa con
     generosidad (excepción sancionada a la Regla de Rareza de `DESIGN.md`).
 
-## Exploración
+## Artistas seguidos (antes «Exploración»)
 
 Los **artistas que el dueño sigue** (`artist_follow`, cambio `add-artist-following`),
-rejilla de foto/monograma + nombre con enlace a cada artista. Se muestra en los niveles
+rejilla de foto/monograma + nombre con enlace a cada artista. Desde `redesign-user-profile-phase1`
+vive en la franja de identidad, con el rótulo «Artistas seguidos» (sin tercera persona), el total
+enlazado a la lista completa y avatares de 3,5 rem en 4 columnas. Se muestra en los niveles
 autorizado y dueño; no aparece si el dueño no sigue a ningún artista.
 
 - **Seguir artista ≠ favorito de artista.** Seguir es intención de seguimiento (contexto de
@@ -792,7 +828,9 @@ entidades que ambos puntúan con 4+ estrellas (solo si el visitante puede ver la
 del dueño), **artistas que ambos siguen**, y seguidores en común. Se oculta sin sesión, para
 el propio dueño, ante bloqueo, o si no hay ninguna coincidencia. El hint de seguidores en
 común aparece también en el aviso de perfil privado, y los artistas en común alimentan además
-la insignia "tú también" de Exploración.
+la insignia "tú también" de «Artistas seguidos». En la cabecera se muestra en una sola línea
+(`ProfileAffinity compact`): el número de seguidores en común junto al rótulo y cada grupo como
+miniaturas con el nombre de tooltip (fotos de artista incluidas).
 
 ## Diario
 

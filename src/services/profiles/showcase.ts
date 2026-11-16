@@ -198,12 +198,20 @@ export const getShowcase = cache(async function getShowcase(userId: string): Pro
   const definingArtistId = showcaseRow?.definingArtistId ?? null;
   if (definingArtistId) {
     const [row] = await db
-      .select({ name: artist.name })
+      .select({ name: artist.name, photoUrl: artist.photoUrl })
       .from(artist)
       .where(eq(artist.id, definingArtistId))
       .limit(1);
     if (row) {
-      definingArtist = { type: "artist", id: definingArtistId, title: row.name, artistName: null, coverThumbUrl: null };
+      // La foto del artista (Commons con licencia verificada, ADR 0021) hace de imagen del
+      // artista definitorio, igual que en "Artistas seguidos": sin ella, la tarjeta dibuja el disco.
+      definingArtist = {
+        type: "artist",
+        id: definingArtistId,
+        title: row.name,
+        artistName: null,
+        coverThumbUrl: row.photoUrl,
+      };
     }
   }
 

@@ -12,14 +12,16 @@ interface ProfileFichaProps {
   genreLabels: Record<string, string>;
 }
 
-const LABEL = "pt-0.5 font-data text-[11px] uppercase tracking-wide text-paper-muted";
+const LABEL = "font-data text-[11px] text-paper-muted";
+const VALUE = "m-0 font-body text-[0.9375rem] leading-snug text-paper";
 
-// La ficha de disco de la Placa (spec profile-music-identity, "Ficha de la
-// Placa"): etiquetas en tipografía de datos con su valor al lado, como los
-// créditos de un disco. Cada fila se omite si está vacía y el bloque entero —con
-// su divisor— si la persona no completó nada, sin dejar hueco. Solo la dibuja la
-// Placa de un perfil accesible: no la usa la tarjeta del perfil privado. Nunca
-// muestra números de actividad ni logros.
+// La ficha de disco del perfil (spec profile-music-identity, "Ficha de la
+// Placa"): etiquetas en tipografía de datos sobre su valor, como los créditos
+// de un disco, en dos columnas dentro de la franja de identidad (openspec:
+// redesign-user-profile-phase1). Cada fila se omite si está vacía y la ficha
+// entera si la persona no completó nada, sin dejar hueco. Solo la dibuja un
+// perfil accesible: no la usa la tarjeta del perfil privado. Nunca muestra
+// números de actividad ni logros.
 export function ProfileFicha({ identity, t, genreLabels }: ProfileFichaProps) {
   // Un género retirado u oculto no tiene etiqueta y se ignora (openspec: show-genres, D5).
   const shownGenres = identity.genres.filter((genre) => genre in genreLabels);
@@ -29,41 +31,33 @@ export function ProfileFicha({ identity, t, genreLabels }: ProfileFichaProps) {
     keys.map((key) => t(`musicIdentity.${namespace}.${key}`)).join(" · ");
 
   return (
-    <>
-      <hr className="border-0 border-t border-ink-border" />
-      <dl
-        aria-label={t("musicIdentity.ficha.aria")}
-        className="m-0 grid grid-cols-[max-content_minmax(0,1fr)] gap-x-3 gap-y-2"
-      >
-        {identity.selfRoles.length > 0 && (
-          <>
-            <dt className={LABEL}>{t("musicIdentity.ficha.roles")}</dt>
-            <dd className="m-0 font-body text-sm text-paper">{list("roles", identity.selfRoles)}</dd>
-          </>
-        )}
-        {shownGenres.length > 0 && (
-          <>
-            <dt className={LABEL}>{t("musicIdentity.ficha.genres")}</dt>
-            <dd className="m-0 font-body text-sm text-paper">
-              {shownGenres.map((genre) => genreLabels[genre]).join(" · ")}
-            </dd>
-          </>
-        )}
-        {identity.listeningFormats.length > 0 && (
-          <>
-            <dt className={LABEL}>{t("musicIdentity.ficha.formats")}</dt>
-            <dd className="m-0 font-body text-sm text-paper">{list("formats", identity.listeningFormats)}</dd>
-          </>
-        )}
-        {identity.prompts.map((prompt) => (
-          <PromptRow key={prompt.promptKey} promptKey={prompt.promptKey} answer={prompt.answer} t={t} />
-        ))}
-      </dl>
-    </>
+    <dl aria-label={t("musicIdentity.ficha.aria")} className="m-0 grid gap-x-5 gap-y-3 sm:grid-cols-2">
+      {identity.selfRoles.length > 0 && (
+        <div className="min-w-0">
+          <dt className={LABEL}>{t("musicIdentity.ficha.roles")}</dt>
+          <dd className={VALUE}>{list("roles", identity.selfRoles)}</dd>
+        </div>
+      )}
+      {shownGenres.length > 0 && (
+        <div className="min-w-0">
+          <dt className={LABEL}>{t("musicIdentity.ficha.genres")}</dt>
+          <dd className={VALUE}>{shownGenres.map((genre) => genreLabels[genre]).join(" · ")}</dd>
+        </div>
+      )}
+      {identity.listeningFormats.length > 0 && (
+        <div className="min-w-0">
+          <dt className={LABEL}>{t("musicIdentity.ficha.formats")}</dt>
+          <dd className={VALUE}>{list("formats", identity.listeningFormats)}</dd>
+        </div>
+      )}
+      {identity.prompts.map((prompt) => (
+        <PromptRow key={prompt.promptKey} promptKey={prompt.promptKey} answer={prompt.answer} t={t} />
+      ))}
+    </dl>
   );
 }
 
-// La etiqueta corta cabe en la columna; la pregunta completa va de tooltip.
+// La etiqueta corta va sobre la respuesta; la pregunta completa va de tooltip.
 function PromptRow({
   promptKey,
   answer,
@@ -74,11 +68,11 @@ function PromptRow({
   t: ProfileFichaProps["t"];
 }) {
   return (
-    <>
+    <div className="min-w-0">
       <dt className={LABEL} title={t(`musicIdentity.prompts.${promptKey}.question`)}>
         {t(`musicIdentity.prompts.${promptKey}.short`)}
       </dt>
-      <dd className="m-0 font-body text-sm italic text-paper">{answer}</dd>
-    </>
+      <dd className={`${VALUE} italic`}>{answer}</dd>
+    </div>
   );
 }

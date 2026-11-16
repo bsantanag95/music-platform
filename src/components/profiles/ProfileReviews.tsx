@@ -22,7 +22,7 @@ export async function ProfileReviews({ data }: ProfileReviewsProps) {
   const remainder = data.total - data.reviews.length;
 
   return (
-    <section className="flex w-full max-w-2xl flex-col gap-4">
+    <section id="resenas" className="flex w-full scroll-mt-[calc(var(--site-header-h,0px)+var(--profile-anchors-h,0px)+1rem)] flex-col gap-4">
       <h2 className="font-display text-xl text-paper">{t("reviews.title")}</h2>
 
       <ul className="flex flex-col gap-3">

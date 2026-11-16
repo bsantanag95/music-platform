@@ -34,7 +34,7 @@ export async function ProfileLevel3Links({ username, has, hasFingerprint }: Prof
   if (links.length === 0) return null;
 
   return (
-    <nav aria-label={t("level3.navLabel")} className="flex w-full max-w-2xl flex-wrap gap-x-4 gap-y-2 border-t border-ink-border pt-4">
+    <nav aria-label={t("level3.navLabel")} className="flex w-full flex-wrap gap-x-4 gap-y-2 border-t border-ink-border pt-4">
       {links.map((link) => (
         <Link
           key={link.href}

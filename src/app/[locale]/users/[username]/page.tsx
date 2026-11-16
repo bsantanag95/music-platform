@@ -8,23 +8,24 @@ import { ShareAction } from "@/components/share/ShareAction";
 import { getMutualFollowersPreview, mutualFollowersHint } from "@/services/profiles/affinity";
 import { resolveSession } from "@/services/auth/sessions";
 import { getUserPermissions } from "@/services/auth/authorization";
-import { Placa } from "@/components/profiles/Placa";
+import { ProfileHeader } from "@/components/profiles/ProfileHeader";
 import { PrivateProfileCard } from "@/components/profiles/PrivateProfileCard";
 import { ViewAsBanner } from "@/components/profiles/ViewAsBanner";
 import { OwnerEditProvider } from "@/components/profiles/OwnerEditProvider";
 import { OwnerProfileBar } from "@/components/profiles/OwnerProfileBar";
 import {
   AffinitySection,
+  AnchorsSection,
   CaminosRail,
   CollectionRail,
   ConcertsRail,
   DiaryRail,
-  ExplorationSection,
   FavoritesRail,
   FeaturedReviewsSection,
   EditablePlaca,
-  FingerprintSummarySection,
+  HeaderBackdropSection,
   IdentityCardSection,
+  IdentityStripSection,
   InRotationSection,
   Level3LinksSection,
   ListsRail,
@@ -128,56 +129,80 @@ async function UserProfilePage({ params, searchParams }: UserProfilePageProps) {
   }
 
   // Dueño y visitante autorizado comparten la misma composición estructural
-  // (spec `social-profiles`, "Composición visual única para dueño y
-  // visitante autorizado"): dos columnas en escritorio, barra lateral
-  // pegajosa con la identidad y las señales "quién es esta persona", columna
-  // principal con la Tarjeta de Identidad y el resto en 3 niveles de
-  // profundidad. Las capas propias del dueño (barra con el interruptor
-  // "Editar perfil", tarjeta de Ajustes y lápices por bloque) se superponen a
-  // esa misma estructura, no la reemplazan: hasta que el dueño activa el modo
-  // edición, su perfil se ve igual que el de un visitante (spec
-  // `profile-edit-mode`).
+  // (spec `social-profiles`, "Composición visual única para dueño y visitante
+  // autorizado" y "Cabecera del perfil"; openspec: redesign-user-profile-phase1):
+  // una cabecera a todo el ancho con la identidad, las acciones y la Tarjeta de
+  // Identidad; la barra de anclas fija; la franja de identidad y el resto en
+  // niveles de profundidad, todo a lo ancho del contenedor, sin columna lateral.
+  // Las capas propias del dueño (barra con el interruptor "Editar perfil" y
+  // acceso a Ajustes, lápices por bloque) se superponen a esa misma estructura,
+  // no la reemplazan: hasta que el dueño activa el modo edición, su perfil se ve
+  // igual que el de un visitante (spec `profile-edit-mode`).
   const mutualFollowers = effectiveViewerId
     ? await getMutualFollowersPreview(profile.username, effectiveViewerId)
     : null;
 
-  const placa = (
-    <Placa
+  const header = (
+    <ProfileHeader
       profile={profile}
       authenticated={authenticated}
       preview={previewing}
       canModerate={canModerate}
       mutualFollowers={mutualFollowers}
+      wrapDetails={isOwn ? (details) => (
+              <EditablePlaca profile={profile} className="min-w-0">
+                {details}
+              </EditablePlaca>
+            ) : undefined}
+      backdrop={
+        <Suspense fallback={null}>
+          <HeaderBackdropSection ownerId={profile.id} />
+        </Suspense>
+      }
+      share={
+        // Compartir el perfil (add-share-foundation): la imagen y el enlace son siempre los de un anónimo.
+        <Suspense fallback={null}>
+          <ShareAction kind="profile" username={profile.username} />
+        </Suspense>
+      }
+      extras={
+        <>
+          <Suspense fallback={null}>
+            <AffinitySection username={section.username} viewerId={effectiveViewerId} />
+          </Suspense>
+          <Suspense fallback={null}>
+            <RecencySection username={section.username} viewerId={effectiveViewerId} />
+          </Suspense>
+          {/* Tarjeta de Ajustes del dueño, con su bandeja de solicitudes (spec social-profiles, "Panel del dueño"). */}
+          {isOwn && (
+            <div className="w-full max-w-sm">
+              <Suspense fallback={null}>
+                <SettingsCardSection ownerId={profile.id} />
+              </Suspense>
+            </div>
+          )}
+        </>
+      }
+      identity={
+        <Suspense fallback={<SectionFallback />}>
+          <IdentityCardSection ownerId={profile.id} isOwn={isOwn} />
+        </Suspense>
+      }
     />
   );
 
   const content = (
-    <div className="grid w-full max-w-5xl gap-8 lg:grid-cols-[19rem_minmax(0,1fr)] lg:gap-10">
-      <aside className="flex flex-col gap-6 lg:sticky lg:top-20 lg:self-start">
-        {isOwn ? <EditablePlaca profile={profile}>{placa}</EditablePlaca> : placa}
-        {/* Compartir el perfil (add-share-foundation): la imagen y el enlace son siempre los de un anónimo. */}
-        <Suspense fallback={null}>
-          <ShareAction kind="profile" username={profile.username} className="self-start" />
-        </Suspense>
-        {isOwn && (
-          <Suspense fallback={<SectionFallback />}>
-            <SettingsCardSection ownerId={profile.id} />
-          </Suspense>
-        )}
-        <Suspense fallback={null}>
-          <AffinitySection username={section.username} viewerId={effectiveViewerId} />
-        </Suspense>
-        <Suspense fallback={null}>
-          <RecencySection username={section.username} viewerId={effectiveViewerId} />
-        </Suspense>
-      </aside>
+    <>
+      {/* Nivel 1: la cabecera —quién es y qué la define— y la franja de identidad. */}
+      {header}
+      <Suspense fallback={null}>
+        <AnchorsSection username={section.username} viewerId={effectiveViewerId} />
+      </Suspense>
 
-      <div className="flex min-w-0 flex-col gap-8">
-        {/* Nivel 1: la Tarjeta de Identidad — lo único que hace falta ver
-            para reconocer quién es esta persona musicalmente. */}
-        <Streamed>
-          <IdentityCardSection ownerId={profile.id} isOwn={isOwn} />
-        </Streamed>
+      <div className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-10 px-4 pt-8 xl:px-6">
+        <Suspense fallback={null}>
+          <IdentityStripSection profile={profile} viewerId={effectiveViewerId} />
+        </Suspense>
 
         {/* Nivel 2: exploración curada, resumida — puertas de entrada, no
             el contenido completo. */}
@@ -193,15 +218,9 @@ async function UserProfilePage({ params, searchParams }: UserProfilePageProps) {
         <Streamed>
           <InRotationSection username={section.username} viewerId={effectiveViewerId} />
         </Streamed>
-        <Suspense fallback={null}>
-          <FingerprintSummarySection username={section.username} viewerId={effectiveViewerId} />
-        </Suspense>
-        <Streamed>
-          <ExplorationSection username={section.username} viewerId={effectiveViewerId} />
-        </Streamed>
 
-        {/* Nivel 3: inmersión bajo demanda — estantes completos y el
-            enlace a la huella de gusto completa. */}
+        {/* Nivel 3: inmersión bajo demanda — estantes con tope y los enlaces
+            a las vistas completas. */}
         <Streamed>
           <DiaryRail {...section} />
         </Streamed>
@@ -224,20 +243,22 @@ async function UserProfilePage({ params, searchParams }: UserProfilePageProps) {
           <Level3LinksSection username={section.username} viewerId={effectiveViewerId} />
         </Suspense>
       </div>
-    </div>
+    </>
   );
 
   return (
-    <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-12">
+    // Alturas de la cabecera del sitio y de la barra de anclas: la barra queda fija debajo de la
+    // primera y los estantes reservan las dos al saltar a su ancla.
+    <main className="flex min-h-screen flex-col pb-12 [--profile-anchors-h:2.875rem] [--site-header-h:3.625rem]">
       {previewing && (
-        <div className="w-full max-w-5xl">
+        <div className="mx-auto w-full max-w-7xl px-4 pt-6 xl:px-6">
           <ViewAsBanner username={profile.username} />
         </div>
       )}
       {isOwn ? (
         // Solo el dueño real (no en previsualización) recibe el modo edición.
         <OwnerEditProvider>
-          <div className="w-full max-w-5xl">
+          <div className="mx-auto w-full max-w-7xl px-4 pt-6 xl:px-6">
             <OwnerProfileBar username={profile.username} visibility={profile.profileVisibility} />
           </div>
           {content}

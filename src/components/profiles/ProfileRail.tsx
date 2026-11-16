@@ -16,7 +16,7 @@ interface ProfileRailProps {
 // página, no acá.
 export function ProfileRail({ label, count, id, children }: ProfileRailProps) {
   return (
-    <section id={id} className="flex w-full max-w-2xl scroll-mt-8 flex-col gap-4">
+    <section id={id} className="flex w-full scroll-mt-[calc(var(--site-header-h,0px)+var(--profile-anchors-h,0px)+1rem)] flex-col gap-4">
       <div className="flex items-baseline gap-2">
         <h2 className="font-display text-xl text-paper">{label}</h2>
         {count != null && <span className="font-data text-xs text-paper-muted">{count}</span>}

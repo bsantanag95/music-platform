@@ -1,16 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 import UserProfilePage from "./page";
-import { Placa } from "@/components/profiles/Placa";
+import { ProfileHeader } from "@/components/profiles/ProfileHeader";
 import { PrivateProfileCard } from "@/components/profiles/PrivateProfileCard";
 import { ViewAsBanner } from "@/components/profiles/ViewAsBanner";
 import { OwnerEditProvider } from "@/components/profiles/OwnerEditProvider";
 import { OwnerProfileBar } from "@/components/profiles/OwnerProfileBar";
 import {
+  AnchorsSection,
   EditablePlaca,
-  ExplorationSection,
   FeaturedReviewsSection,
+  HeaderBackdropSection,
   IdentityCardSection,
+  IdentityStripSection,
   InRotationSection,
   PinnedSection,
   RatingHighlightsSection,
@@ -51,7 +53,7 @@ vi.mock("@/services/profiles/affinity", () => ({
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children }: { children: ReactNode }) => <span>{children}</span>,
 }));
-vi.mock("@/components/profiles/Placa", () => ({ Placa: () => null }));
+vi.mock("@/components/profiles/ProfileHeader", () => ({ ProfileHeader: () => null }));
 vi.mock("@/components/profiles/PrivateProfileCard", () => ({ PrivateProfileCard: () => null }));
 vi.mock("@/components/profiles/ViewAsBanner", () => ({ ViewAsBanner: () => null }));
 vi.mock("@/components/profiles/OwnerEditProvider", () => ({ OwnerEditProvider: () => null }));
@@ -63,9 +65,10 @@ vi.mock("./sections", () => ({
   RatingHighlightsSection: () => null,
   FeaturedReviewsSection: () => null,
   InRotationSection: () => null,
-  ExplorationSection: () => null,
+  IdentityStripSection: () => null,
+  HeaderBackdropSection: () => null,
+  AnchorsSection: () => null,
   PinnedSection: () => null,
-  FingerprintSummarySection: () => null,
   RecencySection: () => null,
   AffinitySection: () => null,
   DiaryRail: () => null,
@@ -86,9 +89,13 @@ function findElement(node: unknown, type: unknown): { props?: Record<string, unk
     }
     return null;
   }
-  const element = node as { type?: unknown; props?: { children?: unknown } };
+  const element = node as { type?: unknown; props?: Record<string, unknown> };
   if (element.type === type) return element as { props?: Record<string, unknown> };
-  return findElement((element.props as { children?: ReactNode } | undefined)?.children, type);
+  for (const value of Object.values(element.props ?? {})) {
+    const found = findElement(value, type);
+    if (found) return found;
+  }
+  return null;
 }
 
 // Recorre el árbol en orden y devuelve la secuencia de `type` de los elementos
@@ -101,9 +108,9 @@ function orderOf(node: unknown, types: unknown[]): unknown[] {
       n.forEach(walk);
       return;
     }
-    const el = n as { type?: unknown; props?: { children?: unknown } };
+    const el = n as { type?: unknown; props?: Record<string, unknown> };
     if (types.includes(el.type)) out.push(el.type);
-    walk(el.props?.children);
+    Object.values(el.props ?? {}).forEach(walk);
   };
   walk(node);
   return out;
@@ -159,8 +166,8 @@ describe("UserProfilePage", () => {
     const card = findElement(tree, PrivateProfileCard);
     expect(card).not.toBeNull();
     expect(card?.props?.authenticated).toBe(false);
-    // La identidad vive en la propia tarjeta: la Placa no se apila encima.
-    expect(findElement(tree, Placa)).toBeNull();
+    // La identidad vive en la propia tarjeta: la cabecera no se apila encima.
+    expect(findElement(tree, ProfileHeader)).toBeNull();
     expect(findElement(tree, OwnerEditProvider)).toBeNull();
   });
 
@@ -213,7 +220,7 @@ describe("UserProfilePage", () => {
     expect(findElement(tree, OwnerEditProvider)).toBeNull();
   });
 
-  it("vista del dueño: monta el modo edición, la barra, la Placa editable y la tarjeta de Ajustes, sin umbral", async () => {
+  it("vista del dueño: monta el modo edición, la barra, la cabecera editable y la tarjeta de Ajustes, sin umbral", async () => {
     resolveSession.mockResolvedValue({ user: { id: "owner" } });
     getProfileView.mockResolvedValue(
       profile({ profileVisibility: "public", relation: "self", isOwner: true, accessible: true }),
@@ -224,8 +231,9 @@ describe("UserProfilePage", () => {
     expect(findElement(tree, OwnerProfileBar)?.props?.visibility).toBe("public");
     expect(findElement(tree, OwnerProfileBar)?.props?.username).toBe("ana");
     expect(findElement(tree, SettingsCardSection)).not.toBeNull();
-    // La Placa va dentro del bloque editable.
-    expect(findElement(findElement(tree, EditablePlaca), Placa)).not.toBeNull();
+    // Los datos de la persona de la cabecera van dentro del bloque editable.
+    const wrapDetails = findElement(tree, ProfileHeader)?.props?.wrapDetails as (details: ReactNode) => ReactNode;
+    expect(findElement(wrapDetails(<p />), EditablePlaca)).not.toBeNull();
     // Sin previsualización no hay banner de salida.
     expect(findElement(tree, ViewAsBanner)).toBeNull();
     expect(findElement(tree, PrivateProfileCard)).toBeNull();
@@ -258,7 +266,7 @@ describe("UserProfilePage", () => {
     expect(getProfileView).toHaveBeenNthCalledWith(2, "ana", null);
     expect(findElement(tree, OwnerEditProvider)).toBeNull();
     expect(findElement(tree, OwnerProfileBar)).toBeNull();
-    expect(findElement(tree, EditablePlaca)).toBeNull();
+    expect(findElement(tree, ProfileHeader)?.props?.wrapDetails).toBeUndefined();
     expect(findElement(tree, SettingsCardSection)).toBeNull();
     expect(findElement(tree, ViewAsBanner)).not.toBeNull();
     // Las secciones editables tampoco reciben isOwn: el visitante simulado no edita.
@@ -275,13 +283,13 @@ describe("UserProfilePage", () => {
     const tree = await render();
     expect(findElement(tree, OwnerEditProvider)).toBeNull();
     expect(findElement(tree, OwnerProfileBar)).toBeNull();
-    expect(findElement(tree, EditablePlaca)).toBeNull();
+    expect(findElement(tree, ProfileHeader)?.props?.wrapDetails).toBeUndefined();
     expect(findElement(tree, SettingsCardSection)).toBeNull();
     expect(findElement(tree, ViewAsBanner)).toBeNull();
     expect(findElement(tree, IdentityCardSection)?.props?.isOwn).toBe(false);
   });
 
-  it("vista pública: layout de dos columnas — Tarjeta de Identidad, destacados generales y valoraciones destacadas", async () => {
+  it("vista pública: cabecera con la Tarjeta de Identidad, anclas, franja, destacados y valoraciones destacadas", async () => {
     resolveSession.mockResolvedValue({ user: { id: "viewer" } });
     getProfileView.mockResolvedValue(
       profile({ profileVisibility: "public", relation: "following", accessible: true }),
@@ -289,10 +297,14 @@ describe("UserProfilePage", () => {
 
     const tree = await render();
     expect(findElement(tree, IdentityCardSection)).not.toBeNull();
+    // La Tarjeta de Identidad y el fondo viajan dentro de la cabecera.
+    expect(findElement(findElement(tree, ProfileHeader)?.props?.identity, IdentityCardSection)).not.toBeNull();
+    expect(findElement(findElement(tree, ProfileHeader)?.props?.backdrop, HeaderBackdropSection)).not.toBeNull();
+    expect(findElement(tree, AnchorsSection)).not.toBeNull();
     expect(findElement(tree, PinnedSection)).not.toBeNull();
     expect(findElement(tree, RatingHighlightsSection)).not.toBeNull();
     expect(findElement(tree, InRotationSection)).not.toBeNull();
-    expect(findElement(tree, ExplorationSection)).not.toBeNull();
+    expect(findElement(tree, IdentityStripSection)).not.toBeNull();
     expect(findElement(tree, SettingsCardSection)).toBeNull();
   });
 
@@ -307,7 +319,7 @@ describe("UserProfilePage", () => {
     expect(findElement(tree, RatingHighlightsSection)).not.toBeNull();
     expect(findElement(tree, FeaturedReviewsSection)).not.toBeNull();
     expect(findElement(tree, InRotationSection)).not.toBeNull();
-    expect(findElement(tree, ExplorationSection)).not.toBeNull();
+    expect(findElement(tree, IdentityStripSection)).not.toBeNull();
     // Las capas del dueño se superponen a la misma estructura, no la reemplazan.
     expect(findElement(tree, OwnerEditProvider)).not.toBeNull();
   });
@@ -358,5 +370,18 @@ describe("UserProfilePage", () => {
     const tree = await render();
     expect(mutualFollowersHint).toHaveBeenCalledWith("viewer", "owner");
     expect(findElement(tree, PrivateProfileCard)?.props?.mutualFollowers).toBe(2);
+  });
+
+  it("la franja de identidad va después de la cabecera y antes de Empieza por aquí", async () => {
+    resolveSession.mockResolvedValue(null);
+    getProfileView.mockResolvedValue(profile({ profileVisibility: "public", relation: "none", accessible: true }));
+
+    const tree = await render();
+    expect(orderOf(tree, [ProfileHeader, AnchorsSection, IdentityStripSection, PinnedSection])).toEqual([
+      ProfileHeader,
+      AnchorsSection,
+      IdentityStripSection,
+      PinnedSection,
+    ]);
   });
 });

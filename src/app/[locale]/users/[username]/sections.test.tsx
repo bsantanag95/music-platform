@@ -1,15 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AffinitySection,
+  AnchorsSection,
   CaminosRail,
   CollectionRail,
   DiaryRail,
   EditablePlaca,
-  ExplorationSection,
   FavoritesRail,
   FeaturedReviewsSection,
-  FingerprintSummarySection,
+  HeaderBackdropSection,
   IdentityCardSection,
+  IdentityStripSection,
   InRotationSection,
   ListsRail,
   PinnedSection,
@@ -24,9 +25,9 @@ import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
 import { InRotation } from "@/components/profiles/InRotation";
 import { ProfileReviews } from "@/components/profiles/ProfileReviews";
 import { RatingHighlights } from "@/components/profiles/RatingHighlights";
-import { ExploreSection } from "@/components/profiles/ExploreSection";
+import { IdentityStrip } from "@/components/profiles/IdentityStrip";
+import { ProfileAnchors } from "@/components/profiles/ProfileAnchors";
 import { IdentityCard } from "@/components/profiles/IdentityCard";
-import { FingerprintSummary } from "@/components/profiles/FingerprintSummary";
 import { ProfileAffinity } from "@/components/profiles/ProfileAffinity";
 import { EditableBlock } from "@/components/profiles/EditableBlock";
 import { OwnerSettingsCard } from "@/components/profiles/OwnerSettingsCard";
@@ -253,7 +254,7 @@ describe("estantes vacíos", () => {
   });
 });
 
-describe("IdentityCardSection / FingerprintSummarySection", () => {
+describe("secciones del Nivel 1 y 2", () => {
   it("PinnedSection renderiza solo los ítems de Empieza por aquí (null sin ellos)", async () => {
     svc.getShowcase.mockResolvedValue({
       pinned: [],
@@ -364,60 +365,109 @@ describe("IdentityCardSection / FingerprintSummarySection", () => {
     expect(tree?.props?.data).toBeNull();
   });
 
-  it("ExplorationSection pasa los artistas seguidos y el total a ExploreSection", async () => {
-    svc.listProfileFollowedArtists.mockResolvedValue({
-      artists: [{ id: "a1", name: "Radiohead", type: "group", photoUrl: null }],
-      totalCount: 1,
-      page: 1,
-      pageSize: 8,
-      hasNext: false,
-    });
+  const stripProfile = {
+    id: "owner",
+    username: "ana",
+    selfRoles: ["collector"],
+    genres: ["jazz"],
+    listeningFormats: [],
+    prompts: [],
+  } as unknown as ProfileView;
+  const followed = {
+    artists: [{ id: "a1", name: "Radiohead", type: "group", photoUrl: null }],
+    totalCount: 12,
+    page: 1,
+    pageSize: 8,
+    hasNext: true,
+  };
+
+  it("IdentityStripSection pasa ficha, artistas seguidos y total a IdentityStrip", async () => {
+    svc.listProfileFollowedArtists.mockResolvedValue(followed);
     svc.getProfileAffinity.mockResolvedValue(null);
-    const tree = (await ExplorationSection({ username: "ana", viewerId: "v" })) as {
+    svc.getTasteFingerprint.mockResolvedValue(null);
+    const tree = (await IdentityStripSection({ profile: stripProfile, viewerId: "v" })) as {
       type?: unknown;
-      props?: { username?: string; artists?: unknown[]; totalCount?: number; sharedArtistIds?: Set<string> };
+      props?: Record<string, unknown>;
     };
     expect(svc.listProfileFollowedArtists).toHaveBeenCalledWith("ana", "v");
-    expect(tree?.type).toBe(ExploreSection);
-    expect(tree?.props?.username).toBe("ana");
+    expect(tree?.type).toBe(IdentityStrip);
     expect(tree?.props?.artists).toHaveLength(1);
-    expect(tree?.props?.totalCount).toBe(1);
+    expect(tree?.props?.artistsTotal).toBe(12);
+    expect(tree?.props?.identity).toEqual({ selfRoles: ["collector"], genres: ["jazz"], listeningFormats: [], prompts: [] });
+    expect(tree?.props?.genreLabels).toEqual({ jazz: "jazz" });
+    expect(tree?.props?.fingerprint).toBeNull();
     expect(tree?.props?.sharedArtistIds).toBeUndefined();
   });
 
-  it("ExplorationSection marca los artistas seguidos en común vía la afinidad", async () => {
-    svc.listProfileFollowedArtists.mockResolvedValue({
-      artists: [{ id: "a1", name: "Radiohead", type: "group", photoUrl: null }],
-      totalCount: 1,
-      page: 1,
-      pageSize: 8,
-      hasNext: false,
-    });
+  it("IdentityStripSection marca los artistas seguidos en común vía la afinidad", async () => {
+    svc.listProfileFollowedArtists.mockResolvedValue(followed);
+    svc.getTasteFingerprint.mockResolvedValue(null);
     svc.getProfileAffinity.mockResolvedValue({
       sharedFavorites: [],
       sharedHighRatings: [],
       sharedFollowedArtists: [{ type: "artist", id: "a1", title: "Radiohead", artistName: null, coverThumbUrl: null }],
       mutualFollowers: 0,
     });
-    const tree = (await ExplorationSection({ username: "ana", viewerId: "v" })) as {
+    const tree = (await IdentityStripSection({ profile: stripProfile, viewerId: "v" })) as {
       props?: { sharedArtistIds?: Set<string> };
     };
     expect(tree?.props?.sharedArtistIds?.has("a1")).toBe(true);
   });
 
-  it("FingerprintSummarySection es null cuando getTasteFingerprint devuelve null", async () => {
-    svc.getTasteFingerprint.mockResolvedValue(null);
-    expect(await FingerprintSummarySection({ username: "ana", viewerId: null })).toBeNull();
+  it("IdentityStripSection destaca la década predominante y quita su frase del resumen", async () => {
+    svc.listProfileFollowedArtists.mockResolvedValue({ ...followed, artists: [], totalCount: 0 });
+    svc.getProfileAffinity.mockResolvedValue(null);
+    svc.getTasteFingerprint.mockResolvedValue({
+      decades: [
+        { label: "1990s", count: 2 },
+        { label: "1980s", count: 7 },
+      ],
+      summary: ["Escucha sobre todo música de los 1980s", "Es un calificador exigente"],
+    });
+    const tree = (await IdentityStripSection({ profile: stripProfile, viewerId: null })) as {
+      props?: { fingerprint?: { topDecade: string | null; phrases: string[] } };
+    };
+    expect(tree?.props?.fingerprint).toEqual({ topDecade: "1980s", phrases: ["Es un calificador exigente"] });
   });
 
-  it("FingerprintSummarySection renderiza FingerprintSummary con el resumen", async () => {
-    svc.getTasteFingerprint.mockResolvedValue({ ratingsVisible: true, summary: ["Escucha sobre todo música de los 90s"] });
-    const tree = (await FingerprintSummarySection({ username: "ana", viewerId: "v" })) as {
+  it("HeaderBackdropSection usa la carátula del álbum definitorio y no dibuja nada sin él", async () => {
+    svc.getShowcase.mockResolvedValueOnce({
+      pinned: [],
+      identityCard: {
+        artist: null,
+        album: { type: "release-group", id: "rg1", title: "Souvlaki", artistName: "Slowdive", coverThumbUrl: "/covers/rg1.webp" },
+        anthem: null,
+      },
+    });
+    const withCover = await HeaderBackdropSection({ ownerId: "owner" });
+    expect(JSON.stringify(withCover)).toContain("/covers/rg1.webp");
+
+    svc.getShowcase.mockResolvedValueOnce({ pinned: [], identityCard: { artist: null, album: null, anthem: null } });
+    expect(await HeaderBackdropSection({ ownerId: "owner" })).toBeNull();
+  });
+
+  it("AnchorsSection ofrece solo las secciones con contenido, con su recuento", async () => {
+    svc.listUserDiary.mockResolvedValue({ entries: [{ id: "d1" }], totalCount: 5 });
+    svc.getProfileReviews.mockResolvedValue({ reviews: [{ id: "r1" }], total: 13 });
+    svc.getFavoritesPreview.mockResolvedValue({
+      artists: [],
+      albums: [],
+      songs: [],
+      counts: { artist: 0, "release-group": 0, recording: 0 },
+    });
+    svc.listUserLists.mockResolvedValue({ lists: [{ id: "l1" }], totalCount: 6 });
+    svc.getCollectionPreview.mockResolvedValue({ artists: [], totalEntries: 0 });
+    const tree = (await AnchorsSection({ username: "ana", viewerId: null })) as {
       type?: unknown;
-      props?: { summary?: string[] };
+      props?: { items?: { id: string; count?: number }[] };
     };
-    expect(tree?.type).toBe(FingerprintSummary);
-    expect(tree?.props?.summary).toHaveLength(1);
+    expect(tree?.type).toBe(ProfileAnchors);
+    expect(tree?.props?.items).toEqual([
+      { id: "perfil", label: "anchors.summary" },
+      { id: "diario", label: "anchors.diary", count: 5 },
+      { id: "resenas", label: "anchors.reviews", count: 13 },
+      { id: "listas", label: "anchors.lists", count: 6 },
+    ]);
   });
 
   it("AffinitySection es null cuando no hay afinidad", async () => {

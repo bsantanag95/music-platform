@@ -104,7 +104,7 @@
     "railLabel": "Releases from your artists",
     "railTitle": "Upcoming releases"
   },
-  "explorationHeading": "Exploration",
+  "explorationHeading": "Followed artists",
   "explorationMutualBadge": "You too",
   "explorationMoreLabel": "See more",
   "explorationFullTitle": "Artists {name} follows",
@@ -194,6 +194,7 @@
     }
   },
   "identityCard": {
+    "heading": "Musical identity",
     "artistHeading": "Artist that defines me",
     "albumHeading": "Album that defines me",
     "songHeading": "Song that defines me",
@@ -932,5 +933,20 @@
     "listens": "Listens",
     "favorite": "Favorite",
     "readReview": "Read the review"
+  },
+  "strip": {
+    "ficha": "Fact sheet",
+    "fingerprint": "Taste fingerprint",
+    "fingerprintFull": "Full view",
+    "topDecade": "Most-listened decade"
+  },
+  "anchors": {
+    "label": "Profile sections",
+    "summary": "Overview",
+    "diary": "Diary",
+    "reviews": "Reviews",
+    "favorites": "Favorites",
+    "lists": "Lists",
+    "collection": "Collection"
   }
 }

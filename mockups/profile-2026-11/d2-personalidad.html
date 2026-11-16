@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta D2 · Mezcla con personalidad — perfil de besantanag95</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #14120f; --s1: #1f1b17; --s2: #26221d; --line: #2e2a24; --line-2: #3b362f;
+    --paper: #f2ede4; --muted: #a89e8e; --amber: #e8b84b; --amber-2: #f2c866; --petrol: #5b9494;
+    --display: "Space Grotesk", system-ui, sans-serif; --body: "Source Serif 4", Georgia, serif; --data: "IBM Plex Mono", ui-monospace, monospace;
+    --wrap: 1280px; --pad: clamp(16px, 3.5vw, 40px);
+    --tone: #e8b84b; --cover: url(assets/rise.webp);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--ink); color: var(--paper); font-family: var(--display); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  ::selection { background: var(--amber); color: var(--ink); }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 4px; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  ul, ol, dl { list-style: none; }
+  img { display: block; }
+  .wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 var(--pad); }
+  .cv { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; background: var(--s1); }
+  .ph { width: 100%; aspect-ratio: 1; border-radius: 6px; background: var(--s1); border: 1px solid var(--line); display: grid; place-items: center; color: var(--muted); font-weight: 700; font-size: 26px; }
+  .stars { color: var(--amber); letter-spacing: 1px; font-size: 13px; }
+  .mono { font-family: var(--data); font-size: 12px; color: var(--muted); }
+
+  /* Cabecera del sitio */
+  header.site { position: sticky; top: 0; z-index: 30; background: rgba(20,18,15,.85); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
+  header.site .wrap { display: flex; align-items: center; gap: 24px; height: 60px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+  .brand i { width: 30px; height: 30px; border-radius: 7px; background: var(--amber); display: grid; place-items: center; color: var(--ink); font-style: normal; font-size: 15px; }
+  header nav { display: flex; gap: 20px; color: var(--muted); font-size: 15px; }
+  .hsearch { margin-left: auto; width: 340px; height: 38px; border: 1px solid var(--line-2); border-radius: 8px; display: flex; align-items: center; padding: 0 12px; color: var(--muted); font-size: 14px; background: var(--s1); }
+  .hauth { display: flex; gap: 10px; align-items: center; font-size: 14px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 8px; font-weight: 600; font-size: 14px; white-space: nowrap; transition: background-color .2s, border-color .2s; }
+  .btn svg { width: 17px; height: 17px; }
+  .btn-amber { background: var(--amber); color: var(--ink); }
+  .btn-amber:hover { background: var(--amber-2); }
+  .btn-line { border: 1px solid var(--line-2); }
+  .btn-line:hover { border-color: var(--muted); }
+  .icon-btn { width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--line-2); display: grid; place-items: center; }
+  .icon-btn svg { width: 18px; height: 18px; }
+
+  /* Cabecera del perfil (de A): la persona y su identidad musical juntas */
+  .stage { position: relative; overflow: hidden; border-bottom: 1px solid var(--line); box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--tone) 70%, transparent); transition: box-shadow .4s; }
+  .stage::before { content: ""; position: absolute; inset: -60px; background: var(--cover) center 30% / cover; filter: blur(52px) saturate(1.1); opacity: .3; }
+  .stage::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,18,15,.4), var(--ink) 95%); }
+  .stage .wrap { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: clamp(24px, 4vw, 72px); align-items: center; padding-top: 40px; padding-bottom: 32px; }
+  .who { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 22px; align-items: center; }
+  .avatar { width: 112px; height: 112px; border-radius: 50%; object-fit: cover; border: 3px solid var(--ink); box-shadow: 0 0 0 1px var(--line-2); transition: transform .4s cubic-bezier(.16,1,.3,1), border-radius .4s; }
+  body.tilt .avatar { border-radius: 6px; border: 5px solid var(--paper); box-shadow: 0 14px 26px -14px #000; transform: rotate(-3deg); }
+  h1 { font-size: clamp(34px, 4vw, 52px); line-height: .95; letter-spacing: -.03em; font-weight: 700; overflow-wrap: anywhere; }
+  .handle { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px 14px; font-family: var(--data); font-size: 13px; color: var(--muted); }
+  .bio { margin-top: 16px; font-family: var(--body); font-style: italic; font-size: clamp(20px, 1.8vw, 24px); line-height: 1.3; max-width: 30ch; }
+  .bio::before { content: "«"; color: var(--tone); margin-right: 2px; font-style: normal; }
+  .bio::after { content: "»"; color: var(--tone); margin-left: 2px; font-style: normal; }
+  .row-acts { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; }
+  .stats { display: flex; gap: 16px; font-size: 14px; color: var(--muted); }
+  .stats b { color: var(--paper); font-weight: 600; margin-right: 4px; }
+  .acts { display: flex; gap: 8px; }
+  .trio h2 { font-family: var(--data); font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .trio ul { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+  .trio a { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .trio img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; box-shadow: 0 18px 32px -20px #000; }
+  .trio li:first-child img { border-radius: 50%; }
+  .trio li { position: relative; }
+  .trio li:hover, .trio li:focus-within { z-index: 3; }
+  .sleeve { position: relative; display: block; }
+  .sleeve img { position: relative; z-index: 1; }
+  .vinyl { position: absolute; inset: 4%; z-index: 0; border-radius: 50%;
+    background:
+      radial-gradient(circle, #0d0c0b 0 3%, var(--tone) 3.5% 30%, #0d0c0b 30.5% 33%, transparent 33.5%),
+      repeating-radial-gradient(circle, #181614 0 1.2px, #0b0a09 1.6px 3px);
+    box-shadow: 0 10px 24px -12px #000, inset 0 0 0 1px rgba(255,255,255,.06);
+    transition: transform .7s cubic-bezier(.16,1,.3,1); }
+  .trio a:hover .vinyl, .trio a:focus-visible .vinyl { transform: translateX(36%) rotate(40deg); }
+  @media (hover: none) { .vinyl { transform: translateX(14%); } }
+  body.peek .trio .vinyl { transform: translateX(36%) rotate(40deg); }
+  body.peek .trio li:nth-child(2) { z-index: 3; }
+  @media (prefers-reduced-motion: reduce) { .vinyl { transition: none; } }
+  .trio .k { font-family: var(--data); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--amber); }
+  .trio .t { font-weight: 600; font-size: 14px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .trio .a { font-size: 12px; color: var(--muted); }
+
+  .tabs { position: sticky; top: 60px; z-index: 20; background: rgba(20,18,15,.94); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+  .tabs .wrap { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+  .tabs a { padding: 13px 14px 11px; font-size: 15px; color: var(--muted); border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tabs a span { font-family: var(--data); font-size: 12px; margin-left: 6px; }
+  .tabs a[aria-current] { color: var(--paper); border-color: var(--tone); }
+  .tabs a:hover { color: var(--paper); }
+
+  /* Cuerpo a todo el ancho: sin columna lateral fija */
+  main { padding: 40px 0 96px; }
+  main .wrap { display: flex; flex-direction: column; gap: 56px; }
+  .sh { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+  .sh h2 { font-size: 22px; letter-spacing: -.015em; font-weight: 700; }
+  .sh h2 span { font-family: var(--data); font-size: 13px; font-weight: 400; color: var(--muted); margin-left: 8px; }
+  .sh a { font-family: var(--data); font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .sh a:hover { color: var(--amber); }
+  .pair { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 48px; }
+  .pair.wide { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+
+  /* Ficha · Huella · Artistas: una franja sin tarjetas, separada por filetes */
+  .facts-strip { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1.1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .facts-strip > section { padding: 22px 28px; }
+  .facts-strip > section + section { border-left: 1px solid var(--line); }
+  .facts-strip > section:first-child { padding-left: 0; }
+  .facts-strip > section:last-child { padding-right: 0; }
+  .facts-strip h2 { font-family: var(--data); font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; display: flex; justify-content: space-between; }
+  .facts-strip h2 a { letter-spacing: 0; text-transform: none; }
+  .facts-strip h2 a:hover { color: var(--amber); }
+  .credits { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
+  .credits dt { font-family: var(--data); font-size: 11px; color: var(--muted); }
+  .credits dd { font-family: var(--body); font-size: 15px; line-height: 1.35; }
+  .credits dd em { font-style: italic; }
+  .fp-big { font-size: 56px; font-weight: 700; letter-spacing: -.04em; line-height: .9; }
+  .fp-sub { margin-top: 10px; font-family: var(--body); font-size: 15px; color: var(--muted); }
+  .fp-sub b { color: var(--paper); font-weight: 500; }
+  .artists { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px 6px; text-align: center; }
+  .artists img, .artists .more { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; margin: 0 auto; background: var(--s2); }
+  .artists .more { display: grid; place-items: center; color: var(--amber); font-family: var(--data); font-size: 13px; border: 1px solid var(--line-2); }
+  .artists span { display: block; margin-top: 6px; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Empieza por aquí */
+  .start { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 20px; }
+  .start a { display: grid; grid-template-columns: 96px minmax(0,1fr); gap: 14px; align-items: center; }
+  .start .k { font-family: var(--data); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--petrol); }
+  .start .k.hl { color: var(--amber); }
+  .start .t { font-weight: 600; line-height: 1.25; font-size: 15px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .start .a { font-size: 13px; color: var(--muted); }
+  .start .sc { margin-top: 4px; font-family: var(--data); font-size: 13px; }
+  .start .k, .start .a, .start .sc { display: block; }
+
+  /* Reseñas | Diario (de C) */
+  .rv { display: grid; grid-template-columns: 56px minmax(0,1fr) auto; gap: 14px; align-items: start; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .rv .t { font-weight: 600; line-height: 1.25; }
+  .rv .a { font-size: 13px; color: var(--muted); }
+  .rv .r { font-family: var(--data); font-size: 13px; text-align: right; white-space: nowrap; }
+  .bars { margin-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+  .bars i { display: block; height: 6px; border-radius: 3px; background: var(--line); }
+  .diary { width: 100%; border-collapse: collapse; }
+  .diary td { padding: 12px 12px 12px 0; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  .diary .d { font-family: var(--data); font-size: 12px; color: var(--muted); white-space: nowrap; width: 76px; }
+  .diary .w { display: flex; gap: 12px; align-items: center; min-width: 0; }
+  .diary .w img { width: 44px; height: 44px; border-radius: 5px; object-fit: cover; flex: none; }
+  .diary .w b { font-weight: 600; display: block; }
+  .diary .w span { font-size: 13px; color: var(--muted); }
+  .diary q { font-family: var(--body); font-style: italic; color: var(--paper); }
+  .diary .c { text-align: right; padding-right: 0; }
+  .pill { font-family: var(--data); font-size: 11px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--muted); white-space: nowrap; }
+  .pill.amb { border-color: rgba(232,184,75,.45); color: var(--amber); }
+
+  /* Favoritos (de B): portadas grandes + canciones al lado */
+  .favs { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 40px; align-items: start; }
+  .sleeves { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 14px; }
+  .sleeves p { margin-top: 8px; font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sleeves span { font-size: 12px; color: var(--muted); }
+  .songs li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .songs li:first-child { border-top: 1px solid var(--line); }
+  .songs span { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .songs .fav-artist { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+  .songs .fav-artist img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+
+  /* Listas y recorridos | Colección física (de C) */
+  .lists { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
+  .lists a { display: flex; flex-direction: column; gap: 8px; }
+  .mos { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; border-radius: 8px; overflow: hidden; aspect-ratio: 1.6; background: var(--s1); }
+  .mos img { width: 100%; height: 100%; object-fit: cover; }
+  .mos img.solo { grid-column: span 2; grid-row: span 2; }
+  .lists .t { font-weight: 600; }
+  .lists .m { font-family: var(--data); font-size: 12px; color: var(--muted); }
+  .lists .tag { font-family: var(--data); font-size: 11px; color: var(--amber); }
+  .lists .tag.rec { color: var(--petrol); }
+  .coll { display: grid; grid-template-columns: 120px minmax(0,1fr); gap: 16px; align-items: center; }
+  .coll .t { font-weight: 600; font-size: 17px; }
+  .coll .chips { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+
+  /* Vista de seguidor (ilustrativa) */
+  .follower-only { display: none !important; }
+  body.as-follower .follower-only { display: revert !important; }
+  body.as-follower .visitor-only { display: none !important; }
+  body.as-follower .btn.follower-only { display: inline-flex !important; }
+  .rotation { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 20px; }
+  .rot { display: grid; grid-template-columns: 56px minmax(0,1fr); gap: 12px; align-items: center; }
+  .rot .t { font-weight: 600; font-size: 15px; }
+  .rot .a { font-size: 13px; color: var(--muted); }
+
+  .mock-bar { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 60; display: flex; gap: 4px; align-items: center; padding: 5px; background: #f2ede4; color: #14120f; border-radius: 999px; font: 13px system-ui, sans-serif; box-shadow: 0 10px 30px -10px #000; white-space: nowrap; }
+  .mock-bar a, .mock-bar button { padding: 6px 12px; border-radius: 999px; font: inherit; color: inherit; }
+  .mock-bar a:hover, .mock-bar button:hover { background: #ddd5c8; }
+  .mock-bar [aria-current="page"], .mock-bar [aria-pressed="true"] { background: #14120f; color: #f2ede4; }
+  .mock-bar { max-width: calc(100vw - 24px); overflow-x: auto; scrollbar-width: none; }
+  .mock-bar .sep { width: 1px; height: 18px; background: #c8bfb0; margin: 0 4px; }
+
+  @media (max-width: 1100px) {
+    header nav, .hsearch { display: none; }
+    .hauth { margin-left: auto; }
+    .stage .wrap { grid-template-columns: 1fr; }
+    .trio { max-width: 520px; }
+    .facts-strip { grid-template-columns: 1fr 1fr; }
+    .facts-strip > section:nth-child(3) { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--line); padding-left: 0; }
+    .facts-strip > section:nth-child(2) { padding-right: 0; }
+    .start { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .pair, .pair.wide, .favs { grid-template-columns: 1fr; gap: 48px; }
+  }
+  @media (max-width: 680px) {
+    .who { grid-template-columns: auto minmax(0,1fr); gap: 16px; }
+    .avatar { width: 76px; height: 76px; }
+    .row-acts { flex-direction: column; align-items: flex-start; }
+    .trio ul { gap: 8px; }
+    .trio .t { font-size: 13px; }
+    .facts-strip { grid-template-columns: 1fr; }
+    .facts-strip > section { padding: 20px 0; border-left: 0 !important; }
+    .facts-strip > section + section { border-top: 1px solid var(--line); }
+    .start { grid-template-columns: 1fr; gap: 14px; }
+    .start a { grid-template-columns: 72px minmax(0,1fr); }
+    .sleeves { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .lists { grid-template-columns: 1fr 1fr; }
+    .lists li:nth-child(3) { display: none; }
+    .rotation { grid-template-columns: 1fr; }
+    .diary tr { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 4px 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .diary td { border: 0; padding: 0; }
+    .diary .d { grid-column: 1 / -1; width: auto; }
+    .hauth .btn-line { display: none; }
+    .mock-bar .lbl { display: none; }
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V3m0 0-4 4m4-4 4 4M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-ig" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".8" fill="currentColor"/></g></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</defs></svg>
+
+<header class="site"><div class="wrap">
+  <a class="brand" href="#"><i>♪</i>music-platform</a>
+  <nav><a href="#">Explorar</a><a href="#">Listas</a><a href="#">Comunidad</a></nav>
+  <div class="hsearch">Buscar artistas</div>
+  <div class="hauth"><a class="btn btn-line" href="#">Iniciar sesión</a><a class="btn btn-amber" href="#">Crear cuenta</a></div>
+</div></header>
+
+<section class="stage" aria-labelledby="name">
+  <div class="wrap">
+    <div>
+      <div class="who">
+        <img class="avatar" src="assets/avatar.webp" alt="">
+        <div>
+          <h1 id="name">besantanag95</h1>
+          <p class="handle"><span>@besantanag95</span><span>él</span><span>Quilpue</span><span>Desde agosto de 2026</span></p>
+        </div>
+      </div>
+      <p class="bio">Me gusta la musica ochentera</p>
+      <div class="row-acts">
+        <div class="acts">
+          <a class="btn btn-amber visitor-only" href="#"><svg><use href="#i-plus"/></svg>Seguir</a>
+          <a class="btn btn-line follower-only" href="#"><svg><use href="#i-check"/></svg>Siguiendo</a>
+          <a class="btn btn-line" href="#"><svg><use href="#i-share"/></svg>Compartir</a>
+          <a class="icon-btn" href="#" aria-label="Instagram"><svg><use href="#i-ig"/></svg></a>
+        </div>
+        <p class="stats"><a href="#"><b>2</b>seguidores</a><a href="#"><b>3</b>siguiendo</a></p>
+      </div>
+    </div>
+    <div class="trio">
+      <h2>Identidad musical</h2>
+      <ul>
+        <li><a href="#"><img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/Chappell_Roan%2C_20_August_2025_106_%28cropped%29.jpg/500px-Chappell_Roan%2C_20_August_2025_106_%28cropped%29.jpg" alt=""><span class="k">Artista</span><span class="t">Chappell Roan</span></a></li>
+        <li><a href="#"><span class="sleeve"><span class="vinyl" aria-hidden="true"></span><img src="assets/rise.webp" alt=""></span><span class="k">Álbum</span><span class="t">The Rise and Fall of a Midwest Princess</span><span class="a">Chappell Roan</span></a></li>
+        <li><a href="#"><span class="sleeve"><span class="vinyl" aria-hidden="true"></span><img src="assets/taste.webp" alt=""></span><span class="k">Himno</span><span class="t">Taste</span><span class="a">Sabrina Carpenter</span></a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<nav class="tabs" aria-label="Secciones del perfil"><div class="wrap">
+  <a href="#" aria-current="page">Resumen</a><a href="#diario">Diario<span>5</span></a><a href="#resenas">Reseñas<span>13</span></a><a href="#favoritos">Favoritos<span>15</span></a><a href="#listas">Listas<span>6</span></a><a href="#coleccion">Colección<span>1</span></a>
+</div></nav>
+
+<main><div class="wrap">
+  <div class="facts-strip">
+    <section aria-labelledby="h-ficha">
+      <h2 id="h-ficha">Ficha</h2>
+      <dl class="credits">
+        <div><dt>Soy</dt><dd>Oyente · Coleccionista</dd></div>
+        <div><dt>Géneros</dt><dd>Rock · metal · hard rock</dd></div>
+        <div><dt>Escucho en</dt><dd>Vinilo · CD · Streaming · Archivos digitales</dd></div>
+        <div><dt>1.er show</dt><dd><em>Deep Purple</em></dd></div>
+        <div style="grid-column:1 / -1"><dt>1.er disco</dt><dd><em>Def Leppard — On Through the Night</em></dd></div>
+      </dl>
+    </section>
+    <section aria-labelledby="h-huella">
+      <h2 id="h-huella">Huella de gusto <a href="#">Completa →</a></h2>
+      <p class="fp-big">2020s</p>
+      <p class="fp-sub">Década más escuchada. Familia principal: <b>Rock</b>, sobre todo <b>glam metal</b>.</p>
+    </section>
+    <section aria-labelledby="h-art">
+      <h2 id="h-art">Artistas seguidos <a href="#">10 →</a></h2>
+      <ul class="artists">
+        <li><img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/5/55/Glam_metal_band_Ratt.jpg/500px-Glam_metal_band_Ratt.jpg" alt=""><span>Ratt</span></li>
+        <li><img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b5/Belinda_Carlisle_1987_photo.jpg/500px-Belinda_Carlisle_1987_photo.jpg" alt=""><span>Belinda Carlisle</span></li>
+        <li><img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b1/Europe_the_band_in_Stockholm_2016.jpg/500px-Europe_the_band_in_Stockholm_2016.jpg" alt=""><span>Europe</span></li>
+        <li><img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Queen_A_Night_At_The_Opera_%281975_Elektra_publicity_photo_02%29.jpg/500px-Queen_A_Night_At_The_Opera_%281975_Elektra_publicity_photo_02%29.jpg" alt=""><span>Queen</span></li>
+        <li><img src="https://upload.wikimedia.org/wikipedia/commons/1/11/Lana_Del_Rey_Seattle.jpg" alt=""><span>Lana Del Rey</span></li>
+        <li><span class="more" style="font-family:var(--display);font-weight:700;color:var(--muted)">QR</span><span>Quiet Riot</span></li>
+        <li><img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/Chappell_Roan%2C_20_August_2025_106_%28cropped%29.jpg/500px-Chappell_Roan%2C_20_August_2025_106_%28cropped%29.jpg" alt=""><span>Chappell Roan</span></li>
+        <li><span class="more">+3</span><span>Ver más</span></li>
+      </ul>
+    </section>
+  </div>
+
+  <section class="follower-only" aria-labelledby="h-rot">
+    <div class="sh"><h2 id="h-rot">En rotación</h2></div>
+    <div class="rotation">
+      <div class="rot"><img class="cv" src="assets/mansbest.webp" alt=""><div><p class="t">Man's Best Friend</p><p class="a">Sabrina Carpenter · 3 escuchas</p></div></div>
+      <div class="rot"><img class="cv" src="assets/f7800.webp" alt=""><div><p class="t">7800° Fahrenheit</p><p class="a">Bon Jovi · 1 escucha</p></div></div>
+      <div class="rot"><img class="cv" src="assets/icon.webp" alt=""><div><p class="t">Icon</p><p class="a">Icon · 1 escucha</p></div></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-start">
+    <div class="sh"><h2 id="h-start">Empieza por aquí</h2></div>
+    <ul class="start">
+      <li><a href="#"><img class="cv" src="assets/ocean.webp" alt=""><span><span class="k">Álbum</span><span class="t">Did you know that there's a tunnel under Ocean Blvd</span><span class="a">Lana Del Rey</span></span></a></li>
+      <li><a href="#"><span class="ph">AA</span><span><span class="k">Canción</span><span class="t">Alone Again</span><span class="a">Dokken</span></span></a></li>
+      <li><a href="#"><span class="ph">T</span><span><span class="k">Artista</span><span class="t">Tigertailz</span></span></a></li>
+      <li><a href="#"><img class="cv" src="assets/toofast.webp" alt=""><span><span class="k hl">Valoración destacada</span><span class="t">Too Fast for Love</span><span class="a">Mötley Crüe</span><span class="sc"><span class="stars">★★★★☆</span> 77/100</span></span></a></li>
+    </ul>
+  </section>
+
+  <div class="pair">
+    <section id="resenas" aria-labelledby="h-rev">
+      <div class="sh"><h2 id="h-rev">Reseñas<span>13</span></h2><a href="#">Ver todas →</a></div>
+      <ul>
+        <li class="rv"><img class="cv" src="assets/badanimals.webp" alt=""><div><p class="t">Bad Animals</p><p class="a">Heart</p><div class="bars"><i style="width:90%"></i><i style="width:55%"></i></div></div><p class="r"><span class="stars">★★★★☆</span> 4,0</p></li>
+        <li class="rv"><img class="cv" src="assets/xmas.webp" alt=""><div><p class="t">Christmas the Whole Year Round</p><p class="a">Sabrina Carpenter</p><div class="bars"><i style="width:80%"></i><i style="width:40%"></i></div></div><p class="r"><span class="stars">★☆☆☆☆</span> 1,0</p></li>
+        <li class="rv"><img class="cv" src="assets/standout.webp" alt=""><div><p class="t">Stand Out</p><p class="a">Sabrina Carpenter</p><div class="bars"><i style="width:86%"></i><i style="width:48%"></i></div></div><p class="r"><span class="stars">★☆☆☆☆</span> 1,0</p></li>
+        <li class="rv"><img class="cv" src="assets/cantblame.webp" alt=""><div><p class="t">Can't Blame a Girl for Trying</p><p class="a">Sabrina Carpenter</p><div class="bars"><i style="width:72%"></i><i style="width:34%"></i></div></div><p class="r"><span class="stars">★★★★☆</span> 4,0</p></li>
+      </ul>
+    </section>
+    <section id="diario" aria-labelledby="h-diary">
+      <div class="sh"><h2 id="h-diary">Diario<span>5</span></h2><a href="#">Ver todo →</a></div>
+      <table class="diary"><tbody>
+        <tr><td class="d">24 sept</td><td><span class="w"><img src="assets/mansbest.webp" alt=""><span><b>Man's Best Friend</b><span>Sabrina Carpenter</span></span></span></td><td class="c"><span class="pill">Repetición</span></td></tr>
+        <tr><td class="d">14 sept</td><td><span class="w"><img src="assets/f7800.webp" alt=""><span><b>7800° Fahrenheit</b><span>Bon Jovi · <q>Discazo</q></span></span></span></td><td class="c"><span class="pill amb">Primera escucha</span></td></tr>
+        <tr><td class="d">14 sept</td><td><span class="w"><img src="assets/icon.webp" alt=""><span><b>Icon</b><span>Icon</span></span></span></td><td class="c"><span class="pill amb">Primera escucha</span></td></tr>
+        <tr><td class="d">22 ago</td><td><span class="w"><img src="assets/mansbest.webp" alt=""><span><b>Tears</b><span>Sabrina Carpenter</span></span></span></td><td class="c"><span class="pill">Repetición</span></td></tr>
+      </tbody></table>
+    </section>
+  </div>
+
+  <section id="favoritos" aria-labelledby="h-fav">
+    <div class="sh"><h2 id="h-fav">Favoritos<span>15</span></h2><a href="#">Ver todos →</a></div>
+    <div class="favs">
+      <ul class="sleeves">
+        <li><img class="cv" src="assets/ratt.webp" alt=""><p>Ratt</p><span>Ratt</span></li>
+        <li><img class="cv" src="assets/mansbest.webp" alt=""><p>Man's Best Friend</p><span>Sabrina Carpenter</span></li>
+        <li><img class="cv" src="assets/feelgood.webp" alt=""><p>Dr. Feelgood</p><span>Mötley Crüe</span></li>
+        <li><img class="cv" src="assets/rise.webp" alt=""><p>The Rise and Fall of a Midwest Princess</p><span>Chappell Roan</span></li>
+        <li><img class="cv" src="assets/ocean.webp" alt=""><p>Did you know that there's a tunnel under Ocean Blvd</p><span>Lana Del Rey</span></li>
+      </ul>
+      <ul class="songs">
+        <li><span class="fav-artist"><img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/6/61/Sabrina_Carpenter_-_O2_Arena_2025_-_086_%28cropped_2%29.jpg/500px-Sabrina_Carpenter_-_O2_Arena_2025_-_086_%28cropped_2%29.jpg" alt="">Sabrina Carpenter</span><span>Artista</span></li>
+        <li>Love Bites<span>Def Leppard</span></li>
+        <li>After Midnight<span>Chappell Roan</span></li>
+        <li>Read your Mind<span>Sabrina Carpenter</span></li>
+        <li>Kickstart My Heart<span>Mötley Crüe</span></li>
+        <li>Rattlesnake Shake<span>Mötley Crüe</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="pair wide">
+    <section id="listas" aria-labelledby="h-lists">
+      <div class="sh"><h2 id="h-lists">Listas y recorridos<span>6</span></h2><a href="#">Ver todas →</a></div>
+      <ul class="lists">
+        <li><a href="#"><span class="mos"><img src="assets/aor1.webp" alt=""><img src="assets/aor2.webp" alt=""><img src="assets/aor3.webp" alt=""><img src="assets/aor4.webp" alt=""></span><span class="tag">Fijada</span><span class="t">Best AOR songs</span><span class="m">Canciones · 4</span></a></li>
+        <li><a href="#"><span class="mos"><img class="solo" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/DefLeppard1.JPG/500px-DefLeppard1.JPG" alt=""></span><span class="tag" style="visibility:hidden">·</span><span class="t">Glam Metal Bands</span><span class="m">Artistas · 1</span></a></li>
+        <li><a href="#"><span class="mos"><img class="solo" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/6/61/Sabrina_Carpenter_-_O2_Arena_2025_-_086_%28cropped_2%29.jpg/500px-Sabrina_Carpenter_-_O2_Arena_2025_-_086_%28cropped_2%29.jpg" alt=""></span><span class="tag rec">Recorrido · completo</span><span class="t">Best of Sabrina</span><span class="m">Álbumes · 2</span></a></li>
+      </ul>
+    </section>
+    <section id="coleccion" aria-labelledby="h-coll">
+      <div class="sh"><h2 id="h-coll">Colección física<span>1</span></h2><a href="#">Ver →</a></div>
+      <a class="coll" href="#"><img class="cv" src="assets/toothnail.webp" alt=""><div><p class="t">Tooth and Nail</p><p class="mono">Dokken · 1984</p><p class="chips"><span class="pill">Vinilo</span></p></div></a>
+    </section>
+  </div>
+</div></main>
+
+<nav class="mock-bar" aria-label="Mockups"><span class="lbl" style="padding:0 8px;opacity:.6">Mockup</span><a href="index.html">Resumen</a><a href="a-escenario.html">A</a><a href="b-funda.html">B</a><a href="c-muro.html">C</a><a href="d-mezcla.html">D</a><a href="d2-personalidad.html" aria-current="page">D2</a><span class="sep"></span><button type="button" class="tone-btn" data-cover="assets/rise.webp" aria-pressed="true">Tono</button><button type="button" class="tone-btn" data-cover="assets/ratt.webp" aria-pressed="false" title="Así se vería con Ratt como álbum definitorio">·Ratt</button><button type="button" class="tone-btn" data-cover="assets/toothnail.webp" aria-pressed="false" title="Así se vería con Tooth and Nail">·Dokken</button><button type="button" id="tilt" aria-pressed="false">Giro</button><span class="sep"></span><button type="button" id="v-visitor" aria-pressed="true">Visitante</button><button type="button" id="v-follower" aria-pressed="false">Seguidor</button></nav>
+<script>
+  const visitor = document.getElementById('v-visitor'), follower = document.getElementById('v-follower');
+  function view(asFollower) {
+    document.body.classList.toggle('as-follower', asFollower);
+    visitor.setAttribute('aria-pressed', String(!asFollower));
+    follower.setAttribute('aria-pressed', String(asFollower));
+  }
+  visitor.onclick = () => view(false);
+  follower.onclick = () => view(true);
+  if (location.hash === '#seguidor') view(true);
+  if (location.hash === '#disco') document.body.classList.add('peek');
+
+  // Tono del perfil: color medio de la carátula del álbum definitorio, ponderado por saturación, con
+  // luminosidad acotada para que contraste sobre la tinta; si la portada es casi gris, ámbar.
+  function toneFrom(src) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas'); c.width = c.height = 48;
+        const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0, 48, 48);
+        const d = ctx.getImageData(0, 0, 48, 48).data;
+        // Histograma de tonos en 12 grupos ponderado por saturación: gana el grupo dominante, no el promedio
+        // (que en portadas con varios colores da un marrón apagado).
+        const bins = Array.from({ length: 12 }, () => ({ w: 0, h: 0, s: 0 }));
+        for (let i = 0; i < d.length; i += 4) {
+          const R = d[i] / 255, G = d[i + 1] / 255, B = d[i + 2] / 255;
+          const mx = Math.max(R, G, B), mn = Math.min(R, G, B), l = (mx + mn) / 2, dl = mx - mn;
+          if (!dl || l < .12 || l > .92) continue;
+          const sat = dl / (1 - Math.abs(2 * l - 1));
+          let h = mx === R ? ((G - B) / dl) % 6 : mx === G ? (B - R) / dl + 2 : (R - G) / dl + 4;
+          h = (h * 60 + 360) % 360;
+          const wt = sat * sat, bin = bins[Math.floor(h / 30) % 12];
+          bin.w += wt; bin.h += h * wt; bin.s += sat * wt;
+        }
+        const top = bins.reduce((best, bin) => (bin.w > best.w ? bin : best));
+        if (top.w < 20) return resolve(null);
+        const h = Math.round(top.h / top.w), sat = top.s / top.w;
+        if (sat < .18) return resolve(null);
+        resolve('hsl(' + h + ' ' + Math.round(Math.max(sat, .5) * 100) + '% 64%)');
+      };
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+  }
+  async function applyTone(src) {
+    const tone = await toneFrom(src);
+    document.documentElement.style.setProperty('--tone', tone || '#e8b84b');
+    document.documentElement.style.setProperty('--cover', 'url(' + src + ')');
+  }
+  document.querySelectorAll('.tone-btn').forEach((btn) => {
+    btn.onclick = () => {
+      document.querySelectorAll('.tone-btn').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      applyTone(btn.dataset.cover);
+    };
+  });
+  applyTone('assets/rise.webp');
+  const tilt = document.getElementById('tilt');
+  tilt.onclick = () => { const on = document.body.classList.toggle('tilt'); tilt.setAttribute('aria-pressed', String(on)); };
+</script>
+</body>
+</html>

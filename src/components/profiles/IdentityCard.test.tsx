@@ -11,7 +11,11 @@ vi.mock("next-intl/server", () => ({
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children }: { href: string; children: ReactNode }) => <a href={href}>{children}</a>,
 }));
-vi.mock("@/components/catalog/CoverThumb", () => ({ CoverThumb: () => <span data-testid="cover" /> }));
+vi.mock("@/components/catalog/CoverThumb", () => ({
+  CoverThumb: ({ cover, className }: { cover: string | null; className?: string }) => (
+    <span data-testid="cover" data-cover={cover ?? ""} className={className} />
+  ),
+}));
 
 const artist: ShowcaseEntity = {
   type: "artist",
@@ -60,5 +64,28 @@ describe("IdentityCard", () => {
       expect.stringContaining("/album/rg1"),
       expect.stringContaining("/song/rec1"),
     ]);
+  });
+
+  it("va bajo el rótulo «Identidad musical» (spec social-profiles, 'Cabecera del perfil')", async () => {
+    renderWithIntl(await IdentityCard({ identityCard: { artist, album, anthem } }));
+    expect(screen.getByRole("heading", { name: "identityCard.heading" })).toBeInTheDocument();
+  });
+
+  it("a 390 px cada elemento puede encogerse y los títulos se recortan en dos líneas", async () => {
+    renderWithIntl(await IdentityCard({ identityCard: { artist, album, anthem } }));
+    for (const item of screen.getAllByRole("listitem")) expect(item).toHaveClass("min-w-0");
+    expect(screen.getByText("Blonde")).toHaveClass("line-clamp-2");
+  });
+
+  it("muestra la foto del artista definitorio, en círculo", async () => {
+    renderWithIntl(
+      await IdentityCard({
+        identityCard: { artist: { ...artist, coverThumbUrl: "https://upload.wikimedia.org/radiohead.jpg" }, album, anthem: null },
+      }),
+    );
+    const [artistCover, albumCover] = screen.getAllByTestId("cover");
+    expect(artistCover).toHaveAttribute("data-cover", "https://upload.wikimedia.org/radiohead.jpg");
+    expect(artistCover).toHaveClass("rounded-full");
+    expect(albumCover).not.toHaveClass("rounded-full");
   });
 });

@@ -13,7 +13,7 @@ export async function ProfileRecency({ at }: ProfileRecencyProps) {
   const t = await getTranslations("users");
   const ago = await relativeFeedDate(at.toISOString());
   return (
-    <p className="w-full max-w-2xl font-data text-xs text-paper-muted">
+    <p className="w-full font-data text-xs text-paper-muted">
       {t("recencyLastSignal", { ago })}
     </p>
   );

@@ -935,7 +935,9 @@ mezclados, con orden y nota). `DELETE` los vacía. El nombre de la ruta no cambi
 **Body (PUT):** `{ items: [{ type: "artist"|"release-group"|"recording", id, note? (≤120) }] }`.
 **200 OK:** `{ showcase: { pinned: [{ id, note, position, entity: { type, id, title, artistName, coverThumbUrl } }], identityCard: { artist, album, anthem } } }`.
 El himno solo viaja dentro de `identityCard.anthem` (el campo `showcase.anthem` de primer nivel
-se retiró en el cambio `simplify-profile-curation`).
+se retiró en el cambio `simplify-profile-curation`). En `identityCard.artist`, `coverThumbUrl` es la
+foto del artista (`artist.photo_url`, Commons con licencia verificada) o `null` si no tiene
+(`redesign-user-profile-phase1`); en los ítems de tipo artista de `pinned` sigue siendo `null`.
 **400** con `VALIDATION_ERROR` si hay más de 4, una nota demasiado larga o una entidad
 inexistente.
 
