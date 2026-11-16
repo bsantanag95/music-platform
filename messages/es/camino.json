@@ -70,7 +70,6 @@
   "railLabel": "Listas para completar",
   "railPrev": "Listas anteriores",
   "railNext": "Listas siguientes",
-  "profileSeeAll": "Ver las {count} listas",
   "itemsCount": "{count, plural, one {# álbum} other {# álbumes}}",
   "profileEmpty": "Este usuario todavía no tiene listas para completar visibles.",
   "prevPage": "Anterior",

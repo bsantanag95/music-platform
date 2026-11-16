@@ -5,6 +5,7 @@ import { StarRatingValue } from "@/components/social/StarRatingValue";
 import { formatStars } from "@/components/album/album-format";
 import { albumHref } from "@/lib/catalog-links";
 import type { ProfileReview } from "@/services/profiles/reviews";
+import { ProfileSectionHeading } from "./ProfileSectionHeading";
 
 interface ProfileReviewsProps {
   data: { reviews: ProfileReview[]; total: number } | null;
@@ -23,14 +24,11 @@ export async function ProfileReviews({ data }: ProfileReviewsProps) {
 
   return (
     <section id="resenas" className="flex w-full scroll-mt-[calc(var(--site-header-h,0px)+var(--profile-anchors-h,0px)+1rem)] flex-col gap-4">
-      <h2 className="font-display text-xl text-paper">{t("reviews.title")}</h2>
+      <ProfileSectionHeading title={t("reviews.title")} count={data.total} />
 
-      <ul className="flex flex-col gap-3">
+      <ul className="flex flex-col divide-y divide-ink-border">
         {data.reviews.map((entry) => (
-          <li
-            key={entry.id}
-            className="flex gap-3 rounded-lg border border-ink-border bg-ink-surface p-4 sm:gap-4"
-          >
+          <li key={entry.id} className="flex gap-3 py-3 first:pt-0 last:pb-0">
             <Link
               href={albumHref(entry.album.artistName, entry.album.title, entry.album.id)}
               className="group shrink-0"
@@ -38,14 +36,14 @@ export async function ProfileReviews({ data }: ProfileReviewsProps) {
               <CoverThumb
                 cover={entry.album.coverThumbUrl}
                 label=""
-                className="size-14 rounded-md border border-ink-border transition-colors group-hover:border-amber sm:size-16"
+                className="size-12 rounded border border-ink-border transition-colors group-hover:border-amber"
               />
             </Link>
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <div className="flex flex-wrap items-baseline gap-x-2">
                 <Link
                   href={albumHref(entry.album.artistName, entry.album.title, entry.album.id)}
-                  className="truncate font-display text-base text-paper underline decoration-ink-border decoration-1 underline-offset-4 transition-colors hover:text-amber hover:decoration-amber"
+                  className="truncate font-display text-sm text-paper underline decoration-ink-border decoration-1 underline-offset-4 transition-colors hover:text-amber hover:decoration-amber"
                 >
                   {entry.album.title}
                 </Link>
@@ -65,7 +63,7 @@ export async function ProfileReviews({ data }: ProfileReviewsProps) {
               {entry.title ? (
                 <p className="mt-0.5 font-display text-sm text-paper">{entry.title}</p>
               ) : null}
-              <p className="line-clamp-4 whitespace-pre-wrap font-body text-sm text-paper-muted">
+              <p className="line-clamp-2 whitespace-pre-wrap font-body text-sm text-paper-muted">
                 {entry.body}
               </p>
             </div>

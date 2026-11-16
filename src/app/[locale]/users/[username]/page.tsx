@@ -16,23 +16,18 @@ import { OwnerProfileBar } from "@/components/profiles/OwnerProfileBar";
 import {
   AffinitySection,
   AnchorsSection,
-  CaminosRail,
-  CollectionRail,
   ConcertsRail,
-  DiaryRail,
   FavoritesRail,
-  FeaturedReviewsSection,
   EditablePlaca,
   HeaderBackdropSection,
   IdentityCardSection,
   IdentityStripSection,
   InRotationSection,
-  Level3LinksSection,
-  ListsRail,
-  PinnedSection,
-  RatingHighlightsSection,
+  ListsCollectionRow,
   RecencySection,
+  ReviewsDiaryRow,
   SettingsCardSection,
+  StartRow,
 } from "./sections";
 import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
 import { withClientMessages } from "@/i18n/client-messages";
@@ -103,6 +98,8 @@ async function UserProfilePage({ params, searchParams }: UserProfilePageProps) {
       ? await mutualFollowersHint(effectiveViewerId, profile.id)
       : 0;
   const section = { username: profile.username, viewerId: effectiveViewerId, isOwn };
+  // Guardar/Seguir y Seguir mi progreso: solo para quien tiene sesión y no es el dueño (ni lo simula).
+  const canAct = authenticated && !isOwn && !previewing;
 
   // Perfil privado sin acceso: una sola tarjeta con la identidad extendida y el
   // estado exacto del visitante (`PrivateProfileCard`), nada más — no hay
@@ -199,49 +196,31 @@ async function UserProfilePage({ params, searchParams }: UserProfilePageProps) {
         <AnchorsSection username={section.username} viewerId={effectiveViewerId} />
       </Suspense>
 
-      <div className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-10 px-4 pt-8 xl:px-6">
+      <div className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-12 px-4 pt-8 xl:px-6">
         <Suspense fallback={null}>
           <IdentityStripSection profile={profile} viewerId={effectiveViewerId} />
         </Suspense>
 
-        {/* Nivel 2: exploración curada, resumida — puertas de entrada, no
-            el contenido completo. */}
-        <Streamed>
-          <PinnedSection ownerId={profile.id} isOwn={isOwn} />
-        </Streamed>
-        <Streamed>
-          <RatingHighlightsSection username={section.username} viewerId={effectiveViewerId} />
-        </Streamed>
-        <Streamed>
-          <FeaturedReviewsSection username={section.username} viewerId={effectiveViewerId} />
-        </Streamed>
+        {/* Nivel 2 en filas (openspec: redesign-user-profile-phase2): cada sección enlaza su
+            vista completa de Nivel 3 desde el título; no hay bloque de enlaces al final. */}
         <Streamed>
           <InRotationSection username={section.username} viewerId={effectiveViewerId} />
         </Streamed>
-
-        {/* Nivel 3: inmersión bajo demanda — estantes con tope y los enlaces
-            a las vistas completas. */}
         <Streamed>
-          <DiaryRail {...section} />
+          <StartRow ownerId={profile.id} {...section} />
+        </Streamed>
+        <Streamed>
+          <ReviewsDiaryRow {...section} />
         </Streamed>
         <Streamed>
           <FavoritesRail {...section} />
         </Streamed>
         <Streamed>
-          <ListsRail {...section} />
-        </Streamed>
-        <Streamed>
-          <CaminosRail {...section} />
-        </Streamed>
-        <Streamed>
-          <CollectionRail {...section} />
+          <ListsCollectionRow {...section} canAct={canAct} />
         </Streamed>
         <Streamed>
           <ConcertsRail {...section} />
         </Streamed>
-        <Suspense fallback={null}>
-          <Level3LinksSection username={section.username} viewerId={effectiveViewerId} />
-        </Suspense>
       </div>
     </>
   );

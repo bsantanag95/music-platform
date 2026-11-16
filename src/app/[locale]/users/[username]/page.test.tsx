@@ -9,13 +9,15 @@ import { OwnerProfileBar } from "@/components/profiles/OwnerProfileBar";
 import {
   AnchorsSection,
   EditablePlaca,
-  FeaturedReviewsSection,
+  FavoritesRail,
+  ConcertsRail,
+  ListsCollectionRow,
+  ReviewsDiaryRow,
   HeaderBackdropSection,
   IdentityCardSection,
   IdentityStripSection,
   InRotationSection,
-  PinnedSection,
-  RatingHighlightsSection,
+  StartRow,
   SettingsCardSection,
 } from "./sections";
 import type { ProfileView } from "@/services/profiles/profile-view";
@@ -62,22 +64,17 @@ vi.mock("./sections", () => ({
   EditablePlaca: () => null,
   SettingsCardSection: () => null,
   IdentityCardSection: () => null,
-  RatingHighlightsSection: () => null,
-  FeaturedReviewsSection: () => null,
+  StartRow: () => null,
+  ReviewsDiaryRow: () => null,
+  ListsCollectionRow: () => null,
   InRotationSection: () => null,
   IdentityStripSection: () => null,
   HeaderBackdropSection: () => null,
   AnchorsSection: () => null,
-  PinnedSection: () => null,
   RecencySection: () => null,
   AffinitySection: () => null,
-  DiaryRail: () => null,
   FavoritesRail: () => null,
-  ListsRail: () => null,
-  CaminosRail: () => null,
-  CollectionRail: () => null,
   ConcertsRail: () => null,
-  Level3LinksSection: () => null,
 }));
 
 function findElement(node: unknown, type: unknown): { props?: Record<string, unknown> } | null {
@@ -248,9 +245,9 @@ describe("UserProfilePage", () => {
 
     const tree = await render();
     expect(findElement(tree, IdentityCardSection)?.props?.isOwn).toBe(true);
-    expect(findElement(tree, PinnedSection)?.props?.isOwn).toBe(true);
+    expect(findElement(tree, StartRow)?.props?.isOwn).toBe(true);
     // Los estantes sin editor propio no reciben lápiz (spec: "Bloque sin editor").
-    expect(findElement(tree, RatingHighlightsSection)?.props?.isOwn).toBeUndefined();
+    expect(findElement(tree, ListsCollectionRow)?.props?.canAct).toBe(false);
     expect(findElement(tree, InRotationSection)?.props?.isOwn).toBeUndefined();
   });
 
@@ -271,7 +268,7 @@ describe("UserProfilePage", () => {
     expect(findElement(tree, ViewAsBanner)).not.toBeNull();
     // Las secciones editables tampoco reciben isOwn: el visitante simulado no edita.
     expect(findElement(tree, IdentityCardSection)?.props?.isOwn).toBe(false);
-    expect(findElement(tree, PinnedSection)?.props?.isOwn).toBe(false);
+    expect(findElement(tree, StartRow)?.props?.isOwn).toBe(false);
   });
 
   it("visitante que no es el dueño: sin modo edición, sin Ajustes ni banner", async () => {
@@ -301,8 +298,7 @@ describe("UserProfilePage", () => {
     expect(findElement(findElement(tree, ProfileHeader)?.props?.identity, IdentityCardSection)).not.toBeNull();
     expect(findElement(findElement(tree, ProfileHeader)?.props?.backdrop, HeaderBackdropSection)).not.toBeNull();
     expect(findElement(tree, AnchorsSection)).not.toBeNull();
-    expect(findElement(tree, PinnedSection)).not.toBeNull();
-    expect(findElement(tree, RatingHighlightsSection)).not.toBeNull();
+    expect(findElement(tree, StartRow)).not.toBeNull();
     expect(findElement(tree, InRotationSection)).not.toBeNull();
     expect(findElement(tree, IdentityStripSection)).not.toBeNull();
     expect(findElement(tree, SettingsCardSection)).toBeNull();
@@ -316,50 +312,11 @@ describe("UserProfilePage", () => {
 
     const tree = await render();
     expect(findElement(tree, IdentityCardSection)).not.toBeNull();
-    expect(findElement(tree, RatingHighlightsSection)).not.toBeNull();
-    expect(findElement(tree, FeaturedReviewsSection)).not.toBeNull();
+    expect(findElement(tree, ReviewsDiaryRow)).not.toBeNull();
     expect(findElement(tree, InRotationSection)).not.toBeNull();
     expect(findElement(tree, IdentityStripSection)).not.toBeNull();
     // Las capas del dueño se superponen a la misma estructura, no la reemplazan.
     expect(findElement(tree, OwnerEditProvider)).not.toBeNull();
-  });
-
-  it("vista del dueño: 'Reseñas' va después de los destacados y antes de 'En rotación'", async () => {
-    resolveSession.mockResolvedValue({ user: { id: "owner" } });
-    getProfileView.mockResolvedValue(
-      profile({ relation: "self", isOwner: true, accessible: true }),
-    );
-
-    const tree = await render();
-    expect(
-      orderOf(tree, [PinnedSection, FeaturedReviewsSection, InRotationSection]),
-    ).toEqual([PinnedSection, FeaturedReviewsSection, InRotationSection]);
-  });
-
-  it("vista pública: 'Reseñas' va después de los destacados y antes de 'En rotación'", async () => {
-    resolveSession.mockResolvedValue({ user: { id: "viewer" } });
-    getProfileView.mockResolvedValue(
-      profile({ relation: "following", accessible: true, profileVisibility: "public" }),
-    );
-
-    const tree = await render();
-    expect(
-      orderOf(tree, [PinnedSection, FeaturedReviewsSection, InRotationSection]),
-    ).toEqual([PinnedSection, FeaturedReviewsSection, InRotationSection]);
-  });
-
-  it("Tarjeta de Identidad va antes de Empieza por aquí, que abre el Nivel 2 antes de Valoraciones destacadas", async () => {
-    resolveSession.mockResolvedValue({ user: { id: "viewer" } });
-    getProfileView.mockResolvedValue(
-      profile({ profileVisibility: "public", relation: "following", accessible: true }),
-    );
-
-    const tree = await render();
-    expect(orderOf(tree, [IdentityCardSection, PinnedSection, RatingHighlightsSection])).toEqual([
-      IdentityCardSection,
-      PinnedSection,
-      RatingHighlightsSection,
-    ]);
   });
 
   it("visitante autenticado bloqueado fuera: calcula el hint y lo pasa al umbral", async () => {
@@ -377,11 +334,29 @@ describe("UserProfilePage", () => {
     getProfileView.mockResolvedValue(profile({ profileVisibility: "public", relation: "none", accessible: true }));
 
     const tree = await render();
-    expect(orderOf(tree, [ProfileHeader, AnchorsSection, IdentityStripSection, PinnedSection])).toEqual([
+    expect(orderOf(tree, [ProfileHeader, AnchorsSection, IdentityStripSection, StartRow])).toEqual([
       ProfileHeader,
       AnchorsSection,
       IdentityStripSection,
-      PinnedSection,
+      StartRow,
     ]);
+  });
+
+  it("Nivel 2 en filas: En rotación, Empieza | Valoraciones, Reseñas | Diario, Favoritos, Listas | Colección, Conciertos", async () => {
+    resolveSession.mockResolvedValue(null);
+    getProfileView.mockResolvedValue(profile({ profileVisibility: "public", relation: "none", accessible: true }));
+
+    const tree = await render();
+    const order = [IdentityStripSection, InRotationSection, StartRow, ReviewsDiaryRow, FavoritesRail, ListsCollectionRow, ConcertsRail];
+    expect(orderOf(tree, order)).toEqual(order);
+  });
+
+  it("solo un visitante con sesión que no es el dueño puede guardar o seguir listas", async () => {
+    resolveSession.mockResolvedValue(null);
+    getProfileView.mockResolvedValue(profile({ profileVisibility: "public", relation: "none", accessible: true }));
+    expect(findElement(await render(), ListsCollectionRow)?.props?.canAct).toBe(false);
+
+    resolveSession.mockResolvedValue({ user: { id: "viewer" } });
+    expect(findElement(await render(), ListsCollectionRow)?.props?.canAct).toBe(true);
   });
 });

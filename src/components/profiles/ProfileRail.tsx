@@ -1,26 +1,29 @@
 import type { ReactNode } from "react";
+import { ProfileSectionHeading } from "./ProfileSectionHeading";
 
 interface ProfileRailProps {
   label: string;
   /** Conteo visible junto al título (mono, apagado). */
   count?: number;
-  /** Ancla para los enlaces de Nivel 3 del perfil (spec `social-profiles`). */
+  /** Ancla para la barra de anclas del perfil (spec `social-profiles`). */
   id?: string;
+  /** Vista completa de Nivel 3 («Ver todo →»). */
+  more?: { href: string; label: string } | null;
   children: ReactNode;
 }
 
-// Encabezado uniforme de cada estante del perfil (diario, favoritos, listas,
-// colección): título en display + conteo en mono. El cuerpo lo aporta el
-// componente de lectura existente (`DiaryReadList`, `FavoritesPreview`, ...). Un
-// estante vacío no se renderiza: esa decisión vive en cada sección de la
-// página, no acá.
-export function ProfileRail({ label, count, id, children }: ProfileRailProps) {
+// Estante del cuerpo del perfil (diario, favoritos, listas, colección,
+// conciertos): el encabezado común —título, conteo y «Ver todo →»— y el cuerpo
+// que aporta cada vista previa. Un estante vacío no se renderiza: esa decisión
+// vive en cada sección de la página, no acá. Reserva la altura de la cabecera
+// del sitio y de la barra de anclas al saltar a su ancla.
+export function ProfileRail({ label, count, id, more, children }: ProfileRailProps) {
   return (
-    <section id={id} className="flex w-full scroll-mt-[calc(var(--site-header-h,0px)+var(--profile-anchors-h,0px)+1rem)] flex-col gap-4">
-      <div className="flex items-baseline gap-2">
-        <h2 className="font-display text-xl text-paper">{label}</h2>
-        {count != null && <span className="font-data text-xs text-paper-muted">{count}</span>}
-      </div>
+    <section
+      id={id}
+      className="flex w-full scroll-mt-[calc(var(--site-header-h,0px)+var(--profile-anchors-h,0px)+1rem)] flex-col gap-4"
+    >
+      <ProfileSectionHeading title={label} count={count} more={more} />
       {children}
     </section>
   );

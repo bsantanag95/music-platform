@@ -7,7 +7,6 @@
   "noResultsDescription": "Ningún favorito coincide con los filtros. Prueba quitar alguno.",
   "profileEmptyTitle": "Sin favoritos",
   "profileEmptyDescription": "Este usuario todavía no compartió favoritos visibles.",
-  "profileMoreButton": "Ver más favoritos",
   "addFavorite": "Marcar como favorito",
   "removeFavorite": "Quitar favorito",
   "quickAdded": "Agregado a favoritos",
@@ -71,5 +70,6 @@
     "private": "Privado",
     "followers": "Seguidores",
     "public": "Público"
-  }
+  },
+  "profileArtistKind": "Artista"
 }

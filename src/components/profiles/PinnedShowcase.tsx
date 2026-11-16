@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { ArtistPlate } from "@/components/favorites/ArtistPlate";
 import { targetHref } from "@/components/feed/feed-target";
+import { ProfileSectionHeading } from "./ProfileSectionHeading";
 import type { PinnedItem, ShowcaseEntityType } from "@/services/profiles/showcase";
 
 interface PinnedShowcaseProps {
@@ -28,10 +29,10 @@ export async function PinnedShowcase({ pinned }: PinnedShowcaseProps) {
 
   return (
     <section className="flex w-full flex-col gap-4">
-      <h2 className="font-display text-xl text-paper">{t("showcase.pinnedHeading")}</h2>
+      <ProfileSectionHeading title={t("showcase.pinnedHeading")} />
       <ul className="flex flex-col">
         {pinned.map((item) => (
-          <li key={item.id} className="border-t border-ink-border py-4 first:border-t-0 first:pt-0">
+          <li key={item.id} className="border-t border-ink-border py-3 first:border-t-0 first:pt-0">
             <Link
               href={targetHref(
                 item.entity.type,
@@ -44,13 +45,13 @@ export async function PinnedShowcase({ pinned }: PinnedShowcaseProps) {
               {item.entity.type === "artist" ? (
                 <ArtistPlate
                   title={item.entity.title}
-                  className="size-16 transition-colors group-hover:border-amber sm:size-22"
+                  className="size-14 transition-colors group-hover:border-amber"
                 />
               ) : (
                 <CoverThumb
                   cover={item.entity.coverThumbUrl}
                   label=""
-                  className="size-16 border border-ink-border transition-colors group-hover:border-amber sm:size-22"
+                  className="size-14 border border-ink-border transition-colors group-hover:border-amber"
                 />
               )}
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -64,7 +65,7 @@ export async function PinnedShowcase({ pinned }: PinnedShowcaseProps) {
                   <span className="font-data text-xs text-paper-muted">{item.entity.artistName}</span>
                 )}
                 {item.note && (
-                  <span className="mt-2 border-l-2 border-amber pl-3 font-body text-base italic text-paper">
+                  <span className="mt-1.5 border-l-2 border-amber pl-3 font-body text-sm italic text-paper">
                     {item.note}
                   </span>
                 )}

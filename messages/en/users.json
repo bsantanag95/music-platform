@@ -436,13 +436,6 @@
   "caminosTitle": "Lists to complete",
   "collectionTitle": "Physical collection",
   "level3": {
-    "navLabel": "Explore more of the profile",
-    "diary": "Full diary",
-    "favorites": "All favorites",
-    "lists": "All lists",
-    "caminos": "All lists to complete",
-    "collection": "Full physical collection",
-    "concerts": "All concerts",
     "fingerprint": "Full taste fingerprint"
   },
   "editPanel": {
@@ -948,5 +941,10 @@
     "favorites": "Favorites",
     "lists": "Lists",
     "collection": "Collection"
+  },
+  "seeAll": "See all",
+  "listsAndCaminos": {
+    "moreLists": "See all {count} lists",
+    "moreCaminos": "See all {count} lists to complete"
   }
 }

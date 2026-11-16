@@ -2,14 +2,11 @@ import type { ReactNode } from "react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { genreLocaleOf } from "@/services/genres/names";
 import { identityGenreLabels } from "@/services/genres/read";
-import { Link } from "@/i18n/navigation";
 import { listUserDiary } from "@/services/diary/diary";
-import { getFavoritesPreview, listUserFavorites } from "@/services/favorites/favorites";
+import { getFavoritesPreview } from "@/services/favorites/favorites";
 import { listUserLists } from "@/services/lists/lists";
-import { LISTS_PREVIEW_LIMIT } from "@/services/lists/types";
 import { listVisibleCaminos } from "@/services/camino/camino";
-import { CAMINOS_PREVIEW_LIMIT } from "@/services/camino/types";
-import { getCollectionPreview, listProfileCollection } from "@/services/collection/collection";
+import { getCollectionPreview } from "@/services/collection/collection";
 import { getConcertPreview } from "@/services/concerts/concerts";
 import { getTasteFingerprint } from "@/services/profiles/stats";
 import { getShowcase } from "@/services/profiles/showcase";
@@ -38,13 +35,12 @@ import { RatingHighlights } from "@/components/profiles/RatingHighlights";
 import { InRotation } from "@/components/profiles/InRotation";
 import { PinnedShowcase } from "@/components/profiles/PinnedShowcase";
 import { IdentityCard } from "@/components/profiles/IdentityCard";
-import { ProfileLevel3Links } from "@/components/profiles/ProfileLevel3Links";
 import { ProfileRail } from "@/components/profiles/ProfileRail";
 import { ProfileRecency } from "@/components/profiles/ProfileRecency";
-import { DiaryReadList } from "@/components/diary/DiaryReadList";
+import { DiaryPreviewTable } from "@/components/diary/DiaryPreviewTable";
 import { FavoritesPreview } from "@/components/favorites/FavoritesPreview";
-import { ListsCarousel } from "@/components/lists/ListsCarousel";
-import { CaminosCarousel } from "@/components/camino/CaminosCarousel";
+import { ListsAndCaminosPreview, LISTS_AND_CAMINOS_PREVIEW } from "@/components/profiles/ListsAndCaminosPreview";
+import { ProfileRow } from "@/components/profiles/ProfileRow";
 import { CollectionPreview } from "@/components/collection/CollectionPreview";
 import { ConcertsPreview } from "@/components/concerts/ConcertsPreview";
 
@@ -133,18 +129,6 @@ export async function EditablePlaca({
   );
 }
 
-// "Reseñas": las reseñas de álbum más recientes del dueño. Clúster de
-// identidad cultural — se rinde en los niveles autorizado y dueño, después de
-// "Empieza por aquí" y antes de "En rotación". Automática, no curada.
-// `getProfileReviews` devuelve null (y la sección no aparece) sin acceso o sin
-// reseñas (spec profile-reviews).
-export async function FeaturedReviewsSection({
-  username,
-  viewerId,
-}: Omit<SectionProps, "isOwn">) {
-  return <ProfileReviews data={await getProfileReviews(username, viewerId)} />;
-}
-
 // "En rotación": qué está sonando últimamente, derivado del diario. Se rinde
 // en los niveles autorizado y dueño, entre "Empieza por aquí" y la huella de
 // gusto. `getProfileInRotation` devuelve null (y la sección no aparece) sin
@@ -231,11 +215,12 @@ export async function HeaderBackdropSection({ ownerId }: { ownerId: string }) {
 // Nivel 3; independiente y con su propio <Suspense> en `page.tsx`.
 export async function AnchorsSection({ username, viewerId }: Omit<SectionProps, "isOwn">) {
   const t = await getTranslations("users");
-  const [diary, reviews, favorites, lists, collection] = await Promise.all([
+  const [diary, reviews, favorites, lists, caminos, collection] = await Promise.all([
     listUserDiary(username, viewerId, 1, 1),
     getProfileReviews(username, viewerId),
     getFavoritesPreview(username, viewerId),
     listUserLists(username, viewerId, 1, 1),
+    listVisibleCaminos(username, viewerId, 1, 1),
     getCollectionPreview(username, viewerId),
   ]);
   const favoritesTotal =
@@ -247,7 +232,10 @@ export async function AnchorsSection({ username, viewerId }: Omit<SectionProps, 
     items.push({ id: "resenas", label: t("anchors.reviews"), count: reviews.total });
   }
   if (favoritesTotal > 0) items.push({ id: "favoritos", label: t("anchors.favorites"), count: favoritesTotal });
-  if (lists.lists.length > 0) items.push({ id: "listas", label: t("anchors.lists"), count: lists.totalCount });
+  // «Listas y recorridos»: el ancla cuenta ambos, como el título de su sección.
+  if (lists.lists.length > 0 || caminos.caminos.length > 0) {
+    items.push({ id: "listas", label: t("anchors.lists"), count: lists.totalCount + caminos.totalCount });
+  }
   if (collection.totalEntries > 0) {
     items.push({ id: "coleccion", label: t("anchors.collection"), count: collection.totalEntries });
   }
@@ -296,16 +284,6 @@ export async function PinnedSection({ ownerId, isOwn = false }: { ownerId: strin
   );
 }
 
-// "Valoraciones destacadas" — Nivel 2 (spec `rating-highlights`): curaduría
-// consciente, visible más allá de la relación de seguimiento del visitante.
-export async function RatingHighlightsSection({
-  username,
-  viewerId,
-}: Omit<SectionProps, "isOwn">) {
-  const highlights = await getProfileRatingHighlights(username, viewerId);
-  return <RatingHighlights highlights={highlights} />;
-}
-
 export async function RecencySection({ username, viewerId }: Omit<SectionProps, "isOwn">) {
   return <ProfileRecency at={await getProfileRecency(username, viewerId)} />;
 }
@@ -316,26 +294,61 @@ export async function AffinitySection({ username, viewerId }: Omit<SectionProps,
   return <ProfileAffinity affinity={affinity} compact />;
 }
 
-export async function DiaryRail({ username, viewerId, isOwn }: SectionProps) {
-  const t = await getTranslations("users");
-  const tDiary = await getTranslations("diary");
-  const initial = await listUserDiary(username, viewerId, 1, 20);
-  if (initial.entries.length === 0) {
-    return isOwn ? <EmptyRailForOwner label={t("diaryTitle")} message={t("railEmptyOwn")} /> : null;
+/** Entradas del diario en la vista previa del perfil. */
+export const DIARY_PROFILE_PREVIEW = 5;
+
+// Las filas del cuerpo (spec social-profiles, "Cuerpo del perfil en filas"; openspec:
+// redesign-user-profile-phase2) deciden con datos si llevan una o dos secciones: con una
+// sola, ocupa la fila entera. Para el dueño, un estante vacío se muestra igual (con su
+// invitación a agregar), como antes.
+
+// «Empieza por aquí» | «Valoraciones destacadas». Sin ítems fijados, el bloque editable
+// vacío del dueño va solo, encima, para no reservar media fila en blanco cuando no edita.
+export async function StartRow({
+  ownerId,
+  username,
+  viewerId,
+  isOwn,
+}: SectionProps & { ownerId: string }) {
+  const [{ pinned }, highlights] = await Promise.all([
+    getShowcase(ownerId),
+    getProfileRatingHighlights(username, viewerId),
+  ]);
+  const pinnedNode = <PinnedSection ownerId={ownerId} isOwn={isOwn} />;
+  const highlightsNode = highlights.length > 0 ? <RatingHighlights highlights={highlights} /> : null;
+  if (pinned.length === 0) {
+    return (
+      <>
+        {isOwn && pinnedNode}
+        <ProfileRow start={null} end={highlightsNode} />
+      </>
+    );
   }
-  return (
-    <ProfileRail id="diario" label={t("diaryTitle")} count={initial.totalCount}>
-      <div className="flex w-full flex-col gap-3">
-        <DiaryReadList initial={initial} username={username} scrollable />
-        <Link
-          href={`/users/${username}/diary`}
-          className="self-start font-data text-xs text-paper-muted underline decoration-dotted underline-offset-2 transition-colors hover:text-paper"
-        >
-          {tDiary("profileViewFull")}
-        </Link>
-      </div>
-    </ProfileRail>
-  );
+  return <ProfileRow start={pinnedNode} end={highlightsNode} />;
+}
+
+// «Reseñas» | Diario (como tabla de sus entradas más recientes, sin caja con scroll).
+export async function ReviewsDiaryRow({ username, viewerId, isOwn }: SectionProps) {
+  const [t, reviews, diary] = await Promise.all([
+    getTranslations("users"),
+    getProfileReviews(username, viewerId),
+    listUserDiary(username, viewerId, 1, DIARY_PROFILE_PREVIEW),
+  ]);
+  const reviewsNode = reviews && reviews.reviews.length > 0 ? <ProfileReviews data={reviews} /> : null;
+  const diaryNode =
+    diary.entries.length > 0 ? (
+      <ProfileRail
+        id="diario"
+        label={t("diaryTitle")}
+        count={diary.totalCount}
+        more={{ href: `/users/${username}/diary`, label: t("seeAll") }}
+      >
+        <DiaryPreviewTable entries={diary.entries} />
+      </ProfileRail>
+    ) : isOwn ? (
+      <EmptyRailForOwner label={t("diaryTitle")} message={t("railEmptyOwn")} />
+    ) : null;
+  return <ProfileRow start={reviewsNode} end={diaryNode} />;
 }
 
 export async function FavoritesRail({ username, viewerId, isOwn }: SectionProps) {
@@ -348,66 +361,71 @@ export async function FavoritesRail({ username, viewerId, isOwn }: SectionProps)
     ) : null;
   }
   return (
-    <ProfileRail id="favoritos" label={t("favoritesTitle")} count={total}>
-      <FavoritesPreview username={username} preview={preview} />
+    <ProfileRail
+      id="favoritos"
+      label={t("favoritesTitle")}
+      count={total}
+      more={{ href: `/users/${username}/favorites`, label: t("seeAll") }}
+    >
+      <FavoritesPreview preview={preview} />
     </ProfileRail>
   );
 }
 
-export async function ListsRail({ username, viewerId, isOwn }: SectionProps) {
-  const t = await getTranslations("users");
-  const initial = await listUserLists(username, viewerId, 1, LISTS_PREVIEW_LIMIT);
-  if (initial.lists.length === 0) {
-    return isOwn ? <EmptyRailForOwner label={t("listsTitle")} message={t("railEmptyOwn")} /> : null;
-  }
-  return (
-    <ProfileRail id="listas" label={t("listsTitle")} count={initial.totalCount}>
-      <ListsCarousel lists={initial.lists} username={username} totalCount={initial.totalCount} />
-    </ProfileRail>
-  );
-}
-
-// Estante "Caminos": mismo molde que ListsRail, sobre `listVisibleCaminos`
-// (Caminos propios visibles, no archivados). Un Camino nunca cuenta como
-// "lista" en ningún otro estante ni conteo (openspec: add-camino).
-export async function CaminosRail({ username, viewerId, isOwn }: SectionProps) {
-  const t = await getTranslations("users");
-  const initial = await listVisibleCaminos(username, viewerId, 1, CAMINOS_PREVIEW_LIMIT);
-  if (initial.caminos.length === 0) {
-    return isOwn ? <EmptyRailForOwner label={t("caminosTitle")} message={t("railEmptyOwn")} /> : null;
-  }
-  return (
-    <ProfileRail id="caminos" label={t("caminosTitle")} count={initial.totalCount}>
-      <CaminosCarousel
-        caminos={initial.caminos}
+// «Listas y recorridos» | Colección física. Un Camino nunca cuenta como "lista" en otro
+// conteo (openspec: add-camino): el título suma ambos, cada «+N» enlaza su página.
+// `canAct`: visitante con sesión que no es el dueño ni la previsualización — el único que
+// ve Guardar/Seguir y Seguir mi progreso.
+export async function ListsCollectionRow({
+  username,
+  viewerId,
+  isOwn,
+  canAct,
+}: SectionProps & { canAct: boolean }) {
+  const [t, lists, caminos, collection] = await Promise.all([
+    getTranslations("users"),
+    listUserLists(username, viewerId, 1, LISTS_AND_CAMINOS_PREVIEW),
+    listVisibleCaminos(username, viewerId, 1, LISTS_AND_CAMINOS_PREVIEW),
+    getCollectionPreview(username, viewerId),
+  ]);
+  const hasLists = lists.lists.length > 0 || caminos.caminos.length > 0;
+  const listsNode = hasLists ? (
+    <ProfileRail
+      id="listas"
+      label={t("listsTitle")}
+      count={lists.totalCount + caminos.totalCount}
+      more={
+        lists.lists.length > 0
+          ? { href: `/users/${username}/lists`, label: t("seeAll") }
+          : { href: `/users/${username}/caminos`, label: t("seeAll") }
+      }
+    >
+      <ListsAndCaminosPreview
         username={username}
-        totalCount={initial.totalCount}
-        canTrack={!isOwn}
+        lists={lists.lists}
+        listsTotal={lists.totalCount}
+        caminos={caminos.caminos}
+        caminosTotal={caminos.totalCount}
+        canAct={canAct}
       />
     </ProfileRail>
-  );
-}
-
-// Estante "Colección": una previsualización con tope (5 artistas × 4 copias, los
-// de los que más copias tiene) y la puerta a `/users/[username]/collection`. El
-// conteo del encabezado es el total real de copias, no lo traído.
-export async function CollectionRail({ username, viewerId, isOwn }: SectionProps) {
-  const t = await getTranslations("users");
-  const preview = await getCollectionPreview(username, viewerId);
-  if (preview.totalEntries === 0) {
-    return isOwn ? (
+  ) : isOwn ? (
+    <EmptyRailForOwner label={t("listsTitle")} message={t("railEmptyOwn")} />
+  ) : null;
+  const collectionNode =
+    collection.totalEntries > 0 ? (
+      <ProfileRail
+        id="coleccion"
+        label={t("collectionTitle")}
+        count={collection.totalEntries}
+        more={{ href: `/users/${username}/collection`, label: t("seeAll") }}
+      >
+        <CollectionPreview artists={collection.artists} />
+      </ProfileRail>
+    ) : isOwn ? (
       <EmptyRailForOwner label={t("collectionTitle")} message={t("railEmptyOwn")} />
     ) : null;
-  }
-  return (
-    <ProfileRail id="coleccion" label={t("collectionTitle")} count={preview.totalEntries}>
-      <CollectionPreview
-        artists={preview.artists}
-        totalEntries={preview.totalEntries}
-        username={username}
-      />
-    </ProfileRail>
-  );
+  return <ProfileRow start={listsNode} end={collectionNode} />;
 }
 
 // Estante "Conciertos" (openspec: add-my-concerts): los últimos registros visibles y la puerta a
@@ -422,36 +440,5 @@ export async function ConcertsRail({ username, viewerId, isOwn }: SectionProps) 
     <ProfileRail id="conciertos" label={t("rail")} count={preview.total}>
       <ConcertsPreview entries={preview.entries} total={preview.total} username={username} />
     </ProfileRail>
-  );
-}
-
-// Puertas al Nivel 3 (spec `social-profiles`): comprueba livianamente qué
-// estantes tienen contenido para no enlazar a un ancla vacía. Independiente
-// y con su propio <Suspense> en `page.tsx`, igual que el resto de las
-// secciones — no bloquea ni depende de los estantes que referencia.
-export async function Level3LinksSection({ username, viewerId }: Omit<SectionProps, "isOwn">) {
-  const [diary, favorites, lists, caminos, collection, concerts, fingerprint] = await Promise.all([
-    listUserDiary(username, viewerId, 1, 1),
-    listUserFavorites(username, viewerId, 1, 1),
-    listUserLists(username, viewerId, 1, 1),
-    listVisibleCaminos(username, viewerId, 1, 1),
-    listProfileCollection(username, viewerId, 1, 1),
-    getConcertPreview(username, viewerId),
-    getTasteFingerprint(username, viewerId),
-  ]);
-
-  return (
-    <ProfileLevel3Links
-      username={username}
-      has={{
-        diary: diary.entries.length > 0,
-        favorites: favorites.favorites.length > 0,
-        lists: lists.lists.length > 0,
-        caminos: caminos.caminos.length > 0,
-        collection: collection.entries.length > 0,
-        concerts: concerts.total > 0,
-      }}
-      hasFingerprint={Boolean(fingerprint)}
-    />
   );
 }

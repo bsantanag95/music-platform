@@ -12,7 +12,6 @@
   "emptyDescription": "Registra una escucha de un artista, álbum o canción para que aparezca acá.",
   "profileEmptyTitle": "Sin entradas en el diario",
   "profileEmptyDescription": "Este usuario todavía no registró escuchas visibles.",
-  "profileViewFull": "Ver diario completo",
   "scrollRegionLabel": "Entradas del diario",
   "logInDiary": "Anotar en el diario",
   "signInToListen": "Iniciar sesión para registrar escuchas",
@@ -105,5 +104,9 @@
     "asOthersDescription": "Cada escucha se ve según su audiencia: las privadas solo las ves tú.",
     "asOthersLink": "Ver tu diario en el perfil"
   },
-  "yearInDiscs": "Tu {year} en discos"
+  "yearInDiscs": "Tu {year} en discos",
+  "profilePreviewCaption": "Entradas recientes del diario",
+  "profilePreviewDate": "Fecha",
+  "profilePreviewWork": "Obra",
+  "profilePreviewContext": "Escucha"
 }

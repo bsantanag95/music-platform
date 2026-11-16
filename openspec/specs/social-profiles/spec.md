@@ -253,18 +253,20 @@ en los niveles autorizado y dueño, organizados en tres niveles de profundidad:
   y la Tarjeta de Identidad (artista definitorio, álbum definitorio e himno; ver
   `profile-showcase`), y la franja de identidad (ficha, resumen de la huella de gusto y
   "Artistas seguidos").
-- **Nivel 2** (exploración de minutos, resumida): en este orden, "Empieza por aquí" (ver
-  `profile-showcase`), "Valoraciones destacadas" (ver `rating-highlights`), "Reseñas", "En
-  rotación" y un resumen de listas destacadas.
-- **Nivel 3** (inmersión bajo demanda, accesible desde enlaces del Nivel 2, nunca
-  precargada): la huella de gusto completa, el diario completo, todas las valoraciones,
-  todas las listas, los recorridos de artista y la colección física.
+- **Nivel 2** (exploración de minutos, resumida): en filas (ver "Cuerpo del perfil en
+  filas"), en este orden, "En rotación", "Empieza por aquí" (ver `profile-showcase`) con
+  "Valoraciones destacadas" (ver `rating-highlights`), "Reseñas" con el diario, Favoritos,
+  "Listas" con la colección física, y Conciertos.
+- **Nivel 3** (inmersión bajo demanda, accesible desde el enlace de cada sección del Nivel 2
+  o de la franja, nunca precargada): la huella de gusto completa, el diario completo, todas
+  las valoraciones, todas las listas, los recorridos de artista y la colección física.
 
-La sección "Empieza por aquí" SHALL ubicarse antes de "Valoraciones destacadas"; ésta antes
-de "Reseñas"; y "Reseñas" antes de "En rotación". "Artistas seguidos" SHALL ubicarse en la
-franja de identidad, antes de "Empieza por aquí". La huella de gusto completa (curvas y
-crestas) SHALL NOT renderizarse junto a estas secciones de Nivel 2: SHALL vivir en el
-Nivel 3, accesible mediante un enlace desde el perfil.
+"En rotación" SHALL ubicarse antes de "Empieza por aquí"; "Empieza por aquí" antes de
+"Valoraciones destacadas" (a su izquierda en la misma fila); y "Valoraciones destacadas"
+antes de "Reseñas". "Artistas seguidos" SHALL ubicarse en la franja de identidad, antes de
+todas las secciones del Nivel 2. La huella de gusto completa (curvas y crestas) SHALL NOT
+renderizarse junto a estas secciones de Nivel 2: SHALL vivir en el Nivel 3, accesible
+mediante un enlace desde el perfil.
 
 #### Scenario: Perfil privado sin autorización
 
@@ -281,8 +283,8 @@ Nivel 3, accesible mediante un enlace desde el perfil.
 #### Scenario: "Empieza por aquí" en el nivel autorizado
 
 - **WHEN** un visitante autorizado abre un perfil cuyo dueño tiene ítems en "Empieza por aquí"
-- **THEN** ve la sección como primera del Nivel 2; un visitante no autorizado de un perfil
-  privado no la ve
+- **THEN** ve la sección en el Nivel 2, después de "En rotación" y antes de "Valoraciones
+  destacadas"; un visitante no autorizado de un perfil privado no la ve
 
 #### Scenario: El perfil no repite álbumes favoritos
 
@@ -294,21 +296,21 @@ Nivel 3, accesible mediante un enlace desde el perfil.
 
 - **WHEN** un visitante autorizado abre un perfil cuyo dueño ha escrito al menos una reseña
   de álbum
-- **THEN** ve la sección "Reseñas" entre "Valoraciones destacadas" y "En rotación", dentro
-  del Nivel 2; un visitante no autorizado de un perfil privado no la ve
+- **THEN** ve la sección "Reseñas" después de "Valoraciones destacadas", junto al diario,
+  dentro del Nivel 2; un visitante no autorizado de un perfil privado no la ve
 
 #### Scenario: "En rotación" en el nivel autorizado
 
 - **WHEN** un visitante autorizado abre un perfil cuyo dueño tiene actividad de diario
   reciente visible para él que alcanza el umbral de rotación
-- **THEN** ve la sección "En rotación" después de "Reseñas", dentro del Nivel 2; un
-  visitante no autorizado de un perfil privado no la ve
+- **THEN** ve la sección "En rotación" como primera del Nivel 2, después de la franja de
+  identidad; un visitante no autorizado de un perfil privado no la ve
 
 #### Scenario: "Exploración" en el nivel autorizado
 
 - **WHEN** un visitante autorizado abre un perfil cuyo dueño sigue a al menos un artista
 - **THEN** ve esos artistas bajo "Artistas seguidos" en la franja de identidad, antes de
-  "Empieza por aquí"; un visitante no autorizado de un perfil privado no la ve
+  las secciones del Nivel 2; un visitante no autorizado de un perfil privado no la ve
 
 #### Scenario: Estado bloqueado
 
@@ -328,7 +330,8 @@ Nivel 3, accesible mediante un enlace desde el perfil.
 
 - **WHEN** un visitante autorizado abre un perfil cuyo dueño tiene valoraciones destacadas
   visibles para él
-- **THEN** ve la sección "Valoraciones destacadas" entre "Empieza por aquí" y "Reseñas"
+- **THEN** ve la sección "Valoraciones destacadas" junto a "Empieza por aquí" y antes de
+  "Reseñas"
 
 ### Requirement: Cabecera del perfil
 
@@ -391,4 +394,63 @@ cuando ninguna lo tiene.
 #### Scenario: Sin huella de gusto
 - **WHEN** la huella de gusto no tiene datos suficientes para el visitante
 - **THEN** la franja muestra la ficha y los artistas seguidos sin espacio vacío
+
+### Requirement: Cuerpo del perfil en filas
+
+En los niveles autorizado y dueño, después de la franja de identidad, el cuerpo del perfil
+SHALL componerse en filas a todo el ancho del contenedor, en este orden: "En rotación";
+"Empieza por aquí" junto a "Valoraciones destacadas"; "Reseñas" junto al diario; Favoritos;
+"Listas" (las listas y las listas para completar del dueño) junto a la colección física; y
+Conciertos. En una pantalla angosta, las secciones de una misma fila SHALL apilarse en ese
+orden. Cuando una de las dos secciones de una fila no tiene contenido, la otra SHALL ocupar la
+fila completa, sin hueco.
+
+Cada sección SHALL tener un título, su recuento cuando lo tiene y, cuando existe una vista
+completa de Nivel 3, un enlace a ella; SHALL NOT tener subtítulos ni numeración. Las vistas
+previas SHALL ser acotadas y legibles sin controles propios: el diario SHALL mostrarse como
+una tabla de sus entradas más recientes (fecha, obra y tipo de escucha) sin desplazamiento
+interno; Favoritos SHALL mostrar las carátulas de sus álbumes y, al lado, sus artistas y
+canciones; la colección física SHALL mostrar sus copias más recientes sin selector de modo de
+visualización (que sigue en la vista completa). El perfil SHALL NOT repetir al final un
+bloque aparte de enlaces a las vistas de Nivel 3.
+
+Las acciones que requieren sesión sobre el contenido ajeno del perfil (guardar o seguir una
+lista, seguir el progreso de una lista para completar) SHALL ofrecerse solo a un visitante autenticado
+que no es el dueño.
+
+#### Scenario: Filas completas en escritorio
+
+- **WHEN** un visitante autorizado abre en escritorio un perfil con contenido en todas las
+  secciones
+- **THEN** ve "En rotación", luego "Empieza por aquí" y "Valoraciones destacadas" lado a lado,
+  luego "Reseñas" y el diario lado a lado, Favoritos, "Listas" y la colección
+  física lado a lado, y Conciertos
+
+#### Scenario: Una sección de la fila vacía
+
+- **WHEN** el dueño no tiene valoraciones destacadas pero sí ítems en "Empieza por aquí"
+- **THEN** "Empieza por aquí" ocupa la fila completa
+
+#### Scenario: Diario sin caja de desplazamiento
+
+- **WHEN** un visitante autorizado ve el diario en el perfil
+- **THEN** ve una tabla con las entradas más recientes, completa sin desplazarse dentro de
+  ella, y un enlace al diario completo
+
+#### Scenario: Colección sin selector de vista
+
+- **WHEN** un visitante autorizado ve la colección física en el perfil
+- **THEN** ve sus copias más recientes sin selector de modo de visualización, con un enlace a
+  la colección completa, donde sí puede cambiarlo
+
+#### Scenario: Visitante sin sesión
+
+- **WHEN** un visitante sin sesión ve las listas y las listas para completar de un perfil público
+- **THEN** no se le ofrecen las acciones de guardar, seguir ni seguir el progreso
+
+#### Scenario: Sin bloque de enlaces al final
+
+- **WHEN** un visitante autorizado llega al final del perfil
+- **THEN** no encuentra una lista aparte de enlaces a las vistas completas: cada sección
+  enlaza la suya desde su título
 

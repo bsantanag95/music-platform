@@ -436,13 +436,6 @@
   "caminosTitle": "Listas para completar",
   "collectionTitle": "Colección física",
   "level3": {
-    "navLabel": "Explorar más del perfil",
-    "diary": "Diario completo",
-    "favorites": "Todos los favoritos",
-    "lists": "Todas las listas",
-    "caminos": "Todas las listas para completar",
-    "collection": "Colección física completa",
-    "concerts": "Todos los conciertos",
     "fingerprint": "Huella de gusto completa"
   },
   "editPanel": {
@@ -948,5 +941,10 @@
     "favorites": "Favoritos",
     "lists": "Listas",
     "collection": "Colección"
+  },
+  "seeAll": "Ver todo",
+  "listsAndCaminos": {
+    "moreLists": "Ver las {count} listas",
+    "moreCaminos": "Ver las {count} listas para completar"
   }
 }
