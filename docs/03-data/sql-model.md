@@ -908,6 +908,17 @@ favoritos" del perfil se eliminó porque repetía la fila de álbumes de Favorit
 Identidad es una referencia directa en `user_showcase` (migración `0030`), sin relación con
 esta tabla. El orden manual perdido no se puede reconstruir.
 
+## `user_showcase` — tono del perfil
+
+Una fila por usuario con el himno (`anthem_recording_id`) y el artista y álbum definitorios
+(`defining_artist_id`, `defining_release_group_id`, migración `0030`) de la Tarjeta de Identidad.
+
+- `profile_tone` (migración `0097`, cambio `redesign-user-profile-phase3`): color de acento del
+  perfil en hex `#rrggbb`, derivado de la carátula del álbum definitorio cuando el dueño lo elige
+  o lo cambia (`src/services/profiles/tone.ts`); `NULL` sin álbum, sin arte o sin matiz saturado
+  (el perfil usa el ámbar). `CHECK (profile_tone IS NULL OR profile_tone ~ '^#[0-9a-f]{6}$')`.
+  Dato derivado: se recalcula con `scripts/backfill-profile-tone.ts`.
+
 ## `user_list`
 
 **Propósito:** cabecera de una lista curada (Fase 5, cambio `add-favorites-and-lists`).

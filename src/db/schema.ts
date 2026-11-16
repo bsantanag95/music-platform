@@ -1754,6 +1754,9 @@ export const userShowcase = pgTable("user_showcase", {
   definingReleaseGroupId: uuid("defining_release_group_id").references(() => releaseGroup.id, {
     onDelete: "set null",
   }),
+  // Tono del perfil (openspec: redesign-user-profile-phase3, migración 0097): `#rrggbb`
+  // derivado de la carátula del álbum definitorio; NULL = ámbar del sitio. CHECK de formato en SQL.
+  profileTone: text("profile_tone"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

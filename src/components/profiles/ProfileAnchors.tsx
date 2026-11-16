@@ -55,7 +55,10 @@ export function ProfileAnchors({ label, items }: { label: string; items: Profile
                 href={`#${item.id}`}
                 aria-current={current ? "location" : undefined}
                 className={`inline-flex items-center gap-1.5 border-b-2 px-3 font-display text-[0.9375rem] transition-colors ${
-                  current ? "border-amber text-paper" : "border-transparent text-paper-muted hover:text-paper"
+                  // La marca de la sección activa usa el tono del perfil (ámbar si no tiene).
+                  current
+                    ? "border-[var(--profile-tone,var(--color-amber))] text-paper"
+                    : "border-transparent text-paper-muted hover:text-paper"
                 }`}
               >
                 {item.label}

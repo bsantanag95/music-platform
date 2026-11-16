@@ -23,6 +23,9 @@ import {
 import type { ProfileView } from "@/services/profiles/profile-view";
 // Compartir (add-share-foundation): carga datos de la base; acá no se prueba.
 vi.mock("@/components/share/ShareAction", () => ({ ShareAction: () => null }));
+// Tono del perfil (redesign-user-profile-phase3): guardado, se lee al componer.
+const getProfileTone = vi.fn();
+vi.mock("@/services/profiles/showcase", () => ({ getProfileTone: (id: string) => getProfileTone(id) }));
 vi.mock("@/services/share/metadata", () => ({ buildShareMetadata: async () => ({}), buildProfileShareMetadata: async () => ({}) }));
 vi.mock("@/services/profiles/renamed-redirect", () => ({ redirectIfRenamed: vi.fn().mockResolvedValue(undefined) }));
 
@@ -152,6 +155,7 @@ beforeEach(() => {
   mutualFollowersHint.mockResolvedValue(0);
   getMutualFollowersPreview.mockResolvedValue(null);
   getUserPermissions.mockResolvedValue([]);
+  getProfileTone.mockResolvedValue(null);
 });
 
 describe("UserProfilePage", () => {
@@ -358,5 +362,18 @@ describe("UserProfilePage", () => {
 
     resolveSession.mockResolvedValue({ user: { id: "viewer" } });
     expect(findElement(await render(), ListsCollectionRow)?.props?.canAct).toBe(true);
+  });
+
+  it("pone el tono guardado del perfil en --profile-tone; sin tono, nada (ámbar por defecto)", async () => {
+    resolveSession.mockResolvedValue(null);
+    getProfileView.mockResolvedValue(profile({ profileVisibility: "public", relation: "none", accessible: true }));
+
+    getProfileTone.mockResolvedValueOnce("#e0606a");
+    const toned = (await render()) as { props: { style?: Record<string, string> } };
+    expect(getProfileTone).toHaveBeenCalledWith("owner");
+    expect(toned.props.style).toEqual({ "--profile-tone": "#e0606a" });
+
+    const plain = (await render()) as { props: { style?: Record<string, string> } };
+    expect(plain.props.style).toBeUndefined();
   });
 });

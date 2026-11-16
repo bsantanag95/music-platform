@@ -215,3 +215,19 @@ request por cada 100 discos de cada artista con discografía sincronizada, y des
 request por cada disco `studio` que ningún artista cubrió (stubs de apariciones). Solo escribe
 `category` en las filas que cambian y lista cada cambio. Las ingestas nuevas ya aplican la
 regla (`mapReleaseGroupCategory`); el script se corre una vez por base.
+
+## `scripts/backfill-profile-tone.ts`
+
+Calcula el tono de los perfiles que ya tienen álbum definitorio (`user_showcase.profile_tone`,
+migración `0097`, cambio `redesign-user-profile-phase3`). El tono se calcula solo al elegir o
+cambiar el álbum; este script cubre los perfiles anteriores y sirve para recalcular si cambiaron
+las carátulas (espejo, retiros). Idempotente.
+
+```bash
+npx tsx --env-file=.env scripts/backfill-profile-tone.ts --dry-run
+npx tsx --env-file=.env scripts/backfill-profile-tone.ts
+```
+
+Lee cada carátula con `fetchImageBytes` (espejo propio o los hosts permitidos de las imágenes
+para compartir; ninguna salida nueva). Una carátula que no se puede descargar deja el tono como
+estaba; sin carátula o sin un matiz saturado, el perfil queda en ámbar (`NULL`).

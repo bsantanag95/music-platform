@@ -363,6 +363,23 @@ export async function clearDefiningEntity(userId: string, type: DefiningEntityTy
   if (type === "artist") {
     await db.update(userShowcase).set({ definingArtistId: null }).where(eq(userShowcase.userId, userId));
   } else {
-    await db.update(userShowcase).set({ definingReleaseGroupId: null }).where(eq(userShowcase.userId, userId));
+    // Sin álbum definitorio el perfil vuelve al ámbar (spec social-profiles, "Tono del perfil").
+    await db
+      .update(userShowcase)
+      .set({ definingReleaseGroupId: null, profileTone: null })
+      .where(eq(userShowcase.userId, userId));
   }
 }
+
+/**
+ * Tono guardado del perfil (`#rrggbb`), o `null` para el ámbar del sitio. Solo lee: el
+ * cálculo vive en `tone.ts` y corre al elegir el álbum definitorio, nunca al visitar.
+ */
+export const getProfileTone = cache(async (userId: string): Promise<string | null> => {
+  const [row] = await db
+    .select({ tone: userShowcase.profileTone })
+    .from(userShowcase)
+    .where(eq(userShowcase.userId, userId))
+    .limit(1);
+  return row?.tone ?? null;
+});

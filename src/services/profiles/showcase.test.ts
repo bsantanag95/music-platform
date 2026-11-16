@@ -144,13 +144,15 @@ describe("setDefiningEntity / clearDefiningEntity", () => {
     await expectCode(setDefiningEntity("u1", "artist", "no-existe"), "VALIDATION_ERROR");
   });
 
-  it("clearDefiningEntity limpia la columna del tipo dado, idempotente", async () => {
+  it("clearDefiningEntity limpia la columna del tipo dado, idempotente; quitar el álbum borra el tono", async () => {
     const set = vi.fn(() => ({ where: () => Promise.resolve(undefined) }));
     mocks.update.mockReturnValue({ set });
 
     await clearDefiningEntity("u1", "release-group");
+    expect(set).toHaveBeenCalledWith({ definingReleaseGroupId: null, profileTone: null });
 
-    expect(set).toHaveBeenCalledWith({ definingReleaseGroupId: null });
+    await clearDefiningEntity("u1", "artist");
+    expect(set).toHaveBeenLastCalledWith({ definingArtistId: null });
   });
 });
 
