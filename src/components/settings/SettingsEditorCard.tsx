@@ -45,14 +45,14 @@ export function SettingsEditorCard({ id, label, children }: SettingsEditorCardPr
         id={`settings-${id}`}
         aria-label={label}
         role="region"
-        className={`relative scroll-mt-36 rounded-lg border bg-ink-surface p-5 transition-colors ${
+        className={`relative scroll-mt-36 rounded-lg border bg-ink-surface px-5 pb-5 pt-9 transition-colors ${
           dirty ? "border-amber/60" : "border-ink-border"
         }`}
       >
         {dirty ? (
           <span
             role="status"
-            className="absolute right-4 top-3 font-data text-[11px] text-amber"
+            className="absolute right-5 top-3 font-data text-[11px] text-amber"
           >
             <span aria-hidden="true">● </span>
             {t("settings.unsaved.badge")}
