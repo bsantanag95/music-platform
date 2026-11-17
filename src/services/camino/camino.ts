@@ -80,6 +80,8 @@ export interface CaminoProfileSummary {
   coverThumbs: string[];
   /** Tracking propio del visitante sobre este Camino — `false` sin sesión. */
   tracking: boolean;
+  /** Audiencia del Camino: el perfil la marca solo para su dueño (redesign-owner-profile-phase2). */
+  audience: Audience;
 }
 
 interface CaminoRow {
@@ -403,6 +405,7 @@ export async function listVisibleCaminos(
         itemCount: enriched?.itemCount ?? 0,
         coverThumbs: enriched?.coverThumbs ?? [],
         tracking: trackingState.get(row.id)?.tracking ?? false,
+        audience: row.audience as Audience,
       };
     }),
     page,

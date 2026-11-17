@@ -12,6 +12,11 @@ vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children }: { href: string; children: ReactNode }) => <a href={href}>{children}</a>,
 }));
 vi.mock("./diary-row-parts", () => ({ DiaryCover: () => <span data-testid="cover" /> }));
+vi.mock("@/components/profiles/AudienceMark", () => ({
+  AudienceMark: ({ audience }: { audience: string }) =>
+    audience === "public" ? null : <span data-testid="audience-mark">{audience}</span>,
+}));
+
 
 const entry = (over: Partial<ListenEntry>): ListenEntry =>
   ({
@@ -40,5 +45,21 @@ describe("DiaryPreviewTable", () => {
     expect(screen.getByText("Discazo").tagName).toBe("Q");
     expect(screen.getAllByText("context.first_listen").length).toBeGreaterThan(0);
     expect(container.querySelector(".overflow-y-auto")).toBeNull();
+    expect(screen.queryByTestId("audience-mark")).not.toBeInTheDocument();
+  });
+
+  it("vista del dueño: marca las entradas que no son públicas", async () => {
+    render(
+      await DiaryPreviewTable({
+        entries: [
+          entry({ audience: "public" } as Partial<ListenEntry>),
+          entry({ id: "e2", audience: "followers" } as Partial<ListenEntry>),
+        ],
+        showAudience: true,
+      }),
+    );
+    const marks = screen.getAllByTestId("audience-mark");
+    expect(marks.length).toBeGreaterThan(0);
+    expect(marks.every((mark) => mark.textContent === "followers")).toBe(true);
   });
 });

@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { ListCard } from "@/components/lists/ListCard";
 import { TrackListButton } from "./TrackListButton";
 import type { CaminoProfileSummary } from "@/lib/api/schemas";
+import { AudienceMark } from "@/components/profiles/AudienceMark";
 
 // Tarjeta de un Camino en el perfil de OTRA persona (riel del Nivel 2 y
 // página dedicada): mismo `ListCard` genérico que usan las Listas, con la
@@ -14,12 +15,15 @@ export function CaminoProfileCard({
   username,
   canTrack = true,
   className,
+  showAudience = false,
 }: {
   camino: CaminoProfileSummary;
   username: string;
   /** `false` en el propio perfil del dueño — no se puede trackear el propio Camino. */
   canTrack?: boolean;
   className?: string;
+  /** Vista del dueño: marca el Camino si no es público (redesign-owner-profile-phase2). */
+  showAudience?: boolean;
 }) {
   const t = useTranslations("camino");
 
@@ -38,6 +42,12 @@ export function CaminoProfileCard({
             <>
               <span aria-hidden>·</span>
               <span>{camino.state === "complete" ? t("stateComplete") : t("stateInProgress")}</span>
+            </>
+          )}
+          {showAudience && camino.audience !== "public" && (
+            <>
+              <span aria-hidden>·</span>
+              <AudienceMark audience={camino.audience} />
             </>
           )}
         </>

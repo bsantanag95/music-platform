@@ -956,5 +956,19 @@
     "private": "Privado",
     "statusAria": "Visibilidad del perfil: {status}. Cambiarla en Privacidad y audiencia",
     "pendingRequests": "{count, plural, one {# solicitud para seguirte} other {# solicitudes para seguirte}}"
+  },
+  "ownerAdd": {
+    "listen": "Registrar",
+    "listenAria": "Registrar una escucha",
+    "favorite": "Agregar",
+    "favoriteAria": "Agregar un favorito",
+    "newList": "Nueva lista",
+    "newListAria": "Crear una lista",
+    "collection": "Agregar",
+    "collectionAria": "Agregar a la colección física"
+  },
+  "audienceMark": {
+    "followers": "Seguidores",
+    "private": "Solo tú"
   }
 }
