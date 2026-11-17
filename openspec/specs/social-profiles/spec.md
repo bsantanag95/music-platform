@@ -166,13 +166,14 @@ desde el menú de usuario.
 
 ### Requirement: Panel del dueño
 
-La vista del dueño SHALL incluir una tarjeta "Ajustes" que enlace al área de ajustes
-(`/me/settings`) y muestre un indicador con el número de solicitudes de seguimiento pendientes
-cuando sea mayor que cero, presentado como bandeja de entrada y no como métrica de logro. La
-tarjeta SHALL NOT listar las superficies de biblioteca (`/me/diary`, `/me/favorites`,
-`/me/lists`, `/me/collection` y similares), que se alcanzan desde el menú de usuario. La vista
-del dueño SHALL ofrecer una previsualización que muestre el perfil tal como lo ve un visitante
-público y tal como lo ve un visitante no autorizado.
+La cabecera del perfil, vista por su dueño, SHALL mostrar bajo los recuentos una línea con el
+número de solicitudes de seguimiento pendientes, enlazada a `/me/follow-requests`, cuando sea
+mayor que cero, presentada como bandeja de entrada y no como métrica de logro. La vista del dueño
+SHALL NOT incluir una tarjeta de acceso a los ajustes ni listar las superficies de biblioteca
+(`/me/diary`, `/me/favorites`, `/me/lists`, `/me/collection` y similares), que se alcanzan desde el
+menú de usuario; el acceso a Privacidad y audiencia es la marca de visibilidad junto al nombre (ver
+`profile-edit-mode`). La vista del dueño SHALL ofrecer una previsualización que muestre el perfil
+tal como lo ve un visitante público y tal como lo ve un visitante no autorizado.
 
 El conjunto de destinos de gestión de red y de cuenta (seguidores, seguidos, solicitudes de
 seguimiento, cuentas bloqueadas y ajustes) enlazados por el área de ajustes y el conjunto
@@ -184,13 +185,13 @@ del menú del Header, o las cuentas bloqueadas, propias del área de ajustes).
 #### Scenario: Solicitudes pendientes en el panel
 
 - **WHEN** el dueño abre su perfil y tiene solicitudes de seguimiento pendientes
-- **THEN** la tarjeta "Ajustes" muestra el número de solicitudes pendientes y la pantalla Red de
-  los ajustes lo muestra junto al enlace a `/me/follow-requests`
+- **THEN** bajo los recuentos ve cuántas solicitudes tiene, con un enlace a `/me/follow-requests`,
+  y la pantalla Red de los ajustes lo muestra junto al enlace a `/me/follow-requests`
 
 #### Scenario: Sin solicitudes pendientes
 
 - **WHEN** el dueño abre su perfil y no tiene solicitudes pendientes
-- **THEN** la tarjeta "Ajustes" no muestra ningún indicador numérico
+- **THEN** la cabecera no muestra ninguna línea ni indicador numérico de solicitudes
 
 #### Scenario: Previsualizar "cómo te ven"
 
