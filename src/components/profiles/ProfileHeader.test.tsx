@@ -262,6 +262,40 @@ describe("ProfileHeader", () => {
   });
 });
 
+describe("ProfileHeader: vista del dueño", () => {
+  it("las acciones del dueño reemplazan a seguir: sin FollowButton ni «Perfil propio»", async () => {
+    renderWithIntl(
+      await ProfileHeader({
+        profile: { ...base, relation: "self", isOwner: true },
+        authenticated: true,
+        ownerActions: <button type="button">editar-perfil</button>,
+        ownerStatus: { visibility: "public" },
+      }),
+    );
+    expect(screen.getByRole("button", { name: "editar-perfil" })).toBeInTheDocument();
+    expect(screen.queryByTestId("follow-button")).not.toBeInTheDocument();
+  });
+
+  it("marca de visibilidad junto al nombre, enlazada a Privacidad", async () => {
+    renderWithIntl(
+      await ProfileHeader({
+        profile: { ...base, relation: "self", isOwner: true },
+        authenticated: true,
+        ownerActions: <span />,
+        ownerStatus: { visibility: "private" },
+      }),
+    );
+    const status = screen.getByText("ownerHeader.private").closest("a");
+    expect(status).toHaveAttribute("href", "/me/settings/privacy");
+  });
+
+  it("un visitante no ve la marca de visibilidad", async () => {
+    renderWithIntl(await ProfileHeader({ profile: base, authenticated: true }));
+    expect(screen.queryByText(/ownerHeader\.(public|private)/)).not.toBeInTheDocument();
+    expect(screen.getByTestId("follow-button")).toBeInTheDocument();
+  });
+});
+
 describe("ProfileHeader: perfil privado sin acceso (locked)", () => {
   const privateProfile: ProfileView = {
     ...base,

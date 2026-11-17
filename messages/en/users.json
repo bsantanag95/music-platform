@@ -163,7 +163,6 @@
   "recencyLastSignal": "Last activity {ago}",
   "railEmptyOwn": "Nothing here yet.",
   "viewAs": {
-    "enter": "See how others see you",
     "banner": "You're viewing your profile as the public sees it.",
     "exit": "Back to your view"
   },
@@ -453,16 +452,8 @@
   "editMode": {
     "edit": "Edit",
     "editBlock": "Edit {block}",
-    "toggle": "Edit profile",
     "placa": "Your profile",
     "emptyBlock": "{block}: nothing here yet. Edit to add something."
-  },
-  "ownerBar": {
-    "label": "Your profile options",
-    "public": "Public profile",
-    "private": "Private profile",
-    "settings": "Settings",
-    "settingsHint": "Profile, privacy and network"
   },
   "settings": {
     "title": "Settings",
@@ -956,5 +947,14 @@
     "note": "If you follow @{username}, you'll also see what they share only with their followers.",
     "emptyTitle": "Nothing public yet",
     "empty": "If you follow @{username}, you'll see what they share only with their followers."
+  },
+  "ownerHeader": {
+    "edit": "Edit profile",
+    "done": "Done",
+    "viewAsVisitor": "View as visitor",
+    "public": "Public",
+    "private": "Private",
+    "statusAria": "Profile visibility: {status}. Change it in Privacy and audience",
+    "pendingRequests": "{count, plural, one {# follow request} other {# follow requests}}"
   }
 }

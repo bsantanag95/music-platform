@@ -11,7 +11,7 @@ import {
   ListsCollectionRow,
   PinnedSection,
   ReviewsDiaryRow,
-  SettingsCardSection,
+  OwnerRequestsSection,
   StartRow,
   DIARY_PROFILE_PREVIEW,
 } from "./sections";
@@ -29,7 +29,7 @@ import { ProfileAnchors } from "@/components/profiles/ProfileAnchors";
 import { IdentityCard } from "@/components/profiles/IdentityCard";
 import { ProfileAffinity } from "@/components/profiles/ProfileAffinity";
 import { EditableBlock } from "@/components/profiles/EditableBlock";
-import { OwnerSettingsCard } from "@/components/profiles/OwnerSettingsCard";
+import { render, screen } from "@testing-library/react";
 import { OwnerIdentityCardEditor } from "@/components/profiles/OwnerIdentityCardEditor";
 import { OwnerAvatarEditor } from "@/components/profiles/OwnerAvatarEditor";
 import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
@@ -574,13 +574,16 @@ describe("secciones editables del dueño", () => {
     expect(inner?.[4]?.props?.initialLinks).toBe(profile.links);
   });
 
-  it("SettingsCardSection: cuenta las solicitudes pendientes del dueño y las pasa a la tarjeta", async () => {
+  it("OwnerRequestsSection: con solicitudes, una línea a /me/follow-requests con el recuento", async () => {
     svc.countPendingFollowRequests.mockResolvedValue(3);
-
-    const tree = (await SettingsCardSection({ ownerId: "owner" })) as { type?: unknown; props?: { pendingRequests?: number } };
-
+    const tree = await OwnerRequestsSection({ ownerId: "owner" });
     expect(svc.countPendingFollowRequests).toHaveBeenCalledWith("owner");
-    expect(tree.type).toBe(OwnerSettingsCard);
-    expect(tree.props?.pendingRequests).toBe(3);
+    render(<>{tree}</>);
+    expect(screen.getByText(/ownerHeader\.pendingRequests/)).toBeInTheDocument();
+  });
+
+  it("OwnerRequestsSection: sin solicitudes no dibuja nada", async () => {
+    svc.countPendingFollowRequests.mockResolvedValue(0);
+    expect(await OwnerRequestsSection({ ownerId: "owner" })).toBeNull();
   });
 });

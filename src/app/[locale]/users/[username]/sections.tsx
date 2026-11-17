@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { getLocale, getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { genreLocaleOf } from "@/services/genres/names";
 import { identityGenreLabels } from "@/services/genres/read";
 import { listUserDiary } from "@/services/diary/diary";
@@ -19,7 +20,6 @@ import { getProfileRatingHighlights } from "@/services/rating-highlights/rating-
 import { countPendingFollowRequests } from "@/services/social/following";
 import type { ProfileView } from "@/services/profiles/profile-view";
 import { ProfileAffinity } from "@/components/profiles/ProfileAffinity";
-import { OwnerSettingsCard } from "@/components/profiles/OwnerSettingsCard";
 import { EditableBlock } from "@/components/profiles/EditableBlock";
 import { OwnerAvatarEditor } from "@/components/profiles/OwnerAvatarEditor";
 import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
@@ -65,9 +65,20 @@ function EmptyRailForOwner({ label, message }: { label: string; message: string 
   );
 }
 
-// Tarjeta de acceso al área de ajustes (reemplaza al panel de atajos).
-export async function SettingsCardSection({ ownerId }: { ownerId: string }) {
-  return <OwnerSettingsCard pendingRequests={await countPendingFollowRequests(ownerId)} />;
+// Solicitudes de seguimiento pendientes del dueño, como una línea bajo los recuentos de la
+// cabecera (openspec: redesign-owner-profile-phase1; spec social-profiles, "Panel del dueño").
+// Bandeja de entrada, no métrica: sin solicitudes no dibuja nada.
+export async function OwnerRequestsSection({ ownerId }: { ownerId: string }) {
+  const count = await countPendingFollowRequests(ownerId);
+  if (count === 0) return null;
+  const t = await getTranslations("users");
+  return (
+    <p className="font-data text-xs">
+      <Link href="/me/follow-requests" className="text-amber transition-colors hover:text-amber-hover">
+        {t("ownerHeader.pendingRequests", { count })} <span aria-hidden="true">→</span>
+      </Link>
+    </p>
+  );
 }
 
 // Los bloques visibles del perfil que el dueño puede editar sobre el propio

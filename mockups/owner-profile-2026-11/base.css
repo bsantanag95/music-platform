@@ -1,0 +1,65 @@
+/* Base compartida de los mockups de la vista del dueño (2026-11).
+   Mismos tokens y tipografías que el sitio y que los mockups del perfil (D2). */
+:root {
+  --ink: #14120f; --s1: #1f1b17; --s2: #26221d; --line: #2e2a24; --line-2: #3b362f;
+  --paper: #f2ede4; --muted: #a89e8e; --amber: #e8b84b; --amber-2: #f2c866; --petrol: #5b9494;
+  --display: "Space Grotesk", system-ui, sans-serif; --body: "Source Serif 4", Georgia, serif; --data: "IBM Plex Mono", ui-monospace, monospace;
+  --wrap: 1280px; --pad: clamp(16px, 3.5vw, 40px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { overflow-x: hidden; }
+body { background: var(--ink); color: var(--paper); font-family: var(--display); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; padding-bottom: 72px; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 4px; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+ul, ol, dl { list-style: none; }
+img { display: block; }
+.wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 var(--pad); }
+.mono { font-family: var(--data); font-size: 12px; color: var(--muted); }
+.eyebrow { font-family: var(--data); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.cv { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; background: var(--s1); }
+
+/* Cabecera del sitio */
+header.site { position: sticky; top: 0; z-index: 30; background: rgba(20,18,15,.85); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
+header.site .wrap { display: flex; align-items: center; gap: 24px; height: 60px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+.brand i { width: 30px; height: 30px; border-radius: 7px; background: var(--amber); display: grid; place-items: center; color: var(--ink); font-style: normal; font-size: 15px; }
+header.site nav { display: flex; gap: 20px; color: var(--muted); font-size: 15px; }
+.hsearch { margin-left: auto; width: 340px; height: 38px; border: 1px solid var(--line-2); border-radius: 8px; display: flex; align-items: center; padding: 0 12px; color: var(--muted); font-size: 14px; background: var(--s1); }
+.hauth { display: flex; gap: 10px; align-items: center; font-size: 14px; }
+
+/* Botones */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 8px; font-weight: 600; font-size: 14px; white-space: nowrap; transition: background-color .2s, border-color .2s; }
+.btn svg { width: 17px; height: 17px; }
+.btn-amber { background: var(--amber); color: var(--ink); }
+.btn-amber:hover { background: var(--amber-2); }
+.btn-line { border: 1px solid var(--line-2); }
+.btn-line:hover { border-color: var(--muted); }
+.btn-quiet { color: var(--muted); border: 1px solid var(--line); cursor: default; }
+.icon-btn { width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--line-2); display: grid; place-items: center; color: var(--muted); }
+.icon-btn svg { width: 18px; height: 18px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border: 1px solid var(--line-2); border-radius: 999px; font-family: var(--data); font-size: 12px; color: var(--muted); white-space: nowrap; }
+.chip svg { width: 13px; height: 13px; }
+.link-mono { font-family: var(--data); font-size: 12px; color: var(--muted); text-decoration: underline dotted; text-underline-offset: 3px; }
+.link-mono:hover { color: var(--paper); }
+
+/* Avatar y monograma */
+.avatar { border-radius: 50%; object-fit: cover; border: 3px solid var(--ink); box-shadow: 0 0 0 1px var(--line-2); flex: none; }
+.mono-av { border-radius: 50%; display: grid; place-items: center; background: #2a2318; color: var(--amber); font-family: var(--body); font-size: 44px; border: 3px solid var(--ink); box-shadow: 0 0 0 1px var(--line-2); flex: none; }
+
+/* Estados de la demo: `demo.js` pone `hidden` a lo que no corresponde a quien mira. */
+[hidden] { display: none !important; }
+
+/* Barra de la demo (no es parte del diseño) */
+.mock-bar { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 50; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; max-width: calc(100vw - 16px); padding: 5px; background: rgba(31,27,23,.96); border: 1px solid var(--line-2); border-radius: 10px; font-family: var(--data); font-size: 11px; box-shadow: 0 10px 30px -10px #000; }
+.mock-bar a, .mock-bar button { padding: 5px 8px; border-radius: 6px; color: var(--muted); }
+.mock-bar a[aria-current], .mock-bar button[aria-pressed="true"] { background: var(--s2); color: var(--paper); }
+.mock-bar .sep { width: 1px; background: var(--line-2); margin: 2px 3px; }
+
+@media (max-width: 860px) {
+  header.site nav, .hsearch, .hauth .lang { display: none; }
+  .hauth { margin-left: auto; }
+}
+@media (max-width: 520px) {
+  .hauth .login { display: none; }
+}

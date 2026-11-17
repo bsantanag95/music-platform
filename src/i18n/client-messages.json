@@ -6717,7 +6717,6 @@
     "users.editMode.edit",
     "users.editMode.editBlock",
     "users.editMode.emptyBlock",
-    "users.editMode.toggle",
     "users.editPanel.close",
     "users.editPanel.discardCancel",
     "users.editPanel.discardConfirm",
@@ -6803,10 +6802,9 @@
     "users.mutualFollowersRow.modalClose",
     "users.mutualFollowersRow.modalLoading",
     "users.ownProfile",
-    "users.ownerBar.label",
-    "users.ownerBar.private",
-    "users.ownerBar.public",
-    "users.ownerBar.settings",
+    "users.ownerHeader.done",
+    "users.ownerHeader.edit",
+    "users.ownerHeader.viewAsVisitor",
     "users.reject",
     "users.report",
     "users.reportReasonLabel",
@@ -6837,8 +6835,7 @@
     "users.suspendSent",
     "users.suspendSubmit",
     "users.unblock",
-    "users.unfollow",
-    "users.viewAs.enter"
+    "users.unfollow"
   ],
   "users/[username]/song/[id]/page": [
     "share.button",

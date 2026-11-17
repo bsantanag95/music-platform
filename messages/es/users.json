@@ -163,7 +163,6 @@
   "recencyLastSignal": "Última señal {ago}",
   "railEmptyOwn": "Todavía no hay nada acá.",
   "viewAs": {
-    "enter": "Ver cómo te ven",
     "banner": "Estás viendo tu perfil como lo ve el público.",
     "exit": "Volver a tu vista"
   },
@@ -453,16 +452,8 @@
   "editMode": {
     "edit": "Editar",
     "editBlock": "Editar {block}",
-    "toggle": "Editar perfil",
     "placa": "Tu perfil",
     "emptyBlock": "{block}: todavía no hay nada acá. Edita para agregar."
-  },
-  "ownerBar": {
-    "label": "Opciones de tu perfil",
-    "public": "Perfil público",
-    "private": "Perfil privado",
-    "settings": "Ajustes",
-    "settingsHint": "Perfil, privacidad y red"
   },
   "settings": {
     "title": "Ajustes",
@@ -956,5 +947,14 @@
     "note": "Si sigues a @{username}, verás también lo que comparte solo con sus seguidores.",
     "emptyTitle": "Nada público por ahora",
     "empty": "Si sigues a @{username}, verás lo que comparte solo con sus seguidores."
+  },
+  "ownerHeader": {
+    "edit": "Editar perfil",
+    "done": "Listo",
+    "viewAsVisitor": "Ver como visitante",
+    "public": "Público",
+    "private": "Privado",
+    "statusAria": "Visibilidad del perfil: {status}. Cambiarla en Privacidad y audiencia",
+    "pendingRequests": "{count, plural, one {# solicitud para seguirte} other {# solicitudes para seguirte}}"
   }
 }

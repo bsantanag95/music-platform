@@ -12,6 +12,7 @@ import { countryName, EMPTY_PERSONAL_INFO, isPronounSet } from "@/lib/personal-i
 import { isBlockedState, type PrivateState } from "@/components/profiles/private-state";
 import { LockIcon } from "@/components/profiles/LockIcon";
 import type { ProfileView } from "@/services/profiles/profile-view";
+import type { ProfileVisibility } from "@/services/social/types";
 import type { MutualFollowersPreview } from "@/services/profiles/affinity";
 
 // Tono del perfil (spec social-profiles, "Tono del perfil"): `--profile-tone` lo pone la página;
@@ -49,6 +50,13 @@ interface ProfileHeaderProps {
    * solo quedan avatar, nombre y usuario.
    */
   locked?: { state: PrivateState };
+  /**
+   * Acciones del dueño (openspec: redesign-owner-profile-phase1): ocupan el lugar de la acción de
+   * seguir. Solo las pasa `page.tsx` al dueño real, no en la previsualización.
+   */
+  ownerActions?: ReactNode;
+  /** Visibilidad del perfil, para la marca del dueño junto al nombre (enlaza a Privacidad). */
+  ownerStatus?: { visibility: ProfileVisibility };
 }
 
 // Cabecera del perfil accesible (público, seguidor aprobado o dueño), a todo el
@@ -72,6 +80,8 @@ export async function ProfileHeader({
   backdrop,
   wrapDetails,
   locked,
+  ownerActions,
+  ownerStatus,
 }: ProfileHeaderProps) {
   const t = await getTranslations("users");
   // Sin acceso: país, ciudad y pronombres son de quien tiene acceso (spec profile-personal-info);
@@ -121,6 +131,21 @@ export async function ProfileHeader({
             >
               {name}
             </h1>
+            {ownerStatus && (
+              <Link
+                href="/me/settings/privacy"
+                aria-label={t("ownerHeader.statusAria", {
+                  status: ownerStatus.visibility === "private" ? t("ownerHeader.private") : t("ownerHeader.public"),
+                })}
+                className="inline-flex items-center gap-1.5 rounded-full border border-ink-border px-2.5 py-0.5 font-data text-xs text-paper-muted transition-colors hover:border-paper-muted hover:text-paper"
+              >
+                <span
+                  aria-hidden="true"
+                  className={`size-1.5 rounded-full ${ownerStatus.visibility === "private" ? "bg-amber" : "bg-petrol"}`}
+                />
+                {ownerStatus.visibility === "private" ? t("ownerHeader.private") : t("ownerHeader.public")}
+              </Link>
+            )}
             {locked && (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-ink-border px-2.5 py-0.5 font-data text-xs text-paper-muted">
                 <LockIcon />
@@ -155,7 +180,8 @@ export async function ProfileHeader({
       {!minimal && (
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
           <div className="flex flex-wrap items-center gap-2">
-            {!locked && (
+            {ownerActions}
+            {!locked && !ownerActions && (
               <FollowButton
                 username={profile.username}
                 relation={profile.relation}
@@ -216,11 +242,13 @@ export async function ProfileHeader({
     </div>
   );
 
+  // `overflow-clip`, no `overflow-hidden`: el fondo de carátula sobresale 64 px y un contenedor
+  // `hidden` sigue siendo desplazable, así que el foco podía correr la cabecera de lado.
   return (
     <section
       id="perfil"
       aria-labelledby="profile-name"
-      className={`relative isolate w-full scroll-mt-[var(--site-header-h)] overflow-hidden border-b border-ink-border bg-gradient-to-b from-ink-surface/50 to-ink ${TONE_LINE}`}
+      className={`relative isolate w-full scroll-mt-[var(--site-header-h)] overflow-clip border-b border-ink-border bg-gradient-to-b from-ink-surface/50 to-ink ${TONE_LINE}`}
     >
       {backdrop}
       <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 pb-8 pt-8 sm:pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,27.5rem)] lg:items-center lg:gap-16 xl:px-6">

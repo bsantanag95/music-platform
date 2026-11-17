@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta A · Cabecera del dueño — vista del dueño</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="profile.css">
+<style>
+.status { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border: 1px solid var(--line-2); border-radius: 999px; font-family: var(--data); font-size: 12px; color: var(--muted); }
+.status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--petrol); }
+.status:hover { color: var(--paper); border-color: var(--muted); }
+.inbox { margin-top: 14px; font-family: var(--data); font-size: 12px; color: var(--amber); }
+.edit-on { background: var(--amber); color: var(--ink); border-color: var(--amber); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; font-family: var(--data); font-size: 11px; color: var(--muted); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 13v6h14v-6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-ig" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3.6" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+<header class="site"><div class="wrap">
+  <a class="brand" href="#"><i>♪</i>music-platform</a>
+  <nav><a href="#">Explorar</a><a href="#">Listas</a><a href="#">Comunidad</a></nav>
+  <div class="hsearch">Buscar artistas</div>
+  <div class="hauth"><span class="lang mono">ES · EN</span><a class="btn btn-line" href="#" style="height:34px;color:var(--amber)">+ Añadir</a><img class="avatar" src="assets/avatar.webp" alt="" style="width:30px;height:30px;border-width:0"></div>
+</div></header>
+<section class="stage" aria-labelledby="name"><div class="bd" aria-hidden="true"></div><div class="wrap">
+  <div><div class="details" data-only="view panel">
+    <div class="who">
+      <img class="avatar" src="assets/avatar.webp" alt="">
+      <div style="min-width:0">
+        <div class="nm"><h1 id="name">besantanag95</h1><a class="status" href="#" title="Cambiar en Ajustes · Privacidad">Público</a></div>
+        <p class="handle"><span>@besantanag95</span><span>él</span><span>Quilpué, Chile</span><span>Desde agosto de 2026</span></p>
+      </div>
+    </div>
+    <blockquote class="bio"><b>«</b>Me gusta la música ochentera<b>»</b></blockquote>
+    <div class="row-acts">
+      <div class="acts"><a class="btn btn-line" href="#edit"><svg><use href="#i-pen"/></svg>Editar perfil</a><a class="btn btn-line" href="#"><svg><use href="#i-eye"/></svg>Ver como visitante</a><a class="btn btn-line" href="#"><svg><use href="#i-share"/></svg>Compartir</a><a class="icon-btn" href="#" aria-label="Instagram"><svg><use href="#i-ig"/></svg></a></div>
+      <p class="stats"><a href="#"><b>2</b>seguidores</a><a href="#"><b>3</b>siguiendo</a></p>
+    </div>
+    <p class="inbox"><a href="#">2 solicitudes para seguirte →</a></p>
+  </div>
+  <div class="details editable" data-only="edit"><button class="pen" type="button"><svg width="13" height="13"><use href="#i-pen"/></svg>Editar</button>
+    <div class="who">
+      <img class="avatar" src="assets/avatar.webp" alt="">
+      <div style="min-width:0">
+        <div class="nm"><h1 id="name">besantanag95</h1><a class="status" href="#">Público</a></div>
+        <p class="handle"><span>@besantanag95</span><span>él</span><span>Quilpué, Chile</span><span>Desde agosto de 2026</span></p>
+      </div>
+    </div>
+    <blockquote class="bio"><b>«</b>Me gusta la música ochentera<b>»</b></blockquote>
+    <div class="row-acts">
+      <div class="acts"><a class="btn edit-on" href="#view"><svg><use href="#i-check"/></svg>Listo</a><a class="btn btn-line" href="#"><svg><use href="#i-share"/></svg>Compartir</a><a class="icon-btn" href="#" aria-label="Instagram"><svg><use href="#i-ig"/></svg></a></div>
+      <p class="stats"><a href="#"><b>2</b>seguidores</a><a href="#"><b>3</b>siguiendo</a></p>
+    </div>
+  </div></div>
+  <div data-only="view panel"><section class="idc">
+      <h2>Identidad musical</h2>
+      <ul>
+        <li><img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/Chappell_Roan%2C_20_August_2025_106_%28cropped%29.jpg/500px-Chappell_Roan%2C_20_August_2025_106_%28cropped%29.jpg" alt=""><span class="k">Artista</span><span class="t">Chappell Roan</span></li>
+        <li><img src="assets/rise.webp" alt=""><span class="k">Álbum</span><span class="t">The Rise and Fall of a Midwest Princess</span><span class="a">Chappell Roan</span></li>
+        <li><img src="assets/taste.webp" alt=""><span class="k">Himno</span><span class="t">Taste</span><span class="a">Sabrina Carpenter</span></li>
+      </ul>
+    </section></div><div data-only="edit"><section class="idc editable"><button class="pen" type="button"><svg width="13" height="13"><use href="#i-pen"/></svg>Editar</button>
+      <h2>Identidad musical</h2>
+      <ul>
+        <li><img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/Chappell_Roan%2C_20_August_2025_106_%28cropped%29.jpg/500px-Chappell_Roan%2C_20_August_2025_106_%28cropped%29.jpg" alt=""><span class="k">Artista</span><span class="t">Chappell Roan</span></li>
+        <li><img src="assets/rise.webp" alt=""><span class="k">Álbum</span><span class="t">The Rise and Fall of a Midwest Princess</span><span class="a">Chappell Roan</span></li>
+        <li><img src="assets/taste.webp" alt=""><span class="k">Himno</span><span class="t">Taste</span><span class="a">Sabrina Carpenter</span></li>
+      </ul>
+    </section></div>
+</div></section>
+<nav class="anchors" aria-label="Secciones"><div class="wrap">
+  <a href="#" aria-current="true">Resumen</a><a href="#">Diario <span>70</span></a><a href="#">Reseñas <span>13</span></a><a href="#">Favoritos <span>27</span></a><a href="#">Listas <span>23</span></a><a href="#">Colección <span>13</span></a>
+</div></nav>
+<main class="wrap body">
+<div data-only="view panel"><div class="strip">
+      <section>
+        <p class="eyebrow">Ficha</p>
+        <dl><div><dt>Soy</dt><dd>Oyente · Coleccionista · Músico</dd></div><div><dt>Géneros</dt><dd>rock · metal · hard rock</dd></div>
+        <div><dt>Escucho en</dt><dd>Vinilo · CD · Streaming</dd></div><div><dt>1.er show</dt><dd><i style="font-family:var(--body)">Deep Purple</i></dd></div></dl>
+      </section>
+      <section><p class="eyebrow">Huella de gusto</p><p class="big">2020s</p><p class="s">Su familia más presente es Rock, sobre todo hard rock.</p></section>
+      <section><p class="eyebrow">Artistas seguidos</p>
+        <div class="artists"><span><i style="background-image:url(assets/ratt.webp)"></i>Ratt</span><span><i style="background-image:url(https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/Chappell_Roan%2C_20_August_2025_106_%28cropped%29.jpg/500px-Chappell_Roan%2C_20_August_2025_106_%28cropped%29.jpg)"></i>Chappell Roan</span><span><i style="background-image:url(assets/toothnail.webp)"></i>Europe</span><span><i style="background-image:url(assets/feelgood.webp)"></i>Mötley Crüe</span></div>
+      </section>
+    </div></div><div data-only="edit"><div class="strip">
+      <section class="editable"><button class="pen" type="button"><svg width="13" height="13"><use href="#i-pen"/></svg>Editar</button>
+        <p class="eyebrow">Ficha</p>
+        <dl><div><dt>Soy</dt><dd>Oyente · Coleccionista · Músico</dd></div><div><dt>Géneros</dt><dd>rock · metal · hard rock</dd></div>
+        <div><dt>Escucho en</dt><dd>Vinilo · CD · Streaming</dd></div><div><dt>1.er show</dt><dd><i style="font-family:var(--body)">Deep Purple</i></dd></div></dl>
+      </section>
+      <section><p class="eyebrow">Huella de gusto</p><p class="big">2020s</p><p class="s">Su familia más presente es Rock, sobre todo hard rock.</p></section>
+      <section><p class="eyebrow">Artistas seguidos</p>
+        <div class="artists"><span><i style="background-image:url(assets/ratt.webp)"></i>Ratt</span><span><i style="background-image:url(https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/Chappell_Roan%2C_20_August_2025_106_%28cropped%29.jpg/500px-Chappell_Roan%2C_20_August_2025_106_%28cropped%29.jpg)"></i>Chappell Roan</span><span><i style="background-image:url(assets/toothnail.webp)"></i>Europe</span><span><i style="background-image:url(assets/feelgood.webp)"></i>Mötley Crüe</span></div>
+      </section>
+    </div></div>
+<div data-only="view panel" style="display:contents">
+  <p class="legend"><span>Lo que no es público lleva su marca:</span><span class="aud">Seguidores</span><span class="aud me">Solo tú</span></p>
+  
+    <section>
+      <div class="sh"><h2>Empieza por aquí</h2></div>
+      <ul class="pins">
+        <li><img src="assets/ocean.webp" alt=""><div><small>Álbum</small><p>Did you know that there's a tunnel under Ocean Blvd</p><small>Lana Del Rey</small></div></li>
+        <li><img src="assets/rise.webp" alt=""><div><small>Álbum</small><p>The Rise and Fall of a Midwest Princess</p><small>Chappell Roan</small></div></li>
+        <li><img src="assets/f7800.webp" alt=""><div><small>Canción</small><p>Alone Again</p><small>Dokken</small></div></li>
+        <li><img src="assets/toofast.webp" alt=""><div><small>Álbum</small><p>Too Fast for Love</p><small>Mötley Crüe</small></div></li>
+      </ul>
+    </section>
+    <div class="pair">
+      <section>
+        <div class="sh"><h2>Reseñas</h2><span class="n">13</span><span class="more"><a class="add" href="#">+ Escribir</a></span></div>
+        <div class="rv"><img src="assets/badanimals.webp" alt=""><div><p class="t">Bad Animals<small>Heart · ★★★★ 4,0</small></p><p>Un disco que suena enorme de principio a fin.</p></div><span></span></div>
+        <div class="rv"><img src="assets/xmas.webp" alt=""><div><p class="t">Christmas the Whole Year Round<small>Sabrina Carpenter · ★ 1,0</small></p><p>No es para mí.</p></div><span class="aud">Seguidores</span></div>
+        <div class="rv"><img src="assets/standout.webp" alt=""><div><p class="t">Stand Out<small>Sabrina Carpenter · ★ 1,0</small></p><p>Se queda corta.</p></div><span></span></div>
+      </section>
+      <section>
+        <div class="sh"><h2>Diario</h2><span class="n">70</span><span class="more"><a class="add" href="#">+ Registrar</a><a class="mono" href="#">Ver todo →</a></span></div>
+        <table class="dt"><tbody>
+          <tr><td>24 oct</td><td><img src="assets/toofast.webp" alt=""></td><td>Mötley Crüe<small>Mötley Crüe</small></td><td></td></tr>
+          <tr><td>24 oct</td><td><img src="assets/feelgood.webp" alt=""></td><td>Dr. Feelgood<small>Mötley Crüe</small></td><td><span class="aud me">Solo tú</span></td></tr>
+          <tr><td>22 oct</td><td><img src="assets/ratt.webp" alt=""></td><td>Ratt<small>Ratt</small></td><td><span class="aud">Seguidores</span></td></tr>
+          <tr><td>21 oct</td><td><img src="assets/cantblame.webp" alt=""></td><td>Can't Blame a Girl for Trying<small>Sabrina Carpenter</small></td><td></td></tr>
+        </tbody></table>
+      </section>
+    </div>
+    <section>
+      <div class="sh"><h2>Listas</h2><span class="n">23</span><span class="more"><a class="add" href="#">+ Nueva lista</a><a class="mono" href="#">Ver todo →</a></span></div>
+      <div class="lists">
+        <div><img class="cv" src="assets/mansbest.webp" alt=""><p class="t">Sabrina Carpenter</p><small>Álbumes · 1</small></div>
+        <div><div class="grid4"><img src="assets/aor1.webp" alt=""><img src="assets/aor2.webp" alt=""><img src="assets/aor3.webp" alt=""><img src="assets/aor4.webp" alt=""></div><p class="t">Best AOR songs</p><small>Canciones · 4 <span class="aud">Seguidores</span></small></div>
+        <div><div class="grid4"><img src="assets/toothnail.webp" alt=""><img src="assets/ratt.webp" alt=""><img src="assets/feelgood.webp" alt=""><img src="assets/toofast.webp" alt=""></div><p class="t">Aguante Survivor!!</p><small>Álbumes · 20 <span class="aud me">Solo tú</span></small></div>
+        <div><img class="cv" src="assets/icon.webp" alt=""><p class="t">2010 Rock Metal</p><small>Álbumes · 0 <span class="aud me">Solo tú</span></small></div>
+      </div>
+    </section>
+</div>
+<div data-only="edit" style="display:contents">
+    <section class="editable"><button class="pen" type="button"><svg width="13" height="13"><use href="#i-pen"/></svg>Editar</button>
+      <div class="sh"><h2>Empieza por aquí</h2></div>
+      <ul class="pins">
+        <li><img src="assets/ocean.webp" alt=""><div><small>Álbum</small><p>Did you know that there's a tunnel under Ocean Blvd</p><small>Lana Del Rey</small></div></li>
+        <li><img src="assets/rise.webp" alt=""><div><small>Álbum</small><p>The Rise and Fall of a Midwest Princess</p><small>Chappell Roan</small></div></li>
+        <li><img src="assets/f7800.webp" alt=""><div><small>Canción</small><p>Alone Again</p><small>Dokken</small></div></li>
+        <li><img src="assets/toofast.webp" alt=""><div><small>Álbum</small><p>Too Fast for Love</p><small>Mötley Crüe</small></div></li>
+      </ul>
+    </section>
+    <div class="pair">
+      <section>
+        <div class="sh"><h2>Reseñas</h2><span class="n">13</span><span class="more"></span></div>
+        <div class="rv"><img src="assets/badanimals.webp" alt=""><div><p class="t">Bad Animals<small>Heart · ★★★★ 4,0</small></p><p>Un disco que suena enorme de principio a fin.</p></div><span></span></div>
+        <div class="rv"><img src="assets/xmas.webp" alt=""><div><p class="t">Christmas the Whole Year Round<small>Sabrina Carpenter · ★ 1,0</small></p><p>No es para mí.</p></div><span class="aud">Seguidores</span></div>
+        <div class="rv"><img src="assets/standout.webp" alt=""><div><p class="t">Stand Out<small>Sabrina Carpenter · ★ 1,0</small></p><p>Se queda corta.</p></div><span></span></div>
+      </section>
+      <section>
+        <div class="sh"><h2>Diario</h2><span class="n">70</span><span class="more"><a class="mono" href="#">Ver todo →</a></span></div>
+        <table class="dt"><tbody>
+          <tr><td>24 oct</td><td><img src="assets/toofast.webp" alt=""></td><td>Mötley Crüe<small>Mötley Crüe</small></td><td></td></tr>
+          <tr><td>24 oct</td><td><img src="assets/feelgood.webp" alt=""></td><td>Dr. Feelgood<small>Mötley Crüe</small></td><td><span class="aud me">Solo tú</span></td></tr>
+          <tr><td>22 oct</td><td><img src="assets/ratt.webp" alt=""></td><td>Ratt<small>Ratt</small></td><td><span class="aud">Seguidores</span></td></tr>
+          <tr><td>21 oct</td><td><img src="assets/cantblame.webp" alt=""></td><td>Can't Blame a Girl for Trying<small>Sabrina Carpenter</small></td><td></td></tr>
+        </tbody></table>
+      </section>
+    </div>
+    <section>
+      <div class="sh"><h2>Listas</h2><span class="n">23</span><span class="more"><a class="mono" href="#">Ver todo →</a></span></div>
+      <div class="lists">
+        <div><img class="cv" src="assets/mansbest.webp" alt=""><p class="t">Sabrina Carpenter</p><small>Álbumes · 1</small></div>
+        <div><div class="grid4"><img src="assets/aor1.webp" alt=""><img src="assets/aor2.webp" alt=""><img src="assets/aor3.webp" alt=""><img src="assets/aor4.webp" alt=""></div><p class="t">Best AOR songs</p><small>Canciones · 4 <span class="aud">Seguidores</span></small></div>
+        <div><div class="grid4"><img src="assets/toothnail.webp" alt=""><img src="assets/ratt.webp" alt=""><img src="assets/feelgood.webp" alt=""><img src="assets/toofast.webp" alt=""></div><p class="t">Aguante Survivor!!</p><small>Álbumes · 20 <span class="aud me">Solo tú</span></small></div>
+        <div><img class="cv" src="assets/icon.webp" alt=""><p class="t">2010 Rock Metal</p><small>Álbumes · 0 <span class="aud me">Solo tú</span></small></div>
+      </div>
+    </section></div>
+</main>
+<div class="scrim" data-only="panel"></div>
+<aside class="panel" data-only="panel" aria-label="Editar la ficha">
+  <header><h2>Ficha</h2><button class="link-mono" type="button">Cerrar</button></header>
+  <div class="pb">
+    <div class="field"><label>Me defino como · 3 de 3</label><div class="chips"><span class="on">Oyente</span><span class="on">Coleccionista</span><span class="on">Músico</span><span>DJ</span><span>Crítico</span></div></div>
+    <div class="field"><label>Géneros que me mueven · 3 de 5</label><div class="chips"><span class="on">rock</span><span class="on">metal</span><span class="on">hard rock</span><span>+ Buscar un género</span></div></div>
+    <div class="field"><label>Cómo escucho · 3 de 5</label><div class="chips"><span class="on">Vinilo</span><span class="on">CD</span><span class="on">Streaming</span><span>Casete</span><span>Radio</span></div></div>
+    <div class="field"><label>Mi primer show</label><div class="in">Deep Purple</div></div>
+    <div class="field"><label>Mi primer disco</label><div class="in">Def Leppard · On Through the Night</div></div>
+  </div>
+  <footer><button class="btn btn-line" type="button">Cancelar</button><button class="btn btn-amber" type="button">Guardar</button></footer>
+</aside><nav class="mock-bar" aria-label="Mockups">
+  <a href="index.html">Resumen</a><a href="a-cabecera.html" aria-current="page">A</a><a href="b-ver-como.html">B</a><a href="c-por-completar.html">C</a>
+  <span class="sep"></span><button type="button" data-set="view">Viendo</button><button type="button" data-set="edit">Editando</button><button type="button" data-set="panel">Panel: Ficha</button>
+</nav>
+<script src="demo.js"></script>
+</body>
+</html>

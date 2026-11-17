@@ -7,7 +7,7 @@ interface ViewAsBannerProps {
 
 // Aviso de la previsualización "cómo te ven": el dueño ve su perfil tal como lo
 // ve el público (spec social-profiles, "Panel del dueño") y aquí tiene la salida
-// a su vista. La entrada a la previsualización vive en `OwnerProfileBar`. Es
+// a su vista. La entrada a la previsualización es «Ver como visitante» (`OwnerHeaderActions`). Es
 // navegación por query param (`?preview=1`), sin estado cliente: el servidor
 // recompone el perfil con el visitante anónimo cuando el parámetro está presente.
 export async function ViewAsBanner({ username }: ViewAsBannerProps) {
