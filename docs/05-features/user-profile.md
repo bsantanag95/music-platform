@@ -38,7 +38,7 @@ visitante:
 |---|---|---|
 | **No autorizado** | Anónimo, sin relación aceptada, o solicitud pendiente sobre un perfil privado | La cabecera del perfil sin acceso (`ProfileHeader` con `locked`) + la franja «Solo para seguidores» (`PrivateProfileDoor`): estado exacto del visitante + una acción + siluetas sin datos. Nada más. Ver "Perfil privado". |
 | **Autorizado** | Cuenta pública, o seguidor aprobado de una privada | Identidad + Tarjeta de Identidad + resumen de huella + Empieza por aquí + valoraciones destacadas + reseñas + en rotación + huella completa (nivel 3) + afinidad + estantes (diario / favoritos / listas / colección) + recencia. |
-| **Dueño** | La persona | Lo mismo que "autorizado" + modo edición ("Editar perfil": lápiz por bloque y panel lateral con los editores de identidad/enlaces, de la Tarjeta de Identidad —artista, álbum e himno— y de Empieza por aquí) + acción de destacar valoraciones y entradas de diario + tarjeta de Ajustes + previsualizador "cómo te ven". Ver "Gestión del propio perfil". |
+| **Dueño** | La persona | Lo mismo que "autorizado" + modo edición ("Editar perfil": lápiz por bloque y panel lateral con los editores de identidad/enlaces, de la Tarjeta de Identidad —artista, álbum e himno— y de Empieza por aquí) + acción de destacar valoraciones y entradas de diario + marca de visibilidad, solicitudes pendientes y "Ver como visitante" en la cabecera. Ver "Gestión del propio perfil". |
 
 Un perfil **privado** solo expone su huella, Empieza por aquí y estantes a
 seguidores aprobados y al dueño; un visitante no autorizado ve únicamente la identidad
@@ -154,11 +154,13 @@ el tono por perfil y el vinilo que asoma. Reemplaza a la **Placa** de la barra l
   local), la bio como **cita** entre comillas angulares, el botón Seguir, Compartir y los
   enlaces como íconos, los recuentos de seguidores/seguidos (enlazados a las conexiones), los
   seguidores en común, la afinidad en una línea (`ProfileAffinity compact`), la última señal y,
-  para el dueño, la tarjeta de Ajustes con su bandeja de solicitudes. Bloquear, reportar y
+  para el dueño, la línea de solicitudes pendientes. Bloquear, reportar y
   suspender van en una fila discreta debajo, siempre a la vista (no en un menú). A la derecha,
   la Tarjeta de Identidad bajo «Identidad musical». De fondo, la carátula del álbum definitorio
   difuminada (`HeaderBackdropSection`, la misma miniatura de ≤250 px, decorativa); sin álbum, un
-  fondo neutro.
+  fondo neutro. La sección usa `overflow-clip` (no `overflow-hidden`): el fondo sobresale 64 px y un
+  contenedor `hidden` sigue siendo desplazable, así que el foco podía correr la cabecera de lado
+  (`redesign-owner-profile-phase1`).
 - **Barra de anclas** (`ProfileAnchors.tsx`, `AnchorsSection`): fija bajo la cabecera del sitio
   (`--site-header-h`), con Resumen, Diario, Reseñas, Favoritos, Listas y Colección —cada una
   solo si tiene contenido visible y con su recuento—. Son enlaces `#ancla` normales; la activa
@@ -168,7 +170,7 @@ el tono por perfil y el vinilo que asoma. Reemplaza a la **Placa** de la barra l
   tres partes separadas por filetes y sin tarjetas — la ficha musical, el resumen de la huella
   con su década predominante como dato grande y «Artistas seguidos». Cada parte se omite sin
   contenido, y la franja entera si no queda ninguna. Debajo de `lg` se apilan.
-- **Capas del dueño**: la barra del dueño va encima de la cabecera; el lápiz «Tu perfil» envuelve
+- **Capas del dueño**: sus acciones van en la propia cabecera (ver "Gestión del propio perfil"); el lápiz «Tu perfil» envuelve
   solo la columna de datos de la cabecera (`wrapDetails`) y abre el mismo panel de siempre
   (identidad, identidad musical, preguntas y enlaces: también edita la ficha de la franja); la
   Tarjeta de Identidad conserva su propio lápiz.
@@ -425,7 +427,7 @@ Seguidos y Seguidores comparten `ProfileConnectionsView`.
   pintaba el menú sin pantalla marcada y sin contenido hasta una segunda petición (2,3 s observados en desarrollo; en
   producción ~40 ms por respuesta, pero igual dos viajes con un estado vacío). Las pantallas y su layout viven ahora en
   el grupo de rutas `settings/(screens)/` (mismas URLs) y `settings/page.tsx` redirige fuera del layout.
-- El menú de usuario, el pie y `OwnerSettingsCard` enlazan a `SETTINGS_DEFAULT_HREF` (`/me/settings/profile`).
+- El menú de usuario y el pie enlazan a `SETTINGS_DEFAULT_HREF` (`/me/settings/profile`).
 - `(screens)/loading.tsx`: el menú se mantiene con la pantalla de destino marcada y el contenido muestra un esqueleto
   (`aria-busy`, bloques en tono de borde porque el `Skeleton` común usa el fondo de las tarjetas).
 - Título por pantalla "<Pantalla> · Ajustes" (`settingsMetadata`).
@@ -1015,12 +1017,22 @@ gestión; el dueño ve el mismo perfil que un visitante hasta que activa el modo
 
 ### Edición rápida sobre el perfil (modo edición)
 
-- **`OwnerProfileBar`** — barra superior del perfil, solo para el dueño real (`isOwn` y no
-  previsualización): chip de estado "Perfil público/privado · Ajustes →" (enlaza a
-  `/me/settings/privacy`, no cambia nada por sí mismo), el acceso a "Ver cómo te ven", el
-  enlace a "Valoraciones" (`/me/ratings`, cambio `add-my-ratings-library`) y el
-  interruptor **"Editar perfil"** (`role="switch"`). El estado es local (`useState`) y no persiste
-  al navegar.
+- **Acciones y estado en la cabecera** (`redesign-owner-profile-phase1`, 2026-11; propuesta «A · Cabecera del
+  dueño» de `mockups/owner-profile-2026-11/`). Antes una barra en caja (`OwnerProfileBar`) encima de la cabecera
+  juntaba estado, "Ver cómo te ven", "Valoraciones" y el interruptor, y una tarjeta de Ajustes en la cabecera llevaba
+  a otra pantalla que el estado. Ahora, solo para el dueño real (`isOwn` y no previsualización):
+  - `ProfileHeader` recibe `ownerActions` (**`OwnerHeaderActions`**, cliente), que ocupa el lugar de Seguir:
+    **"Editar perfil"** (`aria-pressed`; con el modo activo, en ámbar y rotulado **"Listo"**) y **"Ver como
+    visitante"** (`?preview=1`). Ya no aparece el texto "Perfil propio". El estado es local (`useState`) y no
+    persiste al navegar.
+  - `ownerStatus`: marca **"Público"/"Privado"** junto al nombre que enlaza a `/me/settings/privacy` sin cambiar
+    nada por sí misma.
+  - **`OwnerRequestsSection`**: con solicitudes pendientes, una línea "N solicitudes para seguirte →" a
+    `/me/follow-requests` bajo los recuentos (bandeja de entrada, no métrica); sin solicitudes no dibuja nada.
+  - Ajustes queda en el menú de usuario; "Valoraciones" (`/me/ratings`) también.
+  - Plan: **Fase 2** (`redesign-owner-profile-phase2`) marca de audiencia solo para el dueño y acciones para agregar
+    en cada sección; **Fase 3** (`redesign-owner-profile-phase3`) lápiz en la Ficha, paneles cortos por bloque con un
+    solo «Guardar» y la franja «Tu perfil · N de 7».
 - **`OwnerEditProvider`** (cliente) guarda `editing` y renderiza **una sola vez** el panel lateral.
   **`EditableBlock`** envuelve cada bloque con editor: Placa (identidad + enlaces en un mismo
   panel), Tarjeta de Identidad y Empieza por aquí. Con `editing` muestra un
@@ -1039,12 +1051,8 @@ gestión; el dueño ve el mismo perfil que un visitante hasta que activa el modo
   dos) y cada editor conserva una **línea base** que se actualiza al guardar (antes `dirty` se
   comparaba contra `initial` y un editor ya guardado seguía "sucio"). Las props opcionales
   `onSaved`/`onDirtyChange` siguen disponibles para un anfitrión directo.
-- **`OwnerSettingsCard`** — en la barra lateral, un único enlace a `/me/settings` con la bandeja de
-  solicitudes pendientes (bandeja de entrada, no métrica). Sustituye al panel de 11 atajos
-  (`OwnerHubPanel`, retirado): la biblioteca (diario, favoritos, listas, colección, artistas,
-  recorridos, feed) queda solo en el menú de usuario.
 - **`?preview=1`** — el dueño recompone su perfil tal como lo ve un visitante anónimo
-  (`getProfileView(username, null)`), sin proveedor de edición, barra ni tarjeta de Ajustes, y con
+  (`getProfileView(username, null)`), sin proveedor de edición ni acciones del dueño, y con
   `ViewAsBanner` para volver. Es navegación por query param, sin estado cliente.
 
 ### Área de ajustes (`/me/settings`)

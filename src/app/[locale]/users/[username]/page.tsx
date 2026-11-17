@@ -14,7 +14,7 @@ import { PrivateProfileDoor } from "@/components/profiles/PrivateProfileDoor";
 import { privateState } from "@/components/profiles/private-state";
 import { ViewAsBanner } from "@/components/profiles/ViewAsBanner";
 import { OwnerEditProvider } from "@/components/profiles/OwnerEditProvider";
-import { OwnerProfileBar } from "@/components/profiles/OwnerProfileBar";
+import { OwnerHeaderActions } from "@/components/profiles/OwnerHeaderActions";
 import {
   AffinitySection,
   AnchorsSection,
@@ -29,7 +29,7 @@ import {
   ListsCollectionRow,
   RecencySection,
   ReviewsDiaryRow,
-  SettingsCardSection,
+  OwnerRequestsSection,
   StartRow,
 } from "./sections";
 import { redirectIfRenamed } from "@/services/profiles/renamed-redirect";
@@ -148,8 +148,8 @@ async function UserProfilePage({ params, searchParams }: UserProfilePageProps) {
   // una cabecera a todo el ancho con la identidad, las acciones y la Tarjeta de
   // Identidad; la barra de anclas fija; la franja de identidad y el resto en
   // niveles de profundidad, todo a lo ancho del contenedor, sin columna lateral.
-  // Las capas propias del dueño (barra con el interruptor "Editar perfil" y
-  // acceso a Ajustes, lápices por bloque) se superponen a esa misma estructura,
+  // Las capas propias del dueño (en la cabecera, «Editar perfil», «Ver como visitante», la marca
+  // de visibilidad y las solicitudes pendientes; lápices por bloque) se superponen a esa estructura,
   // no la reemplazan: hasta que el dueño activa el modo edición, su perfil se ve
   // igual que el de un visitante (spec `profile-edit-mode`).
   const [mutualFollowers, tone] = await Promise.all([
@@ -166,6 +166,8 @@ async function UserProfilePage({ params, searchParams }: UserProfilePageProps) {
       preview={previewing}
       canModerate={canModerate}
       mutualFollowers={mutualFollowers}
+      ownerActions={isOwn ? <OwnerHeaderActions username={profile.username} /> : undefined}
+      ownerStatus={isOwn ? { visibility: profile.profileVisibility } : undefined}
       wrapDetails={isOwn ? (details) => (
               <EditablePlaca profile={profile} className="min-w-0">
                 {details}
@@ -190,13 +192,11 @@ async function UserProfilePage({ params, searchParams }: UserProfilePageProps) {
           <Suspense fallback={null}>
             <RecencySection username={section.username} viewerId={effectiveViewerId} />
           </Suspense>
-          {/* Tarjeta de Ajustes del dueño, con su bandeja de solicitudes (spec social-profiles, "Panel del dueño"). */}
+          {/* Solicitudes pendientes del dueño, bajo los recuentos (spec social-profiles, "Panel del dueño"). */}
           {isOwn && (
-            <div className="w-full max-w-sm">
-              <Suspense fallback={null}>
-                <SettingsCardSection ownerId={profile.id} />
-              </Suspense>
-            </div>
+            <Suspense fallback={null}>
+              <OwnerRequestsSection ownerId={profile.id} />
+            </Suspense>
           )}
         </>
       }
@@ -273,9 +273,6 @@ async function UserProfilePage({ params, searchParams }: UserProfilePageProps) {
       {isOwn ? (
         // Solo el dueño real (no en previsualización) recibe el modo edición.
         <OwnerEditProvider>
-          <div className="mx-auto w-full max-w-7xl px-4 pt-6 xl:px-6">
-            <OwnerProfileBar username={profile.username} visibility={profile.profileVisibility} />
-          </div>
           {content}
         </OwnerEditProvider>
       ) : (

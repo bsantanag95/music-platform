@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Perfil visto por su dueño — auditoría y propuestas (2026-11)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<style>
+  main.wrap { padding-top: 48px; padding-bottom: 40px; }
+  h1 { font-size: clamp(30px, 4vw, 46px); letter-spacing: -.02em; line-height: 1.05; }
+  .lead { margin-top: 12px; font-family: var(--body); font-size: 18px; color: var(--muted); max-width: 70ch; }
+  h2 { margin-top: 48px; font-size: 24px; }
+  h3 { font-size: 17px; margin-bottom: 6px; }
+  p, li { font-family: var(--body); font-size: 16px; color: #d6cfc3; }
+  .grid2 { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .grid3 { margin-top: 18px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+  figure img { width: 100%; border: 1px solid var(--line); border-radius: 8px; }
+  figcaption { margin-top: 8px; font-family: var(--data); font-size: 12px; color: var(--muted); }
+  ol.find { margin-top: 14px; display: grid; gap: 10px; counter-reset: f; }
+  ol.find li { position: relative; padding-left: 34px; }
+  ol.find li::before { counter-increment: f; content: counter(f); position: absolute; left: 0; top: 1px; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--line-2); font-family: var(--data); font-size: 11px; color: var(--muted); display: grid; place-items: center; }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 18px; background: var(--s1); display: flex; flex-direction: column; gap: 10px; }
+  .card a.open { margin-top: auto; }
+  .tag { align-self: flex-start; font-family: var(--data); font-size: 11px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--muted); }
+  .rec { border-color: var(--amber); }
+  .rec .tag { border-color: var(--amber); color: var(--amber); }
+  table { margin-top: 16px; width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--data); font-size: 12px; color: var(--muted); font-weight: 500; }
+  td { font-family: var(--body); color: #d6cfc3; }
+  .callout { margin-top: 18px; border-left: 3px solid var(--amber); padding: 6px 0 6px 16px; }
+  .bug { border-left-color: #d0705a; }
+  @media (max-width: 860px) { .grid2, .grid3 { grid-template-columns: 1fr; } table { font-size: 13px; } }
+</style>
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <a class="brand" href="#"><i>♪</i>music-platform</a>
+  <span class="mono" style="margin-left:auto">Mockups · perfil visto por su dueño · 2026-11</span>
+</div></header>
+
+<main class="wrap">
+  <h1>El perfil visto por su dueño</h1>
+  <p class="lead">Auditoría con la sesión de <b>@besantanag95</b> sobre la BD de pruebas, con el perfil rediseñado (Fases 1–3) y el modo edición. Sin guardar ningún cambio. Tres propuestas en el navegador, con los colores y tipografías actuales.</p>
+
+  <h2>Cómo se ve hoy</h2>
+  <div class="grid3">
+    <figure><img src="shots/actual-vista-1440.jpg" alt="Perfil del dueño a 1440 px"><figcaption>Vista del dueño · 1440 px</figcaption></figure>
+    <figure><img src="shots/actual-edicion-1440.jpg" alt="Modo edición activo"><figcaption>«Editar perfil» activado</figcaption></figure>
+    <figure><img src="shots/actual-panel-1440.jpg" alt="Panel lateral de la cabecera"><figcaption>Panel «Tu perfil»</figcaption></figure>
+  </div>
+
+  <h2>Hallazgos</h2>
+  <ol class="find">
+    <li><b>Una barra aparte con cuatro cosas distintas.</b> Encima de la cabecera, una caja con el estado («Perfil público · Ajustes →»), «Ver cómo te ven», «Valoraciones» y el interruptor «Editar perfil». En teléfono ocupa 137 px antes del nombre. «Valoraciones» no tiene relación con el perfil y ya está en el menú de usuario.</li>
+    <li><b>Ajustes dos veces, con destinos distintos.</b> El estado de la barra lleva a Privacidad; la tarjeta «Ajustes · Perfil, privacidad y red» dentro de la cabecera lleva a Perfil. La tarjeta además rompe la cabecera, que en el resto de vistas no tiene cajas.</li>
+    <li><b>«Perfil propio» en lugar de una acción.</b> Donde el visitante ve «Seguir», el dueño ve un texto gris que no hace nada. Las acciones del dueño (editar, ver como visitante) están en otra parte de la página.</li>
+    <li><b>Solo tres bloques editables.</b> Con el modo edición aparecen lápices en los datos de la cabecera, la Tarjeta de Identidad y «Empieza por aquí». La Ficha de la franja no tiene lápiz: se edita desde el panel de la cabecera, lejos de donde se ve.</li>
+    <li><b>Un panel de 2.135 px con cinco editores y cuatro «Guardar».</b> Foto, identidad, ficha, preguntas y enlaces van juntos en «Tu perfil»; cada parte se guarda por separado y la foto se sube sola, así que no queda claro qué se guardó.</li>
+    <li><b>Nada indica qué no es público.</b> El dueño ve mezcladas entradas, reseñas y listas públicas, solo para seguidores y privadas, sin ninguna marca. La única forma de saberlo es «Ver cómo te ven», que recarga la página.</li>
+    <li><b>Ninguna sección ofrece agregar.</b> Diario, Reseñas, Listas y Colección muestran «Ver todo», pero no «Registrar», «Escribir» ni «Nueva lista»: el dueño tiene que ir al botón «Añadir» del sitio o a otra página.</li>
+    <li><b>Las solicitudes pendientes se ven solo en la tarjeta de Ajustes</b>, como una píldora pequeña, y solo si hay alguna.</li>
+  </ol>
+  <div class="callout bug">
+    <h3>Error encontrado (afecta a todos, no solo al dueño)</h3>
+    <p>El fondo de carátula de la cabecera sobresale 64 px (<code>-inset-16</code>) dentro de una sección con <code>overflow-hidden</code>. Esa sección sigue siendo desplazable por el navegador: al cerrar el panel de edición, el foco desplazó la cabecera 64 px a la izquierda a 390 px y el avatar quedó cortado. Se corrige con <code>overflow-clip</code>, sin cambiar el diseño.</p>
+    <figure style="max-width:260px;margin-top:10px"><img src="shots/actual-desplazada-390.jpg" alt="Cabecera desplazada a 390 px"><figcaption>Cabecera desplazada · 390 px</figcaption></figure>
+  </div>
+
+  <h2>Tres propuestas</h2>
+  <div class="grid3">
+    <div class="card rec">
+      <span class="tag">Recomendada</span>
+      <h3>A · Cabecera del dueño</h3>
+      <p>Sin barra aparte: las acciones del dueño van donde el visitante tiene «Seguir» (<i>Editar perfil</i>, <i>Ver como visitante</i>, Compartir) y el estado «Público» va junto al nombre como enlace a Privacidad. Se quitan la tarjeta de Ajustes y «Perfil propio»; las solicitudes pendientes son una línea bajo los recuentos. Cada sección ofrece agregar («+ Registrar», «+ Nueva lista») y lo que no es público lleva una marca solo para el dueño. En edición, lápiz también en la Ficha y un panel corto por bloque con un solo «Guardar».</p>
+      <a class="open btn btn-amber" href="a-cabecera.html#view">Abrir A</a>
+    </div>
+    <div class="card">
+      <span class="tag">Alternativa</span>
+      <h3>B · Ver como</h3>
+      <p>Una barra fina y fija bajo la cabecera del sitio con «Ver como: Tú · Seguidor · Público», el estado, Ajustes y el interruptor de edición. Cambiar de vista no recarga: oculta lo que esa audiencia no ve. Más potente para revisar la privacidad, pero suma una barra fija más (ya hay la del sitio y la de anclas) y exige calcular tres vistas.</p>
+      <a class="open btn btn-line" href="b-ver-como.html#tu">Abrir B</a>
+    </div>
+    <div class="card">
+      <span class="tag">Complemento</span>
+      <h3>C · Por completar</h3>
+      <p>La cabecera de A más una franja «Tu perfil · 5 de 7» con lo que falta (bio, Identidad musical, Ficha, Empieza por aquí, preguntas, enlaces), cada parte abre su editor; se oculta al completar o a mano. En un perfil nuevo, las secciones vacías son invitaciones con su acción. Útil para cuentas nuevas; en un perfil completo casi no aparece.</p>
+      <a class="open btn btn-line" href="c-por-completar.html#view">Abrir C</a>
+    </div>
+  </div>
+
+  <h2>Comparación</h2>
+  <table>
+    <thead><tr><th></th><th>Hoy</th><th>A · Cabecera</th><th>B · Ver como</th><th>C · Por completar</th></tr></thead>
+    <tbody>
+      <tr><td>Controles del dueño</td><td>Barra en caja + tarjeta en la cabecera</td><td>En la fila de acciones de la cabecera</td><td>Barra fija propia</td><td>Como A</td></tr>
+      <tr><td>Entradas a Ajustes</td><td>Dos, a pantallas distintas</td><td>Una (el estado → Privacidad); el resto en el menú</td><td>Una en la barra</td><td>Como A</td></tr>
+      <tr><td>Saber qué no es público</td><td>Solo con «Ver cómo te ven» (recarga)</td><td>Marca por elemento</td><td>Vista por audiencia sin recargar</td><td>Marca por elemento</td></tr>
+      <tr><td>Agregar desde el perfil</td><td>No</td><td>«+» en cada sección</td><td>«+» en cada sección</td><td>«+» e invitaciones en vacío</td></tr>
+      <tr><td>Edición</td><td>3 bloques, panel de 5 editores</td><td>4 bloques (con Ficha), un panel por bloque</td><td>Como A</td><td>Como A</td></tr>
+      <tr><td>Altura antes del nombre (390 px)</td><td>137 px de barra</td><td>0</td><td>Barra fija de ~100 px</td><td>0</td></tr>
+      <tr><td>Costo</td><td>—</td><td>Medio</td><td>Alto (tres vistas)</td><td>Medio, sobre A</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Recomendación</h2>
+  <div class="callout">
+    <p><b>A · Cabecera del dueño</b>, con la franja «por completar» de C solo mientras falte algo (y que se pueda ocultar). Resuelve la duplicación de Ajustes, el texto muerto «Perfil propio», la falta de marcas de audiencia y de acciones para agregar, y deja la edición en paneles cortos. B es mejor herramienta de privacidad, pero agrega una barra fija y bastante costo; «Ver como visitante» de A cubre el caso más común. El error de desplazamiento de la cabecera se corrige en la primera fase, sea cual sea la elección.</p>
+  </div>
+
+  <h2>Decisiones abiertas</h2>
+  <ol class="find">
+    <li><b>Marcas de audiencia:</b> solo el dueño las ve, en Diario, Reseñas, Listas y Colección. Recomendado: sí.</li>
+    <li><b>Franja «por completar»:</b> incluirla (solo con algo pendiente y ocultable) o dejarla para después. Recomendado: incluirla en la última fase.</li>
+    <li><b>«Valoraciones» de la barra:</b> quitarla del perfil (sigue en el menú de usuario). Recomendado: quitarla.</li>
+    <li><b>Solicitudes pendientes:</b> una línea bajo los recuentos en lugar de la píldora de la tarjeta de Ajustes. Recomendado: sí.</li>
+  </ol>
+</main>
+<nav class="mock-bar" aria-label="Mockups"><a href="index.html" aria-current="page">Resumen</a><a href="a-cabecera.html#view">A</a><a href="b-ver-como.html#tu">B</a><a href="c-por-completar.html#view">C</a></nav>
+</body>
+</html>

@@ -2,15 +2,17 @@
 
 ## Purpose
 
-La edición rápida sobre el propio perfil: el interruptor "Editar perfil", el lápiz por bloque con editor, el panel lateral modal (con descarte de cambios sin guardar) y la barra del dueño con el estado de visibilidad y el acceso a Ajustes. Hasta que el dueño activa el modo edición, su perfil se ve igual que el de un visitante.
+La edición rápida sobre el propio perfil: el interruptor "Editar perfil", el lápiz por bloque con editor, el panel lateral modal (con descarte de cambios sin guardar) y el estado de visibilidad y las acciones del dueño en la cabecera del perfil. Hasta que el dueño activa el modo edición, su perfil se ve igual que el de un visitante.
 ## Requirements
 ### Requirement: Interruptor "Editar perfil"
 
-La vista del dueño SHALL incluir, en una barra superior del perfil, un interruptor "Editar perfil"
-que empieza desactivado. Con el interruptor desactivado el perfil SHALL verse igual que para un
-visitante autorizado, sin ningún control de edición. El estado del interruptor SHALL ser local a
-la página y no persistir entre navegaciones. El interruptor SHALL NOT mostrarse en la
-previsualización "cómo te ven" ni a ningún visitante que no sea el dueño.
+La vista del dueño SHALL incluir, en la fila de acciones de la cabecera del perfil (donde un
+visitante ve la acción de seguir), un botón "Editar perfil" que alterna el modo edición y empieza
+desactivado; con el modo activo SHALL indicar su estado (`aria-pressed`) y rotularse "Listo". Con
+el modo desactivado el perfil SHALL verse igual que para un visitante autorizado, sin ningún
+control de edición. El estado del interruptor SHALL ser local a la página y no persistir entre
+navegaciones. El interruptor SHALL NOT mostrarse en la previsualización "cómo te ven" ni a ningún
+visitante que no sea el dueño.
 
 #### Scenario: Perfil propio con edición desactivada
 
@@ -20,7 +22,8 @@ previsualización "cómo te ven" ni a ningún visitante que no sea el dueño.
 #### Scenario: Activar el modo edición
 
 - **WHEN** el dueño activa "Editar perfil"
-- **THEN** cada bloque con editor muestra un control de edición y el interruptor queda activado
+- **THEN** cada bloque con editor muestra un control de edición y el interruptor queda activado,
+  rotulado "Listo"
 
 #### Scenario: El estado no persiste
 
@@ -104,21 +107,29 @@ sin guardar, el panel SHALL cerrarse sin preguntar.
 - **WHEN** el dueño abre un editor y lo cierra sin modificar nada
 - **THEN** el panel se cierra sin pedir confirmación
 
-### Requirement: Barra del dueño con estado y acceso a Ajustes
+### Requirement: Estado y acciones del dueño en la cabecera
 
-La barra superior del perfil del dueño SHALL mostrar un indicador de estado con la visibilidad
-actual del perfil y un enlace a la pantalla de Privacidad y audiencia de los ajustes, sin cambiar
-por sí mismo ninguna configuración. SHALL incluir además el acceso a la previsualización "cómo te
-ven" y el interruptor "Editar perfil".
+La cabecera del perfil, vista por su dueño (no en la previsualización), SHALL mostrar junto al
+nombre una marca con la visibilidad actual del perfil ("Público" o "Privado") que enlace a la
+pantalla de Privacidad y audiencia de los ajustes sin cambiar por sí misma ninguna configuración.
+En lugar de la acción de seguir, su fila de acciones SHALL ofrecer "Editar perfil" (ver
+"Interruptor «Editar perfil»") y "Ver como visitante", que lleva a la previsualización "cómo te
+ven", junto a la acción de compartir y los enlaces. La vista del dueño SHALL NOT incluir una barra
+separada encima de la cabecera ni un texto inerte en lugar de la acción de seguir.
 
 #### Scenario: Indicador de visibilidad
 
 - **WHEN** el dueño con perfil público abre su perfil
-- **THEN** la barra muestra "Perfil público" con un enlace a `/me/settings/privacy` y no cambia la
-  visibilidad al pulsarlo
+- **THEN** junto al nombre ve "Público" con un enlace a `/me/settings/privacy`, y pulsarlo no
+  cambia la visibilidad
 
 #### Scenario: Acceso a la previsualización
 
-- **WHEN** el dueño pulsa "Ver cómo te ven"
+- **WHEN** el dueño pulsa "Ver como visitante"
 - **THEN** llega a la previsualización de su perfil como lo ve un visitante público
+
+#### Scenario: Sin barra encima de la cabecera
+
+- **WHEN** el dueño abre su perfil en una pantalla de 390 px
+- **THEN** lo primero bajo la cabecera del sitio es su cabecera de perfil, sin barra intermedia
 
