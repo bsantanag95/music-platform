@@ -1030,8 +1030,17 @@ gestión; el dueño ve el mismo perfil que un visitante hasta que activa el modo
   - **`OwnerRequestsSection`**: con solicitudes pendientes, una línea "N solicitudes para seguirte →" a
     `/me/follow-requests` bajo los recuentos (bandeja de entrada, no métrica); sin solicitudes no dibuja nada.
   - Ajustes queda en el menú de usuario; "Valoraciones" (`/me/ratings`) también.
-  - Plan: **Fase 2** (`redesign-owner-profile-phase2`) marca de audiencia solo para el dueño y acciones para agregar
-    en cada sección; **Fase 3** (`redesign-owner-profile-phase3`) lápiz en la Ficha, paneles cortos por bloque con un
+- **Marcas de audiencia y acciones para agregar** (`redesign-owner-profile-phase2`), solo con `isOwn` (no en la
+  previsualización):
+  - **`AudienceMark`** (icono + «Seguidores» / «Solo tú»; nada para lo público) en las entradas de
+    `DiaryPreviewTable`, en `FavoritesPreview` y en las tarjetas de `ListsAndCaminosPreview` (listas y Caminos; el
+    resumen de un Camino trae ahora su `audience`). Las vistas previas lo activan con `showAudience`. Sin marcas en la
+    Colección física (la vista previa agrupa copias de distintas audiencias por artista) ni en Reseñas (sin audiencia).
+  - **`OwnerAddAction`** en el encabezado de Diario («+ Registrar»), Favoritos y Colección («+ Agregar») y Listas
+    («+ Nueva lista»), también en sus estantes vacíos (`ProfileRail` → `ownerAction`). Abre `QuickActionsDialog` con
+    `initialAction` (`listen`, `favorite`, `collection`, `newList`); si mientras estuvo abierto llegó
+    `OWN_DATA_CHANGED_EVENT`, al cerrarlo hace `router.refresh()`. El foco vuelve al botón.
+  - Plan: **Fase 3** (`redesign-owner-profile-phase3`) lápiz en la Ficha, paneles cortos por bloque con un
     solo «Guardar» y la franja «Tu perfil · N de 7».
 - **`OwnerEditProvider`** (cliente) guarda `editing` y renderiza **una sola vez** el panel lateral.
   **`EditableBlock`** envuelve cada bloque con editor: Placa (identidad + enlaces en un mismo

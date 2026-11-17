@@ -17,6 +17,8 @@ interface ListsAndCaminosPreviewProps {
   caminosTotal: number;
   /** Visitante con sesión que no es el dueño: único que ve Guardar/Seguir y Seguir mi progreso. */
   canAct: boolean;
+  /** Vista del dueño: marca las listas y Caminos que no son públicos (redesign-owner-profile-phase2). */
+  showAudience?: boolean;
 }
 
 // «Listas y recorridos» del perfil (spec social-profiles, "Cuerpo del perfil en filas";
@@ -31,6 +33,7 @@ export async function ListsAndCaminosPreview({
   caminos,
   caminosTotal,
   canAct,
+  showAudience = false,
 }: ListsAndCaminosPreviewProps) {
   // Sin listas, los recorridos ocupan todas las tarjetas; con listas, hasta 2.
   const caminoSlots = lists.length === 0 ? LISTS_AND_CAMINOS_PREVIEW : CAMINOS_IN_PREVIEW;
@@ -48,12 +51,18 @@ export async function ListsAndCaminosPreview({
       <ul className="grid gap-4 sm:grid-cols-2">
         {shownLists.map((list) => (
           <li key={list.id} className="flex min-w-0">
-            <ProfileListCard list={list} username={username} canAct={canAct} className="w-full" />
+            <ProfileListCard list={list} username={username} canAct={canAct} showAudience={showAudience} className="w-full" />
           </li>
         ))}
         {shownCaminos.map((camino) => (
           <li key={camino.id} className="flex min-w-0">
-            <CaminoProfileCard camino={camino} username={username} canTrack={canAct} className="w-full" />
+            <CaminoProfileCard
+              camino={camino}
+              username={username}
+              canTrack={canAct}
+              showAudience={showAudience}
+              className="w-full"
+            />
           </li>
         ))}
       </ul>

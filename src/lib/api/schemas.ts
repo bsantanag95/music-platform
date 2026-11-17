@@ -2374,6 +2374,8 @@ export const CaminoProfileSummarySchema = z.object({
   itemCount: z.number().int(),
   coverThumbs: z.array(z.string()),
   tracking: z.boolean(),
+  /** Audiencia del Camino: el perfil la marca solo para su dueño (redesign-owner-profile-phase2). */
+  audience: DiaryAudienceSchema,
 });
 export type CaminoProfileSummary = z.infer<typeof CaminoProfileSummarySchema>;
 

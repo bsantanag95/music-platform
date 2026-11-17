@@ -15,6 +15,11 @@ vi.mock("@/i18n/navigation", () => ({
   ),
 }));
 vi.mock("@/components/catalog/CoverThumb", () => ({ CoverThumb: () => <span data-testid="cover" /> }));
+vi.mock("@/components/profiles/AudienceMark", () => ({
+  AudienceMark: ({ audience }: { audience: string }) =>
+    audience === "public" ? null : <span data-testid="audience-mark">{audience}</span>,
+}));
+
 
 function favorite(over: Partial<FavoriteEntry> = {}): FavoriteEntry {
   return {
@@ -26,6 +31,25 @@ function favorite(over: Partial<FavoriteEntry> = {}): FavoriteEntry {
     ...over,
   };
 }
+
+describe("FavoritesPreview: vista del dueño", () => {
+  const preview = {
+    artists: [],
+    albums: [favorite(), favorite({ id: "f2", audience: "private" })],
+    songs: [favorite({ id: "f3", targetType: "recording", audience: "followers" })],
+    counts: { artist: 0, "release-group": 2, recording: 1 },
+  };
+
+  it("marca los favoritos que no son públicos", async () => {
+    render(await FavoritesPreview({ preview, showAudience: true }));
+    expect(screen.getAllByTestId("audience-mark").map((m) => m.textContent).sort()).toEqual(["followers", "private"]);
+  });
+
+  it("sin showAudience no hay marcas", async () => {
+    render(await FavoritesPreview({ preview }));
+    expect(screen.queryByTestId("audience-mark")).not.toBeInTheDocument();
+  });
+});
 
 describe("FavoritesPreview", () => {
   it("no renderiza nada cuando los counts están todos en cero", async () => {

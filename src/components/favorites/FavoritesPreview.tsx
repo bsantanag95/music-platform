@@ -3,10 +3,13 @@ import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { ArtistPlate } from "./ArtistPlate";
 import { favoriteTargetHref } from "./favorites-shared";
+import { AudienceMark } from "@/components/profiles/AudienceMark";
 import type { FavoritesPreview as FavoritesPreviewData } from "@/services/favorites/favorites";
 
 interface FavoritesPreviewProps {
   preview: FavoritesPreviewData;
+  /** Vista del dueño: marca los favoritos que no son públicos (redesign-owner-profile-phase2). */
+  showAudience?: boolean;
 }
 
 // Previsualización de "Favoritos" en el perfil (openspec: redesign-user-profile-phase2,
@@ -15,7 +18,7 @@ interface FavoritesPreviewProps {
 // genérico repetido no distingue nada entre canciones, así que van como texto.
 // El muro completo vive en `/users/[username]/favorites`, enlazado desde el título
 // del estante. Server Component.
-export async function FavoritesPreview({ preview }: FavoritesPreviewProps) {
+export async function FavoritesPreview({ preview, showAudience = false }: FavoritesPreviewProps) {
   const t = await getTranslations("favorites");
   const { artists, albums, songs, counts } = preview;
   const total = counts.artist + counts["release-group"] + counts.recording;
@@ -43,6 +46,11 @@ export async function FavoritesPreview({ preview }: FavoritesPreviewProps) {
                       {favorite.target.artistName}
                     </span>
                   )}
+                  {showAudience && favorite.audience !== "public" && (
+                    <span className="mt-0.5 block">
+                      <AudienceMark audience={favorite.audience} />
+                    </span>
+                  )}
                 </span>
               </Link>
             </li>
@@ -59,6 +67,7 @@ export async function FavoritesPreview({ preview }: FavoritesPreviewProps) {
                 <span className="min-w-0 flex-1 truncate font-display text-sm text-paper transition-colors group-hover:text-amber">
                   {favorite.target.title}
                 </span>
+                {showAudience && <AudienceMark audience={favorite.audience} />}
                 <span className="shrink-0 font-data text-xs text-paper-muted">{t("profileArtistKind")}</span>
               </Link>
             </li>
@@ -69,6 +78,7 @@ export async function FavoritesPreview({ preview }: FavoritesPreviewProps) {
                 <span className="min-w-0 flex-1 truncate font-display text-sm text-paper transition-colors group-hover:text-amber">
                   {favorite.target.title}
                 </span>
+                {showAudience && <AudienceMark audience={favorite.audience} />}
                 {favorite.target.artistName && (
                   <span className="max-w-[45%] shrink-0 truncate font-data text-xs text-paper-muted">
                     {favorite.target.artistName}

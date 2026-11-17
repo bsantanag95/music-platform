@@ -16,6 +16,7 @@ import {
   DIARY_PROFILE_PREVIEW,
 } from "./sections";
 import { ProfileRail } from "@/components/profiles/ProfileRail";
+import { OwnerAddAction } from "@/components/profiles/OwnerAddAction";
 import { ProfileRow } from "@/components/profiles/ProfileRow";
 import { DiaryPreviewTable } from "@/components/diary/DiaryPreviewTable";
 import { ListsAndCaminosPreview, LISTS_AND_CAMINOS_PREVIEW } from "@/components/profiles/ListsAndCaminosPreview";
@@ -119,6 +120,7 @@ vi.mock("@/components/profiles/OwnerMusicIdentityEditor", () => ({ OwnerMusicIde
 vi.mock("@/components/profiles/OwnerPromptsEditor", () => ({ OwnerPromptsEditor: () => null }));
 vi.mock("@/components/profiles/OwnerShowcaseEditor", () => ({ OwnerShowcaseEditor: () => null }));
 vi.mock("@/components/profiles/ProfileRecency", () => ({ ProfileRecency: () => null }));
+vi.mock("@/components/profiles/OwnerAddAction", () => ({ OwnerAddAction: () => null }));
 
 const section = { username: "ana", viewerId: null, isOwn: false };
 
@@ -179,6 +181,32 @@ describe("filas del cuerpo (openspec: redesign-user-profile-phase2)", () => {
     expect(visitor.props.end).toBeNull();
     const own = rowOf(await ReviewsDiaryRow({ ...section, isOwn: true }));
     expect(own.props.end).not.toBeNull();
+  });
+
+  it("ReviewsDiaryRow: el dueño recibe «+ Registrar» y las marcas de audiencia; un visitante no", async () => {
+    svc.getProfileReviews.mockResolvedValue(null);
+    svc.listUserDiary.mockResolvedValue({ entries: [{ id: "e1" }], page: 1, hasNext: false, totalCount: 1 });
+    const own = rowOf(await ReviewsDiaryRow({ ...section, isOwn: true })).props.end as {
+      props: { ownerAction?: Node; children: Node };
+    };
+    expect(own.props.ownerAction?.type).toBe(OwnerAddAction);
+    expect(own.props.ownerAction?.props?.kind).toBe("listen");
+    expect(own.props.children?.props?.showAudience).toBe(true);
+    const visitor = rowOf(await ReviewsDiaryRow(section)).props.end as { props: { ownerAction?: Node; children: Node } };
+    expect(visitor.props.ownerAction).toBeUndefined();
+    expect(visitor.props.children?.props?.showAudience).toBe(false);
+  });
+
+  it("FavoritesRail: el dueño recibe «+ Agregar» (favorito) y las marcas", async () => {
+    svc.getFavoritesPreview.mockResolvedValue({
+      artists: [],
+      albums: [{ id: "f2" }],
+      songs: [],
+      counts: { artist: 0, "release-group": 1, recording: 0 },
+    });
+    const rail = (await FavoritesRail({ ...section, isOwn: true })) as { props: { ownerAction?: Node; children: Node } };
+    expect(rail.props.ownerAction?.props?.kind).toBe("favorite");
+    expect(rail.props.children?.props?.showAudience).toBe(true);
   });
 
   it("FavoritesRail colapsa sin favoritos visibles para un visitante", async () => {

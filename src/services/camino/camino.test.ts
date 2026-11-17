@@ -337,6 +337,7 @@ describe("servicio de Camino", () => {
             itemCount: 4,
             coverThumbs: ["c1"],
             tracking: true,
+            audience: caminoRow.audience,
           },
         ],
         page: 1,

@@ -9,6 +9,8 @@ interface ProfileRailProps {
   id?: string;
   /** Vista completa de Nivel 3 («Ver todo →»). */
   more?: { href: string; label: string } | null;
+  /** Acción del dueño para agregar (redesign-owner-profile-phase2). */
+  ownerAction?: ReactNode;
   children: ReactNode;
 }
 
@@ -17,13 +19,13 @@ interface ProfileRailProps {
 // que aporta cada vista previa. Un estante vacío no se renderiza: esa decisión
 // vive en cada sección de la página, no acá. Reserva la altura de la cabecera
 // del sitio y de la barra de anclas al saltar a su ancla.
-export function ProfileRail({ label, count, id, more, children }: ProfileRailProps) {
+export function ProfileRail({ label, count, id, more, ownerAction, children }: ProfileRailProps) {
   return (
     <section
       id={id}
       className="flex w-full scroll-mt-[calc(var(--site-header-h,0px)+var(--profile-anchors-h,0px)+1rem)] flex-col gap-4"
     >
-      <ProfileSectionHeading title={label} count={count} more={more} />
+      <ProfileSectionHeading title={label} count={count} more={more} ownerAction={ownerAction} />
       {children}
     </section>
   );

@@ -3,9 +3,12 @@ import { Link } from "@/i18n/navigation";
 import { targetHref } from "@/components/feed/feed-target";
 import type { ListenEntry } from "@/lib/api/schemas";
 import { DiaryCover } from "./diary-row-parts";
+import { AudienceMark } from "@/components/profiles/AudienceMark";
 
 interface DiaryPreviewTableProps {
   entries: ListenEntry[];
+  /** Vista del dueño: marca las entradas que no son públicas (redesign-owner-profile-phase2). */
+  showAudience?: boolean;
 }
 
 // Vista previa del diario en el perfil (spec social-profiles, "Cuerpo del perfil en
@@ -14,7 +17,7 @@ interface DiaryPreviewTableProps {
 // ella y sin «cargar más»: el diario entero vive en `/users/[username]/diary`,
 // enlazado desde el título. La impresión, si la hay, va como cita de una línea bajo
 // la obra. En pantallas angostas el contexto baja bajo la obra. Server Component.
-export async function DiaryPreviewTable({ entries }: DiaryPreviewTableProps) {
+export async function DiaryPreviewTable({ entries, showAudience = false }: DiaryPreviewTableProps) {
   if (entries.length === 0) return null;
   const [t, locale] = await Promise.all([getTranslations("diary"), getLocale()]);
 
@@ -66,13 +69,19 @@ export async function DiaryPreviewTable({ entries }: DiaryPreviewTableProps) {
                         </>
                       )}
                     </span>
-                    <span className="mt-1 inline-block font-data text-[0.6875rem] text-paper-muted sm:hidden">
-                      {context}
+                    <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 font-data text-[0.6875rem] text-paper-muted sm:hidden">
+                      <span>{context}</span>
+                      {showAudience && <AudienceMark audience={entry.audience} />}
                     </span>
                   </span>
                 </Link>
               </td>
               <td className="hidden py-2.5 pl-3 text-right sm:table-cell">
+                {showAudience && entry.audience !== "public" && (
+                  <span className="mb-1 flex justify-end">
+                    <AudienceMark audience={entry.audience} />
+                  </span>
+                )}
                 <span className="inline-block rounded-full border border-ink-border px-2.5 py-0.5 font-data text-[0.6875rem] text-paper-muted">
                   {context}
                 </span>

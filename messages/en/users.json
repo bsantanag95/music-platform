@@ -956,5 +956,19 @@
     "private": "Private",
     "statusAria": "Profile visibility: {status}. Change it in Privacy and audience",
     "pendingRequests": "{count, plural, one {# follow request} other {# follow requests}}"
+  },
+  "ownerAdd": {
+    "listen": "Log",
+    "listenAria": "Log a listen",
+    "favorite": "Add",
+    "favoriteAria": "Add a favorite",
+    "newList": "New list",
+    "newListAria": "Create a list",
+    "collection": "Add",
+    "collectionAria": "Add to the physical collection"
+  },
+  "audienceMark": {
+    "followers": "Followers",
+    "private": "Only you"
   }
 }

@@ -44,6 +44,7 @@ import { ProfileRow } from "@/components/profiles/ProfileRow";
 import { CollectionPreview } from "@/components/collection/CollectionPreview";
 import { ConcertsPreview } from "@/components/concerts/ConcertsPreview";
 import { FollowersOnlyNote } from "@/components/profiles/FollowersOnlyNote";
+import { OwnerAddAction, type OwnerAddKind } from "@/components/profiles/OwnerAddAction";
 import { profileHasVisibleContent } from "@/services/profiles/visible-content";
 
 // Secciones asíncronas del perfil, cada una envuelta por su propio <Suspense>
@@ -57,9 +58,14 @@ export interface SectionProps {
   isOwn: boolean;
 }
 
-function EmptyRailForOwner({ label, message }: { label: string; message: string }) {
+// Acción del dueño para agregar en un estante (openspec: redesign-owner-profile-phase2).
+function ownerAdd(isOwn: boolean, kind: OwnerAddKind) {
+  return isOwn ? <OwnerAddAction kind={kind} /> : undefined;
+}
+
+function EmptyRailForOwner({ label, message, add }: { label: string; message: string; add?: OwnerAddKind }) {
   return (
-    <ProfileRail label={label}>
+    <ProfileRail label={label} ownerAction={add ? <OwnerAddAction kind={add} /> : undefined}>
       <p className="font-body text-sm text-paper-muted">{message}</p>
     </ProfileRail>
   );
@@ -355,11 +361,12 @@ export async function ReviewsDiaryRow({ username, viewerId, isOwn }: SectionProp
         label={t("diaryTitle")}
         count={diary.totalCount}
         more={{ href: `/users/${username}/diary`, label: t("seeAll") }}
+        ownerAction={ownerAdd(isOwn, "listen")}
       >
-        <DiaryPreviewTable entries={diary.entries} />
+        <DiaryPreviewTable entries={diary.entries} showAudience={isOwn} />
       </ProfileRail>
     ) : isOwn ? (
-      <EmptyRailForOwner label={t("diaryTitle")} message={t("railEmptyOwn")} />
+      <EmptyRailForOwner label={t("diaryTitle")} message={t("railEmptyOwn")} add="listen" />
     ) : null;
   return <ProfileRow start={reviewsNode} end={diaryNode} />;
 }
@@ -370,7 +377,7 @@ export async function FavoritesRail({ username, viewerId, isOwn }: SectionProps)
   const total = preview.counts.artist + preview.counts["release-group"] + preview.counts.recording;
   if (total === 0) {
     return isOwn ? (
-      <EmptyRailForOwner label={t("favoritesTitle")} message={t("railEmptyOwn")} />
+      <EmptyRailForOwner label={t("favoritesTitle")} message={t("railEmptyOwn")} add="favorite" />
     ) : null;
   }
   return (
@@ -379,8 +386,9 @@ export async function FavoritesRail({ username, viewerId, isOwn }: SectionProps)
       label={t("favoritesTitle")}
       count={total}
       more={{ href: `/users/${username}/favorites`, label: t("seeAll") }}
+      ownerAction={ownerAdd(isOwn, "favorite")}
     >
-      <FavoritesPreview preview={preview} />
+      <FavoritesPreview preview={preview} showAudience={isOwn} />
     </ProfileRail>
   );
 }
@@ -412,6 +420,7 @@ export async function ListsCollectionRow({
           ? { href: `/users/${username}/lists`, label: t("seeAll") }
           : { href: `/users/${username}/caminos`, label: t("seeAll") }
       }
+      ownerAction={ownerAdd(isOwn, "newList")}
     >
       <ListsAndCaminosPreview
         username={username}
@@ -420,10 +429,11 @@ export async function ListsCollectionRow({
         caminos={caminos.caminos}
         caminosTotal={caminos.totalCount}
         canAct={canAct}
+        showAudience={isOwn}
       />
     </ProfileRail>
   ) : isOwn ? (
-    <EmptyRailForOwner label={t("listsTitle")} message={t("railEmptyOwn")} />
+    <EmptyRailForOwner label={t("listsTitle")} message={t("railEmptyOwn")} add="newList" />
   ) : null;
   const collectionNode =
     collection.totalEntries > 0 ? (
@@ -432,11 +442,12 @@ export async function ListsCollectionRow({
         label={t("collectionTitle")}
         count={collection.totalEntries}
         more={{ href: `/users/${username}/collection`, label: t("seeAll") }}
+        ownerAction={ownerAdd(isOwn, "collection")}
       >
         <CollectionPreview artists={collection.artists} />
       </ProfileRail>
     ) : isOwn ? (
-      <EmptyRailForOwner label={t("collectionTitle")} message={t("railEmptyOwn")} />
+      <EmptyRailForOwner label={t("collectionTitle")} message={t("railEmptyOwn")} add="collection" />
     ) : null;
   return <ProfileRow start={listsNode} end={collectionNode} />;
 }
