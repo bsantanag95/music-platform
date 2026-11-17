@@ -951,5 +951,10 @@
   "listsAndCaminos": {
     "moreLists": "Ver las {count} listas",
     "moreCaminos": "Ver las {count} listas para completar"
+  },
+  "followersNote": {
+    "note": "Si sigues a @{username}, verás también lo que comparte solo con sus seguidores.",
+    "emptyTitle": "Nada público por ahora",
+    "empty": "Si sigues a @{username}, verás lo que comparte solo con sus seguidores."
   }
 }

@@ -43,6 +43,8 @@ import { ListsAndCaminosPreview, LISTS_AND_CAMINOS_PREVIEW } from "@/components/
 import { ProfileRow } from "@/components/profiles/ProfileRow";
 import { CollectionPreview } from "@/components/collection/CollectionPreview";
 import { ConcertsPreview } from "@/components/concerts/ConcertsPreview";
+import { FollowersOnlyNote } from "@/components/profiles/FollowersOnlyNote";
+import { profileHasVisibleContent } from "@/services/profiles/visible-content";
 
 // Secciones asíncronas del perfil, cada una envuelta por su propio <Suspense>
 // en `page.tsx` para que nada bloquee la cabecera. Un estante colapsa cuando no
@@ -440,5 +442,31 @@ export async function ConcertsRail({ username, viewerId, isOwn }: SectionProps) 
     <ProfileRail id="conciertos" label={t("rail")} count={preview.total}>
       <ConcertsPreview entries={preview.entries} total={preview.total} username={username} />
     </ProfileRail>
+  );
+}
+
+// Aviso para quien no sigue un perfil público (openspec: redesign-private-profile-phase2): al final
+// del cuerpo, genérico y siempre; si no hay nada visible para ese visitante, «Nada público por ahora»
+// en su lugar (las demás secciones devuelven `null`, así que queda justo debajo de la cabecera).
+// `page.tsx` solo la monta para quien no es el dueño ni sigue el perfil.
+export async function FollowersNoteSection({
+  profile,
+  viewerId,
+  authenticated,
+  preview,
+}: {
+  profile: ProfileView;
+  viewerId: string | null;
+  authenticated: boolean;
+  preview: boolean;
+}) {
+  const visible = await profileHasVisibleContent(profile, viewerId);
+  return (
+    <FollowersOnlyNote
+      profile={profile}
+      authenticated={authenticated}
+      preview={preview}
+      variant={visible ? "note" : "empty"}
+    />
   );
 }
