@@ -294,11 +294,30 @@ del perfil accesible, que decía «privado» tres veces y dejaba media pantalla 
 - **Refresco**: `FollowButton refreshOnAnyChange` y `BlockButton refreshOnChange` refrescan la
   página tras cualquier cambio de relación/bloqueo, porque el texto del servidor depende del estado
   exacto.
-- **Fase 2** (`redesign-private-profile-phase2`, pendiente): en un perfil **público** visto por quien
-  no sigue, un aviso genérico al final («Si sigues a @x, verás también lo que comparte solo con sus
-  seguidores»), mostrado a todo visitante que no sigue aunque no haya nada oculto (no debe revelar si
-  existe contenido oculto), y el estado vacío «Nada público por ahora» cuando no hay ninguna sección
-  visible.
+- **Fase 2**: ver "Aviso para quien no sigue un perfil público".
+
+## Aviso para quien no sigue un perfil público
+
+(openspec: `redesign-private-profile-phase2`, 2026-11.) Un perfil **público** cuyo contenido es en parte o del todo
+solo para seguidores se veía, para quien no sigue, como la cabecera y un cuerpo vacío o sin pista de que seguir muestra
+más.
+
+- **Quién lo ve**: quien no es el dueño y no sigue el perfil (sin sesión, sin relación, con una solicitud recibida de esa
+  cuenta, y el dueño en "cómo te ven"). `page.tsx` monta `FollowersNoteSection` al final del cuerpo, en su propio
+  `<Suspense>`, solo en ese caso.
+- **Aviso** (`FollowersOnlyNote`, variante `note`): «Si sigues a @x, verás también lo que comparte solo con sus
+  seguidores», con `FollowButton` (seguir directo, `refreshProfileOnFollow`; inerte en la previsualización; sin acción
+  con una solicitud recibida, que ya se responde desde la cabecera). **Genérico y siempre**: se muestra haya o no
+  contenido solo para seguidores y no dice qué ni cuánto, para no revelar que existe (spec `diary-visibility`).
+- **Estado vacío** (variante `empty`): si nada del cuerpo ni de la franja es visible para ese visitante, «Nada público
+  por ahora», la misma oración sin «también», la acción y, sin sesión, «Crear cuenta». Como las demás secciones devuelven
+  `null`, queda justo debajo de la cabecera.
+- **`profileHasVisibleContent`** (`src/services/profiles/visible-content.ts`) decide con consultas de una fila, con la
+  vista del visitante y las mismas funciones que las secciones: ficha musical, diario, reseñas, valoraciones destacadas,
+  favoritos, listas, Caminos, colección, conciertos, En rotación, Empieza por aquí, huella y artistas seguidos. Devuelve
+  solo un booleano. **Una sección nueva del perfil debe sumarse ahí** (y a su test), o el estado vacío aparecería con
+  contenido debajo.
+
 
 ## Seguidores en común y listados de conexiones
 

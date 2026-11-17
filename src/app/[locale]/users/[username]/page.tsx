@@ -20,6 +20,7 @@ import {
   AnchorsSection,
   ConcertsRail,
   FavoritesRail,
+  FollowersNoteSection,
   EditablePlaca,
   HeaderBackdropSection,
   IdentityCardSection,
@@ -240,6 +241,18 @@ async function UserProfilePage({ params, searchParams }: UserProfilePageProps) {
         <Streamed>
           <ConcertsRail {...section} />
         </Streamed>
+        {/* Quien no es el dueño ni sigue el perfil (incluida la previsualización): aviso genérico al
+            final o, sin nada visible, «Nada público por ahora» (openspec: redesign-private-profile-phase2). */}
+        {!isOwn && profile.relation !== "following" && (
+          <Suspense fallback={null}>
+            <FollowersNoteSection
+              profile={profile}
+              viewerId={effectiveViewerId}
+              authenticated={authenticated}
+              preview={previewing}
+            />
+          </Suspense>
+        )}
       </div>
     </>
   );

@@ -19,6 +19,7 @@ import {
   InRotationSection,
   StartRow,
   SettingsCardSection,
+  FollowersNoteSection,
 } from "./sections";
 import type { ProfileView } from "@/services/profiles/profile-view";
 // Compartir (add-share-foundation): carga datos de la base; acá no se prueba.
@@ -78,6 +79,7 @@ vi.mock("./sections", () => ({
   AffinitySection: () => null,
   FavoritesRail: () => null,
   ConcertsRail: () => null,
+  FollowersNoteSection: () => null,
 }));
 
 function findElement(node: unknown, type: unknown): { props?: Record<string, unknown> } | null {
@@ -387,5 +389,44 @@ describe("UserProfilePage", () => {
 
     const plain = (await render()) as { props: { style?: Record<string, string> } };
     expect(plain.props.style).toBeUndefined();
+  });
+
+  describe("aviso para quien no sigue (redesign-private-profile-phase2)", () => {
+    it("visitante anónimo de un perfil público: monta el aviso con su vista", async () => {
+      resolveSession.mockResolvedValue(null);
+      getProfileView.mockResolvedValue(profile({ profileVisibility: "public", relation: "none", accessible: true }));
+      const note = findElement(await render(), FollowersNoteSection);
+      expect(note?.props?.viewerId).toBeNull();
+      expect(note?.props?.authenticated).toBe(false);
+      expect(note?.props?.preview).toBe(false);
+    });
+
+    it("con sesión, sin relación: lo monta", async () => {
+      resolveSession.mockResolvedValue({ user: { id: "viewer" } });
+      getProfileView.mockResolvedValue(profile({ profileVisibility: "public", relation: "none", accessible: true }));
+      expect(findElement(await render(), FollowersNoteSection)?.props?.viewerId).toBe("viewer");
+    });
+
+    it("previsualización del dueño: lo monta, inerte", async () => {
+      resolveSession.mockResolvedValue({ user: { id: "owner" } });
+      getProfileView
+        .mockResolvedValueOnce(profile({ relation: "self", isOwner: true, accessible: true }))
+        .mockResolvedValueOnce(profile({ profileVisibility: "public", relation: "none", accessible: true }));
+      expect(findElement(await render("ana", "1"), FollowersNoteSection)?.props?.preview).toBe(true);
+    });
+
+    it("seguidor: no lo monta", async () => {
+      resolveSession.mockResolvedValue({ user: { id: "viewer" } });
+      getProfileView.mockResolvedValue(
+        profile({ profileVisibility: "public", relation: "following", accessible: true }),
+      );
+      expect(findElement(await render(), FollowersNoteSection)).toBeNull();
+    });
+
+    it("dueño: no lo monta", async () => {
+      resolveSession.mockResolvedValue({ user: { id: "owner" } });
+      getProfileView.mockResolvedValue(profile({ relation: "self", isOwner: true, accessible: true }));
+      expect(findElement(await render(), FollowersNoteSection)).toBeNull();
+    });
   });
 });
