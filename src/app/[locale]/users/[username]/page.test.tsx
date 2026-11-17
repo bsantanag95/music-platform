@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 import UserProfilePage from "./page";
 import { ProfileHeader } from "@/components/profiles/ProfileHeader";
-import { PrivateProfileCard } from "@/components/profiles/PrivateProfileCard";
+import { PrivateProfileDoor } from "@/components/profiles/PrivateProfileDoor";
 import { ViewAsBanner } from "@/components/profiles/ViewAsBanner";
 import { OwnerEditProvider } from "@/components/profiles/OwnerEditProvider";
 import { OwnerProfileBar } from "@/components/profiles/OwnerProfileBar";
@@ -59,7 +59,7 @@ vi.mock("@/i18n/navigation", () => ({
   Link: ({ children }: { children: ReactNode }) => <span>{children}</span>,
 }));
 vi.mock("@/components/profiles/ProfileHeader", () => ({ ProfileHeader: () => null }));
-vi.mock("@/components/profiles/PrivateProfileCard", () => ({ PrivateProfileCard: () => null }));
+vi.mock("@/components/profiles/PrivateProfileDoor", () => ({ PrivateProfileDoor: () => null }));
 vi.mock("@/components/profiles/ViewAsBanner", () => ({ ViewAsBanner: () => null }));
 vi.mock("@/components/profiles/OwnerEditProvider", () => ({ OwnerEditProvider: () => null }));
 vi.mock("@/components/profiles/OwnerProfileBar", () => ({ OwnerProfileBar: () => null }));
@@ -159,16 +159,22 @@ beforeEach(() => {
 });
 
 describe("UserProfilePage", () => {
-  it("perfil privado, visitante anónimo: una sola tarjeta privada, sin Placa ni contenido", async () => {
+  it("perfil privado, visitante anónimo: cabecera sin acceso + franja, sin identidad ni contenido", async () => {
     resolveSession.mockResolvedValue(null);
     getProfileView.mockResolvedValue(profile({ relation: "none", accessible: false }));
 
     const tree = await render();
-    const card = findElement(tree, PrivateProfileCard);
-    expect(card).not.toBeNull();
-    expect(card?.props?.authenticated).toBe(false);
-    // La identidad vive en la propia tarjeta: la cabecera no se apila encima.
-    expect(findElement(tree, ProfileHeader)).toBeNull();
+    const door = findElement(tree, PrivateProfileDoor);
+    expect(door).not.toBeNull();
+    expect(door?.props?.authenticated).toBe(false);
+    // La misma cabecera del perfil, en su variante sin acceso y sin Tarjeta de Identidad ni fondo.
+    const header = findElement(tree, ProfileHeader);
+    expect(header?.props?.locked).toEqual({ state: "anonymous" });
+    expect(header?.props?.identity).toBeUndefined();
+    expect(header?.props?.backdrop).toBeUndefined();
+    expect(header?.props?.share).toBeDefined();
+    expect(findElement(tree, AnchorsSection)).toBeNull();
+    expect(findElement(tree, IdentityStripSection)).toBeNull();
     expect(findElement(tree, OwnerEditProvider)).toBeNull();
   });
 
@@ -176,9 +182,11 @@ describe("UserProfilePage", () => {
     resolveSession.mockResolvedValue({ user: { id: "viewer" } });
     getProfileView.mockResolvedValue(profile({ relation: "requested", accessible: false }));
 
-    const card = findElement(await render(), PrivateProfileCard);
+    const tree = await render();
+    const card = findElement(tree, PrivateProfileDoor);
     expect((card?.props?.profile as ProfileView).relation).toBe("requested");
     expect(card?.props?.authenticated).toBe(true);
+    expect(findElement(tree, ProfileHeader)?.props?.locked).toEqual({ state: "requested" });
   });
 
   it("perfil privado, visitante común: sin banner de 'cómo te ven'", async () => {
@@ -199,7 +207,8 @@ describe("UserProfilePage", () => {
     const tree = await render("ana", "1");
     expect(getProfileView).toHaveBeenNthCalledWith(2, "ana", null);
     expect(findElement(tree, ViewAsBanner)).not.toBeNull();
-    expect(findElement(tree, PrivateProfileCard)?.props?.preview).toBe(true);
+    expect(findElement(tree, PrivateProfileDoor)?.props?.preview).toBe(true);
+    expect(findElement(tree, ProfileHeader)?.props?.locked).toEqual({ state: "preview" });
     expect(findElement(tree, OwnerEditProvider)).toBeNull();
     expect(findElement(tree, SettingsCardSection)).toBeNull();
   });
@@ -209,7 +218,7 @@ describe("UserProfilePage", () => {
     getProfileView.mockResolvedValue(
       profile({ profileVisibility: "public", relation: "none", accessible: true }),
     );
-    expect(findElement(await render(), PrivateProfileCard)).toBeNull();
+    expect(findElement(await render(), PrivateProfileDoor)).toBeNull();
   });
 
   it("visitante bloqueado por perfil privado: umbral, sin editores", async () => {
@@ -217,8 +226,11 @@ describe("UserProfilePage", () => {
     getProfileView.mockResolvedValue(profile({ relation: "blocked", accessible: false }));
 
     const tree = await render();
-    expect(findElement(tree, PrivateProfileCard)).not.toBeNull();
+    expect(findElement(tree, PrivateProfileDoor)).not.toBeNull();
     expect(findElement(tree, OwnerEditProvider)).toBeNull();
+    // Quien fue bloqueado por la cuenta no recibe la acción de compartir.
+    expect(findElement(tree, ProfileHeader)?.props?.locked).toEqual({ state: "blockedByThem" });
+    expect(findElement(tree, ProfileHeader)?.props?.share).toBeUndefined();
   });
 
   it("vista del dueño: monta el modo edición, la barra, la cabecera editable y la tarjeta de Ajustes, sin umbral", async () => {
@@ -237,7 +249,7 @@ describe("UserProfilePage", () => {
     expect(findElement(wrapDetails(<p />), EditablePlaca)).not.toBeNull();
     // Sin previsualización no hay banner de salida.
     expect(findElement(tree, ViewAsBanner)).toBeNull();
-    expect(findElement(tree, PrivateProfileCard)).toBeNull();
+    expect(findElement(tree, PrivateProfileDoor)).toBeNull();
     expect(mutualFollowersHint).not.toHaveBeenCalled();
   });
 
@@ -330,7 +342,7 @@ describe("UserProfilePage", () => {
 
     const tree = await render();
     expect(mutualFollowersHint).toHaveBeenCalledWith("viewer", "owner");
-    expect(findElement(tree, PrivateProfileCard)?.props?.mutualFollowers).toBe(2);
+    expect(findElement(tree, PrivateProfileDoor)?.props?.mutualFollowers).toBe(2);
   });
 
   it("la franja de identidad va después de la cabecera y antes de Empieza por aquí", async () => {

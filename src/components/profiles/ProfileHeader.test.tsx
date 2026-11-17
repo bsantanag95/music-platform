@@ -261,3 +261,72 @@ describe("ProfileHeader", () => {
     expect(editable).not.toContainElement(screen.getByTestId("identity"));
   });
 });
+
+describe("ProfileHeader: perfil privado sin acceso (locked)", () => {
+  const privateProfile: ProfileView = {
+    ...base,
+    profileVisibility: "private",
+    accessible: false,
+    bio: "Colecciono ediciones japonesas.",
+    links: [{ id: "l1", kind: "bandcamp", url: "https://ana.bandcamp.com", position: 0 }],
+    pronounSet: "she",
+    country: "CL",
+    location: "Rosario",
+    timezone: "America/Santiago",
+    showLocalTime: true,
+  };
+
+  it("marca «Privado» junto al nombre, bio y enlaces visibles; sin pronombres, ubicación ni hora local", async () => {
+    renderWithIntl(
+      await ProfileHeader({ profile: privateProfile, authenticated: false, locked: { state: "anonymous" } }),
+    );
+    expect(screen.getByRole("heading", { level: 1, name: "Ana Torres" })).toBeInTheDocument();
+    expect(screen.getByText("privateProfile.chipPrivate")).toBeInTheDocument();
+    expect(screen.getByText("Colecciono ediciones japonesas.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "linkAria" })).toHaveAttribute("href", "https://ana.bandcamp.com");
+    expect(screen.queryByText("pronounSet.she")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Rosario/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/profileLocalTime/)).not.toBeInTheDocument();
+  });
+
+  it("recuentos como texto, sin enlace a las conexiones", async () => {
+    renderWithIntl(await ProfileHeader({ profile: privateProfile, authenticated: true, locked: { state: "none" } }));
+    expect(screen.getByText("12").closest("a")).toBeNull();
+    expect(screen.getByText("8").closest("a")).toBeNull();
+  });
+
+  it("sin seguir ni bloquear en la cabecera: la acción vive en la franja", async () => {
+    renderWithIntl(await ProfileHeader({ profile: privateProfile, authenticated: true, locked: { state: "none" } }));
+    expect(screen.queryByTestId("follow-button")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("block-button")).not.toBeInTheDocument();
+  });
+
+  it("bloqueo propio: marca «Bloqueada»", async () => {
+    renderWithIntl(
+      await ProfileHeader({
+        profile: { ...privateProfile, relation: "blocked", blockedByMe: true },
+        authenticated: true,
+        locked: { state: "blockedByMe" },
+      }),
+    );
+    expect(screen.getByText("privateProfile.chipBlocked")).toBeInTheDocument();
+  });
+
+  it("bloqueado por la cuenta: solo avatar, nombre y usuario", async () => {
+    renderWithIntl(
+      await ProfileHeader({
+        profile: { ...privateProfile, relation: "blocked" },
+        authenticated: true,
+        locked: { state: "blockedByThem" },
+        share: <button type="button">compartir</button>,
+      }),
+    );
+    expect(screen.getByRole("heading", { level: 1, name: "Ana Torres" })).toBeInTheDocument();
+    expect(screen.getByText("@ana")).toBeInTheDocument();
+    expect(screen.queryByText("Colecciono ediciones japonesas.")).not.toBeInTheDocument();
+    expect(screen.queryByText("12")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "linkAria" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Miembro desde/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "compartir" })).not.toBeInTheDocument();
+  });
+});

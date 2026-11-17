@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta A · Cabecera continua — perfil privado y limitado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<style>
+  /* Cabecera: la misma del perfil accesible (Fase 1), sin identidad musical ni fondo de carátula. */
+  .stage { border-bottom: 1px solid var(--line); background: linear-gradient(180deg, rgba(31,27,23,.55), var(--ink)); }
+  .stage .wrap { padding-top: 40px; padding-bottom: 32px; display: flex; flex-direction: column; gap: 16px; }
+  .who { display: flex; align-items: center; gap: 22px; min-width: 0; }
+  .who .avatar, .who .mono-av { width: 112px; height: 112px; }
+  h1 { font-size: clamp(34px, 4vw, 52px); line-height: .95; letter-spacing: -.03em; font-weight: 700; overflow-wrap: anywhere; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+  .handle { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px 14px; font-family: var(--data); font-size: 13px; color: var(--muted); }
+  .row-acts { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; }
+  .acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .stats { display: flex; gap: 16px; font-size: 14px; color: var(--muted); }
+  .stats b { color: var(--paper); font-weight: 600; margin-right: 4px; }
+
+  /* La puerta: una franja a todo el ancho, no una tarjeta */
+  .door { border-bottom: 1px solid var(--line); }
+  .door .wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: clamp(24px, 4vw, 64px); padding-top: 36px; padding-bottom: 40px; align-items: start; }
+  .door h2 { font-size: 26px; letter-spacing: -.01em; display: flex; align-items: center; gap: 10px; }
+  .door h2 svg { width: 22px; height: 22px; color: var(--amber); }
+  .door p { margin-top: 10px; font-family: var(--body); font-size: 17px; line-height: 1.45; color: var(--muted); max-width: 42ch; }
+  .door .cta { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+  .note { margin-top: 12px; font-family: var(--data); font-size: 12px; color: var(--muted); }
+
+  /* Siluetas: la forma de lo que se abre, sin ningún dato */
+  .ghosts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .ghost { border-top: 1px solid var(--line); padding-top: 12px; }
+  .ghost .eyebrow { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+  .ghost .eyebrow svg { width: 12px; height: 12px; }
+  .bars i { display: block; height: 9px; border-radius: 3px; background: var(--s2); margin-bottom: 9px; }
+  .bars i:nth-child(1) { width: 92%; } .bars i:nth-child(2) { width: 74%; } .bars i:nth-child(3) { width: 84%; }
+  .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .tiles i { aspect-ratio: 1; border-radius: 5px; background: var(--s2); }
+
+  /* Perfil público con poco visible */
+  .body { padding-top: 32px; display: flex; flex-direction: column; gap: 36px; }
+  .strip { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .strip > section { padding: 22px 28px 22px 0; }
+  .strip > section + section { border-left: 1px solid var(--line); padding: 22px 0 22px 28px; }
+  .strip p { font-family: var(--body); font-size: 15px; color: var(--muted); }
+  .sh { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+  .sh h2 { font-size: 20px; font-weight: 500; }
+  .sh h2 span { font-family: var(--data); font-size: 12px; color: var(--muted); margin-left: 8px; }
+  .artist { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; font-family: var(--data); font-size: 12px; }
+  .artist img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; }
+  .fav { width: 130px; }
+  .fav p { font-size: 14px; margin-top: 6px; } .fav span { font-family: var(--data); font-size: 12px; color: var(--muted); }
+  .more-note { border-top: 1px solid var(--line); padding-top: 22px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
+  .more-note p { font-family: var(--body); font-size: 16px; color: var(--muted); max-width: 52ch; }
+  .empty { padding: 56px 0 24px; max-width: 560px; }
+  .empty h2 { font-size: 24px; }
+  .empty p { margin-top: 8px; font-family: var(--body); font-size: 17px; color: var(--muted); }
+  .empty .cta { margin-top: 18px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+  @media (max-width: 860px) {
+    .door .wrap { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 520px) {
+    .who { gap: 16px; } .who .avatar, .who .mono-av { width: 76px; height: 76px; } .mono-av { font-size: 30px; }
+    .ghosts { grid-template-columns: 1fr; }
+    .strip { grid-template-columns: 1fr; }
+    .strip > section, .strip > section + section { padding: 20px 0; border-left: 0; }
+    .strip > section + section { border-top: 1px solid var(--line); }
+    .door h2 { font-size: 22px; }
+  }
+</style>
+</head>
+<body data-state="anon">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 13v6h14v-6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 8v4l3 2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M5 4l14 16M19 4 5 20" stroke="currentColor" stroke-width="1.7"/></symbol>
+  <symbol id="i-ig" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3.6" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+</svg>
+
+<header class="site"><div class="wrap">
+  <a class="brand" href="#"><i>♪</i>music-platform</a>
+  <nav><a href="#">Explorar</a><a href="#">Listas</a><a href="#">Comunidad</a></nav>
+  <div class="hsearch">Buscar artistas</div>
+  <div class="hauth"><span class="lang mono">ES · EN</span><a class="login" href="#">Iniciar sesión</a><a class="btn btn-amber" href="#">Crear cuenta</a></div>
+</div></header>
+
+<!-- ===== Perfil privado ===== -->
+<div data-only="anon logged requested">
+  <section class="stage" aria-labelledby="name"><div class="wrap">
+    <div class="who">
+      <img class="avatar" src="assets/avatar.webp" alt="">
+      <div style="min-width:0">
+        <h1 id="name">Nombre Cambiado <span class="chip"><svg><use href="#i-lock"/></svg>Privado</span></h1>
+        <p class="handle"><span>@pruebatesting</span><span>Desde agosto de 2026</span></p>
+      </div>
+    </div>
+    <div class="row-acts">
+      <div class="acts">
+        <a class="icon-btn" href="#" aria-label="X"><svg><use href="#i-x"/></svg></a>
+        <a class="icon-btn" href="#" aria-label="Instagram"><svg><use href="#i-ig"/></svg></a>
+        <a class="icon-btn" href="#" aria-label="Sitio web"><svg><use href="#i-link"/></svg></a>
+        <a class="btn btn-line" href="#"><svg><use href="#i-share"/></svg>Compartir</a>
+      </div>
+      <p class="stats"><span><b>2</b>seguidores</span><span><b>3</b>siguiendo</span></p>
+    </div>
+  </div></section>
+
+  <section class="door" aria-labelledby="door-t"><div class="wrap">
+    <div>
+      <h2 id="door-t"><svg><use href="#i-lock"/></svg><span data-only="anon logged">Solo para seguidores</span><span data-only="requested">Solicitud enviada</span></h2>
+      <p data-only="anon">Inicia sesión y pide seguir para ver su diario, favoritos, listas y colección.</p>
+      <p data-only="logged">Pide seguir. Cuando acepte, verás su diario, favoritos, listas y colección.</p>
+      <p data-only="requested">Cuando acepte, este perfil se abrirá aquí mismo. Te avisaremos.</p>
+      <div class="cta">
+        <a class="btn btn-amber" href="#" data-only="anon">Iniciar sesión para seguir</a>
+        <a class="link-mono" href="#" data-only="anon">Crear cuenta</a>
+        <a class="btn btn-amber" href="#" data-only="logged">Pedir seguir</a>
+        <span class="btn btn-quiet" data-only="requested"><svg><use href="#i-clock"/></svg>Pendiente</span>
+        <a class="link-mono" href="#" data-only="requested">Cancelar solicitud</a>
+      </div>
+      <p class="note" data-only="logged requested">Seguidores en común: 1</p>
+    </div>
+    <div class="ghosts" aria-hidden="true">
+      <div class="ghost"><p class="eyebrow"><svg><use href="#i-lock"/></svg>Diario</p><div class="bars"><i></i><i></i><i></i></div></div>
+      <div class="ghost"><p class="eyebrow"><svg><use href="#i-lock"/></svg>Favoritos</p><div class="tiles"><i></i><i></i><i></i><i></i></div></div>
+      <div class="ghost"><p class="eyebrow"><svg><use href="#i-lock"/></svg>Listas</p><div class="tiles"><i></i><i></i><i></i><i></i></div></div>
+      <div class="ghost"><p class="eyebrow"><svg><use href="#i-lock"/></svg>Colección física</p><div class="bars"><i></i><i></i><i></i></div></div>
+    </div>
+  </div></section>
+</div>
+
+<!-- ===== Perfil público con poco visible ===== -->
+<div data-only="limited">
+  <section class="stage" aria-labelledby="name2"><div class="wrap">
+    <div class="who">
+      <span class="mono-av" aria-hidden="true">B</span>
+      <div style="min-width:0">
+        <h1 id="name2">besantanag95000</h1>
+        <p class="handle"><span>@besantanag95000</span><span>Desde noviembre de 2026</span></p>
+      </div>
+    </div>
+    <div class="row-acts">
+      <div class="acts"><a class="btn btn-amber" href="#">Iniciar sesión para seguir</a><a class="btn btn-line" href="#"><svg><use href="#i-share"/></svg>Compartir</a></div>
+      <p class="stats"><span><b>0</b>seguidores</span><span><b>0</b>siguiendo</span></p>
+    </div>
+  </div></section>
+  <main class="wrap body">
+    <div class="strip">
+      <section><p class="eyebrow" style="margin-bottom:12px">Huella de gusto</p><p>Su familia más presente es Rock, sobre todo rock espacial.</p></section>
+      <section><p class="eyebrow" style="margin-bottom:12px">Artistas seguidos</p><span class="artist"><img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a1/RadioheadO2211125_composite.jpg/500px-RadioheadO2211125_composite.jpg" alt="">Radiohead</span></section>
+    </div>
+    <section>
+      <div class="sh"><h2>Favoritos<span>1</span></h2><a class="mono" href="#">Ver todo →</a></div>
+      <div class="fav"><img class="cv" src="assets/inrainbows.webp" alt=""><p>In Rainbows</p><span>Radiohead</span></div>
+    </section>
+    <div class="more-note">
+      <p>Si sigues a @besantanag95000, verás también lo que comparte solo con sus seguidores.</p>
+      <a class="btn btn-line" href="#">Iniciar sesión para seguir</a>
+    </div>
+  </main>
+</div>
+
+<div data-only="empty">
+  <section class="stage" aria-labelledby="name3"><div class="wrap">
+    <div class="who">
+      <span class="mono-av" aria-hidden="true">B</span>
+      <div style="min-width:0">
+        <h1 id="name3">bsantana</h1>
+        <p class="handle"><span>@bsantana</span><span>Desde octubre de 2026</span></p>
+      </div>
+    </div>
+    <div class="row-acts">
+      <div class="acts"><a class="btn btn-line" href="#"><svg><use href="#i-share"/></svg>Compartir</a></div>
+      <p class="stats"><span><b>0</b>seguidores</span><span><b>0</b>siguiendo</span></p>
+    </div>
+  </div></section>
+  <main class="wrap">
+    <div class="empty">
+      <h2>Nada público por ahora</h2>
+      <p>Si sigues a @bsantana, verás lo que comparte solo con sus seguidores.</p>
+      <div class="cta"><a class="btn btn-amber" href="#">Iniciar sesión para seguir</a><a class="link-mono" href="#">Crear cuenta</a></div>
+    </div>
+  </main>
+</div>
+
+<nav class="mock-bar" aria-label="Mockups">
+  <a href="index.html">Resumen</a><a href="a-continua.html" aria-current="page">A</a><a href="b-funda.html">B</a><a href="c-pasos.html">C</a>
+  <span class="sep"></span>
+  <button type="button" data-set="anon">Privado · sin sesión</button>
+  <button type="button" data-set="logged">Privado · con sesión</button>
+  <button type="button" data-set="requested">Solicitud enviada</button>
+  <button type="button" data-set="limited">Público limitado</button>
+  <button type="button" data-set="empty">Nada público</button>
+</nav>
+<script src="demo.js"></script>
+</body>
+</html>

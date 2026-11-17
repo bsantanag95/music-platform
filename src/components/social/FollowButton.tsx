@@ -42,6 +42,8 @@ interface FollowButtonProps {
   requestApproval?: boolean;
   /** Rótulo de la acción de seguir en lugar de "Seguir" (p. ej. "Seguir de vuelta" en las vistas de conexiones). */
   followLabel?: string;
+  /** Rótulo del estado "requested" en lugar de "Solicitud enviada" (la franja del perfil privado ya lo dice en su título). */
+  requestedLabel?: string;
   onChange?: (relation: FollowRelation) => void;
 }
 
@@ -58,6 +60,7 @@ export function FollowButton({
   refreshOnAnyChange,
   requestApproval,
   followLabel: followLabelOverride,
+  requestedLabel,
   onChange,
 }: FollowButtonProps) {
   const t = useTranslations("users");
@@ -184,7 +187,7 @@ export function FollowButton({
     return (
       <div className="flex items-center gap-2">
         <span className="font-display text-sm text-paper-muted" role="status">
-          {t("requested")}
+          {requestedLabel ?? t("requested")}
         </span>
         <Button variant="secondary" disabled={busy} onClick={() => void follow("DELETE")}>
           {busy ? t("searching") : t("cancelRequest")}

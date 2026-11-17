@@ -117,7 +117,6 @@
   "emptyBlocks": "You haven't blocked anyone.",
   "removeFollower": "Remove follower",
   "backToProfile": "Back to my profile",
-  "privateNoticeEyebrow": "Private profile",
   "privateNoticeTitle": "This profile is private",
   "privateNoticeMutual": "{count, plural, one {One person you follow also follows this account.} other {# people you follow also follow this account.}}",
   "requestFollow": "Request to follow",
@@ -125,18 +124,24 @@
   "privateProfile": {
     "chipPrivate": "Private",
     "chipBlocked": "Blocked",
-    "eyebrowBlocked": "Blocked account",
-    "titleBlockedByMe": "You blocked this account",
-    "titleBlockedByThem": "You can't view this profile",
-    "opensOnFollow": "Opens when you follow",
+    "pending": "Pending",
+    "title": {
+      "anonymous": "Followers only",
+      "none": "Followers only",
+      "requested": "Request sent",
+      "incoming": "Wants to follow you",
+      "blockedByMe": "You blocked this account",
+      "blockedByThem": "You can't view this profile",
+      "preview": "Followers only"
+    },
     "body": {
-      "anonymous": "Sign in and ask to follow @{username} to see their diary, favorites, lists and collection.",
-      "none": "Ask to follow @{username} to see their diary, favorites, lists and collection. They have to approve your request.",
-      "requested": "Your request is sent. @{username} has to approve it before you can see their content.",
-      "incoming": "@{username} sent you a request to follow you. Their content stays private; you can answer the request from here.",
-      "blockedByMe": "You blocked this account. Unblock it to see its profile again or follow it.",
+      "anonymous": "Sign in and ask to follow to see their diary, favorites, lists and collection.",
+      "none": "Ask to follow. Once @{username} accepts, you'll see their diary, favorites, lists and collection.",
+      "requested": "Once @{username} accepts, this profile will open right here. We'll let you know.",
+      "incoming": "@{username} asked to follow you. You can answer from here; their profile stays private.",
+      "blockedByMe": "Unblock the account to see its profile again or follow it.",
       "blockedByThem": "You can't view or follow this account.",
-      "preview": "Ask to follow @{username} to see their diary, favorites, lists and collection. They have to approve your request."
+      "preview": "Sign in and ask to follow to see their diary, favorites, lists and collection."
     }
   },
   "memberSince": "Member since {date}",
