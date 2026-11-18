@@ -1,0 +1,3 @@
+
+# Los hooks de git son scripts de sh: deben quedar siempre con LF (en Windows, autocrlf los rompe).
+.githooks/* text eol=lf
