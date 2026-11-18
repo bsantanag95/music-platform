@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
+import { renderWithIntl } from "@/test/i18n-test-utils";
 import { ReleaseSwitcher } from "./ReleaseSwitcher";
 import type { HomeRelease } from "@/services/home/home";
 
@@ -11,22 +12,6 @@ vi.mock("@/i18n/navigation", () => ({
     </a>
   ),
 }));
-
-// jsdom no implementa ResizeObserver ni matchMedia (el riel los usa para las flechas y el movimiento).
-vi.stubGlobal("matchMedia", (query: string) => ({
-  matches: false,
-  media: query,
-  addEventListener() {},
-  removeEventListener() {},
-}));
-vi.stubGlobal(
-  "ResizeObserver",
-  class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  },
-);
 
 function release(id: string, overrides: Partial<HomeRelease> = {}): HomeRelease {
   return {
@@ -41,29 +26,13 @@ function release(id: string, overrides: Partial<HomeRelease> = {}): HomeRelease 
   };
 }
 
-const railProps = {
-  locale: "es",
-  title: "Lanzamientos",
-  todayLabel: "Hoy",
-  upcomingPrefix: "Se lanza",
-  upcomingBadge: "Próximo",
-  badgeLabels: { announced: "Anunciado" },
-  prevLabel: "Anterior",
-  nextLabel: "Siguiente",
-};
-
 function renderSwitcher(
   props: Partial<Parameters<typeof ReleaseSwitcher>[0]> & Pick<Parameters<typeof ReleaseSwitcher>[0], "personal" | "popular">,
 ) {
-  return render(
+  return renderWithIntl(
     <ReleaseSwitcher
       defaultTab="personal"
       showHint={false}
-      railProps={railProps}
-      tabLabels={{ personal: "De tus artistas", popular: "Populares" }}
-      tablistLabel="Vista de lanzamientos"
-      hint="Sigue artistas y sus lanzamientos aparecerán aquí."
-      hintCta="Buscar artistas"
       {...props}
     />,
   );
@@ -100,7 +69,7 @@ describe("ReleaseSwitcher", () => {
     expect(within(hint).getByRole("link", { name: "Buscar artistas" })).toHaveAttribute("href", "/search");
   });
 
-  it("la vista personal vacía muestra solo la invitación, sin riel", () => {
+  it("la vista personal vacía muestra solo la invitación, sin horario", () => {
     renderSwitcher({ personal: [], popular: popular2, defaultTab: "personal", showHint: true });
     expect(document.querySelector("[data-release-hint]")).not.toBeNull();
     expect(screen.queryByText("Disco x1")).not.toBeInTheDocument();

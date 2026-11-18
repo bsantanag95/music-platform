@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
@@ -11,7 +12,14 @@ import type { HomeRecentListen } from "@/services/home/home";
 // la persona anotó como escucha, como estante de carátulas —tu diario sin abrir el diario—. Cada uno lleva
 // tu valoración en forma compacta (`rating-display`) o, si no lo valoraste, el contexto de la escucha. Desde
 // `lg` es una rejilla; por debajo, un riel que se desplaza en horizontal. Reemplaza a «Tu rastro reciente».
-export async function RecentListensShelf({ listens }: { listens: HomeRecentListen[] }) {
+export async function RecentListensShelf({
+  listens,
+  footer,
+}: {
+  listens: HomeRecentListen[];
+  /** Fila al pie del estante («Retoma una lista», redesign-signed-in-home-phase3). */
+  footer?: ReactNode;
+}) {
   if (listens.length === 0) return null;
 
   const [t, tFeed, locale] = await Promise.all([getTranslations("home"), getTranslations("feed"), getLocale()]);
@@ -64,6 +72,7 @@ export async function RecentListensShelf({ listens }: { listens: HomeRecentListe
           );
         })}
       </ul>
+      {footer}
     </section>
   );
 }

@@ -56,6 +56,11 @@ export interface CommunityActivityPage {
 export interface CommunityActivityFilters {
   // Una sola fuente (redesign-activity-page, D4): las otras dos ni se consultan.
   kind?: CommunityActivityKind;
+  /**
+   * Excluye la actividad del propio lector (openspec: redesign-signed-in-home-phase3): Inicio ya muestra lo
+   * propio en sus bloques. `/activity` no lo pasa (tiene la pestaña «Tú» aparte).
+   */
+  excludeViewer?: boolean;
 }
 
 export async function listCommunityActivity(
@@ -69,7 +74,13 @@ export async function listCommunityActivity(
   }
 
   const visibility = (authorColumn: unknown) =>
-    viewerId ? and(PUBLIC_PROFILE, NOT_BLOCKED_SQL(viewerId, authorColumn)) : PUBLIC_PROFILE;
+    viewerId
+      ? and(
+          PUBLIC_PROFILE,
+          NOT_BLOCKED_SQL(viewerId, authorColumn),
+          filters.excludeViewer ? sql`${authorColumn} <> ${viewerId}` : undefined,
+        )
+      : PUBLIC_PROFILE;
 
   const perSource = pageSize + 1;
   const include = (kind: CommunityActivityKind) => !filters.kind || filters.kind === kind;

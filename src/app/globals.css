@@ -39,21 +39,6 @@
   --radius-lg: 10px;
 }
 
-/* Movimiento del riel de lanzamientos de Inicio (ReleaseRail, con sesión).
-   Deliberadamente escaso: una entrada escalonada de las tarjetas cuando el
-   bloque aparece. Queda neutralizada por el bloque `prefers-reduced-motion` de más
-   abajo y por el prefijo `motion-safe:` en la utilidad que la aplica. */
-@keyframes card-reveal {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
 /* Confirmación de las acciones del diálogo "Añadir" (ActionNotice): la tarjeta entra
    con un leve ascenso y el check se dibuja. Solo con `motion-safe:`. */
 @keyframes notice-in {

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithIntl } from "@/test/i18n-test-utils";
 import { HomeReleases } from "./HomeReleases";
 import type { HomeRelease } from "@/services/home/home";
 
@@ -12,21 +13,6 @@ vi.mock("next-intl/server", () => ({
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children }: { href: string; children: ReactNode }) => <a href={href}>{children}</a>,
 }));
-
-vi.stubGlobal("matchMedia", (query: string) => ({
-  matches: false,
-  media: query,
-  addEventListener() {},
-  removeEventListener() {},
-}));
-vi.stubGlobal(
-  "ResizeObserver",
-  class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  },
-);
 
 const release = (id: string): HomeRelease => ({
   id,
@@ -40,37 +26,46 @@ const release = (id: string): HomeRelease => ({
 
 describe("HomeReleases", () => {
   it("sin sesión muestra solo la selección popular, sin selector", async () => {
-    render(await HomeReleases({ releases: [release("x1")] }));
+    renderWithIntl(await HomeReleases({ releases: [release("x1")] }));
     expect(screen.getByText("Disco x1")).toBeInTheDocument();
     expect(screen.queryByRole("tablist")).toBeNull();
   });
 
+  // openspec: redesign-signed-in-home-phase3
+  it("con sesión usa el horario (Recientes/Próximos), sin flechas", async () => {
+    renderWithIntl(
+      await HomeReleases({ releases: [release("x1")], personalReleases: [release("p1"), release("p2"), release("p3")] }),
+    );
+    expect(screen.getByRole("heading", { name: /^Recientes/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /lanzamientos anteriores|más lanzamientos/ })).toBeNull();
+  });
+
   it("sin sesión y sin lanzamientos no se muestra el apartado", async () => {
-    const { container } = render(await HomeReleases({ releases: [] }));
+    const { container } = renderWithIntl(await HomeReleases({ releases: [] }));
     expect(container).toBeEmptyDOMElement();
   });
 
   it("con sesión y al menos 3 discos propios abre en «De tus artistas» sin invitación", async () => {
-    render(
+    renderWithIntl(
       await HomeReleases({
         releases: [release("x1")],
         personalReleases: [release("p1"), release("p2"), release("p3")],
       }),
     );
-    expect(screen.getByRole("tab", { name: "releasesTabPersonal" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "De tus artistas" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByText("Disco p1")).toBeInTheDocument();
-    expect(screen.queryByText("releasesFollowHint", { exact: false })).toBeNull();
+    expect(document.querySelector("[data-release-hint]")).toBeNull();
   });
 
   it("con sesión y menos de 3 discos propios abre en «Populares» con la invitación", async () => {
-    render(await HomeReleases({ releases: [release("x1")], personalReleases: [release("p1"), release("p2")] }));
-    expect(screen.getByRole("tab", { name: "releasesTabPopular" })).toHaveAttribute("aria-selected", "true");
+    renderWithIntl(await HomeReleases({ releases: [release("x1")], personalReleases: [release("p1"), release("p2")] }));
+    expect(screen.getByRole("tab", { name: "Populares" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByText("Disco x1")).toBeInTheDocument();
-    expect(screen.getByText("releasesFollowHint", { exact: false })).toBeInTheDocument();
+    expect(document.querySelector("[data-release-hint]")).not.toBeNull();
   });
 
   it("con sesión, sin calendario y sin discos propios no se muestra el apartado", async () => {
-    const { container } = render(await HomeReleases({ releases: [], personalReleases: [] }));
+    const { container } = renderWithIntl(await HomeReleases({ releases: [], personalReleases: [] }));
     expect(container).toBeEmptyDOMElement();
   });
 });

@@ -814,7 +814,7 @@ export interface HomeResumeList {
  * último ítem agregado (`max(user_list_item.created_at)`) — agregar ítems no
  * toca `updated_at` (ver drizzle/0009), así que ordenar solo por esa columna
  * dejaría afuera el caso más común de "seguir armando una lista".
- * Devuelve `null` si el usuario no tiene ninguna lista.
+ * Devuelve `null` si el usuario no tiene ninguna lista con elementos.
  */
 export async function getMostRecentEditedList(userId: string): Promise<HomeResumeList | null> {
   const lastActivity = sql<string>`greatest(${userList.updatedAt}, coalesce(max(${userListItem.createdAt}), ${userList.updatedAt}))`;
@@ -827,7 +827,9 @@ export async function getMostRecentEditedList(userId: string): Promise<HomeResum
       itemCount: sql<number>`count(${userListItem.id})`,
     })
     .from(userList)
-    .leftJoin(userListItem, eq(userListItem.listId, userList.id))
+    // Solo listas con al menos un elemento (openspec: redesign-signed-in-home-phase3): una lista vacía no
+    // se propone para retomar aunque sea la más reciente. El `innerJoin` las descarta antes del `limit`.
+    .innerJoin(userListItem, eq(userListItem.listId, userList.id))
     .where(and(eq(userList.ownerId, userId), eq(userList.kind, "standard")))
     .groupBy(userList.id)
     .orderBy(desc(lastActivity), desc(userList.id))

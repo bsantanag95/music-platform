@@ -448,15 +448,26 @@ describe("servicio de datos de Inicio", () => {
   });
 
   describe("getMostRecentEditedList", () => {
-    // from().leftJoin().where().groupBy().orderBy().limit()
+    // from().innerJoin().where().groupBy().orderBy().limit(): el `innerJoin` con los elementos deja
+    // fuera las listas vacías (openspec: redesign-signed-in-home-phase3).
+    const joins = vi.fn();
     function listQuery(rows: unknown[]) {
       const limit = vi.fn().mockResolvedValue(rows);
       const orderBy = vi.fn(() => ({ limit }));
       const groupBy = vi.fn(() => ({ orderBy }));
       const where = vi.fn(() => ({ groupBy }));
-      const leftJoin = vi.fn(() => ({ where }));
-      return { from: vi.fn(() => ({ leftJoin })) };
+      const innerJoin = vi.fn((...args: unknown[]) => {
+        joins(...args);
+        return { where };
+      });
+      return { from: vi.fn(() => ({ innerJoin })) };
     }
+
+    it("une con los elementos (innerJoin): una lista vacía nunca se propone", async () => {
+      mocks.db.select.mockReturnValueOnce(listQuery([]));
+      await getMostRecentEditedList(author.id);
+      expect(joins).toHaveBeenCalledTimes(1);
+    });
 
     it("devuelve null cuando el usuario no tiene listas", async () => {
       mocks.db.select.mockReturnValueOnce(listQuery([]));

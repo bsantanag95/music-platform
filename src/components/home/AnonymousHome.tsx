@@ -20,8 +20,7 @@ import { listCommunityActivity } from "@/services/activity/community-activity";
 import { albumArtistNames, listFeaturedCollections, listTopRated } from "@/services/discovery/discovery";
 import { CURATOR_USERNAME } from "@/services/discovery/constants";
 import { isExploreEnabled } from "@/lib/config/discovery";
-import { formatStars } from "@/components/album/album-format";
-import type { ReleaseGroupCategory } from "@/lib/api/schemas";
+import { albumCategoryLabels, topRatedStats } from "@/components/home/top-rated";
 
 /** Entradas de actividad en tarjetas: la primera va a lo ancho y las otras seis llenan tres filas de dos. */
 export const ACTIVITY_CARD_LIMIT = 7;
@@ -61,19 +60,12 @@ export async function AnonymousHome() {
     ensureReleaseCalendarFresh(),
   ]);
 
-  const categoryLabels = {
-    studio: tCat("categories.studio"),
-    single_ep: tCat("categories.single_ep"),
-    compilation: tCat("categories.compilation"),
-    live_other: tCat("categories.live_other"),
-  } satisfies Record<ReleaseGroupCategory, string>;
+  const categoryLabels = albumCategoryLabels(tCat);
 
   // El riel de mejor valorados muestra el artista y el promedio de estrellas (lo que ordena el
   // ranking), como en /explore.
   const topRatedArtists = topRated.length > 0 ? await albumArtistNames(topRated.map((album) => album.id)) : {};
-  const topRatedStats = Object.fromEntries(
-    topRated.map((album) => [album.id, `★ ${formatStars(album.avgStars, locale)}`]),
-  );
+  const topRatedRailStats = topRatedStats(topRated, locale);
 
   const totalComments =
     popularComments.artist.length + popularComments["release-group"].length + popularComments.recording.length;
@@ -118,7 +110,7 @@ export async function AnonymousHome() {
               layout="scroll"
               headerless
               artistNames={topRatedArtists}
-              stats={topRatedStats}
+              stats={topRatedRailStats}
             />
           </section>
         ) : null}
@@ -158,7 +150,7 @@ export async function AnonymousHome() {
 
         {/* Cierre de la página (redesign-anon-home-phase3): lanzamientos como horario, las funciones a la
             vista y el panel final. */}
-        <HomeReleases releases={homeReleases} layout="timetable" />
+        <HomeReleases releases={homeReleases} />
         <HowItWorks />
         <AnonCta exploreEnabled={exploreEnabled} />
       </div>

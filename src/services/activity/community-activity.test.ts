@@ -177,4 +177,31 @@ describe("listCommunityActivity", () => {
     // Las valoraciones no se moderan.
     expect(ratingWhere!.sql).not.toContain("moderation_status");
   });
+
+  // openspec: redesign-signed-in-home-phase3
+  it("con excludeViewer deja fuera al propio lector en las tres fuentes; sin él, no", async () => {
+    const dialect = new PgDialect();
+    const viewer = "00000000-0000-4000-8000-0000000000aa";
+    const run = async (excludeViewer: boolean) => {
+      const wheres: SQL[] = [];
+      const capturing = () => {
+        const limit = vi.fn().mockResolvedValue([]);
+        const orderBy = vi.fn(() => ({ limit }));
+        const where = vi.fn((condition: SQL) => {
+          wheres.push(condition);
+          return { orderBy };
+        });
+        const chain = { innerJoin: vi.fn(() => chain), leftJoin: vi.fn(() => chain), where };
+        return { from: vi.fn(() => chain) };
+      };
+      mocks.db.select.mockReturnValueOnce(capturing()).mockReturnValueOnce(capturing()).mockReturnValueOnce(capturing());
+      await listCommunityActivity(viewer, 1, 10, { excludeViewer });
+      return wheres.map((w) => dialect.sqlToQuery(w));
+    };
+
+    const excluded = await run(true);
+    expect(excluded).toHaveLength(3);
+    for (const query of excluded) expect(query.sql).toMatch(/"user_id" <> \$/);
+    for (const query of await run(false)) expect(query.sql).not.toContain("<>");
+  });
 });

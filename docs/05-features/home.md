@@ -146,15 +146,24 @@ entró) seguido de los mismos bloques de descubrimiento. Este cambio cierra su j
    es «Lo que se escucha en la comunidad» (`CommunityActivity layout="cards"`, 7 entradas) con
    «Buscar gente para seguir», y la comunidad no se repite más abajo; `OnboardingPrompt` se
    eliminó.
-6. **Retoma una lista** (`ResumeList`): acceso directo a la lista propia con actividad más
-   reciente, con mini-mosaico 2×2 de carátulas de sus ítems. Se oculta si el usuario no
-   tiene listas. Fuente: `getMostRecentEditedList`.
-7. **Descubrimiento**: `CommunityActivity` + `PublicLists` en el **mismo layout compacto
-   que el anónimo** — grilla `lg:grid-cols-[1.5fr_1fr]` (apiladas en < `lg`) con `compact`
-   y `previewLimit = 6`. Son bloques secundarios acá también (van debajo del contenido
-   propio), así que ocupan poco alto. `PopularComments` y `HomeReleases` siguen full-width,
-   más abajo. (Antes eran full-width con `previewLimit = 10`; el `compact` dejó de ser
-   exclusivo del anónimo.)
+6. **Retoma una lista** (`ResumeList`, `redesign-signed-in-home-phase3`): la lista propia **con
+   elementos** y actividad más reciente (`getMostRecentEditedList` une con `user_list_item`, así que
+   una lista vacía nunca se propone), con mini-mosaico 2×2, tipo y cantidad. Va como fila al pie de
+   «Lo último que escuchaste» (`variant="row"`) o, si no hay escuchas, como sección propia. Se oculta
+   sin listas con elementos.
+7. **Mejor valorados** (`AlbumRail layout="scroll"` con ★ promedio, `top-rated.ts` compartido con la
+   portada): **solo para una cuenta sin actividad** (la misma condición que la bienvenida de la
+   cabecera), después de la comunidad que ocupa el lugar del feed.
+8. **Lanzamientos** (`HomeReleases` → `ReleaseSwitcher`): el horario de la portada con el selector
+   «De tus artistas | Populares» (ver "Lanzamientos" más abajo).
+9. **Para seguir explorando** (`CollectionMosaic`): las colecciones curadas, solo con `/explore`
+   habilitado.
+10. **La comunidad**, como en la portada: con seguidos, `CommunityActivity layout="cards"` (7) en 2/3
+    y `PopularComments`/`PublicLists variant="panel"` + `PeopleCard` en 1/3; sin seguidos (las
+    tarjetas ya están arriba), solo los paneles en tres columnas. En Inicio la actividad de la
+    comunidad **excluye la del propio lector** (`listCommunityActivity(..., { excludeViewer: true })`);
+    `/activity` no cambia. Todo el cuerpo vive en el contenedor ancho: la columna de 768 px del
+    Inicio con sesión desapareció.
 
 ### Cabecera del Inicio con sesión (`redesign-signed-in-home-phase1`)
 
@@ -168,7 +177,7 @@ scroll interno, eventos de poco valor agrupados). Tres fases:
 | --- | --- |
 | 1 (`redesign-signed-in-home-phase1`) | La cabecera, descrita aquí. |
 | 2 (`redesign-signed-in-home-phase2`) | Cuerpo en el contenedor ancho: estante «Lo último que escuchaste» (solo escuchas, reemplaza «Tu rastro reciente») antes de «De quienes sigues» en tarjetas, sin scroll interno, con «Ver más actividad» y los eventos de poco valor agrupados por autor. |
-| 3 | «Retoma una lista» (solo listas con elementos) junto a los lanzamientos como horario con selector; colecciones en mosaico; «Mejor valorados» para la cuenta sin actividad; la comunidad como en la portada, sin la actividad propia. |
+| 3 (`redesign-signed-in-home-phase3`) | «Retoma una lista» (solo listas con elementos) al pie del estante; lanzamientos como horario con selector; colecciones en mosaico; «Mejor valorados» para la cuenta sin actividad; la comunidad como en la portada, sin la actividad propia. |
 
 - **Franja a sangre completa** con `wall.webp` de fondo (12 %, máscara hacia la derecha,
   `aria-hidden`) y el contenedor de `max-w-[88rem]`; dos columnas desde `lg`. El `<h1>` es el
@@ -437,12 +446,16 @@ mismos filtros y topes) como `ReleaseTimetable`: dos partes, «Recientes» (fech
 compartida con el riel en `release-dates.ts`), miniatura, título, artista y estado
 («Publicado» / «Próximo»), enlazada a `albumHref`. Seis filas por parte y el resto dentro de un
 `<details>` nativo («Ver N más»). Una parte sin discos no se muestra. Préstamo de la propuesta A
-de la auditoría: el riel ponía flechas sobre las carátulas y cortaba tarjetas en los bordes. **Con
-sesión no cambia**: el riel y el selector de abajo siguen igual.
+de la auditoría: el riel ponía flechas sobre las carátulas y cortaba tarjetas en los bordes.
 
-### Diseño: un solo riel en línea de tiempo (Inicio con sesión)
+**Con sesión** (`redesign-signed-in-home-phase3`), el mismo horario lleva el selector «De tus
+artistas | Populares» (`ReleaseSwitcher`, cliente, con sus textos por `useTranslations`): la lógica
+de vistas no cambia (abre en lo personal con ≥ 3 discos, invitación a seguir artistas con menos,
+«Populares» vacía oculta el selector). El riel de abajo (`ReleaseRail`) se eliminó.
 
-En vez de dos rieles de carátulas casi idénticos apilados, **un único riel horizontal
+### Diseño anterior: un solo riel en línea de tiempo (retirado en `redesign-signed-in-home-phase3`)
+
+Histórico: en vez de dos rieles de carátulas casi idénticos apilados, **un único riel horizontal
 ordenado por fecha** con un marcador "hoy" en el medio:
 
 ```
