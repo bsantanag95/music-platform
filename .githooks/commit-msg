@@ -1,0 +1,6 @@
+#!/bin/sh
+# Gate de commit (sello `Verified:`). Ver docs/06-operations/verification.md.
+# Se activa con `pnpm run verify:hooks` (git config core.hooksPath .githooks). Por defecto VERIFY_GATE=observe:
+# solo registra en .verify/log.jsonl lo que habría bloqueado. Si faltan dependencias, no estorba.
+[ -d node_modules ] || exit 0
+exec node --import tsx scripts/verify/seal.ts --hook "$1"

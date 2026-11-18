@@ -11,7 +11,8 @@ export default defineConfig({
     // Los worktrees de agentes en .claude/ contienen copias viejas de los
     // tests que el glob por defecto descubría y ejecutaba contra el alias
     // `@` de este workspace (falsos fallos en `pnpm test`).
-    exclude: ["**/node_modules/**", "**/dist/**", ".claude/**", "**/.claude/**"],
+    // `e2e/` es de Playwright (`pnpm run test:e2e`), no de vitest.
+    exclude: ["**/node_modules/**", "**/dist/**", ".claude/**", "**/.claude/**", "e2e/**"],
   },
   resolve: {
     alias: {

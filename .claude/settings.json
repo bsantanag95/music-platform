@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node --import tsx scripts/verify/stop-hook.ts",
+            "timeout": 540,
+            "statusMessage": "Verificando typecheck y lint"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -49,8 +49,8 @@ async function main() {
     }
     relationFetches += 1;
     releaseFetch();
-    if (url.searchParams.get("inc") !== "artist-rels") {
-      throw new Error(`Se esperaba inc=artist-rels: ${url}`);
+    if (url.searchParams.get("inc") !== "artist-rels+url-rels") {
+      throw new Error(`Se esperaba inc=artist-rels+url-rels: ${url}`);
     }
     return new Response(JSON.stringify(relationResponse()), { status: 200 });
   }) as typeof fetch;
