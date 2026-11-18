@@ -44,10 +44,13 @@ import shareEs from "../../messages/es/share.json";
 import shareEn from "../../messages/en/share.json";
 import concertsEs from "../../messages/es/concerts.json";
 import concertsEn from "../../messages/en/concerts.json";
+import homeEs from "../../messages/es/home.json";
+import homeEn from "../../messages/en/home.json";
 
 const messagesByLocale = {
   es: {
     common: commonEs,
+    home: homeEs,
     catalog: catalogEs,
     errors: errorsEs,
     auth: authEs,
@@ -71,6 +74,7 @@ const messagesByLocale = {
   },
   en: {
     common: commonEn,
+    home: homeEn,
     catalog: catalogEn,
     errors: errorsEn,
     auth: authEn,

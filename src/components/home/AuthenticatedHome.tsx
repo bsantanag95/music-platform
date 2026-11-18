@@ -1,4 +1,4 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { CommunityActivity } from "@/components/home/CommunityActivity";
 import { PublicLists } from "@/components/home/PublicLists";
 import { FeedPreview } from "@/components/home/FeedPreview";
@@ -10,6 +10,13 @@ import { selectHomeFeedCards } from "@/components/home/home-feed-cards";
 import { ResumeList } from "@/components/home/ResumeList";
 import { HomeReleases } from "@/components/home/HomeReleases";
 import { PopularComments } from "@/components/home/PopularComments";
+import { PeopleCard } from "@/components/home/PeopleCard";
+import { CollectionMosaic } from "@/components/home/CollectionMosaic";
+import { albumCategoryLabels, topRatedStats } from "@/components/home/top-rated";
+import { AlbumRail } from "@/components/discovery/AlbumRail";
+import { albumArtistNames, listFeaturedCollections, listTopRated } from "@/services/discovery/discovery";
+import { CURATOR_USERNAME } from "@/services/discovery/constants";
+import { isExploreEnabled } from "@/lib/config/discovery";
 import { YearInvitationCard } from "@/components/laminas/YearInvitationCard";
 import { yearInvitationForRequest } from "@/lib/year-invitation-request";
 import { listFollowing } from "@/services/social/following";
@@ -33,8 +40,10 @@ const LAST_TOUCH_SCAN = 10;
 // Página del feed para llenar las tarjetas de «De quienes sigues»: los eventos de poco valor no ocupan
 // tarjeta, así que se pide más de lo que se muestra (openspec: redesign-signed-in-home-phase2).
 const FEED_CARDS_SCAN = 30;
-// Tarjetas de la comunidad cuando ocupa el lugar del feed: las mismas siete que la portada sin sesión.
+// Tarjetas de la comunidad (arriba sin seguidos, abajo con seguidos): las mismas siete que la portada.
 const COMMUNITY_CARD_LIMIT = 7;
+// Listas públicas en su panel lateral, como en la portada.
+const PUBLIC_LIST_LIMIT = 6;
 
 interface AuthenticatedHomeProps {
   user: { id: string; username: string; displayName: string | null };
@@ -44,30 +53,33 @@ interface AuthenticatedHomeProps {
   emailVerified?: boolean;
 }
 
-// Inicio del usuario con sesión: cabecera (saludo, «¿Qué escuchaste hoy?», accesos y «Última vez»;
-// openspec: redesign-signed-in-home-phase1); en el contenedor ancho, «Lo último que escuchaste» y «De
-// quienes sigues» en tarjetas —o la comunidad en tarjetas si no sigue a nadie— (redesign-signed-in-home-phase2);
-// debajo, retomar lista y los bloques de descubrimiento (listas públicas, comentarios populares,
-// lanzamientos), que cambian en la Fase 3. Ver docs/05-features/home.md.
+// Inicio del usuario con sesión (rediseño en tres fases, ver docs/05-features/home.md): cabecera con el
+// saludo, «¿Qué escuchaste hoy?», accesos y «Última vez» (redesign-signed-in-home-phase1); en el contenedor
+// ancho, «Lo último que escuchaste» con la fila de retomar lista y «De quienes sigues» en tarjetas —o la
+// comunidad en tarjetas si no sigue a nadie— (phase2); y lanzamientos como horario, colecciones curadas,
+// «Mejor valorados» solo para una cuenta sin actividad y «La comunidad» sin la actividad propia (phase3).
 export async function AuthenticatedHome({ user, onboardingPending, emailVerified }: AuthenticatedHomeProps) {
-  const tHome = await getTranslations("home");
+  const [tHome, tCat, locale] = await Promise.all([
+    getTranslations("home"),
+    getTranslations("catalog.artist"),
+    getLocale(),
+  ]);
+  const exploreEnabled = isExploreEnabled();
 
-  // Descubrimiento: bloques secundarios (van más abajo que el contenido
-  // propio), en el mismo layout compacto que el Inicio anónimo — top-N corto.
-  const previewLimit = 6;
-
-  const [following, recentActivity, recentListens, resumeList, communityActivity, publicLists, popularComments, homeReleases, personalReleases, , yearInvitation] =
+  const [following, recentActivity, recentListens, resumeList, communityActivity, publicLists, popularComments, homeReleases, personalReleases, featuredCollections, , yearInvitation] =
     await Promise.all([
       listFollowing(user.id, 1, 1),
       listMyRecentActivity(user.id, 1, LAST_TOUCH_SCAN),
       listMyRecentListens(user.id),
       getMostRecentEditedList(user.id),
-      // Sin seguidos, la comunidad ocupa el lugar del feed en tarjetas: se pide con el límite de las tarjetas.
-      listCommunityActivity(user.id, 1, COMMUNITY_CARD_LIMIT).then((page) => page.entries),
-      listPublicLists(user.id, previewLimit),
+      // Sin la actividad propia: Inicio ya la muestra en sus bloques (redesign-signed-in-home-phase3).
+      listCommunityActivity(user.id, 1, COMMUNITY_CARD_LIMIT, { excludeViewer: true }).then((page) => page.entries),
+      listPublicLists(user.id, PUBLIC_LIST_LIMIT),
       listPopularComments(undefined, user.id),
       listHomeReleases(),
       listPersonalHomeReleases(user.id),
+      // Solo con /explore habilitada: sus listas curadas enlazan a rutas que, apagado, redirigen a Inicio.
+      exploreEnabled ? listFeaturedCollections() : Promise.resolve([]),
       ensureReleaseCalendarFresh(),
       // Invitación de diciembre a "Tu año en discos" (add-year-in-discs-phase3).
       yearInvitationForRequest(user.id),
@@ -91,6 +103,12 @@ export async function AuthenticatedHome({ user, onboardingPending, emailVerified
         entry.kind === "comment" ||
         entry.kind === "review",
     ) ?? null;
+
+  // «Mejor valorados» solo para una cuenta sin actividad (misma condición que la bienvenida de la cabecera):
+  // le da discos por donde empezar; con uso ya tiene su estante y su feed.
+  const isNewAccount = lastTouch === null;
+  const topRated = isNewAccount ? await listTopRated() : [];
+  const topRatedArtists = topRated.length > 0 ? await albumArtistNames(topRated.map((album) => album.id)) : {};
 
   // Tu valoración del objetivo de «Última vez», en forma de fila: si la entrada ya es una
   // valoración trae sus datos; si no, una consulta por el índice único (usuario, objetivo).
@@ -118,7 +136,11 @@ export async function AuthenticatedHome({ user, onboardingPending, emailVerified
       ) : null}
 
       <div className="flex w-full max-w-[88rem] flex-col gap-16 sm:px-4 lg:gap-24 xl:px-8">
-        <RecentListensShelf listens={recentListens} />
+        {recentListens.length > 0 ? (
+          <RecentListensShelf listens={recentListens} footer={<ResumeList list={resumeList} variant="row" />} />
+        ) : (
+          <ResumeList list={resumeList} />
+        )}
 
         {feedSelection ? (
           <FeedPreview selection={feedSelection} />
@@ -135,24 +157,77 @@ export async function AuthenticatedHome({ user, onboardingPending, emailVerified
             <CommunityActivity entries={communityActivity} layout="cards" label={tHome("communityFirstTitle")} />
           </section>
         )}
+
+        {topRated.length > 0 ? (
+          <section aria-labelledby="home-top-rated" className="flex flex-col gap-6">
+            <HomeSectionHeading
+              id="home-top-rated"
+              title={tHome("communityTopRatedHeading")}
+              description={tHome("topRatedDescription")}
+              seeAll={exploreEnabled ? { href: "/explore", label: tHome("topRatedSeeAll") } : undefined}
+            />
+            <AlbumRail
+              heading={tHome("communityTopRatedHeading")}
+              albums={topRated}
+              categoryLabels={albumCategoryLabels(tCat)}
+              coverLabel={tHome("albumCoverLabel")}
+              layout="scroll"
+              headerless
+              artistNames={topRatedArtists}
+              stats={topRatedStats(topRated, locale)}
+            />
+          </section>
+        ) : null}
+
+        <HomeReleases releases={homeReleases} personalReleases={personalReleases} />
+
+        {featuredCollections.length > 0 ? (
+          <section aria-labelledby="home-collections" className="flex flex-col gap-6">
+            <HomeSectionHeading
+              id="home-collections"
+              title={tHome("collectionsSignedInTitle")}
+              description={tHome("featuredAlbumsDescription")}
+              seeAll={{ href: "/explore/collections", label: tHome("collectionsSeeAll") }}
+            />
+            <CollectionMosaic
+              collections={featuredCollections}
+              curatorUsername={CURATOR_USERNAME}
+              itemsLabel={(count) => tHome("collectionItems", { count })}
+              labelledBy="home-collections"
+            />
+          </section>
+        ) : null}
+
+        {/* La comunidad como en la portada: con seguidos, la actividad en tarjetas (2/3) y los paneles al
+            costado; sin seguidos las tarjetas ya están arriba y quedan solo los paneles. */}
+        <section aria-labelledby="home-community" className="flex flex-col gap-6">
+          <HomeSectionHeading
+            id="home-community"
+            title={tHome("communityActivityTitle")}
+            description={tHome("communityActivitySubtitle")}
+            seeAll={{ href: "/activity", label: tHome("feedPreviewSeeAll") }}
+          />
+          {hasFollows && communityActivity.length > 0 ? (
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:items-start">
+              <CommunityActivity entries={communityActivity} layout="cards" label={tHome("communityActivityTitle")} />
+              <div className="flex flex-col gap-6">
+                <PopularComments comments={popularComments} variant="panel" />
+                <PublicLists entries={publicLists} variant="panel" />
+                <PeopleCard />
+              </div>
+            </div>
+          ) : (
+            <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
+              <PopularComments comments={popularComments} variant="panel" />
+              <PublicLists entries={publicLists} variant="panel" />
+              <PeopleCard />
+            </div>
+          )}
+          {communityActivity.length === 0 && publicLists.length === 0 ? (
+            <p className="font-body text-sm text-paper-muted">{tHome("noCommunityContentYet")}</p>
+          ) : null}
+        </section>
       </div>
-
-      <ResumeList list={resumeList} />
-
-      <div className="grid w-full max-w-3xl gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-start">
-        {hasFollows ? <CommunityActivity entries={communityActivity.slice(0, previewLimit)} /> : null}
-        <PublicLists entries={publicLists} />
-      </div>
-
-      <PopularComments comments={popularComments} />
-
-      <HomeReleases releases={homeReleases} personalReleases={personalReleases} />
-
-      {communityActivity.length === 0 && publicLists.length === 0 && (
-        <p className="max-w-md text-center font-body text-sm text-paper-muted">
-          {tHome("noCommunityContentYet")}
-        </p>
-      )}
     </main>
   );
 }

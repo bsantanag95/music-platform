@@ -143,7 +143,7 @@ describe("AnonymousHome", () => {
   it("los lanzamientos van como horario y el cierre ofrece explorar si está habilitado", async () => {
     const element = await AnonymousHome();
 
-    expect(findProps(element, HomeReleases)?.layout).toBe("timetable");
+    expect(findProps(element, HomeReleases)?.personalReleases).toBeUndefined();
     expect(findProps(element, AnonCta)?.exploreEnabled).toBe(true);
   });
 

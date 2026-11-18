@@ -39,16 +39,19 @@ Inicio) o, para una cuenta sin actividad, la variante de bienvenida (ver Require
 Cabecera de Inicio para una cuenta sin actividad); el estante «Lo último que escuchaste»
 si tiene escuchas (ver Requirement: Lo último que escuchaste en Inicio); la actividad de
 quienes sigue en tarjetas o, si no sigue a nadie, la actividad de la comunidad en ese lugar
-(ver Requirement: Actividad de quienes sigues en Inicio); y un acceso para retomar su lista
-editada más recientemente si tiene al menos una lista. Ningún bloque de Inicio SHALL
+(ver Requirement: Actividad de quienes sigues en Inicio); un acceso para retomar su lista
+con elementos editada más recientemente, si tiene una; para una cuenta sin escuchas,
+valoraciones, comentarios ni reseñas, los álbumes mejor valorados por la comunidad; los
+lanzamientos; las colecciones curadas de la superficie de descubrimiento, solo cuando esa
+superficie está habilitada; y la comunidad (actividad, comentarios populares, listas públicas y
+acceso a personas). Ningún bloque de Inicio SHALL
 desplazar su contenido dentro de un contenedor de altura fija. La página con sesión SHALL NOT mostrar la tagline de propuesta de valor, el
 hero visual del visitante anónimo, el bloque de funcionalidades, ninguna llamada a la
 acción de registro o inicio de sesión, ni el buscador del hero (esa entrada queda
 cubierta por la búsqueda persistente del Header). El campo para registrar una escucha
 SHALL NOT funcionar como buscador del catálogo: no navega a `/search` ni a la entidad
-elegida. El
-bloque editorial de álbumes descrito para la vista sin sesión NO SHALL mostrarse en la
-vista con sesión.
+elegida. Con sesión, los álbumes mejor valorados SHALL NOT mostrarse a una cuenta que ya tiene
+escuchas, valoraciones, comentarios o reseñas.
 
 El saludo y los bloques de contenido propio SHALL NOT incluir conteos de progreso,
 elementos pendientes de valorar, rachas ni medallas de completitud.
@@ -106,14 +109,20 @@ elementos pendientes de valorar, rachas ni medallas de completitud.
 - **THEN** ve el saludo como antetítulo, el titular «¿Qué escuchaste hoy?», el campo para
   registrar una escucha, los accesos rápidos, y la actividad de quienes sigue en tarjetas
   con un acceso a `/me/feed`, y no ve la tagline de propuesta de valor, el
-  hero anónimo, el bloque de funcionalidades, el buscador del hero ni el bloque editorial
-  de álbumes del landing anónimo
+  hero anónimo, el bloque de funcionalidades, el buscador del hero ni, si ya tiene
+  actividad, los álbumes mejor valorados
 
 #### Scenario: Usuario con sesión sin seguidos
 - **WHEN** un usuario autenticado que no sigue a nadie abre `/[locale]`
 - **THEN** en el lugar de la actividad de quienes sigue ve la actividad reciente de la
   comunidad en tarjetas con una invitación a buscar gente para seguir, no un feed vacío,
   y no ve el buscador del hero
+
+#### Scenario: Cuenta sin actividad ve el catálogo curado
+- **WHEN** una persona con sesión sin escuchas, valoraciones, comentarios ni reseñas abre
+  `/[locale]` con la superficie de descubrimiento habilitada
+- **THEN** ve los álbumes mejor valorados por la comunidad y las colecciones curadas, como un
+  visitante sin sesión
 
 #### Scenario: Usuario con sesión sin actividad propia ni listas
 - **WHEN** un usuario autenticado que nunca registró escuchas, valoraciones ni
@@ -125,17 +134,23 @@ elementos pendientes de valorar, rachas ni medallas de completitud.
 ### Requirement: Retomar una lista propia desde Inicio
 
 El sistema SHALL mostrar en Inicio, solo para usuarios con sesión activa que tengan al
-menos una lista propia, un acceso directo a la lista propia con actividad más reciente,
-con su título y un enlace a la vista de esa lista. El acceso SHALL NOT mostrarse si el
-usuario no tiene ninguna lista.
+menos una lista propia con un elemento o más, un acceso directo a la lista propia con
+elementos y actividad más reciente, con su título, su tipo, su cantidad de elementos y un
+enlace a la vista de esa lista. Una lista sin elementos SHALL NOT proponerse, aunque sea la
+editada más recientemente. El acceso SHALL NOT mostrarse si el usuario no tiene ninguna
+lista con elementos.
 
 #### Scenario: Usuario con al menos una lista
 - **WHEN** un usuario autenticado que creó o editó al menos una lista abre `/[locale]`
 - **THEN** ve un acceso directo a su lista con actividad más reciente, con enlace a esa
   lista
 
+#### Scenario: La lista más reciente está vacía
+- **WHEN** un usuario creó ayer una lista vacía y la semana pasada agregó un disco a otra lista
+- **THEN** el acceso propone la lista con el disco, no la vacía
+
 #### Scenario: Usuario sin listas
-- **WHEN** un usuario autenticado no tiene ninguna lista
+- **WHEN** un usuario autenticado no tiene ninguna lista, o solo listas vacías
 - **THEN** el acceso para retomar una lista no se muestra en la página
 
 ### Requirement: Actividad reciente de la comunidad
@@ -144,7 +159,8 @@ El sistema SHALL mostrar en Inicio, para cualquier visitante con o sin sesión, 
 con los ratings y comentarios públicos más recientes de usuarios con perfil público,
 independientemente de si el visitante los sigue. El bloque SHALL excluir actividad de
 autores con perfil privado. Si hay sesión activa, SHALL excluir además actividad de
-autores con quienes exista un bloqueo en cualquier dirección. El bloque SHALL NOT incluir
+autores con quienes exista un bloqueo en cualquier dirección y SHALL excluir la actividad
+de la propia persona, que Inicio ya muestra en sus bloques propios. El bloque SHALL NOT incluir
 escuchas, favoritos ni eventos de lista, y SHALL NOT paginar — muestra un número fijo de
 entradas.
 
@@ -162,6 +178,11 @@ entradas.
 - **WHEN** un usuario autenticado tiene un bloqueo en cualquier dirección con el autor de
   un rating o comentario público reciente
 - **THEN** esa entrada no aparece en su bloque de actividad de la comunidad
+
+#### Scenario: Lo propio no aparece como comunidad
+- **WHEN** una persona con sesión y perfil público valoró un álbum hace un momento
+- **THEN** esa valoración no aparece en la actividad de la comunidad de su propio Inicio, y sí
+  en la de otras personas
 
 #### Scenario: Sin actividad reciente
 - **WHEN** no hay ratings ni comentarios recientes de perfiles públicos
