@@ -3,8 +3,8 @@
 Cómo se verifica un cambio en este proyecto, más allá de `typecheck → lint → test → build` del CI. Decisión de fondo y
 alternativas: ADR 0062 (`docs/02-architecture/adr/`). Change de origen: `strengthen-verification-loop` (OpenSpec).
 
-> Estado: **Fase 1** (skill `verify`, hook `Stop`, `REVIEW.md`, sello y gate en observe). Las fases siguientes (E2E, smoke tests en
-> CI, propiedades) se documentan aquí a medida que se implementan.
+> Estado: **Fases 1 y 2** (skill `verify`, hook `Stop`, `REVIEW.md`, sello y gate en observe; feature map y E2E). Las fases siguientes (smoke
+> tests en CI, propiedades) se documentan aquí a medida que se implementan.
 
 ## Piezas
 
@@ -57,6 +57,24 @@ que deben estar en el diff; `@A` = archivo nuevo), **Resultado**, **Check** y **
   cuenta como explicado. Merges, reverts y fixups no se evalúan.
 - Consulta: `node --import tsx scripts/verify/seal.ts --report [rango]` lista los commits sin sello o con `none`.
 - El sello declara lo que se corrió; no demuestra que pasó por sí solo. El gate en `observe` sirve para medir antes de decidir `enforce`.
+
+## E2E (Playwright)
+
+- `pnpm run test:e2e` (`playwright.config.ts`, `e2e/*.e2e.ts`; vitest no los recoge). Los flujos están en `docs/05-features/feature-map.md`, que es su rúbrica.
+- **BD:** exige una BD de scratch (misma regla que `verify`) y aborta al cargar la config, antes de levantar el servidor. El setup global siembra
+  (en un proceso aparte con `tsx`: `e2e/lib/seed-cli.ts`) un artista, un álbum de 3 canciones, una lista y dos usuarios `e2e_*` con MBID
+  `e2e00000-…`; el teardown lo borra, también si los tests fallan. La sesión del usuario de prueba se guarda en `e2e/.auth/` (ignorado por git).
+- **Red:** el servidor se levanta sin `MUSICBRAINZ_USER_AGENT`, `WIKIMEDIA_USER_AGENT` ni `LISTENBRAINZ_USER_AGENT`: esos clientes fallan cerrados y
+  nada sale a internet (las páginas muestran "MusicBrainz no respondió").
+- **Servidor:** por defecto un **build de producción** (`next build && next start`, puerto `E2E_PORT`, 3417). `E2E_SKIP_BUILD=1` reutiliza el `.next`
+  (solo si el código no cambió). `E2E_SERVER=dev` usa `next dev`, pero es inestable: compila cada ruta al primer acceso y un chunk a medio compilar deja
+  la página sin hidratar (en una corrida el formulario de login se envió como GET nativo, con la contraseña en la URL).
+- **Navegador:** `E2E_CHANNEL=msedge` (o `chrome`) usa el instalado; sin él, el Chromium de Playwright (`pnpm exec playwright install chromium`).
+- **Sin reintentos** (`retries: 0`) y **un solo worker** (los flujos comparten usuario y BD). Antes de interactuar con un control de cliente, el test espera
+  su hidratación (`e2e/lib/hydration.ts`), no un `sleep`.
+- **Evidencia:** un fallo deja traza y captura en `e2e/.results/` (con su `error-context.md`) y un informe HTML en `e2e/.report/`.
+- **Estabilidad:** 5 corridas seguidas con 9 de 9 tests en verde (2026-11-18, ~50 s cada una con el build ya hecho). Un test que falle de forma intermitente
+  se arregla en su causa o se elimina con su motivo.
 
 ## Política de tests
 

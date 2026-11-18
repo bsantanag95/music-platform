@@ -51,12 +51,20 @@ Cada nombre corre `scripts/smoke-test-<nombre>.ts` con `ALLOW_SMOKE_ON_REAL_DB=1
 
 Si usaste una BD con datos reales, **limpia los fixtures** (ver `docs/06-operations/smoke-tests.md`). Nunca resetees ni borres datos que no creó el smoke test.
 
+## 3b. Flujos críticos (E2E, cuando el cambio toca su UI o datos)
+
+```bash
+E2E_CHANNEL=msedge pnpm run test:e2e   # sirve un build de producción; `E2E_SKIP_BUILD=1` reutiliza el .next si no cambió el código
+```
+
+Corre los 5 flujos de `docs/05-features/feature-map.md` (login, buscar y abrir álbum, valorar, añadir a lista, perfil) contra la BD de scratch y un servidor sin salida a internet. Exige scratch por sí solo (aborta si no lo es). Un fallo deja traza y captura en `e2e/.results/` y un informe en `e2e/.report/`. No reintentes: arregla la causa. Si tu cambio modifica un flujo, actualiza el feature map y su test en el mismo cambio.
+
 ## 4. Recorrido en el navegador (cambios visibles)
 
 Solo si el cambio se ve en la app. **Nunca uses `preview_start` para esto en un worktree**: sirve la raíz, no tu código.
 
 1. Levanta el servidor **desde el worktree** en un puerto libre: `pnpm exec next dev -p 3101` (en segundo plano) y espera "Ready".
-2. Abre `http://localhost:3101` en el navegador integrado y recorre lo que tocaste: si existe `docs/05-features/feature-map.md`, usa sus flujos como rúbrica; si no, las páginas y estados afectados (vacío, con datos, error, responsive, es/en).
+2. Abre `http://localhost:3101` en el navegador integrado y recorre lo que tocaste: usa los flujos de `docs/05-features/feature-map.md` como rúbrica y, además, las páginas y estados afectados (vacío, con datos, error, responsive, es/en).
 3. Revisa consola y red (`read_console_messages`, `read_network_requests`) y toma captura como evidencia.
 4. Para sesiones iniciadas hace falta un usuario de prueba de la BD de scratch; no uses cuentas reales.
 5. Detén el servidor al terminar.

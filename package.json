@@ -16,7 +16,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "verify": "tsx scripts/verify/run.ts",
-    "verify:hooks": "git config core.hooksPath .githooks"
+    "verify:hooks": "git config core.hooksPath .githooks",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1137.0",
@@ -37,6 +38,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.6",
+    "@playwright/test": "^1.65.1",
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.3",

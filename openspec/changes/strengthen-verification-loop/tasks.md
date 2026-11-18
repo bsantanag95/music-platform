@@ -25,13 +25,13 @@
 
 ## 4. Fase 2 — Feature map y E2E
 
-- [ ] 4.1 Redactar `docs/05-features/feature-map.md` con los 5 flujos críticos (login, buscar y abrir álbum, valorar, añadir a lista, perfil): ruta, pasos, selectores accesibles, resultado esperado
-- [ ] 4.2 Añadir `@playwright/test` como devDependency (justificada en `design.md`), `playwright.config.ts` sin reintentos, con traza y captura ante fallo, y `pnpm run test:e2e`
-- [ ] 4.3 Crear la siembra de BD de scratch para E2E (usuario de prueba + datos mínimos con prefijo propio) y la guardia que aborta si `DATABASE_URL` es la real
-- [ ] 4.4 Interceptar las llamadas a MusicBrainz, Wikimedia y ListenBrainz en los E2E
-- [ ] 4.5 Implementar los 5 E2E; añadir solo los `data-testid` imprescindibles cuando no haya locator accesible
-- [ ] 4.6 Ejecutar la suite 5 veces seguidas para comprobar estabilidad y documentar el resultado
-- [ ] 4.7 Referenciar el feature map desde el skill `verify`
+- [x] 4.1 Redactar `docs/05-features/feature-map.md` con los 5 flujos críticos (login, buscar y abrir álbum, valorar, añadir a lista, perfil): ruta, pasos, selectores accesibles, resultado esperado
+- [x] 4.2 Añadir `@playwright/test` como devDependency (justificada en `design.md`), `playwright.config.ts` sin reintentos, con traza y captura ante fallo, y `pnpm run test:e2e` (servidor de producción por defecto; `next dev` queda opcional por su inestabilidad)
+- [x] 4.3 Crear la siembra de BD de scratch para E2E (usuario de prueba + datos mínimos con prefijo propio) y la guardia que aborta si `DATABASE_URL` es la real
+- [x] 4.4 Cortar las llamadas externas en los E2E: el servidor arranca sin los user agents de MusicBrainz, Wikimedia y ListenBrainz (fallan cerrados, nada sale a internet)
+- [x] 4.5 Implementar los 5 E2E; añadir solo los `data-testid` imprescindibles cuando no haya locator accesible
+- [x] 4.6 Ejecutar la suite 5 veces seguidas para comprobar estabilidad y documentar el resultado
+- [x] 4.7 Referenciar el feature map desde el skill `verify`
 
 ## 5. Fase 3 — Integración en CI e higiene de smoke tests
 

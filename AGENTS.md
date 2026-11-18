@@ -16,6 +16,9 @@ empezar por `/docs/README.md` antes de tocar código. Código y comentarios en e
   para sellar el commit. El skill `verify` (`.claude/skills/verify/`) lo amplía con smoke tests y recorrido en el navegador.
   Un hook `Stop` del proyecto (`.claude/settings.json`) corre `typecheck` y `lint` al terminar si hay cambios de código y, tras
   3 rondas fallidas, deja de insistir y pide ayuda humana. Detalle y gate de commit: `docs/06-operations/verification.md`.
+- `pnpm run test:e2e` — flujos críticos en el navegador (Playwright), contra una BD de scratch y un build de producción sin salida a
+  internet; rúbrica en `docs/05-features/feature-map.md`. No forma parte de `pnpm test` ni del hook `Stop`. Si cambias un flujo, actualiza el
+  feature map y su test en el mismo cambio.
 - `pnpm run i18n:client-messages` — regenera `src/i18n/client-messages.json` (qué textos recibe el
   cliente en cada ruta, ADR 0048). Correrlo tras tocar un componente cliente que use
   `useTranslations` o al crear una página; `src/i18n/client-messages.test.ts` falla si quedó viejo.

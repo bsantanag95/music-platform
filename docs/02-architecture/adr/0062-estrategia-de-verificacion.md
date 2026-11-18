@@ -2,7 +2,7 @@
 
 ## Estado
 
-Aceptado (cambio `strengthen-verification-loop`, 2026-11), implementado por fases; esta versión recoge la Fase 1. Complementa
+Aceptado (cambio `strengthen-verification-loop`, 2026-11), implementado por fases; esta versión recoge las Fases 1 y 2. Complementa
 `docs/06-operations/smoke-tests.md` sin reescribirlo.
 
 ## Contexto
@@ -29,6 +29,9 @@ agentes en paralelo, leer cada diff no escala.
    con válvula de escape tras 2 bloqueos, pero queda apagado hasta revisar el registro.
 6. **Scripts en TypeScript ejecutados con `tsx`**, como el resto de `scripts/`: la lógica pura se testea con vitest y el
    typecheck del proyecto los cubre.
+7. **E2E con Playwright contra un build de producción** y una BD de scratch sembrada, con el servidor sin user agents externos (los clientes de
+   MusicBrainz, Wikimedia y ListenBrainz fallan cerrados). `next dev` se descartó como servidor por defecto: su compilación perezosa deja páginas sin
+   hidratar y vuelve inestables los tests. Sin reintentos automáticos; la rúbrica de los flujos es `docs/05-features/feature-map.md`.
 
 ## Alternativas descartadas
 
