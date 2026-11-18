@@ -8,12 +8,11 @@ import * as feed from "@/services/feed/feed";
 import { AuthenticatedHome } from "./AuthenticatedHome";
 import { FeedPreview } from "./FeedPreview";
 import { OnboardingPrompt } from "./OnboardingPrompt";
-import { WelcomeLink } from "./WelcomeLink";
 import { RecentSelfActivity } from "./RecentSelfActivity";
 import { ResumeList } from "./ResumeList";
-import { WelcomePanel } from "./WelcomePanel";
+import { SignedInHero } from "./SignedInHero";
+import * as social from "@/services/social";
 import { HomeReleases } from "./HomeReleases";
-import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
 
 vi.mock("@/lib/year-invitation-request", () => ({ yearInvitationForRequest: vi.fn(async () => null) }));
 vi.mock("next-intl/server", () => ({
@@ -41,6 +40,10 @@ vi.mock("@/services/home/home", () => ({
   listHomeReleases: vi.fn().mockResolvedValue([]),
   listPersonalHomeReleases: vi.fn().mockResolvedValue([]),
   ensureReleaseCalendarFresh: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock("@/services/social", () => ({
+  getOwnRatingRow: vi.fn().mockResolvedValue(null),
+  knownSocialTarget: (type: string, id: string) => ({ type, id, column: "releaseGroupId" }),
 }));
 vi.mock("@/services/activity/community-activity", () => ({
   listCommunityActivity: vi.fn().mockResolvedValue({ entries: [], page: 1, pageSize: 6, hasNext: false }),
@@ -108,36 +111,17 @@ describe("AuthenticatedHome", () => {
     expect(findElement(element, FeedPreview)).toBeNull();
   });
 
-  it("muestra el aviso de verificación de email cuando el email no está verificado", async () => {
+  // openspec: redesign-signed-in-home-phase1
+  it("la cabecera recibe el estado del email y del onboarding; ya no hay enlace suelto a /welcome", async () => {
     vi.mocked(following.listFollowing).mockResolvedValue({
       users: [], page: 1, pageSize: 1, hasNext: false,
     });
-    const element = await AuthenticatedHome({ user, emailVerified: false });
-    const notice = findElement(element, EmailVerificationNotice);
-    expect(notice).not.toBeNull();
-    expect(notice?.props?.variant).toBe("home");
-    expect(notice?.props?.verified).toBe(false);
-  });
-
-  it("no muestra el aviso de verificación de email cuando el email está verificado", async () => {
-    vi.mocked(following.listFollowing).mockResolvedValue({
-      users: [], page: 1, pageSize: 1, hasNext: false,
-    });
-    const element = await AuthenticatedHome({ user, emailVerified: true });
-    const notice = findElement(element, EmailVerificationNotice);
-    // El componente se renderiza pero internamente retorna null cuando verified es true
-    expect(notice?.props?.verified).toBe(true);
-  });
-
-  it("muestra el enlace a /welcome cuando el onboarding está pendiente", async () => {
-    vi.mocked(following.listFollowing).mockResolvedValue({
-      users: [], page: 1, pageSize: 1, hasNext: false,
-    });
-    const withLink = await AuthenticatedHome({ user, onboardingPending: true });
-    expect(findElement(withLink, WelcomeLink)).not.toBeNull();
-
-    const withoutLink = await AuthenticatedHome({ user, onboardingPending: false });
-    expect(findElement(withoutLink, WelcomeLink)).toBeNull();
+    const element = await AuthenticatedHome({ user, emailVerified: false, onboardingPending: true });
+    const hero = findElement(element, SignedInHero);
+    expect(hero?.props?.emailVerified).toBe(false);
+    expect(hero?.props?.onboardingPending).toBe(true);
+    expect(hero?.props?.lastTouch).toBeNull();
+    expect(readFileSync(join(__dirname, "AuthenticatedHome.tsx"), "utf8")).not.toMatch(/WelcomeLink|EmailVerificationNotice/);
   });
 
   it("pasa la actividad propia y la lista reciente a sus bloques", async () => {
@@ -147,7 +131,7 @@ describe("AuthenticatedHome", () => {
       pageSize: 1,
       hasNext: false,
     });
-    const activity = [{ kind: "listen", id: "l1" }];
+    const activity = [{ kind: "listen", id: "l1", target: { type: "release-group", id: "a1", title: "Álbum" } }];
     const resumeList = {
       id: "list1",
       title: "Para el auto",
@@ -187,7 +171,34 @@ describe("AuthenticatedHome", () => {
 
     const element = await AuthenticatedHome({ user });
 
-    expect(findElement(element, WelcomePanel)?.props?.lastActivity).toEqual(rating);
+    expect(findElement(element, SignedInHero)?.props?.lastTouch).toEqual(rating);
+  });
+
+  it("la valoración de «Última vez» sale de la entrada si es una valoración, sin consultar", async () => {
+    vi.mocked(following.listFollowing).mockResolvedValue({ users: [], page: 1, pageSize: 1, hasNext: false });
+    const rating = { kind: "rating", id: "r1", stars: "4.0", detailedScore: 77, target: { type: "release-group", id: "a1", title: "Álbum" } };
+    vi.mocked(home.listMyRecentActivity).mockResolvedValue({
+      entries: [rating], page: 1, pageSize: 10, hasNext: false,
+    } as unknown as Awaited<ReturnType<typeof home.listMyRecentActivity>>);
+
+    const element = await AuthenticatedHome({ user });
+
+    expect(findElement(element, SignedInHero)?.props?.ownRating).toEqual({ stars: "4.0", detailedScore: 77 });
+    expect(social.getOwnRatingRow).not.toHaveBeenCalled();
+  });
+
+  it("para una escucha consulta tu valoración del objetivo", async () => {
+    vi.mocked(following.listFollowing).mockResolvedValue({ users: [], page: 1, pageSize: 1, hasNext: false });
+    const listen = { kind: "listen", id: "l1", target: { type: "release-group", id: "a1", title: "Álbum" } };
+    vi.mocked(home.listMyRecentActivity).mockResolvedValue({
+      entries: [listen], page: 1, pageSize: 10, hasNext: false,
+    } as unknown as Awaited<ReturnType<typeof home.listMyRecentActivity>>);
+    vi.mocked(social.getOwnRatingRow).mockResolvedValueOnce({ stars: "4.5", detailedScore: null } as never);
+
+    const element = await AuthenticatedHome({ user });
+
+    expect(social.getOwnRatingRow).toHaveBeenCalledWith({ type: "release-group", id: "a1", column: "releaseGroupId" }, "u1");
+    expect(findElement(element, SignedInHero)?.props?.ownRating).toEqual({ stars: "4.5", detailedScore: null });
   });
 });
 

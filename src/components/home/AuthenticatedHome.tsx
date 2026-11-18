@@ -3,13 +3,12 @@ import { CommunityActivity } from "@/components/home/CommunityActivity";
 import { PublicLists } from "@/components/home/PublicLists";
 import { FeedPreview } from "@/components/home/FeedPreview";
 import { OnboardingPrompt } from "@/components/home/OnboardingPrompt";
-import { WelcomeLink } from "@/components/home/WelcomeLink";
-import { WelcomePanel } from "@/components/home/WelcomePanel";
+import { SignedInHero } from "@/components/home/SignedInHero";
+import type { OwnRating } from "@/components/home/LastTouchCard";
 import { RecentSelfActivity } from "@/components/home/RecentSelfActivity";
 import { ResumeList } from "@/components/home/ResumeList";
 import { HomeReleases } from "@/components/home/HomeReleases";
 import { PopularComments } from "@/components/home/PopularComments";
-import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
 import { YearInvitationCard } from "@/components/laminas/YearInvitationCard";
 import { yearInvitationForRequest } from "@/lib/year-invitation-request";
 import { listFollowing } from "@/services/social/following";
@@ -24,6 +23,7 @@ import {
   listPublicLists,
 } from "@/services/home/home";
 import { listCommunityActivity } from "@/services/activity/community-activity";
+import { getOwnRatingRow, knownSocialTarget } from "@/services/social";
 import type { FeedComment, FeedListenEntry, FeedRating, FeedReview } from "@/services/feed/feed";
 
 // Carga inicial de los bloques con scroll infinito ("Tu feed", "Tu rastro
@@ -39,15 +39,13 @@ interface AuthenticatedHomeProps {
   emailVerified?: boolean;
 }
 
-// Inicio del usuario con sesión: saludo + contenido propio (feed de seguidos u
+// Inicio del usuario con sesión: cabecera (saludo, «¿Qué escuchaste hoy?», accesos y «Última vez»;
+// openspec: redesign-signed-in-home-phase1) + contenido propio (feed de seguidos u
 // onboarding, rastro reciente, retomar lista) arriba, y los bloques de
 // descubrimiento (actividad de la comunidad, listas públicas, comentarios
 // populares, lanzamientos) debajo. Ver docs/05-features/home.md.
 export async function AuthenticatedHome({ user, onboardingPending, emailVerified }: AuthenticatedHomeProps) {
-  const [t, tHome] = await Promise.all([
-    getTranslations("common"),
-    getTranslations("home"),
-  ]);
+  const tHome = await getTranslations("home");
 
   // Descubrimiento: bloques secundarios (van más abajo que el contenido
   // propio), en el mismo layout compacto que el Inicio anónimo — top-N corto.
@@ -87,23 +85,30 @@ export async function AuthenticatedHome({ user, onboardingPending, emailVerified
         entry.kind === "review",
     ) ?? null;
 
+  // Tu valoración del objetivo de «Última vez», en forma de fila: si la entrada ya es una
+  // valoración trae sus datos; si no, una consulta por el índice único (usuario, objetivo).
+  let ownRating: OwnRating | null = null;
+  if (lastTouch?.kind === "rating") {
+    ownRating = { stars: lastTouch.stars, detailedScore: lastTouch.detailedScore };
+  } else if (lastTouch) {
+    const row = await getOwnRatingRow(knownSocialTarget(lastTouch.target.type, lastTouch.target.id), user.id);
+    ownRating = row ? { stars: String(row.stars), detailedScore: row.detailedScore } : null;
+  }
+
   return (
     <main className="flex min-h-screen flex-col items-center gap-12 overflow-x-clip px-4 py-12">
-      <h1 className="sr-only">{t("appName")}</h1>
-
-      <WelcomePanel
+      <SignedInHero
         name={user.displayName ?? `@${user.username}`}
         username={user.username}
-        lastActivity={lastTouch}
+        lastTouch={lastTouch}
+        ownRating={ownRating}
+        onboardingPending={onboardingPending ?? false}
+        emailVerified={emailVerified ?? false}
       />
-
-      <EmailVerificationNotice verified={emailVerified ?? false} variant="home" />
 
       {yearInvitation ? (
         <YearInvitationCard username={user.username} year={yearInvitation.year} inProgress={yearInvitation.inProgress} />
       ) : null}
-
-      {onboardingPending && <WelcomeLink />}
 
       {hasFollows ? (
         <FeedPreview initialEntries={feedPreview.entries} initialHasNext={feedPreview.hasNext} />

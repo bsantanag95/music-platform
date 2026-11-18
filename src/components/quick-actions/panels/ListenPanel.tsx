@@ -18,13 +18,19 @@ interface ListenPanelProps {
   /** Vuelve al buscador ("Registrar otra" o tras un error). */
   onReset: () => void;
   onNavigate: () => void;
+  /**
+   * Pide confirmar antes de crear la escucha (openspec: redesign-signed-in-home-phase1): el diálogo se
+   * abrió con el objetivo ya elegido desde otra superficie («Lo volví a escuchar» de Inicio), así que
+   * abrirlo no es todavía la elección de la persona.
+   */
+  confirm?: boolean;
 }
 
 // Acción Escucha del diálogo de acciones rápidas (openspec: add-header-quick-actions): elegir el
 // objetivo crea la escucha al instante (audiencia `private`) y ofrece ampliarla. Es el flujo del
 // antiguo `RegisterListenDialog`, sin cambios de comportamiento. El panel se monta con `key` por
 // objetivo; el guard de `started` evita crear dos escuchas con el doble efecto de StrictMode.
-export function ListenPanel({ target, onReset, onNavigate }: ListenPanelProps) {
+export function ListenPanel({ target, onReset, onNavigate, confirm = false }: ListenPanelProps) {
   const t = useTranslations("quickActions");
   const tDiary = useTranslations("diary");
   const [entry, setEntry] = useState<ListenEntry | null>(null);
@@ -33,9 +39,15 @@ export function ListenPanel({ target, onReset, onNavigate }: ListenPanelProps) {
   const notifyChanged = useNotifyQuickActionChange();
   const [detailsOpen, setDetailsOpen] = useState(false);
   const detailsId = useId();
+  const [confirmed, setConfirmed] = useState(!confirm);
+  const confirmRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (started.current) return;
+    if (!confirmed) confirmRef.current?.focus();
+  }, [confirmed]);
+
+  useEffect(() => {
+    if (!confirmed || started.current) return;
     started.current = true;
     createListenEntry({ type: target.type, id: target.id })
       .then((created) => {
@@ -43,7 +55,30 @@ export function ListenPanel({ target, onReset, onNavigate }: ListenPanelProps) {
         notifyChanged();
       })
       .catch((err: unknown) => setErrorCode(err instanceof ApiError ? err.code : "INTERNAL_ERROR"));
-  }, [target.type, target.id, notifyChanged]);
+  }, [confirmed, target.type, target.id, notifyChanged]);
+
+  if (!confirmed) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-0.5">
+          <span className="font-data text-[11px] uppercase tracking-wider text-paper-muted">{t("listen.confirmEyebrow")}</span>
+          <span className="font-display text-base text-paper">{target.title}</span>
+          {target.subtitle ? <span className="font-data text-xs text-paper-muted">{target.subtitle}</span> : null}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            ref={confirmRef}
+            type="button"
+            onClick={() => setConfirmed(true)}
+            className="inline-flex min-h-10 items-center justify-center rounded-md bg-amber px-4 py-2 font-display text-sm font-medium text-ink transition-colors hover:bg-amber-hover"
+          >
+            {t("listen.confirm")}
+          </button>
+          <PanelAction onClick={onReset}>{t("chooseAnother")}</PanelAction>
+        </div>
+      </div>
+    );
+  }
 
   if (errorCode) {
     return (

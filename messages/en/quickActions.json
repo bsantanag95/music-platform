@@ -52,7 +52,9 @@
     "viewDiary": "View my diary",
     "addDetails": "Add details",
     "optional": "Optional",
-    "detailsHint": "Reaction, context, note and who sees it"
+    "detailsHint": "Reaction, context, note and who sees it",
+    "confirm": "Log listen",
+    "confirmEyebrow": "Add it to your diary?"
   },
   "rate": {
     "loading": "Loading your rating...",

@@ -35,8 +35,6 @@
     "saving": "Guardando..."
   },
   "error": "No pudimos completar el paso. Prueba de nuevo.",
-  "homeLink": "Completa tu perfil musical",
-  "homeLinkCta": "Empezar",
   "searchError": "No pudimos buscar. Prueba de nuevo.",
   "categories": {
     "single_ep": "Single / EP",

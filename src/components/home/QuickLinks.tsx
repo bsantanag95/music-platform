@@ -8,11 +8,12 @@ import {
   JourneysIcon,
 } from "@/components/home/QuickLinkIcons";
 
-// Accesos rápidos de usuario logueado en Inicio: diario, favoritos, listas,
-// colección física y progreso. El resto de la navegación completa vive en el Header.
-// Vive dentro de WelcomePanel, por eso el grid asume una columna angosta.
+// Accesos rápidos de usuario logueado en Inicio: diario, favoritos, listas, colección física y
+// progreso. El resto de la navegación completa vive en el Header. Desde la cabecera de Inicio
+// (openspec: redesign-signed-in-home-phase1) van como una fila de cinco mosaicos —icono arriba,
+// rótulo abajo—; por debajo de `sm` la fila se desplaza en horizontal en vez de partirse.
 export async function QuickLinks() {
-  const t = await getTranslations("common");
+  const [t, tHome] = await Promise.all([getTranslations("common"), getTranslations("home")]);
 
   const links = [
     { href: "/me/diary" as const, label: t("diary"), Icon: DiaryIcon },
@@ -23,17 +24,18 @@ export async function QuickLinks() {
   ];
 
   return (
-    <nav aria-label={t("home")} className="grid grid-cols-2 gap-2">
+    <nav
+      aria-label={tHome("yourLibrary")}
+      className="-mx-4 flex gap-2.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-5 sm:overflow-visible sm:px-0 sm:pb-0"
+    >
       {links.map(({ href, label, Icon }) => (
         <Link
           key={href}
           href={href}
-          className="group flex min-h-11 items-center gap-2 rounded-md border border-ink-border bg-ink/40 py-1.5 pl-1.5 pr-2.5 font-data text-sm text-paper transition-[color,background-color,border-color] duration-150 hover:border-amber/60 hover:bg-ink hover:text-amber"
+          className="group flex min-h-11 w-[6.75rem] shrink-0 flex-col gap-2.5 rounded-lg border border-ink-border bg-ink-surface/85 p-3 font-display text-sm text-paper transition-[color,border-color] duration-150 hover:border-amber/60 hover:text-amber sm:w-auto"
         >
-          <span className="grid size-7 shrink-0 place-items-center rounded-sm bg-ink-border/60 text-paper-muted transition-colors duration-150 group-hover:bg-amber/15 group-hover:text-amber">
-            <Icon className="size-4" />
-          </span>
-          <span className="truncate">{label}</span>
+          <Icon className="size-5 text-paper-muted transition-colors duration-150 group-hover:text-amber" />
+          <span className="leading-tight">{label}</span>
         </Link>
       ))}
     </nav>
