@@ -11,6 +11,11 @@ empezar por `/docs/README.md` antes de tocar código. Código y comentarios en e
   archivo tocado: valida contra `.next/types/` y es lo único que detecta firmas
   viejas de rutas dinámicas de Next 15.
 - `pnpm run lint`, `pnpm run build`.
+- `pnpm run verify` — verificación local de un cambio: aplica `REVIEW.md` al diff y corre `typecheck`, `lint` y los tests relacionados con el diff
+  (`-- --full` suma `build`; `-- --smoke a,b` suma smoke tests, solo contra una BD de scratch). Deja constancia en `.verify/`
+  para sellar el commit. El skill `verify` (`.claude/skills/verify/`) lo amplía con smoke tests y recorrido en el navegador.
+  Un hook `Stop` del proyecto (`.claude/settings.json`) corre `typecheck` y `lint` al terminar si hay cambios de código y, tras
+  3 rondas fallidas, deja de insistir y pide ayuda humana. Detalle y gate de commit: `docs/06-operations/verification.md`.
 - `pnpm run i18n:client-messages` — regenera `src/i18n/client-messages.json` (qué textos recibe el
   cliente en cada ruta, ADR 0048). Correrlo tras tocar un componente cliente que use
   `useTranslations` o al crear una página; `src/i18n/client-messages.test.ts` falla si quedó viejo.
@@ -167,6 +172,12 @@ guía completa y mapa de "qué cambio obliga a tocar qué página" en `docs/05-f
 ## Antes de dar un cambio por terminado
 
 - [ ] `pnpm run typecheck && pnpm run lint && pnpm run build` pasan.
+- [ ] `pnpm run verify` pasa sobre el árbol final (incluye los ítems de `REVIEW.md` que dispara el diff: un ítem en `FALLA`
+      se corrige; uno en `REVISAR` se revisa contra su Check). Un test inestable no se reintenta ni se le pone `sleep`: se
+      arregla la causa o se elimina documentando el motivo.
+- [ ] El mensaje de commit lleva el trailer `Verified: …` con lo que realmente pasó (`node --import tsx scripts/verify/seal.ts
+      --suggest` lo propone) o `Verified: none: <motivo>`. Es independiente de las líneas de atribución, que siguen las reglas de
+      la sección de commits. El gate está en modo `observe` (solo registra); se activa con `pnpm run verify:hooks`.
 - [ ] Si se tocó `catalog/` o `musicbrainz/`, se corrieron los smoke tests
       relevantes contra una **BD de scratch** (`DATABASE_URL` distinto +
       `ALLOW_SMOKE_ON_REAL_DB=1`); si se usó la BD real, se **resetearon los

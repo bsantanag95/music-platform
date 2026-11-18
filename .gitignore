@@ -9,3 +9,6 @@ next-env.d.ts
 backups/
 logs/
 public/uploads/
+
+# Estado local de `pnpm run verify` y del gate de commit (scripts/verify).
+.verify/

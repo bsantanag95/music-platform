@@ -14,7 +14,9 @@
     "i18n:client-messages": "tsx scripts/generate-client-messages.ts",
     "db:migrate": "tsx --env-file=.env src/db/migrate.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "verify": "tsx scripts/verify/run.ts",
+    "verify:hooks": "git config core.hooksPath .githooks"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1137.0",
