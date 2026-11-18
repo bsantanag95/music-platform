@@ -36,11 +36,12 @@ principal de la página, un campo para registrar una escucha (ver Requirement: R
 una escucha desde Inicio), los accesos rápidos a diario, favoritos, listas, colección y
 progreso, y la tarjeta «Última vez» (ver Requirement: Última vez en la cabecera de
 Inicio) o, para una cuenta sin actividad, la variante de bienvenida (ver Requirement:
-Cabecera de Inicio para una cuenta sin actividad); un
-preview del feed de seguidos como bloque principal o, si el usuario no sigue a nadie, un
-bloque de onboarding en su lugar; un bloque con la actividad reciente del propio usuario
-si existe; y un acceso para retomar su lista editada más recientemente si tiene al menos
-una lista. La página con sesión SHALL NOT mostrar la tagline de propuesta de valor, el
+Cabecera de Inicio para una cuenta sin actividad); el estante «Lo último que escuchaste»
+si tiene escuchas (ver Requirement: Lo último que escuchaste en Inicio); la actividad de
+quienes sigue en tarjetas o, si no sigue a nadie, la actividad de la comunidad en ese lugar
+(ver Requirement: Actividad de quienes sigues en Inicio); y un acceso para retomar su lista
+editada más recientemente si tiene al menos una lista. Ningún bloque de Inicio SHALL
+desplazar su contenido dentro de un contenedor de altura fija. La página con sesión SHALL NOT mostrar la tagline de propuesta de valor, el
 hero visual del visitante anónimo, el bloque de funcionalidades, ninguna llamada a la
 acción de registro o inicio de sesión, ni el buscador del hero (esa entrada queda
 cubierta por la búsqueda persistente del Header). El campo para registrar una escucha
@@ -103,76 +104,23 @@ elementos pendientes de valorar, rachas ni medallas de completitud.
 - **WHEN** un usuario autenticado que sigue a al menos otra persona con relación aceptada
   abre `/[locale]`
 - **THEN** ve el saludo como antetítulo, el titular «¿Qué escuchaste hoy?», el campo para
-  registrar una escucha, los accesos rápidos, y un preview del feed de seguidos con
-  link a `/me/feed` como bloque principal, y no ve la tagline de propuesta de valor, el
+  registrar una escucha, los accesos rápidos, y la actividad de quienes sigue en tarjetas
+  con un acceso a `/me/feed`, y no ve la tagline de propuesta de valor, el
   hero anónimo, el bloque de funcionalidades, el buscador del hero ni el bloque editorial
   de álbumes del landing anónimo
 
 #### Scenario: Usuario con sesión sin seguidos
 - **WHEN** un usuario autenticado que no sigue a nadie abre `/[locale]`
-- **THEN** en el lugar del preview de feed ve un bloque de onboarding que lo invita a
-  buscar gente y explorar el catálogo, no un feed vacío, y no ve el buscador del hero;
-  registrar una escucha queda en el campo de la cabecera, no repetido en ese bloque
+- **THEN** en el lugar de la actividad de quienes sigue ve la actividad reciente de la
+  comunidad en tarjetas con una invitación a buscar gente para seguir, no un feed vacío,
+  y no ve el buscador del hero
 
 #### Scenario: Usuario con sesión sin actividad propia ni listas
 - **WHEN** un usuario autenticado que nunca registró escuchas, valoraciones ni
   comentarios y no tiene listas abre `/[locale]`
-- **THEN** no ve el bloque de rastro reciente ni el acceso para retomar una lista, ve la
+- **THEN** no ve el estante «Lo último que escuchaste» ni el acceso para retomar una lista, ve la
   cabecera en su variante de bienvenida, y el resto de la página (onboarding, accesos
   rápidos, bloques de descubrimiento) se compone sin espacios vacíos
-
-### Requirement: Rastro reciente del propio usuario en Inicio
-
-El sistema SHALL mostrar en Inicio, solo para usuarios con sesión activa, un bloque con
-las escuchas, valoraciones y comentarios más recientes registrados por el propio usuario,
-ordenados por fecha descendente, dentro de un contenedor de altura fija con scroll
-interno (ver Requirement: Carga incremental en los bloques de Inicio). El bloque SHALL
-NOT aplicar filtros de audiencia, porque es contenido del propio usuario. El bloque SHALL
-NOT mostrarse si el usuario no tiene ninguna entrada de esos tipos.
-
-#### Scenario: Usuario con actividad propia reciente
-- **WHEN** un usuario autenticado que registró escuchas, valoraciones o comentarios
-  abre `/[locale]`
-- **THEN** ve un bloque con sus entradas más recientes de esos tipos, cada una con link
-  a la entidad correspondiente
-
-#### Scenario: La actividad propia privada también aparece
-- **WHEN** un usuario autenticado tiene una escucha o valoración con audiencia privada
-- **THEN** esa entrada aparece igualmente en su bloque de rastro reciente, porque el
-  bloque muestra contenido propio sin filtrar por audiencia
-
-#### Scenario: Usuario sin actividad propia
-- **WHEN** un usuario autenticado no tiene ninguna escucha, valoración ni comentario
-- **THEN** el bloque de rastro reciente no se muestra en la página
-
-### Requirement: Carga incremental en los bloques de Inicio
-
-El sistema SHALL cargar inicialmente hasta 10 entradas en los bloques "Tu feed" y "Tu
-rastro reciente" de Inicio, mostradas dentro de un contenedor con una altura fija que no
-crece respecto a mostrar menos entradas: el contenido excedente SHALL desplazarse
-mediante scroll dentro del contenedor, no expandir el bloque en la página. Al desplazar
-el contenedor hasta su fondo, si existen más entradas, el sistema SHALL cargar
-automáticamente la siguiente página y mostrar un indicador de carga circular mientras la
-solicitud está en curso. El sistema SHALL NOT cargar más entradas de las que existen ni
-mostrar el indicador de carga cuando ya no hay más páginas.
-
-#### Scenario: Carga inicial de un bloque con más de 10 entradas disponibles
-- **WHEN** un usuario autenticado tiene más de 10 entradas disponibles para "Tu feed" o
-  "Tu rastro reciente"
-- **THEN** el bloque muestra las primeras 10 dentro de un contenedor con scroll interno,
-  sin crecer de tamaño respecto al bloque con menos entradas
-
-#### Scenario: Scroll hasta el fondo dispara carga de más entradas
-- **WHEN** el usuario desplaza el contenido de uno de estos bloques hasta el fondo del
-  contenedor y existen más páginas de entradas
-- **THEN** el sistema muestra un indicador de carga circular y agrega la siguiente
-  página de entradas al final de la lista, sin recargar la página ni perder la posición
-  de scroll ya alcanzada
-
-#### Scenario: No hay más entradas para cargar
-- **WHEN** el usuario llega al fondo del contenedor y ya se cargaron todas las entradas
-  disponibles
-- **THEN** el sistema no muestra el indicador de carga ni realiza más solicitudes
 
 ### Requirement: Retomar una lista propia desde Inicio
 
@@ -543,4 +491,74 @@ marcas de completado ni conteos.
 - **WHEN** una persona sin actividad registra su primera escucha desde el campo y vuelve a cargar
   Inicio
 - **THEN** la cabecera muestra el saludo y la tarjeta «Última vez» en lugar de la bienvenida
+
+### Requirement: Lo último que escuchaste en Inicio
+
+El sistema SHALL mostrar en Inicio, solo con sesión y solo si la persona tiene al menos una
+escucha, un estante «Lo último que escuchaste» con hasta 8 objetivos distintos que la persona
+anotó como escucha, del más reciente al más antiguo, contando para cada objetivo solo su escucha
+más reciente. Cada elemento SHALL mostrar la carátula (o la imagen de reserva), el título, el
+artista cuando aplica, la fecha relativa de esa escucha y, si la persona valoró el objetivo, su
+valoración en la forma compacta de `rating-display`; si no lo valoró, el contexto de la escucha.
+Cada elemento SHALL enlazar a su entidad, y el estante SHALL ofrecer un acceso al diario. El
+estante SHALL NOT filtrar por audiencia, porque es contenido propio. Por debajo de `lg`, el
+estante SHALL desplazarse en horizontal en vez de apilarse.
+
+#### Scenario: Escuchas repetidas del mismo disco
+- **WHEN** una persona escuchó «Hysteria» hoy y hace una semana, y «Pyromania» ayer
+- **THEN** el estante muestra «Hysteria» primero y una sola vez, seguido de «Pyromania»
+
+#### Scenario: Escucha valorada y sin valorar
+- **WHEN** la persona valoró «Too Fast for Love» con 77/100 y no valoró «Dr. Feelgood»
+- **THEN** «Too Fast for Love» muestra `★ 77/100` y «Dr. Feelgood» muestra el contexto de su
+  escucha, por ejemplo «Primera escucha»
+
+#### Scenario: Escucha privada
+- **WHEN** la persona tiene una escucha con audiencia privada
+- **THEN** esa escucha aparece en su estante
+
+#### Scenario: Sin escuchas
+- **WHEN** una persona sin escuchas abre Inicio
+- **THEN** el estante no se muestra
+
+### Requirement: Actividad de quienes sigues en Inicio
+
+Con sesión y al menos una persona seguida con relación aceptada, Inicio SHALL mostrar la
+actividad reciente de quienes sigue (con las mismas reglas de audiencia y bloqueo que
+`/me/feed`) como hasta 7 tarjetas, la primera a lo ancho. SHALL ir en tarjetas: escuchas,
+valoraciones, reseñas, comentarios y favoritos de álbum; varias escuchas consecutivas de una misma
+persona SHALL unirse en una sola tarjeta. Los seguimientos, los eventos de lista y de lista para
+completar, las altas en la colección, los pendientes y los favoritos de canción o artista del mismo
+tramo SHALL NOT ocupar tarjetas: SHALL resumirse en una línea por persona que nombre cada tipo de
+evento con su cantidad. Las valoraciones SHALL usar la forma compacta de `rating-display`. Al
+final, el bloque SHALL ofrecer un acceso a `/me/feed`, y SHALL NOT cargar más entradas dentro de
+Inicio ni desplazarlas dentro de un contenedor de altura fija.
+
+Si la persona no sigue a nadie, ese lugar SHALL mostrar la actividad reciente de la comunidad
+(ver Requirement: Actividad reciente de la comunidad) en tarjetas, con un encabezado que lo
+indique y una invitación a buscar gente para seguir, y la actividad de la comunidad SHALL NOT
+repetirse más abajo en la misma página.
+
+#### Scenario: Tarjetas y resumen
+- **WHEN** las entradas más recientes de quienes sigue son una reseña de Ana, seis listas para
+  completar creadas por Luis y una valoración de Luis
+- **THEN** la reseña y la valoración aparecen como tarjetas y debajo hay una línea «Luis armó 6
+  listas para completar»
+
+#### Scenario: Racha de escuchas
+- **WHEN** Ana registró cuatro escuchas seguidas sin otra entrada de tarjeta entre ellas
+- **THEN** se muestran en una sola tarjeta con sus carátulas, no en cuatro
+
+#### Scenario: Ver más actividad
+- **WHEN** la persona activa «Ver más actividad»
+- **THEN** la aplicación abre `/me/feed`
+
+#### Scenario: Sin seguidos
+- **WHEN** una persona que no sigue a nadie abre Inicio y hay actividad reciente de la comunidad
+- **THEN** en el lugar del feed ve «Lo que se escucha en la comunidad» en tarjetas con un enlace a
+  buscar gente, y la actividad de la comunidad no aparece de nuevo más abajo
+
+#### Scenario: Seguidos sin actividad
+- **WHEN** las personas que sigue no tienen actividad visible
+- **THEN** el bloque muestra un texto vacío y el acceso a `/me/feed`, sin tarjetas
 
