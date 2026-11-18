@@ -49,6 +49,8 @@ Cada nombre corre `scripts/smoke-test-<nombre>.ts` con `ALLOW_SMOKE_ON_REAL_DB=1
 | Géneros, premios, explorar, calendario | `genres`, `music-awards`, `explore-collections`, `release-calendar` |
 | Compartir y Láminas | `share-relation`, `share-user-content`, `top-laminas`, `tier-laminas`, `year-laminas`, `discography-lamina` |
 
+`pnpm run smoke:ci` corre de una vez la lista del CI (`scripts/smoke-lib/ci-list.ts`), en orden, contra una BD de scratch **virgen** (`ingestion` la exige): sirve para reproducir el job `integration`.
+
 Si usaste una BD con datos reales, **limpia los fixtures** (ver `docs/06-operations/smoke-tests.md`). Nunca resetees ni borres datos que no creó el smoke test.
 
 ## 3b. Flujos críticos (E2E, cuando el cambio toca su UI o datos)

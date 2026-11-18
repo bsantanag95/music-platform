@@ -3,8 +3,8 @@
 Cómo se verifica un cambio en este proyecto, más allá de `typecheck → lint → test → build` del CI. Decisión de fondo y
 alternativas: ADR 0062 (`docs/02-architecture/adr/`). Change de origen: `strengthen-verification-loop` (OpenSpec).
 
-> Estado: **Fases 1 y 2** (skill `verify`, hook `Stop`, `REVIEW.md`, sello y gate en observe; feature map y E2E). Las fases siguientes (smoke
-> tests en CI, propiedades) se documentan aquí a medida que se implementan.
+> Estado: **Fases 1 a 3** (skill `verify`, hook `Stop`, `REVIEW.md`, sello y gate en observe; feature map y E2E; smoke tests en CI). La fase siguiente
+> (propiedades) se documenta aquí cuando se implemente.
 
 ## Piezas
 
@@ -75,6 +75,18 @@ que deben estar en el diff; `@A` = archivo nuevo), **Resultado**, **Check** y **
 - **Evidencia:** un fallo deja traza y captura en `e2e/.results/` (con su `error-context.md`) y un informe HTML en `e2e/.report/`.
 - **Estabilidad:** 5 corridas seguidas con 9 de 9 tests en verde (2026-11-18, ~50 s cada una con el build ya hecho). Un test que falle de forma intermitente
   se arregla en su causa o se elimina con su motivo.
+
+## CI
+
+`.github/workflows/ci.yml` tiene tres jobs independientes:
+
+- `build` (sin cambios): `typecheck → lint → test → build`, sin BD.
+- `integration`: Postgres 18 efímero, migraciones y `pnpm run smoke:ci` (25 smoke tests con `fetch` mockeado; lista y criterios en
+  `docs/06-operations/smoke-tests.md`). Bloquea.
+- `e2e`: el mismo servicio, Chromium de Playwright y `pnpm run test:e2e`. **No bloquea** (`continue-on-error`) mientras se mide su estabilidad en CI; sube
+  el informe y las trazas como artefacto si falla. Pasar a bloqueante es una decisión posterior.
+
+Ningún job recibe credenciales de una BD real: `DATABASE_URL` apunta siempre al servicio del propio job.
 
 ## Política de tests
 

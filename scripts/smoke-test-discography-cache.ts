@@ -1,5 +1,6 @@
 export {}; // fuerza module scope
 import { assertSmokeAllowed } from "./assert-smoke-allowed";
+import { runSmoke, type SmokeContext } from "./smoke-lib/run";
 
 assertSmokeAllowed();
 
@@ -34,7 +35,7 @@ global.fetch = (async (input: RequestInfo | URL) => {
   throw new Error(`No hay mock para: ${url.pathname}${url.search}`);
 }) as typeof fetch;
 
-async function main() {
+async function main(ctx: SmokeContext) {
   const { upsertArtistFromMb } = await import("../src/services/catalog/ingest-artist");
   const { findOrIngestDiscography } = await import("../src/services/catalog/ingest-discography");
 
@@ -57,16 +58,21 @@ async function main() {
 
   global.fetch = realFetch;
 
-  if (browseCallCount === 1 && second.length === first.length) {
-    console.log("\n✅ Corregido: la segunda llamada usó el cache, no volvió a tocar MusicBrainz.");
-  } else {
-    console.log(`\n❌ Sigue fallando (browseCallCount=${browseCallCount}, esperado 1).`);
-  }
-
-  process.exit(0);
+  ctx.check(
+    browseCallCount === 1 && second.length === first.length,
+    `la segunda llamada usó el cache y no volvió a tocar MusicBrainz (browseCallCount=${browseCallCount}, esperado 1)`,
+  );
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+const TEST_RELEASE_GROUP_MBID = "bbbbbbbb-1111-2222-3333-444444444444";
+
+/** Borra el artista y el álbum sintéticos (los créditos caen en cascada). */
+async function cleanup() {
+  const { eq } = await import("drizzle-orm");
+  const { db } = await import("../src/db");
+  const { artist, releaseGroup } = await import("../src/db/schema");
+  await db.delete(releaseGroup).where(eq(releaseGroup.mbid, TEST_RELEASE_GROUP_MBID));
+  await db.delete(artist).where(eq(artist.mbid, TEST_ARTIST_MBID));
+}
+
+void runSmoke({ name: "discography-cache", cleanup, run: main });

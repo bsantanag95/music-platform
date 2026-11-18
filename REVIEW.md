@@ -85,6 +85,7 @@ Poda: revisar este archivo cada cierto tiempo; un ítem que ya no evita nada se 
 ### R10 — Smoke test nuevo sin guardia de BD
 - **Rutas:** `scripts/smoke-test-*.ts`
 - **Cambio:** A
-- **Check:** el script llama a `assertSmokeAllowed()` (`scripts/assert-smoke-allowed.ts`), crea fixtures con prefijo propio, los
-  borra al terminar también si falla, y su entrada en `docs/06-operations/smoke-tests.md` incluye la sentencia de limpieza.
+- **Check:** el script llama a `assertSmokeAllowed()` (`scripts/assert-smoke-allowed.ts`) primero, usa `runSmoke` (`scripts/smoke-lib/run.ts`: código de
+  salida fiel y limpieza en `finally`), crea fixtures con prefijo propio, y su entrada en `docs/06-operations/smoke-tests.md` incluye la sentencia de
+  limpieza. Si debe correr en el CI, se agrega a `scripts/smoke-lib/ci-list.ts` (sin medir tiempos).
 - **Origen:** incidente Pink Floyd (2026-08): un smoke test dejó "congelada" la discografía con datos falsos.

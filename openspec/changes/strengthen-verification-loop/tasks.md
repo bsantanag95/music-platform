@@ -35,13 +35,13 @@
 
 ## 5. Fase 3 — Integración en CI e higiene de smoke tests
 
-- [ ] 5.1 Crear `scripts/smoke-lib/` con `withFixtureCleanup(prefix, fn)` y la declaración `requiresPristineDb`; tests del helper
-- [ ] 5.2 Migrar a ese helper los smoke tests que ya crean fixtures con prefijo, empezando por `smoke-test-ingestion` y `smoke-test-routes`
-- [ ] 5.3 Auditar los ~50 smoke tests: marcar los que exigen BD virgen y listar los candidatos a poda (solo con evidencia de que cubren código reescrito); decidir con el usuario antes de borrar
-- [ ] 5.4 Añadir el job `integration` a `.github/workflows/ci.yml` (Postgres efímero, `db:migrate`, `smoke-test-ingestion` luego `smoke-test-routes`) sin tocar el job `build`
-- [ ] 5.5 Comprobar que ambos smoke tests corren sin red real en el job (sin salida a internet) y con `ALLOW_SMOKE_ON_REAL_DB=1` solo dentro del job
-- [ ] 5.6 Añadir un job `e2e` opcional y no bloqueante
-- [ ] 5.7 Actualizar `docs/06-operations/smoke-tests.md` (marcas de BD virgen, limpieza común, poda)
+- [x] 5.1 Crear `scripts/smoke-lib/run.ts` con `runSmoke` (código de salida fiel, limpieza en `finally` antes y después, `pristineCheck`) y sus tests
+- [x] 5.2 Migrar a `runSmoke` los smoke tests sin limpieza ni código de salida fiel: `ingestion`, `routes` (ahora con aserciones de estado HTTP), `new-endpoints`, `artist-by-id`, `unknown-enrichment` y `discography-cache` (los tres últimos dejaban su fixture sin borrar)
+- [x] 5.3 Auditar los 41 smoke tests sobre una BD virgen: 25 entran al CI, 12 pasan pero quedan fuera (miden tiempos o son lentos), 4 fallan (candidatos a reparar o podar: la decisión queda con el usuario, no se borró nada); se corrigieron los mocks desactualizados de `ingestion` y `membership-sync`
+- [x] 5.4 Añadir el job `integration` a `.github/workflows/ci.yml` (Postgres 18 efímero, migraciones y `pnpm run smoke:ci`) sin tocar el job `build`
+- [x] 5.5 Comprobar que la lista corre sin red real y con `ALLOW_SMOKE_ON_REAL_DB=1` solo en los hijos del runner: simulado en local sobre una BD virgen con el entorno del CI (25 de 25)
+- [x] 5.6 Añadir un job `e2e` opcional y no bloqueante (Chromium de Playwright, evidencia como artefacto)
+- [x] 5.7 Actualizar `docs/06-operations/smoke-tests.md` (ejecución común, job de CI, auditoría y exclusiones)
 
 ## 6. Fase 4 — Property-based tests
 

@@ -5,6 +5,41 @@ se reconocen y la sentencia de limpieza si la corrida se interrumpió. La regla 
 tests abortan salvo `ALLOW_SMOKE_ON_REAL_DB=1`, preferir una BD de scratch y resetear los artistas
 tocados) vive en `AGENTS.md`.
 
+
+## Ejecución común (`scripts/smoke-lib/`) y job de CI
+
+Los smoke tests migrados usan `runSmoke` (`scripts/smoke-lib/run.ts`): el **código de salida refleja el resultado** (antes varios imprimían
+"❌" y terminaban en 0), la limpieza de fixtures corre en un `finally` (antes de empezar, para reintentar tras una corrida interrumpida, y siempre al
+terminar, también si el script falló) y los que exigen una BD virgen lo declaran con `pristineCheck`. Migrados: `ingestion`, `routes`, `new-endpoints`,
+`artist-by-id`, `unknown-enrichment` y `discography-cache` (estos tres dejaban su fixture sin borrar). El resto ya tenía su propio `try/finally`
+y se migra a medida que se toca. Cada script nuevo debe llamar a `assertSmokeAllowed()` primero (`REVIEW.md`, R10) y usar `runSmoke`.
+
+`pnpm run smoke:ci` (`scripts/smoke-lib/ci.ts`) corre en orden la lista `scripts/smoke-lib/ci-list.ts` contra `DATABASE_URL`, solo si el nombre de la BD es
+de scratch, y resume el resultado. Es lo que ejecuta el job `integration` de `.github/workflows/ci.yml`: un Postgres 18 efímero (`music_platform_ci`), las
+migraciones con `tsx src/db/migrate.ts` y la lista. No toca el job `build`. `ingestion` va primero porque puebla Pink Floyd y `routes` y `new-endpoints` leen
+esos datos; exige BD virgen, algo que el servicio efímero garantiza. `ALLOW_SMOKE_ON_REAL_DB=1` lo pone el runner solo a sus procesos hijos.
+
+### Auditoría (2026-11-18, PostgreSQL 18, BD virgen recién migrada, sin `.env`)
+
+Los 41 smoke tests se corrieron uno por uno. La corrida destapó que **`ingestion` estaba roto** (su mock de la búsqueda de artistas no llevaba
+`limit`/`offset`, ni `url-rels`, ni el browse de ediciones: MusicBrainz se pide distinto desde varios cambios atrás) y, con él, `routes` y `new-endpoints`; se
+actualizaron los mocks. `membership-sync` tenía el mismo defecto (`inc=artist-rels+url-rels`), también corregido.
+
+| Resultado | Smoke tests |
+|---|---|
+| **En el CI (25)** | `ingestion`, `routes`, `new-endpoints`, `artist-by-id`, `unknown-enrichment`, `discography-cache`, `album-editions`, `personnel-credits`, `artist-profile`, `artist-lineup`, `artist-discography`, `membership-sync`, `google-oauth`, `social`, `comment-likes`, `comment-replies`, `artist-comment-topics`, `diary-social`, `share-relation`, `share-user-content`, `concerts`, `shared-concerts`, `genres`, `music-awards`, `phase4` |
+| **Pasan, fuera del CI por medir tiempos (11)** | `community-activity`, `community-concerts`, `concert-links-tours`, `diary`, `discography-lamina`, `email-verification`, `keep-signed-in`, `password-reset`, `release-calendar`, `tier-laminas`, `year-laminas`: un umbral de milisegundos es una fuente de intermitencia en un runner compartido. Candidatos a entrar cuando se aísle la medición |
+| **Pasa, fuera del CI por lentitud (1)** | `top-laminas` (~150 s) |
+| **Fallan en una BD virgen (4)** | `account-settings`: exige el catálogo de géneros cargado (`load-genre-taxonomy`). `explore-collections`: «la plantilla tiene una colección vigente» (depende de datos/fecha). `notifications`: un umbral de 10 ms para el contador (12,13 ms). `recording-search`: sus mocks de ingesta están desactualizados (no persiste los release-groups) |
+
+Decisión pendiente (no se borró ni reescribió nada): los cuatro que fallan son candidatos a **reparar o podar**. `recording-search` y `explore-collections` parecen
+obsoletos; `account-settings` necesita un paso de siembra; `notifications` necesita un umbral realista. Mientras tanto no están en el CI.
+
+> Windows: un `process.exit` con el pool de Postgres abierto hace que Node aborte a veces (código 3221226505) después de haber pasado todo. `runSmoke` cierra el
+> pool y deja salir al proceso; los scripts sin migrar pueden mostrar ese código en una máquina Windows aunque el resultado sea correcto (en Linux/CI no ocurre).
+
+## Fixtures por script
+
 - `smoke-test-unknown-enrichment.ts` / `smoke-test-artist-by-id.ts` crean un
   stub "Farruko" (`9b90d5a6-8b3f-4e2d-9f11-7e0c0d3a1a01`) y
   `smoke-test-discography-cache.ts` un artista de prueba — borrarlos si se

@@ -16,6 +16,8 @@ empezar por `/docs/README.md` antes de tocar código. Código y comentarios en e
   para sellar el commit. El skill `verify` (`.claude/skills/verify/`) lo amplía con smoke tests y recorrido en el navegador.
   Un hook `Stop` del proyecto (`.claude/settings.json`) corre `typecheck` y `lint` al terminar si hay cambios de código y, tras
   3 rondas fallidas, deja de insistir y pide ayuda humana. Detalle y gate de commit: `docs/06-operations/verification.md`.
+- `pnpm run smoke:ci` — los smoke tests de `scripts/smoke-lib/ci-list.ts` en orden, contra una BD de scratch (la misma lista que corre el job `integration`
+  del CI con un Postgres efímero). Los smoke tests nuevos usan `runSmoke` (`scripts/smoke-lib/run.ts`): código de salida fiel, limpieza en `finally`.
 - `pnpm run test:e2e` — flujos críticos en el navegador (Playwright), contra una BD de scratch y un build de producción sin salida a
   internet; rúbrica en `docs/05-features/feature-map.md`. No forma parte de `pnpm test` ni del hook `Stop`. Si cambias un flujo, actualiza el
   feature map y su test en el mismo cambio.
