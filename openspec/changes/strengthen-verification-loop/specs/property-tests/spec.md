@@ -17,9 +17,9 @@ las transformaciones usadas por los backfills. Solo SHALL aplicarse a funciones 
 Cuando exista una implementación optimizada y otra simple y evidentemente correcta, una propiedad SHALL comprobar que ambas
 devuelven el mismo resultado para entradas generadas.
 
-#### Scenario: Agrupación de runs
-- **WHEN** se agrupan eventos de feed generados con la función real y con una referencia ingenua
-- **THEN** ambos agrupamientos son iguales
+#### Scenario: Invariantes de la agrupación de runs
+- **WHEN** se agrupan eventos de feed generados (no existe una referencia ingenua del plegado)
+- **THEN** cada grupo es un tramo contiguo de una sola persona y un solo tipo, no se repiten ids de fila y el orden se conserva
 
 ### Requirement: Reproducibilidad
 Las propiedades SHALL ejecutarse con una semilla fija en CI y con un número de corridas acotado, y SHALL imprimir la semilla y el

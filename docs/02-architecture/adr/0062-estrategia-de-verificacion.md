@@ -2,7 +2,7 @@
 
 ## Estado
 
-Aceptado (cambio `strengthen-verification-loop`, 2026-11), implementado por fases; esta versión recoge las Fases 1 a 3. Complementa
+Aceptado (cambio `strengthen-verification-loop`, 2026-11), implementado por fases; esta versión recoge las cuatro Fases. Complementa
 `docs/06-operations/smoke-tests.md` sin reescribirlo.
 
 ## Contexto
@@ -35,6 +35,9 @@ agentes en paralelo, leer cada diff no escala.
 8. **Smoke tests en el CI con un Postgres efímero** (job `integration`, aparte de `build`) y un helper común (`runSmoke`) que hace fiel el código de salida
    y garantiza la limpieza. La lista es explícita (`ci-list.ts`) y excluye los que miden tiempos, los lentos y los que hoy fallan, con su motivo; la
    auditoría los destapó (varios mocks de MusicBrainz estaban desactualizados desde hacía cambios). Los E2E corren en un job no bloqueante hasta medir su estabilidad.
+9. **Tests de propiedades con `fast-check`, solo de desarrollo y solo sobre funciones puras** (normalización de búsqueda, edición representativa, plegado del feed,
+   fechas parciales, zona horaria, idempotencia del backfill de categorías, slugs). Semilla fija y corridas acotadas para que el CI sea reproducible; un test
+   meta impide importarlo fuera de los tests. Cada propiedad nueva debe fallar al romper a propósito la función que cubre.
 
 ## Alternativas descartadas
 

@@ -3,8 +3,7 @@
 Cómo se verifica un cambio en este proyecto, más allá de `typecheck → lint → test → build` del CI. Decisión de fondo y
 alternativas: ADR 0062 (`docs/02-architecture/adr/`). Change de origen: `strengthen-verification-loop` (OpenSpec).
 
-> Estado: **Fases 1 a 3** (skill `verify`, hook `Stop`, `REVIEW.md`, sello y gate en observe; feature map y E2E; smoke tests en CI). La fase siguiente
-> (propiedades) se documenta aquí cuando se implemente.
+> Estado: **Fases 1 a 4** (skill `verify`, hook `Stop`, `REVIEW.md`, sello y gate en observe; feature map y E2E; smoke tests en CI; tests de propiedades).
 
 ## Piezas
 
@@ -75,6 +74,31 @@ que deben estar en el diff; `@A` = archivo nuevo), **Resultado**, **Check** y **
 - **Evidencia:** un fallo deja traza y captura en `e2e/.results/` (con su `error-context.md`) y un informe HTML en `e2e/.report/`.
 - **Estabilidad:** 5 corridas seguidas con 9 de 9 tests en verde (2026-11-18, ~50 s cada una con el build ya hecho). Un test que falle de forma intermitente
   se arregla en su causa o se elimina con su motivo.
+
+## Tests de propiedades (`fast-check`)
+
+Un test de propiedades afirma algo que no puede fallar y `fast-check` genera cientos de entradas para intentar refutarlo; encuentra los casos límite que
+nadie imaginó al escribir el código. Viven junto al código como `*.property.test.ts` y corren con `pnpm test` (y con `verify`, por ser tests relacionados).
+
+| Archivo | Qué afirma |
+|---|---|
+| `src/services/catalog/search/normalize.property.test.ts` | La normalización de búsqueda (contraparte TS de `search_key`) es idempotente, no deja mayúsculas ni diacríticos ni espacios sobrantes; `tokenize`, `matchTier` y `isExactMatch` son coherentes; `baseSongTitle` es idempotente. |
+| `src/services/catalog/representative-release.property.test.ts` | La edición representativa **no depende del orden** de las ediciones (ni de invertirlas), siempre es una de las dadas, es oficial si hay alguna oficial y no muta la entrada. Incluye fechas parciales (`YYYY`, `YYYY-MM`). |
+| `src/components/feed/feed-grouping.property.test.ts` | `groupFeedRuns` no inventa filas, es pura, no repite ids, cada grupo es un tramo contiguo de una persona y un tipo, y conserva el orden. |
+| `src/services/musicbrainz/mappers.property.test.ts` | `normalizeReleaseDate` acepta toda fecha de calendario real tal cual y rechaza parciales e imposibles (31 de abril, 29 de febrero sin bisiesto); `yearFromMbDate` concuerda; la categoría del álbum no depende del orden de los tipos. |
+| `src/lib/time-zone.property.test.ts` | `parseTimeZone` nunca lanza, es idempotente, acepta toda zona IANA y rechaza los desplazamientos sueltos. |
+| `src/services/catalog/release-group-category.property.test.ts` | El backfill de categorías es **idempotente** (aplicar el plan y volver a planear no cambia nada), solo toca lo que cambia y no depende del orden. |
+| `src/lib/slug.property.test.ts` | `slugify` es idempotente, `truncateSlug` respeta el tope y el id de catálogo hace ida y vuelta. |
+
+- **Reproducibles:** semilla fija (`20261118`) y 200 corridas por propiedad (`src/test/property.ts`): una corrida no cambia de un día para otro. Si una propiedad falla,
+  `fast-check` imprime la semilla y el contraejemplo ya reducido; se reproduce con `FC_SEED=<semilla> pnpm exec vitest run <archivo>`.
+- **Explorar:** `FC_RUNS=5000 FC_SEED=<otra> pnpm exec vitest run <archivo>` busca más a fondo sin tocar el código (ver en la tabla de abajo lo que se encontró).
+- **Solo sobre funciones puras**, sin red, BD ni UI. La normalización SQL (`search_key`) y los backfills que escriben en la BD se cubren con los smoke tests.
+- **Solo de desarrollo:** `fast-check` está en `devDependencies` y `src/test/property.meta.test.ts` falla si algún archivo que no sea un test lo importa; `next build` no lo incluye.
+- **Cómo se sabe que las propiedades detectan algo:** se rompió a propósito cada una de cuatro funciones y la propiedad correspondiente falló (2026-11-18): quitar `toLowerCase`
+  de `normalizeSearchText`, quitar el desempate por mbid de `pickRepresentativeRelease`, agrupar personas distintas en `groupFeedRuns` y proponer cambios innecesarios en
+  `planCategoryUpdates`. Una propiedad nueva debería pasar por la misma prueba antes de fiarse de ella.
+- **Exploración (2026-11-18):** 3 semillas distintas × 3000–5000 corridas por propiedad sin ningún contraejemplo: las funciones cubiertas se comportan como se esperaba.
 
 ## CI
 

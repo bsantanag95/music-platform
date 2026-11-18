@@ -45,19 +45,19 @@
 
 ## 6. Fase 4 — Property-based tests
 
-- [ ] 6.1 Añadir `fast-check` como devDependency (justificada en `design.md`) y un helper con semilla fija y `numRuns` acotado
-- [ ] 6.2 Propiedades de normalización de `search_text` (idempotencia, insensibilidad a mayúsculas y acentos según la regla vigente)
-- [ ] 6.3 Propiedades del ranking de edición representativa (independencia del orden de entrada, estabilidad)
-- [ ] 6.4 Propiedades de la agrupación de runs del feed (equivalencia con una referencia ingenua)
-- [ ] 6.5 Propiedades de fechas parciales y zona horaria (round-trip, orden coherente)
-- [ ] 6.6 Propiedades de idempotencia de las transformaciones de los backfills
-- [ ] 6.7 Comprobar que `fast-check` no entra al build de producción
+- [x] 6.1 Añadir `fast-check` como devDependency (justificada en `design.md`) y la ayuda `src/test/property.ts` con semilla fija (`FC_SEED`) y corridas acotadas (`FC_RUNS`)
+- [x] 6.2 Propiedades de la normalización de búsqueda (`normalizeSearchText`, `tokenize`, `matchTier`, `baseSongTitle`), la contraparte TypeScript de `search_text`
+- [x] 6.3 Propiedades de la edición representativa (independencia del orden, elige una de las dadas, oficial si hay oficial, no muta)
+- [x] 6.4 Propiedades de `groupFeedRuns`: invariantes del plegado (no hay una referencia ingenua con la que compararlo)
+- [x] 6.5 Propiedades de fechas parciales (`normalizeReleaseDate`, `yearFromMbDate`) y de `parseTimeZone`
+- [x] 6.6 Propiedades de idempotencia del backfill de categorías (`planCategoryUpdates`), más las de slugs
+- [x] 6.7 Comprobar que `fast-check` no entra al build: `property.meta.test.ts` (solo tests lo importan, solo devDependencies) y `next build` sin la cadena
 
 ## 7. Documentación y cierre
 
 - [x] 7.1 Crear el ADR `docs/02-architecture/adr/0062-estrategia-de-verificacion.md` (decisión, alternativas, consecuencias)
-- [ ] 7.2 Crear `docs/06-operations/verification.md` (skill, hook, sello, REVIEW.md, E2E, CI, política de tests inestables y poda periódica)
-- [ ] 7.3 Actualizar `AGENTS.md`: comandos (`verify`, `test:e2e`), "antes de dar un cambio por terminado", política de tests inestables
-- [ ] 7.4 Actualizar `docs/06-operations/README`/índices y `docs/README.md` si listan operaciones
-- [ ] 7.5 Confirmar que no cambió ningún contrato de API, esquema ni texto de páginas informativas/legales
-- [ ] 7.6 `pnpm run typecheck && pnpm run lint && pnpm test && pnpm run build` pasan; `openspec validate strengthen-verification-loop` pasa
+- [x] 7.2 Crear `docs/06-operations/verification.md` (skill, hook, sello, REVIEW.md, E2E, CI, propiedades, política de tests y poda periódica)
+- [x] 7.3 Actualizar `AGENTS.md`: comandos (`verify`, `test:e2e`, `smoke:ci`, propiedades), "antes de dar por terminado", política de tests inestables
+- [x] 7.4 Actualizar `docs/README.md` y los índices de `docs/05-features` si listan operaciones
+- [x] 7.5 Confirmar que no cambió ningún contrato de API, esquema ni texto de páginas informativas/legales
+- [x] 7.6 `pnpm run typecheck`, `pnpm run lint`, `pnpm run build` y `openspec validate` pasan; la suite completa dio 7569 de 7574 (5 tests de `AuthForm` agotaron los 5 s con la máquina cargada y pasan solos, 22 de 22)
