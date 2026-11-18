@@ -38,10 +38,8 @@ interface FeedActivityListProps {
   variant?: "feed" | "self" | "own";
   // Pliega una cita larga (comentario o nota de escucha) que supera 6 líneas
   // de alto real, con un botón "Ver más"/"Ver menos". Opt-in: `FeedList`
-  // (`/me/feed`) lo activa; `ScrollablePreviewList` (preview de feed y rastro
-  // reciente de Inicio) NO lo pasa a propósito — ese preview ya está acotado
-  // por su propio contenedor de scroll, plegar ahí encima sería doble tope
-  // (ver openspec/changes/add-feed-filters, Non-Goals).
+  // (`/me/feed`) lo activa; los demás usos no lo pasan (ver
+  // openspec/changes/add-feed-filters, Non-Goals).
   clamp?: boolean;
   // Encabezados "Hoy / Esta semana / Este mes / Antes" entre filas (redesign-activity-page, D7). Opt-in: solo
   // `/activity`; `/me/feed` e Inicio no los muestran.

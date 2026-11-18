@@ -1,20 +1,17 @@
 import { describe, it, expect, vi } from "vitest";
 import { screen } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { AnchorHTMLAttributes, ReactElement, ReactNode } from "react";
+import type { AnchorHTMLAttributes, ReactNode } from "react";
 import { FeedPreview } from "./FeedPreview";
-import { RecentSelfActivity } from "./RecentSelfActivity";
+import { selectHomeFeedCards } from "./home-feed-cards";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import type { FeedEntry } from "@/services/feed/feed";
 
-function renderWithQuery(ui: ReactElement) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return renderWithIntl(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
-}
-
 vi.mock("next-intl/server", () => ({
-  getTranslations: vi.fn().mockResolvedValue((key: string) => key),
+  getTranslations: vi.fn().mockResolvedValue((key: string, values?: { count?: number }) =>
+    values?.count != null ? `${key}:${values.count}` : key,
+  ),
 }));
+vi.mock("@/components/profiles/UserHoverCard", () => ({ UserHoverCard: ({ children }: { children: ReactNode }) => <>{children}</> }));
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({
@@ -68,33 +65,33 @@ const favorite: FeedEntry = {
   author,
 };
 
-describe("FeedPreview", () => {
-  it("usa la presentación por peso: comentario en bloque, favorito en línea", async () => {
-    const ui = await FeedPreview({ initialEntries: [comment, favorite], initialHasNext: false });
-    renderWithQuery(ui);
-
-    expect(screen.getByText("Producción impecable de principio a fin.")).toBeInTheDocument();
-    expect(screen.getByText("Lonerism")).toBeInTheDocument();
-  });
-
-  it("muestra el empty state cuando no hay entradas", async () => {
-    const ui = await FeedPreview({ initialEntries: [], initialHasNext: false });
-    renderWithIntl(ui);
-
-    expect(screen.getByText("feedPreviewEmpty")).toBeInTheDocument();
-  });
+const camino = (id: string): FeedEntry => ({
+  kind: "camino",
+  id,
+  event: "created",
+  audience: "public",
+  createdAt: "2026-07-30T00:00:00Z",
+  camino: { id, title: "Camino", albumCount: 3 },
+  author,
 });
 
-describe("RecentSelfActivity", () => {
-  it("devuelve null sin entradas", async () => {
-    expect(await RecentSelfActivity({ initialEntries: [], initialHasNext: false })).toBeNull();
+// openspec: redesign-signed-in-home-phase2
+describe("FeedPreview", () => {
+  it("muestra el contenido en tarjetas, el resumen por persona y el acceso al feed", async () => {
+    const selection = selectHomeFeedCards([favorite, comment, camino("k1"), camino("k2")]);
+    renderWithIntl(await FeedPreview({ selection }));
+
+    expect(screen.getAllByRole("listitem").filter((item) => item.querySelector("article"))).toHaveLength(2);
+    expect(screen.getByText("Producción impecable de principio a fin.")).toBeInTheDocument();
+    expect(screen.getByText("Lonerism")).toBeInTheDocument();
+    expect(screen.getByText("feedSummary.caminoCreated:2")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "followingMore" })).toHaveAttribute("href", "/me/feed");
   });
 
-  it("renderiza la actividad propia con la presentación por peso", async () => {
-    const ui = await RecentSelfActivity({ initialEntries: [comment], initialHasNext: false });
-    if (!ui) throw new Error("RecentSelfActivity debería renderizar con entradas");
-    renderWithQuery(ui);
+  it("sin tarjetas muestra el texto vacío y conserva el acceso al feed", async () => {
+    renderWithIntl(await FeedPreview({ selection: { cards: [], summary: [] } }));
 
-    expect(screen.getByText("Producción impecable de principio a fin.")).toBeInTheDocument();
+    expect(screen.getByText("feedPreviewEmpty")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "followingMore" })).toHaveAttribute("href", "/me/feed");
   });
 });
