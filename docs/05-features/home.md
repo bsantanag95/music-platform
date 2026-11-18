@@ -75,19 +75,16 @@ Ver "Inicio con sesión — estructura" para la jerarquía completa y los bloque
   'public'` en el autor (más `audience = 'public'` en el caso de listas) y, si hay sesión,
   excluyen bloqueos en cualquier dirección — sin paginación, devuelven un top-N fijo para
   preview.
-- El feed de seguidos (`/me/feed`, `FeedPreview`, `RecentSelfActivity`) usa
-  `FeedActivityList`; los bloques compactos (`CommunityActivity`, `PublicLists`) tienen su
+- El feed de seguidos de `/me/feed` usa `FeedActivityList`; en Inicio, «De quienes sigues»
+  (`FeedPreview`) usa tarjetas (`ActivityCard`, ver más abajo); los bloques compactos (`CommunityActivity`, `PublicLists`) tienen su
   propia fila densa. `FeedEntryBody` se eliminó en `redesign-feed`; `targetHref` vive en
   `src/components/feed/feed-target.ts`.
-- **"Tu feed" y "Tu rastro reciente" cargan y pagan con scroll interno**
-  (`home-scrollable-preview-lists`): el servidor resuelve la primera página (10 entradas —
-  `listFeed`/`listMyRecentActivity` con `pageSize=10`) dentro de un contenedor de altura
-  fija (`ScrollablePreviewList`, cliente); el resto se pagina bajo demanda contra
-  `GET /api/me/feed` / `GET /api/me/recent-activity` al llegar al fondo del contenedor
-  (`IntersectionObserver` sobre un sentinel + `useInfiniteQuery`), con un spinner
-  circular mientras carga. `listMyRecentActivity` ahora pagina igual que `listFeed`
-  (`page`/`pageSize`/`hasNext`, ver `src/services/feed/feed.ts`); `listFollowingFeedPreview`
-  se eliminó — "Tu feed" llama `listFeed` directo, igual que `/me/feed`.
+- **Sin scroll interno** (`redesign-signed-in-home-phase2`, antes `home-scrollable-preview-lists`):
+  «Tu feed» y «Tu rastro reciente» vivían en contenedores de altura fija con carga por
+  `IntersectionObserver` (`ScrollablePreviewList`, eliminado), que atrapaban el gesto en el
+  teléfono. Ahora «De quienes sigues» muestra un tramo fijo de tarjetas y «Ver más actividad»
+  lleva a `/me/feed`; el rastro salió de Inicio (sigue en `/me/diary`, en el perfil y en la
+  pestaña «Tú» de `/activity`, que usa `GET /api/me/recent-activity`).
 - No hizo falta ningún rol/permiso nuevo — "listas públicas recientes" usa el mismo campo
   `audience` que ya expone `userList`.
 - El hero sin sesión monta `HeaderSearch size="hero"` (variante `full`/`large` de
@@ -133,19 +130,22 @@ entró) seguido de los mismos bloques de descubrimiento. Este cambio cierra su j
 3. **Accesos rápidos** (`QuickLinks`, dentro de la cabecera): diario, favoritos, listas,
    colección física y progreso (`/me/progress`, que reúne recorridos de artista, Caminos y
    listas seguidas) — todos de la biblioteca propia; la búsqueda ya vive en el Header. Son cinco
-   enlaces (`clarify-user-menu-names`). La vista previa del feed se titula "Actividad de quienes
-   sigues".
-4. **Feed de seguidos** (`FeedPreview`) como bloque principal, o **nudge de onboarding**
-   (`OnboardingPrompt`) si no sigue a nadie: buscar gente y explorar el catálogo. Registrar la
-   primera escucha ya no se repite ahí: lo cubre el campo de la cabecera. `FeedPreview` usa
-   `FeedActivityList` (misma presentación que `/me/feed`, `redesign-feed`), con scroll
-   interno y carga de a 10 (ver "Notas técnicas de la implementación").
-5. **Tu rastro reciente** (`RecentSelfActivity`): las últimas escuchas, valoraciones y
-   comentarios del propio usuario. **No filtra por audiencia** (es contenido propio,
-   igual que `/me/diary`). Se oculta si no hay actividad. Fuente: `listMyRecentActivity`
-   en `src/services/home/home.ts` (pagina de a 10). Presentación: `FeedActivityList` (peso
-   por contenido, igual que `/me/feed` — ver `activity-feed.md`, `redesign-feed`), con el
-   mismo contenedor de scroll y carga incremental que "Tu feed".
+   enlaces (`clarify-user-menu-names`). La actividad de seguidos se titula «De quienes sigues».
+4. **Lo último que escuchaste** (`RecentListensShelf`, `redesign-signed-in-home-phase2`): estante
+   con los últimos objetivos **distintos** anotados como escucha (hasta 8; `listMyRecentListens`
+   lee las 60 escuchas más recientes y deduplica por objetivo), cada uno con tu valoración en
+   forma compacta o el contexto de la escucha, y la fecha. No filtra por audiencia (contenido
+   propio). Rejilla de 8 desde `lg`, riel horizontal por debajo. Se oculta sin escuchas.
+5. **De quienes sigues** (`FeedPreview`): `listFeed` con `pageSize = 30` y
+   `selectHomeFeedCards` (`home-feed-cards.ts`) eligen hasta 7 tarjetas (`ActivityCard`, la
+   primera ancha): escucha, valoración, reseña, comentario y favorito de álbum; las escuchas
+   seguidas de una persona se unen en una tarjeta de racha (mosaico 2×2 y títulos). Los eventos
+   de poco valor del mismo tramo (listas, listas para completar, colección, búsqueda,
+   seguimientos, favoritos de canción o artista) van en una línea por persona («Luis armó 6
+   listas para completar»). «Ver más actividad» lleva a `/me/feed`. **Sin seguidos**, ese lugar
+   es «Lo que se escucha en la comunidad» (`CommunityActivity layout="cards"`, 7 entradas) con
+   «Buscar gente para seguir», y la comunidad no se repite más abajo; `OnboardingPrompt` se
+   eliminó.
 6. **Retoma una lista** (`ResumeList`): acceso directo a la lista propia con actividad más
    reciente, con mini-mosaico 2×2 de carátulas de sus ítems. Se oculta si el usuario no
    tiene listas. Fuente: `getMostRecentEditedList`.
@@ -167,7 +167,7 @@ scroll interno, eventos de poco valor agrupados). Tres fases:
 | Fase | Alcance |
 | --- | --- |
 | 1 (`redesign-signed-in-home-phase1`) | La cabecera, descrita aquí. |
-| 2 | Cuerpo en el contenedor ancho: estante «Lo último que escuchaste» (solo escuchas, reemplaza «Tu rastro reciente») antes de «De quienes sigues» en tarjetas, sin scroll interno, con «Ver más actividad» y los eventos de poco valor agrupados por autor. |
+| 2 (`redesign-signed-in-home-phase2`) | Cuerpo en el contenedor ancho: estante «Lo último que escuchaste» (solo escuchas, reemplaza «Tu rastro reciente») antes de «De quienes sigues» en tarjetas, sin scroll interno, con «Ver más actividad» y los eventos de poco valor agrupados por autor. |
 | 3 | «Retoma una lista» (solo listas con elementos) junto a los lanzamientos como horario con selector; colecciones en mosaico; «Mejor valorados» para la cuenta sin actividad; la comunidad como en la portada, sin la actividad propia. |
 
 - **Franja a sangre completa** con `wall.webp` de fondo (12 %, máscara hacia la derecha,
@@ -324,8 +324,8 @@ propio, en layout denso: grilla `lg:grid-cols-[1.5fr_1fr]` (apilados en < `lg`) 
   fecha relativa a la derecha (mono), `divide-y`; el encabezado enlaza "Ver todas" a `/lists`.
   Solo listas `standard`: un Camino público tiene su propio descubrimiento (`/caminos`).
 - `redesign-feed` eliminó de estos dos la rama no usada que renderizaba `FeedEntryCard`
-  full-width y el prop `withCover`/`compact`; siempre son densos. `FeedPreview` y
-  `RecentSelfActivity` migraron a `FeedActivityList`. `FeedEntryBody` se eliminó;
+  full-width y el prop `withCover`/`compact`; siempre son densos. `FeedPreview` migró a
+  `FeedActivityList` y, en `redesign-signed-in-home-phase2`, a tarjetas. `FeedEntryBody` se eliminó;
   `targetHref` vive en `src/components/feed/feed-target.ts`.
 - Primitiva `CoverThumb` (`src/components/catalog/CoverThumb.tsx`): miniatura cuadrada con
   `DiscPlaceholder` de fallback, tamaño vía `className`. Compartida por las filas compactas

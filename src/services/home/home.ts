@@ -34,6 +34,7 @@ import {
   PRIMARY_ARTIST_SQL,
   RECORDING_ALBUM_ID_SQL,
   RECORDING_ALBUM_TITLE_SQL,
+  RECORDING_COVER_SQL,
 } from "@/services/feed/feed";
 import type {
   FeedAuthor,
@@ -75,6 +76,107 @@ function targetType(
   releaseGroupId: string | null,
 ): "artist" | "release-group" | "recording" {
   return artistId ? "artist" : releaseGroupId ? "release-group" : "recording";
+}
+
+/** Una escucha del estante «Lo último que escuchaste» (openspec: redesign-signed-in-home-phase2). */
+export interface HomeRecentListen {
+  id: string;
+  listenContext: "first_listen" | "relisten" | "rediscovery";
+  createdAt: string;
+  target: {
+    type: "artist" | "release-group" | "recording";
+    id: string;
+    title: string;
+    artistName: string | null;
+    coverThumbUrl: string | null;
+  };
+  /** Tu valoración del objetivo, si existe (`stars` "0.5".."5.0"). */
+  rating: { stars: string; detailedScore: number | null } | null;
+}
+
+/** Escuchas que se leen antes de deduplicar: acota el recorrido por `idx_listen_entry_user_created`. */
+const RECENT_LISTENS_SCAN = 60;
+
+/**
+ * «Lo último que escuchaste» de Inicio: los últimos objetivos distintos que la persona anotó como
+ * escucha (cada uno con su escucha más reciente), con su valoración propia. Sin filtro de audiencia:
+ * es contenido propio, como `/me/diary`. Se leen las `RECENT_LISTENS_SCAN` escuchas más recientes y se
+ * deduplica por objetivo en memoria; con más repeticiones que eso el estante sale más corto.
+ */
+export async function listMyRecentListens(userId: string, limit = 8): Promise<HomeRecentListen[]> {
+  const rows = await db
+    .select({
+      id: listenEntry.id,
+      listenContext: listenEntry.listenContext,
+      createdAt: listenEntry.createdAt,
+      artistId: listenEntry.artistId,
+      releaseGroupId: listenEntry.releaseGroupId,
+      recordingId: listenEntry.recordingId,
+      artistName: artist.name,
+      artistPhoto: artist.photoUrl,
+      creditedArtist: PRIMARY_ARTIST_SQL(listenEntry.releaseGroupId, listenEntry.recordingId),
+      releaseTitle: releaseGroup.title,
+      releaseCover: releaseGroup.coverThumbUrl,
+      recordingTitle: recording.title,
+      recordingCover: RECORDING_COVER_SQL(listenEntry.recordingId),
+    })
+    .from(listenEntry)
+    .leftJoin(artist, eq(listenEntry.artistId, artist.id))
+    .leftJoin(releaseGroup, eq(listenEntry.releaseGroupId, releaseGroup.id))
+    .leftJoin(recording, eq(listenEntry.recordingId, recording.id))
+    .where(eq(listenEntry.userId, userId))
+    .orderBy(desc(listenEntry.createdAt), desc(listenEntry.id))
+    .limit(RECENT_LISTENS_SCAN);
+
+  const seen = new Set<string>();
+  const picked = rows.filter((row) => {
+    const key = row.artistId ?? row.releaseGroupId ?? row.recordingId ?? row.id;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, limit);
+  if (picked.length === 0) return [];
+
+  const idsOf = (column: "artistId" | "releaseGroupId" | "recordingId") =>
+    picked.map((row) => row[column]).filter((id): id is string => id != null);
+  const [artistIds, releaseGroupIds, recordingIds] = [idsOf("artistId"), idsOf("releaseGroupId"), idsOf("recordingId")];
+  const targetConditions = [
+    artistIds.length > 0 ? inArray(rating.artistId, artistIds) : undefined,
+    releaseGroupIds.length > 0 ? inArray(rating.releaseGroupId, releaseGroupIds) : undefined,
+    recordingIds.length > 0 ? inArray(rating.recordingId, recordingIds) : undefined,
+  ].filter((condition) => condition !== undefined);
+  const ratings = await db
+    .select({
+      artistId: rating.artistId,
+      releaseGroupId: rating.releaseGroupId,
+      recordingId: rating.recordingId,
+      stars: rating.stars,
+      detailedScore: rating.detailedScore,
+    })
+    .from(rating)
+    .where(and(eq(rating.userId, userId), sql`(${sql.join(targetConditions, sql` OR `)})`));
+  const ratingByTarget = new Map(
+    ratings.map((row) => [row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "", row] as const),
+  );
+
+  return picked.map((row) => {
+    const type = targetType(row.artistId, row.releaseGroupId);
+    const id = (row.artistId ?? row.releaseGroupId ?? row.recordingId)!;
+    const own = ratingByTarget.get(id);
+    return {
+      id: row.id,
+      listenContext: row.listenContext as HomeRecentListen["listenContext"],
+      createdAt: row.createdAt.toISOString(),
+      target: {
+        type,
+        id,
+        title: (type === "artist" ? row.artistName : type === "release-group" ? row.releaseTitle : row.recordingTitle) ?? "",
+        artistName: type === "artist" ? null : row.creditedArtist,
+        coverThumbUrl: type === "artist" ? row.artistPhoto : type === "release-group" ? row.releaseCover : row.recordingCover,
+      },
+      rating: own ? { stars: String(own.stars), detailedScore: own.detailedScore } : null,
+    };
+  });
 }
 
 /**

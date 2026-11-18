@@ -7,8 +7,8 @@ import * as home from "@/services/home/home";
 import * as feed from "@/services/feed/feed";
 import { AuthenticatedHome } from "./AuthenticatedHome";
 import { FeedPreview } from "./FeedPreview";
-import { OnboardingPrompt } from "./OnboardingPrompt";
-import { RecentSelfActivity } from "./RecentSelfActivity";
+import { RecentListensShelf } from "./RecentListensShelf";
+import { CommunityActivity } from "./CommunityActivity";
 import { ResumeList } from "./ResumeList";
 import { SignedInHero } from "./SignedInHero";
 import * as social from "@/services/social";
@@ -32,6 +32,7 @@ vi.mock("@/services/home/home", () => ({
   listMyRecentActivity: vi
     .fn()
     .mockResolvedValue({ entries: [], page: 1, pageSize: 10, hasNext: false }),
+  listMyRecentListens: vi.fn().mockResolvedValue([]),
   getMostRecentEditedList: vi.fn().mockResolvedValue(null),
   listPublicLists: vi.fn().mockResolvedValue([]),
   listPopularComments: vi
@@ -80,9 +81,10 @@ describe("AuthenticatedHome", () => {
 
     const element = await AuthenticatedHome({ user });
 
-    expect(feed.listFeed).toHaveBeenCalledWith("u1", 1, 10);
-    expect(findElement(element, FeedPreview)).not.toBeNull();
-    expect(findElement(element, OnboardingPrompt)).toBeNull();
+    expect(feed.listFeed).toHaveBeenCalledWith("u1", 1, 30);
+    expect(findElement(element, FeedPreview)?.props?.selection).toEqual({ cards: [], summary: [] });
+    // La comunidad va más abajo, en su bloque de siempre (sin `layout`).
+    expect(findElement(element, CommunityActivity)?.props?.layout).toBeUndefined();
   });
 
   it("los lanzamientos siguen en el riel con selector, no en el horario de la portada sin sesión", async () => {
@@ -96,7 +98,7 @@ describe("AuthenticatedHome", () => {
     expect(releases!.props?.personalReleases).toBeDefined();
   });
 
-  it("sin seguidos: muestra el onboarding y no pide el preview de feed", async () => {
+  it("sin seguidos: la comunidad en tarjetas ocupa el lugar del feed y no se repite abajo", async () => {
     vi.mocked(following.listFollowing).mockResolvedValue({
       users: [],
       page: 1,
@@ -107,8 +109,17 @@ describe("AuthenticatedHome", () => {
     const element = await AuthenticatedHome({ user });
 
     expect(feed.listFeed).not.toHaveBeenCalled();
-    expect(findElement(element, OnboardingPrompt)).not.toBeNull();
     expect(findElement(element, FeedPreview)).toBeNull();
+    const communities: unknown[] = [];
+    (function collect(node: unknown) {
+      if (node == null || typeof node !== "object") return;
+      if (Array.isArray(node)) return node.forEach(collect);
+      const el = node as { type?: unknown; props?: { children?: unknown } };
+      if (el.type === CommunityActivity) communities.push(el);
+      collect(el.props?.children);
+    })(element);
+    expect(communities).toHaveLength(1);
+    expect((communities[0] as { props: { layout: string } }).props.layout).toBe("cards");
   });
 
   // openspec: redesign-signed-in-home-phase1
@@ -149,7 +160,7 @@ describe("AuthenticatedHome", () => {
 
     const element = await AuthenticatedHome({ user });
 
-    expect(findElement(element, RecentSelfActivity)?.props?.initialEntries).toEqual(activity);
+    expect(findElement(element, RecentListensShelf)).not.toBeNull();
     expect(findElement(element, ResumeList)?.props?.list).toEqual(resumeList);
   });
 
@@ -202,11 +213,7 @@ describe("AuthenticatedHome", () => {
   });
 });
 
-describe("RecentSelfActivity / ResumeList: se ocultan sin datos", () => {
-  it("RecentSelfActivity no renderiza nada sin entradas", async () => {
-    expect(await RecentSelfActivity({ initialEntries: [], initialHasNext: false })).toBeNull();
-  });
-
+describe("ResumeList: se oculta sin datos", () => {
   it("ResumeList no renderiza nada sin lista", async () => {
     expect(await ResumeList({ list: null })).toBeNull();
   });

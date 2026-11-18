@@ -10,7 +10,7 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 
 vi.mock("next-intl/server", async () => {
-  const home = (await import("../../../messages/es/home.json")).default as Record<string, string>;
+  const home = (await import("../../../messages/es/home.json")).default as Record<string, unknown>;
   const diary = (await import("../../../messages/es/diary.json")).default as Record<string, unknown>;
   const collection = (await import("../../../messages/es/collection.json")).default as Record<string, unknown>;
   const namespaces: Record<string, Record<string, unknown>> = { home, diary, collection };
