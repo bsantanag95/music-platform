@@ -5,8 +5,8 @@ import { Link } from "@/i18n/navigation";
 // todavía — evita mostrarle el empty state genérico del feed como primera
 // impresión de Inicio (ver docs/05-features/home.md). Los dos accesos son
 // enlaces con apariencia de botón (un `<button>` dentro de un `<a>` no es HTML
-// válido); la segunda pista —registrar la primera escucha— va aparte, separada
-// por un filete, porque es otro camino y no una continuación del primero.
+// válido). Registrar la primera escucha ya no se repite aquí: lo cubre el campo
+// de la cabecera (openspec: redesign-signed-in-home-phase1).
 export async function OnboardingPrompt() {
   const t = await getTranslations("home");
 
@@ -43,22 +43,6 @@ export async function OnboardingPrompt() {
           {t("onboardingExploreCatalog")}
         </Link>
       </div>
-      <p className="mt-7 flex max-w-sm items-start gap-2 border-t border-ink-border pt-5 text-left font-body text-sm text-paper-muted">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-          className="mt-0.5 size-4 shrink-0 text-paper-muted"
-        >
-          <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
-          <path d="M21 19a2 2 0 0 1-2 2h-1v-6h3zM3 19a2 2 0 0 0 2 2h1v-6H3z" />
-        </svg>
-        {t("onboardingLogFirstListen")}
-      </p>
     </section>
   );
 }

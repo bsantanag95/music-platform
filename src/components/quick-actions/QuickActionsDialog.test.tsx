@@ -350,4 +350,48 @@ describe("QuickActionsDialog", () => {
     expect(mocks.refresh).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalled();
   });
+
+  // openspec: redesign-signed-in-home-phase1
+  describe("con un objetivo ya elegido", () => {
+    const target = { type: "release-group" as const, id: albumId, title: "The Dark Side of the Moon", subtitle: "Pink Floyd" };
+
+    it("sin confirmación registra la escucha al abrir, en Escucha y sin buscador", async () => {
+      mocks.createListenEntry.mockResolvedValue(createdEntry);
+      renderWithIntl(<QuickActionsDialog onClose={() => {}} initialTarget={target} />);
+      expect(await screen.findByRole("radio", { name: "Escucha" })).toBeChecked();
+      expect(await screen.findByText("Escucha registrada")).toBeInTheDocument();
+      expect(mocks.createListenEntry).toHaveBeenCalledWith({ type: "release-group", id: albumId });
+      expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    });
+
+    it("con confirmación no registra hasta confirmar", async () => {
+      mocks.createListenEntry.mockResolvedValue(createdEntry);
+      renderWithIntl(<QuickActionsDialog onClose={() => {}} initialTarget={target} confirmListen />);
+      const confirm = await screen.findByRole("button", { name: "Registrar escucha" });
+      await waitFor(() => expect(confirm).toHaveFocus());
+      expect(screen.getByText("Pink Floyd")).toBeInTheDocument();
+      expect(mocks.createListenEntry).not.toHaveBeenCalled();
+
+      await userEvent.click(confirm);
+      expect(await screen.findByText("Escucha registrada")).toBeInTheDocument();
+      expect(mocks.createListenEntry).toHaveBeenCalledTimes(1);
+    });
+
+    it("«Elegir otro» vuelve al buscador sin registrar", async () => {
+      renderWithIntl(<QuickActionsDialog onClose={() => {}} initialTarget={target} confirmListen />);
+      await userEvent.click(await screen.findByRole("button", { name: "Elegir otro" }));
+      await waitFor(() => expect(screen.getByRole("searchbox")).toHaveFocus());
+      expect(mocks.createListenEntry).not.toHaveBeenCalled();
+    });
+
+    it("cerrar sin confirmar no registra ni refresca", async () => {
+      const onClose = vi.fn();
+      renderWithIntl(<QuickActionsDialog onClose={onClose} initialTarget={target} confirmListen />);
+      await screen.findByRole("button", { name: "Registrar escucha" });
+      fireEvent.keyDown(document, { key: "Escape" });
+      expect(onClose).toHaveBeenCalled();
+      expect(mocks.createListenEntry).not.toHaveBeenCalled();
+      expect(mocks.refresh).not.toHaveBeenCalled();
+    });
+  });
 });
