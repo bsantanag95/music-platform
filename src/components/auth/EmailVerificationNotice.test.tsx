@@ -47,10 +47,14 @@ describe("EmailVerificationNotice", () => {
     expect(screen.getByText(authEs.verifyEmailWelcomeDescription)).toBeInTheDocument();
   });
 
-  it("muestra el título y descripción compactos con variante home", () => {
-    renderWithIntl(<EmailVerificationNotice verified={false} variant="home" />);
-    expect(screen.getByText(authEs.verifyEmailHomeTitle)).toBeInTheDocument();
-    expect(screen.getByText(authEs.verifyEmailHomeDescription)).toBeInTheDocument();
+  // openspec: redesign-signed-in-home-phase1
+  it("en línea es una frase con la acción de reenvío, rotulada como aviso", async () => {
+    const user = userEvent.setup();
+    mocks.apiFetch.mockResolvedValue({ ok: true });
+    renderWithIntl(<EmailVerificationNotice verified={false} variant="inline" />);
+    expect(screen.getByRole("status", { name: authEs.verifyEmailHomeTitle })).toHaveTextContent(authEs.verifyEmailHomeDescription);
+    await user.click(screen.getByRole("button", { name: authEs.verifyEmailResend }));
+    expect(await screen.findByText(authEs.verifyEmailResent)).toBeInTheDocument();
   });
 
   it("no renderiza nada con variante welcome si el email está verificado", () => {
@@ -58,8 +62,8 @@ describe("EmailVerificationNotice", () => {
     expect(screen.queryByText(authEs.verifyEmailWelcomeTitle)).not.toBeInTheDocument();
   });
 
-  it("no renderiza nada con variante home si el email está verificado", () => {
-    renderWithIntl(<EmailVerificationNotice verified variant="home" />);
-    expect(screen.queryByText(authEs.verifyEmailHomeTitle)).not.toBeInTheDocument();
+  it("no renderiza nada en línea si el email está verificado", () => {
+    renderWithIntl(<EmailVerificationNotice verified variant="inline" />);
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 });

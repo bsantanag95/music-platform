@@ -4,6 +4,7 @@ import type { SQL } from "drizzle-orm";
 import {
   getMostRecentEditedList,
   listMyRecentActivity,
+  listMyRecentListens,
   listPublicLists,
 } from "./home";
 
@@ -101,6 +102,69 @@ describe("servicio de datos de Inicio", () => {
           coverThumbUrls: ["https://example.com/a.jpg", "https://example.com/b.jpg"],
         }),
       ]);
+    });
+  });
+
+  // openspec: redesign-signed-in-home-phase2
+  describe("listMyRecentListens", () => {
+    const rg = (n: number) => `00000000-0000-4000-8000-0000000001${String(n).padStart(2, "0")}`;
+    const row = (id: string, releaseGroupId: string, title: string, context = "first_listen") => ({
+      id,
+      listenContext: context,
+      createdAt: new Date("2026-11-10T00:00:00Z"),
+      artistId: null,
+      releaseGroupId,
+      recordingId: null,
+      artistName: null,
+      artistPhoto: null,
+      creditedArtist: "Def Leppard",
+      releaseTitle: title,
+      releaseCover: `https://covers/${title}.jpg`,
+      recordingTitle: null,
+      recordingCover: null,
+    });
+
+    it("deja una escucha por objetivo, la más reciente, con tu valoración si existe", async () => {
+      const ratingsWhere = vi.fn().mockResolvedValue([
+        { artistId: null, releaseGroupId: rg(1), recordingId: null, stars: "4.5", detailedScore: 88 },
+      ]);
+      mocks.db.select
+        .mockReset()
+        .mockReturnValueOnce(
+          sourceQuery([
+            row("l3", rg(1), "Hysteria", "relisten"),
+            row("l2", rg(2), "Pyromania"),
+            row("l1", rg(1), "Hysteria"),
+          ]),
+        )
+        .mockReturnValueOnce({ from: vi.fn(() => ({ where: ratingsWhere })) });
+
+      const listens = await listMyRecentListens("u1");
+
+      expect(listens.map((listen) => listen.target.title)).toEqual(["Hysteria", "Pyromania"]);
+      expect(listens[0]).toMatchObject({
+        id: "l3",
+        listenContext: "relisten",
+        target: { type: "release-group", id: rg(1), artistName: "Def Leppard", coverThumbUrl: "https://covers/Hysteria.jpg" },
+        rating: { stars: "4.5", detailedScore: 88 },
+      });
+      expect(listens[1]!.rating).toBeNull();
+    });
+
+    it("respeta el límite", async () => {
+      mocks.db.select
+        .mockReset()
+        .mockReturnValueOnce(sourceQuery([1, 2, 3].map((n) => row(`l${n}`, rg(n), `Disco ${n}`))))
+        .mockReturnValueOnce({ from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([]) })) });
+
+      expect(await listMyRecentListens("u1", 2)).toHaveLength(2);
+    });
+
+    it("sin escuchas no consulta valoraciones", async () => {
+      mocks.db.select.mockReset().mockReturnValueOnce(sourceQuery([]));
+
+      expect(await listMyRecentListens("u1")).toEqual([]);
+      expect(mocks.db.select).toHaveBeenCalledTimes(1);
     });
   });
 

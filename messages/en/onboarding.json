@@ -35,8 +35,6 @@
     "saving": "Saving..."
   },
   "error": "We couldn't complete the step. Try again.",
-  "homeLink": "Complete your music profile",
-  "homeLinkCta": "Start",
   "searchError": "We couldn't search. Try again.",
   "categories": {
     "single_ep": "Single / EP",

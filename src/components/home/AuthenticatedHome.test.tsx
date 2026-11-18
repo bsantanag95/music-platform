@@ -7,13 +7,12 @@ import * as home from "@/services/home/home";
 import * as feed from "@/services/feed/feed";
 import { AuthenticatedHome } from "./AuthenticatedHome";
 import { FeedPreview } from "./FeedPreview";
-import { OnboardingPrompt } from "./OnboardingPrompt";
-import { WelcomeLink } from "./WelcomeLink";
-import { RecentSelfActivity } from "./RecentSelfActivity";
+import { RecentListensShelf } from "./RecentListensShelf";
+import { CommunityActivity } from "./CommunityActivity";
 import { ResumeList } from "./ResumeList";
-import { WelcomePanel } from "./WelcomePanel";
+import { SignedInHero } from "./SignedInHero";
+import * as social from "@/services/social";
 import { HomeReleases } from "./HomeReleases";
-import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
 
 vi.mock("@/lib/year-invitation-request", () => ({ yearInvitationForRequest: vi.fn(async () => null) }));
 vi.mock("next-intl/server", () => ({
@@ -33,6 +32,7 @@ vi.mock("@/services/home/home", () => ({
   listMyRecentActivity: vi
     .fn()
     .mockResolvedValue({ entries: [], page: 1, pageSize: 10, hasNext: false }),
+  listMyRecentListens: vi.fn().mockResolvedValue([]),
   getMostRecentEditedList: vi.fn().mockResolvedValue(null),
   listPublicLists: vi.fn().mockResolvedValue([]),
   listPopularComments: vi
@@ -41,6 +41,10 @@ vi.mock("@/services/home/home", () => ({
   listHomeReleases: vi.fn().mockResolvedValue([]),
   listPersonalHomeReleases: vi.fn().mockResolvedValue([]),
   ensureReleaseCalendarFresh: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock("@/services/social", () => ({
+  getOwnRatingRow: vi.fn().mockResolvedValue(null),
+  knownSocialTarget: (type: string, id: string) => ({ type, id, column: "releaseGroupId" }),
 }));
 vi.mock("@/services/activity/community-activity", () => ({
   listCommunityActivity: vi.fn().mockResolvedValue({ entries: [], page: 1, pageSize: 6, hasNext: false }),
@@ -77,9 +81,10 @@ describe("AuthenticatedHome", () => {
 
     const element = await AuthenticatedHome({ user });
 
-    expect(feed.listFeed).toHaveBeenCalledWith("u1", 1, 10);
-    expect(findElement(element, FeedPreview)).not.toBeNull();
-    expect(findElement(element, OnboardingPrompt)).toBeNull();
+    expect(feed.listFeed).toHaveBeenCalledWith("u1", 1, 30);
+    expect(findElement(element, FeedPreview)?.props?.selection).toEqual({ cards: [], summary: [] });
+    // La comunidad va más abajo, en su bloque de siempre (sin `layout`).
+    expect(findElement(element, CommunityActivity)?.props?.layout).toBeUndefined();
   });
 
   it("los lanzamientos siguen en el riel con selector, no en el horario de la portada sin sesión", async () => {
@@ -93,7 +98,7 @@ describe("AuthenticatedHome", () => {
     expect(releases!.props?.personalReleases).toBeDefined();
   });
 
-  it("sin seguidos: muestra el onboarding y no pide el preview de feed", async () => {
+  it("sin seguidos: la comunidad en tarjetas ocupa el lugar del feed y no se repite abajo", async () => {
     vi.mocked(following.listFollowing).mockResolvedValue({
       users: [],
       page: 1,
@@ -104,40 +109,30 @@ describe("AuthenticatedHome", () => {
     const element = await AuthenticatedHome({ user });
 
     expect(feed.listFeed).not.toHaveBeenCalled();
-    expect(findElement(element, OnboardingPrompt)).not.toBeNull();
     expect(findElement(element, FeedPreview)).toBeNull();
+    const communities: unknown[] = [];
+    (function collect(node: unknown) {
+      if (node == null || typeof node !== "object") return;
+      if (Array.isArray(node)) return node.forEach(collect);
+      const el = node as { type?: unknown; props?: { children?: unknown } };
+      if (el.type === CommunityActivity) communities.push(el);
+      collect(el.props?.children);
+    })(element);
+    expect(communities).toHaveLength(1);
+    expect((communities[0] as { props: { layout: string } }).props.layout).toBe("cards");
   });
 
-  it("muestra el aviso de verificación de email cuando el email no está verificado", async () => {
+  // openspec: redesign-signed-in-home-phase1
+  it("la cabecera recibe el estado del email y del onboarding; ya no hay enlace suelto a /welcome", async () => {
     vi.mocked(following.listFollowing).mockResolvedValue({
       users: [], page: 1, pageSize: 1, hasNext: false,
     });
-    const element = await AuthenticatedHome({ user, emailVerified: false });
-    const notice = findElement(element, EmailVerificationNotice);
-    expect(notice).not.toBeNull();
-    expect(notice?.props?.variant).toBe("home");
-    expect(notice?.props?.verified).toBe(false);
-  });
-
-  it("no muestra el aviso de verificación de email cuando el email está verificado", async () => {
-    vi.mocked(following.listFollowing).mockResolvedValue({
-      users: [], page: 1, pageSize: 1, hasNext: false,
-    });
-    const element = await AuthenticatedHome({ user, emailVerified: true });
-    const notice = findElement(element, EmailVerificationNotice);
-    // El componente se renderiza pero internamente retorna null cuando verified es true
-    expect(notice?.props?.verified).toBe(true);
-  });
-
-  it("muestra el enlace a /welcome cuando el onboarding está pendiente", async () => {
-    vi.mocked(following.listFollowing).mockResolvedValue({
-      users: [], page: 1, pageSize: 1, hasNext: false,
-    });
-    const withLink = await AuthenticatedHome({ user, onboardingPending: true });
-    expect(findElement(withLink, WelcomeLink)).not.toBeNull();
-
-    const withoutLink = await AuthenticatedHome({ user, onboardingPending: false });
-    expect(findElement(withoutLink, WelcomeLink)).toBeNull();
+    const element = await AuthenticatedHome({ user, emailVerified: false, onboardingPending: true });
+    const hero = findElement(element, SignedInHero);
+    expect(hero?.props?.emailVerified).toBe(false);
+    expect(hero?.props?.onboardingPending).toBe(true);
+    expect(hero?.props?.lastTouch).toBeNull();
+    expect(readFileSync(join(__dirname, "AuthenticatedHome.tsx"), "utf8")).not.toMatch(/WelcomeLink|EmailVerificationNotice/);
   });
 
   it("pasa la actividad propia y la lista reciente a sus bloques", async () => {
@@ -147,7 +142,7 @@ describe("AuthenticatedHome", () => {
       pageSize: 1,
       hasNext: false,
     });
-    const activity = [{ kind: "listen", id: "l1" }];
+    const activity = [{ kind: "listen", id: "l1", target: { type: "release-group", id: "a1", title: "Álbum" } }];
     const resumeList = {
       id: "list1",
       title: "Para el auto",
@@ -165,7 +160,7 @@ describe("AuthenticatedHome", () => {
 
     const element = await AuthenticatedHome({ user });
 
-    expect(findElement(element, RecentSelfActivity)?.props?.initialEntries).toEqual(activity);
+    expect(findElement(element, RecentListensShelf)).not.toBeNull();
     expect(findElement(element, ResumeList)?.props?.list).toEqual(resumeList);
   });
 
@@ -187,15 +182,38 @@ describe("AuthenticatedHome", () => {
 
     const element = await AuthenticatedHome({ user });
 
-    expect(findElement(element, WelcomePanel)?.props?.lastActivity).toEqual(rating);
+    expect(findElement(element, SignedInHero)?.props?.lastTouch).toEqual(rating);
+  });
+
+  it("la valoración de «Última vez» sale de la entrada si es una valoración, sin consultar", async () => {
+    vi.mocked(following.listFollowing).mockResolvedValue({ users: [], page: 1, pageSize: 1, hasNext: false });
+    const rating = { kind: "rating", id: "r1", stars: "4.0", detailedScore: 77, target: { type: "release-group", id: "a1", title: "Álbum" } };
+    vi.mocked(home.listMyRecentActivity).mockResolvedValue({
+      entries: [rating], page: 1, pageSize: 10, hasNext: false,
+    } as unknown as Awaited<ReturnType<typeof home.listMyRecentActivity>>);
+
+    const element = await AuthenticatedHome({ user });
+
+    expect(findElement(element, SignedInHero)?.props?.ownRating).toEqual({ stars: "4.0", detailedScore: 77 });
+    expect(social.getOwnRatingRow).not.toHaveBeenCalled();
+  });
+
+  it("para una escucha consulta tu valoración del objetivo", async () => {
+    vi.mocked(following.listFollowing).mockResolvedValue({ users: [], page: 1, pageSize: 1, hasNext: false });
+    const listen = { kind: "listen", id: "l1", target: { type: "release-group", id: "a1", title: "Álbum" } };
+    vi.mocked(home.listMyRecentActivity).mockResolvedValue({
+      entries: [listen], page: 1, pageSize: 10, hasNext: false,
+    } as unknown as Awaited<ReturnType<typeof home.listMyRecentActivity>>);
+    vi.mocked(social.getOwnRatingRow).mockResolvedValueOnce({ stars: "4.5", detailedScore: null } as never);
+
+    const element = await AuthenticatedHome({ user });
+
+    expect(social.getOwnRatingRow).toHaveBeenCalledWith({ type: "release-group", id: "a1", column: "releaseGroupId" }, "u1");
+    expect(findElement(element, SignedInHero)?.props?.ownRating).toEqual({ stars: "4.5", detailedScore: null });
   });
 });
 
-describe("RecentSelfActivity / ResumeList: se ocultan sin datos", () => {
-  it("RecentSelfActivity no renderiza nada sin entradas", async () => {
-    expect(await RecentSelfActivity({ initialEntries: [], initialHasNext: false })).toBeNull();
-  });
-
+describe("ResumeList: se oculta sin datos", () => {
   it("ResumeList no renderiza nada sin lista", async () => {
     expect(await ResumeList({ list: null })).toBeNull();
   });

@@ -7,7 +7,7 @@ import type { HomeResumeList } from "@/services/home/home";
 // reciente, para seguir agregándole ítems, con link a /me/lists para ver el
 // resto. No renderiza nada si el usuario no tiene listas (ver
 // docs/05-features/home.md). Mismo patrón de sección (h2 + "ver todo" +
-// contenido sobre el fondo, sin card) que FeedPreview/RecentSelfActivity —
+// contenido sobre el fondo, sin card) que los demás bloques de Inicio —
 // antes era la única sección de Inicio metida en una card, y quedaba como un
 // elemento suelto entre secciones sin caja.
 export async function ResumeList({ list }: { list: HomeResumeList | null }) {

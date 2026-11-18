@@ -22,6 +22,11 @@ const targetColumns: Record<SocialTargetType, TargetColumn> = {
 
 export type SocialTarget = { type: SocialTargetType; id: string; column: TargetColumn };
 
+/** Objetivo ya conocido (viene de una fila propia), sin comprobar que exista en el catálogo. */
+export function knownSocialTarget(type: SocialTargetType, id: string): SocialTarget {
+  return { type, id, column: targetColumns[type] };
+}
+
 export async function resolveSocialTarget(type: SocialTargetType, id: string): Promise<SocialTarget> {
   const table = type === "artist" ? artist : type === "release-group" ? releaseGroup : recording;
   const [found] = await db.select({ id: table.id }).from(table).where(eq(table.id, id)).limit(1);
