@@ -338,7 +338,9 @@ async function main() {
     let output = "";
     global.fetch = realFetch;
     try {
-      execSync(`npx tsx --env-file=.env scripts/load-awards.ts --dir "${dir}"`, { stdio: "pipe" });
+      // Sin `--env-file`: el subproceso hereda `DATABASE_URL` del entorno de este script. En el CI no existe `.env`, y con la bandera
+      // `node` aborta antes de validar nada (el test no vería el error de validación que espera).
+      execSync(`npx tsx scripts/load-awards.ts --dir "${dir}"`, { stdio: "pipe" });
     } catch (error) {
       output = String((error as { stderr?: Buffer }).stderr ?? "");
     }
