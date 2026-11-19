@@ -89,6 +89,14 @@ const badge = (name: RegExp) => screen.getByRole("button", { name });
 describe("FavoritesWall", () => {
   beforeEach(() => {
     seq = 0;
+    // El modo de vista (Detallada, Índice, Gráfico) se guarda en `localStorage`: un test que lo cambia lo dejaba
+    // puesto para los siguientes. Con un `localStorage` funcional (Node 22 del CI) rompía tres tests; Node 25 lo
+    // enmascara en local porque su `localStorage` experimental no persiste sin `--localstorage-file`.
+    try {
+      window.localStorage.clear();
+    } catch {
+      // Node 25 sin `--localstorage-file`: no hay almacenamiento que limpiar (y nada persiste entre tests).
+    }
     vi.clearAllMocks();
     mocks.getMyFavorites.mockResolvedValue(response([]));
     mocks.getUserFavorites.mockResolvedValue(response([]));
