@@ -27,6 +27,7 @@ import {
   listHomeReleases,
   listPersonalHomeReleases,
   listMyRecentActivity,
+  listMyBackdropAlbums,
   listMyRecentListens,
   listPopularComments,
   listPublicLists,
@@ -66,11 +67,13 @@ export async function AuthenticatedHome({ user, onboardingPending, emailVerified
   ]);
   const exploreEnabled = isExploreEnabled();
 
-  const [following, recentActivity, recentListens, resumeList, communityActivity, publicLists, popularComments, homeReleases, personalReleases, featuredCollections, , yearInvitation] =
+  const [following, recentActivity, recentListens, backdropAlbums, resumeList, communityActivity, publicLists, popularComments, homeReleases, personalReleases, featuredCollections, , yearInvitation] =
     await Promise.all([
       listFollowing(user.id, 1, 1),
       listMyRecentActivity(user.id, 1, LAST_TOUCH_SCAN),
       listMyRecentListens(user.id),
+      // Fondo de la cabecera con tus álbumes (personalize-signed-in-hero-backdrop).
+      listMyBackdropAlbums(user.id),
       getMostRecentEditedList(user.id),
       // Sin la actividad propia: Inicio ya la muestra en sus bloques (redesign-signed-in-home-phase3).
       listCommunityActivity(user.id, 1, COMMUNITY_CARD_LIMIT, { excludeViewer: true }).then((page) => page.entries),
@@ -129,6 +132,7 @@ export async function AuthenticatedHome({ user, onboardingPending, emailVerified
         ownRating={ownRating}
         onboardingPending={onboardingPending ?? false}
         emailVerified={emailVerified ?? false}
+        backdropAlbums={backdropAlbums}
       />
 
       {yearInvitation ? (

@@ -8,6 +8,7 @@ import {
   artistFollow,
   collectionEntry,
   comment,
+  favorite,
 
   listenEntry,
   rating,
@@ -76,6 +77,54 @@ function targetType(
   releaseGroupId: string | null,
 ): "artist" | "release-group" | "recording" {
   return artistId ? "artist" : releaseGroupId ? "release-group" : "recording";
+}
+
+/** Un álbum del fondo de la cabecera de Inicio (openspec: personalize-signed-in-hero-backdrop). */
+export interface HomeBackdropAlbum {
+  id: string;
+  coverThumbUrl: string;
+}
+
+/**
+ * Álbumes del fondo de la cabecera con sesión: primero los favoritos de álbum con carátula (del marcado más
+ * reciente al más antiguo) y, si faltan, los álbumes más escuchados (por cantidad de escuchas; desempata la
+ * escucha más reciente), sin repetir. Las escuchas recientes no se usan: ya las muestra el estante de debajo.
+ * Solo objetivos de álbum: la carátula de una canción es la de un álbum elegido por aproximación. Sin filtro de
+ * audiencia (contenido propio que solo ve la persona, como el estante).
+ */
+export async function listMyBackdropAlbums(userId: string, limit = 20): Promise<HomeBackdropAlbum[]> {
+  const favorites = await db
+    .select({ id: releaseGroup.id, coverThumbUrl: releaseGroup.coverThumbUrl })
+    .from(favorite)
+    .innerJoin(releaseGroup, eq(favorite.releaseGroupId, releaseGroup.id))
+    .where(and(eq(favorite.userId, userId), isNotNull(releaseGroup.coverThumbUrl)))
+    .orderBy(desc(favorite.createdAt), desc(favorite.id))
+    .limit(limit);
+
+  const picked: HomeBackdropAlbum[] = favorites.flatMap((row) =>
+    row.coverThumbUrl ? [{ id: row.id, coverThumbUrl: row.coverThumbUrl }] : [],
+  );
+  if (picked.length >= limit) return picked;
+
+  const listenCount = count(listenEntry.id);
+  const mostListened = await db
+    .select({ id: releaseGroup.id, coverThumbUrl: releaseGroup.coverThumbUrl })
+    .from(listenEntry)
+    .innerJoin(releaseGroup, eq(listenEntry.releaseGroupId, releaseGroup.id))
+    .where(and(eq(listenEntry.userId, userId), isNotNull(releaseGroup.coverThumbUrl)))
+    .groupBy(releaseGroup.id)
+    .orderBy(desc(listenCount), desc(sql`max(${listenEntry.createdAt})`), desc(releaseGroup.id))
+    // Se piden de más para cubrir los que ya están entre los favoritos.
+    .limit(limit + picked.length);
+
+  const seen = new Set(picked.map((album) => album.id));
+  for (const row of mostListened) {
+    if (picked.length >= limit) break;
+    if (!row.coverThumbUrl || seen.has(row.id)) continue;
+    seen.add(row.id);
+    picked.push({ id: row.id, coverThumbUrl: row.coverThumbUrl });
+  }
+  return picked;
 }
 
 /** Una escucha del estante «Lo último que escuchaste» (openspec: redesign-signed-in-home-phase2). */
