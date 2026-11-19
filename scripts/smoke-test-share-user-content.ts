@@ -98,7 +98,9 @@ async function main() {
     const created = await s.reviews.createOrReplaceReview(albumTarget, author.id, { title: null, body: "Una reseña larga. ".repeat(30) } as never);
     const reviewTarget = await load("review", created.id, "es");
     check(reviewTarget?.card.stars === 4.5, "la imagen lleva las estrellas del autor");
-    check(!JSON.stringify(reviewTarget).includes("86"), "nunca el puntaje detallado, que solo ve su autor");
+    // Con `includes("86")` fallaba ~1 de cada 3 corridas: los ids (UUID) y las fechas del objeto llevan "86" por azar. Se busca el 86 como
+    // número aislado (`\b86\b`), que es como aparecería el puntaje detallado.
+    check(!/\b86\b/.test(JSON.stringify(reviewTarget)), "nunca el puntaje detallado, que solo ve su autor");
     check((reviewTarget?.card.quote ?? "").length <= 200, "la cita se recorta a 200 caracteres");
     check(reviewTarget?.card.byline === `@${author.username}`, "firma quien escribió");
     await db.update(review).set({ moderationStatus: "hidden" }).where(eq(review.id, created.id));
