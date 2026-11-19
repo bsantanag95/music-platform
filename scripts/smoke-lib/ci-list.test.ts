@@ -6,6 +6,9 @@ import { CI_SMOKES } from "./ci-list";
 
 const scripts = join(import.meta.dirname, "..");
 
+/** Smoke tests de la lista que miden un tiempo, pero solo fallan muy por encima de su presupuesto (5×): detectan un índice perdido, no ruido. */
+const TIMING_TOLERANT = new Set(["notifications"]);
+
 describe("CI_SMOKES", () => {
   it("no repite scripts", () => {
     expect(new Set(CI_SMOKES).size).toBe(CI_SMOKES.length);
@@ -24,10 +27,17 @@ describe("CI_SMOKES", () => {
     expect(readFileSync(file, "utf8")).toContain("assertSmokeAllowed()");
   });
 
-  it("ningún smoke de la lista mide tiempos (intermitentes en un runner compartido)", () => {
+  it("ningún smoke de la lista falla por una medida de tiempo, salvo los tolerantes declarados", () => {
     for (const name of CI_SMOKES) {
+      if (TIMING_TOLERANT.has(name)) continue;
       const text = readFileSync(join(scripts, `smoke-test-${name}.ts`), "utf8");
-      expect(text, name).not.toMatch(/performance\.now\(\)|Date\.now\(\) - |hrtime/);
+      // `Date.now() - x` se usa para fabricar fechas pasadas, no para medir: solo cuentan los relojes de alta resolución.
+      expect(text, name).not.toMatch(/performance\.now\(\)|hrtime/);
     }
+  });
+
+  it("los tolerantes tienen un umbral de fallo con holgura, no el presupuesto pelado", () => {
+    const text = readFileSync(join(scripts, "smoke-test-notifications.ts"), "utf8");
+    expect(text).toContain("COUNTER_FAIL_MS = COUNTER_BUDGET_MS * 5");
   });
 });
