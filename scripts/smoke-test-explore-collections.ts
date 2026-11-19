@@ -22,7 +22,7 @@ export {};
 //   DELETE FROM explore_collection_sync WHERE template_key LIKE 'smoke-%';
 //   DELETE FROM user_list WHERE title LIKE 'Smoke oficial%';
 //   DELETE FROM app_user WHERE username LIKE 'smoke_feat_%';
-//   DELETE FROM release_group WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-0000000009c%' OR mbid::text LIKE '5e0ce000-0000-4000-8000-0000000009e%' OR mbid::text LIKE '5e0ce000-0000-4000-8000-000000009d%';
+//   DELETE FROM release_group WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-0000000009c%' OR mbid::text LIKE '5e0ce000-0000-4000-8000-0000000009e%' OR mbid::text LIKE '5e0ce000-0000-4000-8000-0000000006d%' OR mbid::text LIKE '5e0ce000-0000-4000-8000-000000009d%';
 //   DELETE FROM award WHERE slug = 'smoke-premio';
 //   DELETE FROM release_calendar_entry WHERE release_group_mbid::text LIKE '5e0ce000-0000-4000-8000-000000009d%';
 // Necesita las migraciones 0069 y 0070 aplicadas. Correr contra una BD de scratch:
@@ -97,6 +97,11 @@ assertSmokeAllowed();
 
 const mbid = (n: number) => `5e0ce000-0000-4000-8000-0000000009c${n.toString(16)}`;
 const ALBUM_COUNT = 10;
+// "Un disco por década" necesita álbumes de estudio de varias décadas (mínimo `MIN_ALBUMS_FOR_SECTION`). Los 10 de arriba
+// caen todos en los 2000; en una BD con el catálogo real el resto de las décadas lo pone el catálogo, pero en una BD virgen
+// (la del CI) no hay nada: este script siembra las suyas, con otro prefijo para borrarlas aparte.
+const DECADE_YEARS = [1950, 1960, 1970, 1980, 1990, 2010];
+const decadeMbid = (n: number) => `5e0ce000-0000-4000-8000-0000000006d${n.toString(16)}`;
 
 function check(condition: unknown, message: string): void {
   if (!condition) throw new Error(`FALLÓ: ${message}`);
@@ -152,6 +157,7 @@ async function cleanup(): Promise<void> {
   await db.delete(releaseGroup).where(like(sql`${releaseGroup.mbid}::text`, "5e0ce000-0000-4000-8000-0000000009c%"));
   await db.delete(releaseGroup).where(like(sql`${releaseGroup.mbid}::text`, "5e0ce000-0000-4000-8000-000000009d%"));
   await db.delete(releaseGroup).where(like(sql`${releaseGroup.mbid}::text`, "5e0ce000-0000-4000-8000-0000000009e%"));
+  await db.delete(releaseGroup).where(like(sql`${releaseGroup.mbid}::text`, "5e0ce000-0000-4000-8000-0000000006d%"));
   if (createdCurator) await db.delete(appUser).where(eq(appUser.username, CURATOR_USERNAME));
 }
 
@@ -189,6 +195,15 @@ async function main() {
       )
       .returning({ id: releaseGroup.id })
   ).map((row) => row.id);
+  await db.insert(releaseGroup).values(
+    DECADE_YEARS.map((year, i) => ({
+      mbid: decadeMbid(i),
+      title: `Smoke década ${year}`,
+      category: "studio" as const,
+      firstReleaseYear: year,
+      coverThumbUrl: "https://example.test/cover.jpg",
+    })),
+  );
 
   console.log("Migración 0069:");
   {
@@ -751,7 +766,17 @@ async function main() {
     const category = async (key: string, tier: "general" | "genre", sortOrder: number) => {
       const [cat] = await db
         .insert(awardCategory)
-        .values({ awardId: syntheticAward!.id, key, tier, subjectKind: "release_group", nameEs: key, nameEn: key, sortOrder })
+        .values({
+          awardId: syntheticAward!.id,
+          key,
+          tier,
+          // Desde la migración 0072 una categoría de género exige su campo (`chk_award_category_genre_field`).
+          ...(tier === "genre" ? { field: "smoke-genero" } : {}),
+          subjectKind: "release_group",
+          nameEs: key,
+          nameEn: key,
+          sortOrder,
+        })
         .returning({ id: awardCategory.id });
       const [edition] = await db
         .insert(awardCategoryEdition)

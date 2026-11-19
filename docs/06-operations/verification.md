@@ -105,7 +105,7 @@ nadie imaginó al escribir el código. Viven junto al código como `*.property.t
 `.github/workflows/ci.yml` tiene tres jobs independientes:
 
 - `build` (sin cambios): `typecheck → lint → test → build`, sin BD.
-- `integration`: Postgres 18 efímero, migraciones y `pnpm run smoke:ci` (25 smoke tests con `fetch` mockeado; lista y criterios en
+- `integration`: Postgres 18 efímero, migraciones y `pnpm run smoke:ci` (33 smoke tests con `fetch` mockeado; lista y criterios en
   `docs/06-operations/smoke-tests.md`). Bloquea.
 - `e2e`: el mismo servicio, Chromium de Playwright y `pnpm run test:e2e`. **No bloquea** (`continue-on-error`) mientras se mide su estabilidad en CI; sube
   el informe y las trazas como artefacto si falla. Pasar a bloqueante es una decisión posterior.

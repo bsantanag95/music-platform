@@ -23,6 +23,7 @@ import {
   authIdentity,
   comment,
   favorite,
+  genre,
   listenEntry,
   rating,
   releaseGroup,
@@ -47,6 +48,8 @@ const suffix = randomUUID().slice(0, 8);
 const cookieJar = new Map<string, string>();
 let userAgent = "Mozilla/5.0 (X11; Linux x86_64; rv:127.0) Gecko/20100101 Firefox/127.0";
 const createdUserIds: string[] = [];
+/** Géneros que este script creó (solo los que faltaban): se borran al terminar y no se toca la taxonomía real. */
+const createdGenreIds: string[] = [];
 const day = 24 * 60 * 60 * 1000;
 
 function mockCookies() {
@@ -296,6 +299,17 @@ async function main() {
 
     console.log("\n7) Identidad musical, preguntas, zona horaria y hora local (Fase 2)");
     const m = await newUser("m");
+    // La identidad musical exige que cada género exista como estilo de la taxonomía. En una BD con la taxonomía cargada ya están;
+    // en una BD virgen (la del CI) se crean aquí, con MBID sintético, y se borran solo si los creó este script.
+    const inserted = await db
+      .insert(genre)
+      .values([
+        { mbid: "5e0ce000-0000-4000-8000-0000000007a0", slug: "post-punk", name: "Post-punk", kind: "style" },
+        { mbid: "5e0ce000-0000-4000-8000-0000000007a1", slug: "jazz", name: "Jazz", kind: "style" },
+      ])
+      .onConflictDoNothing()
+      .returning({ id: genre.id });
+    createdGenreIds.push(...inserted.map((row) => row.id));
     const saved = await s.musicIdentity.updateMusicIdentity(m.id, { selfRoles: ["collector", "dj"], genres: ["post-punk", "jazz"], listeningFormats: ["vinyl"] });
     check(saved.selfRoles.join() === "collector,dj" && saved.genres.join() === "post-punk,jazz", "roles, géneros y formatos se guardan y conservan su orden");
     await s.musicIdentity.updateMusicIdentity(m.id, { genres: [] });
@@ -612,7 +626,10 @@ async function main() {
     for (const id of createdUserIds) {
       await db.delete(appUser).where(eq(appUser.id, id)).catch(() => undefined);
     }
-    console.log(`(fixtures borrados: ${createdUserIds.length} usuarios)`);
+    for (const id of createdGenreIds) {
+      await db.delete(genre).where(eq(genre.id, id)).catch(() => undefined);
+    }
+    console.log(`(fixtures borrados: ${createdUserIds.length} usuarios, ${createdGenreIds.length} géneros)`);
   }
 }
 
