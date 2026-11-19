@@ -3,6 +3,7 @@ import { PgDialect } from "drizzle-orm/pg-core";
 import type { SQL } from "drizzle-orm";
 import {
   getMostRecentEditedList,
+  listMyBackdropAlbums,
   listMyRecentActivity,
   listMyRecentListens,
   listPublicLists,
@@ -165,6 +166,40 @@ describe("servicio de datos de Inicio", () => {
 
       expect(await listMyRecentListens("u1")).toEqual([]);
       expect(mocks.db.select).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // openspec: personalize-signed-in-hero-backdrop
+  describe("listMyBackdropAlbums", () => {
+    const album = (n: number) => ({ id: `rg-${n}`, coverThumbUrl: `https://covers/${n}.jpg` });
+
+    it("con favoritos suficientes no consulta las escuchas", async () => {
+      mocks.db.select.mockReset().mockReturnValueOnce(chainQuery([album(1), album(2), album(3)]));
+
+      const result = await listMyBackdropAlbums("u1", 3);
+
+      expect(result.map((a) => a.id)).toEqual(["rg-1", "rg-2", "rg-3"]);
+      expect(mocks.db.select).toHaveBeenCalledTimes(1);
+    });
+
+    it("completa con los más escuchados, sin repetir favoritos y respetando el límite", async () => {
+      mocks.db.select
+        .mockReset()
+        .mockReturnValueOnce(chainQuery([album(1), album(2)]))
+        .mockReturnValueOnce(chainQuery([album(2), album(5), album(6), album(7)]));
+
+      const result = await listMyBackdropAlbums("u1", 4);
+
+      expect(result.map((a) => a.id)).toEqual(["rg-1", "rg-2", "rg-5", "rg-6"]);
+    });
+
+    it("descarta filas sin carátula", async () => {
+      mocks.db.select
+        .mockReset()
+        .mockReturnValueOnce(chainQuery([{ id: "rg-1", coverThumbUrl: null }, album(2)]))
+        .mockReturnValueOnce(chainQuery([{ id: "rg-3", coverThumbUrl: null }]));
+
+      expect((await listMyBackdropAlbums("u1", 5)).map((a) => a.id)).toEqual(["rg-2"]);
     });
   });
 

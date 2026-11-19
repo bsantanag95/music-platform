@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
@@ -8,15 +7,11 @@ import { greetingKey } from "./greeting-key";
 import { HomeLogField } from "./HomeLogField";
 import { LastTouchCard, type LastTouch, type OwnRating } from "./LastTouchCard";
 import { QuickLinks } from "./QuickLinks";
+import { HeroBackdrop } from "./HeroBackdrop";
+import type { HomeBackdropAlbum } from "@/services/home/home";
 
 /** Carátulas del mosaico para la cuenta sin actividad: la segunda fila, la más reconocible. */
 const WELCOME_TILES = [8, 9, 10, 11, 12, 13, 14, 15] as const;
-
-const wallBackdrop: CSSProperties = {
-  backgroundImage: `url(${HERO_WALL.src})`,
-  WebkitMaskImage: "linear-gradient(90deg, transparent 35%, #000 95%)",
-  maskImage: "linear-gradient(90deg, transparent 35%, #000 95%)",
-};
 
 interface SignedInHeroProps {
   name: string;
@@ -26,6 +21,8 @@ interface SignedInHeroProps {
   ownRating: OwnRating | null;
   onboardingPending: boolean;
   emailVerified: boolean;
+  /** Álbumes de la persona para el fondo (personalize-signed-in-hero-backdrop); pocos = mosaico general. */
+  backdropAlbums?: readonly HomeBackdropAlbum[];
   // Inyectable para test; en producción siempre es "ahora".
   now?: Date;
 }
@@ -43,6 +40,7 @@ export async function SignedInHero({
   ownRating,
   onboardingPending,
   emailVerified,
+  backdropAlbums = [],
   now = new Date(),
 }: SignedInHeroProps) {
   const t = await getTranslations("home");
@@ -62,7 +60,7 @@ export async function SignedInHero({
       aria-labelledby="home-hero-title"
       className="relative -mx-[calc(50vw-50%)] -mt-12 w-screen max-w-none overflow-hidden border-b border-ink-border"
     >
-      <div aria-hidden className="pointer-events-none absolute inset-0 bg-cover bg-center opacity-[0.12]" style={wallBackdrop} />
+      <HeroBackdrop albums={backdropAlbums} />
 
       <div className="relative mx-auto grid w-full max-w-[88rem] gap-8 px-4 py-9 sm:px-8 sm:py-11 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-12 xl:px-12">
         <div className="flex min-w-0 flex-col">

@@ -179,8 +179,16 @@ scroll interno, eventos de poco valor agrupados). Tres fases:
 | 2 (`redesign-signed-in-home-phase2`) | Cuerpo en el contenedor ancho: estante «Lo último que escuchaste» (solo escuchas, reemplaza «Tu rastro reciente») antes de «De quienes sigues» en tarjetas, sin scroll interno, con «Ver más actividad» y los eventos de poco valor agrupados por autor. |
 | 3 (`redesign-signed-in-home-phase3`) | «Retoma una lista» (solo listas con elementos) al pie del estante; lanzamientos como horario con selector; colecciones en mosaico; «Mejor valorados» para la cuenta sin actividad; la comunidad como en la portada, sin la actividad propia. |
 
-- **Franja a sangre completa** con `wall.webp` de fondo (12 %, máscara hacia la derecha,
-  `aria-hidden`) y el contenedor de `max-w-[88rem]`; dos columnas desde `lg`. El `<h1>` es el
+- **Franja a sangre completa** con un mosaico de fondo (12 %, máscara hacia la derecha,
+  `aria-hidden`) y el contenedor de `max-w-[88rem]`; dos columnas desde `lg`.
+- **Fondo con tus álbumes** (`HeroBackdrop`, `personalize-signed-in-hero-backdrop`):
+  `listMyBackdropAlbums` toma primero los favoritos de álbum con carátula (recientes primero) y,
+  si faltan, los álbumes más escuchados por cantidad (no los recientes: ya están en el estante),
+  hasta 20. Con al menos 6 (`BACKDROP_MIN`), una rejilla 8 × 4 con la geometría de `HERO_WALL`
+  pone esas carátulas en las celdas visibles (columnas 3–7, desde la derecha) y rellena el resto
+  con recortes de `wall.webp`; con menos, el mosaico general entero (una imagen, sin peticiones
+  extra). Las propias van con `AppImage` sin prioridad y carga diferida. Por debajo de `lg` la
+  máscara empieza en el 55 % y la opacidad baja al 9 %, para no competir con el titular. El `<h1>` es el
   titular visible «¿Qué escuchaste hoy?» (antes un `<h1 class="sr-only">` con el nombre de la app).
 - **Campo de registro** (`HomeLogField`, cliente): combobox sobre `useTargetSearch` —la misma
   búsqueda en dos fases que el diálogo de «+ Añadir»— con selector Álbum | Canción. Elegir una

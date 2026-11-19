@@ -38,6 +38,7 @@ vi.mock("@/services/home/home", () => ({
     .fn()
     .mockResolvedValue({ entries: [], page: 1, pageSize: 10, hasNext: false }),
   listMyRecentListens: vi.fn().mockResolvedValue([]),
+  listMyBackdropAlbums: vi.fn().mockResolvedValue([]),
   getMostRecentEditedList: vi.fn().mockResolvedValue(null),
   listPublicLists: vi.fn().mockResolvedValue([]),
   listPopularComments: vi
@@ -318,5 +319,19 @@ describe("AuthenticatedHome — parte baja", () => {
     vi.mocked(home.listMyRecentListens).mockResolvedValueOnce([]);
     const noListens = await AuthenticatedHome({ user });
     expect(findAll(noListens, ResumeList)[0]?.props?.variant).toBeUndefined();
+  });
+});
+
+// openspec: personalize-signed-in-hero-backdrop
+describe("AuthenticatedHome — fondo de la cabecera", () => {
+  it("pide tus álbumes del fondo y se los pasa a la cabecera", async () => {
+    vi.mocked(following.listFollowing).mockResolvedValue({ users: [], page: 1, pageSize: 1, hasNext: false });
+    const albums = [{ id: "rg-1", coverThumbUrl: "https://covers/1.jpg" }];
+    vi.mocked(home.listMyBackdropAlbums).mockResolvedValueOnce(albums);
+
+    const element = await AuthenticatedHome({ user });
+
+    expect(home.listMyBackdropAlbums).toHaveBeenCalledWith("u1");
+    expect(findElement(element, SignedInHero)?.props?.backdropAlbums).toEqual(albums);
   });
 });
