@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { ActivityCard, type ActivityCardEntry } from "./ActivityCard";
-import { HomeSectionHeading } from "./HomeSectionHeading";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import type { HomeFeedSelection } from "./home-feed-cards";
 
 // «De quienes sigues» (openspec: redesign-signed-in-home-phase2): la actividad de quienes sigues en tarjetas
@@ -14,7 +14,7 @@ export async function FeedPreview({ selection }: { selection: HomeFeedSelection 
 
   return (
     <section aria-labelledby="home-following" className="flex flex-col gap-6">
-      <HomeSectionHeading
+      <SectionHeading
         id="home-following"
         title={t("followingTitle")}
         description={t("followingDescription")}

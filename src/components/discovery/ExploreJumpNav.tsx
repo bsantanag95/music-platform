@@ -1,9 +1,10 @@
 import { MIN_SECTIONS_FOR_JUMP_NAV } from "@/services/discovery/constants";
+import { JumpNavLinks } from "./JumpNavLinks";
 
-// Navegación rápida de la portada de `/explore` (openspec: reorder-explore-sections, design D3-D6): una fila de
-// píldoras con un enlace por cada sección que se renderiza, hacia su ancla. Sin estado ni JavaScript: son enlaces
-// `#ancla` normales (las secciones llevan `scroll-mt-24`, así el encabezado global no tapa su título). No es fija ni
-// resalta la sección activa. La página le pasa solo las secciones visibles, así nunca enlaza a una omitida.
+// Barra de pasillos de la portada de `/explore` (openspec: reorder-explore-sections D3-D6, redesign-explore-phase1): un
+// enlace por cada sección que se renderiza, hacia su ancla. Queda fija bajo la cabecera global mientras se recorre la
+// portada y marca la sección que está a la vista (`JumpNavLinks`, cliente). Sin JavaScript son enlaces `#ancla` normales,
+// sin marca. La página le pasa solo las secciones visibles, así nunca enlaza a una omitida.
 
 export interface JumpItem {
   /** Ancla de la sección (`id` de su `<section>`). */
@@ -21,19 +22,11 @@ interface ExploreJumpNavProps {
 export function ExploreJumpNav({ label, items }: ExploreJumpNavProps) {
   if (items.length < MIN_SECTIONS_FOR_JUMP_NAV) return null;
   return (
-    <nav aria-label={label} className="themed-scrollbar -mx-4 w-[calc(100%+2rem)] overflow-x-auto px-4 py-0.5 md:mx-0 md:w-full md:overflow-visible md:px-0">
-      <ul className="flex w-max gap-1.5 md:w-auto md:flex-wrap">
-        {items.map((item) => (
-          <li key={item.id}>
-            <a
-              href={`#${item.id}`}
-              className="inline-flex shrink-0 items-center rounded-full border border-ink-border px-3 py-1 font-data text-xs text-paper-muted transition-colors hover:border-amber hover:text-paper focus-visible:border-amber focus-visible:text-paper"
-            >
-              {item.label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </nav>
+    // Franja a todo el ancho del contenedor, pegada bajo la cabecera global (69 px debajo de `lg`, 65 px desde `lg`).
+    <div className="sticky top-[4.3125rem] z-20 -mx-4 w-[calc(100%+2rem)] border-b border-ink-border bg-ink/90 backdrop-blur-md supports-[backdrop-filter]:bg-ink/75 sm:-mx-8 sm:w-[calc(100%+4rem)] lg:top-[4.0625rem] xl:-mx-12 xl:w-[calc(100%+6rem)]">
+      <nav aria-label={label} className="px-4 sm:px-8 xl:px-12">
+        <JumpNavLinks items={items} />
+      </nav>
+    </div>
   );
 }

@@ -556,8 +556,10 @@ La vista `/explore` SHALL mostrar, bajo el título, una fila de enlaces ("En est
 sección que se renderiza, en el mismo orden de la página, cada uno hacia el ancla de su sección: `colecciones`,
 `popular`, `generos`, `decadas`, `novedades`, `proximos`, `premios`, `salon-de-la-fama` y `mejor-valorados`. La fila SHALL NOT
 enlazar a una sección omitida y SHALL omitirse por completo cuando se rendericen menos de 4 secciones. La fila SHALL
-funcionar sin JavaScript y SHALL NOT ser fija ni resaltar la sección activa. Las etiquetas SHALL ser cortas y estar en
-el locale activo.
+quedar fija bajo la cabecera global mientras se recorre la portada, sin tapar el título de la sección a la que se salta, y SHALL
+marcar como actual (`aria-current`) el enlace de la sección que está a la vista. Sin JavaScript, la fila SHALL seguir funcionando como
+enlaces a las anclas, sin sección marcada. En pantallas angostas la fila SHALL desplazarse en horizontal y SHALL mantener visible el
+enlace marcado. Las etiquetas SHALL ser cortas y estar en el locale activo.
 
 #### Scenario: Fila con todas las secciones
 
@@ -578,7 +580,17 @@ el locale activo.
 #### Scenario: Salto a una sección
 
 - **WHEN** una persona activa "Premios" en la fila
-- **THEN** la página se desplaza a la sección Premios sin que el encabezado global tape su título
+- **THEN** la página se desplaza a la sección Premios sin que el encabezado global ni la fila fija tapen su título
+
+#### Scenario: La fila acompaña al bajar
+
+- **WHEN** una persona baja hasta la sección Décadas
+- **THEN** la fila sigue visible bajo la cabecera global y el enlace "Décadas" está marcado como actual
+
+#### Scenario: Sin JavaScript
+
+- **WHEN** la portada de Explorar se carga sin JavaScript
+- **THEN** la fila muestra los enlaces a las anclas y ninguno aparece marcado
 
 ### Requirement: Vista de familia de géneros
 

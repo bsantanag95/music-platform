@@ -32,6 +32,8 @@ interface AlbumRailProps {
    * título queda para los lectores de pantalla y las flechas siguen a la vista.
    */
   headerless?: boolean;
+  /** `page`: título de 30–40 px (portada de Explorar, redesign-explore-phase1). Por defecto, el compacto. */
+  headingSize?: "default" | "page";
 }
 
 /**
@@ -52,6 +54,7 @@ export function AlbumRail({
   artistNames,
   stats,
   headerless = false,
+  headingSize = "default",
 }: AlbumRailProps) {
   if (albums.length === 0) return null;
   const headingId = id ? `${id}-heading` : undefined;
@@ -60,7 +63,7 @@ export function AlbumRail({
       {heading}
     </h3>
   ) : (
-    <SectionHeader heading={heading} description={description} seeAll={seeAll} headingId={headingId} />
+    <SectionHeader heading={heading} description={description} seeAll={seeAll} headingId={headingId} size={headingSize} />
   );
 
   if (layout === "scroll") {

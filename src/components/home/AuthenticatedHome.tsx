@@ -5,7 +5,7 @@ import { FeedPreview } from "@/components/home/FeedPreview";
 import { SignedInHero } from "@/components/home/SignedInHero";
 import type { OwnRating } from "@/components/home/LastTouchCard";
 import { RecentListensShelf } from "@/components/home/RecentListensShelf";
-import { HomeSectionHeading } from "@/components/home/HomeSectionHeading";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { selectHomeFeedCards } from "@/components/home/home-feed-cards";
 import { ResumeList } from "@/components/home/ResumeList";
 import { HomeReleases } from "@/components/home/HomeReleases";
@@ -152,7 +152,7 @@ export async function AuthenticatedHome({ user, onboardingPending, emailVerified
           // Sin seguidos: lo que se escucha en la comunidad en el lugar del feed, con la invitación a
           // seguir gente; no se repite más abajo.
           <section aria-labelledby="home-community-first" className="flex flex-col gap-6">
-            <HomeSectionHeading
+            <SectionHeading
               id="home-community-first"
               title={tHome("communityFirstTitle")}
               description={tHome("communityFirstDescription")}
@@ -164,7 +164,7 @@ export async function AuthenticatedHome({ user, onboardingPending, emailVerified
 
         {topRated.length > 0 ? (
           <section aria-labelledby="home-top-rated" className="flex flex-col gap-6">
-            <HomeSectionHeading
+            <SectionHeading
               id="home-top-rated"
               title={tHome("communityTopRatedHeading")}
               description={tHome("topRatedDescription")}
@@ -187,7 +187,7 @@ export async function AuthenticatedHome({ user, onboardingPending, emailVerified
 
         {featuredCollections.length > 0 ? (
           <section aria-labelledby="home-collections" className="flex flex-col gap-6">
-            <HomeSectionHeading
+            <SectionHeading
               id="home-collections"
               title={tHome("collectionsSignedInTitle")}
               description={tHome("featuredAlbumsDescription")}
@@ -205,7 +205,7 @@ export async function AuthenticatedHome({ user, onboardingPending, emailVerified
         {/* La comunidad como en la portada: con seguidos, la actividad en tarjetas (2/3) y los paneles al
             costado; sin seguidos las tarjetas ya están arriba y quedan solo los paneles. */}
         <section aria-labelledby="home-community" className="flex flex-col gap-6">
-          <HomeSectionHeading
+          <SectionHeading
             id="home-community"
             title={tHome("communityActivityTitle")}
             description={tHome("communityActivitySubtitle")}

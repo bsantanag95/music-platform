@@ -77,8 +77,8 @@ export function MosaicGrid({ heading, description, id, headingId, listId, tiles,
   const canToggle = moreTiles.length > 0 && moreLabel;
 
   return (
-    <section id={id} aria-labelledby={headingId} className="flex w-full scroll-mt-24 flex-col gap-3">
-      <SectionHeader heading={heading} description={description} headingId={headingId} />
+    <section id={id} aria-labelledby={headingId} className="flex w-full scroll-mt-24 flex-col gap-5">
+      <SectionHeader heading={heading} description={description} headingId={headingId} size="page" />
       <ul id={listId} className={GRID}>
         {visible.map((tile) => (
           <li key={tile.key}>

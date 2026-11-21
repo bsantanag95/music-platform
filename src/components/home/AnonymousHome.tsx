@@ -5,7 +5,7 @@ import { HowItWorks } from "@/components/home/HowItWorks";
 import { HomeReleases } from "@/components/home/HomeReleases";
 import { PopularComments } from "@/components/home/PopularComments";
 import { AnonCta } from "@/components/home/AnonCta";
-import { HomeSectionHeading } from "@/components/home/HomeSectionHeading";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { CollectionMosaic } from "@/components/home/CollectionMosaic";
 import { PeopleCard } from "@/components/home/PeopleCard";
 import { AlbumRail } from "@/components/discovery/AlbumRail";
@@ -31,7 +31,7 @@ export const PUBLIC_LIST_LIMIT = 6;
 // (openspec: redesign-anon-home-phase2, dirección «C · Disquería»): colecciones en mosaico y el riel de
 // mejor valorados —la obra primero—, la comunidad en dos columnas como prueba social, y luego
 // lanzamientos como horario, funciones y el cierre (Fase 3). Cada sección usa
-// `HomeSectionHeading`. Ver docs/05-features/home.md.
+// `SectionHeading`. Ver docs/05-features/home.md.
 export async function AnonymousHome() {
   const [tHome, tCat, locale] = await Promise.all([
     getTranslations("home"),
@@ -79,7 +79,7 @@ export async function AnonymousHome() {
         {/* La obra primero: cada parte colapsa por su cuenta. */}
         {featuredCollections.length > 0 ? (
           <section aria-labelledby="home-collections" className="flex flex-col gap-6">
-            <HomeSectionHeading
+            <SectionHeading
               id="home-collections"
               title={tHome("featuredAlbumsHeading")}
               description={tHome("featuredAlbumsDescription")}
@@ -96,7 +96,7 @@ export async function AnonymousHome() {
 
         {topRated.length > 0 ? (
           <section aria-labelledby="home-top-rated" className="flex flex-col gap-6">
-            <HomeSectionHeading
+            <SectionHeading
               id="home-top-rated"
               title={tHome("communityTopRatedHeading")}
               description={tHome("topRatedDescription")}
@@ -118,7 +118,7 @@ export async function AnonymousHome() {
         {/* Prueba social: la actividad en la columna principal; comentarios y listas al costado. El
             acceso a personas va siempre, aunque la comunidad venga vacía. */}
         <section aria-labelledby="home-community" className="flex flex-col gap-6">
-          <HomeSectionHeading
+          <SectionHeading
             id="home-community"
             title={tHome("communityActivityTitle")}
             description={tHome("communityActivitySubtitle")}

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { getTranslations } from "next-intl/server";
 import { HERO_WALL, heroWallTilePosition } from "@/lib/config/hero-covers";
 import { StarRatingValue } from "@/components/social/StarRatingValue";
-import { HomeSectionHeading } from "./HomeSectionHeading";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 // «Qué puedes hacer» en la portada sin sesión (openspec: redesign-anon-home-phase3). Antes era un carrusel
 // (`FeatureCarousel`) que a 1440 px dejaba a la vista 3 de 9 funciones; ahora se ven todas: tres paneles con
@@ -43,7 +43,7 @@ export async function HowItWorks() {
 
   return (
     <section aria-labelledby="home-features" className="flex flex-col gap-6">
-      <HomeSectionHeading id="home-features" title={t("featuresTitle")} description={t("featuresDescription")} />
+      <SectionHeading id="home-features" title={t("featuresTitle")} description={t("featuresDescription")} />
 
       <ul className="grid gap-4 lg:grid-cols-3">
         {DEMO_FEATURES.map((n) => (

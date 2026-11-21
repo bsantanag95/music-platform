@@ -404,14 +404,19 @@ async function ExplorePage({ params, searchParams }: ExplorePageProps) {
   ].filter((item) => item.visible);
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col items-start gap-12 px-4 py-12">
-      {/* Solo miga de pan y título: el rótulo repetía "Explorar" y la introducción enumeraba lo que cada
-          sección ya explica en su propia línea. Así la primera pantalla muestra contenido. */}
-      <div className="flex w-full flex-col gap-4">
+    // Mismo contenedor ancho que Inicio (openspec: redesign-explore-phase1). Las secciones guardan espacio arriba para la
+    // cabecera global y la barra de pasillos al saltar a su ancla.
+    <main className="mx-auto flex min-h-screen w-full max-w-[88rem] flex-col items-start gap-16 px-4 pb-16 pt-10 sm:px-8 lg:gap-24 xl:px-12 [&_section[id]]:scroll-mt-32">
+      {/* Miga de pan, título y una frase de entrada; la barra de pasillos va aparte, como hija directa del `main`,
+          para quedar fija durante toda la portada. */}
+      <div className="-mb-8 flex w-full flex-col gap-3 lg:-mb-16">
         <Breadcrumbs items={[{ label: tCommon("home"), href: "/" }, { label: t("heading") }]} />
-        <h1 className="font-display text-3xl text-paper">{t("heading")}</h1>
-        <ExploreJumpNav label={t("jump.label")} items={jumpItems} />
+        <h1 className="font-display text-[clamp(2.5rem,5vw,4rem)] font-bold leading-[0.95] tracking-[-0.035em] text-paper">
+          {t("heading")}
+        </h1>
+        <p className="max-w-[52ch] font-body text-lg text-paper-muted">{t("intro")}</p>
       </div>
+      <ExploreJumpNav label={t("jump.label")} items={jumpItems} />
 
       {/* Un solo riel (ADR 0038): las curadas a mano y las generadas por plantilla mezcladas. Cómo se mantiene
           una colección no es información para quien mira; lo que la distingue de las otras es su familia. Fila
@@ -426,6 +431,7 @@ async function ExplorePage({ params, searchParams }: ExplorePageProps) {
         familyLabel={(family) => t(`collectionFamilies.${family}`)}
         seeAll={{ href: "/explore/collections", label: t("seeAllCollections") }}
         layout="scroll"
+        headingSize="page"
       />
 
       {/* Popular ahora (openspec: explore-popular-now): justo después de Colecciones, como prueba de que hay gente usando la
@@ -469,6 +475,7 @@ async function ExplorePage({ params, searchParams }: ExplorePageProps) {
 
       <AlbumRail
         layout="scroll"
+        headingSize="page"
         id="novedades"
         authenticated={authenticated}
         heading={t("newReleasesHeading")}
@@ -483,6 +490,7 @@ async function ExplorePage({ params, searchParams }: ExplorePageProps) {
 
       <AlbumRail
         layout="scroll"
+        headingSize="page"
         id="proximos"
         authenticated={authenticated}
         heading={t("upcomingHeading")}
@@ -502,6 +510,7 @@ async function ExplorePage({ params, searchParams }: ExplorePageProps) {
 
       <AlbumRail
         layout="scroll"
+        headingSize="page"
         id="mejor-valorados"
         authenticated={authenticated}
         heading={t("topRatedHeading")}

@@ -13,11 +13,12 @@ export function AwardsExploreSection({ ceremonies }: { ceremonies: LatestCeremon
   if (ceremonies.length === 0) return null;
 
   return (
-    <section id="premios" aria-labelledby="premios-heading" className="flex w-full scroll-mt-24 flex-col gap-3">
+    <section id="premios" aria-labelledby="premios-heading" className="flex w-full scroll-mt-24 flex-col gap-5">
       <SectionHeader
         heading={t("exploreHeading")}
         description={t("exploreDescription")}
         seeAll={{ href: awardsIndexHref(), label: t("exploreSeeAll") }}
+        size="page"
         headingId="premios-heading"
       />
       <AwardTileGrid ceremonies={ceremonies} />
