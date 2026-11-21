@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { ListMosaic } from "@/components/home/ListMosaic";
-import { HomeSectionHeading } from "@/components/home/HomeSectionHeading";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import type { HomeResumeList } from "@/services/home/home";
 
 // «Retoma una lista»: acceso directo a la lista propia con elementos y actividad más reciente, para seguir
@@ -72,7 +72,7 @@ export async function ResumeList({
 
   return (
     <section aria-labelledby="home-resume-list" className="flex flex-col gap-6">
-      <HomeSectionHeading
+      <SectionHeading
         id="home-resume-list"
         title={t("resumeListLabel")}
         seeAll={{ href: "/me/lists", label: t("resumeListSeeAll") }}

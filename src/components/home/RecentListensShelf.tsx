@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { targetHref } from "@/components/feed/feed-target";
 import { relativeFeedDate } from "@/components/feed/feed-dates";
-import { HomeSectionHeading } from "./HomeSectionHeading";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { compactRatingValue } from "./compact-rating";
 import type { HomeRecentListen } from "@/services/home/home";
 
@@ -27,7 +27,7 @@ export async function RecentListensShelf({
 
   return (
     <section aria-labelledby="home-recent-listens" className="flex flex-col gap-6">
-      <HomeSectionHeading
+      <SectionHeading
         id="home-recent-listens"
         title={t("recentListensTitle")}
         description={t("recentListensDescription")}

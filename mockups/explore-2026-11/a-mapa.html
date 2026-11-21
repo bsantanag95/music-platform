@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta A · Mapa — Explorar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<style>
+  .page-head { padding: 40px 0 28px; display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 20px; }
+  .page-head h1 { font-family: var(--display); font-weight: 700; font-size: clamp(40px, 5vw, 64px); line-height: .95; letter-spacing: -.035em; margin-top: 12px; }
+  .page-head p { color: var(--muted); font-size: 18px; margin-top: 12px; max-width: 46ch; }
+  .shortcuts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .shortcuts a { font: 500 13px var(--data); padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); }
+  .shortcuts a:hover { border-color: var(--amber); color: var(--paper); }
+
+  /* ——— El mapa ——— */
+  .atlas { display: grid; grid-template-columns: minmax(0, 1fr) 360px; min-width: 0; gap: 24px; align-items: start; }
+  .matrix-card { min-width: 0; border: 1px solid var(--border); border-radius: 14px; background: var(--ink-2); padding: 20px 20px 16px; }
+  .matrix-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
+  .matrix-top h2 { font-family: var(--display); font-size: 20px; font-weight: 500; }
+  .legend { display: flex; align-items: center; gap: 8px; font: 500 11px var(--data); color: var(--muted); }
+  .legend i { display: block; width: 14px; height: 14px; border-radius: 3px; }
+  .scroller { overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  table.matrix { border-collapse: separate; border-spacing: 4px; width: 100%; min-width: 640px; }
+  .matrix th { font: 500 12px var(--data); color: var(--muted); font-weight: 500; }
+  .matrix thead th { padding: 0 0 6px; text-align: center; }
+  .matrix thead th a, .matrix tbody th a { display: block; padding: 4px 6px; border-radius: 5px; }
+  .matrix thead th a:hover, .matrix tbody th a:hover { color: var(--paper); background: var(--surface); }
+  .matrix tbody th { text-align: left; white-space: nowrap; font-family: var(--display); font-size: 14px; color: var(--paper); position: sticky; left: 0; background: var(--ink-2); z-index: 1; padding-right: 8px; }
+  .matrix td { padding: 0; }
+  .cell { width: 100%; height: 34px; border-radius: 5px; display: grid; place-items: center; font: 500 11px var(--data); color: transparent; transition: transform .15s, box-shadow .15s, color .15s; border: 1px solid transparent; }
+  .cell:hover, .cell:focus-visible { color: var(--paper); transform: scale(1.06); border-color: var(--amber); outline: none; }
+  .cell[aria-pressed="true"] { border-color: var(--amber); color: var(--amber-ink); box-shadow: 0 0 0 2px var(--amber); }
+  .cell[aria-pressed="true"] { background: var(--amber) !important; }
+  .cell.empty { background: transparent !important; border: 1px dashed var(--border); cursor: default; }
+  .matrix-foot { display: flex; justify-content: space-between; gap: 12px; margin-top: 12px; font: 500 12px var(--data); color: var(--muted); flex-wrap: wrap; }
+  .matrix-foot button { color: var(--muted); padding: 6px 0; }
+  .matrix-foot button:hover { color: var(--amber); }
+
+  .preview { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); padding: 20px; position: sticky; top: 84px; }
+  .preview .stamp { color: var(--amber); }
+  .preview h3 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height: 1.02; letter-spacing: -.02em; margin-top: 6px; }
+  .preview .count { margin-top: 6px; color: var(--muted); font-size: 15px; }
+  .preview .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 18px 0; }
+  .preview .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+  .chip { font: 500 12px var(--data); padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border-2); color: var(--muted); }
+  .chip:hover { color: var(--paper); border-color: var(--amber); }
+  .go { display: flex; justify-content: center; align-items: center; height: 46px; border-radius: 8px; background: var(--amber); color: var(--amber-ink); font-family: var(--display); font-weight: 500; }
+  .go:hover { background: var(--amber-2); }
+  .alt-links { display: flex; justify-content: space-between; margin-top: 12px; font: 500 12px var(--data); color: var(--muted); }
+  .alt-links a:hover { color: var(--paper); }
+
+  /* ——— Ahora mismo ——— */
+  .now { margin-top: 72px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+  .panel { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .panel-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .panel-h h2 { font-family: var(--display); font-weight: 700; font-size: 22px; letter-spacing: -.01em; }
+  .panel p.sub { color: var(--muted); font-size: 14px; margin-top: -8px; }
+  .rows li a { display: grid; grid-template-columns: 26px 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid var(--border); }
+  .rows li:first-child a { border-top: 0; }
+  .rows .rank { font: 500 14px var(--data); color: var(--muted); text-align: right; }
+  .rows li:first-child .rank { color: var(--amber); }
+  .rows .cv, .rows .disc { width: 44px; }
+  .rows .t { display: flex; flex-direction: column; min-width: 0; }
+  .rows .t b { font-family: var(--display); font-weight: 500; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rows .t span { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rows .meta { font: 500 12px var(--data); color: var(--muted); }
+  .rows.dated li a { grid-template-columns: 54px 44px minmax(0, 1fr) auto; }
+  .rows.dated .d { font: 500 12px var(--data); color: var(--muted); }
+
+  /* ——— Colecciones ——— */
+  .block { margin-top: 72px; }
+  .coll-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
+  .coll { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); overflow: hidden; display: flex; flex-direction: column; transition: border-color .2s; }
+  .coll:hover { border-color: var(--amber); }
+  .coll .art { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+  .coll .art .cv { border-radius: 0; }
+  .coll .body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 4px; }
+  .coll .body .stamp { color: var(--muted); }
+  .coll h3 { font-family: var(--display); font-weight: 500; font-size: 16px; line-height: 1.2; }
+  .coll .n { font: 500 12px var(--data); color: var(--muted); }
+
+  /* ——— Premios y salones ——— */
+  .awards { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .awards table { width: 100%; border-collapse: collapse; }
+  .awards th { text-align: left; font: 500 11px var(--data); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); }
+  .awards td { padding: 14px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .awards tr:last-child td { border-bottom: 0; }
+  .awards tr:hover td { background: var(--ink-2); }
+  .awards .aw { font-family: var(--display); font-size: 16px; }
+  .awards .yr { font: 500 14px var(--data); }
+  .awards .ed { font: 500 12px var(--data); color: var(--muted); }
+  .awards .win { display: flex; align-items: center; gap: 12px; }
+  .awards .win .disc { width: 36px; }
+  .awards .win b { font-family: var(--display); font-weight: 500; display: block; }
+  .awards .win span { color: var(--muted); font-size: 13px; }
+  .awards .kind { display: inline-flex; gap: 6px; align-items: center; }
+
+  @media (max-width: 1180px) {
+    .atlas { grid-template-columns: minmax(0, 1fr); }
+    .preview { position: static; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 24px; }
+    .preview .grid { grid-row: span 4; margin: 0; align-self: start; }
+    .now { grid-template-columns: 1fr 1fr; }
+    .now .panel:first-child { grid-column: 1 / -1; }
+    .coll-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 720px) {
+    .preview { display: flex; flex-direction: column; }
+    .preview .grid { margin: 16px 0; align-self: stretch; }
+    .now { grid-template-columns: 1fr; }
+    .coll-row { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 calc(-1 * var(--pad)); padding: 0 var(--pad); scrollbar-width: none; }
+    .coll { flex: 0 0 62%; scroll-snap-align: start; }
+    .awards .ed, .awards th.hide, .awards td.hide { display: none; }
+    .matrix-card { padding: 16px 12px 12px; margin: 0 calc(-1 * var(--pad) + 8px); }
+    .page-head h1 { font-size: 44px; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header"></header>
+<main class="wrap">
+  <div class="page-head">
+    <div>
+      <p class="crumbs">Inicio / <b>Explorar</b></p>
+      <h1>Explorar</h1>
+      <p>Todo el catálogo en un mapa: elige un género y una época, o entra por lo que suena ahora.</p>
+    </div>
+    <nav class="shortcuts" aria-label="Atajos"><a href="#ahora">Ahora mismo</a><a href="#colecciones">Colecciones</a><a href="#premios">Premios y salones</a></nav>
+  </div>
+
+  <section class="atlas" aria-labelledby="map-title">
+    <div class="matrix-card">
+      <div class="matrix-top">
+        <h2 id="map-title">Géneros por década</h2>
+        <div class="legend" aria-hidden="true"><span>menos</span><i style="background:rgba(242,237,228,.07)"></i><i style="background:rgba(242,237,228,.19)"></i><i style="background:rgba(242,237,228,.34)"></i><i style="background:rgba(242,237,228,.53)"></i><span>más álbumes</span></div>
+      </div>
+      <div class="scroller"><table class="matrix" id="matrix"></table></div>
+      <div class="matrix-foot">
+        <button id="more-fam" aria-expanded="false">+ 3 familias más</button>
+        <button>Décadas anteriores a 1950 →</button>
+      </div>
+    </div>
+    <aside class="preview" id="preview" aria-live="polite"></aside>
+  </section>
+
+  <section id="ahora" class="now" aria-label="Ahora mismo">
+    <div class="panel">
+      <div class="panel-h"><h2>Popular ahora</h2><a class="see" href="#">Ver todo →</a></div>
+      <div class="tabs" role="tablist"><button role="tab" aria-selected="true">Álbumes</button><button role="tab" aria-selected="false">Artistas</button><button role="tab" aria-selected="false">Canciones</button></div>
+      <p class="sub" style="margin-top:0">Lo que más se escucha, valora y guarda en los últimos 3 meses.</p>
+      <ol class="rows">
+        <li><a href="#"><span class="rank">1</span><i class="cv" data-c="16"></i><span class="t"><b>LUX</b><span>Rosalía</span></span><span class="meta">48 personas</span></a></li>
+        <li><a href="#"><span class="rank">2</span><i class="cv" data-c="19"></i><span class="t"><b>AM</b><span>Arctic Monkeys</span></span><span class="meta">41</span></a></li>
+        <li><a href="#"><span class="rank">3</span><i class="cv" data-c="8"></i><span class="t"><b>Random Access Memories</b><span>Daft Punk</span></span><span class="meta">37</span></a></li>
+        <li><a href="#"><span class="rank">4</span><i class="cv" data-c="12"></i><span class="t"><b>Back to Black</b><span>Amy Winehouse</span></span><span class="meta">33</span></a></li>
+        <li><a href="#"><span class="rank">5</span><i class="cv" data-c="20"></i><span class="t"><b>Loveless</b><span>My Bloody Valentine</span></span><span class="meta">29</span></a></li>
+      </ol>
+    </div>
+    <div class="panel">
+      <div class="panel-h"><h2>Novedades</h2><a class="see" href="#">Ver todo →</a></div>
+      <p class="sub">Lanzados en los últimos 90 días.</p>
+      <ul class="rows dated">
+        <li><a href="#"><span class="d num">20 nov</span><span class="disc"></span><span class="t"><b>Crown in the Grave</b><span>Trivium</span></span><span class="badge">Estudio</span></a></li>
+        <li><a href="#"><span class="d num">20 nov</span><span class="disc"></span><span class="t"><b>Graceless</b><span>Suicide Silence</span></span><span class="badge">Estudio</span></a></li>
+        <li><a href="#"><span class="d num">20 nov</span><span class="disc"></span><span class="t"><b>In the North</b><span>The Black Dog</span></span><span class="badge">Estudio</span></a></li>
+        <li><a href="#"><span class="d num">20 nov</span><span class="disc"></span><span class="t"><b>Volume V</b><span>Down</span></span><span class="badge">Estudio</span></a></li>
+        <li><a href="#"><span class="d num">13 nov</span><span class="disc"></span><span class="t"><b>Year of the Rooster</b><span>Fucked Up</span></span><span class="badge">Estudio</span></a></li>
+      </ul>
+    </div>
+    <div class="panel">
+      <div class="panel-h"><h2>Próximos</h2><a class="see" href="#">Ver todo →</a></div>
+      <p class="sub">Lo que sale en los próximos 180 días.</p>
+      <ul class="rows dated">
+        <li><a href="#"><span class="d num">24 nov</span><span class="disc"></span><span class="t"><b>Týr</b><span>Týr</span></span><span class="badge next">En 3 días</span></a></li>
+        <li><a href="#"><span class="d num">27 nov</span><span class="disc"></span><span class="t"><b>o\i</b><span>Peter Gabriel</span></span><span class="badge next">En 6 días</span></a></li>
+        <li><a href="#"><span class="d num">27 nov</span><span class="disc"></span><span class="t"><b>Still</b><span>Keep Shelly in Athens</span></span><span class="badge next">En 6 días</span></a></li>
+        <li><a href="#"><span class="d num">4 dic</span><span class="disc"></span><span class="t"><b>Cocoon</b><span>Morphine</span></span><span class="badge next">En 13 días</span></a></li>
+        <li><a href="#"><span class="d num">4 dic</span><span class="disc"></span><span class="t"><b>45</b><span>Yelawolf</span></span><span class="badge next">En 13 días</span></a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="colecciones" class="block" aria-labelledby="h-coll">
+    <div class="sec-head"><div><h2 id="h-coll">Colecciones</h2><p>Recorridos por el catálogo: efemérides, premios, rankings y hallazgos.</p></div><a class="see" href="#">Ver todas →</a></div>
+    <div class="coll-row">
+      <a class="coll" href="#"><span class="art"><i class="cv" data-c="16"></i><i class="cv" data-c="8"></i><i class="cv" data-c="19"></i><i class="cv" data-c="12"></i></span><span class="body"><span class="stamp">Lanzamientos</span><h3>Novedades esenciales</h3><span class="n">12 álbumes</span></span></a>
+      <a class="coll" href="#"><span class="art"><i class="cv" data-c="24"></i><i class="cv" data-c="29"></i><i class="cv" data-c="21"></i><i class="cv" data-c="11"></i></span><span class="body"><span class="stamp">Descubrimiento</span><h3>Un disco por década</h3><span class="n">8 álbumes</span></span></a>
+      <a class="coll" href="#"><span class="art"><i class="cv" data-c="12"></i><i class="cv" data-c="16"></i><i class="cv" data-c="8"></i><i class="cv" data-c="6"></i></span><span class="body"><span class="stamp">Premios</span><h3>Ganadores del Grammy 2025</h3><span class="n">10 álbumes</span></span></a>
+      <a class="coll" href="#"><span class="art"><i class="cv" data-c="13"></i><i class="cv" data-c="7"></i><i class="cv" data-c="25"></i><i class="cv" data-c="5"></i></span><span class="body"><span class="stamp">Descubrimiento</span><h3>Para entrar a R&amp;B, soul y funk</h3><span class="n">12 álbumes</span></span></a>
+      <a class="coll" href="#"><span class="art"><i class="cv" data-c="31"></i><i class="cv" data-c="17"></i><i class="cv" data-c="26"></i><i class="cv" data-c="3"></i></span><span class="body"><span class="stamp">Efemérides</span><h3>Cumplen años en noviembre de 2026</h3><span class="n">12 álbumes</span></span></a>
+      <a class="coll" href="#"><span class="art"><i class="cv" data-c="14"></i><i class="cv" data-c="20"></i><i class="cv" data-c="10"></i><i class="cv" data-c="30"></i></span><span class="body"><span class="stamp">Lanzamientos</span><h3>Lo que viene</h3><span class="n">12 álbumes</span></span></a>
+    </div>
+  </section>
+
+  <section id="premios" class="block" aria-labelledby="h-aw">
+    <div class="sec-head"><div><h2 id="h-aw">Premios y salones</h2><p>Las últimas ceremonias y las grabaciones que entraron este año a los salones de la fama.</p></div><a class="see" href="#">Ver todos →</a></div>
+    <div class="awards">
+      <table>
+        <thead><tr><th>Ceremonia</th><th>Año</th><th class="hide">Edición</th><th>Destacado</th></tr></thead>
+        <tbody>
+          <tr><td class="aw">Premios Grammy</td><td class="yr">2026</td><td class="ed hide">68.ª edición</td><td><span class="win"><span class="disc"></span><span><b>DeBÍ TiRAR MáS FOToS</b><span>Bad Bunny · Álbum del año</span></span></span></td></tr>
+          <tr><td class="aw">Premios Brit</td><td class="yr">2026</td><td class="ed hide">46.ª edición</td><td><span class="win"><span class="disc"></span><span><b>The Art of Loving</b><span>Olivia Dean · Álbum británico del año</span></span></span></td></tr>
+          <tr><td class="aw">Premio Lo Nuestro</td><td class="yr">2026</td><td class="ed hide">38.ª edición</td><td><span class="win"><span class="disc"></span><span><b>DeBÍ TiRAR MáS FOToS</b><span>Bad Bunny · Álbum del año</span></span></span></td></tr>
+          <tr><td class="aw">Premios Latin Grammy</td><td class="yr">2025</td><td class="ed hide">26.ª edición</td><td><span class="win"><span class="disc"></span><span><b>DeBÍ TiRAR MáS FOToS</b><span>Bad Bunny · Álbum del año</span></span></span></td></tr>
+          <tr><td class="aw">Premio Mercury</td><td class="yr">2025</td><td class="ed hide">34.ª edición</td><td><span class="win"><span class="disc"></span><span><b>People Watching</b><span>Sam Fender · Álbum del año</span></span></span></td></tr>
+          <tr><td class="aw">Registro Nacional de Grabaciones</td><td class="yr">2026</td><td class="ed hide">Salón</td><td><span class="win"><span class="disc"></span><span><b>25 grabaciones</b><span>Clase de 2026</span></span></span></td></tr>
+          <tr><td class="aw">Salón de la Fama de los Grammy</td><td class="yr">2026</td><td class="ed hide">Salón</td><td><span class="win"><span class="disc"></span><span><b>14 grabaciones</b><span>Clase de 2026</span></span></span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<footer class="site-foot"><div class="wrap">Mockup · datos del catálogo local; cifras del mapa y del ranking de ejemplo.</div></footer>
+<nav class="mock-bar" aria-label="Mockups"><span>Mockup · datos de ejemplo</span><a href="index.html">Resumen</a><a href="a-mapa.html" aria-current="page">A · Mapa</a><a href="b-pasillos.html">B · Pasillos</a><a href="c-muro.html">C · Muro</a></nav>
+
+<script src="shared.js"></script>
+<script>
+  // Cifras de ejemplo con una forma creíble: cada familia tiene su época fuerte.
+  var DECADES = [1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020];
+  var FAMILIES = [
+    ["Rock", [120, 610, 1284, 980, 1120, 1040, 860, 410], [17, 21, 4, 18]],
+    ["Metal", [0, 12, 210, 940, 860, 1010, 880, 420], [28, 18, 30, 9]],
+    ["Punk y hardcore", [0, 20, 380, 520, 410, 390, 260, 110], [21, 26, 29, 17]],
+    ["Pop", [260, 540, 620, 870, 960, 1180, 1320, 720], [19, 8, 12, 16]],
+    ["Electrónica", [0, 30, 160, 520, 1050, 1210, 1160, 640], [14, 8, 11, 20]],
+    ["Hip hop", [0, 0, 20, 330, 880, 1020, 1150, 790], [5, 6, 23, 15]],
+    ["R&B, soul y funk", [210, 720, 890, 560, 610, 520, 480, 260], [13, 7, 25, 12]],
+    ["Jazz", [940, 820, 520, 340, 280, 240, 210, 120], [24, 0, 13, 22]],
+    ["Blues", [520, 610, 360, 180, 160, 130, 90, 40], [1, 26, 24, 28]],
+    ["Folk y cantautor", [180, 620, 740, 300, 380, 520, 560, 290], [3, 26, 1, 17]],
+    ["Country", [340, 410, 450, 380, 520, 430, 380, 210], [1, 3, 26, 25]],
+    ["Clásica", [430, 380, 330, 300, 290, 250, 220, 120], [22, 14, 3, 24]],
+    ["Experimental", [40, 150, 300, 310, 420, 480, 440, 230], [2, 14, 20, 22]],
+    ["Ambient y new age", [0, 10, 120, 360, 420, 400, 390, 220], [14, 10, 20, 4]],
+    ["Reggae y Caribe", [40, 260, 520, 360, 240, 180, 120, 60], [25, 7, 13, 5]],
+    ["Latina", [160, 240, 360, 420, 560, 680, 840, 760], [15, 23, 27, 16]],
+    ["Brasileña", [180, 420, 460, 300, 260, 230, 200, 120], [2, 15, 0, 7]]
+  ];
+  var MORE = [["Palabra y escena", [30, 40, 60, 50, 60, 40, 30, 10], [17, 26, 1, 3]], ["Religiosa", [60, 70, 80, 90, 110, 120, 90, 50], [9, 1, 3, 25]], ["Del mundo", [40, 90, 140, 180, 220, 240, 200, 110], [7, 15, 25, 23]]];
+  var MAX = 1320;
+  var fmt = new Intl.NumberFormat("es", { useGrouping: "always" });
+  var decadeName = function (d) { return d >= 2000 ? "años " + d : "años " + String(d).slice(2); };
+  var SUB = { Rock: ["Hard rock", "Rock progresivo", "Glam"], Metal: ["Heavy metal", "Thrash", "Doom"], "Hip hop": ["Boom bap", "Trap", "Rap alternativo"], Jazz: ["Bebop", "Cool", "Hard bop"], Pop: ["Synth-pop", "Dance pop", "Art pop"], Electrónica: ["House", "Techno", "IDM"] };
+  var selected = null;
+
+  function render(families) {
+    var t = document.getElementById("matrix");
+    var head = "<thead><tr><th scope=\"col\"><span class=\"sr-only\">Familia</span></th>" + DECADES.map(function (d) {
+      return "<th scope=\"col\"><a href=\"#\">" + (d >= 2000 ? d : "'" + String(d).slice(2)) + "s</a></th>";
+    }).join("") + "</tr></thead>";
+    var body = "<tbody>" + families.map(function (f, r) {
+      return "<tr><th scope=\"row\"><a href=\"#\">" + f[0] + "</a></th>" + f[1].map(function (n, c) {
+        if (!n) return "<td><span class=\"cell empty\" aria-hidden=\"true\"></span></td>";
+        var a = Math.max(0.08, Math.min(0.9, n / MAX));
+        return "<td><button class=\"cell\" data-r=\"" + r + "\" data-c=\"" + c + "\" style=\"background:rgba(232,184,75," + a.toFixed(2) + ")\" aria-pressed=\"false\" aria-label=\"" + f[0] + ", " + decadeName(DECADES[c]) + ": " + fmt.format(n) + " álbumes\">" + (n >= 1000 ? (n / 1000).toFixed(1) + "k" : n) + "</button></td>";
+      }).join("") + "</tr>";
+    }).join("") + "</tbody>";
+    t.innerHTML = head + body;
+    t.querySelectorAll(".cell:not(.empty)").forEach(function (b) {
+      b.addEventListener("click", function () { select(families, +b.dataset.r, +b.dataset.c); });
+    });
+    if (selected) select(families, selected[0], selected[1]); else select(families, 0, 2);
+  }
+
+  function select(families, r, c) {
+    selected = [r, c];
+    document.querySelectorAll(".cell").forEach(function (b) { b.setAttribute("aria-pressed", String(+b.dataset.r === r && +b.dataset.c === c)); });
+    var f = families[r], n = f[1][c], covers = f[2];
+    var extra = [(covers[0] + 3) % 32, (covers[1] + 9) % 32];
+    var subs = SUB[f[0]] || ["Clásicos", "Raros", "Esenciales"];
+    document.getElementById("preview").innerHTML =
+      "<div><p class=\"stamp\">Selección del mapa</p><h3>" + f[0] + "<br>" + decadeName(DECADES[c]) + "</h3><p class=\"count num\">" + fmt.format(n) + " álbumes en el catálogo</p></div>" +
+      "<div class=\"grid\">" + covers.concat(extra).map(function (i) { return "<i class=\"cv\" data-c=\"" + i + "\"></i>"; }).join("") + "</div>" +
+      "<div class=\"chips\">" + subs.map(function (s) { return "<a class=\"chip\" href=\"#\">" + s + "</a>"; }).join("") + "</div>" +
+      "<div><a class=\"go\" href=\"#\">Ver estos álbumes</a><div class=\"alt-links\"><a href=\"#\">Todo " + f[0] + " →</a><a href=\"#\">Todos los " + decadeName(DECADES[c]) + " →</a></div></div>";
+    window.paintCovers(document.getElementById("preview"));
+  }
+
+  var all = FAMILIES.slice();
+  document.addEventListener("DOMContentLoaded", function () {
+    render(all);
+    var more = document.getElementById("more-fam");
+    more.addEventListener("click", function () {
+      var open = more.getAttribute("aria-expanded") === "true";
+      all = open ? FAMILIES.slice() : FAMILIES.concat(MORE);
+      more.setAttribute("aria-expanded", String(!open));
+      more.textContent = open ? "+ 3 familias más" : "− Menos familias";
+      render(all);
+    });
+  });
+</script>
+</body>
+</html>

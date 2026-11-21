@@ -46,4 +46,4 @@ export function SleeveStack({ covers, size = "card" }: { covers: string[]; size?
 
 /** Sello de la familia sobre la carátula: el mismo recurso que la cifra de `AlbumCard` sobre su carátula. */
 export const FAMILY_STAMP_CLASS =
-  "inline-flex items-center rounded-md bg-ink/85 px-1.5 py-0.5 font-data text-[0.65rem] uppercase tracking-wide text-paper backdrop-blur-sm";
+  "inline-flex items-center rounded-md bg-ink/85 px-1.5 py-0.5 font-data text-[0.6875rem] uppercase tracking-wide text-paper backdrop-blur-sm";

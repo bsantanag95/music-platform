@@ -104,8 +104,8 @@ export function PopularNow({
   if (tabs.length === 0) return null;
 
   return (
-    <section id="popular" aria-labelledby="popular-heading" className="flex w-full scroll-mt-24 flex-col gap-3">
-      <SectionHeader heading={heading} headingId="popular-heading" />
+    <section id="popular" aria-labelledby="popular-heading" className="flex w-full scroll-mt-24 flex-col gap-5">
+      <SectionHeader heading={heading} headingId="popular-heading" size="page" />
       <PopularTabs tabs={tabs} label={tabsLabel} />
     </section>
   );

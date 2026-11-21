@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Explorar · Auditoría y tres propuestas — music-platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f6f5f2; --card: #fff; --tx: #17161a; --tx-2: #4b4a50; --tx-3: #6b6a70; --line: #e2e0da; --ok: #1f7a4d; --no: #b23a2e; --hi: #8a5a00; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--tx); font: 16px/1.6 "Geist", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-underline-offset: 3px; }
+  :focus-visible { outline: 2px solid #8a5a00; outline-offset: 3px; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 48px); }
+  header.doc { padding: 64px 0 40px; border-bottom: 1px solid var(--line); }
+  h1 { font-size: clamp(34px, 4.4vw, 56px); line-height: 1.05; letter-spacing: -.03em; font-weight: 700; max-width: 22ch; }
+  .intro { margin-top: 18px; font-size: 19px; color: var(--tx-2); max-width: 66ch; }
+  .meta { margin-top: 20px; font: 500 13px "Geist Mono", monospace; color: var(--tx-3); display: flex; flex-wrap: wrap; gap: 8px 20px; }
+  nav.toc { position: sticky; top: 0; z-index: 5; background: rgba(246,245,242,.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  nav.toc .wrap { display: flex; gap: 6px; overflow-x: auto; padding-top: 10px; padding-bottom: 10px; }
+  nav.toc a { white-space: nowrap; color: var(--tx-2); text-decoration: none; font-size: 14px; font-weight: 500; padding: 6px 12px; border-radius: 8px; }
+  nav.toc a:hover { background: #ebe9e3; color: var(--tx); }
+  nav.toc a.cta { background: var(--tx); color: #fff; }
+  section { padding: 72px 0 0; }
+  h2 { font-size: clamp(26px, 2.6vw, 36px); letter-spacing: -.02em; line-height: 1.1; font-weight: 700; }
+  h2 + p { margin-top: 10px; color: var(--tx-2); max-width: 70ch; font-size: 17px; }
+  h3 { font-size: 19px; letter-spacing: -.01em; font-weight: 650; }
+  .shots { margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  figure { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  figure img { display: block; width: 100%; height: auto; }
+  figcaption { padding: 12px 16px; font-size: 14px; color: var(--tx-3); border-top: 1px solid var(--line); }
+  .stats { margin-top: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+  .stat b { display: block; font-size: 30px; letter-spacing: -.02em; line-height: 1.1; }
+  .stat span { font-size: 14px; color: var(--tx-2); }
+  .issues { margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .issue { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; }
+  .issue h3 { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .sev { font: 500 12px "Geist Mono", monospace; padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+  .sev.alta { background: #fbe4e1; color: var(--no); }
+  .sev.media { background: #fdf0d6; color: #8a5a00; }
+  .sev.baja { background: #e9ece9; color: #4b5a4f; }
+  .issue ul { margin-top: 10px; padding-left: 18px; color: var(--tx-2); font-size: 15px; }
+  .issue li + li { margin-top: 6px; }
+  .issue li b { color: var(--tx); font-weight: 600; }
+  .note { margin-top: 16px; padding: 14px 18px; border-radius: 10px; background: #efede8; color: var(--tx-2); font-size: 15px; }
+  .criteria { margin-top: 28px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 40px; }
+  .criteria li { list-style: none; padding: 16px 0; border-top: 1px solid var(--line); }
+  .criteria h3 { font-size: 17px; }
+  .criteria p { color: var(--tx-2); font-size: 15px; margin-top: 4px; }
+  .props { margin-top: 28px; display: grid; gap: 24px; }
+  .prop { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: grid; grid-template-columns: 1.1fr 1fr; }
+  .prop .img { display: block; border-right: 1px solid var(--line); background: #14120f; }
+  .prop .img img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+  .prop .body { padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+  .prop h3 { font-size: 24px; letter-spacing: -.02em; }
+  .prop .thesis { color: var(--tx-2); }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tags span { font-size: 13px; padding: 3px 9px; border-radius: 6px; background: #efede8; color: var(--tx-2); }
+  .pc { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 14px; }
+  .pc h4 { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .pc .pro h4 { color: var(--ok); } .pc .con h4 { color: var(--no); }
+  .pc ul { padding-left: 16px; color: var(--tx-2); }
+  .pc li + li { margin-top: 4px; }
+  .open { margin-top: auto; display: inline-flex; align-self: start; align-items: center; gap: 8px; background: var(--tx); color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 15px; }
+  .open:hover { background: #8a5a00; }
+  table { margin-top: 28px; width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); font-size: 15px; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { background: #efede8; font-size: 13px; font-weight: 600; color: var(--tx-2); }
+  td.s { font: 500 14px "Geist Mono", monospace; white-space: nowrap; }
+  .rec { margin-top: 28px; background: var(--tx); color: #f4f3ef; border-radius: 16px; padding: clamp(28px, 4vw, 48px); display: grid; grid-template-columns: 1fr 1.3fr; gap: 40px; }
+  .rec h3 { font-size: clamp(26px, 2.8vw, 38px); letter-spacing: -.02em; line-height: 1.1; }
+  .rec p, .rec li { color: #cfcdc7; }
+  .rec ul { padding-left: 18px; margin-top: 10px; }
+  .rec li + li { margin-top: 8px; }
+  .rec b { color: #fff; }
+  .rec a { color: #f2c866; }
+  .notes { margin: 56px 0 80px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 14px; color: var(--tx-3); max-width: 90ch; }
+  .notes p + p { margin-top: 8px; }
+  @media (max-width: 900px) {
+    .shots, .issues, .criteria, .prop, .rec, .pc { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .prop .img { border-right: 0; border-bottom: 1px solid var(--line); aspect-ratio: 16/10; }
+    table { display: block; overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+<header class="doc">
+  <div class="wrap">
+    <h1>Explorar: auditoría y tres propuestas de modernización</h1>
+    <p class="intro">Revisión de <code>/explore</code> tal como la ve cualquier visitante, con tres mockups completos que replantean su estructura y su forma de navegar. Las tres mantienen la identidad que ya adoptó la portada (tinta, papel y ámbar, y las tipografías actuales): lo que cambia es cómo se organiza y se recorre el catálogo.</p>
+    <p class="meta"><span>21 nov 2026</span><span>main 9f318230 · /es/explore sin sesión</span><span>Revisado a 1440, 1024, 820 y 390 px</span></p>
+  </div>
+</header>
+<nav class="toc" aria-label="Contenido"><div class="wrap"><a href="#estado">Estado actual</a><a href="#problemas">Problemas</a><a href="#criterios">Criterios</a><a href="#propuestas">Propuestas</a><a href="#comparacion">Comparación</a><a href="#recomendacion">Recomendación</a><a class="cta" href="b-pasillos.html">Abrir la recomendada</a></div></nav>
+
+<main class="wrap">
+  <section id="estado" aria-labelledby="h-estado">
+    <h2 id="h-estado">Estado actual</h2>
+    <p>La portada de Explorar reúne mucho y muy buen material (colecciones, ranking de la comunidad, 20 familias de géneros, décadas, calendario, premios y salones), pero lo presenta como ocho bloques con el mismo encabezado, el mismo peso y casi la misma tarjeta, uno debajo de otro.</p>
+    <div class="shots">
+      <figure><img src="shots/actual.png" alt="Primer viewport actual de Explorar a 1440 px: título, ocho botones de navegación, riel de colecciones y el inicio de Popular ahora"><figcaption>Primer viewport a 1440 px: título sin contexto, ocho atajos y un riel de colecciones pequeñas.</figcaption></figure>
+      <figure><img src="shots/actual-medio.png" alt="Géneros y décadas actuales: dos muros de mosaicos casi idénticos con el nombre abajo y una ficha punteada de más"><figcaption>Géneros y décadas: dos muros de mosaicos casi idénticos, con una ficha punteada para el resto.</figcaption></figure>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>8</b><span>secciones con el mismo título de 20 px y la misma separación de 48 px</span></div>
+      <div class="stat"><b>7.058 px</b><span>de página a 390 px (3.985 px a 1440)</span></div>
+      <div class="stat"><b>1.276 px</b><span>ocupa el muro de géneros en un teléfono; décadas, otros 731</span></div>
+      <div class="stat"><b>3 de 5</b><span>ceremonias muestran el mismo ganador: el disco de Bad Bunny aparece tres veces</span></div>
+    </div>
+    <p class="note">La base de datos local tiene pocas carátulas, así que en las capturas actuales casi todo sale con el disco de reserva. Lo tomé en cuenta: la página depende de las carátulas en todas sus secciones, y cuando faltan se vuelve un muro de círculos iguales.</p>
+  </section>
+
+  <section id="problemas" aria-labelledby="h-prob">
+    <h2 id="h-prob">Problemas detectados</h2>
+    <p>Ordenados por el impacto que tienen en alguien que llega a explorar sin saber qué buscar.</p>
+    <div class="issues">
+      <article class="issue"><h3>Monotonía y jerarquía <span class="sev alta">Alta</span></h3><ul>
+        <li><b>Ocho secciones con el mismo patrón</b>: título de 20 px, una línea en serif y «Ver todo». Nada indica qué es lo principal de la página.</li>
+        <li>Los dos ejes del catálogo (género y época) van en el medio, entre el ranking y los rieles de fechas, con el mismo peso que «Salones de la Fama».</li>
+        <li>Separación uniforme de 48 px entre todo: no hay pausas ni un bloque protagonista.</li>
+      </ul></article>
+      <article class="issue"><h3>Entrada sin contexto <span class="sev alta">Alta</span></h3><ul>
+        <li>El título «Explorar» (30 px) no dice qué se puede hacer ni cuánto hay: no hay cifra del catálogo ni frase de entrada.</li>
+        <li>Los ocho atajos de navegación <b>no quedan fijos</b>: al bajar se pierden, justo en una página de 4.000 px. En el teléfono se desbordan a la derecha sin indicar que hay más.</li>
+      </ul></article>
+      <article class="issue"><h3>Muros de mosaicos <span class="sev alta">Alta</span></h3><ul>
+        <li>Géneros (17 fichas + «3 familias más») y décadas (8 + «Décadas anteriores») usan la misma ficha de 2×2 carátulas: se confunden entre sí.</li>
+        <li>La ficha punteada «más» queda como un hueco; en décadas deja una fila con 2 fichas y la de «anteriores».</li>
+        <li>En el teléfono los dos muros suman <b>~2.000 px</b> de scroll.</li>
+      </ul></article>
+      <article class="issue"><h3>Popular ahora desequilibrado <span class="sev media">Media</span></h3><ul>
+        <li>El n.º 1 ocupa una tarjeta de ~510 × 430 px dominada por la carátula; los puestos 2–12 se aprietan en dos columnas de texto pequeño.</li>
+        <li>La cifra de «personas» solo aparece en algunas filas.</li>
+        <li>A 390 px la lista se sale 1,6 px del ancho (desborde horizontal).</li>
+      </ul></article>
+      <article class="issue"><h3>Novedades y Próximos duplicados <span class="sev media">Media</span></h3><ul>
+        <li>Dos rieles con la misma tarjeta; solo cambia una etiqueta («En 3 días»).</li>
+        <li>Flechas pequeñas arriba a la derecha y tarjetas cortadas en el borde, el mismo problema que la portada resolvió con el horario.</li>
+      </ul></article>
+      <article class="issue"><h3>Premios y salones poco informativos <span class="sev media">Media</span></h3><ul>
+        <li>Cinco tarjetas grandes para cinco datos (ceremonia, año, edición, ganador): el ganador repetido tres veces llena la fila.</li>
+        <li>Los salones muestran 8 discos decorativos y una cifra.</li>
+        <li>En el teléfono, premios ocupa 1.000 px.</li>
+      </ul></article>
+      <article class="issue"><h3>Tipografía y ancho <span class="sev baja">Baja</span></h3><ul>
+        <li>Textos de 10,4 y 11,2 px (rótulos de familia, metadatos) y monoespaciada para casi todo rótulo.</li>
+        <li>El contenido mide 1280 px, mientras que la portada rediseñada usa 1408 px: al pasar de una a otra cambia el ancho.</li>
+      </ul></article>
+      <article class="issue"><h3>Mejor valorados escondido <span class="sev baja">Baja</span></h3><ul>
+        <li>El riel va al final de todo, después de los salones (en la base local no aparece porque hay pocas valoraciones).</li>
+      </ul></article>
+    </div>
+  </section>
+
+  <section id="criterios" aria-labelledby="h-crit">
+    <h2 id="h-crit">Criterios de las propuestas</h2>
+    <p>Explorar vive dentro de la aplicación: su identidad ya la fijó el rediseño de la portada. Por eso las tres propuestas conservan colores, tipografías y componentes, y varían la estructura.</p>
+    <ul class="criteria">
+      <li><h3>Una entrada que diga algo</h3><p>Título con una frase de qué se puede hacer y, donde encaja, la cifra del catálogo.</p></li>
+      <li><h3>Navegación que acompañe</h3><p>Atajos fijos bajo la cabecera, con la sección visible marcada, o filtros fijos que cambian el contenido.</p></li>
+      <li><h3>Un protagonista por página</h3><p>Cada propuesta elige qué va primero (el mapa, las colecciones o el muro) y lo trata en grande.</p></li>
+      <li><h3>Cada sección en su formato</h3><p>Ranking como ranking, fechas como horario, premios como tabla, géneros y décadas como índice: no la misma tarjeta para todo.</p></li>
+      <li><h3>Resistente a carátulas que faltan</h3><p>Los índices y horarios funcionan con texto; las carátulas suman, no sostienen la página.</p></li>
+      <li><h3>Mismo ancho que la portada</h3><p>Contenedor de 1408 px y márgenes fluidos, para que la app no cambie de ancho de una página a otra.</p></li>
+      <li><h3>Móvil propio</h3><p>Rieles horizontales donde hay muchas fichas, índices en dos columnas y nada por debajo de 11 px.</p></li>
+      <li><h3>Ámbar escaso</h3><p>El acento marca lo elegido y lo próximo; las cantidades se codifican en tono papel.</p></li>
+    </ul>
+  </section>
+
+  <section id="propuestas" aria-labelledby="h-props">
+    <h2 id="h-props">Las tres propuestas</h2>
+    <p>Las tres estructuras salieron de un sorteo entre seis candidatas, para no quedarme solo con la más obvia. Todas son navegables y adaptables; las carátulas salen del mosaico real del hero y el ranking, los conteos y las cifras del mapa son de ejemplo.</p>
+    <div class="props">
+      <article class="prop">
+        <a class="img" href="a-mapa.html"><img src="shots/a.png" alt="Propuesta A: mapa de calor de 17 géneros por 8 décadas y, a la derecha, la vista previa de Rock en los años 70"></a>
+        <div class="body">
+          <h3>A · Mapa</h3>
+          <p class="thesis">La entrada es un mapa de calor de géneros por décadas: cada celda dice cuántos discos hay de ese género en esa época, y al elegirla se ve una vista previa con carátulas, subgéneros y el enlace a esos álbumes. Debajo, «Ahora mismo» reúne popular, novedades y próximos en tres paneles, y los premios pasan a una tabla.</p>
+          <div class="tags"><span>Herramienta</span><span>Género × década</span><span>Paneles</span><span>Tabla de premios</span></div>
+          <div class="pc"><div class="pro"><h4>Ventajas</h4><ul><li>La más propia: muestra la forma del catálogo, algo que pocos sitios ofrecen.</li><li>Lleva directo a cruces (rock de los 70) en un clic.</li><li>No depende de carátulas: funciona solo con cifras.</li></ul></div><div class="con"><h4>Desventajas</h4><ul><li>Necesita datos y rutas nuevas: conteos por familia y década, y que <code>familia</code> y <code>decada</code> se puedan combinar.</li><li>En el teléfono el mapa se desplaza en horizontal.</li><li>Puede intimidar a quien solo quiere mirar.</li></ul></div></div>
+          <a class="open" href="a-mapa.html">Abrir propuesta A</a>
+        </div>
+      </article>
+      <article class="prop">
+        <a class="img" href="b-pasillos.html"><img src="shots/b.png" alt="Propuesta B: barra de pasillos fija y colecciones en mosaico con una destacada grande"></a>
+        <div class="body">
+          <h3>B · Pasillos</h3>
+          <p class="thesis">Evolución de la portada: la página como una disquería con pasillos. Una barra fija marca la sección en la que estás; las colecciones van en mosaico con una destacada; Popular es un top con números grandes; géneros muestra 6 familias en grande y las otras 14 como chips con su cifra; las décadas son una línea de tiempo; los lanzamientos, el mismo horario de la portada.</p>
+          <div class="tags"><span>Producto</span><span>Pasillos fijos</span><span>Horario</span><span>Línea de tiempo</span></div>
+          <div class="pc"><div class="pro"><h4>Ventajas</h4><ul><li>Coherente con la portada rediseñada: reutiliza mosaico, horario y escala de títulos.</li><li>Cada sección con su formato y la navegación siempre visible.</li><li>Casi todo sale de datos que ya existen.</li></ul></div><div class="con"><h4>Desventajas</h4><ul><li>La menos sorprendente: se parece a otras plataformas.</li><li>Sigue siendo larga (~4.350 px a 1024).</li><li>Las cifras de los chips de género son un dato nuevo, aunque barato.</li></ul></div></div>
+          <a class="open" href="b-pasillos.html">Abrir propuesta B</a>
+        </div>
+      </article>
+      <article class="prop">
+        <a class="img" href="c-muro.html"><img src="shots/c.png" alt="Propuesta C: barra de filtros y un muro de carátulas con el primero en grande"></a>
+        <div class="body">
+          <h3>C · Muro</h3>
+          <p class="thesis">Explorar a simple vista: un muro de carátulas que cambia con los filtros fijos (Popular, Novedades, Próximos, Mejor valorados, Género, Década), con el primero en grande y el título al pasar el cursor. Debajo, géneros y décadas como índices tipográficos con su cifra, colecciones como estantes y premios en una fila por ceremonia.</p>
+          <div class="tags"><span>Visual</span><span>Filtros fijos</span><span>Índices de texto</span><span>Página corta</span></div>
+          <div class="pc"><div class="pro"><h4>Ventajas</h4><ul><li>La más corta (3.736 px a 1024) y la más rápida de recorrer con la vista.</li><li>Los índices de géneros y décadas resuelven los muros de mosaicos.</li><li>Un solo componente sirve para cuatro listados.</li></ul></div><div class="con"><h4>Desventajas</h4><ul><li>Depende por completo de las carátulas: sin ellas, el muro pierde sentido.</li><li>Oculta datos (fecha, artista) hasta pasar el cursor.</li><li>Las colecciones y el calendario pierden protagonismo.</li></ul></div></div>
+          <a class="open" href="c-muro.html">Abrir propuesta C</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="comparacion" aria-labelledby="h-comp">
+    <h2 id="h-comp">Comparación</h2>
+    <p>Valoración de 1 a 5 frente a los problemas detectados y al coste de llevarla a la aplicación.</p>
+    <table>
+      <thead><tr><th>Criterio</th><th>A · Mapa</th><th>B · Pasillos</th><th>C · Muro</th></tr></thead>
+      <tbody>
+        <tr><td>Jerarquía y variedad entre secciones</td><td class="s">4</td><td class="s">5</td><td class="s">4</td></tr>
+        <tr><td>Navegación a lo largo de la página</td><td class="s">3</td><td class="s">5</td><td class="s">4</td></tr>
+        <tr><td>Géneros y décadas</td><td class="s">5</td><td class="s">4</td><td class="s">5</td></tr>
+        <tr><td>Resiste carátulas que faltan</td><td class="s">5</td><td class="s">3</td><td class="s">1</td></tr>
+        <tr><td>Identidad propia</td><td class="s">5</td><td class="s">3</td><td class="s">4</td></tr>
+        <tr><td>Coherencia con la portada rediseñada</td><td class="s">3</td><td class="s">5</td><td class="s">3</td></tr>
+        <tr><td>Móvil</td><td class="s">3</td><td class="s">4</td><td class="s">5</td></tr>
+        <tr><td>Coste de implementación</td><td class="s">Alto</td><td class="s">Medio</td><td class="s">Medio</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="recomendacion" aria-labelledby="h-rec">
+    <div class="rec">
+      <div><h3 id="h-rec">Recomendación: B · Pasillos, con el índice de C</h3></div>
+      <div>
+        <p><b>B resuelve los problemas de más impacto con piezas que la app ya tiene.</b> La barra fija resuelve la navegación perdida; cada sección pasa a su formato natural; los lanzamientos usan el horario de la portada; y el lenguaje (mosaico, escala de títulos, ancho de 1408 px) es el mismo que acabamos de publicar en Inicio. Se puede hacer en tres fases como la portada.</p>
+        <ul>
+          <li><b>Tomar de C el índice tipográfico de géneros y décadas</b> para las familias que no van en grande y para las décadas en el teléfono: funciona sin carátulas y acorta el móvil.</li>
+          <li><b>Tomar de C la cifra del catálogo</b> junto al título («54.820 álbumes»): da escala a la página con un dato que ya existe.</li>
+          <li><b>Guardar A como función aparte:</b> el mapa género × década es la idea más propia de las tres, pero pide conteos nuevos y combinar <code>familia</code> con <code>decada</code> en la ruta. Encaja mejor como su propia página o como bloque de la página de género.</li>
+          <li><b>Independiente de la dirección:</b> corregir el desborde de 1,6 px del ranking a 390 px y subir los rótulos de 10,4 px al mínimo de 11.</li>
+        </ul>
+        <p style="margin-top:16px"><a href="b-pasillos.html">Abrir la propuesta B →</a></p>
+      </div>
+    </div>
+  </section>
+
+  <div class="notes">
+    <p><b>Sobre los mockups.</b> Son páginas estáticas independientes en <code>mockups/explore-2026-11/</code>; no modifican el sitio. Colecciones, familias, décadas, lanzamientos y premios son los del catálogo local; el ranking, los conteos y las cifras del mapa son de ejemplo. Las carátulas se recortan del mosaico real del hero.</p>
+    <p>Revisados a 1440, 1024, 820 y 390 px sin desbordes horizontales; respetan <code>prefers-reduced-motion</code>.</p>
+  </div>
+</main>
+</body>
+</html>

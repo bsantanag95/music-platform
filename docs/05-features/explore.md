@@ -25,15 +25,33 @@ sin tabla materializada. Cada sección se **omite** si no tiene contenido. En or
 | Salón de la Fama | clases cerradas de los salones de la fama cargados desde `data/awards/` (cambios `add-grammy-hall-of-fame` y `add-national-recording-registry`, ADR 0044; hoy el Grammy Hall of Fame y el National Recording Registry) | tras Premios y con su mismo aspecto: una tarjeta por salón (nombre, año de su última clase en grande y cuatro carátulas, las de las canciones con la de su disco ancla) que abre esa clase, y "Ver todos" → `/hall-of-fame` (índice de salones, `add-hall-of-fame-page`); el encabezado y la entrada de la navegación rápida van en plural con más de un salón; se omite sin clases cerradas (`HallOfFameExploreSection`, `HallOfFameTile`, `listHallOfFameClasses`). Ver `awards.md` |
 | Mejor valorados | `rating` agregado por álbum | riel horizontal; ver umbrales abajo |
 
-### Navegación rápida
+### Marco y entrada (cambio `redesign-explore-phase1`)
 
-Bajo el título hay una fila de píldoras "En esta página" (`ExploreJumpNav`) con un enlace por cada sección que se
-renderiza, en el orden de la página. Las anclas son `colecciones`, `popular`, `generos`, `decadas`, `novedades`, `proximos`, `premios`, `salon-de-la-fama` y
-`mejor-valorados` (el `id` del `<section>`, con `scroll-mt-24` para que el encabezado fijo no
-tape el título). La página decide qué secciones están visibles con los mismos datos con los que cada una se omite, así que
-la fila nunca enlaza a una sección ausente. Se omite con menos de `MIN_SECTIONS_FOR_JUMP_NAV` (4) secciones. Es solo
-enlaces (sin JavaScript): no es fija ni resalta la sección activa. En móvil se desplaza en horizontal. Las etiquetas son
-cortas (`catalog.explore.jump.*`) y no repiten los títulos de sección.
+Desde la auditoría del 2026-11-21 (mockups en `mockups/explore-2026-11/`, dirección «B · Pasillos» con el índice
+tipográfico de la propuesta C) la portada usa el mismo contenedor que Inicio (`max-w-[88rem]`, `px-4 sm:px-8 xl:px-12`,
+`gap-16 lg:gap-24`) y, bajo la miga de pan, un `<h1>` en la escala de Inicio con una frase de entrada
+(`catalog.explore.intro`) que dice qué se puede hacer, **sin cifras** del catálogo (la misma razón que quitó los
+conteos de géneros y décadas). Los títulos de sección son de página (30–40 px, `SectionHeading` en
+`src/components/ui/`, el mismo de Inicio): `SectionHeader` delega en él con `size="page"`; los rieles compartidos
+(`AlbumRail`, `CollectionRail`) lo reciben como `headingSize="page"` solo desde esta portada, así la página de género, el
+hub de colecciones y el resto siguen con el compacto de 20 px.
+
+### Barra de pasillos (navegación rápida)
+
+Bajo la entrada va la barra "En esta página" (`ExploreJumpNav`) con un enlace por cada sección que se renderiza, en el
+orden de la página. Las anclas son `colecciones`, `popular`, `generos`, `decadas`, `novedades`, `proximos`, `premios`,
+`salon-de-la-fama` y `mejor-valorados` (el `id` del `<section>`; el `main` les da `scroll-mt-32`, la altura de la
+cabecera global más la barra, para que ninguna tape el título al saltar). La página decide qué secciones están visibles
+con los mismos datos con los que cada una se omite, así que la barra nunca enlaza a una sección ausente. Se omite con
+menos de `MIN_SECTIONS_FOR_JUMP_NAV` (4) secciones.
+
+Desde `redesign-explore-phase1` la barra **queda fija** bajo la cabecera global (`sticky`, hija directa del `main` para
+acompañar toda la portada) y **marca la sección a la vista** con `aria-current` y un subrayado ámbar: `JumpNavLinks`
+(cliente) mide, una vez por cuadro al desplazar o redimensionar, la última sección cuyo borde superior pasó la línea de
+la barra (`pickActiveSection`; al final de la página gana la última) y, si la fila se desborda, la desplaza para dejar el
+enlace marcado a la vista sin mover la página. Sin JavaScript son los mismos enlaces a las anclas, sin marca. Las
+etiquetas son cortas (`catalog.explore.jump.*`) y no repiten los títulos de sección. Las Fases 2 y 3 (plan en el
+`design.md` de `redesign-explore-phase1`) rehacen el interior de las secciones.
 
 Cada sección lleva bajo el título una línea que dice qué reúne o con qué regla (la de Mejor valorados
 cita `MIN_RATINGS_PER_ALBUM`). Los rieles de álbumes de la portada son **horizontales**

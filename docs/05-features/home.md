@@ -279,7 +279,7 @@ física, seguir, catálogo preciso, privacidad) se ven **todas a la vez**. Hasta
 `redesign-anon-home-phase3` eran un carrusel (`FeatureCarousel`, eliminado) que a 1440 px
 dejaba a la vista 3 de 9 y explicaba el doble puntaje solo con texto.
 
-- `HowItWorks` (server) arma `feature{1..9}{Title,Body}` bajo `HomeSectionHeading`
+- `HowItWorks` (server) arma `feature{1..9}{Title,Body}` bajo `SectionHeading` (`src/components/ui/SectionHeading.tsx`, antes `HomeSectionHeading`)
   (`featuresTitle`, `featuresDescription`).
 - **Tres paneles con demostración** (`DEMO_FEATURES = [1, 2, 6]`): diario (tres filas con
   carátulas del mosaico del hero y los contextos de escucha de `diary.context`), doble puntaje
@@ -297,7 +297,7 @@ Fase 2 de la dirección «C · Disquería» (plan en el `design.md` de
 sesión no cambian.
 
 - **Contenedor ancho:** el cuerpo usa el mismo `max-w-[88rem]` del hero, con `gap-16 lg:gap-24`
-  entre secciones. Cada sección lleva `HomeSectionHeading` (`h2` de 32–40 px, descripción de una
+  entre secciones. Cada sección lleva `SectionHeading` (`src/components/ui/SectionHeading.tsx`, antes `HomeSectionHeading`) (`h2` de 32–40 px, descripción de una
   línea y enlace «Ver …»), propio de Inicio porque `SectionHeader` lo comparte `/explore`.
 - **Colecciones:** `CollectionMosaic` muestra hasta 6 (`mosaicTiles`): con 6 o más, destacada 2×2
   (cuadrícula 4×2 de carátulas) + cuatro medianas (`SleeveStack`) + la sexta a lo ancho; con 5,
