@@ -40,13 +40,11 @@
     "familyResultsHeading": "Albums · {family}",
     "genresDescription": "The six broadest families up front; the rest in the index.",
     "upcomingHeading": "Upcoming releases",
-    "upcomingDescription": "What comes out in the next {days} days, soonest first.",
     "seeAll": "See all",
     "releasesNavLabel": "Releases",
     "newReleasesResultsHeading": "New releases",
     "upcomingResultsHeading": "Upcoming releases",
     "upcomingCrumb": "Upcoming releases",
-    "newReleasesDescription": "Studio albums, singles and EPs released in the last {days} days.",
     "decadesDescription": "Pick an era and browse it year by year.",
     "decadeAllYears": "Whole decade",
     "yearResultsHeading": "Albums from {year}",
@@ -66,12 +64,11 @@
       "popular": "Popular",
       "collections": "Collections",
       "genres": "Genres",
-      "newReleases": "New releases",
-      "upcoming": "Upcoming",
       "awards": "Awards",
       "hallOfFame": "{count, plural, one {Hall of Fame} other {Halls of Fame}}",
       "topRated": "Top rated",
-      "decades": "Decades"
+      "decades": "Decades",
+      "releases": "Releases"
     },
     "collectionsHeading": "Collections",
     "collectionsDescription": "Ways through the catalog: anniversaries, awards, rankings and finds.",
@@ -141,7 +138,12 @@
     },
     "albumCount": "{formatted} {count, plural, one {album} other {albums}}",
     "genresIndexLabel": "More families",
-    "beforeDecade": "Before {year}"
+    "beforeDecade": "Before {year}",
+    "releasesHeading": "Releases",
+    "releasesDescription": "What came out in the last {recent} days and what comes out in the next {upcoming} days.",
+    "releasesPublished": "Out",
+    "releasesShowMore": "{count, plural, one {Show # more} other {Show # more}}",
+    "releasesShowLess": "Show less"
   },
   "search": {
     "documentTitle": "“{query}” in {type} · Search",

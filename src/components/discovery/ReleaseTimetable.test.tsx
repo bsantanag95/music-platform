@@ -90,3 +90,36 @@ describe("ReleaseTimetable", () => {
     expect(container).toBeEmptyDOMElement();
   });
 });
+
+describe("ReleaseTimetable en Explorar (openspec: redesign-explore-phase3)", () => {
+  const both = [release(1, "recent", 3), release(2, "upcoming", 28)];
+
+  it("usa el estado que le pasan, cambia la cifra por «Ver todo» y pone el ancla de cada parte", () => {
+    const { container } = render(
+      <ReleaseTimetable
+        releases={both}
+        locale="es"
+        labels={labels}
+        labelledBy="explore-releases"
+        status={(r) => (r.section === "upcoming" ? { label: "En 7 días", tone: "upcoming" } : { label: "Publicado", tone: "published" })}
+        seeAll={{ recent: { href: "/explore?novedades=1", label: "Ver todo" }, upcoming: { href: "/explore?proximos=1", label: "Ver todo" } }}
+        partIds={{ recent: "novedades", upcoming: "proximos" }}
+      />,
+    );
+
+    expect(container.querySelector("section#novedades")).not.toBeNull();
+    expect(container.querySelector("section#proximos")).not.toBeNull();
+    expect(screen.getByText("En 7 días")).toBeInTheDocument();
+    expect(screen.queryByText("Próximo")).not.toBeInTheDocument();
+    const upcoming = screen.getByRole("region", { name: /Próximos/ });
+    expect(within(upcoming).getByRole("link", { name: "Ver todo" })).toHaveAttribute("href", "/explore?proximos=1");
+    expect(within(upcoming).queryByText("1")).not.toBeInTheDocument();
+  });
+
+  it("sin opciones conserva los rótulos y la cifra de Inicio", () => {
+    render(<ReleaseTimetable releases={both} locale="es" labels={labels} labelledBy="home-releases" />);
+
+    expect(screen.getByText("Próximo")).toBeInTheDocument();
+    expect(screen.getAllByText("1")).toHaveLength(2);
+  });
+});

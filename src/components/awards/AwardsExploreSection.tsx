@@ -2,10 +2,10 @@ import { useTranslations } from "next-intl";
 import { SectionHeader } from "@/components/discovery/SectionHeader";
 import type { LatestCeremony } from "@/services/awards/read";
 import { awardsIndexHref } from "./award-links";
-import { AwardTileGrid } from "./AwardTile";
+import { CeremonyRow } from "./CeremonyRow";
 
 // Sección "Premios" de la portada de Explorar (openspec: add-music-awards, design D6; add-four-music-awards, design D6):
-// una tarjeta por premio, con su ceremonia más reciente, y "Ver todos" al hub. Sin ceremonias no se renderiza, como las
+// una columna por premio, con su ceremonia más reciente y el ganador como texto (`CeremonyRow`, redesign-explore-phase3), y "Ver todos" al hub. Sin ceremonias no se renderiza, como las
 // demás secciones.
 
 export function AwardsExploreSection({ ceremonies }: { ceremonies: LatestCeremony[] }) {
@@ -21,7 +21,7 @@ export function AwardsExploreSection({ ceremonies }: { ceremonies: LatestCeremon
         size="page"
         headingId="premios-heading"
       />
-      <AwardTileGrid ceremonies={ceremonies} />
+      <CeremonyRow ceremonies={ceremonies} />
     </section>
   );
 }

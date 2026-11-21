@@ -4,7 +4,7 @@ import { type KeyboardEvent, useId, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { ReleaseTimetable } from "./ReleaseTimetable";
+import { ReleaseTimetable } from "@/components/discovery/ReleaseTimetable";
 import type { HomeRelease } from "@/services/home/home";
 
 type TabKey = "personal" | "popular";

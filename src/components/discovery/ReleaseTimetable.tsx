@@ -16,6 +16,17 @@ export interface TimetableLabels {
   showLess: string;
 }
 
+/** Estado de una fila: el texto y si va resaltado (próximo) o apagado (publicado). */
+export interface TimetableStatus {
+  label: string;
+  tone: "upcoming" | "published";
+}
+
+interface TimetableLink {
+  href: string;
+  label: string;
+}
+
 /** Parte la selección en recientes (de la más nueva a la más vieja) y próximos (de la más cercana a la más lejana). */
 export function splitTimetable(releases: HomeRelease[]) {
   const recent = releases.filter((r) => r.section === "recent").sort((a, b) => b.releaseDate.localeCompare(a.releaseDate));
@@ -28,23 +39,34 @@ export function splitTimetable(releases: HomeRelease[]) {
 // Lanzamientos de la portada sin sesión como horario (openspec: redesign-anon-home-phase3, préstamo de la
 // propuesta A): dos partes con columnas fijas —fecha, disco, estado— que se leen como un tablero, sin flechas
 // sobre las carátulas. Seis filas por parte y el resto en un `<details>` nativo (sin JavaScript). El Inicio
-// con sesión sigue con `ReleaseRail`/`ReleaseSwitcher`.
+// con sesión sigue con `ReleaseRail`/`ReleaseSwitcher`. Explorar lo usa para su sección Lanzamientos
+// (openspec: redesign-explore-phase3) con la cuenta regresiva como estado, "Ver todo" por parte y las anclas
+// `novedades`/`proximos` en cada parte.
 export function ReleaseTimetable({
   releases,
   locale,
   labels,
   labelledBy,
+  status,
+  seeAll,
+  partIds,
 }: {
   releases: HomeRelease[];
   locale: string;
   labels: TimetableLabels;
   /** `id` del encabezado de la sección (prefijo de los `id` de cada parte). */
   labelledBy: string;
+  /** Estado de cada fila; por defecto, "Próximo" o "Publicado" según la parte. */
+  status?: (release: HomeRelease) => TimetableStatus;
+  /** "Ver todo" de cada parte, en lugar de la cifra de filas de su encabezado. */
+  seeAll?: { recent?: TimetableLink; upcoming?: TimetableLink };
+  /** `id` de cada parte, para enlazarlas como anclas. */
+  partIds?: { recent: string; upcoming: string };
 }) {
   const { recent, upcoming } = splitTimetable(releases);
   const parts = [
-    { key: "recent", title: labels.recent, rows: recent },
-    { key: "upcoming", title: labels.upcoming, rows: upcoming },
+    { key: "recent" as const, title: labels.recent, rows: recent },
+    { key: "upcoming" as const, title: labels.upcoming, rows: upcoming },
   ].filter((part) => part.rows.length > 0);
   if (parts.length === 0) return null;
 
@@ -54,18 +76,27 @@ export function ReleaseTimetable({
         const headingId = `${labelledBy}-${part.key}`;
         const visible = part.rows.slice(0, TIMETABLE_VISIBLE);
         const rest = part.rows.slice(TIMETABLE_VISIBLE);
+        const link = seeAll?.[part.key];
         return (
-          <section key={part.key} aria-labelledby={headingId} className="flex min-w-0 flex-col">
-            <h3
-              id={headingId}
-              className="flex items-baseline justify-between border-b border-paper-muted/40 pb-2.5 font-display text-lg text-paper"
-            >
-              {part.title}
-              <span className="font-data text-xs text-paper-muted">{part.rows.length}</span>
-            </h3>
+          <section key={part.key} id={partIds?.[part.key]} aria-labelledby={headingId} className="flex min-w-0 scroll-mt-32 flex-col">
+            <div className="flex items-baseline justify-between gap-3 border-b border-paper-muted/40 pb-2.5">
+              <h3 id={headingId} className="font-display text-lg text-paper">
+                {part.title}
+              </h3>
+              {link ? (
+                <Link
+                  href={link.href}
+                  className="shrink-0 font-data text-xs text-paper-muted transition-colors hover:text-amber focus-visible:text-amber"
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <span className="font-data text-xs text-paper-muted">{part.rows.length}</span>
+              )}
+            </div>
             <ul className="divide-y divide-ink-border">
               {visible.map((release) => (
-                <Row key={release.id} release={release} locale={locale} labels={labels} />
+                <Row key={release.id} release={release} locale={locale} labels={labels} status={status} />
               ))}
             </ul>
             {rest.length > 0 ? (
@@ -79,7 +110,7 @@ export function ReleaseTimetable({
                 </summary>
                 <ul className="divide-y divide-ink-border border-t border-ink-border">
                   {rest.map((release) => (
-                    <Row key={release.id} release={release} locale={locale} labels={labels} />
+                    <Row key={release.id} release={release} locale={locale} labels={labels} status={status} />
                   ))}
                 </ul>
               </details>
@@ -91,8 +122,23 @@ export function ReleaseTimetable({
   );
 }
 
-function Row({ release, locale, labels }: { release: HomeRelease; locale: string; labels: TimetableLabels }) {
-  const upcoming = release.section === "upcoming";
+function Row({
+  release,
+  locale,
+  labels,
+  status,
+}: {
+  release: HomeRelease;
+  locale: string;
+  labels: TimetableLabels;
+  status?: (release: HomeRelease) => TimetableStatus;
+}) {
+  const state: TimetableStatus = status
+    ? status(release)
+    : release.section === "upcoming"
+      ? { label: labels.upcomingBadge, tone: "upcoming" }
+      : { label: labels.published, tone: "published" };
+  const upcoming = state.tone === "upcoming";
   return (
     <li>
       <Link
@@ -114,7 +160,7 @@ function Row({ release, locale, labels }: { release: HomeRelease; locale: string
             upcoming ? "bg-amber/15 text-amber" : "bg-ink-surface text-paper-muted"
           }`}
         >
-          {upcoming ? labels.upcomingBadge : labels.published}
+          {state.label}
         </span>
       </Link>
     </li>

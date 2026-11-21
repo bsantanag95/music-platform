@@ -449,7 +449,7 @@ todavía sin salir (futuro). La distinción es limpia y no se solapa. El recorri
 ### Portada sin sesión: horario (`redesign-anon-home-phase3`)
 
 Sin sesión, `HomeReleases layout="timetable"` presenta la selección anónima (la misma, con los
-mismos filtros y topes) como `ReleaseTimetable`: dos partes, «Recientes» (fecha descendente) y
+mismos filtros y topes) como `ReleaseTimetable` (en `components/discovery/` desde `redesign-explore-phase3`, que lo comparte con la sección Lanzamientos de Explorar): dos partes, «Recientes» (fecha descendente) y
 «Próximos» (ascendente), lado a lado desde `lg`; cada fila es fecha corta (`formatReleaseDate`,
 compartida con el riel en `release-dates.ts`), miniatura, título, artista y estado
 («Publicado» / «Próximo»), enlazada a `albumHref`. Seis filas por parte y el resto dentro de un
