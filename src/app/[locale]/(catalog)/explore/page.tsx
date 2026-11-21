@@ -3,14 +3,16 @@ import { getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { AlbumRail } from "@/components/discovery/AlbumRail";
-import { CollectionRail } from "@/components/discovery/CollectionRail";
+import { CollectionMosaic } from "@/components/discovery/CollectionMosaic";
+import { DecadeTimeline, type DecadeEntry } from "@/components/discovery/DecadeTimeline";
+import { GenreFamilies, splitFamilies, type FamilyEntry } from "@/components/discovery/GenreFamilies";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { daysUntilRelease, releaseDateLabel } from "@/components/discovery/release-date-label";
 import { AwardsExploreSection } from "@/components/awards/AwardsExploreSection";
 import { HallOfFameExploreSection } from "@/components/awards/HallOfFameExploreSection";
 import { listHallOfFameClasses, listLatestCeremoniesByAward } from "@/services/awards/read";
 import { ExploreJumpNav } from "@/components/discovery/ExploreJumpNav";
 import { FilteredAlbumList } from "@/components/discovery/FilteredAlbumList";
-import { MosaicGrid, type MosaicTile } from "@/components/discovery/MosaicGrid";
 import { PopularNow } from "@/components/discovery/PopularNow";
 import { ApiError } from "@/lib/api/errors";
 import { isExploreEnabled } from "@/lib/config/discovery";
@@ -372,23 +374,23 @@ async function ExplorePage({ params, searchParams }: ExplorePageProps) {
   // Cifra que ubica a cada disco en su riel, sobre la carátula: el promedio en "Mejor valorados".
   const topRatedStats = Object.fromEntries(explore.topRated.map((album) => [album.id, `★ ${starsFormat.format(album.avgStars)}`]));
   const hasPopular = Boolean(explore.popular.albums || explore.popular.artists || explore.popular.songs);
-  const familyTiles = (buckets: FamilyBucket[]): MosaicTile[] =>
-    buckets.map((bucket) => ({
-      key: bucket.key,
-      label: tGenres(`families.${bucket.key}`),
-      href: `/explore?familia=${bucket.key}`,
-      covers: bucket.covers,
-    }));
-  const moreFamilies = explore.families.filter((f) => f.tier === "more");
-  // Décadas: de la más reciente a la más antigua; desde 1950 son tarjetas de la grilla y las anteriores van tras "Décadas anteriores".
-  const decadeTile = (bucket: (typeof explore.decades)[number]): MosaicTile => ({
-    key: String(bucket.decade),
+  // Géneros: las seis primeras familias principales en grande y el resto (las secundarias al final) en el índice.
+  const familyEntry = (bucket: FamilyBucket): FamilyEntry => ({
+    key: bucket.key,
+    label: tGenres(`families.${bucket.key}`),
+    href: `/explore?familia=${bucket.key}`,
+    covers: bucket.covers,
+  });
+  const families = splitFamilies(explore.families);
+  // Décadas: de la más reciente a la más antigua; desde 1950 tienen entrada propia y las anteriores van juntas en "Antes de 1950".
+  const decadeEntry = (bucket: (typeof explore.decades)[number]): DecadeEntry => ({
+    decade: bucket.decade,
     label: decadeLabel(bucket.decade, locale),
     href: `/explore?decada=${bucket.decade}`,
     covers: bucket.covers,
   });
-  const decadeTiles = explore.decades.filter((bucket) => bucket.decade >= MOSAIC_FIRST_DECADE).map(decadeTile);
-  const earlierDecadeTiles = explore.decades.filter((bucket) => bucket.decade < MOSAIC_FIRST_DECADE).map(decadeTile);
+  const decadeEntries = explore.decades.filter((bucket) => bucket.decade >= MOSAIC_FIRST_DECADE).map(decadeEntry);
+  const earlierDecadeEntries = explore.decades.filter((bucket) => bucket.decade < MOSAIC_FIRST_DECADE).map(decadeEntry);
   // Navegación rápida: una entrada por cada sección que se renderiza (mismos datos que cada sección usa para omitirse),
   // en el orden de la página.
   const jumpItems = [
@@ -418,21 +420,25 @@ async function ExplorePage({ params, searchParams }: ExplorePageProps) {
       </div>
       <ExploreJumpNav label={t("jump.label")} items={jumpItems} />
 
-      {/* Un solo riel (ADR 0038): las curadas a mano y las generadas por plantilla mezcladas. Cómo se mantiene
-          una colección no es información para quien mira; lo que la distingue de las otras es su familia. Fila
-          desplazable porque son hasta 10 y una rejilla alargaría la portada. */}
-      <CollectionRail
-        id="colecciones"
-        heading={t("collectionsHeading")}
-        description={t("collectionsDescription")}
-        collections={explore.collections}
-        curatorUsername={CURATOR_USERNAME}
-        itemsLabel={(count) => t("collectionItems", { count })}
-        familyLabel={(family) => t(`collectionFamilies.${family}`)}
-        seeAll={{ href: "/explore/collections", label: t("seeAllCollections") }}
-        layout="scroll"
-        headingSize="page"
-      />
+      {/* Colecciones en el mosaico de Inicio (ADR 0038, openspec: redesign-explore-phase2): las curadas a mano y las generadas por
+          plantilla mezcladas, hasta seis, con su familia como sello. Las demás, en "Ver todas". */}
+      {explore.collections.length > 0 ? (
+        <section id="colecciones" aria-labelledby="explore-collections-heading" className="flex w-full flex-col gap-5">
+          <SectionHeading
+            id="explore-collections-heading"
+            title={t("collectionsHeading")}
+            description={t("collectionsDescription")}
+            seeAll={{ href: "/explore/collections", label: t("seeAllCollections") }}
+          />
+          <CollectionMosaic
+            collections={explore.collections}
+            curatorUsername={CURATOR_USERNAME}
+            itemsLabel={(count) => t("collectionItems", { count })}
+            labelledBy="explore-collections-heading"
+            familyLabel={(family) => t(`collectionFamilies.${family}`)}
+          />
+        </section>
+      ) : null}
 
       {/* Popular ahora (openspec: explore-popular-now): justo después de Colecciones, como prueba de que hay gente usando la
           plataforma. Reemplaza al antiguo riel "Más reseñados". */}
@@ -447,30 +453,22 @@ async function ExplorePage({ params, searchParams }: ExplorePageProps) {
         artistNames={railArtistNames}
       />
 
-      <MosaicGrid
-        id="generos"
-        headingId="explore-genres-heading"
-        listId="explore-genre-families"
+      <GenreFamilies
         heading={t("genresHeading")}
         description={t("genresDescription")}
-        tiles={familyTiles(explore.families.filter((f) => f.tier === "main"))}
-        moreTiles={familyTiles(moreFamilies)}
-        moreLabel={t("moreFamilies", { count: moreFamilies.length })}
-        lessLabel={t("fewerFamilies")}
+        indexLabel={t("genresIndexLabel")}
+        big={families.big.map(familyEntry)}
+        index={families.index.map(familyEntry)}
       />
 
-      {/* Décadas (openspec: redesign-explore-decades): el mismo mosaico que los géneros, sin cifras, justo después de ellos: los
-          dos ejes del catálogo juntos, antes de los feeds con fecha. */}
-      <MosaicGrid
-        id="decadas"
-        headingId="explore-decades-heading"
-        listId="explore-decade-tiles"
+      {/* Décadas (openspec: redesign-explore-decades, redesign-explore-phase2): justo después de los géneros, los dos ejes del
+          catálogo juntos; línea de tiempo en escritorio e índice en el teléfono, sin cifras. */}
+      <DecadeTimeline
         heading={t("decadesHeading")}
         description={t("decadesDescription")}
-        tiles={decadeTiles}
-        moreTiles={earlierDecadeTiles}
-        moreLabel={t("earlierDecades")}
-        lessLabel={t("fewerDecades")}
+        decades={decadeEntries}
+        earlier={earlierDecadeEntries}
+        earlierLabel={t("beforeDecade", { year: String(MOSAIC_FIRST_DECADE) })}
       />
 
       <AlbumRail

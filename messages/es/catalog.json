@@ -38,8 +38,7 @@
     "notFoundTitle": "Filtro de descubrimiento no encontrado",
     "notFoundDescription": "Ese filtro de descubrimiento no es válido.",
     "familyResultsHeading": "Álbumes · {family}",
-    "genresDescription": "Elige una familia de géneros para ver sus álbumes.",
-    "moreFamilies": "{count, plural, one {# familia más} other {# familias más}}",
+    "genresDescription": "Las seis grandes familias al frente; el resto, en el índice.",
     "upcomingHeading": "Próximos lanzamientos",
     "upcomingDescription": "Lo que sale en los próximos {days} días, del más cercano al más lejano.",
     "seeAll": "Ver todo",
@@ -48,7 +47,7 @@
     "upcomingResultsHeading": "Próximos lanzamientos",
     "upcomingCrumb": "Próximos lanzamientos",
     "newReleasesDescription": "Discos de estudio, singles y EPs lanzados en los últimos {days} días.",
-    "decadesDescription": "Elige una época para recorrerla.",
+    "decadesDescription": "Elige una época y recórrela año por año.",
     "decadeAllYears": "Toda la década",
     "yearResultsHeading": "Álbumes de {year}",
     "topRatedDescription": "Por promedio, entre los discos con al menos {min} valoraciones.",
@@ -61,9 +60,6 @@
     "clearFilters": "Quitar filtros",
     "paginationLabel": "Paginación",
     "pageIndicator": "Página {page}",
-    "fewerFamilies": "Ver menos",
-    "earlierDecades": "Décadas anteriores",
-    "fewerDecades": "Ver menos",
     "countdown": "{days, plural, =0 {Hoy} =1 {Mañana} other {En # días}}",
     "jump": {
       "label": "En esta página",
@@ -143,7 +139,9 @@
       "popularMonthSummary": "Los álbumes que más movieron a la comunidad en {month}: escuchas, valoraciones, reseñas, favoritos y listas, contando personas.",
       "popularMonthNote": "{count, plural, one {# persona} other {# personas}}"
     },
-    "albumCount": "{formatted} {count, plural, one {álbum} other {álbumes}}"
+    "albumCount": "{formatted} {count, plural, one {álbum} other {álbumes}}",
+    "genresIndexLabel": "Más familias",
+    "beforeDecade": "Antes de {year}"
   },
   "search": {
     "documentTitle": "«{query}» en {type} · Buscar",

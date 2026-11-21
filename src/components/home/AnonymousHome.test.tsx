@@ -10,7 +10,7 @@ import { AnonCta } from "./AnonCta";
 import { HomeReleases } from "./HomeReleases";
 import { QuickLinks } from "./QuickLinks";
 import { FeedPreview } from "./FeedPreview";
-import { CollectionMosaic } from "./CollectionMosaic";
+import { CollectionMosaic } from "@/components/discovery/CollectionMosaic";
 import { CommunityActivity } from "./CommunityActivity";
 import { PeopleCard } from "./PeopleCard";
 import { AlbumRail } from "@/components/discovery/AlbumRail";

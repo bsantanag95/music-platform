@@ -1,13 +1,14 @@
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { encodeId } from "@/lib/slug";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { parseExploreListParams } from "@/services/discovery/explore-params";
 import { CollectionRail } from "./CollectionRail";
 import { CoverMosaic } from "./CoverMosaic";
 import { ExploreFilterBar } from "./ExploreFilterBar";
-import { MosaicGrid } from "./MosaicGrid";
+import { DecadeTimeline } from "./DecadeTimeline";
+import { GenreFamilies, splitFamilies } from "./GenreFamilies";
 
 // jsdom no implementa ResizeObserver ni matchMedia (el riel desplazable los usa para las flechas y el movimiento).
 vi.stubGlobal("matchMedia", (query: string) => ({
@@ -46,151 +47,109 @@ const categoryLabels = {
   live_other: "Directos y otros",
 };
 
-describe("MosaicGrid", () => {
-  const tile = (key: string, covers: string[] = []) => ({
-    key,
-    label: key,
-    href: `/explore?familia=${key}`,
-    covers,
-  });
-  const cover = (n: number) => `https://coverartarchive.org/release-group/${n}/front-250`;
+describe("splitFamilies", () => {
+  const fam = (key: string, tier: "main" | "more" = "main") => ({ key, tier });
 
-  it("enlaza cada familia y deja las secundarias tras el desplegable", () => {
-    renderWithIntl(
-      <MosaicGrid
-        id="generos"
-        headingId="genres-heading"
-        listId="genres-list"
-        heading="Explorar por género"
-        tiles={[tile("rock", [cover(1)]), tile("jazz")]}
-        moreTiles={[tile("world")]}
-        moreLabel="1 familia más"
-        lessLabel="Ver menos"
-      />,
-    );
-    expect(screen.getByRole("link", { name: /rock/ })).toHaveAttribute("href", "/es/explore?familia=rock");
-    const toggle = screen.getByRole("button", { name: /1 familia más/ });
-    expect(toggle).toHaveAttribute("aria-expanded", "false");
-    expect(screen.queryByRole("link", { name: /world/ })).not.toBeInTheDocument();
-    fireEvent.click(toggle);
-    expect(screen.getByRole("link", { name: /world/ })).toHaveAttribute("href", "/es/explore?familia=world");
-    expect(screen.getByRole("button", { name: /Ver menos/ })).toHaveAttribute("aria-expanded", "true");
+  it("seis principales en grande y el resto, con las secundarias al final, en el índice", () => {
+    const families = [..."abcdefghij".split("").map((k) => fam(k)), fam("x", "more"), fam("y", "more")];
+    const { big, index } = splitFamilies(families);
+    expect(big.map((f) => f.key)).toEqual(["a", "b", "c", "d", "e", "f"]);
+    expect(index.map((f) => f.key)).toEqual(["g", "h", "i", "j", "x", "y"]);
+  });
+
+  it("con pocas principales, las secundarias completan las tarjetas y no queda índice", () => {
+    const { big, index } = splitFamilies([fam("a"), fam("b"), fam("c"), fam("x", "more")]);
+    expect(big.map((f) => f.key)).toEqual(["a", "b", "c", "x"]);
+    expect(index).toEqual([]);
   });
 });
 
-describe("MosaicGrid: tarjeta visual", () => {
+describe("GenreFamilies", () => {
   const cover = (n: number) => `https://coverartarchive.org/release-group/${n}/front-250`;
-  const family = (key: string, covers: string[]) => ({ key, label: key, href: `/explore?familia=${key}`, covers });
-  const imagesIn = (name: RegExp) => screen.getByRole("link", { name }).querySelectorAll("img").length;
+  const family = (key: string, covers: string[] = []) => ({ key, label: key, href: `/explore?familia=${key}`, covers });
+  const big = [family("rock", [1, 2, 3, 4, 5].map(cover)), family("jazz", [1, 2, 3].map(cover)), family("latin")];
+  const index = [family("blues"), family("religious")];
 
-  it("muestra un mosaico con tantas carátulas como haya, hasta cuatro", () => {
-    renderWithIntl(
-      <MosaicGrid
-        id="generos"
-        headingId="genres-heading"
-        listId="genres-list"
-        heading="Explorar por género"
-        tiles={[
-          family("rock", [1, 2, 3, 4, 5].map(cover)),
-          family("jazz", [1, 2, 3].map(cover)),
-          family("blues", [1, 2].map(cover)),
-          family("pop", [1].map(cover)),
-        ]}
-      />,
-    );
+  it("tarjetas grandes con hasta cuatro carátulas y un índice de nombres, en el ancla de géneros", () => {
+    const { container } = renderWithIntl(<GenreFamilies heading="Géneros" indexLabel="Más familias" big={big} index={index} />);
 
-    expect(imagesIn(/rock/)).toBe(4);
-    expect(imagesIn(/jazz/)).toBe(3);
-    expect(imagesIn(/blues/)).toBe(2);
-    expect(imagesIn(/pop/)).toBe(1);
+    expect(container.querySelector("section#generos")).toHaveAttribute("aria-labelledby", "explore-genres-heading");
+    expect(screen.getByRole("link", { name: "rock" }).querySelectorAll("img")).toHaveLength(4);
+    expect(screen.getByRole("link", { name: "jazz" }).querySelectorAll("img")).toHaveLength(3);
+    const list = screen.getByRole("list", { name: "Más familias" });
+    expect(within(list).getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual([
+      "/es/explore?familia=blues",
+      "/es/explore?familia=religious",
+    ]);
+    expect(within(list).queryAllByRole("img")).toHaveLength(0);
   });
 
-  it("con tres carátulas la primera ocupa las dos filas", () => {
-    renderWithIntl(<MosaicGrid id="generos" headingId="genres-heading" listId="genres-list" heading="Explorar por género" tiles={[family("jazz", [1, 2, 3].map(cover))]} />);
+  it("una familia sin carátulas es una tarjeta plana que sigue enlazando", () => {
+    renderWithIntl(<GenreFamilies heading="Géneros" indexLabel="Más familias" big={big} index={index} />);
 
-    const cells = screen.getByRole("link", { name: /jazz/ }).querySelectorAll("[aria-hidden] > div");
-    expect(cells[0]).toHaveClass("row-span-2");
-    expect(cells[1]).not.toHaveClass("row-span-2");
-  });
-
-  it("una familia sin carátulas es una tarjeta plana con su nombre y sigue enlazando", () => {
-    renderWithIntl(<MosaicGrid id="generos" headingId="genres-heading" listId="genres-list" heading="Explorar por género" tiles={[family("latin", [])]} />);
-
-    const link = screen.getByRole("link", { name: /latin/ });
+    const link = screen.getByRole("link", { name: "latin" });
+    expect(link.querySelectorAll("img")).toHaveLength(0);
     expect(link).toHaveAttribute("href", "/es/explore?familia=latin");
-    expect(link.querySelectorAll("img")).toHaveLength(0);
   });
 
-  it("no muestra número de álbumes ni barra de tamaño", () => {
-    const { container } = renderWithIntl(
-      <MosaicGrid id="generos" headingId="genres-heading" listId="genres-list" heading="Explorar por género" tiles={[family("rock", [1, 2].map(cover))]} />,
-    );
+  it("no muestra cifras ni desplegable, y sin resto no hay índice", () => {
+    renderWithIntl(<GenreFamilies heading="Géneros" indexLabel="Más familias" big={big} index={[]} />);
 
-    expect(screen.queryByText(/álbum/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/\d{2,}/)).not.toBeInTheDocument();
-    // La barra era un `span` con el ancho en porcentaje; las imágenes de `next/image` llevan su propio estilo.
-    expect(container.querySelector("span[style*='width']")).toBeNull();
-  });
-
-  it("las carátulas son decorativas: el enlace se nombra solo con la familia", () => {
-    renderWithIntl(<MosaicGrid id="generos" headingId="genres-heading" listId="genres-list" heading="Explorar por género" tiles={[family("rock", [1, 2].map(cover))]} />);
-
-    expect(screen.getByRole("link", { name: "rock" })).toBeInTheDocument();
+    expect(screen.queryByText(/\d/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.queryByRole("list", { name: "Más familias" })).not.toBeInTheDocument();
   });
 });
 
-describe("MosaicGrid: décadas", () => {
+describe("DecadeTimeline", () => {
   const cover = (n: number) => `https://coverartarchive.org/release-group/${n}/front-250`;
-  const decade = (year: number, covers: string[] = []) => ({ key: String(year), label: `${year}s`, href: `/explore?decada=${year}`, covers });
-  const renderDecades = (props: Partial<React.ComponentProps<typeof MosaicGrid>> = {}) =>
+  const decade = (year: number, covers: string[] = []) => ({ decade: year, label: `Años ${year % 100}`, href: `/explore?decada=${year}`, covers });
+  const renderTimeline = () =>
     renderWithIntl(
-      <MosaicGrid
-        id="decadas"
-        headingId="explore-decades-heading"
-        listId="explore-decade-tiles"
-        heading="Explorar por década"
-        tiles={[decade(2020, [1, 2, 3, 4].map(cover)), decade(1990, [5, 6].map(cover)), decade(1950)]}
-        moreTiles={[decade(1940), decade(1890)]}
-        moreLabel="Décadas anteriores"
-        lessLabel="Ver menos"
-        {...props}
+      <DecadeTimeline
+        heading="Décadas"
+        decades={[decade(2020, [1, 2, 3, 4].map(cover)), decade(1990, [5, 6].map(cover)), decade(1950)]}
+        earlier={[decade(1940), decade(1890)]}
+        earlierLabel="Antes de 1950"
       />,
     );
+  // jsdom no aplica `display: none`: las dos formas están en el DOM y cada prueba mira la suya.
+  const timeline = (container: HTMLElement) => container.querySelector<HTMLElement>("section#decadas > ol")!;
+  const indexList = (container: HTMLElement) => container.querySelector<HTMLElement>("section#decadas > ul")!;
 
-  it("lleva el ancla, el título y la lista que le pide quien la usa", () => {
-    const { container } = renderDecades();
+  it("línea de tiempo de la más reciente a la más antigua, con el año en grande y el nombre como nombre del enlace", () => {
+    const { container } = renderTimeline();
 
-    expect(container.querySelector("section#decadas")).toHaveAttribute("aria-labelledby", "explore-decades-heading");
-    expect(screen.getByRole("heading", { name: "Explorar por década" })).toHaveAttribute("id", "explore-decades-heading");
-    expect(container.querySelector("ul#explore-decade-tiles")).not.toBeNull();
-    expect(screen.getByRole("button", { name: /Décadas anteriores/ })).toHaveAttribute("aria-controls", "explore-decade-tiles");
+    const entries = within(timeline(container)).getAllByRole("link");
+    expect(entries.map((a) => a.getAttribute("aria-label") ?? a.textContent)).toEqual(["Años 20", "Años 90", "Años 50", "Años 40", "Años 90"]);
+    expect(entries[0]).toHaveTextContent("2020s");
+    expect(entries[0]!.querySelectorAll("img")).toHaveLength(4);
+    expect(entries[2]!.querySelectorAll("img")).toHaveLength(0);
+    expect(entries[1]).toHaveAttribute("href", "/es/explore?decada=1990");
+    expect(timeline(container)).toHaveClass("hidden", "lg:grid");
   });
 
-  it("deja las décadas en el orden recibido, enlazadas a su listado", () => {
-    renderDecades();
+  it("índice de nombres sin carátulas por debajo de lg", () => {
+    const { container } = renderTimeline();
 
-    const links = screen.getAllByRole("link");
-    expect(links.map((a) => a.textContent?.replace("→", ""))).toEqual(["2020s", "1990s", "1950s"]);
-    expect(links[1]).toHaveAttribute("href", "/es/explore?decada=1990");
+    const list = indexList(container);
+    expect(list).toHaveClass("lg:hidden");
+    expect(within(list).getAllByRole("link").map((a) => a.textContent)).toEqual(["Años 20", "Años 90", "Años 50", "Años 40", "Años 90"]);
+    expect(list.querySelectorAll("img")).toHaveLength(0);
   });
 
-  it("las décadas anteriores quedan tras el desplegable, sin cifras, y se pliegan de nuevo", () => {
-    renderDecades();
+  it("las décadas anteriores van juntas al final, visibles sin desplegar y sin cifras", () => {
+    const { container } = renderTimeline();
 
-    expect(screen.queryByRole("link", { name: "1890s" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /Décadas anteriores/ }));
-    expect(screen.getAllByRole("link").map((a) => a.textContent?.replace("→", ""))).toEqual(["2020s", "1990s", "1950s", "1940s", "1890s"]);
-    expect(screen.queryByText(/\d{3,}\s*álbum/i)).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /Ver menos/ }));
-    expect(screen.queryByRole("link", { name: "1940s" })).not.toBeInTheDocument();
+    expect(within(timeline(container)).getByText("Antes de 1950")).toBeInTheDocument();
+    expect(within(indexList(container)).getByRole("link", { name: "Años 40" })).toHaveAttribute("href", "/es/explore?decada=1940");
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.queryByText(/álbum/i)).not.toBeInTheDocument();
   });
 
-  it("una década sin carátulas es una tarjeta plana que sigue enlazando", () => {
-    renderDecades();
-
-    const link = screen.getByRole("link", { name: "1950s" });
-    expect(link.querySelectorAll("img")).toHaveLength(0);
-    expect(link).toHaveAttribute("href", "/es/explore?decada=1950");
+  it("sin décadas anteriores no hay entrada «Antes de»", () => {
+    renderWithIntl(<DecadeTimeline heading="Décadas" decades={[decade(2020)]} earlier={[]} earlierLabel="Antes de 1950" />);
+    expect(screen.queryByText("Antes de 1950")).not.toBeInTheDocument();
   });
 });
 

@@ -3,6 +3,7 @@ import { albumHref, artistHref, songHref } from "@/lib/catalog-links";
 import type { PopularSection } from "@/services/discovery/discovery";
 import { POPULARITY_FIGURE_MIN, type PopularWindow } from "@/services/discovery/constants";
 import { PopularChart } from "./PopularChart";
+import { PopularTop } from "./PopularTop";
 import { PopularTabs, type PopularTabPanel } from "./PopularTabs";
 import { SectionHeader } from "./SectionHeader";
 
@@ -21,7 +22,8 @@ interface PopularNowProps {
 
 /**
  * "Popular ahora" de `/explore` (openspec: explore-popular-now): lo que más mueve a la comunidad, por personas distintas, en tres
- * pestañas (Álbumes · Artistas · Canciones). Una pestaña sin resultado no aparece y, sin ninguna, la sección no se renderiza. La
+ * pestañas (Álbumes · Artistas · Canciones): los álbumes como top de carátulas con la posición en grande (`PopularTop`, openspec:
+ * redesign-explore-phase2); artistas y canciones como ranking con el n.º 1 en grande (`PopularChart`). Una pestaña sin resultado no aparece y, sin ninguna, la sección no se renderiza. La
  * cifra "N personas" solo aparece desde `POPULARITY_FIGURE_MIN`: con menos, presumirla sería exagerar. No es personalizada: la
  * misma para todas las personas.
  */
@@ -44,7 +46,7 @@ export function PopularNow({
       label: tabLabels.albums,
       description: windowDescription(section.albums.window),
       panel: (
-        <PopularChart
+        <PopularTop
           label={tabLabels.albums}
           items={section.albums.items.map((album) => {
             const artistName = artistNames?.[album.id] ?? null;

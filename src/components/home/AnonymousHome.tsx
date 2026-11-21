@@ -6,7 +6,7 @@ import { HomeReleases } from "@/components/home/HomeReleases";
 import { PopularComments } from "@/components/home/PopularComments";
 import { AnonCta } from "@/components/home/AnonCta";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { CollectionMosaic } from "@/components/home/CollectionMosaic";
+import { CollectionMosaic } from "@/components/discovery/CollectionMosaic";
 import { PeopleCard } from "@/components/home/PeopleCard";
 import { AlbumRail } from "@/components/discovery/AlbumRail";
 import { getLocale, getTranslations } from "next-intl/server";

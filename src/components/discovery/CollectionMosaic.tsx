@@ -2,7 +2,8 @@ import { getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import type { FeaturedCollection } from "@/services/discovery/discovery";
 import { collectionLinkOf, collectionTitleOf } from "@/components/discovery/collection-links";
-import { SleeveStack } from "@/components/discovery/CollectionSleeves";
+import { FAMILY_STAMP_CLASS, SleeveStack } from "@/components/discovery/CollectionSleeves";
+import type { CollectionFamily } from "@/services/discovery/collections/families";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
 
@@ -36,17 +37,20 @@ interface CollectionMosaicProps {
   itemsLabel: (count: number) => string;
   /** `id` del encabezado de la sección (la lista lo usa como nombre accesible). */
   labelledBy: string;
+  /** Nombre de la familia de cada colección, como sello sobre el título (Explorar). Sin él no hay sello (Inicio). */
+  familyLabel?: (family: CollectionFamily) => string;
 }
 
-// Colecciones de la portada sin sesión (openspec: redesign-anon-home-phase2, dirección «C · Disquería»):
+// Colecciones de Inicio y de la portada de Explorar (openspec: redesign-anon-home-phase2, redesign-explore-phase2):
 // desde `lg`, un mosaico con una colección destacada; por debajo, las mismas fichas en una fila con
-// desplazamiento horizontal, para que no se apilen a ancho completo en el teléfono. Solo Inicio:
-// `/explore` sigue con `CollectionRail`. No renderiza nada sin colecciones.
+// desplazamiento horizontal, para que no se apilen a ancho completo en el teléfono. Explorar le pasa
+// `familyLabel` para el sello de familia. No renderiza nada sin colecciones.
 export async function CollectionMosaic({
   collections,
   curatorUsername,
   itemsLabel,
   labelledBy,
+  familyLabel,
 }: CollectionMosaicProps) {
   if (collections.length === 0) return null;
   const locale = await getLocale();
@@ -86,7 +90,10 @@ export async function CollectionMosaic({
                   <SleeveStack covers={collection.coverThumbs} size="card" />
                 </div>
               ) : null}
-              <div className="flex min-w-0 flex-col gap-1">
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                {familyLabel ? (
+                  <span className={`mb-1 ${FAMILY_STAMP_CLASS}`}>{familyLabel(collection.family)}</span>
+                ) : null}
                 <h3
                   className={`font-display font-bold leading-tight text-paper transition-colors group-hover:text-amber ${
                     tile === "featured" ? "text-[clamp(1.5rem,2.2vw,2.125rem)]" : "line-clamp-2 text-lg"
