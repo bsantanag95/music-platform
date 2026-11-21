@@ -9,7 +9,7 @@ import { AuthenticatedHome } from "./AuthenticatedHome";
 import { FeedPreview } from "./FeedPreview";
 import { RecentListensShelf } from "./RecentListensShelf";
 import { CommunityActivity } from "./CommunityActivity";
-import { CollectionMosaic } from "./CollectionMosaic";
+import { CollectionMosaic } from "@/components/discovery/CollectionMosaic";
 import { AlbumRail } from "@/components/discovery/AlbumRail";
 import * as discovery from "@/services/discovery/discovery";
 import * as config from "@/lib/config/discovery";

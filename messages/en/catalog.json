@@ -38,8 +38,7 @@
     "notFoundTitle": "Slice not found",
     "notFoundDescription": "That discovery filter is not valid.",
     "familyResultsHeading": "Albums · {family}",
-    "genresDescription": "Pick a genre family to see its albums.",
-    "moreFamilies": "{count, plural, one {# more family} other {# more families}}",
+    "genresDescription": "The six broadest families up front; the rest in the index.",
     "upcomingHeading": "Upcoming releases",
     "upcomingDescription": "What comes out in the next {days} days, soonest first.",
     "seeAll": "See all",
@@ -48,7 +47,7 @@
     "upcomingResultsHeading": "Upcoming releases",
     "upcomingCrumb": "Upcoming releases",
     "newReleasesDescription": "Studio albums, singles and EPs released in the last {days} days.",
-    "decadesDescription": "Pick an era to browse it.",
+    "decadesDescription": "Pick an era and browse it year by year.",
     "decadeAllYears": "Whole decade",
     "yearResultsHeading": "Albums from {year}",
     "topRatedDescription": "By average, among albums with at least {min} ratings.",
@@ -61,9 +60,6 @@
     "clearFilters": "Clear filters",
     "paginationLabel": "Pagination",
     "pageIndicator": "Page {page}",
-    "fewerFamilies": "Show fewer",
-    "earlierDecades": "Earlier decades",
-    "fewerDecades": "Show fewer",
     "countdown": "{days, plural, =0 {Today} =1 {Tomorrow} other {In # days}}",
     "jump": {
       "label": "On this page",
@@ -143,7 +139,9 @@
       "popularMonthSummary": "The albums that moved the community most in {month}: listens, ratings, reviews, favorites and lists, counting people.",
       "popularMonthNote": "{count, plural, one {# person} other {# people}}"
     },
-    "albumCount": "{formatted} {count, plural, one {album} other {albums}}"
+    "albumCount": "{formatted} {count, plural, one {album} other {albums}}",
+    "genresIndexLabel": "More families",
+    "beforeDecade": "Before {year}"
   },
   "search": {
     "documentTitle": "“{query}” in {type} · Search",

@@ -90,3 +90,21 @@ describe("CollectionMosaic", () => {
     expect(element).toBeNull();
   });
 });
+
+describe("CollectionMosaic con sello de familia", () => {
+  it("con familyLabel cada tarjeta lleva el nombre de su familia; sin él, ninguna", async () => {
+    const element = await CollectionMosaic({
+      collections: [collection(1), collection(2)],
+      curatorUsername: "exploracion",
+      itemsLabel: (n) => `${n} álbumes`,
+      labelledBy: "explore-collections-heading",
+      familyLabel: (family) => (family === "discovery" ? "Descubrimiento" : family),
+    });
+    const { unmount } = render(<>{element}</>);
+    expect(screen.getAllByText("Descubrimiento")).toHaveLength(2);
+    unmount();
+
+    await renderMosaic(2);
+    expect(screen.queryByText("Descubrimiento")).not.toBeInTheDocument();
+  });
+});

@@ -60,14 +60,24 @@ describe("PopularNow", () => {
     expect(screen.getByRole("link", { name: /Disco b/ })).not.toHaveTextContent("personas");
   });
 
-  it("es un ranking: el n.º 1 en grande y el resto numerado desde el 2", () => {
+  it("los álbumes son un top numerado: todos en una lista ordenada, con la posición en grande", () => {
     render(full);
 
-    const top = screen.getByRole("link", { name: /Disco a/ });
-    expect(top).toHaveTextContent("1");
-    const rest = screen.getByRole("list", { name: "Álbumes" });
+    const top = screen.getByRole("list", { name: "Álbumes" });
+    expect(top.tagName).toBe("OL");
+    expect(top).not.toHaveAttribute("start");
+    const links = within(top).getAllByRole("link");
+    expect(links.map((link) => link.getAttribute("href"))).toHaveLength(2);
+    expect(links[0]).toHaveTextContent(/^1Disco a/);
+    expect(links[1]).toHaveTextContent(/^2Disco b/);
+  });
+
+  it("artistas y canciones siguen como ranking con el n.º 1 aparte", () => {
+    render({ ...full, albums: null, artists: { window: "quarter", items: [{ id: "x", name: "Zoe", photoUrl: null, people: 6 }, { id: "y", name: "Yma", photoUrl: null, people: 2 }] } });
+
+    const rest = screen.getByRole("list", { name: "Artistas" });
     expect(rest).toHaveAttribute("start", "2");
-    expect(within(rest).getByRole("link", { name: /Disco b/ })).toHaveTextContent("2");
+    expect(within(rest).getByRole("link", { name: /Yma/ })).toHaveTextContent("2");
   });
 
   it("al cambiar de pestaña muestra su panel y el subtítulo de su ventana, sin recargar", () => {

@@ -263,7 +263,7 @@ landing anónimo lo refleja en dos piezas:
 - **Bloque editorial de álbumes** en `AnonymousHome`, **debajo del hero y encima de los
   bloques de la comunidad** — la obra primero, la prueba social después. Desde
   `redesign-anon-home-phase2` (ver "Cuerpo de la portada sin sesión"):
-  - `CollectionMosaic` (solo Inicio) con `listFeaturedCollections()` — **solo si
+  - `CollectionMosaic` (lo comparte la portada de Explorar desde `redesign-explore-phase2`, con sello de familia) con `listFeaturedCollections()` — **solo si
     `isExploreEnabled()`** (con el flag apagado, sus listas enlazarían a rutas que redirigen a
     Inicio).
   - `AlbumRail layout="scroll"` de `/explore` con `listTopRated()` ("Mejor valorados por la

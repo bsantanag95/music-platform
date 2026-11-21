@@ -11,7 +11,7 @@ import { ResumeList } from "@/components/home/ResumeList";
 import { HomeReleases } from "@/components/home/HomeReleases";
 import { PopularComments } from "@/components/home/PopularComments";
 import { PeopleCard } from "@/components/home/PeopleCard";
-import { CollectionMosaic } from "@/components/home/CollectionMosaic";
+import { CollectionMosaic } from "@/components/discovery/CollectionMosaic";
 import { albumCategoryLabels, topRatedStats } from "@/components/home/top-rated";
 import { AlbumRail } from "@/components/discovery/AlbumRail";
 import { albumArtistNames, listFeaturedCollections, listTopRated } from "@/services/discovery/discovery";

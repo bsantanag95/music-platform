@@ -13,7 +13,7 @@ export function mosaicLayout(count: number): { grid: string; span: (index: numbe
 
 /**
  * Mosaico decorativo de hasta cuatro carátulas (openspec: visual-genre-families, redesign-decade-view): lo comparten las tarjetas de
- * `/explore` (`MosaicGrid`) y la cabecera de la vista de década. Es `aria-hidden`: lo que lo rodea ya nombra el corte. Quien lo usa pone
+ * `/explore` (`GenreFamilies`, `DecadeTimeline`) y la cabecera de la vista de década. Es `aria-hidden`: lo que lo rodea ya nombra el corte. Quien lo usa pone
  * el tamaño y la propiedad `display` (`grid`, `hidden sm:grid`) en `className`; sin carátulas no pinta nada.
  */
 export function CoverMosaic({ covers, className = "" }: { covers: string[]; className?: string }) {
