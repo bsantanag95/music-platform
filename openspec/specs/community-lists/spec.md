@@ -248,8 +248,11 @@ móvil del Header el enlace SHALL vivir en el bloque de barra general.
 ### Requirement: Toolbar de exploración de listas
 
 La vista `/lists` SHALL mostrar un toolbar de exploración, siempre visible, con búsqueda por texto,
-filtro por tipo de entidad (`artist`, `release-group`, `recording`) presentado como chips (Todas · Álbumes · Artistas ·
-Canciones) y orden (`popular` o `recent`). El orden `popular` SHALL etiquetarse "Más guardadas" ("Most saved"), para no
+filtro por tipo de entidad (`artist`, `release-group`, `recording`) presentado como un control segmentado (Todas · Álbumes ·
+Artistas · Canciones) y orden (`popular` o `recent`). Cada segmento, el campo de búsqueda y el control de orden SHALL medir al
+menos 44 px de alto. Desde `lg` los tres SHALL ir en una sola fila (búsqueda, segmentos y orden); por debajo, la búsqueda y el
+orden SHALL compartir la primera fila y los segmentos SHALL ocupar una fila propia a todo el ancho, con los cuatro visibles sin
+desplazar. El orden `popular` SHALL etiquetarse "Más guardadas" ("Most saved"), para no
 confundirlo con la sección "Populares", que exige un mínimo de guardados. En la vitrina, el control de orden SHALL NOT
 mostrar un valor elegido. El estado de los filtros SHALL vivir en la URL (`?q=&type=&sort=`) para ser enlazable y
 sobrevivir a la recarga. La búsqueda por texto SHALL coincidir con el título y la descripción de la lista. La vista
@@ -262,7 +265,7 @@ estado "sin resultados" localizado, distinto del estado vacío global de la vitr
 #### Scenario: Filtrar por texto y tipo
 
 - **WHEN** una persona escribe texto y elige el chip de un tipo de entidad
-- **THEN** la URL refleja `q` y `type`, el chip queda marcado y la grilla muestra solo las listas públicas que coinciden
+- **THEN** la URL refleja `q` y `type`, el segmento queda marcado y la grilla muestra solo las listas públicas que coinciden
 
 #### Scenario: Ordenar los resultados
 
@@ -280,6 +283,12 @@ estado "sin resultados" localizado, distinto del estado vacío global de la vitr
 - **WHEN** hay filtros activos y la lista tiene más resultados que una página
 - **THEN** paginar mantiene los filtros aplicados y trae resultados coherentes con el conjunto
   completo, no solo con la página ya cargada
+
+#### Scenario: Tipos visibles en el teléfono
+
+- **WHEN** se abre `/lists` a 390 px
+- **THEN** los cuatro segmentos de tipo se ven completos en su propia fila, sin desplazamiento horizontal, cada uno de al menos
+  44 px de alto, y la búsqueda y el orden comparten la fila de arriba
 
 ### Requirement: Imágenes y tamaño de las tarjetas de listas
 
