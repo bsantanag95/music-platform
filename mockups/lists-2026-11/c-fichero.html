@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta C · Fichero — Listas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="lists.css">
+<style>
+  /* Fichero: la destacada como portada tipográfica y todas las listas en un índice que se compara de un vistazo. */
+  .plate { margin-top: 40px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 32px; align-items: end; padding: 32px 0 28px; border-top: 2px solid var(--paper); border-bottom: 1px solid var(--border); }
+  .plate .k { display: flex; gap: 12px; align-items: center; }
+  .plate h2 { font-family: var(--display); font-weight: 700; font-size: clamp(44px, 6vw, 88px); line-height: .9; letter-spacing: -.04em; margin-top: 14px; }
+  .plate h2 a:hover { color: var(--amber); }
+  .plate p { color: var(--muted); margin-top: 14px; max-width: 56ch; }
+  .plate .strip { display: grid; grid-template-columns: repeat(4, 96px); gap: 6px; }
+  .plate .strip .cv { border-radius: 3px; }
+  .plate .actions { display: flex; gap: 12px; margin-top: 18px; align-items: center; flex-wrap: wrap; }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 48px; margin-top: 48px; align-items: start; }
+  .idx-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 8px; }
+  .idx-head h2 { font-family: var(--display); font-weight: 700; font-size: clamp(26px, 2.4vw, 34px); letter-spacing: -.02em; }
+  .shelf-tabs { display: flex; gap: 4px; }
+  .shelf-tabs button { height: 44px; padding: 0 12px; font-family: var(--display); font-size: 15px; color: var(--muted); box-shadow: inset 0 -2px transparent; }
+  .shelf-tabs button[aria-selected="true"] { color: var(--paper); box-shadow: inset 0 -2px var(--amber); }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th { text-align: left; font: 500 12px var(--data); color: var(--muted-2); text-transform: uppercase; letter-spacing: .06em; padding: 12px 10px; border-bottom: 1px solid var(--border-2); white-space: nowrap; }
+  thead th.n, td.n { text-align: right; }
+  thead th[aria-sort] { color: var(--paper); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .2s; }
+  tbody tr:hover { background: var(--surface); }
+  td { padding: 12px 10px; vertical-align: middle; }
+  td.list a { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 14px; align-items: center; }
+  td.list .m { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
+  td.list .m .cv { border-radius: 2px; }
+  td.list .m.round .cv { border-radius: 50%; }
+  td.list b { display: block; font-family: var(--display); font-weight: 500; font-size: 16px; }
+  tbody tr:hover td.list b { color: var(--amber); }
+  td.list span { color: var(--muted); font-size: 14px; }
+  td.type { font-family: var(--display); font-size: 14px; color: var(--muted); }
+  td.n { font: 500 13px var(--data); color: var(--paper); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.when { font: 500 13px var(--data); color: var(--muted); white-space: nowrap; }
+  td.list .pl { display: none; font: 500 12px var(--data); color: var(--muted-2); margin-top: 3px; }
+  .pager { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+  .pager button { height: 44px; padding: 0 16px; border: 1px solid var(--border); border-radius: 8px; font-family: var(--display); }
+
+  .aside-block + .aside-block { margin-top: 28px; }
+  .aside-block h3 { font-family: var(--display); font-weight: 700; font-size: 18px; }
+  .aside-block p { color: var(--muted); font-size: 14px; margin: 4px 0 14px; }
+  .aside-block .act { display: flex; gap: 14px; align-items: center; }
+  .make-box { padding: 20px; border: 1px dashed var(--border-2); border-radius: 12px; }
+  .tc { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--border); }
+  .tc .m { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; }
+  .tc .m .cv { border-radius: 1px; }
+  .tc b { font-family: var(--display); font-weight: 500; display: block; font-size: 15px; }
+  .tc span { color: var(--muted); font-size: 13px; }
+  .tc:hover b { color: var(--amber); }
+
+  @media (max-width: 1279px) { .layout { grid-template-columns: minmax(0, 1fr) 260px; gap: 32px; } .plate .strip { grid-template-columns: repeat(4, 76px); } }
+  @media (max-width: 1023px) {
+    .layout { grid-template-columns: 1fr; }
+    .plate { grid-template-columns: 1fr; }
+    .col-when { display: none; }
+  }
+  /* En el teléfono la tabla pasa a filas de dos líneas: nombre arriba, tipo · elementos · guardadas debajo. */
+  @media (max-width: 640px) {
+    .plate { padding-top: 24px; }
+    .plate .strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .idx-head { flex-direction: column; align-items: flex-start; }
+    thead { display: none; }
+    table, tbody, tr, td { display: block; }
+    tbody tr { display: grid; grid-template-columns: 52px minmax(0, 1fr); column-gap: 14px; padding: 12px 0; }
+    td { padding: 0; }
+    td.list { grid-column: 1 / -1; }
+    td.type, td.n { grid-column: 2; display: inline; text-align: left; font-size: 12.5px; color: var(--muted); }
+    tbody tr { grid-template-areas: none; }
+    td.list + td.type { margin-top: 4px; }
+    td.type, td.n { display: none !important; }
+    td.list .pl { display: block; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header"></header>
+<main class="wrap">
+  <div class="page-head">
+    <p class="crumbs">Inicio / <b>Listas</b></p>
+    <h1>Listas</h1>
+    <p>Todas las listas públicas de la comunidad en un índice: compara tipo, tamaño y cuánta gente las guarda.</p>
+  </div>
+
+  <div class="toolbar" role="search">
+    <label class="lsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Buscar listas por nombre o autor</span></label>
+    <div class="seg" role="group" aria-label="Tipo"><a aria-current="true" href="#">Todas</a><a href="#">Álbumes</a><a href="#">Artistas</a><a href="#">Canciones</a></div>
+    <button class="sort">Más guardadas <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+  </div>
+
+  <section class="plate" aria-labelledby="h-feat">
+    <div>
+      <div class="k"><span class="badge official"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5 9-10"/></svg>Oficial</span><span class="mut">Canciones · 4 · por Alex</span></div>
+      <h2 id="h-feat"><a href="#">Playlist de fondo</a></h2>
+      <p>Para trabajar sin perder el hilo: canciones que acompañan sin pedir atención.</p>
+      <div class="actions"><a class="btn-amber" href="#">Abrir la lista</a><button class="save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4h12v17l-6-4-6 4z"/></svg>Guardar</button><span class="mut">23 guardadas</span></div>
+    </div>
+    <div class="strip" aria-hidden="true"><i class="cv" data-c="16"></i><i class="cv" data-c="8"></i><i class="cv" data-c="12"></i><i class="cv" data-c="20"></i></div>
+  </section>
+
+  <div class="layout">
+    <section aria-labelledby="h-idx">
+      <div class="idx-head"><h2 id="h-idx">Índice de listas</h2><div class="shelf-tabs" role="tablist" aria-label="Vista"><button role="tab" aria-selected="true">Populares</button><button role="tab" aria-selected="false">Recientes</button></div></div>
+      <table>
+        <thead><tr><th scope="col">Lista</th><th scope="col">Tipo</th><th scope="col" class="n">Elementos</th><th scope="col" class="n" aria-sort="descending">Guardadas ↓</th><th scope="col" class="col-when">Actualizada</th></tr></thead>
+        <tbody>
+          <tr><td class="list"><a href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="10"></i><i class="cv" data-c="18"></i><i class="cv" data-c="6"></i><i class="cv" data-c="23"></i></span><span><b>Discos favoritos del momento</b><span>Fran</span><small class="pl">4 álbumes · 12 guardadas</small></span></a></td><td class="type">Álbumes</td><td class="n">4</td><td class="n">12</td><td class="when col-when">hace 3 meses</td></tr>
+          <tr><td class="list"><a href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="19"></i><i class="cv" data-c="11"></i><i class="cv" data-c="2"></i><i class="cv" data-c="6"></i></span><span><b>Para escuchar completos</b><span>Eli</span><small class="pl">4 álbumes · 9 guardadas</small></span></a></td><td class="type">Álbumes</td><td class="n">4</td><td class="n">9</td><td class="when col-when">hace 3 meses</td></tr>
+          <tr><td class="list"><a href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="2"></i><i class="cv" data-c="19"></i><i class="cv" data-c="11"></i><i class="cv" data-c="14"></i></span><span><b>Canciones en repeat</b><span>Cami</span><small class="pl">4 canciones · 8 guardadas</small></span></a></td><td class="type">Canciones</td><td class="n">4</td><td class="n">8</td><td class="when col-when">hace 3 meses</td></tr>
+          <tr><td class="list"><a href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="26"></i><i class="cv" data-c="13"></i><i class="cv" data-c="29"></i><i class="cv" data-c="24"></i></span><span><b>Debuts que no fallan</b><span>Nora</span><small class="pl">18 álbumes · 7 guardadas</small></span></a></td><td class="type">Álbumes</td><td class="n">18</td><td class="n">7</td><td class="when col-when">hace 2 semanas</td></tr>
+          <tr><td class="list"><a href="#"><span class="m round" aria-hidden="true"><i class="cv" data-c="5"></i><i class="cv" data-c="23"></i><i class="cv" data-c="15"></i><i class="cv" data-c="3"></i></span><span><b>Artistas que sigo de cerca</b><span>Dario</span><small class="pl">4 artistas · 6 guardadas</small></span></a></td><td class="type">Artistas</td><td class="n">4</td><td class="n">6</td><td class="when col-when">hace 3 meses</td></tr>
+          <tr><td class="list"><a href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="25"></i><i class="cv" data-c="0"></i><i class="cv" data-c="27"></i><i class="cv" data-c="9"></i></span><span><b>Best AOR songs</b><span>@besantanag95</span><small class="pl">4 canciones · 5 guardadas</small></span></a></td><td class="type">Canciones</td><td class="n">4</td><td class="n">5</td><td class="when col-when">hace 3 meses</td></tr>
+          <tr><td class="list"><a href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="24"></i><i class="cv" data-c="1"></i><i class="cv" data-c="22"></i><i class="cv" data-c="7"></i></span><span><b>Discos para un domingo lento</b><span>Mateo</span><small class="pl">24 álbumes · 5 guardadas</small></span></a></td><td class="type">Álbumes</td><td class="n">24</td><td class="n">5</td><td class="when col-when">hace 1 mes</td></tr>
+          <tr><td class="list"><a href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="20"></i><i class="cv" data-c="4"></i><i class="cv" data-c="9"></i><i class="cv" data-c="31"></i></span><span><b>Shoegaze esencial</b><span>Lu</span><small class="pl">15 álbumes · 4 guardadas</small></span></a></td><td class="type">Álbumes</td><td class="n">15</td><td class="n">4</td><td class="when col-when">hace 5 días</td></tr>
+          <tr><td class="list"><a href="#"><span class="m round" aria-hidden="true"><i class="cv" data-c="12"></i><i class="cv" data-c="16"></i><i class="cv" data-c="8"></i><span class="ph" style="border-radius:50%"></span></span><span><b>Cantantes pop favoritas</b><span>@besantanag95</span><small class="pl">3 artistas · 4 guardadas</small></span></a></td><td class="type">Artistas</td><td class="n">3</td><td class="n">4</td><td class="when col-when">hace 3 meses</td></tr>
+          <tr><td class="list"><a href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="14"></i><i class="cv" data-c="6"></i><i class="cv" data-c="23"></i><i class="cv" data-c="10"></i></span><span><b>Para correr</b><span>Sofi</span><small class="pl">30 canciones · 4 guardadas</small></span></a></td><td class="type">Canciones</td><td class="n">30</td><td class="n">4</td><td class="when col-when">ayer</td></tr>
+        </tbody>
+      </table>
+      <div class="pager"><span class="mut">1–10 de 48 listas</span><button>Siguientes 10 →</button></div>
+    </section>
+
+    <aside>
+      <div class="aside-block make-box"><h3>Arma tus propias listas</h3><p>Con una cuenta puedes crear listas, guardar las de otras personas y completar las que te interesen.</p><div class="act"><a class="btn-amber" href="#">Crear cuenta</a><a class="see" href="#">Ya tengo cuenta</a></div></div>
+      <div class="aside-block"><h3>Para completar</h3><p>Listas que alguien está escuchando de principio a fin.</p>
+        <a class="tc" href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="28"></i><i class="cv" data-c="30"></i><i class="cv" data-c="17"></i><i class="cv" data-c="3"></i></span><span><b>Best of Hard Rock Albums</b><span>1 persona la está completando</span></span></a>
+        <a class="tc" href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="8"></i><i class="cv" data-c="16"></i><i class="cv" data-c="12"></i><i class="cv" data-c="20"></i></span><span><b>Best of Sabrina</b><span>1 persona la está completando</span></span></a>
+        <a class="tc" href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="26"></i><i class="cv" data-c="13"></i><i class="cv" data-c="29"></i><i class="cv" data-c="24"></i></span><span><b>Debuts que no fallan</b><span>3 personas la están completando</span></span></a>
+        <a class="see" href="#" style="margin-top:8px">Ver todas →</a>
+      </div>
+    </aside>
+  </div>
+</main>
+<footer class="site-foot"><div class="wrap">Pie del sitio (sin cambios)</div></footer>
+<nav class="mock-bar" aria-label="Mockups"><span>Mockup · datos de ejemplo</span><a href="index.html">Resumen</a><a href="a-cajones.html">A · Cajones</a><a href="b-lector.html">B · Lector</a><a href="c-fichero.html" aria-current="page">C · Fichero</a></nav>
+<script src="shared.js"></script>
+</body>
+</html>

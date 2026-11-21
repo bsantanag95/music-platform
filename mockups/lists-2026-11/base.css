@@ -1,0 +1,91 @@
+/* Base común de los mockups de /lists (copiada de /explore): el sistema visual vigente de la app (DESIGN.md + portada
+   rediseñada), para que las tres propuestas varíen estructura y presentación, no identidad. */
+:root {
+  --ink: #14120f;
+  --ink-2: #1a1713;
+  --surface: #1f1b17;
+  --surface-2: #26211c;
+  --border: #2e2a24;
+  --border-2: #3d372f;
+  --paper: #f2ede4;
+  --muted: #a89e8e;
+  --muted-2: #8c8374;
+  --amber: #e8b84b;
+  --amber-2: #f2c866;
+  --amber-ink: #1d1505;
+  --petrol: #4a7c7c;
+  --wrap: 88rem;
+  --pad: clamp(16px, 3.5vw, 48px);
+  --display: "Space Grotesk", system-ui, sans-serif;
+  --body: "Source Serif 4", Georgia, serif;
+  --data: "IBM Plex Mono", ui-monospace, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; scroll-padding-top: 132px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; animation: none !important; } }
+body { background: var(--ink); color: var(--paper); font-family: var(--body); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+::selection { background: var(--amber); color: var(--amber-ink); }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+ul, ol { list-style: none; }
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 4px; }
+.wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 var(--pad); }
+.num { font-variant-numeric: tabular-nums; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ——— Cabecera del sitio (la actual) ——— */
+.site-header { position: sticky; top: 0; z-index: 40; background: rgba(20,18,15,.86); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+.site-header .bar { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; align-items: center; gap: 28px; height: 64px; padding: 0 24px; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 700; font-size: 17px; white-space: nowrap; }
+.brand i { width: 32px; height: 32px; border-radius: 7px; background: var(--amber); display: grid; place-items: center; color: var(--amber-ink); font-style: normal; }
+.brand i svg { width: 16px; height: 16px; }
+.site-nav { display: flex; gap: 22px; font-family: var(--display); font-size: 15px; color: var(--muted); }
+.site-nav a[aria-current] { color: var(--paper); box-shadow: inset 0 -2px var(--amber); padding-bottom: 4px; }
+.hsearch { justify-self: center; width: 100%; max-width: 480px; height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border: 1px solid var(--border); background: var(--surface); border-radius: 8px; color: var(--muted); font-family: var(--body); font-size: 15px; }
+.hsearch kbd { margin-left: auto; font: 500 11px var(--data); border: 1px solid var(--border-2); border-radius: 4px; padding: 1px 6px; }
+.hsearch svg { width: 16px; height: 16px; flex: none; }
+.acct { display: flex; align-items: center; gap: 14px; font-family: var(--display); font-size: 15px; }
+.lang { display: flex; border: 1px solid var(--border); border-radius: 6px; padding: 2px; font: 500 11px var(--data); }
+.lang span { padding: 2px 7px; border-radius: 4px; color: var(--muted); }
+.lang span:first-child { background: var(--surface-2); color: var(--paper); }
+.btn-amber { background: var(--amber); color: var(--amber-ink); padding: 9px 16px; border-radius: 6px; font-weight: 500; }
+.icon-btn { display: none; width: 44px; height: 44px; place-items: center; color: var(--muted); }
+.icon-btn svg { width: 20px; height: 20px; }
+@media (max-width: 1023px) {
+  .site-header .bar { grid-template-columns: auto 1fr auto; height: 60px; padding: 0 16px; }
+  .site-nav, .hsearch, .acct { display: none; }
+  .icon-btn { display: grid; }
+  .icons { display: flex; justify-self: end; }
+}
+@media (min-width: 1024px) { .icons { display: none; } }
+
+/* ——— Piezas comunes ——— */
+.crumbs { font: 500 12px var(--data); color: var(--muted); }
+.crumbs b { color: var(--paper); font-weight: 500; }
+.sec-head { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 20px; }
+.sec-head h2 { font-family: var(--display); font-weight: 700; font-size: clamp(26px, 2.4vw, 34px); line-height: 1.05; letter-spacing: -.02em; }
+.sec-head p { margin-top: 6px; color: var(--muted); font-size: 15px; max-width: 60ch; }
+.see { font: 500 13px var(--data); color: var(--muted); white-space: nowrap; display: inline-flex; gap: 6px; align-items: center; padding: 6px 0; }
+.see:hover { color: var(--amber); }
+.tabs { display: inline-flex; padding: 3px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.tabs button { padding: 6px 12px; border-radius: 6px; font: 500 12px var(--data); color: var(--muted); }
+.tabs button[aria-selected="true"] { background: var(--paper); color: var(--ink); }
+.cv { display: block; aspect-ratio: 1; border-radius: 6px; background-color: var(--surface-2); background-repeat: no-repeat; }
+.disc { display: grid; place-items: center; aspect-ratio: 1; border-radius: 6px; background: var(--surface-2); color: var(--muted-2); }
+.disc svg { width: 64%; height: 64%; }
+.stamp { font: 500 11.5px var(--data); text-transform: uppercase; letter-spacing: .08em; }
+.badge { font: 500 11px var(--data); padding: 2px 7px; border-radius: 4px; background: var(--surface-2); color: var(--muted); white-space: nowrap; }
+.badge.next { background: rgba(232,184,75,.14); color: var(--amber); }
+.star { color: var(--amber); }
+
+/* Pie mínimo */
+.site-foot { margin-top: 96px; border-top: 1px solid var(--border); padding: 32px 0 96px; color: var(--muted); font-size: 13px; }
+
+/* Barra de navegación entre mockups */
+.mock-bar { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 60; display: flex; gap: 3px; align-items: center; padding: 5px; background: #f2ede4; color: #14120f; border-radius: 999px; font: 500 13px system-ui, sans-serif; box-shadow: 0 10px 30px -10px rgba(0,0,0,.8); white-space: nowrap; }
+.mock-bar a { padding: 6px 12px; border-radius: 999px; }
+.mock-bar a:hover { background: #ddd5c8; }
+.mock-bar a[aria-current] { background: #14120f; color: #f2ede4; }
+.mock-bar span { padding: 0 8px; opacity: .6; }
+@media (max-width: 640px) { .mock-bar span { display: none; } .mock-bar a { padding: 6px 9px; } }
+@media (max-width: 600px) { .sec-head { flex-direction: column; align-items: flex-start; gap: 12px; } }

@@ -71,8 +71,8 @@ export function CommunityListSection({
   if (lists.length === 0) return null;
 
   return (
-    <section className="flex w-full flex-col gap-4">
-      <SectionHeader heading={t(headingKey)} description={descriptionKey ? t(descriptionKey) : undefined} />
+    <section className="flex w-full flex-col gap-5">
+      <SectionHeader heading={t(headingKey)} description={descriptionKey ? t(descriptionKey) : undefined} size="page" />
       <ListsGrid cols={cols}>
         {lists.map((list) => (
           <CommunityListCard

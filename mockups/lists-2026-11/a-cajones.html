@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta A · Cajones — Listas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="lists.css">
+<style>
+  /* Mostrador: la lista destacada como un exhibidor, las fundas abiertas en abanico. */
+  .counter { position: relative; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 40px; align-items: center; padding: 36px 40px; border: 1px solid var(--border); border-radius: 16px; background: radial-gradient(120% 140% at 0% 100%, rgba(232,184,75,.09), transparent 55%), var(--surface); overflow: hidden; }
+  .counter .fan { position: relative; height: 260px; }
+  .counter .fan .cv { position: absolute; bottom: 0; width: 200px; box-shadow: 0 24px 40px -18px rgba(0,0,0,.9); border-radius: 4px; }
+  .counter .fan .cv:nth-child(1) { left: 0; transform: rotate(-9deg); }
+  .counter .fan .cv:nth-child(2) { left: 70px; transform: rotate(-3deg); }
+  .counter .fan .cv:nth-child(3) { left: 140px; transform: rotate(3deg); }
+  .counter .fan .cv:nth-child(4) { left: 210px; transform: rotate(9deg); }
+  .counter h2 { font-family: var(--display); font-weight: 700; font-size: clamp(30px, 3.2vw, 46px); line-height: 1; letter-spacing: -.03em; margin-top: 12px; }
+  .counter .lede { color: var(--muted); margin-top: 12px; max-width: 48ch; }
+  .counter .tracks { margin-top: 18px; display: grid; gap: 2px; counter-reset: t; }
+  .counter .tracks li { counter-increment: t; display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 7px 0; border-top: 1px solid var(--border); }
+  .counter .tracks li::before { content: counter(t); font: 500 12px var(--data); color: var(--muted-2); }
+  .counter .tracks b { font-family: var(--display); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .counter .tracks span { color: var(--muted); font-size: 14px; }
+  .counter .actions { display: flex; gap: 12px; align-items: center; margin-top: 22px; flex-wrap: wrap; }
+
+  /* Cajones: una fila por tipo; cada lista es una pila de fundas de pie, como en un cajón de disquería. */
+  .crate { margin-top: 72px; }
+  .crate-row { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 4 * 24px) / 5); gap: 24px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 8px 2px 12px; scrollbar-width: none; }
+  .crate-row::-webkit-scrollbar { display: none; }
+  .crate-row > li { scroll-snap-align: start; min-width: 0; }
+  .pile { display: block; }
+  .pile .stack { position: relative; display: block; aspect-ratio: 1 / 1.08; }
+  .pile .stack .cv, .pile .stack .ph { position: absolute; width: 82%; left: 0; box-shadow: 0 14px 24px -14px rgba(0,0,0,.95); border-radius: 4px; transition: transform .35s cubic-bezier(.16,1,.3,1); }
+  .pile .stack > :nth-child(1) { top: 0; left: 18%; transform: rotate(4deg); filter: brightness(.55); }
+  .pile .stack > :nth-child(2) { top: 4%; left: 9%; transform: rotate(1.5deg); filter: brightness(.75); }
+  .pile .stack > :nth-child(3) { top: 8%; left: 0; }
+  .pile:hover .stack > :nth-child(1) { transform: translate(10px, -10px) rotate(7deg); }
+  .pile:hover .stack > :nth-child(2) { transform: translate(5px, -6px) rotate(3deg); }
+  .pile .stack.round > * { border-radius: 50%; }
+  .pile .meta { display: block; margin-top: 14px; }
+  .pile .meta b { display: block; font-family: var(--display); font-weight: 500; font-size: 17px; line-height: 1.25; }
+  .pile:hover .meta b { color: var(--amber); }
+  .pile .meta span { display: block; color: var(--muted); font-size: 14px; margin-top: 2px; }
+  .pile .meta small { display: block; font: 500 12px var(--data); color: var(--muted-2); margin-top: 4px; }
+
+  /* Banda para crear listas (sin sesión), dentro del recorrido, no en una columna aparte. */
+  .make { margin-top: 72px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: center; padding: 26px 30px; border-radius: 14px; border: 1px dashed var(--border-2); }
+  .make h2 { font-family: var(--display); font-weight: 700; font-size: 24px; letter-spacing: -.015em; }
+  .make p { color: var(--muted); margin-top: 4px; }
+  .make .act { display: flex; gap: 16px; align-items: center; }
+
+  /* Para completar: pilas a medio armar. */
+  .tocomplete { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .tc { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px; align-items: center; padding: 12px; border: 1px solid var(--border); border-radius: 10px; }
+  .tc:hover { border-color: var(--amber); }
+  .tc .m { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
+  .tc .m .cv { border-radius: 2px; }
+  .tc b { font-family: var(--display); font-weight: 500; display: block; }
+  .tc span { color: var(--muted); font-size: 14px; }
+
+  @media (max-width: 1279px) { .crate-row { grid-auto-columns: calc((100% - 3 * 24px) / 4.3); } .tocomplete { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 1023px) {
+    .counter { grid-template-columns: 1fr; padding: 28px 24px; gap: 28px; }
+    .counter .fan { height: 210px; }
+    .counter .fan .cv { width: 160px; }
+    .counter .fan .cv:nth-child(2) { left: 56px; } .counter .fan .cv:nth-child(3) { left: 112px; } .counter .fan .cv:nth-child(4) { left: 168px; }
+    .crate-row { grid-auto-columns: calc((100% - 2 * 20px) / 3.3); gap: 20px; }
+  }
+  @media (max-width: 640px) {
+    .counter { padding: 22px 18px; border-radius: 12px; }
+    .counter .fan { height: 170px; }
+    .counter .fan .cv { width: 128px; }
+    .counter .fan .cv:nth-child(2) { left: 44px; } .counter .fan .cv:nth-child(3) { left: 88px; } .counter .fan .cv:nth-child(4) { left: 132px; }
+    .counter .tracks li:nth-child(n+4) { display: none; }
+    .crate { margin-top: 56px; }
+    .crate-row { grid-auto-columns: 58%; gap: 16px; margin: 0 calc(-1 * var(--pad)); padding-left: var(--pad); padding-right: var(--pad); scroll-padding: 0 var(--pad); }
+    .make { grid-template-columns: 1fr; padding: 22px 20px; margin-top: 56px; }
+    .make .act { flex-direction: column; align-items: stretch; }
+    .tocomplete { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header"></header>
+<main class="wrap">
+  <div class="page-head">
+    <p class="crumbs">Inicio / <b>Listas</b></p>
+    <h1>Listas</h1>
+    <p>Lo que la comunidad ordena, colecciona y recomienda: listas de discos, artistas y canciones, una pila a la vez.</p>
+  </div>
+
+  <div class="toolbar" role="search">
+    <label class="lsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Buscar listas por nombre o autor</span></label>
+    <div class="seg" role="group" aria-label="Tipo"><a aria-current="true" href="#">Todas</a><a href="#albumes">Álbumes</a><a href="#artistas">Artistas</a><a href="#canciones">Canciones</a></div>
+    <button class="sort">Más guardadas <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+  </div>
+
+  <section class="counter" aria-labelledby="h-feat" style="margin-top:40px">
+    <div class="fan" aria-hidden="true"><i class="cv" data-c="16"></i><i class="cv" data-c="8"></i><i class="cv" data-c="12"></i><i class="cv" data-c="20"></i></div>
+    <div>
+      <span class="badge official"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5 9-10"/></svg>Oficial · Canciones</span>
+      <h2 id="h-feat">Playlist de fondo</h2>
+      <p class="lede">Para trabajar sin perder el hilo: canciones que acompañan sin pedir atención. Por Alex, del equipo.</p>
+      <ol class="tracks">
+        <li><b>On the Bound</b><span>Fiona Apple</span></li>
+        <li><b>Untitled</b><span>Radiohead</span></li>
+        <li><b>In the Back of My Mind</b><span>Beach House</span></li>
+        <li><b>Desire Be Desire Go</b><span>Tame Impala</span></li>
+      </ol>
+      <div class="actions"><a class="btn-amber" href="#">Abrir la lista</a><button class="save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4h12v17l-6-4-6 4z"/></svg>Guardar</button><span class="mut">4 canciones · 23 guardadas</span></div>
+    </div>
+  </section>
+
+  <section class="crate" id="albumes" aria-labelledby="h-alb">
+    <div class="sec-head"><div><h2 id="h-alb">Cajón de álbumes</h2><p>Discos ordenados por alguien: favoritos, debuts, recorridos.</p></div><a class="see" href="#">Ver todas →</a></div>
+    <ul class="crate-row">
+      <li><a class="pile" href="#"><span class="stack"><i class="cv" data-c="10"></i><i class="cv" data-c="18"></i><i class="cv" data-c="6"></i></span><span class="meta"><b>Discos favoritos del momento</b><span>Fran</span><small>4 álbumes · 12 guardadas</small></span></a></li>
+      <li><a class="pile" href="#"><span class="stack"><i class="cv" data-c="19"></i><i class="cv" data-c="11"></i><i class="cv" data-c="2"></i></span><span class="meta"><b>Para escuchar completos</b><span>Eli</span><small>4 álbumes · 9 guardadas</small></span></a></li>
+      <li><a class="pile" href="#"><span class="stack"><i class="cv" data-c="26"></i><i class="cv" data-c="13"></i><i class="cv" data-c="29"></i></span><span class="meta"><b>Debuts que no fallan</b><span>Nora</span><small>18 álbumes · 7 guardadas</small></span></a></li>
+      <li><a class="pile" href="#"><span class="stack"><i class="cv" data-c="24"></i><i class="cv" data-c="1"></i><i class="cv" data-c="22"></i></span><span class="meta"><b>Discos para un domingo lento</b><span>Mateo</span><small>24 álbumes · 5 guardadas</small></span></a></li>
+      <li><a class="pile" href="#"><span class="stack"><i class="cv" data-c="20"></i><i class="cv" data-c="4"></i><i class="cv" data-c="9"></i></span><span class="meta"><b>Shoegaze esencial</b><span>Lu</span><small>15 álbumes · 4 guardadas</small></span></a></li>
+      <li><a class="pile" href="#"><span class="stack"><i class="cv" data-c="28"></i><i class="cv" data-c="30"></i><i class="cv" data-c="17"></i></span><span class="meta"><b>Best of Hard Rock Albums</b><span>@besantanag95</span><small>10 álbumes · 3 guardadas</small></span></a></li>
+    </ul>
+  </section>
+
+  <section class="crate" id="artistas" aria-labelledby="h-art">
+    <div class="sec-head"><div><h2 id="h-art">Cajón de artistas</h2><p>A quién sigue cada uno, quién canta mejor, a quién ver en vivo.</p></div><a class="see" href="#">Ver todas →</a></div>
+    <ul class="crate-row">
+      <li><a class="pile" href="#"><span class="stack round"><i class="cv" data-c="5"></i><i class="cv" data-c="23"></i><i class="cv" data-c="15"></i></span><span class="meta"><b>Artistas que sigo de cerca</b><span>Dario</span><small>4 artistas · 6 guardadas</small></span></a></li>
+      <li><a class="pile" href="#"><span class="stack round"><i class="cv" data-c="12"></i><i class="cv" data-c="16"></i><i class="cv" data-c="8"></i></span><span class="meta"><b>Cantantes pop favoritas</b><span>@besantanag95</span><small>3 artistas · 4 guardadas</small></span></a></li>
+      <li><a class="pile" href="#"><span class="stack round"><i class="cv" data-c="3"></i><i class="cv" data-c="27"></i><i class="cv" data-c="14"></i></span><span class="meta"><b>Bandas para ver en vivo</b><span>Tomi</span><small>9 artistas · 3 guardadas</small></span></a></li>
+      <li><a class="pile" href="#"><span class="stack round"><i class="cv" data-c="21"></i><i class="cv" data-c="31"></i><i class="cv" data-c="7"></i></span><span class="meta"><b>Artistas que sigo de cerca</b><span>Bea</span><small>4 artistas · 2 guardadas</small></span></a></li>
+      <li><a class="pile" href="#"><span class="stack round"><span class="ph"></span><span class="ph"></span><i class="cv" data-c="30"></i></span><span class="meta"><b>Glam Metal Bands</b><span>@besantanag95</span><small>1 artista</small></span></a></li>
+    </ul>
+  </section>
+
+  <section class="make" aria-labelledby="h-make">
+    <div><h2 id="h-make">Arma tus propias listas</h2><p>Con una cuenta puedes crear listas, guardar las de otras personas y completar las que te interesen.</p></div>
+    <div class="act"><a class="btn-amber" href="#">Crear cuenta</a><a class="see" href="#">Ya tengo cuenta</a></div>
+  </section>
+
+  <section class="crate" id="canciones" aria-labelledby="h-can">
+    <div class="sec-head"><div><h2 id="h-can">Cajón de canciones</h2><p>Para correr, para repetir, para no olvidar.</p></div><a class="see" href="#">Ver todas →</a></div>
+    <ul class="crate-row">
+      <li><a class="pile" href="#"><span class="stack"><i class="cv" data-c="2"></i><i class="cv" data-c="19"></i><i class="cv" data-c="11"></i></span><span class="meta"><b>Canciones en repeat</b><span>Cami</span><small>4 canciones · 8 guardadas</small></span></a></li>
+      <li><a class="pile" href="#"><span class="stack"><i class="cv" data-c="25"></i><i class="cv" data-c="0"></i><i class="cv" data-c="27"></i></span><span class="meta"><b>Best AOR songs</b><span>@besantanag95</span><small>4 canciones · 5 guardadas</small></span></a></li>
+      <li><a class="pile" href="#"><span class="stack"><i class="cv" data-c="14"></i><i class="cv" data-c="6"></i><i class="cv" data-c="23"></i></span><span class="meta"><b>Para correr</b><span>Sofi</span><small>30 canciones · 4 guardadas</small></span></a></li>
+      <li><a class="pile" href="#"><span class="stack"><i class="cv" data-c="8"></i><i class="cv" data-c="16"></i><i class="cv" data-c="12"></i></span><span class="meta"><b>Best of Sabrina</b><span>Julia</span><small>12 canciones · 2 guardadas</small></span></a></li>
+      <li><a class="pile" href="#"><span class="stack"><i class="cv" data-c="9"></i><i class="cv" data-c="18"></i><i class="cv" data-c="31"></i></span><span class="meta"><b>Canciones de ruta</b><span>Pau</span><small>21 canciones · 1 guardada</small></span></a></li>
+    </ul>
+  </section>
+
+  <section class="crate" aria-labelledby="h-tc">
+    <div class="sec-head"><div><h2 id="h-tc">Para completar</h2><p>Listas que alguien está escuchando de principio a fin. Únete y lleva la cuenta.</p></div><a class="see" href="#">Ver todas →</a></div>
+    <ul class="tocomplete">
+      <li><a class="tc" href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="28"></i><i class="cv" data-c="30"></i><i class="cv" data-c="17"></i><i class="cv" data-c="3"></i></span><span><b>Best of Hard Rock Albums</b><span>1 persona la está completando</span></span></a></li>
+      <li><a class="tc" href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="8"></i><i class="cv" data-c="16"></i><i class="cv" data-c="12"></i><i class="cv" data-c="20"></i></span><span><b>Best of Sabrina</b><span>1 persona la está completando</span></span></a></li>
+      <li><a class="tc" href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="26"></i><i class="cv" data-c="13"></i><i class="cv" data-c="29"></i><i class="cv" data-c="24"></i></span><span><b>Debuts que no fallan</b><span>3 personas la están completando</span></span></a></li>
+      <li><a class="tc" href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="19"></i><i class="cv" data-c="11"></i><i class="cv" data-c="2"></i><i class="cv" data-c="6"></i></span><span><b>Para escuchar completos</b><span>2 personas la están completando</span></span></a></li>
+    </ul>
+  </section>
+</main>
+<footer class="site-foot"><div class="wrap">Pie del sitio (sin cambios)</div></footer>
+<nav class="mock-bar" aria-label="Mockups"><span>Mockup · datos de ejemplo</span><a href="index.html">Resumen</a><a href="a-cajones.html" aria-current="page">A · Cajones</a><a href="b-lector.html">B · Lector</a><a href="c-fichero.html">C · Fichero</a></nav>
+<script src="shared.js"></script>
+</body>
+</html>
