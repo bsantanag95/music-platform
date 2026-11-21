@@ -74,6 +74,8 @@ const { GenreFamilies } = await import("@/components/discovery/GenreFamilies");
 const { DecadeTimeline } = await import("@/components/discovery/DecadeTimeline");
 const { FilteredAlbumList } = await import("@/components/discovery/FilteredAlbumList");
 const { SectionHeading } = await import("@/components/ui/SectionHeading");
+const { ReleaseTimetable } = await import("@/components/discovery/ReleaseTimetable");
+const { AlbumRail } = await import("@/components/discovery/AlbumRail");
 
 /** Todos los elementos de `type` dentro del árbol devuelto por el componente. */
 function findAll(node: ReactNode, type: unknown, found: ReactElement[] = []): ReactElement[] {
@@ -243,14 +245,14 @@ describe("/explore: Explorar por década (openspec: redesign-explore-decades)", 
       ...empty,
       collections: [collection("a1")],
       families: [{ key: "rock", tier: "main", count: 3, covers: [] }],
-      newReleases: [{ id: "n1" }],
+      newReleases: [{ id: "n1", title: "Nuevo", coverThumbUrl: null, firstReleaseDate: "2026-11-10" }],
       decades: [card(2020)],
     });
 
     const element = await ExplorePage({ params, searchParams: Promise.resolve({}) });
     const nav = findAll(element, ExploreJumpNav)[0]!.props as { items: { id: string }[] };
 
-    expect(nav.items.map((item) => item.id)).toEqual(["colecciones", "generos", "decadas", "novedades"]);
+    expect(nav.items.map((item) => item.id)).toEqual(["colecciones", "generos", "decadas", "lanzamientos"]);
   });
 
   describe("vista de década", () => {
@@ -590,5 +592,54 @@ describe("/explore/collections", () => {
     const note = (archive.props as { noteFor: (c: ArchivedCollection) => string }).noteFor(archived("v1"));
 
     expect(note).toBe("endedOn");
+  });
+});
+
+describe("/explore: segunda mitad (openspec: redesign-explore-phase3)", () => {
+  const album = (id: string, firstReleaseDate: string) => ({ id, title: `Disco ${id}`, coverThumbUrl: null, firstReleaseDate });
+
+  it("novedades y próximos son las dos partes de una sola sección Lanzamientos, con su ancla, «Ver todo» y la cuenta regresiva", async () => {
+    const soon = new Date(Date.now() + 3 * 86_400_000).toISOString().slice(0, 10);
+    mocks.getExplorePage.mockResolvedValue({
+      ...empty,
+      collections: [collection("a1")],
+      families: [{ key: "rock", tier: "main", count: 3, covers: [] }],
+      newReleases: [album("n1", "2026-11-10")],
+      upcoming: [album("u1", soon)],
+    });
+
+    const element = await ExplorePage({ params, searchParams: Promise.resolve({}) });
+    const timetables = findAll(element, ReleaseTimetable);
+    const nav = findAll(element, ExploreJumpNav)[0]!.props as { items: { id: string }[] };
+
+    expect(findAll(element, AlbumRail).map((rail) => (rail.props as { id: string }).id)).not.toContain("novedades");
+    expect(timetables).toHaveLength(1);
+    const props = timetables[0]!.props as {
+      releases: { id: string; section: string }[];
+      partIds: { recent: string; upcoming: string };
+      seeAll: { recent: { href: string }; upcoming: { href: string } };
+      status: (release: { section: string; releaseDate: string }) => { label: string; tone: string };
+    };
+    expect(props.releases.map((r) => [r.id, r.section])).toEqual([["n1", "recent"], ["u1", "upcoming"]]);
+    expect(props.partIds).toEqual({ recent: "novedades", upcoming: "proximos" });
+    expect(props.seeAll.upcoming.href).toBe("/explore?proximos=1");
+    expect(props.status({ section: "upcoming", releaseDate: soon }).tone).toBe("upcoming");
+    expect(props.status({ section: "recent", releaseDate: "2026-11-10" })).toEqual({ label: "releasesPublished", tone: "published" });
+    expect(nav.items.map((item) => item.id)).toEqual(["colecciones", "generos", "lanzamientos"]);
+  });
+
+  it("Mejor valorados va justo después de Popular, antes de los géneros", async () => {
+    mocks.getExplorePage.mockResolvedValue({
+      ...empty,
+      collections: [collection("a1")],
+      families: [{ key: "rock", tier: "main", count: 3, covers: [] }],
+      decades: [{ decade: 2020, count: 1, covers: [] }],
+      topRated: [{ id: "t1", title: "Top", coverThumbUrl: null, avgStars: 4.5 }],
+    });
+
+    const element = await ExplorePage({ params, searchParams: Promise.resolve({}) });
+    const nav = findAll(element, ExploreJumpNav)[0]!.props as { items: { id: string }[] };
+
+    expect(nav.items.map((item) => item.id)).toEqual(["colecciones", "mejor-valorados", "generos", "decadas"]);
   });
 });

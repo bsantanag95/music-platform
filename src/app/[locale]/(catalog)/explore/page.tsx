@@ -4,6 +4,8 @@ import { redirect } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { AlbumRail } from "@/components/discovery/AlbumRail";
 import { CollectionMosaic } from "@/components/discovery/CollectionMosaic";
+import { ReleaseTimetable } from "@/components/discovery/ReleaseTimetable";
+import type { HomeRelease } from "@/services/home/home";
 import { DecadeTimeline, type DecadeEntry } from "@/components/discovery/DecadeTimeline";
 import { GenreFamilies, splitFamilies, type FamilyEntry } from "@/components/discovery/GenreFamilies";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -393,16 +395,38 @@ async function ExplorePage({ params, searchParams }: ExplorePageProps) {
   const earlierDecadeEntries = explore.decades.filter((bucket) => bucket.decade < MOSAIC_FIRST_DECADE).map(decadeEntry);
   // Navegación rápida: una entrada por cada sección que se renderiza (mismos datos que cada sección usa para omitirse),
   // en el orden de la página.
+  // Lanzamientos (openspec: redesign-explore-phase3): novedades y próximos como las dos partes del horario de Inicio, con la
+  // cuenta regresiva como estado de los próximos.
+  const toRelease = (section: HomeRelease["section"]) => (album: (typeof explore.newReleases)[number]): HomeRelease[] =>
+    album.firstReleaseDate
+      ? [
+          {
+            id: album.id,
+            title: album.title,
+            artist: railArtistNames[album.id] ?? "",
+            coverThumbUrl: album.coverThumbUrl,
+            releaseDate: album.firstReleaseDate,
+            section,
+            badge: null,
+          },
+        ]
+      : [];
+  const releaseRows = [...explore.newReleases.flatMap(toRelease("recent")), ...explore.upcoming.flatMap(toRelease("upcoming"))];
+  const releaseStatus = (release: HomeRelease) => {
+    const days = release.section === "upcoming" ? daysUntilRelease(release.releaseDate) : undefined;
+    return days !== undefined
+      ? { label: t("countdown", { days }), tone: "upcoming" as const }
+      : { label: t("releasesPublished"), tone: "published" as const };
+  };
   const jumpItems = [
     { id: "colecciones", label: t("jump.collections"), visible: explore.collections.length > 0 },
     { id: "popular", label: t("jump.popular"), visible: hasPopular },
+    { id: "mejor-valorados", label: t("jump.topRated"), visible: explore.topRated.length > 0 },
     { id: "generos", label: t("jump.genres"), visible: explore.families.length > 0 },
     { id: "decadas", label: t("jump.decades"), visible: explore.decades.length > 0 },
-    { id: "novedades", label: t("jump.newReleases"), visible: explore.newReleases.length > 0 },
-    { id: "proximos", label: t("jump.upcoming"), visible: explore.upcoming.length > 0 },
+    { id: "lanzamientos", label: t("jump.releases"), visible: releaseRows.length > 0 },
     { id: "premios", label: t("jump.awards"), visible: recentCeremonies.length > 0 },
     { id: "salon-de-la-fama", label: t("jump.hallOfFame", { count: hallClasses.length }), visible: hallClasses.length > 0 },
-    { id: "mejor-valorados", label: t("jump.topRated"), visible: explore.topRated.length > 0 },
   ].filter((item) => item.visible);
 
   return (
@@ -453,6 +477,20 @@ async function ExplorePage({ params, searchParams }: ExplorePageProps) {
         artistNames={railArtistNames}
       />
 
+      {/* Las dos voces de la comunidad juntas (openspec: redesign-explore-phase3): Mejor valorados justo después de Popular. */}
+      <AlbumRail
+        layout="scroll"
+        headingSize="page"
+        id="mejor-valorados"
+        authenticated={authenticated}
+        heading={t("topRatedHeading")}
+        description={t("topRatedDescription", { min: MIN_RATINGS_PER_ALBUM })}
+        albums={explore.topRated}
+        artistNames={railArtistNames}
+        stats={topRatedStats}
+        categoryLabels={categoryLabels}
+        coverLabel={coverLabel}
+      />
       <GenreFamilies
         heading={t("genresHeading")}
         description={t("genresDescription")}
@@ -471,54 +509,39 @@ async function ExplorePage({ params, searchParams }: ExplorePageProps) {
         earlierLabel={t("beforeDecade", { year: String(MOSAIC_FIRST_DECADE) })}
       />
 
-      <AlbumRail
-        layout="scroll"
-        headingSize="page"
-        id="novedades"
-        authenticated={authenticated}
-        heading={t("newReleasesHeading")}
-        description={t("newReleasesDescription", { days: NEW_RELEASE_WINDOW_DAYS })}
-        albums={explore.newReleases}
-        artistNames={railArtistNames}
-        categoryLabels={categoryLabels}
-        coverLabel={coverLabel}
-        seeAll={{ href: "/explore?novedades=1", label: t("seeAll") }}
-        dateLabels={dateLabelsFor(explore.newReleases)}
-      />
-
-      <AlbumRail
-        layout="scroll"
-        headingSize="page"
-        id="proximos"
-        authenticated={authenticated}
-        heading={t("upcomingHeading")}
-        description={t("upcomingDescription", { days: UPCOMING_WINDOW_DAYS })}
-        albums={explore.upcoming}
-        artistNames={railArtistNames}
-        stats={countdownsFor(explore.upcoming)}
-        categoryLabels={categoryLabels}
-        coverLabel={coverLabel}
-        seeAll={{ href: "/explore?proximos=1", label: t("seeAll") }}
-        dateLabels={dateLabelsFor(explore.upcoming)}
-      />
+      {releaseRows.length > 0 ? (
+        <section id="lanzamientos" aria-labelledby="explore-releases-heading" className="flex w-full flex-col gap-5">
+          <SectionHeading
+            id="explore-releases-heading"
+            title={t("releasesHeading")}
+            description={t("releasesDescription", { recent: NEW_RELEASE_WINDOW_DAYS, upcoming: UPCOMING_WINDOW_DAYS })}
+          />
+          <ReleaseTimetable
+            releases={releaseRows}
+            locale={locale}
+            labelledBy="explore-releases"
+            partIds={{ recent: "novedades", upcoming: "proximos" }}
+            status={releaseStatus}
+            seeAll={{
+              recent: { href: "/explore?novedades=1", label: t("seeAll") },
+              upcoming: { href: "/explore?proximos=1", label: t("seeAll") },
+            }}
+            labels={{
+              recent: t("newReleasesHeading"),
+              upcoming: t("upcomingHeading"),
+              published: t("releasesPublished"),
+              upcomingBadge: t("upcomingHeading"),
+              showMore: (count) => t("releasesShowMore", { count }),
+              showLess: t("releasesShowLess"),
+            }}
+          />
+        </section>
+      ) : null}
 
       <AwardsExploreSection ceremonies={recentCeremonies} />
 
       <HallOfFameExploreSection halls={hallClasses} />
 
-      <AlbumRail
-        layout="scroll"
-        headingSize="page"
-        id="mejor-valorados"
-        authenticated={authenticated}
-        heading={t("topRatedHeading")}
-        description={t("topRatedDescription", { min: MIN_RATINGS_PER_ALBUM })}
-        albums={explore.topRated}
-        artistNames={railArtistNames}
-        stats={topRatedStats}
-        categoryLabels={categoryLabels}
-        coverLabel={coverLabel}
-      />
     </main>
   );
 }

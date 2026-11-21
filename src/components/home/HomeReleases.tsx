@@ -1,6 +1,6 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { ReleaseSwitcher } from "./ReleaseSwitcher";
-import { ReleaseTimetable } from "./ReleaseTimetable";
+import { ReleaseTimetable } from "@/components/discovery/ReleaseTimetable";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { PERSONAL_DEFAULT_MIN } from "@/services/home/release-calendar";
 import type { HomeRelease } from "@/services/home/home";

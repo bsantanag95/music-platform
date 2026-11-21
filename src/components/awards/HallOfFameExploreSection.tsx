@@ -21,7 +21,7 @@ export function HallOfFameExploreSection({ halls }: { halls: HallOfFameClass[] }
         size="page"
         headingId="salon-de-la-fama-heading"
       />
-      <HallOfFameTileGrid halls={halls} />
+      <HallOfFameTileGrid halls={halls} compact />
     </section>
   );
 }
