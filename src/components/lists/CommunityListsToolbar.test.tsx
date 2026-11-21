@@ -25,7 +25,18 @@ describe("CommunityListsToolbar", () => {
     vi.useRealTimers();
   });
 
-  it("el tipo se elige con chips: navega con el parámetro type y marca el chip (redesign-lists-page, D8)", () => {
+  it("los cuatro tipos son segmentos de 44 px en una fila propia en el teléfono, sin desplazamiento (redesign-lists-phase1)", () => {
+    renderWithIntl(<CommunityListsToolbar />);
+    const group = screen.getByRole("group", { name: "Filtrar por tipo" });
+
+    expect(group.className).toContain("grid-cols-4");
+    expect(group.className).toContain("col-span-2");
+    expect(group.className).not.toContain("overflow-x-auto");
+    for (const button of group.querySelectorAll("button")) expect(button.className).toContain("h-11");
+    expect(screen.getByRole("searchbox").className).toContain("h-11");
+  });
+
+  it("el tipo se elige con segmentos: navega con el parámetro type y marca el segmento (redesign-lists-page, D8)", () => {
     const { unmount } = renderWithIntl(<CommunityListsToolbar />);
     const group = screen.getByRole("group", { name: "Filtrar por tipo" });
     expect([...group.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["Todas", "Artistas", "Álbumes", "Canciones"]);

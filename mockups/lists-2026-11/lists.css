@@ -1,0 +1,37 @@
+/* Común a los tres mockups de /lists: cabecera de página, barra de búsqueda y filtros, botones. */
+.page-head { padding: 40px 0 24px; }
+.page-head h1 { font-family: var(--display); font-weight: 700; font-size: clamp(40px, 5vw, 64px); line-height: .95; letter-spacing: -.035em; margin-top: 12px; }
+.page-head p { color: var(--muted); font-size: 18px; margin-top: 12px; max-width: 54ch; }
+
+.toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; align-items: center; }
+.lsearch { display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--muted); }
+.lsearch svg { width: 18px; height: 18px; flex: none; }
+.seg { display: inline-flex; padding: 4px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.seg a { display: inline-flex; align-items: center; height: 38px; padding: 0 14px; border-radius: 7px; font-family: var(--display); font-size: 15px; color: var(--muted); }
+.seg a:hover { color: var(--paper); }
+.seg a[aria-current] { background: var(--paper); color: var(--ink); }
+.sort { display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 16px; border: 1px solid var(--border); border-radius: 10px; font-family: var(--display); font-size: 15px; color: var(--paper); }
+.sort svg { width: 16px; height: 16px; color: var(--muted); }
+
+.badge.official { display: inline-flex; align-items: center; gap: 6px; background: rgba(74,124,124,.22); color: #9cc8c8; padding: 3px 8px; }
+.badge.official svg { width: 12px; height: 12px; }
+.save { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border: 1px solid var(--border-2); border-radius: 8px; font-family: var(--display); font-size: 15px; }
+.save:hover { border-color: var(--amber); color: var(--amber); }
+.save svg { width: 16px; height: 16px; }
+.mut { color: var(--muted); font: 500 12.5px var(--data); }
+.ph { display: block; aspect-ratio: 1; border-radius: 6px; background: var(--surface-2); }
+.btn-amber { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; white-space: nowrap; }
+
+@media (max-width: 1023px) {
+  .toolbar { grid-template-columns: minmax(0, 1fr) auto; }
+  .toolbar .seg { grid-column: 1 / -1; grid-row: 2; justify-self: start; }
+}
+@media (max-width: 640px) {
+  .page-head { padding: 28px 0 20px; }
+  .page-head p { font-size: 16px; }
+  .toolbar { grid-template-columns: minmax(0, 1fr) auto; }
+  .toolbar .lsearch span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .toolbar .sort { padding: 0 12px; }
+  .toolbar .seg { width: 100%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .toolbar .seg a { justify-content: center; padding: 0 6px; font-size: 14px; height: 40px; }
+}

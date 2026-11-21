@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Listas · Auditoría y tres propuestas — music-platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f6f5f2; --card: #fff; --tx: #17161a; --tx-2: #4b4a50; --tx-3: #6b6a70; --line: #e2e0da; --ok: #1f7a4d; --no: #b23a2e; --hi: #8a5a00; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--tx); font: 16px/1.6 "Geist", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-underline-offset: 3px; }
+  :focus-visible { outline: 2px solid #8a5a00; outline-offset: 3px; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 48px); }
+  header.doc { padding: 64px 0 40px; border-bottom: 1px solid var(--line); }
+  h1 { font-size: clamp(34px, 4.4vw, 56px); line-height: 1.05; letter-spacing: -.03em; font-weight: 700; max-width: 22ch; }
+  .intro { margin-top: 18px; font-size: 19px; color: var(--tx-2); max-width: 66ch; }
+  .meta { margin-top: 20px; font: 500 13px "Geist Mono", monospace; color: var(--tx-3); display: flex; flex-wrap: wrap; gap: 8px 20px; }
+  nav.toc { position: sticky; top: 0; z-index: 5; background: rgba(246,245,242,.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  nav.toc .wrap { display: flex; gap: 6px; overflow-x: auto; padding-top: 10px; padding-bottom: 10px; }
+  nav.toc a { white-space: nowrap; color: var(--tx-2); text-decoration: none; font-size: 14px; font-weight: 500; padding: 6px 12px; border-radius: 8px; }
+  nav.toc a:hover { background: #ebe9e3; color: var(--tx); }
+  nav.toc a.cta { background: var(--tx); color: #fff; }
+  section { padding: 72px 0 0; }
+  h2 { font-size: clamp(26px, 2.6vw, 36px); letter-spacing: -.02em; line-height: 1.1; font-weight: 700; }
+  h2 + p { margin-top: 10px; color: var(--tx-2); max-width: 70ch; font-size: 17px; }
+  h3 { font-size: 19px; letter-spacing: -.01em; font-weight: 650; }
+  .shots { margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  figure { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  figure img { display: block; width: 100%; height: auto; }
+  figcaption { padding: 12px 16px; font-size: 14px; color: var(--tx-3); border-top: 1px solid var(--line); }
+  .stats { margin-top: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+  .stat b { display: block; font-size: 30px; letter-spacing: -.02em; line-height: 1.1; }
+  .stat span { font-size: 14px; color: var(--tx-2); }
+  .issues { margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .issue { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; }
+  .issue h3 { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .sev { font: 500 12px "Geist Mono", monospace; padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+  .sev.alta { background: #fbe4e1; color: var(--no); }
+  .sev.media { background: #fdf0d6; color: #8a5a00; }
+  .sev.baja { background: #e9ece9; color: #4b5a4f; }
+  .issue ul { margin-top: 10px; padding-left: 18px; color: var(--tx-2); font-size: 15px; }
+  .issue li + li { margin-top: 6px; }
+  .issue li b { color: var(--tx); font-weight: 600; }
+  .note { margin-top: 16px; padding: 14px 18px; border-radius: 10px; background: #efede8; color: var(--tx-2); font-size: 15px; }
+  .criteria { margin-top: 28px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 40px; }
+  .criteria li { list-style: none; padding: 16px 0; border-top: 1px solid var(--line); }
+  .criteria h3 { font-size: 17px; }
+  .criteria p { color: var(--tx-2); font-size: 15px; margin-top: 4px; }
+  .props { margin-top: 28px; display: grid; gap: 24px; }
+  .prop { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: grid; grid-template-columns: 1.1fr 1fr; }
+  .prop .img { display: block; border-right: 1px solid var(--line); background: #14120f; }
+  .prop .img img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+  .prop .body { padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+  .prop h3 { font-size: 24px; letter-spacing: -.02em; }
+  .prop .thesis { color: var(--tx-2); }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tags span { font-size: 13px; padding: 3px 9px; border-radius: 6px; background: #efede8; color: var(--tx-2); }
+  .pc { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 14px; }
+  .pc h4 { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .pc .pro h4 { color: var(--ok); } .pc .con h4 { color: var(--no); }
+  .pc ul { padding-left: 16px; color: var(--tx-2); }
+  .pc li + li { margin-top: 4px; }
+  .open { margin-top: auto; display: inline-flex; align-self: start; align-items: center; gap: 8px; background: var(--tx); color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 15px; }
+  .open:hover { background: #8a5a00; }
+  table { margin-top: 28px; width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); font-size: 15px; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { background: #efede8; font-size: 13px; font-weight: 600; color: var(--tx-2); }
+  td.s { font: 500 14px "Geist Mono", monospace; white-space: nowrap; }
+  .rec { margin-top: 28px; background: var(--tx); color: #f4f3ef; border-radius: 16px; padding: clamp(28px, 4vw, 48px); display: grid; grid-template-columns: 1fr 1.3fr; gap: 40px; }
+  .rec h3 { font-size: clamp(26px, 2.8vw, 38px); letter-spacing: -.02em; line-height: 1.1; }
+  .rec p, .rec li { color: #cfcdc7; }
+  .rec ul { padding-left: 18px; margin-top: 10px; }
+  .rec li + li { margin-top: 8px; }
+  .rec b { color: #fff; }
+  .rec a { color: #f2c866; }
+  .notes { margin: 56px 0 80px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 14px; color: var(--tx-3); max-width: 90ch; }
+  .notes p + p { margin-top: 8px; }
+  @media (max-width: 900px) {
+    .shots, .issues, .criteria, .prop, .rec, .pc { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .prop .img { border-right: 0; border-bottom: 1px solid var(--line); aspect-ratio: 16/10; }
+    table { display: block; overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+<header class="doc"><div class="wrap">
+  <h1>Listas: auditoría y tres propuestas de modernización</h1>
+  <p class="intro">La página pública <code>/es/lists</code>, sin sesión, revisada a 1440, 1024 y 390 px, con tres maquetas navegables que conservan el sistema visual de la portada y de Explorar (tinta, papel y ámbar; Space Grotesk, Source Serif 4 e IBM Plex Mono) y cambian la estructura.</p>
+  <p class="meta"><span>2026-11-21</span><span>Sin sesión · base local</span><span>Mockups con datos de ejemplo</span></p>
+</div></header>
+
+<nav class="toc" aria-label="Secciones"><div class="wrap">
+  <a href="#auditoria">Auditoría</a><a href="#criterios">Criterios</a><a href="#propuestas">Propuestas</a><a href="#comparacion">Comparación</a><a class="cta" href="#recomendacion">Recomendación</a>
+</div></nav>
+
+<main class="wrap">
+<section id="auditoria">
+  <h2>Auditoría de la página actual</h2>
+  <p>La página tiene dos estados: la vitrina (sin filtros) y la grilla filtrada. Sin sesión, la vitrina muestra solo «Destacadas» y «Recientes»; «Populares» no aparece mientras nadie haya guardado listas, y «De la gente que sigues» exige sesión.</p>
+  <div class="stats">
+    <div class="stat"><b>1152 px</b><span>ancho del contenido (<code>max-w-6xl</code>); Inicio y Explorar usan 1408</span></div>
+    <div class="stat"><b>150 px</b><span>ancho de cada tarjeta a 1024 px (4 columnas en 792 px)</span></div>
+    <div class="stat"><b>20 px</b><span>títulos de sección; el <code>h1</code> mide 36 px frente a 40–64 en Explorar</span></div>
+    <div class="stat"><b>18</b><span>controles de menos de 32 px de alto a 390 px</span></div>
+  </div>
+  <div class="shots">
+    <figure><img src="shots/actual.png" alt="Página actual de Listas a 1440 px"><figcaption>Actual · 1440 px: columna de 792 px, panel lateral de 280 y mucho aire abajo.</figcaption></figure>
+    <figure><img src="shots/actual-390-tarjetas.jpg" alt="Página actual de Listas a 390 px, tarjetas"><figcaption>Actual · 390 px: dos listas con el mismo nombre y casi el mismo mosaico.</figcaption></figure>
+  </div>
+  <div class="issues">
+    <div class="issue"><h3>Las tarjetas no dicen qué hay dentro <span class="sev alta">alta</span></h3><ul>
+      <li>Una lista es una <b>secuencia</b>, pero la tarjeta solo muestra un mosaico de 4 carátulas y metadatos en mono de 12 px.</li>
+      <li>Dos «Artistas que sigo de cerca» (Dario y Bea) se ven casi iguales: el autor está en la línea más chica.</li>
+      <li>Para saber si vale la pena hay que abrirla y volver.</li>
+    </ul></div>
+    <div class="issue"><h3>Marco y jerarquía por debajo del resto del sitio <span class="sev media">media</span></h3><ul>
+      <li>Contenido de <b>1152 px</b> frente a 1408 de Inicio y Explorar; títulos de <b>20 px</b>; sin frase de entrada.</li>
+      <li>A 1024 px las tarjetas miden <b>150 px</b> y los títulos 14 px.</li>
+    </ul></div>
+    <div class="issue"><h3>Mosaicos dispares <span class="sev media">media</span></h3><ul>
+      <li>Circulares para artistas y cuadrados para discos y canciones, mezclados en la misma fila.</li>
+      <li>Una lista de un solo artista («Glam Metal Bands») es un círculo gigante recortado; la destacada deja una celda «+1».</li>
+    </ul></div>
+    <div class="issue"><h3>Crear cuenta y «Para completar» quedan al margen <span class="sev media">media</span></h3><ul>
+      <li>En escritorio viven en un panel lateral de 280 px; «1 persona la está complet…» se corta.</li>
+      <li>En el teléfono bajan <b>al final</b> (y ≈ 1716 px), detrás de todas las listas.</li>
+    </ul></div>
+    <div class="issue"><h3>Filtros apretados en el teléfono <span class="sev media">media</span></h3><ul>
+      <li>Los chips de tipo y «Ordenar» comparten fila: «Canciones» queda fuera de la pantalla.</li>
+      <li>Chips de 28 px de alto, por debajo de los 44 recomendados.</li>
+    </ul></div>
+    <div class="issue"><h3>Vitrina corta y sin ritmo <span class="sev baja">baja</span></h3><ul>
+      <li>Sin sesión: una destacada y una grilla de 8. La página mide 1708 px a 1440 y se acaba antes de la mitad de la pantalla de abajo.</li>
+      <li>«Populares» solo aparece con listas guardadas; la vitrina depende de datos que hoy casi no hay.</li>
+    </ul></div>
+  </div>
+  <p class="note">Las carátulas vacías de una primera captura eran carga diferida: con <code>public/uploads</code> copiado al worktree se ven todas. No es un fallo de la página.</p>
+</section>
+
+<section id="criterios">
+  <h2>Criterios</h2>
+  <p>Lo que debía resolver cualquier propuesta, además de conservar el sistema visual.</p>
+  <ul class="criteria">
+    <li><h3>Decidir sin abrir</h3><p>Ver lo suficiente de una lista (qué contiene, de quién es, cuánta gente la guarda) para saber si abrirla.</p></li>
+    <li><h3>Mismo marco que el sitio</h3><p>88rem, título de 40–64 px con frase de entrada, títulos de sección de 30–40 px.</p></li>
+    <li><h3>Un solo tipo de mosaico</h3><p>Misma forma para todos los tipos o una regla clara; nada de recortes de un solo elemento.</p></li>
+    <li><h3>Crear y completar, dentro del recorrido</h3><p>La invitación a crear cuenta y «Para completar» no deben depender de una columna lateral.</p></li>
+    <li><h3>Teléfono de primera</h3><p>Filtros que caben, toques de 44 px, nada importante al fondo.</p></li>
+    <li><h3>Funciona con pocas y con muchas listas</h3><p>Hoy hay una docena; la estructura no debe romperse con cientos.</p></li>
+  </ul>
+</section>
+
+<section id="propuestas">
+  <h2>Tres propuestas</h2>
+  <p>Mismo contenido de ejemplo en las tres (las listas de la base local, más algunas inventadas para mostrar el estado con datos). Cada una es navegable a cualquier ancho.</p>
+  <div class="props">
+    <article class="prop">
+      <a class="img" href="a-cajones.html"><img src="shots/a-cajones.png" alt="Propuesta A, Cajones, a 1440 px"></a>
+      <div class="body">
+        <h3>A · Cajones</h3>
+        <p class="thesis">Una disquería: la destacada como exhibidor, con sus fundas en abanico y sus primeras canciones, y debajo un cajón por tipo (álbumes, artistas, canciones) donde cada lista es una pila de fundas de pie.</p>
+        <div class="tags"><span>Tipo como eje</span><span>Pilas de fundas</span><span>Filas táctiles</span><span>Crear cuenta en el recorrido</span></div>
+        <div class="pc"><div class="pro"><h4>A favor</h4><ul><li>La identidad más fuerte; cada lista tiene cuerpo.</li><li>El tipo, que es lo que distingue una lista de otra, ordena la página.</li><li>El teléfono se recorre deslizando, como en Explorar.</li></ul></div><div class="con"><h4>En contra</h4><ul><li>Popular y reciente quedan escondidos dentro de cada cajón.</li><li>Tres filas desplazables esconden listas a la derecha.</li><li>Sigue sin mostrar qué hay dentro de cada lista.</li></ul></div></div>
+        <a class="open" href="a-cajones.html">Abrir A · Cajones →</a>
+      </div>
+    </article>
+    <article class="prop">
+      <a class="img" href="b-lector.html"><img src="shots/b-lector.png" alt="Propuesta B, Lector, a 1440 px"></a>
+      <div class="body">
+        <h3>B · Lector</h3>
+        <p class="thesis">Dos paneles: a la izquierda las listas en filas (destacada fija arriba, luego Populares, Recientes y Para completar); a la derecha, la lista elegida abierta con su descripción, sus primeros elementos numerados y los botones de abrir y guardar.</p>
+        <div class="tags"><span>Ver por dentro</span><span>Filas densas</span><span>Vista previa fija</span><span>Teléfono: filas</span></div>
+        <div class="pc"><div class="pro"><h4>A favor</h4><ul><li>Responde la pregunta de la página: ¿vale la pena esta lista?</li><li>Filas con autor, tipo, elementos y guardadas: las dos «Artistas que sigo de cerca» ya no se confunden.</li><li>Escala bien: 10 o 500 listas son la misma fila.</li></ul></div><div class="con"><h4>En contra</h4><ul><li>La vista previa necesita los elementos de la lista elegida (una consulta al seleccionar).</li><li>En el teléfono no hay vista previa: queda una lista de filas.</li><li>Menos visual que A.</li></ul></div></div>
+        <a class="open" href="b-lector.html">Abrir B · Lector →</a>
+      </div>
+    </article>
+    <article class="prop">
+      <a class="img" href="c-fichero.html"><img src="shots/c-fichero.png" alt="Propuesta C, Fichero, a 1440 px"></a>
+      <div class="body">
+        <h3>C · Fichero</h3>
+        <p class="thesis">Una biblioteca: la destacada como portada tipográfica de 88 px con una tira de carátulas, y todas las listas en un índice ordenable (lista, tipo, elementos, guardadas, actualizada), con crear cuenta y Para completar al costado.</p>
+        <div class="tags"><span>Índice ordenable</span><span>Comparar de un vistazo</span><span>Portada tipográfica</span></div>
+        <div class="pc"><div class="pro"><h4>A favor</h4><ul><li>La forma más honesta de comparar: columnas fijas y ordenables.</li><li>La que mejor escala y la más cercana al espíritu «biblioteca» del producto.</li><li>Implementación simple: una tabla y una consulta paginada.</li></ul></div><div class="con"><h4>En contra</h4><ul><li>Fría para una página de recomendaciones; las carátulas se reducen a 52 px.</li><li>Tampoco muestra qué hay dentro.</li><li>Vuelve a usar la columna lateral que la auditoría señalaba.</li></ul></div></div>
+        <a class="open" href="c-fichero.html">Abrir C · Fichero →</a>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section id="comparacion">
+  <h2>Comparación</h2>
+  <p>De 1 (no lo resuelve) a 3 (lo resuelve bien).</p>
+  <table>
+    <thead><tr><th>Criterio</th><th>A · Cajones</th><th>B · Lector</th><th>C · Fichero</th></tr></thead>
+    <tbody>
+      <tr><td>Decidir sin abrir</td><td class="s">1</td><td class="s">3</td><td class="s">2</td></tr>
+      <tr><td>Mismo marco que el sitio</td><td class="s">3</td><td class="s">3</td><td class="s">3</td></tr>
+      <tr><td>Un solo tipo de mosaico</td><td class="s">2</td><td class="s">3</td><td class="s">3</td></tr>
+      <tr><td>Crear y completar en el recorrido</td><td class="s">3</td><td class="s">2</td><td class="s">1</td></tr>
+      <tr><td>Teléfono</td><td class="s">3</td><td class="s">2</td><td class="s">2</td></tr>
+      <tr><td>Pocas y muchas listas</td><td class="s">2</td><td class="s">3</td><td class="s">3</td></tr>
+      <tr><td>Identidad</td><td class="s">3</td><td class="s">2</td><td class="s">1</td></tr>
+      <tr><td>Esfuerzo de implementación</td><td class="s">medio</td><td class="s">medio-alto</td><td class="s">bajo</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="recomendacion">
+  <h2>Recomendación</h2>
+  <div class="rec">
+    <div><h3>B · Lector, con el exhibidor y la banda de A</h3><p style="margin-top:12px">Es la única que responde la pregunta que hace la página: ¿esta lista vale la pena? Las otras dos ordenan mejor o se ven mejor, pero obligan a abrir para saber.</p></div>
+    <div>
+      <ul>
+        <li><b>De B:</b> filas con autor, tipo, elementos y guardadas; pestañas Populares, Recientes y Para completar; vista previa fija en escritorio con los primeros elementos numerados y los botones de abrir y guardar.</li>
+        <li><b>De A:</b> la destacada como exhibidor (fundas en abanico y sus primeros elementos) y la invitación a crear cuenta como banda dentro del recorrido, no en un panel lateral.</li>
+        <li><b>De C:</b> la línea de metadatos honesta y el orden explícito («Más guardadas»).</li>
+        <li><b>En el teléfono:</b> filas que abren la lista; los filtros en su propia fila de 4 segmentos de 40 px.</li>
+        <li><b>Por decidir:</b> cómo carga la vista previa (la primera lista resuelta en el servidor y las demás al elegirlas), y si el teléfono despliega la vista previa bajo la fila o solo abre la lista.</li>
+      </ul>
+      <p style="margin-top:14px">Como Inicio y Explorar, se haría en tres fases: marco y jerarquía; filas y vista previa; exhibidor, banda y teléfono.</p>
+    </div>
+  </div>
+</section>
+
+<div class="notes">
+  <p>Mockups estáticos en <code>mockups/lists-2026-11/</code>; las carátulas salen del mosaico real del hero de Inicio (miniaturas de 224 px, dentro del límite de 250 de la licencia). Los conteos de guardadas son de ejemplo.</p>
+  <p>Nada de esto modificó la página real ni se inició sesión.</p>
+</div>
+</main>
+</body>
+</html>

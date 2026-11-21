@@ -102,11 +102,12 @@ async function CommunityListsPage({
         {featured.lists.length > 0 ? (
           // Sin caja propia (era una caja con tarjetas-caja dentro) ni rótulo ámbar: título y una línea
           // que dice qué reúne, como las secciones de Explorar. Una sola destacada ocupa la fila, más grande.
-          <section className="flex w-full flex-col gap-4">
+          <section className="flex w-full flex-col gap-5">
             <SectionHeader
               heading={t("community.featuredHeading")}
               description={t("community.featuredDescription")}
               seeAll={{ href: "/explore/collections", label: t("community.seeCollections") }}
+              size="page"
             />
             {/* Una sola destacada es una portada ancha (D7); con dos o más, la misma estantería que las demás secciones. */}
             <ListsGrid cols={featured.lists.length === 1 ? 1 : "shelf"}>
@@ -164,12 +165,16 @@ async function CommunityListsPage({
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col items-start gap-8 px-4 py-12">
-      <Breadcrumbs items={[{ label: tCommon("home"), href: "/" }, { label: t("community.heading") }]} />
-      {/* Solo miga de pan y título (como Explorar): la introducción enumeraba las secciones de abajo. Con sesión,
-          "Crear lista" a la derecha del título abre el formulario de nueva lista de `/me/lists`. */}
-      <div className="-mt-4 flex w-full items-center justify-between gap-4">
-        <h1 className="font-display text-3xl text-paper sm:text-4xl">{t("community.heading")}</h1>
+    // Mismo contenedor ancho y escala que Inicio y Explorar (openspec: redesign-lists-phase1).
+    <main className="mx-auto flex min-h-screen w-full max-w-[88rem] flex-col items-start gap-10 px-4 pb-16 pt-10 sm:px-8 xl:px-12">
+      {/* Miga de pan, título y una frase de entrada que dice qué hay, sin enumerar las secciones. Con sesión, "Crear lista"
+          a la derecha del título abre el formulario de nueva lista de `/me/lists`. */}
+      <div className="flex w-full flex-col gap-3">
+        <Breadcrumbs items={[{ label: tCommon("home"), href: "/" }, { label: t("community.heading") }]} />
+        <div className="flex w-full flex-wrap items-end justify-between gap-4">
+          <h1 className="font-display text-[clamp(2.5rem,5vw,4rem)] font-bold leading-[0.95] tracking-[-0.035em] text-paper">
+            {t("community.heading")}
+          </h1>
         {canSave ? (
           <Link
             href="/me/lists?new=1"
@@ -178,6 +183,8 @@ async function CommunityListsPage({
             {t("createList")}
           </Link>
         ) : null}
+        </div>
+        <p className="max-w-[54ch] font-body text-lg text-paper-muted">{t("community.intro")}</p>
       </div>
 
       <Suspense fallback={null}>
@@ -187,8 +194,8 @@ async function CommunityListsPage({
       {/* Sin sesión, la invitación a entrar está en el riel (D9), no en una línea bajo el toolbar. En explorar no hay riel:
           la grilla ocupa todo el ancho. */}
       {rail ? (
-        <div className="grid w-full grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-12">
-          <div className="flex min-w-0 flex-col gap-8">{content}</div>
+        <div className="grid w-full grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-12">
+          <div className="flex min-w-0 flex-col gap-16 lg:gap-20">{content}</div>
           <div className="lg:sticky lg:top-24 lg:self-start">{rail}</div>
         </div>
       ) : (

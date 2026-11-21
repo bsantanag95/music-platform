@@ -217,8 +217,10 @@ Descubrimiento de listas de la comunidad en ruta propia `/[locale]/lists`, enlaz
 barra general del Header junto a Explorar. Accesible con y sin sesión.
 
 La superficie tiene **dos estados** derivados de la URL (`?q=&type=&sort=`), con un **toolbar de
-exploración siempre visible**: búsqueda por texto, chips de tipo (Todas · Artistas · Álbumes · Canciones) y orden
-("Más guardadas" / Recientes; en la vitrina el control dice "Ordenar", sin valor):
+exploración siempre visible**: búsqueda por texto, tipo como control segmentado (Todas · Artistas · Álbumes · Canciones) y
+orden ("Más guardadas" / Recientes; en la vitrina el control dice "Ordenar", sin valor). Los tres miden 44 px; desde `lg` van en
+una fila y por debajo los cuatro segmentos ocupan una fila propia, sin desplazamiento (cambio `redesign-lists-phase1`; antes
+eran chips de 28 px que se salían de la pantalla junto al orden):
 
 - **Vitrina** (sin filtros): compone las secciones de abajo, omitiendo las vacías, con un **riel** a la derecha desde `lg`
   (debajo, por debajo de ese ancho).
@@ -280,6 +282,19 @@ detalle de lista (propio y ajeno). La **identidad** de quién guardó sigue sien
 guardado individual es un marcador privado por `(saver, list)`—. El conteo de listas
 `followers` / `private` no se muestra salvo a su dueño. "Populares" ordena por ese conteo
 pero sin posiciones numeradas ni distintivos de "top": es una vitrina, no un leaderboard.
+
+#### Rediseño en tres fases (auditoría del 2026-11-21, mockups en `mockups/lists-2026-11/`)
+
+Se eligió la propuesta «B · Lector» con el exhibidor y la banda de «A · Cajones».
+
+- **Fase 1** (`redesign-lists-phase1`): mismo contenedor que Inicio y Explorar (`max-w-[88rem]`, márgenes fluidos), título de
+  40–64 px con una frase de entrada (`lists.community.intro`), secciones con el encabezado de página (`SectionHeader size="page"`,
+  30–40 px) y el toolbar descrito arriba. El riel sigue a la derecha.
+- **Fase 2** (pendiente): el lector. Filas con autor, tipo, elementos y guardadas; pestañas (De la gente que sigues con sesión,
+  Populares, Recientes, Para completar); vista previa fija desde `lg` (la primera lista resuelta en el servidor, las demás con
+  `GET /api/users/{username}/lists/{listId}` al elegirlas); en el teléfono las filas abren la lista; se retira el riel.
+- **Fase 3** (pendiente): la destacada como exhibidor, la banda «Arma tus propias listas» en el recorrido y los estados vacío y
+  sin resultados con la forma nueva.
 
 ### Decisiones abiertas
 

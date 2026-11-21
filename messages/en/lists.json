@@ -84,6 +84,7 @@
   "community": {
     "pageTitle": "Community lists",
     "heading": "Lists",
+    "intro": "Lists the community builds, ranks and recommends: albums, artists and songs.",
     "searchPlaceholder": "Search lists",
     "searchLabel": "Search lists",
     "sortPopular": "Most saved",
