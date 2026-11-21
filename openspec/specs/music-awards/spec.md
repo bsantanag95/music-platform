@@ -236,7 +236,7 @@ compactas). Una clave inexistente SHALL responder como página no encontrada.
 `/{locale}/awards` SHALL depender de cuántos premios hay cargados. Con **un solo premio** SHALL redirigir a su ceremonia más reciente
 (`/{locale}/awards/{premio}/{año}`). Con **varios**, SHALL ser el hub de premios: bajo el título, la cantidad de premios y de
 ceremonias cargadas; una tarjeta por premio, de la ceremonia más reciente primero, con el nombre del premio, el año y la edición de su
-ceremonia más reciente y su ganador destacado (la tarjeta de la sección "Premios" de Explorar), cada una enlazada a la ceremonia, sin
+ceremonia más reciente y su ganador destacado con su carátula, cada una enlazada a la ceremonia, sin
 rótulo ni texto de relleno sobre el título. En el hub, cada tarjeta SHALL sumar el rango de años cargados del premio, la cantidad de
 ceremonias, quién vota (si se conoce) y hasta cinco ediciones anteriores como enlaces a sus ceremonias. Las tarjetas SHALL ir en una
 sola grilla; la agrupación por tipo de premio (generales, música latina, crítica y jurado, otros) MAY activarse cuando crezca el número
