@@ -83,7 +83,7 @@ interface CommunityActivitySectionProps {
 
 // Una sección de `/activity` (Recientes, Siguiendo, Tú). La primera página llega renderizada del servidor cuando es
 // la pestaña de la URL; el resto se pide por `useInfiniteQuery` contra el endpoint de la fuente — mismo patrón que
-// `CommunityListSection` en `/lists`. El filtro de tipo vive en `?kind=` y, como la pestaña, se deriva de
+// el lector de `/lists` (`ListsReader`). El filtro de tipo vive en `?kind=` y, como la pestaña, se deriva de
 // `useSearchParams` y se escribe con `history.replaceState`.
 export function CommunityActivitySection({
   source,

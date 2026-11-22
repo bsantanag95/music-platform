@@ -178,7 +178,8 @@ export async function listsFromFollowing(readerId: string, page = 1, pageSize = 
 
   const pageRows = rows.slice(0, pageSize);
   return {
-    lists: await enrichPublicLists(pageRows, readerId),
+    // Guardadas en todas las pestañas del lector, no solo en Populares (openspec: redesign-lists-phase2).
+    lists: await enrichPublicLists(pageRows, readerId, { withSaveCount: true }),
     page,
     pageSize,
     hasNext: rows.length > pageSize,

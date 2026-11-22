@@ -245,7 +245,7 @@ export async function listDiscoverLists(
 
   const pageRows = rows.slice(0, pageSize);
   return {
-    lists: await enrichPublicLists(pageRows, readerId),
+    lists: await enrichPublicLists(pageRows, readerId, { withSaveCount: true }),
     page,
     pageSize,
     hasNext: rows.length > pageSize,
