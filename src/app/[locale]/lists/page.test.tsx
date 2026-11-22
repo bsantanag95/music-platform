@@ -47,17 +47,27 @@ vi.mock("@/components/lists/ListsReader", () => ({
 vi.mock("@/components/lists/ListsYourLine", () => ({
   ListsYourLine: ({ resume }: { resume: { id: string } | null }) => <div data-testid="your-line" data-resume={resume?.id ?? "sin-listas"} />,
 }));
-vi.mock("@/components/lists/ListsSignUpBand", () => ({ ListsSignUpBand: () => <div data-testid="band" /> }));
-vi.mock("@/components/lists/CommunityListCard", () => ({
-  CommunityListCard: () => <div data-testid="featured-card" />,
+vi.mock("@/components/lists/ListsSignUpBand", () => ({
+  ListsSignUpBand: ({ covers = [] }: { covers?: string[] }) => <div data-testid="band" data-covers={covers.join(",")} />,
+  ListsBand: ({ title, primary }: { title: string; primary: { label: string } }) => (
+    <div data-testid="empty-band">
+      {title}
+      {primary.label}
+    </div>
+  ),
+}));
+vi.mock("@/components/lists/FeaturedExhibit", () => ({
+  FeaturedExhibit: ({ list, items, compact }: { list: { id: string }; items?: { id: string }[] | null; compact?: boolean }) => (
+    <div data-testid={compact ? "featured-compact" : "featured-card"} data-id={list.id} data-items={items === null ? "null" : (items ?? []).length} />
+  ),
 }));
 vi.mock("@/components/lists/CommunityListsToolbar", () => ({
   CommunityListsToolbar: () => <div data-testid="toolbar" />,
 }));
 
-const list = (id: string, username = "fran") => ({ id, owner: { username } });
+const list = (id: string, username = "fran") => ({ id, owner: { username }, coverThumbs: [] as string[] });
 const page = (lists: unknown[]) => ({ lists, page: 1, pageSize: 20, hasNext: false });
-const camino = (id: string, kind = "standard") => ({ id, kind, owner: { username: "eli" } });
+const camino = (id: string, kind = "standard") => ({ id, kind, owner: { username: "eli" }, coverThumbs: [] as string[] });
 
 async function renderPage(searchParams: Record<string, string> = {}) {
   render(await CommunityListsPage({ searchParams: Promise.resolve(searchParams) }));
@@ -175,8 +185,8 @@ describe("/lists (openspec: redesign-lists-phase2)", () => {
   it("muestra el estado vacío global con su acción: iniciar sesión sin sesión, crear la primera con sesión (D10)", async () => {
     mocks.resolveSession.mockResolvedValue(null);
     await renderPage();
-    expect(screen.getByText("community.emptyTitle")).toBeInTheDocument();
-    expect(screen.getByText("community.emptySignedOutAction")).toBeInTheDocument();
+    expect(screen.getByTestId("empty-band")).toHaveTextContent("community.emptyTitle");
+    expect(screen.getByTestId("empty-band")).toHaveTextContent("community.emptySignedOutAction");
     expect(screen.queryByTestId("reader")).not.toBeInTheDocument();
   });
 
@@ -186,8 +196,8 @@ describe("/lists (openspec: redesign-lists-phase2)", () => {
 
     await renderPage();
 
-    expect(screen.getByText("community.emptyTitle")).toBeInTheDocument();
-    expect(screen.getByText("community.emptyAction")).toBeInTheDocument();
+    expect(screen.getByTestId("empty-band")).toHaveTextContent("community.emptyTitle");
+    expect(screen.getByTestId("empty-band")).toHaveTextContent("community.emptyAction");
   });
 
   it("con filtros usa el lector en modo explorar, sin Destacadas, pestañas ni banda", async () => {
@@ -211,5 +221,66 @@ describe("/lists (openspec: redesign-lists-phase2)", () => {
     await renderPage({ type: "nope", sort: "nope" });
 
     expect(reader().dataset.mode).toBe("showcase");
+  });
+});
+
+describe("/lists: exhibidor, banda y estados (openspec: redesign-lists-phase3)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.listPopularLists.mockResolvedValue(page([]));
+    mocks.listsFromFollowing.mockResolvedValue(page([]));
+    mocks.discoverCaminos.mockResolvedValue({ caminos: [], page: 1, pageSize: 8, hasNext: false });
+    mocks.getMostRecentEditedList.mockResolvedValue(null);
+    mocks.resolveSession.mockResolvedValue(null);
+  });
+
+  it("la primera destacada es el exhibidor con sus elementos; las demás, compactas", async () => {
+    mocks.listFeaturedLists.mockResolvedValue({ lists: [list("f1", "exploracion"), list("f2", "exploracion"), list("f3", "exploracion")] });
+    mocks.listDiscoverLists.mockResolvedValue(page([]));
+    mocks.getUserListDetail.mockResolvedValue({ items: [{ id: "i1" }, { id: "i2" }] });
+
+    await renderPage();
+
+    expect(mocks.getUserListDetail).toHaveBeenCalledWith("exploracion", "f1", null);
+    expect(screen.getByTestId("featured-card")).toHaveAttribute("data-items", "2");
+    expect(screen.getAllByTestId("featured-compact").map((n) => n.dataset.id)).toEqual(["f2", "f3"]);
+  });
+
+  it("si los elementos de la destacada fallan, el exhibidor se muestra igual sin ellos", async () => {
+    mocks.listFeaturedLists.mockResolvedValue({ lists: [list("f1", "exploracion")] });
+    mocks.listDiscoverLists.mockResolvedValue(page([]));
+    mocks.getUserListDetail.mockRejectedValue(new Error("boom"));
+
+    await renderPage();
+
+    expect(screen.getByTestId("featured-card")).toHaveAttribute("data-items", "null");
+  });
+
+  it("la banda lleva hasta tres carátulas de las listas de la página", async () => {
+    mocks.listFeaturedLists.mockResolvedValue({ lists: [] });
+    mocks.listDiscoverLists.mockResolvedValue(
+      page([
+        { ...list("r1"), coverThumbs: ["a.jpg", "x.jpg"] },
+        { ...list("r2"), coverThumbs: [] },
+        { ...list("r3"), coverThumbs: ["b.jpg"] },
+        { ...list("r4"), coverThumbs: ["c.jpg"] },
+        { ...list("r5"), coverThumbs: ["d.jpg"] },
+      ]),
+    );
+    mocks.getUserListDetail.mockResolvedValue({ items: [] });
+
+    await renderPage();
+
+    expect(screen.getByTestId("band")).toHaveAttribute("data-covers", "a.jpg,b.jpg,c.jpg");
+  });
+
+  it("el estado vacío global usa la forma de la banda, y entonces no hay banda de invitación aparte", async () => {
+    mocks.listFeaturedLists.mockResolvedValue({ lists: [] });
+    mocks.listDiscoverLists.mockResolvedValue(page([]));
+
+    await renderPage();
+
+    expect(screen.getByTestId("empty-band")).toHaveTextContent("community.emptyTitle");
+    expect(screen.queryByTestId("band")).not.toBeInTheDocument();
   });
 });

@@ -248,7 +248,12 @@ Fuentes, en este orden:
    Rail sin paginación. Las listas vacías se omiten (siguen visibles en su perfil y por enlace).
    Las **colecciones** de Explorar no entran aquí, ni las generadas por plantilla ni las curadas con fila en
    `user_list_featured` (ADR 0038): una colección es contenido de la plataforma y se recorre en
-   `/explore/collections`, no entre las listas de la comunidad. El encabezado de la sección enlaza allí.
+   `/explore/collections`, no entre las listas de la comunidad. El encabezado de la sección enlaza allí. Forma
+   (`redesign-lists-phase3`): la primera es un **exhibidor** (`FeaturedExhibit`) a todo el ancho, con hasta cuatro carátulas como
+   fundas en abanico (círculo en listas de artistas; silueta sin carátulas), la insignia oficial, el título en grande, la
+   descripción, sus **primeros cuatro elementos** con artista (tres en el teléfono; resueltos en el servidor con
+   `getUserListDetail`, y sin ellos si fallan), «Abrir la lista», Guardar y los conteos; las demás, exhibidores compactos en una
+   fila de hasta tres. Las demás fuentes (2–4) son pestañas del lector, abajo.
 2. **De la gente que sigues** — listas visibles (`public` o `followers`) de usuarios que el
    lector sigue, recientes primero, sin las vacías (aparecen con su primer ítem). Solo con sesión; `GET /api/lists/from-following` responde
    `401 AUTH_REQUIRED` sin ella.
@@ -304,8 +309,10 @@ Se eligió la propuesta «B · Lector» con el exhibidor y la banda de «A · Ca
 - **Fase 2** (`redesign-lists-phase2`): el lector. Filas con autor, tipo, elementos y guardadas; pestañas (De la gente que sigues con sesión,
   Populares, Recientes, Para completar); vista previa fija desde `lg` (la primera lista resuelta en el servidor, las demás con
   `GET /api/users/{username}/lists/{listId}` al elegirlas); en el teléfono las filas abren la lista; se retira el riel.
-- **Fase 3** (pendiente): la destacada como exhibidor, la banda «Arma tus propias listas» en el recorrido y los estados vacío y
-  sin resultados con la forma nueva.
+- **Fase 3** (`redesign-lists-phase3`): el exhibidor de Destacadas (arriba); la banda «Arma tus propias listas» (`ListsBand`) con
+  la superficie de la página y una pila de tres fundas de las listas que se muestran; el estado vacío global con la misma banda
+  (crear la primera lista o iniciar sesión), y el «sin resultados» del modo explorar dentro del lector, con «Limpiar filtros» y,
+  si hay un tipo elegido, «Buscar en todos los tipos» (quita solo `type`). Con esto el rediseño en tres fases queda completo.
 
 ### Decisiones abiertas
 

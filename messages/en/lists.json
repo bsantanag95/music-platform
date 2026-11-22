@@ -128,7 +128,8 @@
       "loadError": "This list could not be loaded. You can still open it.",
       "shownOf": "{shown} of {total}",
       "resume": "Pick up “{title}”",
-      "noLists": "You have no lists yet"
+      "noLists": "You have no lists yet",
+      "allTypes": "Search all types"
     },
     "emptyAction": "Create the first list",
     "emptySignedOutAction": "Sign in to create the first one"

@@ -205,5 +205,21 @@ describe("ListsReader (openspec: redesign-lists-phase2)", () => {
 
     expect(screen.queryByRole("region", { name: /Vista previa/ })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Limpiar filtros/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Buscar en todos los tipos" })).not.toBeInTheDocument();
+  });
+
+  it("sin resultados con un tipo elegido ofrece buscar en todos los tipos, conservando texto y orden", () => {
+    renderReader(
+      <ListsReader
+        mode="explore"
+        initial={page([])}
+        filters={{ q: "rock", type: "artist", sort: "popular" } as never}
+        canSave={false}
+        initialPreview={null}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Buscar en todos los tipos" }));
+    expect(mocks.replace).toHaveBeenCalledWith("/lists?q=rock&sort=popular", { scroll: false });
   });
 });

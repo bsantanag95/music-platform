@@ -8,13 +8,11 @@ import { getUserListDetail } from "@/services/lists/lists";
 import { discoverCaminos } from "@/services/camino/discovery";
 import { listFeaturedLists, listPopularLists, listsFromFollowing } from "@/services/lists/community";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionHeader } from "@/components/discovery/SectionHeader";
-import { ListsGrid } from "@/components/lists/lists-shared";
-import { CommunityListCard } from "@/components/lists/CommunityListCard";
+import { FeaturedExhibit } from "@/components/lists/FeaturedExhibit";
 import { CommunityListsToolbar } from "@/components/lists/CommunityListsToolbar";
 import { ListsReader, type InitialPreview, type ReaderTab } from "@/components/lists/ListsReader";
-import { ListsSignUpBand } from "@/components/lists/ListsSignUpBand";
+import { ListsBand, ListsSignUpBand } from "@/components/lists/ListsSignUpBand";
 import { ListsYourLine } from "@/components/lists/ListsYourLine";
 import { getMostRecentEditedList } from "@/services/home/home";
 import { parseCommunityFilters, toDiscoverFilters } from "@/components/lists/community-filters";
@@ -132,28 +130,40 @@ async function CommunityListsPage({
     );
 
     const anyContent = featured.lists.length > 0 || tabs.some((tab) => tab.key !== "to-complete");
+    // Elementos de la primera destacada para su exhibidor (redesign-lists-phase3); sin ellos se muestra igual.
+    const firstFeatured = featured.lists[0];
+    const exhibitItems = firstFeatured
+      ? await getUserListDetail(firstFeatured.owner.username, firstFeatured.id, viewerId)
+          .then((detail) => detail.items)
+          .catch(() => null)
+      : null;
+    // Fundas de la banda sin sesión: una carátula de cada una de las primeras listas que tengan alguna.
+    const bandCovers = [
+      ...featured.lists,
+      ...tabs.flatMap((tab): { coverThumbs: string[] }[] => (tab.key === "to-complete" ? tab.caminos : tab.initial.lists)),
+    ]
+      .map((list) => list.coverThumbs[0])
+      .filter((cover): cover is string => Boolean(cover))
+      .slice(0, 3);
 
     content = (
       <>
         {!anyContent ? (
-          // Con una salida (D10): crear la primera lista, o iniciar sesión para crearla.
-          <EmptyState
+          // Con una salida (D10): crear la primera lista, o iniciar sesión para crearla. Misma forma que la banda.
+          <ListsBand
+            headingId="lists-empty-heading"
             title={t("community.emptyTitle")}
             description={t("community.emptyDescription")}
-            action={
-              <Link
-                href={canSave ? "/me/lists?new=1" : "/auth/login"}
-                className="inline-flex items-center justify-center rounded border border-ink-border bg-ink px-4 py-2 font-display text-sm font-medium text-paper transition-colors hover:border-amber"
-              >
-                {canSave ? t("community.emptyAction") : t("community.emptySignedOutAction")}
-              </Link>
+            primary={
+              canSave
+                ? { href: "/me/lists?new=1", label: t("community.emptyAction") }
+                : { href: "/auth/login", label: t("community.emptySignedOutAction") }
             }
           />
         ) : null}
 
-        {featured.lists.length > 0 ? (
-          // Sin caja propia ni rótulo ámbar: título y una línea que dice qué reúne, como las secciones de Explorar. Una sola
-          // destacada ocupa la fila, más grande (la Fase 3 la vuelve exhibidor).
+        {firstFeatured ? (
+          // El exhibidor de la primera destacada y, debajo, las demás en compacto (redesign-lists-phase3).
           <section className="flex w-full flex-col gap-5">
             <SectionHeader
               heading={t("community.featuredHeading")}
@@ -161,18 +171,16 @@ async function CommunityListsPage({
               seeAll={{ href: "/explore/collections", label: t("community.seeCollections") }}
               size="page"
             />
-            {/* Una sola destacada es una portada ancha (D7); con dos o más, la misma estantería que las demás secciones. */}
-            <ListsGrid cols={featured.lists.length === 1 ? 1 : "shelf"}>
-              {featured.lists.map((list) => (
-                <CommunityListCard
-                  key={list.id}
-                  list={list}
-                  canSave={canSave}
-                  large={featured.lists.length === 1}
-                  layout={featured.lists.length === 1 ? "row" : "shelf"}
-                />
-              ))}
-            </ListsGrid>
+            <FeaturedExhibit list={firstFeatured} items={exhibitItems} canSave={canSave} />
+            {featured.lists.length > 1 ? (
+              <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {featured.lists.slice(1).map((list) => (
+                  <li key={list.id}>
+                    <FeaturedExhibit list={list} canSave={canSave} compact />
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </section>
         ) : null}
 
@@ -180,7 +188,7 @@ async function CommunityListsPage({
           <ListsReader mode="showcase" tabs={tabs} tabsLabel={t("community.reader.tabsLabel")} canSave={canSave} initialPreview={initialPreview} />
         ) : null}
 
-        {!canSave ? <ListsSignUpBand /> : null}
+        {!canSave && anyContent ? <ListsSignUpBand covers={bandCovers} /> : null}
       </>
     );
   }
