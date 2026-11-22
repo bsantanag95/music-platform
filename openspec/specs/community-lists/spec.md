@@ -299,8 +299,8 @@ siluetas de disco ni recortar una imagen fuera del cuadrado: una sola imagen SHA
 mitades y tres SHALL ocupar tres celdas de una grilla de 2×2, con la cuarta como una celda neutra que muestra los ítems
 restantes ("+N") o, si no hay más, el tipo de la lista. Sin ninguna, SHALL mostrarse una única silueta de disco. Las
 imágenes SHALL ser la carátula del álbum, la de un álbum representativo de una canción y, en una lista de artistas, la foto
-del artista si no fue retirada, recortada en círculo dentro de su celda. Cuando "Destacadas" tiene una sola lista, su
-tarjeta SHALL ocupar la fila como portada ancha (ver "Destacada única como portada").
+del artista si no fue retirada, recortada en círculo dentro de su celda. La primera de "Destacadas" SHALL
+presentarse como exhibidor, con sus carátulas en abanico en lugar del mosaico (ver "Destacadas como exhibidor").
 
 #### Scenario: Lista con dos imágenes
 
@@ -315,7 +315,7 @@ tarjeta SHALL ocupar la fila como portada ancha (ver "Destacada única como port
 #### Scenario: Una sola destacada
 
 - **WHEN** "Destacadas" tiene una sola lista
-- **THEN** su tarjeta ocupa todo el ancho como portada, con un mosaico mayor
+- **THEN** se presenta como exhibidor a todo el ancho, con sus carátulas en abanico en lugar del mosaico
 
 #### Scenario: Lista con tres imágenes
 
@@ -333,18 +333,6 @@ incluir `generated` (plantilla y período, o `null`), como ya lo hacen las lista
 
 - **WHEN** una persona busca "Grammy" en `/en/lists` y activa la tarjeta de la colección generada
 - **THEN** la tarjeta muestra el título en inglés y lleva directo a `/en/explore/collections/…`, sin redirección
-
-### Requirement: Destacada única como portada
-
-Cuando "Destacadas" tiene una sola lista, la tarjeta SHALL presentarse como portada ancha: mosaico mayor, título, tipo,
-conteo, dueño, una línea con los primeros nombres de la lista (hasta cinco) y la descripción (hasta dos líneas), con la
-acción Guardar visible. La insignia de contenido oficial SHALL ir en su propia línea, encima del título, y el
-título SHALL NOT truncarse por ella en ningún ancho.
-
-#### Scenario: Destacada en móvil
-
-- **WHEN** la única destacada es una lista oficial de título largo y se ve en 375px
-- **THEN** la insignia "Oficial" aparece sobre el título y el título se lee completo (en hasta dos líneas)
 
 ### Requirement: Filas del lector
 
@@ -466,4 +454,37 @@ tus propias listas" con la acción de crear una cuenta y la de iniciar sesión. 
 
 - **WHEN** una persona sin sesión abre `/lists`
 - **THEN** después del lector ve la banda "Arma tus propias listas" con "Crear cuenta" e "Iniciar sesión", y no "Tus listas"
+
+### Requirement: Destacadas como exhibidor
+
+La primera lista de "Destacadas" SHALL presentarse como **exhibidor** a todo el ancho: hasta cuatro carátulas de la lista
+como fundas abiertas en abanico (las fotos de artistas, en círculo), la insignia de contenido oficial en su propia línea sobre
+el título, el tipo, el título en grande (hasta dos líneas, sin truncar por la insignia en ningún ancho), el dueño, la
+descripción (hasta dos líneas), los **primeros cuatro elementos** numerados con su título y, si tiene, su artista, y las
+acciones "Abrir la lista" y, con sesión y si no es propia, Guardar, junto al conteo de elementos y de guardados. Los
+elementos SHALL resolverse en el servidor; si no se pueden obtener, el exhibidor SHALL mostrarse sin ellos. Desde la segunda,
+las destacadas SHALL presentarse como **exhibidores compactos** (abanico pequeño, título, tipo y conteo) en una fila de hasta
+tres columnas desde `md`, una sobre otra por debajo. En el teléfono el abanico SHALL achicarse y mostrar tres elementos, no
+cuatro. Sin carátulas, el abanico SHALL mostrar una sola silueta de disco.
+
+#### Scenario: Destacada en móvil
+
+- **WHEN** la única destacada es una lista oficial de título largo y se ve en 375px
+- **THEN** la insignia "Oficial" aparece sobre el título y el título se lee completo (en hasta dos líneas)
+
+#### Scenario: Exhibidor de la destacada
+
+- **WHEN** la única destacada es "Playlist de fondo", con cuatro canciones con carátula
+- **THEN** se ve a todo el ancho con las cuatro carátulas en abanico, la insignia "Oficial", su descripción, las cuatro
+  canciones numeradas con su artista y "Abrir la lista"
+
+#### Scenario: Varias destacadas
+
+- **WHEN** hay tres listas oficiales destacadas
+- **THEN** la primera es el exhibidor y las otras dos van debajo como exhibidores compactos, lado a lado desde `md`
+
+#### Scenario: Elementos no disponibles
+
+- **WHEN** no se pueden obtener los elementos de la destacada
+- **THEN** el exhibidor se muestra con su abanico, título, descripción y acciones, sin la lista numerada y sin error
 

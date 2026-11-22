@@ -5,7 +5,6 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { getDiscoverLists, getListsFromFollowing, getPopularLists, type DiscoverListFiltersParams } from "@/lib/api/lists";
 import { queryKeys } from "@/lib/query/keys";
 import type { DiscoverListsResponse, UserListItem } from "@/lib/api/schemas";
@@ -314,16 +313,31 @@ function ExploreResults({
   const clear = () => router.replace(pathname, { scroll: false });
 
   if (lists.length === 0) {
+    // Sin resultados dentro del lector (redesign-lists-phase3): limpiar todo o, con un tipo elegido, quitar solo el tipo.
+    const withoutType = () => {
+      const next = new URLSearchParams();
+      if (filters.q) next.set("q", filters.q);
+      if (filters.sort) next.set("sort", filters.sort);
+      const query = next.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    };
     return (
-      <EmptyState
-        title={t("community.noResultsTitle")}
-        description={t("community.noResultsDescription")}
-        action={
+      <section aria-labelledby="lists-no-results" className="flex flex-col items-start gap-3 border-y border-ink-border py-10">
+        <h2 id="lists-no-results" className="font-display text-2xl font-bold tracking-[-0.015em] text-paper">
+          {t("community.noResultsTitle")}
+        </h2>
+        <p className="max-w-[52ch] font-body text-paper-muted">{t("community.noResultsDescription")}</p>
+        <div className="mt-1 flex flex-wrap gap-3">
           <Button variant="secondary" onClick={clear}>
             {t("clearFilters")}
           </Button>
-        }
-      />
+          {filters.type ? (
+            <Button variant="secondary" onClick={withoutType}>
+              {t("community.reader.allTypes")}
+            </Button>
+          ) : null}
+        </div>
+      </section>
     );
   }
 
