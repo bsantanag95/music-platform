@@ -39,6 +39,8 @@ interface CollectionRailProps<T extends FeaturedCollection> {
   compact?: boolean;
   /** Solo la rejilla, sin sección ni encabezado: para colocarla dentro de otra sección que ya tiene el suyo. */
   bare?: boolean;
+  /** `page`: título de 30–40 px (portada de Explorar, redesign-explore-phase1). Por defecto, el compacto. */
+  headingSize?: "default" | "page";
 }
 
 /**
@@ -67,6 +69,7 @@ export function CollectionRail<T extends FeaturedCollection>({
   layout = "grid",
   compact = false,
   bare = false,
+  headingSize = "default",
 }: CollectionRailProps<T>) {
   const locale = useLocale();
   if (collections.length === 0 && !emptyMessage) return null;
@@ -75,7 +78,7 @@ export function CollectionRail<T extends FeaturedCollection>({
 
   const headingId = `${id}-heading`;
   const header = (
-    <SectionHeader heading={heading} description={description} seeAll={seeAll} headingId={headingId} />
+    <SectionHeader heading={heading} description={description} seeAll={seeAll} headingId={headingId} size={headingSize} />
   );
   const card = (collection: T, dense = false) => {
     const family = familyLabel ? familyLabel(collection.family) : null;

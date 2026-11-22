@@ -3,14 +3,18 @@ import { getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { AlbumRail } from "@/components/discovery/AlbumRail";
-import { CollectionRail } from "@/components/discovery/CollectionRail";
+import { CollectionMosaic } from "@/components/discovery/CollectionMosaic";
+import { ReleaseTimetable } from "@/components/discovery/ReleaseTimetable";
+import type { HomeRelease } from "@/services/home/home";
+import { DecadeTimeline, type DecadeEntry } from "@/components/discovery/DecadeTimeline";
+import { GenreFamilies, splitFamilies, type FamilyEntry } from "@/components/discovery/GenreFamilies";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { daysUntilRelease, releaseDateLabel } from "@/components/discovery/release-date-label";
 import { AwardsExploreSection } from "@/components/awards/AwardsExploreSection";
 import { HallOfFameExploreSection } from "@/components/awards/HallOfFameExploreSection";
 import { listHallOfFameClasses, listLatestCeremoniesByAward } from "@/services/awards/read";
 import { ExploreJumpNav } from "@/components/discovery/ExploreJumpNav";
 import { FilteredAlbumList } from "@/components/discovery/FilteredAlbumList";
-import { MosaicGrid, type MosaicTile } from "@/components/discovery/MosaicGrid";
 import { PopularNow } from "@/components/discovery/PopularNow";
 import { ApiError } from "@/lib/api/errors";
 import { isExploreEnabled } from "@/lib/config/discovery";
@@ -372,61 +376,93 @@ async function ExplorePage({ params, searchParams }: ExplorePageProps) {
   // Cifra que ubica a cada disco en su riel, sobre la carátula: el promedio en "Mejor valorados".
   const topRatedStats = Object.fromEntries(explore.topRated.map((album) => [album.id, `★ ${starsFormat.format(album.avgStars)}`]));
   const hasPopular = Boolean(explore.popular.albums || explore.popular.artists || explore.popular.songs);
-  const familyTiles = (buckets: FamilyBucket[]): MosaicTile[] =>
-    buckets.map((bucket) => ({
-      key: bucket.key,
-      label: tGenres(`families.${bucket.key}`),
-      href: `/explore?familia=${bucket.key}`,
-      covers: bucket.covers,
-    }));
-  const moreFamilies = explore.families.filter((f) => f.tier === "more");
-  // Décadas: de la más reciente a la más antigua; desde 1950 son tarjetas de la grilla y las anteriores van tras "Décadas anteriores".
-  const decadeTile = (bucket: (typeof explore.decades)[number]): MosaicTile => ({
-    key: String(bucket.decade),
+  // Géneros: las seis primeras familias principales en grande y el resto (las secundarias al final) en el índice.
+  const familyEntry = (bucket: FamilyBucket): FamilyEntry => ({
+    key: bucket.key,
+    label: tGenres(`families.${bucket.key}`),
+    href: `/explore?familia=${bucket.key}`,
+    covers: bucket.covers,
+  });
+  const families = splitFamilies(explore.families);
+  // Décadas: de la más reciente a la más antigua; desde 1950 tienen entrada propia y las anteriores van juntas en "Antes de 1950".
+  const decadeEntry = (bucket: (typeof explore.decades)[number]): DecadeEntry => ({
+    decade: bucket.decade,
     label: decadeLabel(bucket.decade, locale),
     href: `/explore?decada=${bucket.decade}`,
     covers: bucket.covers,
   });
-  const decadeTiles = explore.decades.filter((bucket) => bucket.decade >= MOSAIC_FIRST_DECADE).map(decadeTile);
-  const earlierDecadeTiles = explore.decades.filter((bucket) => bucket.decade < MOSAIC_FIRST_DECADE).map(decadeTile);
+  const decadeEntries = explore.decades.filter((bucket) => bucket.decade >= MOSAIC_FIRST_DECADE).map(decadeEntry);
+  const earlierDecadeEntries = explore.decades.filter((bucket) => bucket.decade < MOSAIC_FIRST_DECADE).map(decadeEntry);
   // Navegación rápida: una entrada por cada sección que se renderiza (mismos datos que cada sección usa para omitirse),
   // en el orden de la página.
+  // Lanzamientos (openspec: redesign-explore-phase3): novedades y próximos como las dos partes del horario de Inicio, con la
+  // cuenta regresiva como estado de los próximos.
+  const toRelease = (section: HomeRelease["section"]) => (album: (typeof explore.newReleases)[number]): HomeRelease[] =>
+    album.firstReleaseDate
+      ? [
+          {
+            id: album.id,
+            title: album.title,
+            artist: railArtistNames[album.id] ?? "",
+            coverThumbUrl: album.coverThumbUrl,
+            releaseDate: album.firstReleaseDate,
+            section,
+            badge: null,
+          },
+        ]
+      : [];
+  const releaseRows = [...explore.newReleases.flatMap(toRelease("recent")), ...explore.upcoming.flatMap(toRelease("upcoming"))];
+  const releaseStatus = (release: HomeRelease) => {
+    const days = release.section === "upcoming" ? daysUntilRelease(release.releaseDate) : undefined;
+    return days !== undefined
+      ? { label: t("countdown", { days }), tone: "upcoming" as const }
+      : { label: t("releasesPublished"), tone: "published" as const };
+  };
   const jumpItems = [
     { id: "colecciones", label: t("jump.collections"), visible: explore.collections.length > 0 },
     { id: "popular", label: t("jump.popular"), visible: hasPopular },
+    { id: "mejor-valorados", label: t("jump.topRated"), visible: explore.topRated.length > 0 },
     { id: "generos", label: t("jump.genres"), visible: explore.families.length > 0 },
     { id: "decadas", label: t("jump.decades"), visible: explore.decades.length > 0 },
-    { id: "novedades", label: t("jump.newReleases"), visible: explore.newReleases.length > 0 },
-    { id: "proximos", label: t("jump.upcoming"), visible: explore.upcoming.length > 0 },
+    { id: "lanzamientos", label: t("jump.releases"), visible: releaseRows.length > 0 },
     { id: "premios", label: t("jump.awards"), visible: recentCeremonies.length > 0 },
     { id: "salon-de-la-fama", label: t("jump.hallOfFame", { count: hallClasses.length }), visible: hallClasses.length > 0 },
-    { id: "mejor-valorados", label: t("jump.topRated"), visible: explore.topRated.length > 0 },
   ].filter((item) => item.visible);
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col items-start gap-12 px-4 py-12">
-      {/* Solo miga de pan y título: el rótulo repetía "Explorar" y la introducción enumeraba lo que cada
-          sección ya explica en su propia línea. Así la primera pantalla muestra contenido. */}
-      <div className="flex w-full flex-col gap-4">
+    // Mismo contenedor ancho que Inicio (openspec: redesign-explore-phase1). Las secciones guardan espacio arriba para la
+    // cabecera global y la barra de pasillos al saltar a su ancla.
+    <main className="mx-auto flex min-h-screen w-full max-w-[88rem] flex-col items-start gap-16 px-4 pb-16 pt-10 sm:px-8 lg:gap-24 xl:px-12 [&_section[id]]:scroll-mt-32">
+      {/* Miga de pan, título y una frase de entrada; la barra de pasillos va aparte, como hija directa del `main`,
+          para quedar fija durante toda la portada. */}
+      <div className="-mb-8 flex w-full flex-col gap-3 lg:-mb-16">
         <Breadcrumbs items={[{ label: tCommon("home"), href: "/" }, { label: t("heading") }]} />
-        <h1 className="font-display text-3xl text-paper">{t("heading")}</h1>
-        <ExploreJumpNav label={t("jump.label")} items={jumpItems} />
+        <h1 className="font-display text-[clamp(2.5rem,5vw,4rem)] font-bold leading-[0.95] tracking-[-0.035em] text-paper">
+          {t("heading")}
+        </h1>
+        <p className="max-w-[52ch] font-body text-lg text-paper-muted">{t("intro")}</p>
       </div>
+      <ExploreJumpNav label={t("jump.label")} items={jumpItems} />
 
-      {/* Un solo riel (ADR 0038): las curadas a mano y las generadas por plantilla mezcladas. Cómo se mantiene
-          una colección no es información para quien mira; lo que la distingue de las otras es su familia. Fila
-          desplazable porque son hasta 10 y una rejilla alargaría la portada. */}
-      <CollectionRail
-        id="colecciones"
-        heading={t("collectionsHeading")}
-        description={t("collectionsDescription")}
-        collections={explore.collections}
-        curatorUsername={CURATOR_USERNAME}
-        itemsLabel={(count) => t("collectionItems", { count })}
-        familyLabel={(family) => t(`collectionFamilies.${family}`)}
-        seeAll={{ href: "/explore/collections", label: t("seeAllCollections") }}
-        layout="scroll"
-      />
+      {/* Colecciones en el mosaico de Inicio (ADR 0038, openspec: redesign-explore-phase2): las curadas a mano y las generadas por
+          plantilla mezcladas, hasta seis, con su familia como sello. Las demás, en "Ver todas". */}
+      {explore.collections.length > 0 ? (
+        <section id="colecciones" aria-labelledby="explore-collections-heading" className="flex w-full flex-col gap-5">
+          <SectionHeading
+            id="explore-collections-heading"
+            title={t("collectionsHeading")}
+            description={t("collectionsDescription")}
+            seeAll={{ href: "/explore/collections", label: t("seeAllCollections") }}
+          />
+          <CollectionMosaic
+            collections={explore.collections}
+            curatorUsername={CURATOR_USERNAME}
+            itemsLabel={(count) => t("collectionItems", { count })}
+            labelledBy="explore-collections-heading"
+            familyLabel={(family) => t(`collectionFamilies.${family}`)}
+          />
+        </section>
+      ) : null}
 
       {/* Popular ahora (openspec: explore-popular-now): justo después de Colecciones, como prueba de que hay gente usando la
           plataforma. Reemplaza al antiguo riel "Más reseñados". */}
@@ -441,67 +477,10 @@ async function ExplorePage({ params, searchParams }: ExplorePageProps) {
         artistNames={railArtistNames}
       />
 
-      <MosaicGrid
-        id="generos"
-        headingId="explore-genres-heading"
-        listId="explore-genre-families"
-        heading={t("genresHeading")}
-        description={t("genresDescription")}
-        tiles={familyTiles(explore.families.filter((f) => f.tier === "main"))}
-        moreTiles={familyTiles(moreFamilies)}
-        moreLabel={t("moreFamilies", { count: moreFamilies.length })}
-        lessLabel={t("fewerFamilies")}
-      />
-
-      {/* Décadas (openspec: redesign-explore-decades): el mismo mosaico que los géneros, sin cifras, justo después de ellos: los
-          dos ejes del catálogo juntos, antes de los feeds con fecha. */}
-      <MosaicGrid
-        id="decadas"
-        headingId="explore-decades-heading"
-        listId="explore-decade-tiles"
-        heading={t("decadesHeading")}
-        description={t("decadesDescription")}
-        tiles={decadeTiles}
-        moreTiles={earlierDecadeTiles}
-        moreLabel={t("earlierDecades")}
-        lessLabel={t("fewerDecades")}
-      />
-
+      {/* Las dos voces de la comunidad juntas (openspec: redesign-explore-phase3): Mejor valorados justo después de Popular. */}
       <AlbumRail
         layout="scroll"
-        id="novedades"
-        authenticated={authenticated}
-        heading={t("newReleasesHeading")}
-        description={t("newReleasesDescription", { days: NEW_RELEASE_WINDOW_DAYS })}
-        albums={explore.newReleases}
-        artistNames={railArtistNames}
-        categoryLabels={categoryLabels}
-        coverLabel={coverLabel}
-        seeAll={{ href: "/explore?novedades=1", label: t("seeAll") }}
-        dateLabels={dateLabelsFor(explore.newReleases)}
-      />
-
-      <AlbumRail
-        layout="scroll"
-        id="proximos"
-        authenticated={authenticated}
-        heading={t("upcomingHeading")}
-        description={t("upcomingDescription", { days: UPCOMING_WINDOW_DAYS })}
-        albums={explore.upcoming}
-        artistNames={railArtistNames}
-        stats={countdownsFor(explore.upcoming)}
-        categoryLabels={categoryLabels}
-        coverLabel={coverLabel}
-        seeAll={{ href: "/explore?proximos=1", label: t("seeAll") }}
-        dateLabels={dateLabelsFor(explore.upcoming)}
-      />
-
-      <AwardsExploreSection ceremonies={recentCeremonies} />
-
-      <HallOfFameExploreSection halls={hallClasses} />
-
-      <AlbumRail
-        layout="scroll"
+        headingSize="page"
         id="mejor-valorados"
         authenticated={authenticated}
         heading={t("topRatedHeading")}
@@ -512,6 +491,57 @@ async function ExplorePage({ params, searchParams }: ExplorePageProps) {
         categoryLabels={categoryLabels}
         coverLabel={coverLabel}
       />
+      <GenreFamilies
+        heading={t("genresHeading")}
+        description={t("genresDescription")}
+        indexLabel={t("genresIndexLabel")}
+        big={families.big.map(familyEntry)}
+        index={families.index.map(familyEntry)}
+      />
+
+      {/* Décadas (openspec: redesign-explore-decades, redesign-explore-phase2): justo después de los géneros, los dos ejes del
+          catálogo juntos; línea de tiempo en escritorio e índice en el teléfono, sin cifras. */}
+      <DecadeTimeline
+        heading={t("decadesHeading")}
+        description={t("decadesDescription")}
+        decades={decadeEntries}
+        earlier={earlierDecadeEntries}
+        earlierLabel={t("beforeDecade", { year: String(MOSAIC_FIRST_DECADE) })}
+      />
+
+      {releaseRows.length > 0 ? (
+        <section id="lanzamientos" aria-labelledby="explore-releases-heading" className="flex w-full flex-col gap-5">
+          <SectionHeading
+            id="explore-releases-heading"
+            title={t("releasesHeading")}
+            description={t("releasesDescription", { recent: NEW_RELEASE_WINDOW_DAYS, upcoming: UPCOMING_WINDOW_DAYS })}
+          />
+          <ReleaseTimetable
+            releases={releaseRows}
+            locale={locale}
+            labelledBy="explore-releases"
+            partIds={{ recent: "novedades", upcoming: "proximos" }}
+            status={releaseStatus}
+            seeAll={{
+              recent: { href: "/explore?novedades=1", label: t("seeAll") },
+              upcoming: { href: "/explore?proximos=1", label: t("seeAll") },
+            }}
+            labels={{
+              recent: t("newReleasesHeading"),
+              upcoming: t("upcomingHeading"),
+              published: t("releasesPublished"),
+              upcomingBadge: t("upcomingHeading"),
+              showMore: (count) => t("releasesShowMore", { count }),
+              showLess: t("releasesShowLess"),
+            }}
+          />
+        </section>
+      ) : null}
+
+      <AwardsExploreSection ceremonies={recentCeremonies} />
+
+      <HallOfFameExploreSection halls={hallClasses} />
+
     </main>
   );
 }

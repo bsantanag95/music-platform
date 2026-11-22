@@ -30,3 +30,95 @@ jobs:
           # Next build imports DB modules, requiring DATABASE_URL.
           # CI does not run database integration tests yet.
           DATABASE_URL: postgres://user:password@localhost:5432/music_platform
+
+  # Smoke tests contra un Postgres efímero (change strengthen-verification-loop, fase 3). Job aparte del de `build` para no
+  # alargar el camino crítico ni mezclar fallos. La BD es el servicio de este job: se crea vacía, se migra y se descarta.
+  # Los smoke tests usan `fetch` mockeado (ninguno consulta MusicBrainz ni otro servicio real); `scripts/smoke-lib/ci.ts` pone
+  # ALLOW_SMOKE_ON_REAL_DB=1 solo a sus procesos hijos y solo si el nombre de la BD es de scratch.
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: music_platform_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d music_platform_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/music_platform_ci
+      # Los clientes externos exigen un User-Agent o fallan cerrado; con `fetch` mockeado no sale ninguna request.
+      MUSICBRAINZ_USER_AGENT: "music-platform-ci/0.0 (ci@example.invalid)"
+      WIKIMEDIA_USER_AGENT: "music-platform-ci/0.0 (ci@example.invalid)"
+      LISTENBRAINZ_USER_AGENT: "music-platform-ci/0.0 (ci@example.invalid)"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.20.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsx src/db/migrate.ts
+      - run: pnpm run smoke:ci
+
+  # E2E de Playwright (fase 2). No bloqueante por ahora: se vigila su estabilidad en CI antes de exigirlo (ver
+  # docs/06-operations/verification.md). Misma BD efímera; el servidor de prueba es un build de producción sin
+  # user agents externos, así que ningún flujo sale a internet.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: music_platform_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d music_platform_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/music_platform_ci
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.20.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec tsx src/db/migrate.ts
+      - run: pnpm run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-evidencia
+          path: |
+            e2e/.report
+            e2e/.results
+          retention-days: 7

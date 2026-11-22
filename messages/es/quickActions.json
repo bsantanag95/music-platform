@@ -52,7 +52,9 @@
     "viewDiary": "Ver mi diario",
     "addDetails": "Añadir detalles",
     "optional": "Opcional",
-    "detailsHint": "Reacción, contexto, nota y quién la ve"
+    "detailsHint": "Reacción, contexto, nota y quién la ve",
+    "confirm": "Registrar escucha",
+    "confirmEyebrow": "¿Lo anotas en tu diario?"
   },
   "rate": {
     "loading": "Cargando tu nota...",

@@ -117,8 +117,9 @@ personal NO SHALL completarse con discos de la selección anónima: lo popular v
 - **THEN** ese disco no aparece en su vista "De tus artistas"
 
 ### Requirement: Selector del riel con sesión
-Con sesión, el riel SHALL ofrecer un selector con dos vistas: "De tus artistas" (selección personal) y
-"Populares" (selección anónima). Las dos vistas NO SHALL mezclar sus discos ni usar marcas de relleno. El
+Con sesión, el apartado de lanzamientos SHALL presentarse como el horario en dos partes de la portada
+sin sesión (ver Requirement: Horario de lanzamientos en Inicio) y SHALL ofrecer un
+selector con dos vistas: "De tus artistas" (selección personal) y "Populares" (selección anónima). Las dos vistas NO SHALL mezclar sus discos ni usar marcas de relleno. El
 riel SHALL abrir en "De tus artistas" cuando esta tiene al menos 3 discos y, si no, en "Populares". Cuando
 "De tus artistas" tiene menos de 3 discos, el riel SHALL mostrar una invitación a seguir artistas (o
 valorarlos y agregarlos a favoritos) con un enlace a la búsqueda. Si "De tus artistas" está vacía y se
@@ -168,7 +169,7 @@ que indique que el tracklist estará disponible cuando se publique.
 - **WHEN** se abre la página de un álbum que sale en 3 semanas y no tiene ediciones con pistas
 - **THEN** la página carga, muestra "Se lanza el …" y el estado vacío del tracklist, sin error
 
-### Requirement: Horario de lanzamientos en la portada sin sesión
+### Requirement: Horario de lanzamientos en Inicio
 
 En la portada sin sesión, la selección anónima SHALL presentarse como un horario en dos
 partes, «Recientes» y «Próximos», cada una ordenada por fecha (de la más reciente a la más
@@ -178,7 +179,8 @@ disco que muestra la fecha, la carátula en miniatura, el título, el artista y 
 principio como máximo seis discos y SHALL ofrecer ver el resto de su parte sin salir de la
 página. Desde anchos de escritorio las dos partes SHALL ir lado a lado; en pantallas
 angostas, una debajo de la otra. La selección, sus filtros y sus topes NO SHALL cambiar. El
-Inicio con sesión SHALL conservar su riel con el selector de vistas.
+Inicio con sesión SHALL usar el mismo horario, con el selector de vistas (ver Requirement:
+Selector del riel con sesión).
 
 #### Scenario: Horario en escritorio
 - **WHEN** un visitante sin sesión abre `/[locale]` en una pantalla de 1440 px y hay
@@ -194,7 +196,8 @@ Inicio con sesión SHALL conservar su riel con el selector de vistas.
 - **WHEN** la selección anónima no tiene lanzamientos recientes pero sí próximos
 - **THEN** el horario muestra solo «Próximos», sin una parte vacía
 
-#### Scenario: El Inicio con sesión conserva el riel
+#### Scenario: El Inicio con sesión usa el horario con selector
 - **WHEN** un usuario autenticado abre `/[locale]`
-- **THEN** los lanzamientos se muestran en el riel con el selector «De tus artistas | Populares»
+- **THEN** los lanzamientos se muestran en el horario de dos partes con el selector «De tus
+  artistas | Populares», sin flechas sobre las carátulas
 

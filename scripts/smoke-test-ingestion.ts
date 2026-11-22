@@ -17,6 +17,7 @@
 
 export {}; // fuerza module scope; sin esto, TS trata el archivo como script global y colisiona con otros scripts/*.ts
 import { assertSmokeAllowed } from "./assert-smoke-allowed";
+import { runSmoke } from "./smoke-lib/run";
 
 assertSmokeAllowed();
 
@@ -30,13 +31,35 @@ const DSOTM_RELEASE_MBID = "9e185369-0eb6-4013-8f7e-f8cd4be3ff02";
 const ICON_RG_MBID = "b0a1b2c3-0000-4000-8000-00000000000d";
 const ICON_RELEASE_MBID = "c0a1b2c3-0000-4000-8000-00000000000e";
 
+// Respuesta del browse de ediciones (`/release?release-group=`): una sola edición oficial por álbum.
+function editionsBrowse(rgMbid: string, title: string, releaseMbid: string, date: string, tracks: number) {
+  return {
+    "release-count": 1,
+    "release-offset": 0,
+    releases: [
+      {
+        id: releaseMbid,
+        title,
+        status: "Official",
+        date,
+        country: "GB",
+        packaging: null,
+        disambiguation: "",
+        media: [{ position: 1, format: "CD", "track-count": tracks }],
+        "label-info": [],
+        "release-group": { id: rgMbid, title, "first-release-date": date, "primary-type": "Album", "secondary-types": [] },
+      },
+    ],
+  };
+}
+
 const mockResponses: Record<string, unknown> = {
-  "/artist?query=Pink+Floyd&fmt=json": {
+  "/artist?query=Pink+Floyd&limit=25&offset=0&fmt=json": {
     artists: [
       { id: PINK_FLOYD_MBID, name: "Pink Floyd", type: "Group", disambiguation: "banda británica de rock" },
     ],
   },
-  [`/artist/${PINK_FLOYD_MBID}?inc=artist-rels&fmt=json`]: {
+  [`/artist/${PINK_FLOYD_MBID}?inc=artist-rels%2Burl-rels&fmt=json`]: {
     id: PINK_FLOYD_MBID,
     name: "Pink Floyd",
     type: "Group",
@@ -49,7 +72,7 @@ const mockResponses: Record<string, unknown> = {
       },
     ],
   },
-  [`/release-group?artist=${PINK_FLOYD_MBID}&limit=100&inc=artist-credits&fmt=json`]: {
+  [`/release-group?artist=${PINK_FLOYD_MBID}&limit=100&offset=0&inc=artist-credits%2Burl-rels&release-group-status=website-default&fmt=json`]: {
     "release-groups": [
       {
         id: DSOTM_RG_MBID,
@@ -67,17 +90,9 @@ const mockResponses: Record<string, unknown> = {
       },
     ],
   },
-  [`/release-group/${DSOTM_RG_MBID}?inc=releases&fmt=json`]: {
-    id: DSOTM_RG_MBID,
-    title: "The Dark Side of the Moon",
-    releases: [{ id: DSOTM_RELEASE_MBID, status: "Official", date: "1973-03-01" }],
-  },
-  [`/release-group/${ICON_RG_MBID}?inc=releases&fmt=json`]: {
-    id: ICON_RG_MBID,
-    title: "Icon (fecha anual)",
-    releases: [{ id: ICON_RELEASE_MBID, status: "Official", date: "1985" }],
-  },
-  [`/release/${DSOTM_RELEASE_MBID}?inc=recordings%2Bartist-credits&fmt=json`]: {
+  [`/release?release-group=${DSOTM_RG_MBID}&limit=100&offset=0&inc=labels%2Bmedia%2Brelease-groups&fmt=json`]: editionsBrowse(DSOTM_RG_MBID, "The Dark Side of the Moon", DSOTM_RELEASE_MBID, "1973-03-01", 2),
+  [`/release?release-group=${ICON_RG_MBID}&limit=100&offset=0&inc=labels%2Bmedia%2Brelease-groups&fmt=json`]: editionsBrowse(ICON_RG_MBID, "Icon (fecha anual)", ICON_RELEASE_MBID, "1985", 0),
+  [`/release/${DSOTM_RELEASE_MBID}?inc=recordings%2Bartist-credits%2Bartist-rels%2Brecording-level-rels%2Bwork-rels%2Bwork-level-rels&fmt=json`]: {
     id: DSOTM_RELEASE_MBID,
     title: "The Dark Side of the Moon",
     date: "1973-03-01",
@@ -102,7 +117,7 @@ const mockResponses: Record<string, unknown> = {
       },
     ],
   },
-  [`/release/${ICON_RELEASE_MBID}?inc=recordings%2Bartist-credits&fmt=json`]: {
+  [`/release/${ICON_RELEASE_MBID}?inc=recordings%2Bartist-credits%2Bartist-rels%2Brecording-level-rels%2Bwork-rels%2Bwork-level-rels&fmt=json`]: {
     id: ICON_RELEASE_MBID,
     title: "Icon (fecha anual)",
     date: "1985",
@@ -149,31 +164,29 @@ global.fetch = (async (input: RequestInfo | URL) => {
   return new Response(JSON.stringify(body), { status: 200 });
 }) as typeof fetch;
 
-async function main() {
+async function pinkFloydSynced(): Promise<boolean> {
   const { eq } = await import("drizzle-orm");
   const { db } = await import("../src/db");
   const { artist: artistTable } = await import("../src/db/schema");
+  const [existing] = await db.select().from(artistTable).where(eq(artistTable.name, "Pink Floyd")).limit(1);
+  return Boolean(existing?.discographySyncedAt);
+}
+
+// Es el script que POBLA los datos que `smoke-test-routes.ts`, `smoke-test-new-endpoints.ts` y otros leen (Pink Floyd, DSOTM):
+// por eso no limpia sus fixtures y exige una BD virgen (ver docs/06-operations/smoke-tests.md).
+void runSmoke({
+  name: "ingestion",
+  pristineCheck: async () =>
+    (await pinkFloydSynced())
+      ? "Pink Floyd ya existe con la discografía sincronizada: el browse mockeado se saltaría y el reset marcaría cientos de discos reales como fuera de la discografía."
+      : null,
+  run: main,
+});
+
+async function main() {
   const { ensureArtistMemberships, findOrIngestArtist } = await import("../src/services/catalog/ingest-artist");
   const { findOrIngestDiscography } = await import("../src/services/catalog/ingest-discography");
   const { findOrIngestTracklist } = await import("../src/services/catalog/ingest-release");
-
-  const [existing] = await db
-    .select()
-    .from(artistTable)
-    .where(eq(artistTable.name, "Pink Floyd"))
-    .limit(1);
-  if (existing?.discographySyncedAt) {
-    console.error(
-      [
-        "⚠️  smoke-test-ingestion exige una BD de scratch VIRGEN.",
-        "Pink Floyd ya existe con la discografía sincronizada: el browse mockeado se saltaría,",
-        "el script reusaría la discografía real y marcaría cientos de discos como fuera de la",
-        "discografía si se forzara el reset. Usá otro DATABASE_URL de scratch limpio, o borrá a",
-        "Pink Floyd de esa BD antes de correrlo (ver AGENTS.md, sección de smoke tests).",
-      ].join("\n"),
-    );
-    process.exit(1);
-  }
 
   console.log("1) Ingiriendo artista...");
   const artist = await findOrIngestArtist("Pink Floyd");
@@ -210,10 +223,4 @@ async function main() {
   console.log("   -> coverThumbUrl null sin carátula (404)");
 
   global.fetch = realFetch;
-  process.exit(0);
 }
-
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});

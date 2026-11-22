@@ -84,6 +84,7 @@
   "community": {
     "pageTitle": "Community lists",
     "heading": "Lists",
+    "intro": "Lists the community builds, ranks and recommends: albums, artists and songs.",
     "searchPlaceholder": "Search lists",
     "searchLabel": "Search lists",
     "sortPopular": "Most saved",
@@ -118,6 +119,17 @@
       "joinDescription": "With an account you can create lists, save other people’s and complete the ones you like.",
       "joinAction": "Create account",
       "signIn": "I already have an account"
+    },
+    "reader": {
+      "tabsLabel": "Community lists",
+      "previewLabel": "Preview: {title}",
+      "open": "Open the list",
+      "seeFull": "See the full list",
+      "loadError": "This list could not be loaded. You can still open it.",
+      "shownOf": "{shown} of {total}",
+      "resume": "Pick up “{title}”",
+      "noLists": "You have no lists yet",
+      "allTypes": "Search all types"
     },
     "emptyAction": "Create the first list",
     "emptySignedOutAction": "Sign in to create the first one"

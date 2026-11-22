@@ -5,6 +5,58 @@ se reconocen y la sentencia de limpieza si la corrida se interrumpió. La regla 
 tests abortan salvo `ALLOW_SMOKE_ON_REAL_DB=1`, preferir una BD de scratch y resetear los artistas
 tocados) vive en `AGENTS.md`.
 
+
+## Ejecución común (`scripts/smoke-lib/`) y job de CI
+
+Los smoke tests migrados usan `runSmoke` (`scripts/smoke-lib/run.ts`): el **código de salida refleja el resultado** (antes varios imprimían
+"❌" y terminaban en 0), la limpieza de fixtures corre en un `finally` (antes de empezar, para reintentar tras una corrida interrumpida, y siempre al
+terminar, también si el script falló) y los que exigen una BD virgen lo declaran con `pristineCheck`. Migrados: `ingestion`, `routes`, `new-endpoints`,
+`artist-by-id`, `unknown-enrichment` y `discography-cache` (estos tres dejaban su fixture sin borrar). El resto ya tenía su propio `try/finally`
+y se migra a medida que se toca. Cada script nuevo debe llamar a `assertSmokeAllowed()` primero (`REVIEW.md`, R10) y usar `runSmoke`.
+
+`pnpm run smoke:ci` (`scripts/smoke-lib/ci.ts`) corre en orden la lista `scripts/smoke-lib/ci-list.ts` contra `DATABASE_URL`, solo si el nombre de la BD es
+de scratch, y resume el resultado. Es lo que ejecuta el job `integration` de `.github/workflows/ci.yml`: un Postgres 18 efímero (`music_platform_ci`), las
+migraciones con `tsx src/db/migrate.ts` y la lista. No toca el job `build`. `ingestion` va primero porque puebla Pink Floyd y `routes` y `new-endpoints` leen
+esos datos; exige BD virgen, algo que el servicio efímero garantiza. `ALLOW_SMOKE_ON_REAL_DB=1` lo pone el runner solo a sus procesos hijos.
+
+### Auditoría (2026-11-18, PostgreSQL 18, BD virgen recién migrada, sin `.env`)
+
+Los 41 smoke tests se corrieron uno por uno. La corrida destapó que **`ingestion` estaba roto** (su mock de la búsqueda de artistas no llevaba
+`limit`/`offset`, ni `url-rels`, ni el browse de ediciones: MusicBrainz se pide distinto desde varios cambios atrás) y, con él, `routes` y `new-endpoints`; se
+actualizaron los mocks. `membership-sync` tenía el mismo defecto (`inc=artist-rels+url-rels`), también corregido.
+
+| Resultado | Smoke tests |
+|---|---|
+| **En el CI (33)** | `ingestion`, `routes`, `new-endpoints`, `artist-by-id`, `recording-search`, `unknown-enrichment`, `discography-cache`, `album-editions`, `personnel-credits`, `artist-profile`, `artist-lineup`, `artist-discography`, `membership-sync`, `account-settings`, `email-verification`, `google-oauth`, `keep-signed-in`, `password-reset`, `social`, `comment-likes`, `comment-replies`, `artist-comment-topics`, `notifications`, `diary-social`, `share-relation`, `share-user-content`, `concerts`, `community-concerts`, `shared-concerts`, `genres`, `music-awards`, `explore-collections`, `phase4` |
+| **Pasan, fuera del CI por fallar ante un umbral de tiempo (7)** | `community-activity`, `concert-links-tours`, `diary`, `discography-lamina`, `release-calendar`, `tier-laminas`, `year-laminas`: miden con `performance.now()` y fallan por encima de un presupuesto de milisegundos, una fuente de intermitencia en un runner compartido. Para entrar, aplicar el mismo criterio que `notifications` (avisar sobre el presupuesto, fallar solo a 5×) |
+| **Pasa, fuera del CI por lentitud (1)** | `top-laminas` (~150 s) |
+
+#### Reparados (2026-11-18)
+
+Los cuatro que fallaban sobre una BD virgen se repararon y entraron al CI (más cuatro que se habían excluido por error: `community-concerts`, `email-verification`,
+`keep-signed-in` y `password-reset` no miden tiempos; `Date.now() - x` se usa para fabricar fechas pasadas, no para medir, y la regla del test de la lista ahora solo
+mira `performance.now()`/`hrtime`):
+
+- **`recording-search`**: sus mocks eran de antes de `speed-up-search`. Las apariciones de una canción ya no se piden con un browse `/release?recording=`: vienen
+  embebidas (`releases`) en la búsqueda de recordings. El mock las embebe y la comprobación pasó de «un browse por versión» a «ningún browse de ediciones». Además migró a
+  `runSmoke` con una limpieza por MBID (antes borraba al final y dejaba fixtures si fallaba).
+- **`notifications`**: el contador exigía < 10 ms, una medida que depende de la máquina (12,13 ms en una corrida cargada sin que hubiera regresión). Ahora descarta una
+  corrida en frío, toma la mejor de 20, **avisa** entre 10 y 50 ms y **falla desde 50 ms** (5× el presupuesto del diseño: lo que delataría un índice perdido o un N+1).
+- **`explore-collections`**: «Un disco por década» necesita álbumes de estudio de al menos 6 décadas; sus fixtures caían todos en los 2000 y el resto lo ponía el catálogo
+  real, que una BD virgen no tiene. Ahora siembra 6 álbumes de otras décadas (MBID `5e0ce000-…-0000000006d*`, borrados en su limpieza). También arrastraba una categoría de
+  premio de género sin el campo que exige desde la migración `0072` (`chk_award_category_genre_field`).
+- **`account-settings`**: la identidad musical valida que cada género exista como estilo de la taxonomía (`post-punk`, `jazz`). En una BD virgen no existen: el script
+  crea los que falten (MBID `5e0ce000-…-0000000007a0/1`) y borra solo los que creó, sin tocar una taxonomía real cargada.
+
+> Windows: un `process.exit` con el pool de Postgres abierto hace que Node aborte a veces (código 3221226505) después de haber pasado todo. `runSmoke` cierra el
+> pool y deja salir al proceso; los scripts sin migrar pueden mostrar ese código en una máquina Windows aunque el resultado sea correcto (en Linux/CI no ocurre).
+
+## Fixtures por script
+
+- `smoke-test-recording-search.ts` crea un artista, dos grabaciones y dos álbumes sintéticos (MBID `aaaaaaaa-0000-4000-8000-9100000000*`,
+  `bbbbbbbb-…`, `cccccccc-…` y `dddddddd-…`) y los borra al terminar con una limpieza por MBID, también si falla. Si se interrumpió, volver a correrlo
+  (limpia antes de empezar).
+
 - `smoke-test-unknown-enrichment.ts` / `smoke-test-artist-by-id.ts` crean un
   stub "Farruko" (`9b90d5a6-8b3f-4e2d-9f11-7e0c0d3a1a01`) y
   `smoke-test-discography-cache.ts` un artista de prueba — borrarlos si se
@@ -37,7 +89,9 @@ tocados) vive en `AGENTS.md`.
   (alta nueva y cuenta existente van a la propia con su usuario, con las dos manda la Lámina, un valor inválido se descarta) y la de año
   (alta nueva y cuenta existente van a su año, con la de discografía manda esa, un valor inválido se descarta).
 - `smoke-test-account-settings.ts` crea usuarios `smoke_acct_*` y los borra al terminar (el `ON
-  DELETE CASCADE` limpia alias, tokens y sesiones). Si se interrumpió, limpiar con
+  DELETE CASCADE` limpia alias, tokens y sesiones). Si faltan, crea los estilos `post-punk` y `jazz`
+  (MBID `5e0ce000-0000-4000-8000-0000000007a0/1`) que exige la identidad musical y borra solo los que creó:
+  `DELETE FROM genre WHERE mbid::text LIKE '5e0ce000-0000-4000-8000-0000000007a%';`. Si se interrumpió, limpiar con
   `DELETE FROM user_role_action WHERE actor_id IN (SELECT id FROM app_user WHERE username LIKE
   'smoke_acct_%'); DELETE FROM app_user WHERE username LIKE 'smoke_acct_%';` (la primera sentencia
   suelta las filas de auditoría del caso de eliminación bloqueada, que referencian al actor con
@@ -199,7 +253,8 @@ tocados) vive en `AGENTS.md`.
   cuentas desactivadas), que el listado solo trae raíces, el hilo en orden cronológico, que el feed, la
   actividad de la comunidad, el rastro propio y "Comentarios populares" no muestran respuestas (aunque una
   tenga más likes que cualquier raíz), los likes sobre respuestas, la exportación y las cascadas.
-- `smoke-test-explore-collections.ts` crea álbumes sintéticos (MBID `5e0ce000-0000-4000-8000-0000000009c*`) y listas
+- `smoke-test-explore-collections.ts` crea álbumes sintéticos (MBID `5e0ce000-0000-4000-8000-0000000009c*`, y `…-0000000006d*` para los
+  de otras décadas que necesita «Un disco por década») y listas
   de plantillas `smoke-*` bajo `@exploracion` (crea la cuenta si falta y la borra solo si la creó), y los borra al terminar
   (también si falla; las plantillas reales solo se ejecutan en lectura). Si se interrumpió, limpiar con
   `DELETE FROM user_list WHERE id IN (SELECT list_id FROM user_list_featured WHERE template_key LIKE 'smoke-%');

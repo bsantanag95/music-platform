@@ -84,6 +84,7 @@
   "community": {
     "pageTitle": "Listas de la comunidad",
     "heading": "Listas",
+    "intro": "Listas que la comunidad arma, ordena y recomienda: discos, artistas y canciones.",
     "searchPlaceholder": "Buscar listas",
     "searchLabel": "Buscar listas",
     "sortPopular": "Más guardadas",
@@ -118,6 +119,17 @@
       "joinDescription": "Con una cuenta puedes crear listas, guardar las de otras personas y completar las que te interesen.",
       "joinAction": "Crear cuenta",
       "signIn": "Ya tengo cuenta"
+    },
+    "reader": {
+      "tabsLabel": "Listas de la comunidad",
+      "previewLabel": "Vista previa: {title}",
+      "open": "Abrir la lista",
+      "seeFull": "Ver la lista completa",
+      "loadError": "No se pudo cargar esta lista. Puedes abrirla igual.",
+      "shownOf": "{shown} de {total}",
+      "resume": "Retoma «{title}»",
+      "noLists": "Aún no tienes listas",
+      "allTypes": "Buscar en todos los tipos"
     },
     "emptyAction": "Crear la primera lista",
     "emptySignedOutAction": "Inicia sesión para crear la primera"

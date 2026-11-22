@@ -323,3 +323,19 @@ describe("HallOfFameTileGrid", () => {
     expect([...container.querySelectorAll("ul > li .grid")].map((g) => g.children.length)).toEqual([4, 4, 4]);
   });
 });
+
+describe("HallOfFameTileGrid compacta (Explorar, openspec: redesign-explore-phase3)", () => {
+  const many = (prefix: string) => Array.from({ length: 9 }, (_, i) => album(`${prefix}${i}`, `T${i}`, "A"));
+
+  it("dos tarjetas horizontales lado a lado, con cuatro carátulas, el año y el enlace a la clase", () => {
+    const { container } = renderWithIntl(
+      <HallOfFameTileGrid compact halls={[hall({ inductees: many("g") }), registry({ inductees: many("r") })]} />,
+    );
+    expect(container.querySelector("ul")?.className).toContain("md:grid-cols-2");
+    expect([...container.querySelectorAll("ul > li .grid")].map((g) => g.children.length)).toEqual([4, 4]);
+    const links = [...container.querySelectorAll("ul > li a")];
+    expect(links).toHaveLength(2);
+    expect(links[0]?.getAttribute("href")).toMatch(/^\/hall-of-fame\//);
+    expect(links[0]?.textContent).toMatch(/\d{4}/);
+  });
+});

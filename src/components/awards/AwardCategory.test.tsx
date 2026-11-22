@@ -256,6 +256,35 @@ describe("AwardsExploreSection", () => {
   });
 });
 
+describe("AwardsExploreSection: fila de ceremonias (openspec: redesign-explore-phase3)", () => {
+  it("muestra el ganador como texto, sin carátulas, también cuando no está en el catálogo", () => {
+    renderWithIntl(
+      <AwardsExploreSection
+        ceremonies={[
+          {
+            awardSlug: "mercury-prize",
+            year: 2025,
+            edition: 34,
+            heldOn: "2025-09-11",
+            voting: null,
+            years: [2025],
+            headline: {
+              category: { es: "Ganador", en: "Winner" },
+              winner: { id: "n2", won: true, text: "People Watching", credit: "Sam Fender", subject: null },
+            },
+          },
+        ]}
+      />,
+    );
+    const entry = screen.getByRole("link", { name: /2025/ });
+    expect(entry).toHaveTextContent("People Watching");
+    expect(entry).toHaveTextContent("Sam Fender");
+    expect(entry).toHaveTextContent("34.ª edición");
+    expect(within(entry).queryByTestId("cover")).not.toBeInTheDocument();
+    expect(entry.querySelectorAll("img")).toHaveLength(0);
+  });
+});
+
 describe("AwardTileGrid detallada (hub)", () => {
   const brit = { awardSlug: "brit-awards", year: 2026, edition: 46, heldOn: "2026-02-28", headline: null };
 

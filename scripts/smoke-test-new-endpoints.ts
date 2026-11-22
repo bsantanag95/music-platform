@@ -1,12 +1,14 @@
 export {}; // fuerza module scope
 import { assertSmokeAllowed } from "./assert-smoke-allowed";
+import { runSmoke, type SmokeContext } from "./smoke-lib/run";
 
 assertSmokeAllowed();
 
 // Valida los dos endpoints nuevos sin levantar un servidor Next.js real:
 // llama directo a los mismos servicios/queries que usan las rutas.
 
-async function main() {
+// Solo lee los datos que deja `smoke-test-ingestion.ts` (Pink Floyd, DSOTM): corre después de él y no crea fixtures.
+async function main(ctx: SmokeContext) {
   const { db } = await import("../src/db");
   const { release, track, recording, credit, artist } = await import("../src/db/schema");
   const { eq, inArray } = await import("drizzle-orm");
@@ -64,16 +66,10 @@ async function main() {
   console.log(JSON.stringify(result, null, 2));
 
   const breathe = result.find((r) => r.title.includes("Breathe"));
-  if (breathe?.credits === "Pink Floyd feat. Roger Waters") {
-    console.log("\n✅ Créditos por canción funcionando en el join del endpoint.");
-  } else {
-    console.log("\n❌ Los créditos no salieron como se esperaba.");
-  }
-
-  process.exit(0);
+  ctx.check(
+    breathe?.credits === "Pink Floyd feat. Roger Waters",
+    "créditos por canción funcionando en el join del endpoint",
+  );
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+void runSmoke({ name: "new-endpoints", run: main });

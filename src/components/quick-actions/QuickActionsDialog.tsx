@@ -30,6 +30,13 @@ interface QuickActionsDialogProps {
   onClose: () => void;
   /** Acción con la que abre; por defecto Escucha. Pendientes la abre en Pendiente (redesign-want-to-listen-toolbar). */
   initialAction?: QuickAction;
+  /**
+   * Objetivo ya elegido por otra superficie (openspec: redesign-signed-in-home-phase1): el diálogo abre
+   * en Escucha con su panel en vez del buscador. Solo lo usa Inicio.
+   */
+  initialTarget?: PickTarget;
+  /** Con `initialTarget`, pide confirmar antes de registrar la escucha («Lo volví a escuchar»). */
+  confirmListen?: boolean;
 }
 
 // Diálogo de acciones rápidas del Header (openspec: add-header-quick-actions): un solo diálogo con
@@ -37,15 +44,22 @@ interface QuickActionsDialogProps {
 // registrar una escucha cuesta lo mismo que antes (abrir y escribir). Las acciones con objetivo
 // comparten el buscador; Nueva lista no lo necesita. A11y al nivel de `RegisterListenDialog`: portal,
 // focus-trap, Escape, retorno de foco (lo hace el botón que lo monta).
-export function QuickActionsDialog({ onClose, initialAction = "listen" }: QuickActionsDialogProps) {
+export function QuickActionsDialog({
+  onClose,
+  initialAction = "listen",
+  initialTarget,
+  confirmListen = false,
+}: QuickActionsDialogProps) {
   const t = useTranslations("quickActions");
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [mounted, setMounted] = useState(false);
 
-  const [action, setAction] = useState<QuickAction>(initialAction);
-  const [target, setTarget] = useState<PickTarget | null>(null);
+  const [action, setAction] = useState<QuickAction>(initialTarget ? "listen" : initialAction);
+  const [target, setTarget] = useState<PickTarget | null>(initialTarget ?? null);
+  // La confirmación solo vale para el objetivo con el que se abrió: elegir otro en el buscador ya es la elección.
+  const [pendingConfirm, setPendingConfirm] = useState(Boolean(initialTarget) && confirmListen);
   const [rawQuery, setRawQuery] = useState("");
   const [searchType, setSearchType] = useState<PickerType>(() =>
     initialAction === "newList" || initialAction === "newCamino"
@@ -112,10 +126,17 @@ export function QuickActionsDialog({ onClose, initialAction = "listen" }: QuickA
     if (mounted && pickerVisible) searchInputRef.current?.focus();
   }, [mounted, pickerVisible, action]);
 
+  // Abierto con un objetivo y sin confirmación no hay buscador que enfocar: el foco entra al diálogo
+  // (con confirmación lo toma «Registrar escucha» dentro del panel).
+  useEffect(() => {
+    if (mounted && initialTarget && !confirmListen) dialogRef.current?.focus();
+  }, [mounted, initialTarget, confirmListen]);
+
   const changeAction = useCallback(
     (next: QuickAction) => {
       setAction(next);
       setTarget(null);
+      setPendingConfirm(false);
       setLockedType(null);
       if (next !== "newList" && next !== "newCamino") {
         const allowed = ACTION_PICKER_TYPES[next];
@@ -135,6 +156,7 @@ export function QuickActionsDialog({ onClose, initialAction = "listen" }: QuickA
   }, []);
 
   const reset = (clearQuery: boolean) => {
+    setPendingConfirm(false);
     setTarget(null);
     if (clearQuery) setRawQuery("");
   };
@@ -148,7 +170,15 @@ export function QuickActionsDialog({ onClose, initialAction = "listen" }: QuickA
   const renderPanel = (targetAction: TargetAction, picked: PickTarget) => {
     switch (targetAction) {
       case "listen":
-        return <ListenPanel key={panelKey} target={picked} onReset={() => reset(true)} onNavigate={onClose} />;
+        return (
+          <ListenPanel
+            key={panelKey}
+            target={picked}
+            confirm={pendingConfirm}
+            onReset={() => reset(true)}
+            onNavigate={onClose}
+          />
+        );
       case "rate":
         return <RatePanel key={panelKey} target={picked} onReset={() => reset(false)} onNavigate={onClose} />;
       case "favorite":
@@ -178,7 +208,8 @@ export function QuickActionsDialog({ onClose, initialAction = "listen" }: QuickA
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="flex w-full max-w-lg flex-col gap-5 rounded-xl border border-ink-border bg-ink-surface p-6 shadow-2xl shadow-black/60"
+        tabIndex={-1}
+        className="flex w-full max-w-lg outline-none flex-col gap-5 rounded-xl border border-ink-border bg-ink-surface p-6 shadow-2xl shadow-black/60"
       >
         <div className="flex items-start justify-between gap-4">
           <h2 id={titleId} className="font-display text-lg text-paper">

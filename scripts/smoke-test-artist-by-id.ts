@@ -1,5 +1,6 @@
 export {}; // fuerza module scope
 import { assertSmokeAllowed } from "./assert-smoke-allowed";
+import { runSmoke, type SmokeContext } from "./smoke-lib/run";
 
 assertSmokeAllowed();
 
@@ -29,7 +30,7 @@ global.fetch = (async (input: RequestInfo | URL) => {
   return new Response(JSON.stringify(body), { status: 200 });
 }) as typeof fetch;
 
-async function main() {
+async function main(ctx: SmokeContext) {
   const { upsertArtistStub, getArtistById } = await import("../src/services/catalog/ingest-artist");
 
   console.log("1) Stub 'unknown' creado desde un feat. (mismo punto de partida que Farruko)...");
@@ -46,16 +47,18 @@ async function main() {
 
   global.fetch = realFetch;
 
-  if (enriched?.type === "person" && enriched.id === stub.id && missing === null) {
-    console.log("\n✅ getArtistById enriquece por id y devuelve null ante un id inexistente.");
-  } else {
-    console.log("\n❌ Sigue fallando.");
-  }
-
-  process.exit(0);
+  ctx.check(
+    enriched?.type === "person" && enriched.id === stub.id && missing === null,
+    "getArtistById enriquece por id y devuelve null ante un id inexistente",
+  );
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+/** Borra el stub sintético "Farruko" (mismo MBID que `smoke-test-unknown-enrichment.ts`). */
+async function cleanup() {
+  const { eq } = await import("drizzle-orm");
+  const { db } = await import("../src/db");
+  const { artist } = await import("../src/db/schema");
+  await db.delete(artist).where(eq(artist.mbid, FARRUKO_MBID));
+}
+
+void runSmoke({ name: "artist-by-id", cleanup, run: main });

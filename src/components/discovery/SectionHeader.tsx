@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 interface SectionHeaderProps {
   heading: string;
@@ -11,10 +12,18 @@ interface SectionHeaderProps {
   actions?: ReactNode;
   /** `id` del título, para `aria-labelledby` de la sección. */
   headingId?: string;
+  /**
+   * `page`: el título de página de 30–40 px (`SectionHeading`), el de la portada de Explorar
+   * (redesign-explore-phase1). Por defecto, el compacto de 20 px del resto de páginas.
+   */
+  size?: "default" | "page";
 }
 
 /** Encabezado común de las secciones de Explorar: título, descripción opcional y acciones. */
-export function SectionHeader({ heading, description, seeAll, actions, headingId }: SectionHeaderProps) {
+export function SectionHeader({ heading, description, seeAll, actions, headingId, size = "default" }: SectionHeaderProps) {
+  if (size === "page") {
+    return <SectionHeading id={headingId} title={heading} description={description} seeAll={seeAll} actions={actions} />;
+  }
   return (
     // En mobile el enlace "Ver todo" baja a su propia línea: a la derecha apretaba la descripción en columnas de 4 líneas.
     <div className="flex w-full flex-col items-start gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-4">

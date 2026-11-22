@@ -1,5 +1,6 @@
 export {}; // fuerza module scope
 import { assertSmokeAllowed } from "./assert-smoke-allowed";
+import { runSmoke, type SmokeContext } from "./smoke-lib/run";
 
 assertSmokeAllowed();
 
@@ -16,7 +17,11 @@ import { eq } from "drizzle-orm";
 // mismo título en la BD.
 const DSOTM_MBID = "1e5eb684-d7e9-3699-8fed-6e2e5d0e0d16";
 
+/** Estados HTTP de las respuestas impresas, en orden: se comprueban al final contra lo esperado. */
+const statuses: number[] = [];
+
 async function printResponse(label: string, res: Response) {
+  statuses.push(res.status);
   const body = await res.json();
   console.log(`\n${label} -> HTTP ${res.status}`);
   console.log(JSON.stringify(body, null, 2).slice(0, 1200));
@@ -44,7 +49,8 @@ function stubNextServerAfter() {
   };
 }
 
-async function main() {
+// Lee los datos que deja `smoke-test-ingestion.ts` (Pink Floyd, DSOTM): corre después de él y no crea fixtures propios.
+async function main(ctx: SmokeContext) {
   const { NextRequest } = await import("next/server");
   const { db } = await import("../src/db");
   const { artist, releaseGroup } = await import("../src/db/schema");
@@ -136,18 +142,11 @@ async function main() {
   console.log(
     `\n6) resolvePrimaryArtists -> artista principal de "${dsotm.title}": ${primary ?? "(ninguno)"}`,
   );
-  if (primary !== "Pink Floyd") {
-    console.error(
-      `   ❌ se esperaba "Pink Floyd" como artista principal y llegó ${primary ?? "(ninguno)"}`,
-    );
-    process.exit(1);
-  }
-  console.log("   ✅ artista principal correcto");
-
-  process.exit(0);
+  ctx.check(primary === "Pink Floyd", `artista principal de "${dsotm.title}" es Pink Floyd (llegó ${primary ?? "(ninguno)"})`);
+  ctx.check(
+    JSON.stringify(statuses) === JSON.stringify([200, 200, 404, 400, 200]),
+    `estados HTTP de los 5 endpoints: 200, 200, 404, 400, 200 (llegaron ${statuses.join(", ")})`,
+  );
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+void runSmoke({ name: "routes", run: main });

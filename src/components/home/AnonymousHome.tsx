@@ -5,8 +5,8 @@ import { HowItWorks } from "@/components/home/HowItWorks";
 import { HomeReleases } from "@/components/home/HomeReleases";
 import { PopularComments } from "@/components/home/PopularComments";
 import { AnonCta } from "@/components/home/AnonCta";
-import { HomeSectionHeading } from "@/components/home/HomeSectionHeading";
-import { CollectionMosaic } from "@/components/home/CollectionMosaic";
+import { SectionHeading } from "@/components/ui/SectionHeading";
+import { CollectionMosaic } from "@/components/discovery/CollectionMosaic";
 import { PeopleCard } from "@/components/home/PeopleCard";
 import { AlbumRail } from "@/components/discovery/AlbumRail";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -20,8 +20,7 @@ import { listCommunityActivity } from "@/services/activity/community-activity";
 import { albumArtistNames, listFeaturedCollections, listTopRated } from "@/services/discovery/discovery";
 import { CURATOR_USERNAME } from "@/services/discovery/constants";
 import { isExploreEnabled } from "@/lib/config/discovery";
-import { formatStars } from "@/components/album/album-format";
-import type { ReleaseGroupCategory } from "@/lib/api/schemas";
+import { albumCategoryLabels, topRatedStats } from "@/components/home/top-rated";
 
 /** Entradas de actividad en tarjetas: la primera va a lo ancho y las otras seis llenan tres filas de dos. */
 export const ACTIVITY_CARD_LIMIT = 7;
@@ -32,7 +31,7 @@ export const PUBLIC_LIST_LIMIT = 6;
 // (openspec: redesign-anon-home-phase2, dirección «C · Disquería»): colecciones en mosaico y el riel de
 // mejor valorados —la obra primero—, la comunidad en dos columnas como prueba social, y luego
 // lanzamientos como horario, funciones y el cierre (Fase 3). Cada sección usa
-// `HomeSectionHeading`. Ver docs/05-features/home.md.
+// `SectionHeading`. Ver docs/05-features/home.md.
 export async function AnonymousHome() {
   const [tHome, tCat, locale] = await Promise.all([
     getTranslations("home"),
@@ -61,19 +60,12 @@ export async function AnonymousHome() {
     ensureReleaseCalendarFresh(),
   ]);
 
-  const categoryLabels = {
-    studio: tCat("categories.studio"),
-    single_ep: tCat("categories.single_ep"),
-    compilation: tCat("categories.compilation"),
-    live_other: tCat("categories.live_other"),
-  } satisfies Record<ReleaseGroupCategory, string>;
+  const categoryLabels = albumCategoryLabels(tCat);
 
   // El riel de mejor valorados muestra el artista y el promedio de estrellas (lo que ordena el
   // ranking), como en /explore.
   const topRatedArtists = topRated.length > 0 ? await albumArtistNames(topRated.map((album) => album.id)) : {};
-  const topRatedStats = Object.fromEntries(
-    topRated.map((album) => [album.id, `★ ${formatStars(album.avgStars, locale)}`]),
-  );
+  const topRatedRailStats = topRatedStats(topRated, locale);
 
   const totalComments =
     popularComments.artist.length + popularComments["release-group"].length + popularComments.recording.length;
@@ -87,7 +79,7 @@ export async function AnonymousHome() {
         {/* La obra primero: cada parte colapsa por su cuenta. */}
         {featuredCollections.length > 0 ? (
           <section aria-labelledby="home-collections" className="flex flex-col gap-6">
-            <HomeSectionHeading
+            <SectionHeading
               id="home-collections"
               title={tHome("featuredAlbumsHeading")}
               description={tHome("featuredAlbumsDescription")}
@@ -104,7 +96,7 @@ export async function AnonymousHome() {
 
         {topRated.length > 0 ? (
           <section aria-labelledby="home-top-rated" className="flex flex-col gap-6">
-            <HomeSectionHeading
+            <SectionHeading
               id="home-top-rated"
               title={tHome("communityTopRatedHeading")}
               description={tHome("topRatedDescription")}
@@ -118,7 +110,7 @@ export async function AnonymousHome() {
               layout="scroll"
               headerless
               artistNames={topRatedArtists}
-              stats={topRatedStats}
+              stats={topRatedRailStats}
             />
           </section>
         ) : null}
@@ -126,7 +118,7 @@ export async function AnonymousHome() {
         {/* Prueba social: la actividad en la columna principal; comentarios y listas al costado. El
             acceso a personas va siempre, aunque la comunidad venga vacía. */}
         <section aria-labelledby="home-community" className="flex flex-col gap-6">
-          <HomeSectionHeading
+          <SectionHeading
             id="home-community"
             title={tHome("communityActivityTitle")}
             description={tHome("communityActivitySubtitle")}
@@ -158,7 +150,7 @@ export async function AnonymousHome() {
 
         {/* Cierre de la página (redesign-anon-home-phase3): lanzamientos como horario, las funciones a la
             vista y el panel final. */}
-        <HomeReleases releases={homeReleases} layout="timetable" />
+        <HomeReleases releases={homeReleases} />
         <HowItWorks />
         <AnonCta exploreEnabled={exploreEnabled} />
       </div>

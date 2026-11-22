@@ -69,8 +69,13 @@ const { FeaturedCollection } = await import("@/components/discovery/FeaturedColl
 const { CollectionFamilyFilter } = await import("@/components/discovery/CollectionFamilyFilter");
 const { ExploreJumpNav } = await import("@/components/discovery/ExploreJumpNav");
 const { PopularNow } = await import("@/components/discovery/PopularNow");
-const { MosaicGrid } = await import("@/components/discovery/MosaicGrid");
+const { CollectionMosaic } = await import("@/components/discovery/CollectionMosaic");
+const { GenreFamilies } = await import("@/components/discovery/GenreFamilies");
+const { DecadeTimeline } = await import("@/components/discovery/DecadeTimeline");
 const { FilteredAlbumList } = await import("@/components/discovery/FilteredAlbumList");
+const { SectionHeading } = await import("@/components/ui/SectionHeading");
+const { ReleaseTimetable } = await import("@/components/discovery/ReleaseTimetable");
+const { AlbumRail } = await import("@/components/discovery/AlbumRail");
 
 /** Todos los elementos de `type` dentro del árbol devuelto por el componente. */
 function findAll(node: ReactNode, type: unknown, found: ReactElement[] = []): ReactElement[] {
@@ -122,8 +127,8 @@ beforeEach(() => {
   mocks.listCollectionSummaries.mockResolvedValue(new Map());
 });
 
-describe("/explore: un solo riel de colecciones", () => {
-  it("mezcla curadas y generadas en un riel desplazable, con su ancla y «Ver todas»", async () => {
+describe("/explore: una sola sección de colecciones", () => {
+  it("mezcla curadas y generadas en el mosaico de Inicio, con su ancla, su familia y «Ver todas»", async () => {
     mocks.getExplorePage.mockResolvedValue({
       ...empty,
       collections: [
@@ -133,23 +138,20 @@ describe("/explore: un solo riel de colecciones", () => {
     });
 
     const element = await ExplorePage({ params, searchParams: Promise.resolve({}) });
-    const rails = findAll(element, CollectionRail);
+    const sections = findAll(element, "section").filter((s) => (s.props as { id?: string }).id === "colecciones");
+    const mosaics = findAll(element, CollectionMosaic);
 
-    expect(rails).toHaveLength(1);
-    const rail = rails[0]!.props as {
-      id: string;
-      collections: FeaturedCollection[];
-      seeAll?: { href: string };
-      familyLabel?: unknown;
-      layout?: string;
-    };
-    expect(rail.id).toBe("colecciones");
+    expect(findAll(element, CollectionRail)).toHaveLength(0);
+    expect(sections).toHaveLength(1);
+    expect(mosaics).toHaveLength(1);
+    const mosaic = mosaics[0]!.props as { collections: FeaturedCollection[]; familyLabel?: unknown; labelledBy: string };
     // El orden que trae el servicio se respeta: una curada puede ir antes que una generada.
-    expect(rail.collections.map((c) => c.id)).toEqual(["e1", "a1"]);
-    expect(rail.seeAll?.href).toBe("/explore/collections");
-    expect(rail.layout).toBe("scroll");
+    expect(mosaic.collections.map((c) => c.id)).toEqual(["e1", "a1"]);
+    expect(mosaic.labelledBy).toBe("explore-collections-heading");
     // La familia se muestra en toda colección, no solo en las generadas.
-    expect(rail.familyLabel).toBeTypeOf("function");
+    expect(mosaic.familyLabel).toBeTypeOf("function");
+    const heading = findAll(sections[0], SectionHeading)[0]!.props as { seeAll?: { href: string } };
+    expect(heading.seeAll?.href).toBe("/explore/collections");
   });
 
   it("la navegación rápida enlaza el riel solo si tiene contenido", async () => {
@@ -201,7 +203,7 @@ describe("/explore: un solo riel de colecciones", () => {
 describe("/explore: Explorar por década (openspec: redesign-explore-decades)", () => {
   const card = (decade: number, covers: string[] = []) => ({ decade, count: 100, covers });
 
-  it("pinta las décadas como mosaico, de la más reciente a la más antigua, y las anteriores a 1950 van aparte", async () => {
+  it("pinta las décadas en la línea de tiempo, de la más reciente a la más antigua, y las anteriores a 1950 van juntas", async () => {
     mocks.getExplorePage.mockResolvedValue({
       ...empty,
       families: [{ key: "rock", tier: "main", count: 3, covers: [] }],
@@ -209,18 +211,33 @@ describe("/explore: Explorar por década (openspec: redesign-explore-decades)", 
     });
 
     const element = await ExplorePage({ params, searchParams: Promise.resolve({}) });
-    const grids = findAll(element, MosaicGrid).map((grid) => grid.props as { id: string; tiles: { key: string; href: string; covers: string[] }[]; moreTiles?: { key: string }[]; moreLabel?: string });
-    const decades = grids.find((grid) => grid.id === "decadas")!;
+    const timeline = findAll(element, DecadeTimeline)[0]!.props as {
+      decades: { decade: number; label: string; href: string; covers: string[] }[];
+      earlier: { decade: number; label: string }[];
+      earlierLabel: string;
+    };
 
-    expect(decades.tiles.map((tile) => tile.key)).toEqual(["2020", "1990", "1950"]);
-    expect(decades.tiles[0]).toMatchObject({ href: "/explore?decada=2020", covers: ["a", "b"] });
+    expect(timeline.decades.map((entry) => entry.decade)).toEqual([2020, 1990, 1950]);
+    expect(timeline.decades[0]).toMatchObject({ href: "/explore?decada=2020", covers: ["a", "b"] });
     // En español la década se llama "Años 90", no "1990s".
-    expect(decades.tiles.map((tile) => (tile as unknown as { label: string }).label)).toEqual(["Años 2020", "Años 90", "Años 50"]);
-    expect((decades.moreTiles as unknown as { label: string }[]).map((tile) => tile.label)).toEqual(["Años 40", "Años 1890"]);
-    expect(decades.moreTiles?.map((tile) => tile.key)).toEqual(["1940", "1890"]);
-    expect(decades.moreLabel).toBe("earlierDecades");
-    // La sección de géneros sigue siendo la otra grilla, antes de la de décadas.
-    expect(grids.map((grid) => grid.id)).toEqual(["generos", "decadas"]);
+    expect(timeline.decades.map((entry) => entry.label)).toEqual(["Años 2020", "Años 90", "Años 50"]);
+    expect(timeline.earlier.map((entry) => entry.label)).toEqual(["Años 40", "Años 1890"]);
+    expect(timeline.earlierLabel).toBe("beforeDecade");
+  });
+
+  it("géneros: las seis primeras principales en grande y el resto en el índice, con las secundarias al final", async () => {
+    const fam = (key: string, tier: "main" | "more" = "main") => ({ key, tier, count: 3, covers: [] });
+    mocks.getExplorePage.mockResolvedValue({
+      ...empty,
+      families: [fam("rock"), fam("metal"), fam("punk"), fam("pop"), fam("electronic"), fam("hip-hop"), fam("rnb"), fam("jazz"), fam("world", "more")],
+    });
+
+    const element = await ExplorePage({ params, searchParams: Promise.resolve({}) });
+    const section = findAll(element, GenreFamilies)[0]!.props as { big: { key: string; href: string }[]; index: { key: string }[] };
+
+    expect(section.big.map((f) => f.key)).toEqual(["rock", "metal", "punk", "pop", "electronic", "hip-hop"]);
+    expect(section.big[0]!.href).toBe("/explore?familia=rock");
+    expect(section.index.map((f) => f.key)).toEqual(["rnb", "jazz", "world"]);
   });
 
   it("la navegación rápida enlaza Décadas justo después de Géneros", async () => {
@@ -228,14 +245,14 @@ describe("/explore: Explorar por década (openspec: redesign-explore-decades)", 
       ...empty,
       collections: [collection("a1")],
       families: [{ key: "rock", tier: "main", count: 3, covers: [] }],
-      newReleases: [{ id: "n1" }],
+      newReleases: [{ id: "n1", title: "Nuevo", coverThumbUrl: null, firstReleaseDate: "2026-11-10" }],
       decades: [card(2020)],
     });
 
     const element = await ExplorePage({ params, searchParams: Promise.resolve({}) });
     const nav = findAll(element, ExploreJumpNav)[0]!.props as { items: { id: string }[] };
 
-    expect(nav.items.map((item) => item.id)).toEqual(["colecciones", "generos", "decadas", "novedades"]);
+    expect(nav.items.map((item) => item.id)).toEqual(["colecciones", "generos", "decadas", "lanzamientos"]);
   });
 
   describe("vista de década", () => {
@@ -575,5 +592,54 @@ describe("/explore/collections", () => {
     const note = (archive.props as { noteFor: (c: ArchivedCollection) => string }).noteFor(archived("v1"));
 
     expect(note).toBe("endedOn");
+  });
+});
+
+describe("/explore: segunda mitad (openspec: redesign-explore-phase3)", () => {
+  const album = (id: string, firstReleaseDate: string) => ({ id, title: `Disco ${id}`, coverThumbUrl: null, firstReleaseDate });
+
+  it("novedades y próximos son las dos partes de una sola sección Lanzamientos, con su ancla, «Ver todo» y la cuenta regresiva", async () => {
+    const soon = new Date(Date.now() + 3 * 86_400_000).toISOString().slice(0, 10);
+    mocks.getExplorePage.mockResolvedValue({
+      ...empty,
+      collections: [collection("a1")],
+      families: [{ key: "rock", tier: "main", count: 3, covers: [] }],
+      newReleases: [album("n1", "2026-11-10")],
+      upcoming: [album("u1", soon)],
+    });
+
+    const element = await ExplorePage({ params, searchParams: Promise.resolve({}) });
+    const timetables = findAll(element, ReleaseTimetable);
+    const nav = findAll(element, ExploreJumpNav)[0]!.props as { items: { id: string }[] };
+
+    expect(findAll(element, AlbumRail).map((rail) => (rail.props as { id: string }).id)).not.toContain("novedades");
+    expect(timetables).toHaveLength(1);
+    const props = timetables[0]!.props as {
+      releases: { id: string; section: string }[];
+      partIds: { recent: string; upcoming: string };
+      seeAll: { recent: { href: string }; upcoming: { href: string } };
+      status: (release: { section: string; releaseDate: string }) => { label: string; tone: string };
+    };
+    expect(props.releases.map((r) => [r.id, r.section])).toEqual([["n1", "recent"], ["u1", "upcoming"]]);
+    expect(props.partIds).toEqual({ recent: "novedades", upcoming: "proximos" });
+    expect(props.seeAll.upcoming.href).toBe("/explore?proximos=1");
+    expect(props.status({ section: "upcoming", releaseDate: soon }).tone).toBe("upcoming");
+    expect(props.status({ section: "recent", releaseDate: "2026-11-10" })).toEqual({ label: "releasesPublished", tone: "published" });
+    expect(nav.items.map((item) => item.id)).toEqual(["colecciones", "generos", "lanzamientos"]);
+  });
+
+  it("Mejor valorados va justo después de Popular, antes de los géneros", async () => {
+    mocks.getExplorePage.mockResolvedValue({
+      ...empty,
+      collections: [collection("a1")],
+      families: [{ key: "rock", tier: "main", count: 3, covers: [] }],
+      decades: [{ decade: 2020, count: 1, covers: [] }],
+      topRated: [{ id: "t1", title: "Top", coverThumbUrl: null, avgStars: 4.5 }],
+    });
+
+    const element = await ExplorePage({ params, searchParams: Promise.resolve({}) });
+    const nav = findAll(element, ExploreJumpNav)[0]!.props as { items: { id: string }[] };
+
+    expect(nav.items.map((item) => item.id)).toEqual(["colecciones", "mejor-valorados", "generos", "decadas"]);
   });
 });

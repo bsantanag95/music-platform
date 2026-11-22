@@ -17,23 +17,21 @@ SHALL componer, en este orden, las secciones que tengan contenido:
 
 1. Colecciones
 2. Popular ahora
-3. Exploración por género
-4. Novedades
-5. Próximos lanzamientos
-6. Premios
-7. Salón de la Fama
-8. Mejor valorados de la comunidad
-9. Exploración por década
+3. Mejor valorados de la comunidad
+4. Exploración por género
+5. Exploración por década
+6. Lanzamientos (Novedades y Próximos lanzamientos)
+7. Premios
+8. Salón de la Fama
 
 Colecciones SHALL ser **una sola sección**, con un único orden, un único tope y un único enlace "Ver todas" a la
 página de colecciones: la vista SHALL NOT separar las colecciones curadas de las generadas por plantilla, porque la
-forma en que se mantiene una colección no es información para quien mira. Novedades, Próximos lanzamientos,
-Exploración por década y
-Exploración por género SHALL ser
-**secciones independientes**, cada una con su propia lógica de navegación (Novedades y
-Próximos lanzamientos abren sus listados completos; Década y Género abren listados filtrados
-con parámetros distintos). Premios SHALL mostrar una tarjeta por premio competitivo, con su ceremonia más reciente, enlazada a su página de ceremonia, y un enlace al hub de
-premios (capacidad `music-awards`). Salón de la Fama SHALL mostrar la última clase cerrada de cada salón de la fama, sin mezclarse con Premios. El descubrimiento SHALL ser editorial y por reglas: SHALL
+forma en que se mantiene una colección no es información para quien mira. Exploración por década y Exploración por género SHALL ser
+**secciones independientes**, cada una con su propia lógica de navegación (abren listados filtrados con parámetros
+distintos). Novedades y Próximos lanzamientos SHALL ser **las dos partes de una sola sección Lanzamientos** (ancla
+`lanzamientos`), cada parte con su propio listado completo. Las dos secciones de la comunidad (Popular ahora y Mejor valorados)
+SHALL ir juntas, una detrás de otra. Premios SHALL mostrar una entrada por premio competitivo, con su ceremonia más reciente y su
+ganador destacado **como texto**, enlazada a su página de ceremonia, y un enlace al hub de premios (capacidad `music-awards`). Salón de la Fama SHALL mostrar la última clase cerrada de cada salón de la fama, sin mezclarse con Premios. El descubrimiento SHALL ser editorial y por reglas: SHALL
 NOT usar recomendación algorítmica ni personalización por afinidad. La vista SHALL centrarse en
 álbumes; la única sección que muestra artistas y canciones SHALL ser Popular ahora, con sus pestañas,
 y la vista SHALL NOT ofrecer listas como objetivo de descubrimiento.
@@ -59,29 +57,36 @@ y la vista SHALL NOT ofrecer listas como objetivo de descubrimiento.
 #### Scenario: Sección Premios
 
 - **WHEN** hay ceremonias de premios cargadas
-- **THEN** `/explore` muestra, después de Próximos lanzamientos, una tarjeta por cada premio, con su ceremonia más reciente y su
-  ganador destacado, y un enlace a `/awards`; sin ceremonias, la sección se omite
+- **THEN** `/explore` muestra, después de Lanzamientos, una fila con una entrada por cada premio, con su ceremonia más reciente y su
+  ganador destacado como texto, sin carátula, y un enlace a `/awards`; sin ceremonias, la sección se omite
 
 #### Scenario: Premios de varios premios
 
 - **WHEN** hay cargadas ceremonias de cinco premios, tres de ellas de febrero
-- **THEN** la sección muestra cinco tarjetas, una por premio, de la ceremonia más reciente a la más antigua, y ningún premio queda fuera por haber otros con ceremonias más recientes
+- **THEN** la sección muestra cinco entradas, una por premio, de la ceremonia más reciente a la más antigua, y ningún premio queda fuera por haber otros con ceremonias más recientes
 
 #### Scenario: Sección Salón de la Fama
 
 - **WHEN** hay una clase cerrada de un salón de la fama cargada
-- **THEN** `/explore` muestra, inmediatamente después de Premios y antes de Mejor valorados, la sección Salón de la Fama con las
-  incorporaciones de esa clase y un enlace a todas las clases; sin clases cerradas, la sección se omite
+- **THEN** `/explore` muestra, inmediatamente después de Premios y como última sección, la sección Salón de la Fama con la última
+  clase de cada salón y un enlace a todas las clases; sin clases cerradas, la sección se omite
 
 #### Scenario: Premios sin salones de la fama
 
 - **WHEN** hay cargados premios competitivos y un salón de la fama
-- **THEN** la sección Premios muestra una tarjeta por cada premio competitivo y ninguna del salón
+- **THEN** la sección Premios muestra una entrada por cada premio competitivo y ninguna del salón
 
 #### Scenario: La comunidad antes que la década
 
-- **WHEN** `/explore` muestra Premios, Salón de la Fama, Mejor valorados y Exploración por década
-- **THEN** el riel de mejor valorados aparece antes que la exploración por década, que cierra la página
+- **WHEN** `/explore` muestra Popular ahora, Mejor valorados, Exploración por década y Salón de la Fama
+- **THEN** el riel de mejor valorados aparece justo después de Popular ahora y antes de la exploración por década, y Salón de la
+  Fama cierra la página
+
+#### Scenario: Lanzamientos en una sola sección
+
+- **WHEN** hay novedades y próximos lanzamientos
+- **THEN** `/explore` muestra una sola sección Lanzamientos, después de la exploración por década, con Novedades y Próximos
+  lanzamientos como sus dos partes
 
 #### Scenario: Colecciones abre la página
 
@@ -95,49 +100,50 @@ y la vista SHALL NOT ofrecer listas como objetivo de descubrimiento.
 
 ### Requirement: Colecciones destacadas
 
-La vista `/explore` SHALL mostrar las colecciones destacadas en **un solo riel**, con las filas **vigentes** de
+La vista `/explore` SHALL mostrar las colecciones destacadas en **una sola sección**, con las filas **vigentes** de
 `user_list_featured` (`starts_at` pasado y `expires_at` nulo o futuro) cuya lista sea pública, visible y de álbumes,
 sin distinguir el origen: las curadas a mano (`source='curated'`, de listas oficiales no retiradas) y las generadas
-por plantilla (`source='template'`) SHALL compartir el riel, el orden y el tope.
+por plantilla (`source='template'`) SHALL compartir la sección, el orden y el tope.
 
-El riel SHALL ordenarse por `weight` descendente y, a igualdad, por `rank` ascendente, con un máximo de 10 tarjetas, y
+La sección SHALL ordenarse por `weight` descendente y, a igualdad, por `rank` ascendente, con un máximo de **6 tarjetas**, y
 SHALL mostrarse siempre que exista al menos una colección vigente. Cada colección SHALL presentarse con su título, la
-etiqueta de su familia, su conteo de ítems y sus carátulas disponibles, y SHALL enlazar a su página de detalle. El
-riel SHALL ofrecer un enlace "Ver todas" a la página de colecciones.
+etiqueta de su familia, su conteo de ítems y sus carátulas disponibles, y SHALL enlazar a su página de detalle. La
+sección SHALL ofrecer un enlace "Ver todas" a la página de colecciones, donde están las demás.
 
-El riel SHALL desplazarse horizontalmente y SHALL mostrar al menos **6 colecciones sin desplazar** en un ancho de
-escritorio: la tarjeta del riel SHALL ser más compacta que la de la página de colecciones (pila de fundas reducida y
-sin descripción), porque un riel horizontal no garantiza que alguien lo desplace y mostrar menos de 6 de entrada
-empobrecería la sección. El riel SHALL ofrecer controles de desplazamiento anterior y siguiente con
-etiqueta accesible, que SHALL desactivarse en cada extremo y SHALL omitirse cuando todas las tarjetas caben sin
-desplazar. El desplazamiento SHALL funcionar con el gesto táctil nativo y SHALL respetar la preferencia de movimiento
-reducido del sistema. La tarjeta SHALL NOT indicar si la colección se armó a mano o por plantilla.
+Desde un ancho de escritorio (`lg`) las colecciones SHALL formar un **mosaico** sin desplazamiento, la misma forma que en
+Inicio: con 6, la primera como **destacada** (dos columnas y dos filas, hasta ocho carátulas y su descripción), cuatro
+medianas (pila de fundas, sin descripción) y la sexta a lo ancho con su descripción y una tira de carátulas; con 5, la
+destacada y cuatro medianas; con 4 o menos, una fila de medianas. Un mosaico no esconde tarjetas detrás de un
+desplazamiento que nadie garantiza hacer, así que SHALL NOT llevar controles anterior y siguiente. Por debajo de `lg` las
+mismas tarjetas SHALL formar una fila con desplazamiento horizontal por gesto táctil nativo, con `scroll-snap` y la
+siguiente tarjeta asomando, sin controles. Cada tarjeta SHALL llevar la etiqueta de su familia como sello. La tarjeta SHALL
+NOT indicar si la colección se armó a mano o por plantilla.
 
 #### Scenario: Con colecciones sembradas
 
 - **WHEN** existen filas curadas y filas generadas vigentes
-- **THEN** `/explore` muestra un solo riel "Colecciones" con las dos clases mezcladas, ordenadas por peso y rank, sin
+- **THEN** `/explore` muestra una sola sección "Colecciones" con las dos clases mezcladas, ordenadas por peso y rank, sin
   rótulo que distinga su origen
 
 #### Scenario: Colección vencida
 
 - **WHEN** una fila de `user_list_featured` tiene `expires_at` en el pasado
-- **THEN** su colección no aparece en el riel
+- **THEN** su colección no aparece en la sección
 
 #### Scenario: Tope de tarjetas
 
-- **WHEN** hay más de 10 colecciones vigentes
-- **THEN** el riel muestra solo las 10 primeras según el orden definido
+- **WHEN** hay más de 6 colecciones vigentes
+- **THEN** la sección muestra solo las 6 primeras según el orden definido, y "Ver todas" lleva a las demás
 
 #### Scenario: Sin curaduría publicada
 
 - **WHEN** no hay ninguna colección curada vigente
-- **THEN** el riel se muestra con normalidad solo con las generadas, sin un bloque vacío ni un mensaje aparte
+- **THEN** la sección se muestra con normalidad solo con las generadas, sin un bloque vacío ni un mensaje aparte
 
 #### Scenario: Sin colecciones destacadas
 
 - **WHEN** ninguna lista tiene fila vigente en `user_list_featured`
-- **THEN** el riel no aparece en `/explore`
+- **THEN** la sección no aparece en `/explore`
 
 #### Scenario: Etiqueta de familia
 
@@ -151,31 +157,47 @@ reducido del sistema. La tarjeta SHALL NOT indicar si la colección se armó a m
 
 #### Scenario: Controles de desplazamiento
 
-- **WHEN** hay más colecciones vigentes de las que caben en el ancho visible
-- **THEN** el riel ofrece los controles anterior y siguiente, el anterior está desactivado al inicio y el siguiente al
-  llegar al final
+- **WHEN** se abre `/explore` a 390 px con 6 colecciones vigentes
+- **THEN** las tarjetas forman una fila que se desliza con el gesto táctil, con la siguiente tarjeta asomando, y no hay
+  controles anterior y siguiente
 
 #### Scenario: Todo cabe en pantalla
 
-- **WHEN** las colecciones vigentes caben sin desplazar
-- **THEN** el riel no muestra los controles de desplazamiento
+- **WHEN** se abre `/explore` en un ancho de escritorio
+- **THEN** todas las colecciones de la sección se ven sin desplazar y no hay controles de desplazamiento
 
 #### Scenario: Seis de un vistazo
 
 - **WHEN** hay 10 colecciones vigentes y se abre `/explore` en un ancho de escritorio
-- **THEN** se ven 6 tarjetas completas en una sola fila, sin descripción, y las demás quedan a un desplazamiento
+- **THEN** se ven 6 tarjetas en mosaico: la primera destacada con su descripción y hasta ocho carátulas, cuatro medianas y la
+  sexta a lo ancho; las otras 4 quedan en la página de colecciones
+
+#### Scenario: Cinco colecciones
+
+- **WHEN** hay exactamente 5 colecciones vigentes y se abre `/explore` en un ancho de escritorio
+- **THEN** el mosaico muestra la destacada y cuatro medianas, sin hueco ni tarjeta a lo ancho
+
+#### Scenario: Pocas colecciones
+
+- **WHEN** hay 3 colecciones vigentes
+- **THEN** en escritorio se muestran como una fila de tres tarjetas medianas, sin destacada
 
 ### Requirement: Exploración por década y por género
 
 La vista `/explore` SHALL ofrecer navegación por **década** (derivada de
 `release_group.first_release_year`), por **familia** de géneros y por **género** (derivados de
-los géneros efectivos de cada álbum, ver capability `genre-seeds`). Las tarjetas de familia SHALL
-mostrar, en el orden de la taxonomía, las familias principales que tienen álbumes, y las familias
-secundarias con álbumes agrupadas detrás de "Más"; una familia sin álbumes SHALL NOT mostrar tarjeta.
-Cada tarjeta SHALL ser visual: un mosaico de hasta cuatro carátulas de discos de estudio de la familia
-con el nombre de la familia encima, y SHALL NOT mostrar número de álbumes ni barra de tamaño. Una
-familia sin carátulas disponibles SHALL mostrarse como tarjeta plana con su nombre. Las tarjetas de
-década se describen en "Sección Explorar por década". Al elegir una década,
+los géneros efectivos de cada álbum, ver capability `genre-seeds`). La sección de géneros (ancla
+`generos`) SHALL mostrar las familias con álbumes en el orden de la taxonomía, en dos niveles: las **seis
+primeras familias principales** con álbumes como tarjetas grandes y **todas las demás** —el resto de las
+principales y, al final, las secundarias— en un **índice tipográfico**: una lista de enlaces de texto con el
+nombre de cada familia, en columnas (dos en el teléfono, hasta cuatro en escritorio), sin carátulas, sin
+desplegable y siempre visible. Una familia sin álbumes SHALL NOT aparecer en ningún nivel. Cada tarjeta grande
+SHALL ser visual: un mosaico de hasta cuatro carátulas de discos de estudio de la familia con el nombre de la
+familia encima. Una familia de las seis sin carátulas disponibles SHALL mostrarse como tarjeta plana con su
+nombre. Ni las tarjetas ni el índice SHALL mostrar número de álbumes ni barra de tamaño: el conteo dice qué se
+ha explorado, no cuánto pesa la familia. Con seis o menos familias con álbumes, el índice SHALL omitirse. Cada
+familia, en los dos niveles, SHALL enlazar a `/{locale}/explore?familia=<clave>`. Las décadas se describen en
+"Sección Explorar por década". Al elegir una década,
 una familia o un género, el sistema SHALL mostrar
 un listado paginado de álbumes de ese corte en `/{locale}/explore` acotado por un parámetro de
 consulta (`?decada=`, `?familia=<clave>` o `?genero=<slug>`), con prioridad `decada` > `familia` > `genero`.
@@ -258,25 +280,47 @@ el orden pasa de la carátula resuelta directamente al identificador, para que l
 
 #### Scenario: Tarjeta de familia con carátulas
 
-- **WHEN** una familia tiene discos de estudio con carátula
-- **THEN** su tarjeta muestra un mosaico de hasta cuatro de esas carátulas con el nombre de la familia, sin número de
+- **WHEN** una de las seis primeras familias principales tiene discos de estudio con carátula
+- **THEN** su tarjeta grande muestra un mosaico de hasta cuatro de esas carátulas con el nombre de la familia, sin número de
   álbumes ni barra
 
 #### Scenario: Familia sin carátulas
 
-- **WHEN** una familia tiene álbumes pero ninguno de estudio con carátula
-- **THEN** su tarjeta se muestra plana con el nombre de la familia y sigue llevando a su listado
+- **WHEN** una de las seis primeras familias principales tiene álbumes pero ninguno de estudio con carátula
+- **THEN** su tarjeta grande se muestra plana con el nombre de la familia y sigue llevando a su listado
 
 #### Scenario: Sin repetir discos entre familias
 
-- **WHEN** dos familias comparten discos entre sus mejores candidatos
+- **WHEN** dos de las seis familias en grande comparten discos entre sus mejores candidatos
 - **THEN** cada disco aparece en la tarjeta de una sola familia, salvo el relleno de una familia que de otro modo quedaría con
   menos de dos carátulas
 
 #### Scenario: Carátulas estables
 
 - **WHEN** se abre `/explore` dos veces sin que cambien los datos
-- **THEN** cada familia muestra las mismas carátulas, elegidas por la señal de calidad y con desempate por id
+- **THEN** cada familia en grande muestra las mismas carátulas, elegidas por la señal de calidad y con desempate por id
+
+#### Scenario: Seis familias en grande
+
+- **WHEN** las 17 familias principales y las 3 secundarias tienen álbumes
+- **THEN** la sección de géneros muestra en grande Rock, Metal, Punk y hardcore, Pop, Electrónica y Hip hop, en ese orden, y las
+  otras 14 en el índice, con las 3 secundarias al final
+
+#### Scenario: Índice sin cifras
+
+- **WHEN** se abre la sección de géneros
+- **THEN** cada entrada del índice es un enlace con solo el nombre de la familia hacia `/explore?familia=<clave>`, sin número de
+  álbumes ni carátula, y el índice se ve sin pulsar nada, también sin JavaScript
+
+#### Scenario: Familia principal sin álbumes
+
+- **WHEN** la familia Punk y hardcore no tiene álbumes
+- **THEN** no aparece, y la séptima familia principal con álbumes (R&B, soul y funk) ocupa la sexta tarjeta grande
+
+#### Scenario: Pocas familias
+
+- **WHEN** solo cuatro familias tienen álbumes
+- **THEN** las cuatro se muestran en grande y no hay índice
 
 #### Scenario: Estudio antes que sencillos en el orden por defecto
 
@@ -301,47 +345,51 @@ el orden pasa de la carátula resuelta directamente al identificador, para que l
 
 ### Requirement: Novedades
 
-La vista `/explore` SHALL incluir un riel de novedades con los release-groups de categoría
+La vista `/explore` SHALL incluir, como primera parte de la sección **Lanzamientos**, la parte **Novedades** con los release-groups de categoría
 `studio` o `single_ep` cuya `first_release_date` (fecha completa, con precisión diaria) caiga
 entre hoy menos `NEW_RELEASE_WINDOW_DAYS` días (90) y hoy, inclusive, ordenados por
-`first_release_date` descendente y, ante empate, por `id`, acotado a `RAIL_SIZE` álbumes. El riel
+`first_release_date` descendente y, ante empate, por `id`, acotado a `RAIL_SIZE` álbumes. La parte
 SHALL excluir los álbumes sin `first_release_date` (solo año o mes conocidos), los de fecha
-posterior a hoy y los sin carátula. El riel SHALL omitirse por completo cuando haya menos de
-`MIN_ALBUMS_FOR_SECTION` álbumes elegibles. Cada tarjeta SHALL mostrar la fecha de lanzamiento (día y
-mes) en lugar del año, y el riel SHALL ofrecer "Ver todo →" hacia el listado completo de novedades. El riel
-de Novedades de la página de género NO SHALL verse afectado por este requisito.
+posterior a hoy y los sin carátula. La parte SHALL omitirse por completo cuando haya menos de
+`MIN_ALBUMS_FOR_SECTION` álbumes elegibles. La sección Lanzamientos SHALL tener la forma del **horario** de Inicio: cada
+parte es una lista de filas con columnas fijas —la fecha de lanzamiento (día y mes), la carátula pequeña, el título con su
+artista y un estado—, con las primeras 6 filas visibles y el resto detrás de un "Ver N más" nativo que funciona sin JavaScript.
+El estado de una novedad SHALL ser "Publicado". Cada parte SHALL ofrecer "Ver todo →" hacia su listado completo. Desde `lg`
+las dos partes SHALL ir en dos columnas, Novedades a la izquierda; por debajo, una sobre otra. Cada parte SHALL llevar el
+ancla de su nombre (`novedades`, `proximos`) para que los enlaces existentes sigan llegando. El riel de Novedades de la
+página de género NO SHALL verse afectado por este requisito.
 
 #### Scenario: Riel de novedades
 
 - **WHEN** hay al menos `MIN_ALBUMS_FOR_SECTION` álbumes de estudio o single/EP con carátula lanzados en los
   últimos 90 días
-- **THEN** `/explore` muestra un riel de novedades con los más recientes primero por fecha de lanzamiento, con
-  la fecha en cada tarjeta y un enlace "Ver todo →" a `/explore?novedades=1`
+- **THEN** `/explore` muestra la parte Novedades con los más recientes primero por fecha de lanzamiento, con
+  la fecha en cada fila y un enlace "Ver todo →" a `/explore?novedades=1`
 
 #### Scenario: Fuera de la ventana
 
 - **WHEN** un álbum se lanzó hace 120 días
-- **THEN** no aparece en el riel de novedades
+- **THEN** no aparece en la parte Novedades
 
 #### Scenario: Lanzamiento futuro
 
 - **WHEN** un álbum tiene `first_release_date` posterior a hoy
-- **THEN** no aparece en el riel de novedades
+- **THEN** no aparece en la parte Novedades
 
 #### Scenario: Fecha parcial
 
 - **WHEN** un álbum solo tiene `first_release_year` (sin `first_release_date`)
-- **THEN** no aparece en el riel de novedades
+- **THEN** no aparece en la parte Novedades
 
 #### Scenario: Sin carátula
 
 - **WHEN** un álbum reciente no tiene `cover_thumb_url`
-- **THEN** no aparece en el riel de novedades
+- **THEN** no aparece en la parte Novedades
 
 #### Scenario: Pocas novedades
 
 - **WHEN** hay menos de `MIN_ALBUMS_FOR_SECTION` álbumes elegibles en la ventana
-- **THEN** `/explore` no renderiza el riel de novedades ni un mensaje de vacío
+- **THEN** `/explore` no renderiza la parte Novedades ni un mensaje de vacío
 
 #### Scenario: Orden dentro del mismo año
 
@@ -433,21 +481,22 @@ mediante una interfaz de administración en la aplicación.
 
 ### Requirement: Próximos lanzamientos
 
-La vista `/explore` SHALL incluir, inmediatamente después del riel de Novedades, un riel de próximos
-lanzamientos con los release-groups de categoría `studio` o `single_ep` cuya `first_release_date` (fecha
+La vista `/explore` SHALL incluir, como segunda parte de la sección **Lanzamientos** (junto a Novedades), la parte
+**Próximos lanzamientos** con los release-groups de categoría `studio` o `single_ep` cuya `first_release_date` (fecha
 completa) sea posterior a hoy y no pase de hoy más `UPCOMING_WINDOW_DAYS` días (180), ordenados por
-`first_release_date` ascendente y, ante empate, por `id`, acotado a `RAIL_SIZE` álbumes. El riel SHALL excluir
+`first_release_date` ascendente y, ante empate, por `id`, acotado a `RAIL_SIZE` álbumes. La parte SHALL excluir
 los álbumes sin `first_release_date`, los de fecha igual o anterior a hoy y los sin carátula, SHALL NOT ordenar
 por popularidad ni limitar por artista o familia de géneros, y SHALL omitirse por completo cuando haya menos de
-`MIN_ALBUMS_FOR_SECTION` álbumes elegibles. Cada tarjeta SHALL mostrar la fecha de lanzamiento (día y mes) en
-lugar del año. El riel SHALL ser igual para todas las personas y SHALL ofrecer "Ver todo →" hacia el listado
-completo.
+`MIN_ALBUMS_FOR_SECTION` álbumes elegibles. Cada fila SHALL mostrar la fecha de lanzamiento (día y mes) y, como
+estado, la **cuenta regresiva** ("Hoy", "Mañana", "En 5 días"), resaltada. La parte SHALL ser igual para todas las personas
+y SHALL ofrecer "Ver todo →" hacia el listado completo. Sin novedades, Próximos lanzamientos SHALL ocupar sola la sección;
+sin ninguna de las dos partes, la sección Lanzamientos SHALL omitirse.
 
 #### Scenario: Riel de próximos lanzamientos
 
 - **WHEN** hay al menos `MIN_ALBUMS_FOR_SECTION` álbumes de estudio o single/EP con carátula que salen en los
   próximos 180 días
-- **THEN** `/explore` muestra, bajo Novedades, un riel con los más cercanos primero y la fecha en cada tarjeta
+- **THEN** `/explore` muestra, junto a Novedades, la parte Próximos lanzamientos con los más cercanos primero, la fecha y la cuenta regresiva en cada fila
 
 #### Scenario: Lo de hoy no es un próximo lanzamiento
 
@@ -457,22 +506,38 @@ completo.
 #### Scenario: Fuera de la ventana
 
 - **WHEN** un álbum sale dentro de 200 días
-- **THEN** no aparece en el riel de próximos lanzamientos
+- **THEN** no aparece en la parte Próximos lanzamientos
 
 #### Scenario: Fecha parcial o sin carátula
 
 - **WHEN** un álbum futuro solo tiene `first_release_year`, o no tiene `cover_thumb_url`
-- **THEN** no aparece en el riel de próximos lanzamientos
+- **THEN** no aparece en la parte Próximos lanzamientos
 
 #### Scenario: Pocos próximos lanzamientos
 
 - **WHEN** hay menos de `MIN_ALBUMS_FOR_SECTION` álbumes elegibles
-- **THEN** `/explore` no renderiza el riel ni un mensaje de vacío
+- **THEN** `/explore` no renderiza esa parte ni un mensaje de vacío
 
 #### Scenario: Sin recorte por artista
 
 - **WHEN** un artista tiene dos lanzamientos futuros dentro de la ventana
-- **THEN** ambos pueden aparecer en el riel
+- **THEN** ambos pueden aparecer en la parte
+
+#### Scenario: Horario de dos columnas
+
+- **WHEN** hay 12 novedades y 9 próximos lanzamientos y se abre `/explore` a 1440 px
+- **THEN** la sección Lanzamientos muestra Novedades a la izquierda y Próximos a la derecha, seis filas en cada una, y "Ver 6 más"
+  y "Ver 3 más" despliegan el resto en la misma página, también sin JavaScript
+
+#### Scenario: Cuenta regresiva
+
+- **WHEN** un próximo lanzamiento sale mañana
+- **THEN** su fila muestra la fecha y el estado "Mañana"
+
+#### Scenario: Solo próximos
+
+- **WHEN** no hay novedades suficientes y sí próximos lanzamientos
+- **THEN** la sección Lanzamientos muestra solo la parte Próximos lanzamientos, a todo el ancho
 
 ### Requirement: Listado completo de próximos lanzamientos
 
@@ -554,21 +619,28 @@ década, familia, género y próximos lanzamientos cuando se combinan en la URL.
 
 La vista `/explore` SHALL mostrar, bajo el título, una fila de enlaces ("En esta página") con un enlace por cada
 sección que se renderiza, en el mismo orden de la página, cada uno hacia el ancla de su sección: `colecciones`,
-`popular`, `generos`, `decadas`, `novedades`, `proximos`, `premios`, `salon-de-la-fama` y `mejor-valorados`. La fila SHALL NOT
+`popular`, `mejor-valorados`, `generos`, `decadas`, `lanzamientos`, `premios` y `salon-de-la-fama`. La fila SHALL NOT
 enlazar a una sección omitida y SHALL omitirse por completo cuando se rendericen menos de 4 secciones. La fila SHALL
-funcionar sin JavaScript y SHALL NOT ser fija ni resaltar la sección activa. Las etiquetas SHALL ser cortas y estar en
-el locale activo.
+quedar fija bajo la cabecera global mientras se recorre la portada, sin tapar el título de la sección a la que se salta, y SHALL
+marcar como actual (`aria-current`) el enlace de la sección que está a la vista. Sin JavaScript, la fila SHALL seguir funcionando como
+enlaces a las anclas, sin sección marcada. En pantallas angostas la fila SHALL desplazarse en horizontal y SHALL mantener visible el
+enlace marcado. Las etiquetas SHALL ser cortas y estar en el locale activo.
 
 #### Scenario: Fila con todas las secciones
 
-- **WHEN** `/es/explore` renderiza las 9 secciones
-- **THEN** la fila muestra "Colecciones, Popular, Géneros, Décadas, Novedades, Próximos, Premios, Salón de la Fama, Mejor valorados",
+- **WHEN** `/es/explore` renderiza las 8 secciones
+- **THEN** la fila muestra "Colecciones, Popular, Mejor valorados, Géneros, Décadas, Lanzamientos, Premios, Salón de la Fama",
   cada una enlazada a su ancla
 
 #### Scenario: Sección omitida
 
 - **WHEN** Novedades y Próximos lanzamientos no tienen contenido
-- **THEN** la fila no los incluye y ninguno de sus enlaces apunta a un ancla inexistente
+- **THEN** la sección Lanzamientos no se renderiza, la fila no la incluye y ninguno de sus enlaces apunta a un ancla inexistente
+
+#### Scenario: Lanzamientos con una sola parte
+
+- **WHEN** solo hay próximos lanzamientos
+- **THEN** la fila incluye "Lanzamientos" y su enlace lleva a la sección, que muestra solo esa parte
 
 #### Scenario: Pocas secciones
 
@@ -578,7 +650,17 @@ el locale activo.
 #### Scenario: Salto a una sección
 
 - **WHEN** una persona activa "Premios" en la fila
-- **THEN** la página se desplaza a la sección Premios sin que el encabezado global tape su título
+- **THEN** la página se desplaza a la sección Premios sin que el encabezado global ni la fila fija tapen su título
+
+#### Scenario: La fila acompaña al bajar
+
+- **WHEN** una persona baja hasta la sección Décadas
+- **THEN** la fila sigue visible bajo la cabecera global y el enlace "Décadas" está marcado como actual
+
+#### Scenario: Sin JavaScript
+
+- **WHEN** la portada de Explorar se carga sin JavaScript
+- **THEN** la fila muestra los enlaces a las anclas y ninguno aparece marcado
 
 ### Requirement: Vista de familia de géneros
 
@@ -623,9 +705,12 @@ su título.
 ### Requirement: Sección Popular ahora
 
 La vista `/explore` SHALL mostrar la sección **Popular ahora** (ancla `popular`) con la popularidad reciente de la comunidad
-(capacidad `popularity`) en tres pestañas: **Álbumes**, **Artistas** y **Canciones**. Álbumes SHALL mostrarse como riel de carátulas de
-hasta `RAIL_SIZE` discos; Artistas y Canciones como listas numeradas de hasta 10, el artista con su foto si la hay y la canción con la
-carátula de su disco y su artista. Cada ítem SHALL enlazar a su página. El subtítulo SHALL decir la ventana usada ("este mes", "en los
+(capacidad `popularity`) en tres pestañas: **Álbumes**, **Artistas** y **Canciones**. Álbumes SHALL mostrarse como un **top numerado**
+de hasta `RAIL_SIZE` discos: cada disco con su posición en cifras grandes de contorno junto a la carátula (la n.º 1 en ámbar), todas las
+carátulas del mismo tamaño, y debajo el título, el artista y la cifra; desde `md` en una rejilla de cuatro columnas (seis desde `lg`) que
+se ve entera sin desplazar y, por debajo, en una fila con desplazamiento táctil. La posición SHALL ser la del orden de la lista (`ol`); la
+cifra grande es decorativa. Artistas y Canciones SHALL mostrarse como un ranking de hasta 10: el n.º 1 como pieza grande y el resto numerado
+en lista, el artista con su foto si la hay y la canción con la carátula de su disco y su artista. Cada ítem SHALL enlazar a su página. El subtítulo SHALL decir la ventana usada ("este mes", "en los
 últimos 3 meses" o "de siempre"); con pestañas de ventanas distintas, el subtítulo SHALL ser el de la pestaña activa. Una pestaña sin
 resultado SHALL NOT mostrarse y, sin ninguna, la sección SHALL omitirse. La primera pestaña con resultado SHALL estar activa al cargar,
 cambiar de pestaña SHALL NOT pedir datos al servidor y, sin JavaScript, SHALL verse la pestaña de álbumes. Las pestañas SHALL ser
@@ -651,16 +736,29 @@ accesibles por teclado (`tablist`, flechas). La cifra "N personas" SHALL aparece
 - **WHEN** una persona elige la pestaña Artistas
 - **THEN** ve la lista numerada de artistas sin recargar la página
 
+#### Scenario: Top de álbumes
+
+- **WHEN** hay 12 álbumes populares y se abre `/explore` a 1440 px
+- **THEN** la pestaña Álbumes muestra los 12 en dos filas de seis, cada uno con su posición en cifras grandes y la carátula del mismo
+  tamaño que las demás, sin desplazamiento
+
+#### Scenario: Top de álbumes en el teléfono
+
+- **WHEN** se abre `/explore` a 390 px
+- **THEN** el top de álbumes es una fila que se desliza con el gesto táctil, con el siguiente disco asomando y sin desbordar la página
+
 ### Requirement: Sección Explorar por década
 
 La vista `/explore` SHALL mostrar la sección **Explorar por década** (ancla `decadas`) justo después de "Explorar por
-género", con una tarjeta por década que tiene álbumes, de la más reciente a la más antigua. Cada tarjeta SHALL ser visual: un
-mosaico de hasta cuatro carátulas de discos de estudio de la década con el nombre de la década encima, y SHALL NOT
-mostrar número de álbumes ni barra de tamaño. El nombre de la década SHALL ser el de su idioma: en español "Años 80" (de 1920 a
+género", con una entrada por década que tiene álbumes, de la más reciente a la más antigua, en dos formas según el ancho. Desde
+`lg` SHALL ser una **línea de tiempo**: una fila con una marca por década sobre una línea, cada una con el año de la década en
+cifras grandes ("1990s"), un mosaico de hasta cuatro carátulas de discos de estudio de la década y su nombre como texto del enlace.
+Por debajo de `lg` SHALL ser un **índice tipográfico**: los nombres de las décadas como enlaces de texto grande en dos columnas,
+sin carátulas. Ninguna forma SHALL mostrar número de álbumes ni barra de tamaño. El nombre de la década SHALL ser el de su idioma: en español "Años 80" (de 1920 a
 1990; con cuatro cifras en las décadas anteriores a 1920 y desde 2000, "Años 1910", "Años 2000", "Años 2020", para que "Años 10" no se
-lea como los 2010 y dos décadas no compartan nombre) y en inglés "1980s". Una década sin discos de estudio con carátula SHALL mostrarse como tarjeta plana
-con su nombre. Las décadas desde 1950 SHALL ser tarjetas de la grilla; las anteriores a 1950 SHALL agruparse detrás de una
-tarjeta "Décadas anteriores" que las despliega y pliega, sin cifras. Cada tarjeta SHALL enlazar a `/{locale}/explore?decada=`.
+lea como los 2010 y dos décadas no compartan nombre) y en inglés "1980s". Una década sin discos de estudio con carátula SHALL mostrarse en la línea de tiempo sin
+mosaico, solo con su marca y su nombre. Las décadas desde 1950 SHALL tener su propia entrada; las anteriores a 1950 SHALL
+agruparse al final en una entrada "Antes de 1950" con un enlace de texto por cada una, visibles sin desplegar nada y sin cifras. Cada entrada SHALL enlazar a `/{locale}/explore?decada=`.
 Las carátulas SHALL elegirse por la señal de calidad de las colecciones (valoración de la comunidad, premio y calendario, con
 desempate por id) entre los discos de estudio con carátula de la década, de forma estable entre visitas, y SHALL calcularse una
 vez y reutilizarse unas horas. La sección SHALL omitirse si no hay ninguna década con álbumes.
@@ -668,8 +766,8 @@ vez y reutilizarse unas horas. La sección SHALL omitirse si no hay ninguna déc
 #### Scenario: Tarjeta de década con carátulas
 
 - **WHEN** la década de 1990 tiene discos de estudio con carátula
-- **THEN** su tarjeta muestra un mosaico de hasta cuatro de esas carátulas con "Años 90" encima (en inglés, "1990s"), sin número de
-  álbumes ni barra, y lleva a `/explore?decada=1990`
+- **THEN** su entrada de la línea de tiempo muestra "1990s" en grande y un mosaico de hasta cuatro de esas carátulas, se nombra "Años 90"
+  (en inglés, "1990s"), sin número de álbumes ni barra, y lleva a `/explore?decada=1990`
 
 #### Scenario: Nombre de la década en español
 
@@ -679,28 +777,34 @@ vez y reutilizarse unas horas. La sección SHALL omitirse si no hay ninguna déc
 #### Scenario: Más reciente primero
 
 - **WHEN** se abre `/explore`
-- **THEN** las tarjetas de década van de los años 2020 hacia atrás, con "Décadas anteriores" al final de la grilla
+- **THEN** la línea de tiempo (y el índice en el teléfono) va de los años 2020 hacia atrás, con "Antes de 1950" al final
 
 #### Scenario: Décadas anteriores a 1950
 
 - **WHEN** hay álbumes de los 1890s a los 1940s
-- **THEN** no hay tarjetas de esas décadas en la grilla, sino una tarjeta "Décadas anteriores" que las despliega, y ninguna
-  muestra cifras
+- **THEN** esas décadas no tienen entrada propia, sino que la entrada "Antes de 1950" enlaza a cada una con su nombre, sin
+  desplegar nada y sin cifras
 
 #### Scenario: Década sin carátulas
 
 - **WHEN** una década tiene álbumes pero ninguno de estudio con carátula
-- **THEN** su tarjeta se muestra plana con el nombre de la década y sigue llevando a su listado
+- **THEN** su entrada se muestra sin mosaico, con su marca y su nombre, y sigue llevando a su listado
 
 #### Scenario: Década sin álbumes
 
 - **WHEN** una década no tiene ningún álbum con año
-- **THEN** no tiene tarjeta
+- **THEN** no tiene entrada en la línea de tiempo ni en el índice
 
 #### Scenario: Carátulas estables
 
 - **WHEN** se abre `/explore` dos veces sin que cambien los datos
 - **THEN** cada década muestra las mismas carátulas
+
+#### Scenario: Índice de décadas en el teléfono
+
+- **WHEN** se abre `/explore` a 390 px
+- **THEN** las décadas se ven como un índice de nombres en dos columnas, sin carátulas, con "Antes de 1950" y sus enlaces al final,
+  y no hay línea de tiempo
 
 ### Requirement: Vista de década
 
@@ -855,11 +959,11 @@ carátulas, y SHALL NOT mostrar cifras.
 
 ### Requirement: Sección Salón de la Fama de Explorar
 
-La sección Salón de la Fama de `/explore` (ancla `salon-de-la-fama`) SHALL mostrar, bajo un encabezado y con el mismo aspecto que Premios,
-**una tarjeta por salón de la fama** con al menos una clase cerrada, en la misma cuadrícula que las tarjetas de Premios. Cada tarjeta
-SHALL mostrar el nombre del salón, el año de su última clase y cuatro carátulas de las incorporaciones de esa clase (primero las que
-tienen disco en el catálogo; las canciones, con la carátula de su disco ancla), con el fondo teñido por la primera carátula, y SHALL
-abrir la clase más reciente del salón en `/hall-of-fame`. La sección SHALL ofrecer un enlace "Ver todos" al índice `/hall-of-fame` y SHALL
+La sección Salón de la Fama de `/explore` (ancla `salon-de-la-fama`) SHALL mostrar, bajo un encabezado,
+**una tarjeta compacta por salón de la fama** con al menos una clase cerrada: tarjetas horizontales lado a lado (dos columnas desde
+`md`, una sobre otra por debajo), cada una con una tira de cuatro carátulas de las incorporaciones de su última clase (primero las que
+tienen disco en el catálogo; las canciones, con la carátula de su disco ancla) y, al lado, el nombre del salón y el año de esa clase,
+con el fondo teñido por la primera carátula. Cada tarjeta SHALL abrir la clase más reciente del salón en `/hall-of-fame`. La sección SHALL ofrecer un enlace "Ver todos" al índice `/hall-of-fame` y SHALL
 omitirse por completo sin clases cerradas. El encabezado SHALL decir "Salón de la Fama" con un solo salón y "Salones de la Fama" con más
 de uno, igual que la entrada de la navegación rápida. SHALL NOT mostrar descripciones del sitio de la organización ni su logo, ni listar
 las incorporaciones de la clase (eso es de la página de la clase).
@@ -877,8 +981,8 @@ las incorporaciones de la clase (eso es de la página de la clase).
 #### Scenario: Una tarjeta por salón
 
 - **WHEN** el Grammy Hall of Fame (clase 2026) y el National Recording Registry (clase 2026) tienen clases cerradas
-- **THEN** la sección, inmediatamente después de Premios, muestra el encabezado "Salones de la Fama" y dos tarjetas con la misma
-  anchura que las de Premios, cada una con su nombre, "2026" y cuatro carátulas
+- **THEN** la sección, inmediatamente después de Premios, muestra el encabezado "Salones de la Fama" y dos tarjetas compactas lado a
+  lado, cada una con su nombre, "2026" y una tira de cuatro carátulas
 
 #### Scenario: Un solo salón
 

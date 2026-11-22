@@ -14,7 +14,11 @@
     "i18n:client-messages": "tsx scripts/generate-client-messages.ts",
     "db:migrate": "tsx --env-file=.env src/db/migrate.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "verify": "tsx scripts/verify/run.ts",
+    "verify:hooks": "git config core.hooksPath .githooks",
+    "test:e2e": "playwright test",
+    "smoke:ci": "tsx scripts/smoke-lib/ci.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1137.0",
@@ -35,6 +39,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.6",
+    "@playwright/test": "^1.65.1",
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.3",
@@ -45,6 +50,7 @@
     "drizzle-kit": "^0.28.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "^15.5.22",
+    "fast-check": "^4.10.2",
     "jsdom": "^29.1.1",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",

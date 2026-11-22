@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 
 // jsdom no implementa IntersectionObserver (usado por los carruseles de
-// Inicio y por ScrollablePreviewList para la carga incremental). Stub no-op
+// Inicio y por las listas con carga incremental). Stub no-op
 // global; los tests que necesitan disparar la intersección lo reemplazan
 // puntualmente con su propio mock.
 class NoopIntersectionObserver implements IntersectionObserver {

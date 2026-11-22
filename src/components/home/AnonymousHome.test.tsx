@@ -10,7 +10,7 @@ import { AnonCta } from "./AnonCta";
 import { HomeReleases } from "./HomeReleases";
 import { QuickLinks } from "./QuickLinks";
 import { FeedPreview } from "./FeedPreview";
-import { CollectionMosaic } from "./CollectionMosaic";
+import { CollectionMosaic } from "@/components/discovery/CollectionMosaic";
 import { CommunityActivity } from "./CommunityActivity";
 import { PeopleCard } from "./PeopleCard";
 import { AlbumRail } from "@/components/discovery/AlbumRail";
@@ -143,7 +143,7 @@ describe("AnonymousHome", () => {
   it("los lanzamientos van como horario y el cierre ofrece explorar si está habilitado", async () => {
     const element = await AnonymousHome();
 
-    expect(findProps(element, HomeReleases)?.layout).toBe("timetable");
+    expect(findProps(element, HomeReleases)?.personalReleases).toBeUndefined();
     expect(findProps(element, AnonCta)?.exploreEnabled).toBe(true);
   });
 

@@ -8,6 +8,7 @@ import {
   artistFollow,
   collectionEntry,
   comment,
+  favorite,
 
   listenEntry,
   rating,
@@ -34,6 +35,7 @@ import {
   PRIMARY_ARTIST_SQL,
   RECORDING_ALBUM_ID_SQL,
   RECORDING_ALBUM_TITLE_SQL,
+  RECORDING_COVER_SQL,
 } from "@/services/feed/feed";
 import type {
   FeedAuthor,
@@ -75,6 +77,155 @@ function targetType(
   releaseGroupId: string | null,
 ): "artist" | "release-group" | "recording" {
   return artistId ? "artist" : releaseGroupId ? "release-group" : "recording";
+}
+
+/** Un álbum del fondo de la cabecera de Inicio (openspec: personalize-signed-in-hero-backdrop). */
+export interface HomeBackdropAlbum {
+  id: string;
+  coverThumbUrl: string;
+}
+
+/**
+ * Álbumes del fondo de la cabecera con sesión: primero los favoritos de álbum con carátula (del marcado más
+ * reciente al más antiguo) y, si faltan, los álbumes más escuchados (por cantidad de escuchas; desempata la
+ * escucha más reciente), sin repetir. Las escuchas recientes no se usan: ya las muestra el estante de debajo.
+ * Solo objetivos de álbum: la carátula de una canción es la de un álbum elegido por aproximación. Sin filtro de
+ * audiencia (contenido propio que solo ve la persona, como el estante).
+ */
+export async function listMyBackdropAlbums(userId: string, limit = 20): Promise<HomeBackdropAlbum[]> {
+  const favorites = await db
+    .select({ id: releaseGroup.id, coverThumbUrl: releaseGroup.coverThumbUrl })
+    .from(favorite)
+    .innerJoin(releaseGroup, eq(favorite.releaseGroupId, releaseGroup.id))
+    .where(and(eq(favorite.userId, userId), isNotNull(releaseGroup.coverThumbUrl)))
+    .orderBy(desc(favorite.createdAt), desc(favorite.id))
+    .limit(limit);
+
+  const picked: HomeBackdropAlbum[] = favorites.flatMap((row) =>
+    row.coverThumbUrl ? [{ id: row.id, coverThumbUrl: row.coverThumbUrl }] : [],
+  );
+  if (picked.length >= limit) return picked;
+
+  const listenCount = count(listenEntry.id);
+  const mostListened = await db
+    .select({ id: releaseGroup.id, coverThumbUrl: releaseGroup.coverThumbUrl })
+    .from(listenEntry)
+    .innerJoin(releaseGroup, eq(listenEntry.releaseGroupId, releaseGroup.id))
+    .where(and(eq(listenEntry.userId, userId), isNotNull(releaseGroup.coverThumbUrl)))
+    .groupBy(releaseGroup.id)
+    .orderBy(desc(listenCount), desc(sql`max(${listenEntry.createdAt})`), desc(releaseGroup.id))
+    // Se piden de más para cubrir los que ya están entre los favoritos.
+    .limit(limit + picked.length);
+
+  const seen = new Set(picked.map((album) => album.id));
+  for (const row of mostListened) {
+    if (picked.length >= limit) break;
+    if (!row.coverThumbUrl || seen.has(row.id)) continue;
+    seen.add(row.id);
+    picked.push({ id: row.id, coverThumbUrl: row.coverThumbUrl });
+  }
+  return picked;
+}
+
+/** Una escucha del estante «Lo último que escuchaste» (openspec: redesign-signed-in-home-phase2). */
+export interface HomeRecentListen {
+  id: string;
+  listenContext: "first_listen" | "relisten" | "rediscovery";
+  createdAt: string;
+  target: {
+    type: "artist" | "release-group" | "recording";
+    id: string;
+    title: string;
+    artistName: string | null;
+    coverThumbUrl: string | null;
+  };
+  /** Tu valoración del objetivo, si existe (`stars` "0.5".."5.0"). */
+  rating: { stars: string; detailedScore: number | null } | null;
+}
+
+/** Escuchas que se leen antes de deduplicar: acota el recorrido por `idx_listen_entry_user_created`. */
+const RECENT_LISTENS_SCAN = 60;
+
+/**
+ * «Lo último que escuchaste» de Inicio: los últimos objetivos distintos que la persona anotó como
+ * escucha (cada uno con su escucha más reciente), con su valoración propia. Sin filtro de audiencia:
+ * es contenido propio, como `/me/diary`. Se leen las `RECENT_LISTENS_SCAN` escuchas más recientes y se
+ * deduplica por objetivo en memoria; con más repeticiones que eso el estante sale más corto.
+ */
+export async function listMyRecentListens(userId: string, limit = 8): Promise<HomeRecentListen[]> {
+  const rows = await db
+    .select({
+      id: listenEntry.id,
+      listenContext: listenEntry.listenContext,
+      createdAt: listenEntry.createdAt,
+      artistId: listenEntry.artistId,
+      releaseGroupId: listenEntry.releaseGroupId,
+      recordingId: listenEntry.recordingId,
+      artistName: artist.name,
+      artistPhoto: artist.photoUrl,
+      creditedArtist: PRIMARY_ARTIST_SQL(listenEntry.releaseGroupId, listenEntry.recordingId),
+      releaseTitle: releaseGroup.title,
+      releaseCover: releaseGroup.coverThumbUrl,
+      recordingTitle: recording.title,
+      recordingCover: RECORDING_COVER_SQL(listenEntry.recordingId),
+    })
+    .from(listenEntry)
+    .leftJoin(artist, eq(listenEntry.artistId, artist.id))
+    .leftJoin(releaseGroup, eq(listenEntry.releaseGroupId, releaseGroup.id))
+    .leftJoin(recording, eq(listenEntry.recordingId, recording.id))
+    .where(eq(listenEntry.userId, userId))
+    .orderBy(desc(listenEntry.createdAt), desc(listenEntry.id))
+    .limit(RECENT_LISTENS_SCAN);
+
+  const seen = new Set<string>();
+  const picked = rows.filter((row) => {
+    const key = row.artistId ?? row.releaseGroupId ?? row.recordingId ?? row.id;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, limit);
+  if (picked.length === 0) return [];
+
+  const idsOf = (column: "artistId" | "releaseGroupId" | "recordingId") =>
+    picked.map((row) => row[column]).filter((id): id is string => id != null);
+  const [artistIds, releaseGroupIds, recordingIds] = [idsOf("artistId"), idsOf("releaseGroupId"), idsOf("recordingId")];
+  const targetConditions = [
+    artistIds.length > 0 ? inArray(rating.artistId, artistIds) : undefined,
+    releaseGroupIds.length > 0 ? inArray(rating.releaseGroupId, releaseGroupIds) : undefined,
+    recordingIds.length > 0 ? inArray(rating.recordingId, recordingIds) : undefined,
+  ].filter((condition) => condition !== undefined);
+  const ratings = await db
+    .select({
+      artistId: rating.artistId,
+      releaseGroupId: rating.releaseGroupId,
+      recordingId: rating.recordingId,
+      stars: rating.stars,
+      detailedScore: rating.detailedScore,
+    })
+    .from(rating)
+    .where(and(eq(rating.userId, userId), sql`(${sql.join(targetConditions, sql` OR `)})`));
+  const ratingByTarget = new Map(
+    ratings.map((row) => [row.artistId ?? row.releaseGroupId ?? row.recordingId ?? "", row] as const),
+  );
+
+  return picked.map((row) => {
+    const type = targetType(row.artistId, row.releaseGroupId);
+    const id = (row.artistId ?? row.releaseGroupId ?? row.recordingId)!;
+    const own = ratingByTarget.get(id);
+    return {
+      id: row.id,
+      listenContext: row.listenContext as HomeRecentListen["listenContext"],
+      createdAt: row.createdAt.toISOString(),
+      target: {
+        type,
+        id,
+        title: (type === "artist" ? row.artistName : type === "release-group" ? row.releaseTitle : row.recordingTitle) ?? "",
+        artistName: type === "artist" ? null : row.creditedArtist,
+        coverThumbUrl: type === "artist" ? row.artistPhoto : type === "release-group" ? row.releaseCover : row.recordingCover,
+      },
+      rating: own ? { stars: String(own.stars), detailedScore: own.detailedScore } : null,
+    };
+  });
 }
 
 /**
@@ -712,7 +863,7 @@ export interface HomeResumeList {
  * último ítem agregado (`max(user_list_item.created_at)`) — agregar ítems no
  * toca `updated_at` (ver drizzle/0009), así que ordenar solo por esa columna
  * dejaría afuera el caso más común de "seguir armando una lista".
- * Devuelve `null` si el usuario no tiene ninguna lista.
+ * Devuelve `null` si el usuario no tiene ninguna lista con elementos.
  */
 export async function getMostRecentEditedList(userId: string): Promise<HomeResumeList | null> {
   const lastActivity = sql<string>`greatest(${userList.updatedAt}, coalesce(max(${userListItem.createdAt}), ${userList.updatedAt}))`;
@@ -725,7 +876,9 @@ export async function getMostRecentEditedList(userId: string): Promise<HomeResum
       itemCount: sql<number>`count(${userListItem.id})`,
     })
     .from(userList)
-    .leftJoin(userListItem, eq(userListItem.listId, userList.id))
+    // Solo listas con al menos un elemento (openspec: redesign-signed-in-home-phase3): una lista vacía no
+    // se propone para retomar aunque sea la más reciente. El `innerJoin` las descarta antes del `limit`.
+    .innerJoin(userListItem, eq(userListItem.listId, userList.id))
     .where(and(eq(userList.ownerId, userId), eq(userList.kind, "standard")))
     .groupBy(userList.id)
     .orderBy(desc(lastActivity), desc(userList.id))

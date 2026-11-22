@@ -4,6 +4,7 @@
 
 export {}; // fuerza module scope; sin esto, TS trata el archivo como script global y colisiona con otros scripts/*.ts
 import { assertSmokeAllowed } from "./assert-smoke-allowed";
+import { runSmoke, type SmokeContext } from "./smoke-lib/run";
 
 assertSmokeAllowed();
 
@@ -38,7 +39,7 @@ global.fetch = (async (input: RequestInfo | URL) => {
   return new Response(JSON.stringify(body), { status: 200 });
 }) as typeof fetch;
 
-async function main() {
+async function main(ctx: SmokeContext) {
   const { upsertArtistStub, findOrIngestArtist } = await import("../src/services/catalog/ingest-artist");
 
   console.log("1) Simulando que Farruko ya quedó credited como feat. (stub 'unknown')...");
@@ -49,17 +50,19 @@ async function main() {
   const enriched = await findOrIngestArtist("Farruko");
   console.log("   ->", enriched);
 
-  if (enriched?.type === "person" && enriched.id === stub.id) {
-    console.log("\n✅ Corregido: la misma fila pasó de 'unknown' a 'person', sin duplicarse.");
-  } else {
-    console.log("\n❌ Sigue fallando.");
-  }
-
   global.fetch = realFetch;
-  process.exit(0);
+  ctx.check(
+    enriched?.type === "person" && enriched.id === stub.id,
+    "la misma fila pasó de 'unknown' a 'person', sin duplicarse",
+  );
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+/** Borra el stub sintético "Farruko" (mismo MBID que `smoke-test-artist-by-id.ts`). */
+async function cleanup() {
+  const { eq } = await import("drizzle-orm");
+  const { db } = await import("../src/db");
+  const { artist } = await import("../src/db/schema");
+  await db.delete(artist).where(eq(artist.mbid, FARRUKO_MBID));
+}
+
+void runSmoke({ name: "unknown-enrichment", cleanup, run: main });

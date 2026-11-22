@@ -8,30 +8,53 @@ import { FEED_KIND_ICONS } from "@/components/feed/FeedKindIcons";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { UserHoverCard } from "@/components/profiles/UserHoverCard";
 import { CommentTopicLabel } from "@/components/social/CommentTopicLabel";
-import { formatStars } from "@/components/album/album-format";
+import { compactRatingValue } from "./compact-rating";
 import type { CompactActivityEntry } from "@/components/feed/CompactActivityRow";
+import type { FeedFavorite, FeedListenEntry } from "@/lib/api/schemas";
 
-/**
- * Nota en la forma compacta que `rating-display` fija para la actividad de la comunidad: `86/100` si la
- * valoración tiene puntaje detallado, el número de estrellas si no — nunca ambos.
- */
-export function compactRatingValue(stars: string, detailedScore: number | null, locale: string): string {
-  return detailedScore != null ? `${detailedScore}/100` : formatStars(Number(stars), locale);
+type FeedAuthor = FeedListenEntry["author"];
+
+export { compactRatingValue };
+
+/** Racha de escuchas de una persona en una sola tarjeta (openspec: redesign-signed-in-home-phase2). */
+export interface ActivityCardListenRun {
+  kind: "listen-run";
+  id: string;
+  author: FeedAuthor;
+  createdAt: string;
+  entries: FeedListenEntry[];
 }
 
-// Tarjeta de actividad de la portada sin sesión (openspec: redesign-anon-home-phase2): la misma
-// información que `CompactActivityRow` —autor, nota compacta o tipo de texto, objetivo, fecha y
-// extracto— con la carátula grande y el extracto en primer plano, para que la comunidad se lea como
-// reseñas de personas. `wide` ocupa las dos columnas de la rejilla (la entrada más reciente). Cliente
-// por `RelativeDate` y `UserHoverCard`; sin acciones.
-export function ActivityCard({ entry, wide = false }: { entry: CompactActivityEntry; wide?: boolean }) {
+export type ActivityCardEntry = CompactActivityEntry | FeedListenEntry | FeedFavorite | ActivityCardListenRun;
+
+/** Carátulas del abanico de una racha. */
+const RUN_COVERS = 4;
+
+// Tarjeta de actividad (openspec: redesign-anon-home-phase2; con sesión, redesign-signed-in-home-phase2):
+// autor, objetivo, nota compacta o tipo de texto, fecha y extracto, con la carátula grande y el extracto en
+// primer plano, para que la actividad se lea como lo que escuchan y opinan personas. Además de valoración,
+// comentario y reseña (comunidad), admite escucha, favorito de álbum y racha de escuchas (feed de quienes
+// sigues). `wide` ocupa dos columnas de la rejilla (la entrada más reciente). Cliente por `RelativeDate` y
+// `UserHoverCard`; sin acciones.
+export function ActivityCard({ entry, wide = false }: { entry: ActivityCardEntry; wide?: boolean }) {
   const t = useTranslations("feed");
   const locale = useLocale();
   const username = entry.author.username;
   const authorLabel = entry.author.displayName ?? `@${username}`;
+  const coverSize = wide ? "size-20 sm:size-24" : "size-16 sm:size-20";
+
+  // Objetivo único (todas salvo la racha).
+  const single = entry.kind === "listen-run" ? null : entry;
+  const target = single
+    ? single.kind === "favorite"
+      ? { type: single.targetType, ...single.target }
+      : single.target
+    : null;
+
   const isReview = entry.kind === "review";
-  const body = entry.kind === "comment" || entry.kind === "review" ? entry.body : null;
-  const icon = entry.kind === "comment" || entry.kind === "review" ? FEED_KIND_ICONS[entry.kind] : null;
+  const body =
+    entry.kind === "comment" || entry.kind === "review" || entry.kind === "listen" ? (entry.body?.trim() || null) : null;
+  const icon = entry.kind === "listen-run" ? FEED_KIND_ICONS.listen : FEED_KIND_ICONS[entry.kind];
   const textLabel =
     entry.kind === "comment"
       ? t("commentLabel")
@@ -39,16 +62,29 @@ export function ActivityCard({ entry, wide = false }: { entry: CompactActivityEn
         ? entry.title
           ? t("reviewVerbTitled", { title: entry.title })
           : t("reviewVerb")
-        : null;
+        : entry.kind === "listen"
+          ? t(`context.${entry.listenContext}`)
+          : entry.kind === "favorite"
+            ? t("favoriteLabel")
+            : entry.kind === "listen-run"
+              ? t("groupListens", { count: entry.entries.length })
+              : null;
 
   return (
     <li className={wide ? "sm:col-span-2" : undefined}>
       <article className="flex h-full gap-4 rounded-xl border border-ink-border bg-ink p-4 transition-colors hover:border-paper-muted/40">
-        <CoverThumb
-          cover={entry.target.coverThumbUrl}
-          label=""
-          className={`rounded-md ring-1 ring-ink-border ${wide ? "size-20 sm:size-24" : "size-16 sm:size-20"}`}
-        />
+        {entry.kind === "listen-run" ? (
+          // Mosaico 2×2 de las carátulas de la racha (como el de las listas), decorativo: los títulos van al lado.
+          <span aria-hidden className={`shrink-0 ${coverSize}`}>
+            <span className="grid h-full w-full grid-cols-2 gap-0.5 overflow-hidden rounded-md ring-1 ring-ink-border">
+              {entry.entries.slice(0, RUN_COVERS).map((listen) => (
+                <CoverThumb key={listen.id} cover={listen.target.coverThumbUrl} label="" className="h-full w-full rounded-none" />
+              ))}
+            </span>
+          </span>
+        ) : (
+          <CoverThumb cover={target!.coverThumbUrl} label="" className={`rounded-md ring-1 ring-ink-border ${coverSize}`} />
+        )}
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex items-baseline justify-between gap-3 font-data text-xs text-paper-muted">
             <UserHoverCard username={username}>
@@ -61,17 +97,19 @@ export function ActivityCard({ entry, wide = false }: { entry: CompactActivityEn
             </UserHoverCard>
             <RelativeDate iso={entry.createdAt} />
           </div>
-          <p className="truncate">
-            <Link
-              href={targetHref(entry.target.type, entry.target.id, entry.target.title, entry.target.artistName ?? null)}
-              className="font-display text-base text-paper transition-colors hover:text-amber"
-            >
-              {entry.target.title}
-            </Link>
-            {entry.target.artistName ? (
-              <span className="font-body text-sm text-paper-muted"> · {entry.target.artistName}</span>
-            ) : null}
-          </p>
+          {target ? (
+            <p className="truncate">
+              <Link
+                href={targetHref(target.type, target.id, target.title, target.artistName ?? null)}
+                className="font-display text-base text-paper transition-colors hover:text-amber"
+              >
+                {target.title}
+              </Link>
+              {target.artistName ? (
+                <span className="font-body text-sm text-paper-muted"> · {target.artistName}</span>
+              ) : null}
+            </p>
+          ) : null}
           {entry.kind === "rating" ? (
             <p className="font-data text-sm">
               <span aria-hidden="true" className="text-amber">
@@ -97,6 +135,23 @@ export function ActivityCard({ entry, wide = false }: { entry: CompactActivityEn
               ) : null}
             </p>
           )}
+          {entry.kind === "listen-run" ? (
+            <ul className="mt-0.5 flex min-w-0 flex-col gap-0.5">
+              {entry.entries.slice(0, RUN_COVERS).map((listen) => (
+                <li key={listen.id} className="truncate">
+                  <Link
+                    href={targetHref(listen.target.type, listen.target.id, listen.target.title, listen.target.artistName ?? null)}
+                    className="font-display text-sm text-paper transition-colors hover:text-amber"
+                  >
+                    {listen.target.title}
+                  </Link>
+                  {listen.target.artistName ? (
+                    <span className="font-body text-xs text-paper-muted"> · {listen.target.artistName}</span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : null}
           {body ? (
             <p
               className={`mt-1 font-body text-sm leading-relaxed text-paper-muted ${wide ? "line-clamp-3" : "line-clamp-2"}`}

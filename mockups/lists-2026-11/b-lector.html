@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta B · Lector — Listas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="lists.css">
+<style>
+  /* Lector: a la izquierda la lista de listas; a la derecha, la lista elegida abierta, sin salir de la página. */
+  .reader { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; margin-top: 32px; align-items: start; }
+  .shelf-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+  .shelf-tabs button { height: 44px; padding: 0 12px; font-family: var(--display); font-size: 15px; color: var(--muted); box-shadow: inset 0 -2px transparent; }
+  .shelf-tabs button[aria-selected="true"] { color: var(--paper); box-shadow: inset 0 -2px var(--amber); }
+  .rows li + li { border-top: 1px solid var(--border); }
+  .row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 16px; align-items: center; padding: 12px 12px; border-radius: 10px; transition: background .2s; }
+  .row:hover { background: var(--surface); }
+  .row[aria-current="true"] { background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--border-2); }
+  .row .m { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
+  .row .m .cv { border-radius: 2px; }
+  .row .m.round .cv { border-radius: 50%; }
+  .row b { display: block; font-family: var(--display); font-weight: 500; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row[aria-current="true"] b { color: var(--amber); }
+  .row span { display: block; color: var(--muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row small { font: 500 12px var(--data); color: var(--muted-2); text-align: right; white-space: nowrap; }
+  .row small em { display: block; font-style: normal; color: var(--muted); }
+  .pinned { margin-bottom: 18px; }
+  .pinned .row { border: 1px solid var(--border); }
+  .more { display: flex; justify-content: center; margin-top: 12px; }
+  .more button { height: 44px; padding: 0 18px; border: 1px solid var(--border); border-radius: 8px; font-family: var(--display); color: var(--muted); }
+
+  .preview { position: sticky; top: 88px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); overflow: hidden; }
+  .pv-head { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 28px; padding: 28px; background: linear-gradient(180deg, rgba(232,184,75,.06), transparent 70%); border-bottom: 1px solid var(--border); }
+  .pv-head .m { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; box-shadow: 0 24px 40px -20px rgba(0,0,0,.9); }
+  .pv-head .m .cv { border-radius: 3px; }
+  .pv-head h2 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 2.4vw, 38px); line-height: 1.02; letter-spacing: -.025em; margin-top: 10px; }
+  .pv-head .by { color: var(--muted); margin-top: 8px; }
+  .pv-head .by b { color: var(--paper); font-weight: 500; }
+  .pv-head .desc { margin-top: 10px; max-width: 52ch; }
+  .pv-head .actions { display: flex; gap: 12px; align-items: center; margin-top: 18px; flex-wrap: wrap; }
+  .items { padding: 8px 28px 20px; counter-reset: n; }
+  .items li { counter-increment: n; display: grid; grid-template-columns: 28px 44px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .items li::before { content: counter(n); font: 500 13px var(--data); color: var(--muted-2); text-align: right; }
+  .items .cv { width: 44px; border-radius: 4px; }
+  .items b { font-family: var(--display); font-weight: 500; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .items span { color: var(--muted); font-size: 14px; }
+  .items small { font: 500 12px var(--data); color: var(--muted-2); }
+  .pv-foot { display: flex; justify-content: space-between; align-items: center; padding: 16px 28px 22px; }
+
+  .side-make { margin-top: 28px; padding: 20px; border: 1px dashed var(--border-2); border-radius: 12px; }
+  .side-make b { font-family: var(--display); font-size: 18px; }
+  .side-make p { color: var(--muted); font-size: 14px; margin: 4px 0 14px; }
+  .side-make .act { display: flex; gap: 14px; align-items: center; }
+
+  @media (max-width: 1279px) { .pv-head { grid-template-columns: 160px minmax(0, 1fr); } }
+  /* Debajo de lg no hay lector: cada fila abre la lista, y la vista previa no se dibuja. */
+  @media (max-width: 1023px) {
+    .reader { grid-template-columns: 1fr; }
+    .preview { display: none; }
+    .row[aria-current="true"] { background: none; box-shadow: none; }
+    .row[aria-current="true"] b { color: var(--paper); }
+  }
+  @media (max-width: 640px) {
+    .row { grid-template-columns: 56px minmax(0, 1fr); gap: 14px; padding: 12px 4px; }
+    .row small { grid-column: 2; text-align: left; margin-top: -4px; }
+    .row small em { display: inline; margin-left: 8px; }
+    .side-make .act { flex-direction: column; align-items: stretch; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header"></header>
+<main class="wrap">
+  <div class="page-head">
+    <p class="crumbs">Inicio / <b>Listas</b></p>
+    <h1>Listas</h1>
+    <p>Lo que la comunidad ordena, colecciona y recomienda. Elige una lista para verla por dentro antes de abrirla.</p>
+  </div>
+
+  <div class="toolbar" role="search">
+    <label class="lsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Buscar listas por nombre o autor</span></label>
+    <div class="seg" role="group" aria-label="Tipo"><a aria-current="true" href="#">Todas</a><a href="#">Álbumes</a><a href="#">Artistas</a><a href="#">Canciones</a></div>
+    <button class="sort">Más guardadas <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+  </div>
+
+  <div class="reader">
+    <div>
+      <div class="pinned">
+        <a class="row" href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="16"></i><i class="cv" data-c="8"></i><i class="cv" data-c="12"></i><i class="cv" data-c="20"></i></span><span><span class="badge official"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5 9-10"/></svg>Oficial</span><b style="margin-top:6px">Playlist de fondo</b><span>Alex · del equipo</span></span><small>4 canciones<em>23 guardadas</em></small></a>
+      </div>
+      <div class="shelf-tabs" role="tablist" aria-label="Orden"><button role="tab" aria-selected="true">Populares</button><button role="tab" aria-selected="false">Recientes</button><button role="tab" aria-selected="false">Para completar</button></div>
+      <ul class="rows">
+        <li><a class="row" href="#" aria-current="true"><span class="m" aria-hidden="true"><i class="cv" data-c="10"></i><i class="cv" data-c="18"></i><i class="cv" data-c="6"></i><i class="cv" data-c="23"></i></span><span><b>Discos favoritos del momento</b><span>Fran · hace 3 meses</span></span><small>4 álbumes<em>12 guardadas</em></small></a></li>
+        <li><a class="row" href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="19"></i><i class="cv" data-c="11"></i><i class="cv" data-c="2"></i><i class="cv" data-c="6"></i></span><span><b>Para escuchar completos</b><span>Eli · hace 3 meses</span></span><small>4 álbumes<em>9 guardadas</em></small></a></li>
+        <li><a class="row" href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="2"></i><i class="cv" data-c="19"></i><i class="cv" data-c="11"></i><i class="cv" data-c="14"></i></span><span><b>Canciones en repeat</b><span>Cami · hace 3 meses</span></span><small>4 canciones<em>8 guardadas</em></small></a></li>
+        <li><a class="row" href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="26"></i><i class="cv" data-c="13"></i><i class="cv" data-c="29"></i><i class="cv" data-c="24"></i></span><span><b>Debuts que no fallan</b><span>Nora · hace 2 semanas</span></span><small>18 álbumes<em>7 guardadas</em></small></a></li>
+        <li><a class="row" href="#"><span class="m round" aria-hidden="true"><i class="cv" data-c="5"></i><i class="cv" data-c="23"></i><i class="cv" data-c="15"></i><i class="cv" data-c="3"></i></span><span><b>Artistas que sigo de cerca</b><span>Dario · hace 3 meses</span></span><small>4 artistas<em>6 guardadas</em></small></a></li>
+        <li><a class="row" href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="25"></i><i class="cv" data-c="0"></i><i class="cv" data-c="27"></i><i class="cv" data-c="9"></i></span><span><b>Best AOR songs</b><span>@besantanag95 · hace 3 meses</span></span><small>4 canciones<em>5 guardadas</em></small></a></li>
+        <li><a class="row" href="#"><span class="m" aria-hidden="true"><i class="cv" data-c="24"></i><i class="cv" data-c="1"></i><i class="cv" data-c="22"></i><i class="cv" data-c="7"></i></span><span><b>Discos para un domingo lento</b><span>Mateo · hace 1 mes</span></span><small>24 álbumes<em>5 guardadas</em></small></a></li>
+        <li><a class="row" href="#"><span class="m round" aria-hidden="true"><i class="cv" data-c="12"></i><i class="cv" data-c="16"></i><i class="cv" data-c="8"></i><span class="ph" style="border-radius:50%"></span></span><span><b>Cantantes pop favoritas</b><span>@besantanag95 · hace 3 meses</span></span><small>3 artistas<em>4 guardadas</em></small></a></li>
+      </ul>
+      <div class="more"><button>Ver más listas</button></div>
+      <div class="side-make"><b>Arma tus propias listas</b><p>Con una cuenta puedes crear listas, guardar las de otras personas y completar las que te interesen.</p><div class="act"><a class="btn-amber" href="#">Crear cuenta</a><a class="see" href="#">Ya tengo cuenta</a></div></div>
+    </div>
+
+    <aside class="preview" aria-label="Vista previa de la lista">
+      <div class="pv-head">
+        <span class="m" aria-hidden="true"><i class="cv" data-c="10"></i><i class="cv" data-c="18"></i><i class="cv" data-c="6"></i><i class="cv" data-c="23"></i></span>
+        <div>
+          <span class="badge">Álbumes · 4</span>
+          <h2>Discos favoritos del momento</h2>
+          <p class="by">por <b>Fran</b> · actualizada hace 3 meses</p>
+          <p class="desc">Lo que más estoy poniendo este otoño, sin orden de preferencia. Cambia cada tanto.</p>
+          <div class="actions"><a class="btn-amber" href="#">Abrir la lista</a><button class="save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4h12v17l-6-4-6 4z"/></svg>Guardar</button><span class="mut">12 guardadas</span></div>
+        </div>
+      </div>
+      <ol class="items">
+        <li><i class="cv" data-c="10"></i><span><b>In Rainbows</b><span>Radiohead</span></span><small>2007</small></li>
+        <li><i class="cv" data-c="18"></i><span><b>Random Access Memories</b><span>Daft Punk</span></span><small>2013</small></li>
+        <li><i class="cv" data-c="6"></i><span><b>Madvillainy</b><span>Madvillain</span></span><small>2004</small></li>
+        <li><i class="cv" data-c="23"></i><span><b>Currents</b><span>Tame Impala</span></span><small>2015</small></li>
+      </ol>
+      <div class="pv-foot"><span class="mut">4 de 4 álbumes</span><a class="see" href="#">Ver la lista completa →</a></div>
+    </aside>
+  </div>
+</main>
+<footer class="site-foot"><div class="wrap">Pie del sitio (sin cambios)</div></footer>
+<nav class="mock-bar" aria-label="Mockups"><span>Mockup · datos de ejemplo</span><a href="index.html">Resumen</a><a href="a-cajones.html">A · Cajones</a><a href="b-lector.html" aria-current="page">B · Lector</a><a href="c-fichero.html">C · Fichero</a></nav>
+<script src="shared.js"></script>
+</body>
+</html>

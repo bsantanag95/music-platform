@@ -3,7 +3,9 @@ import { PgDialect } from "drizzle-orm/pg-core";
 import type { SQL } from "drizzle-orm";
 import {
   getMostRecentEditedList,
+  listMyBackdropAlbums,
   listMyRecentActivity,
+  listMyRecentListens,
   listPublicLists,
 } from "./home";
 
@@ -101,6 +103,103 @@ describe("servicio de datos de Inicio", () => {
           coverThumbUrls: ["https://example.com/a.jpg", "https://example.com/b.jpg"],
         }),
       ]);
+    });
+  });
+
+  // openspec: redesign-signed-in-home-phase2
+  describe("listMyRecentListens", () => {
+    const rg = (n: number) => `00000000-0000-4000-8000-0000000001${String(n).padStart(2, "0")}`;
+    const row = (id: string, releaseGroupId: string, title: string, context = "first_listen") => ({
+      id,
+      listenContext: context,
+      createdAt: new Date("2026-11-10T00:00:00Z"),
+      artistId: null,
+      releaseGroupId,
+      recordingId: null,
+      artistName: null,
+      artistPhoto: null,
+      creditedArtist: "Def Leppard",
+      releaseTitle: title,
+      releaseCover: `https://covers/${title}.jpg`,
+      recordingTitle: null,
+      recordingCover: null,
+    });
+
+    it("deja una escucha por objetivo, la más reciente, con tu valoración si existe", async () => {
+      const ratingsWhere = vi.fn().mockResolvedValue([
+        { artistId: null, releaseGroupId: rg(1), recordingId: null, stars: "4.5", detailedScore: 88 },
+      ]);
+      mocks.db.select
+        .mockReset()
+        .mockReturnValueOnce(
+          sourceQuery([
+            row("l3", rg(1), "Hysteria", "relisten"),
+            row("l2", rg(2), "Pyromania"),
+            row("l1", rg(1), "Hysteria"),
+          ]),
+        )
+        .mockReturnValueOnce({ from: vi.fn(() => ({ where: ratingsWhere })) });
+
+      const listens = await listMyRecentListens("u1");
+
+      expect(listens.map((listen) => listen.target.title)).toEqual(["Hysteria", "Pyromania"]);
+      expect(listens[0]).toMatchObject({
+        id: "l3",
+        listenContext: "relisten",
+        target: { type: "release-group", id: rg(1), artistName: "Def Leppard", coverThumbUrl: "https://covers/Hysteria.jpg" },
+        rating: { stars: "4.5", detailedScore: 88 },
+      });
+      expect(listens[1]!.rating).toBeNull();
+    });
+
+    it("respeta el límite", async () => {
+      mocks.db.select
+        .mockReset()
+        .mockReturnValueOnce(sourceQuery([1, 2, 3].map((n) => row(`l${n}`, rg(n), `Disco ${n}`))))
+        .mockReturnValueOnce({ from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([]) })) });
+
+      expect(await listMyRecentListens("u1", 2)).toHaveLength(2);
+    });
+
+    it("sin escuchas no consulta valoraciones", async () => {
+      mocks.db.select.mockReset().mockReturnValueOnce(sourceQuery([]));
+
+      expect(await listMyRecentListens("u1")).toEqual([]);
+      expect(mocks.db.select).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // openspec: personalize-signed-in-hero-backdrop
+  describe("listMyBackdropAlbums", () => {
+    const album = (n: number) => ({ id: `rg-${n}`, coverThumbUrl: `https://covers/${n}.jpg` });
+
+    it("con favoritos suficientes no consulta las escuchas", async () => {
+      mocks.db.select.mockReset().mockReturnValueOnce(chainQuery([album(1), album(2), album(3)]));
+
+      const result = await listMyBackdropAlbums("u1", 3);
+
+      expect(result.map((a) => a.id)).toEqual(["rg-1", "rg-2", "rg-3"]);
+      expect(mocks.db.select).toHaveBeenCalledTimes(1);
+    });
+
+    it("completa con los más escuchados, sin repetir favoritos y respetando el límite", async () => {
+      mocks.db.select
+        .mockReset()
+        .mockReturnValueOnce(chainQuery([album(1), album(2)]))
+        .mockReturnValueOnce(chainQuery([album(2), album(5), album(6), album(7)]));
+
+      const result = await listMyBackdropAlbums("u1", 4);
+
+      expect(result.map((a) => a.id)).toEqual(["rg-1", "rg-2", "rg-5", "rg-6"]);
+    });
+
+    it("descarta filas sin carátula", async () => {
+      mocks.db.select
+        .mockReset()
+        .mockReturnValueOnce(chainQuery([{ id: "rg-1", coverThumbUrl: null }, album(2)]))
+        .mockReturnValueOnce(chainQuery([{ id: "rg-3", coverThumbUrl: null }]));
+
+      expect((await listMyBackdropAlbums("u1", 5)).map((a) => a.id)).toEqual(["rg-2"]);
     });
   });
 
@@ -384,15 +483,26 @@ describe("servicio de datos de Inicio", () => {
   });
 
   describe("getMostRecentEditedList", () => {
-    // from().leftJoin().where().groupBy().orderBy().limit()
+    // from().innerJoin().where().groupBy().orderBy().limit(): el `innerJoin` con los elementos deja
+    // fuera las listas vacías (openspec: redesign-signed-in-home-phase3).
+    const joins = vi.fn();
     function listQuery(rows: unknown[]) {
       const limit = vi.fn().mockResolvedValue(rows);
       const orderBy = vi.fn(() => ({ limit }));
       const groupBy = vi.fn(() => ({ orderBy }));
       const where = vi.fn(() => ({ groupBy }));
-      const leftJoin = vi.fn(() => ({ where }));
-      return { from: vi.fn(() => ({ leftJoin })) };
+      const innerJoin = vi.fn((...args: unknown[]) => {
+        joins(...args);
+        return { where };
+      });
+      return { from: vi.fn(() => ({ innerJoin })) };
     }
+
+    it("une con los elementos (innerJoin): una lista vacía nunca se propone", async () => {
+      mocks.db.select.mockReturnValueOnce(listQuery([]));
+      await getMostRecentEditedList(author.id);
+      expect(joins).toHaveBeenCalledTimes(1);
+    });
 
     it("devuelve null cuando el usuario no tiene listas", async () => {
       mocks.db.select.mockReturnValueOnce(listQuery([]));

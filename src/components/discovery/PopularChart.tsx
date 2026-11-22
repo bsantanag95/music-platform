@@ -44,7 +44,7 @@ export function PopularChart({ items, label }: { items: PopularChartItem[]; labe
   if (!top) return null;
 
   return (
-    <div className="grid w-full gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+    <div className="grid w-full grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
       <Link
         href={top.href}
         className="group relative isolate flex items-center gap-5 overflow-hidden rounded-xl border border-ink-border bg-ink-surface p-5 transition-colors hover:border-amber focus-visible:border-amber"
@@ -68,7 +68,7 @@ export function PopularChart({ items, label }: { items: PopularChartItem[]; labe
       </Link>
 
       {rest.length > 0 ? (
-        <ol start={2} aria-label={label} className="grid content-start gap-x-4 gap-y-1 sm:grid-cols-2">
+        <ol start={2} aria-label={label} className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-x-4 gap-y-1 sm:grid-cols-2">
           {rest.map((item, index) => (
             <li key={item.id}>
               <Link

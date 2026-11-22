@@ -43,6 +43,23 @@ interface AwardTileProps {
   detailed?: boolean;
 }
 
+/**
+ * Título, crédito y carátula del ganador destacado de una ceremonia. Con el álbum resuelto en el catálogo, título y artista por
+ * separado (el texto curado los junta: "Midnights — Taylor Swift"); sin resolver, el texto curado y su crédito. La comparten la
+ * tarjeta y la fila de ceremonias de Explorar (`CeremonyRow`).
+ */
+export function headlineText(ceremony: LatestCeremony): { title: string | undefined; credit: string | null | undefined; backdrop: string | null } {
+  const headline = ceremony.headline;
+  const subject = headline?.winner.subject;
+  const album = subject?.kind === "release_group" ? subject.album : null;
+  const unresolved = headline && !album ? splitNomineeText(headline.winner.text, headline.winner.credit) : null;
+  return {
+    title: album?.title ?? unresolved?.title,
+    credit: album ? album.artistName : unresolved?.artist,
+    backdrop: album?.cover.coverThumbUrl ?? (subject?.kind === "recording" && subject.anchor ? subject.anchor.cover.coverThumbUrl : null),
+  };
+}
+
 /** Ediciones anteriores que se ofrecen como atajo en la tarjeta del hub; el resto, desde la fila de años de la ceremonia. */
 const PREVIOUS_YEARS_SHOWN = 5;
 
@@ -51,15 +68,7 @@ export function AwardTile({ ceremony, detailed = false }: AwardTileProps) {
   const locale = useLocale();
   const awardName = t.has(`names.${ceremony.awardSlug}`) ? t(`names.${ceremony.awardSlug}`) : ceremony.awardSlug;
   const headline = ceremony.headline;
-  const subject = headline?.winner.subject;
-  // Con el álbum resuelto en el catálogo, título y artista por separado (el texto curado los junta:
-  // "Midnights — Taylor Swift"); sin resolver, el texto curado y su crédito.
-  const album = subject?.kind === "release_group" ? subject.album : null;
-  const unresolved = headline && !album ? splitNomineeText(headline.winner.text, headline.winner.credit) : null;
-  const title = album?.title ?? unresolved?.title;
-  const credit = album ? album.artistName : unresolved?.artist;
-  const backdrop =
-    album?.cover.coverThumbUrl ?? (subject?.kind === "recording" && subject.anchor ? subject.anchor.cover.coverThumbUrl : null);
+  const { title, credit, backdrop } = headlineText(ceremony);
   const oldest = ceremony.years.at(-1) ?? ceremony.year;
   const previous = ceremony.years.filter((year) => year !== ceremony.year).slice(0, PREVIOUS_YEARS_SHOWN);
   const facts = [

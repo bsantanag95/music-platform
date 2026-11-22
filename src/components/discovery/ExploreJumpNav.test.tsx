@@ -12,14 +12,13 @@ const items = (labels: Record<string, string>, ids: string[]): JumpItem[] => ids
 const es = {
   colecciones: catalogEs.explore.jump.collections,
   popular: catalogEs.explore.jump.popular,
+  "mejor-valorados": catalogEs.explore.jump.topRated,
   generos: catalogEs.explore.jump.genres,
-  novedades: catalogEs.explore.jump.newReleases,
-  proximos: catalogEs.explore.jump.upcoming,
+  decadas: catalogEs.explore.jump.decades,
+  lanzamientos: catalogEs.explore.jump.releases,
   premios: catalogEs.explore.jump.awards,
   // Con un solo salón (la etiqueta es un mensaje con plural: la página le pasa cuántos hay).
   "salon-de-la-fama": "Salón de la Fama",
-  "mejor-valorados": catalogEs.explore.jump.topRated,
-  decadas: catalogEs.explore.jump.decades,
 };
 const ALL = Object.keys(es);
 
@@ -31,23 +30,21 @@ describe("ExploreJumpNav", () => {
     expect(links.map((a) => a.textContent)).toEqual([
       "Colecciones",
       "Popular",
+      "Mejor valorados",
       "Géneros",
-      "Novedades",
-      "Próximos",
+      "Décadas",
+      "Lanzamientos",
       "Premios",
       "Salón de la Fama",
-      "Mejor valorados",
-      "Décadas",
     ]);
     expect(links.map((a) => a.getAttribute("href"))).toEqual(ALL.map((id) => `#${id}`));
   });
 
   it("solo enlaza las secciones recibidas: una omitida no aparece", () => {
-    const visible = ALL.filter((id) => id !== "novedades" && id !== "proximos");
+    const visible = ALL.filter((id) => id !== "lanzamientos");
     renderWithIntl(<ExploreJumpNav label="En esta página" items={items(es, visible)} />);
-    expect(screen.queryByRole("link", { name: "Novedades" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Próximos" })).not.toBeInTheDocument();
-    expect(screen.getAllByRole("link")).toHaveLength(ALL.length - 2);
+    expect(screen.queryByRole("link", { name: "Lanzamientos" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("link")).toHaveLength(ALL.length - 1);
   });
 
   it("se omite con menos de MIN_SECTIONS_FOR_JUMP_NAV secciones y aparece con exactamente ese mínimo", () => {

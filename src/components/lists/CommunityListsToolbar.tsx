@@ -68,13 +68,14 @@ export function CommunityListsToolbar() {
   ];
 
   return (
-    // Buscador a todo el ancho y, debajo, los chips de tipo con el orden a la derecha (redesign-lists-page, D8): el tipo
-    // pasó de un select a chips, como en `/activity`, y el orden queda como un control discreto.
+    // Buscador, tipo y orden (redesign-lists-page D8; redesign-lists-phase1): el tipo es un control segmentado de 44 px. Desde
+    // `lg` los tres van en una fila; por debajo, buscador y orden arriba y los cuatro segmentos en su propia fila, a todo el
+    // ancho y sin desplazamiento (antes eran chips de 28 px que se salían de la pantalla junto al orden).
     <form
       role="search"
       aria-label={t("community.searchLabel")}
       onSubmit={(event) => event.preventDefault()}
-      className="flex w-full flex-col gap-3"
+      className="grid w-full grid-cols-[minmax(0,1fr)_auto] gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto]"
     >
       <div className="relative w-full">
         <svg
@@ -96,15 +97,13 @@ export function CommunityListsToolbar() {
           onChange={(event) => setSearchInput(event.target.value)}
           placeholder={t("community.searchPlaceholder")}
           aria-label={t("community.searchLabel")}
-          className="w-full rounded-md border border-ink-border bg-ink-surface py-2 pl-9 pr-3.5 font-data text-sm text-paper transition-colors placeholder:text-paper-muted focus:border-paper-muted/60"
+          className="h-11 w-full rounded-md border border-ink-border bg-ink-surface pl-9 pr-3.5 font-data text-sm text-paper transition-colors placeholder:text-paper-muted focus:border-paper-muted/60"
         />
       </div>
-      <div className="flex w-full items-center justify-between gap-3">
         <div
           role="group"
           aria-label={t("typeFilterLabel")}
-          // Una sola fila; en móvil se desplaza en horizontal sin desbordar la página.
-          className="-mx-4 flex min-w-0 gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden"
+          className="col-span-2 row-start-2 grid grid-cols-4 overflow-hidden rounded-md bg-ink-surface ring-1 ring-inset ring-ink-border lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:flex"
         >
           {typeOptions.map((option) => {
             const selected = option.value === currentType;
@@ -114,10 +113,8 @@ export function CommunityListsToolbar() {
                 type="button"
                 aria-pressed={selected}
                 onClick={() => update({ type: option.value || undefined })}
-                className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1 font-data text-xs transition-colors ${
-                  selected
-                    ? "border-amber/60 bg-amber/10 text-amber"
-                    : "border-ink-border text-paper-muted hover:border-paper-muted hover:text-paper"
+                className={`inline-flex h-11 min-w-0 items-center justify-center whitespace-nowrap rounded-md px-2 font-display text-[0.9375rem] transition-colors sm:px-3.5 ${
+                  selected ? "bg-paper text-ink" : "text-paper-muted hover:text-paper"
                 }`}
               >
                 {option.label}
@@ -129,7 +126,7 @@ export function CommunityListsToolbar() {
           value={currentSort}
           onChange={(value) => update({ sort: value || undefined })}
           ariaLabel={t("sortLabel")}
-          widthClassName="w-[15ch]"
+          widthClassName="h-11 w-[15ch]"
           variant="boxed"
         >
           {currentSort === "" ? (
@@ -144,7 +141,6 @@ export function CommunityListsToolbar() {
           ))}
         </FilterSelect>
         {/* "Limpiar filtros" vive en el rótulo de la grilla de explorar (D4), que solo existe con filtros activos. */}
-      </div>
     </form>
   );
 }

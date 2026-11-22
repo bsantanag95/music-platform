@@ -13,14 +13,15 @@ export function HallOfFameExploreSection({ halls }: { halls: HallOfFameClass[] }
   if (halls.length === 0) return null;
 
   return (
-    <section id="salon-de-la-fama" aria-labelledby="salon-de-la-fama-heading" className="flex w-full scroll-mt-24 flex-col gap-3">
+    <section id="salon-de-la-fama" aria-labelledby="salon-de-la-fama-heading" className="flex w-full scroll-mt-24 flex-col gap-5">
       <SectionHeader
         heading={t("hall.exploreHeading", { count: halls.length })}
         description={t("hall.exploreDescription")}
         seeAll={{ href: hallOfFameIndexHref(), label: t("hall.exploreSeeAll") }}
+        size="page"
         headingId="salon-de-la-fama-heading"
       />
-      <HallOfFameTileGrid halls={halls} />
+      <HallOfFameTileGrid halls={halls} compact />
     </section>
   );
 }
