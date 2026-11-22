@@ -18,15 +18,15 @@ El sistema SHALL exponer una vista pública en `/{locale}/lists` para los locale
 accesible **con y sin sesión**, que presenta el descubrimiento de listas de la comunidad. La vista
 SHALL tener dos estados de presentación derivados de la URL:
 
-1. **Vitrina** (sin `q`, `type` ni `sort`): SHALL componer, en este orden, Destacadas (si tiene contenido) y el
-   **lector** (ver "Lector de listas"), con las pestañas que tengan contenido: De usuarios seguidos (solo con sesión),
-   Populares, Recientes y Para completar. Sin sesión, una banda con la invitación a crear una cuenta SHALL seguir al lector
+1. **Vitrina** (sin `q`, `type` ni `sort`): SHALL componer, en este orden, Destacadas (si tiene contenido), **Para
+   completar** (ver "Sección Para completar") y el **lector** (ver "Lector de listas"), con las pestañas que tengan contenido:
+   De usuarios seguidos (solo con sesión), Populares y Recientes. Sin sesión, una banda con la invitación a crear una cuenta SHALL seguir al lector
    (ver "Tus listas y la invitación a crear cuenta"). Una lista que ya se muestra en Destacadas SHALL omitirse en las
    pestañas; entre pestañas una lista SHALL poder repetirse, porque solo se ve una pestaña a la vez.
 2. **Explorar** (con al menos uno de `q`, `type` o `sort`): SHALL renderizar el lector con una única lista
    paginada de resultados, sin pestañas, en lugar de la composición de la vitrina, encabezada por un rótulo con el número
    de resultados, el orden aplicado y la acción de limpiar filtros. En este estado SHALL NOT mostrarse Destacadas ni la
-   banda.
+   banda; "Para completar" SHALL mostrarse encima del lector según los filtros (ver "Sección Para completar").
 
 Una sección o una pestaña sin contenido SHALL omitirse: la vista se compone solo con las que tienen contenido,
 sin huecos ni mensajes de "vacío" por sección. El descubrimiento SHALL ser editorial y por reglas:
@@ -371,18 +371,16 @@ la lista.
 En la vitrina, `/lists` SHALL mostrar el **lector**: una barra de pestañas y, debajo, las filas de la pestaña abierta (ver
 "Filas del lector"); desde `lg`, a su derecha, la vista previa de la lista elegida (ver "Vista previa de la lista elegida").
 Las pestañas SHALL ser, en este orden y solo las que tienen contenido: "De la gente que sigues" (solo con sesión),
-"Populares", "Recientes" y "Para completar". Al cargar SHALL abrirse la primera con contenido. Cambiar de pestaña SHALL NOT
+"Populares" y "Recientes". Al cargar SHALL abrirse la primera con contenido. Cambiar de pestaña SHALL NOT
 recargar la página y SHALL ser accesible por teclado (`tablist`, flechas). Sin JavaScript SHALL verse la primera pestaña y
-los demás contenidos SHALL seguir siendo alcanzables por sus listados (`?sort=popular`, `?sort=recent`, `/caminos`).
-
-"Para completar" SHALL mostrar hasta 8 de las listas de `/caminos` con trackeo activo, en el mismo orden, como filas cuya línea de
-datos dice cuántas personas las están completando ("1 persona la está completando"), con un enlace "Ver todas" hacia
-`/caminos`; cada fila SHALL llevar a la lectura de esa lista en `/caminos`.
+los demás contenidos SHALL seguir siendo alcanzables por sus listados (`?sort=popular`, `?sort=recent`). "Para completar" SHALL NOT
+ser una pestaña del lector: es una sección propia (ver "Sección Para completar").
 
 #### Scenario: Pestañas sin sesión
 
 - **WHEN** una persona sin sesión abre `/lists` y hay listas recientes, populares y con trackeo
-- **THEN** ve las pestañas "Populares", "Recientes" y "Para completar", con "Populares" abierta, y no "De la gente que sigues"
+- **THEN** ve las pestañas "Populares" y "Recientes", con "Populares" abierta, y no "De la gente que sigues"; "Para completar" va
+  en su propia sección, encima del lector
 
 #### Scenario: Sin guardados
 
@@ -392,7 +390,7 @@ datos dice cuántas personas las están completando ("1 persona la está complet
 #### Scenario: Para completar
 
 - **WHEN** dos listas tienen personas completándolas
-- **THEN** la pestaña "Para completar" las muestra con "1 persona la está completando" y un enlace "Ver todas" a `/caminos`
+- **THEN** no aparecen como pestaña del lector sino en la sección "Para completar", encima de él
 
 #### Scenario: Cambio de pestaña con teclado
 
@@ -409,7 +407,7 @@ SHALL mostrar la primera lista de la pestaña abierta, resuelta en el servidor. 
 pedirse a `GET /api/users/{username}/lists/{listId}`, la fila elegida SHALL quedar marcada (`aria-current`) y, mientras
 llegan, la vista previa SHALL mostrar los datos de la fila y un estado de carga. Si la petición falla o la lista dejó de
 estar visible, la vista previa SHALL decirlo y ofrecer abrir la lista. Al cambiar de pestaña, la vista previa SHALL pasar a
-la primera lista de la nueva pestaña. En "Para completar", "Abrir la lista" SHALL llevar a su lectura en `/caminos`. Por
+la primera lista de la nueva pestaña. Por
 debajo de `lg` la vista previa SHALL NOT renderizarse.
 
 #### Scenario: Primera lista resuelta
@@ -487,4 +485,45 @@ cuatro. Sin carátulas, el abanico SHALL mostrar una sola silueta de disco.
 
 - **WHEN** no se pueden obtener los elementos de la destacada
 - **THEN** el exhibidor se muestra con su abanico, título, descripción y acciones, sin la lista numerada y sin error
+
+### Requirement: Sección Para completar
+
+`/lists` SHALL mostrar "Para completar" como una **sección propia**, con encabezado de página, después de Destacadas y antes
+del lector, porque completar una lista es una acción y no otra forma de descubrir listas. El encabezado SHALL explicar en una
+frase qué es completar una lista y SHALL ofrecer "Ver todas" hacia `/caminos`. La sección SHALL mostrar hasta 4 de las listas
+de `/caminos` con trackeo activo, en el mismo orden, como **tarjetas con acción**: una tira de hasta cuatro carátulas de la
+lista, el título, el dueño, cuántas personas la están completando ("1 persona la está completando") y un botón "Completarla"
+que lleva a su lectura en `/caminos`. Desde `lg` las tarjetas SHALL ir en una fila de hasta cuatro columnas; por debajo, en
+dos columnas y, en el teléfono, en una fila con desplazamiento táctil. Sin ninguna lista con trackeo activo, la sección SHALL
+omitirse.
+
+Como estas listas son siempre de álbumes, con filtros activos la sección SHALL mostrarse solo cuando el tipo es "Todas" o
+"Álbumes", y con una búsqueda por texto SHALL mostrar solo las que contienen ese texto en el título (sin distinguir mayúsculas);
+con el tipo "Artistas" o "Canciones", o si ninguna coincide con la búsqueda, SHALL omitirse.
+
+#### Scenario: Sección propia tras Destacadas
+
+- **WHEN** una persona abre `/lists` sin filtros y hay dos listas con trackeo activo
+- **THEN** después de Destacadas ve la sección "Para completar" con dos tarjetas, cada una con sus carátulas, "1 persona la está
+  completando" y "Completarla", y el lector viene después
+
+#### Scenario: Filtro de álbumes
+
+- **WHEN** una persona filtra por "Álbumes"
+- **THEN** la sección "Para completar" sigue visible encima de los resultados
+
+#### Scenario: Filtro de artistas
+
+- **WHEN** una persona filtra por "Artistas"
+- **THEN** la sección "Para completar" no aparece, porque no hay listas de artistas para completar
+
+#### Scenario: Búsqueda por texto
+
+- **WHEN** una persona busca "sabrina" sin elegir tipo
+- **THEN** la sección muestra solo las listas para completar cuyo título contiene "sabrina", y se omite si ninguna lo contiene
+
+#### Scenario: Sin trackeo
+
+- **WHEN** ninguna lista tiene trackeo activo
+- **THEN** la sección "Para completar" no aparece
 
