@@ -3,8 +3,8 @@ import { Link } from "@/i18n/navigation";
 import { ListCard } from "@/components/lists/ListCard";
 import { ListsGrid } from "@/components/lists/lists-shared";
 import { ListCoverMosaic } from "@/components/lists/ListCoverMosaic";
-import { listHref } from "@/lib/catalog-links";
 import type { CaminoDiscoverySummary } from "@/services/camino/discovery";
+import { caminoHref } from "./camino-href";
 
 // Grilla de tarjetas de "Listas para completar": la usan `/caminos` y la
 // sección "Para completar" de `/lists`. Vitrina, sin posiciones ni insignias.
@@ -13,11 +13,7 @@ import type { CaminoDiscoverySummary } from "@/services/camino/discovery";
 // Recientes. La tarjeta de vitrina, con un mosaico del ancho de la tarjeta, medía unos 420 px de alto y no se
 // parecía a ninguna otra sección de la página.
 
-export function caminoHref(camino: CaminoDiscoverySummary): string {
-  return camino.kind === "custom_journey"
-    ? `/users/${camino.owner.username}/caminos/${camino.id}`
-    : listHref(camino.owner.username, camino.title, camino.id);
-}
+export { caminoHref };
 
 export async function CaminoDiscoveryGrid({ caminos, dense = false }: { caminos: CaminoDiscoverySummary[]; dense?: boolean }) {
   const t = await getTranslations("camino");

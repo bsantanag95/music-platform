@@ -1769,9 +1769,10 @@ Sin texto (`q`), la respuesta excluye las colecciones generadas por plantilla de
 texto sí las encuentra. Con `sort=popular` se ordena por conteo
 agregado de guardados descendente (a igualdad, por creación) e **incluye** las listas sin
 guardados al final; esto difiere de la sección "Populares" (`/api/lists/popular`), que exige
-un mínimo de guardados (`MIN_POPULAR_SAVES`, 2). En ese orden, cada entrada incluye `saveCount`.
+un mínimo de guardados (`MIN_POPULAR_SAVES`, 2). Cada entrada incluye `saveCount` en cualquier orden (0 si no tiene; cambio
+`redesign-lists-phase2`: las filas del lector de `/lists` lo muestran en todas las pestañas; antes solo venía con `sort=popular`).
 
-**200 OK:** `{ lists: [{ ..., owner, saved, following, saveCount?, generated }], page, pageSize, hasNext }`. Sin
+**200 OK:** `{ lists: [{ ..., owner, saved, following, saveCount, generated }], page, pageSize, hasNext }`. Sin
 sesión, `saved`/`following` son `false`. `generated` es `{ templateKey, periodKey }` si la lista es una colección
 generada por plantilla, o `null`: con él el cliente muestra el título del idioma y enlaza a `/explore/collections/<slug>-<id>`
 sin pasar por la ruta de usuario (cambio `redesign-lists-page`; mismo campo que `SavedListSummary`). Lo traen también
@@ -1796,7 +1797,8 @@ Sección "De la gente que seguís" de `/lists`: listas de audiencia `public` o `
 usuarios que el lector sigue con relación aceptada, orden cronológico descendente, excluyendo
 bloqueos y las listas propias.
 
-**200 OK:** `{ lists: [{ ..., owner, saved, following }], page, pageSize, hasNext }`.
+**200 OK:** `{ lists: [{ ..., owner, saved, following, saveCount }], page, pageSize, hasNext }` (`saveCount` desde
+`redesign-lists-phase2`).
 **400** con `VALIDATION_ERROR` si la paginación es inválida. **401** con `AUTH_REQUIRED` sin sesión.
 
 ## Camino (cambio `add-camino`)

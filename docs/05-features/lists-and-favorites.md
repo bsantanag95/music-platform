@@ -222,16 +222,26 @@ orden ("Más guardadas" / Recientes; en la vitrina el control dice "Ordenar", si
 una fila y por debajo los cuatro segmentos ocupan una fila propia, sin desplazamiento (cambio `redesign-lists-phase1`; antes
 eran chips de 28 px que se salían de la pantalla junto al orden):
 
-- **Vitrina** (sin filtros): compone las secciones de abajo, omitiendo las vacías, con un **riel** a la derecha desde `lg`
-  (debajo, por debajo de ese ancho).
-- **Explorar** (con algún filtro): reemplaza la composición por una única grilla paginada de
+- **Vitrina** (sin filtros): Destacadas y el **lector** (cambio `redesign-lists-phase2`, ver abajo), y sin sesión la banda
+  «Arma tus propias listas»; ya no hay riel lateral.
+- **Explorar** (con algún filtro): el mismo lector con una única lista paginada de
   resultados (filtrados y ordenados en el servidor), encabezada por un rótulo ("12 listas · Más guardadas", "Más de N" si hay
   más páginas, porque la respuesta no trae total) con "Limpiar filtros", y el estado "sin resultados". El orden `popular`
-  ("Más guardadas", para no confundirlo con la sección Populares) incluye las listas sin guardados al final. Sin riel.
+  ("Más guardadas", para no confundirlo con la sección Populares) incluye las listas sin guardados al final. Sin pestañas,
+  sin Destacadas ni banda; la vista previa también aparece.
 
-En vitrina, secciones, en este orden (openspec: polish-community-lists: con sesión, lo de la gente que sigues antes que lo
-general). **Cada lista sale una sola vez**: una lista que ya está en una sección de más arriba (contando la primera página de
-cada una) no se repite abajo (`excludeIds` de `CommunityListSection`).
+**Lector** (`ListsReader`, cambio `redesign-lists-phase2`): las fuentes 2–4 de abajo y **Para completar** son **pestañas**, en ese
+orden y solo las que tienen contenido (con sesión, lo de la gente que sigues primero y abierta). Cada lista es una **fila**
+(`ListRow`): mosaico de 64 px (56 en el teléfono), título, dueño · fecha y una línea con tipo, elementos y **guardados en todas las
+pestañas** (`saveCount`, que ahora traen las tres fuentes), con Guardar de 44 px con sesión; «Ver más» pagina cada pestaña. Lo
+que ya está en Destacadas no se repite en las pestañas; entre pestañas sí puede, porque solo se ve una. Desde `lg`, a la derecha,
+la **vista previa** (`ListPreview`) de la lista elegida: mosaico, tipo, título, dueño, fecha, descripción, guardados, «Abrir la
+lista» y Guardar, y los primeros 8 elementos numerados. La primera llega resuelta en el servidor (`getUserListDetail`); al elegir
+otra fila (clic primario sin teclas o Enter; Ctrl/Cmd + clic abre la lista) se piden sus elementos a
+`GET /api/users/{username}/lists/{listId}` con caché por id, con esqueleto mientras llegan y un aviso con enlace si fallan. En el
+teléfono no hay vista previa: la fila abre la lista. Sin JavaScript, las filas son enlaces y se ve la primera pestaña.
+
+Fuentes, en este orden:
 
 1. **Destacadas** — solo las listas **editoriales oficiales publicadas** de `@exploracion`
    (visibles, no retiradas), de la más recientemente publicada a la más antigua, sin filtrar por tipo de entidad.
@@ -255,11 +265,12 @@ cada una) no se repite abajo (`excludeIds` de `CommunityListSection`).
    (`redesign-lists-page`). En sus tarjetas, `generated` (plantilla y período) da el título del idioma y el enlace directo a
    `/explore/collections/…`, con la plataforma como dueña (`presentList`, como en las guardadas).
 
-**Riel** (`ListsContextRail`, `redesign-lists-page`): con sesión, **Tus listas** retoma la lista propia con actividad más reciente
+**Sin riel** (`redesign-lists-phase2`; antes `ListsContextRail`, `redesign-lists-page`): con sesión, **Tus listas**
+(`ListsYourLine`) es una línea bajo la frase de entrada que retoma la lista propia con actividad más reciente
 (`getMostRecentEditedList`, el criterio de "Retoma una lista" de Inicio) y enlaza a `/me/lists` y a las guardadas; sin listas,
-invita a crear la primera. Sin sesión, una invitación a crear una cuenta (o entrar), que reemplaza la línea "Inicia sesión para…"
-bajo el buscador. Debajo, **Para completar**: hasta 4 de las listas de `/caminos` (`discoverCaminos`), con "N personas la están
-completando" y "Ver todas"; dejó de ser una sección de la vitrina (es progreso, no listas sociales). Con ninguna sección con
+invita a crear la primera. Sin sesión, la banda **Arma tus propias listas** (`ListsSignUpBand`) va después del lector. **Para
+completar** es la última pestaña: hasta 8 de las listas de `/caminos` (`discoverCaminos`), con "N personas la están completando"
+y "Ver todas". Con ninguna sección con
 contenido, el estado vacío ofrece crear la primera lista o iniciar sesión para crearla.
 
 **Cabecera.** Junto al título, con sesión, el botón **Crear lista**: lleva a `/me/lists?new=1`, que abre el formulario de nueva
@@ -290,7 +301,7 @@ Se eligió la propuesta «B · Lector» con el exhibidor y la banda de «A · Ca
 - **Fase 1** (`redesign-lists-phase1`): mismo contenedor que Inicio y Explorar (`max-w-[88rem]`, márgenes fluidos), título de
   40–64 px con una frase de entrada (`lists.community.intro`), secciones con el encabezado de página (`SectionHeader size="page"`,
   30–40 px) y el toolbar descrito arriba. El riel sigue a la derecha.
-- **Fase 2** (pendiente): el lector. Filas con autor, tipo, elementos y guardadas; pestañas (De la gente que sigues con sesión,
+- **Fase 2** (`redesign-lists-phase2`): el lector. Filas con autor, tipo, elementos y guardadas; pestañas (De la gente que sigues con sesión,
   Populares, Recientes, Para completar); vista previa fija desde `lg` (la primera lista resuelta en el servidor, las demás con
   `GET /api/users/{username}/lists/{listId}` al elegirlas); en el teléfono las filas abren la lista; se retira el riel.
 - **Fase 3** (pendiente): la destacada como exhibidor, la banda «Arma tus propias listas» en el recorrido y los estados vacío y

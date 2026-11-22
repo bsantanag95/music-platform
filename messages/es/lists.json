@@ -120,6 +120,16 @@
       "joinAction": "Crear cuenta",
       "signIn": "Ya tengo cuenta"
     },
+    "reader": {
+      "tabsLabel": "Listas de la comunidad",
+      "previewLabel": "Vista previa: {title}",
+      "open": "Abrir la lista",
+      "seeFull": "Ver la lista completa",
+      "loadError": "No se pudo cargar esta lista. Puedes abrirla igual.",
+      "shownOf": "{shown} de {total}",
+      "resume": "Retoma «{title}»",
+      "noLists": "Aún no tienes listas"
+    },
     "emptyAction": "Crear la primera lista",
     "emptySignedOutAction": "Inicia sesión para crear la primera"
   },

@@ -20,7 +20,7 @@ interface ItemListsSectionProps {
 
 // Grilla paginada de la página dedicada "Mostrar en listas" (openspec:
 // show-item-in-lists) — a la que el panel acotado a 4 resultados envía con su
-// enlace "Ver más". Mismo patrón que `CommunityListSection` (primera página
+// enlace "Ver más". Mismo patrón que las pestañas de `ListsReader` (primera página
 // server-rendered + `useInfiniteQuery` + botón "Cargar más"), pero con un
 // `target` puntual en vez de una de las tres fuentes fijas de /lists.
 export function ItemListsSection({ target, initial, canSave }: ItemListsSectionProps) {

@@ -108,7 +108,7 @@ describe("servicio de descubrir listas", () => {
       entityType: "release-group",
     });
     expect(result.lists).toHaveLength(1);
-    expect(result.lists[0]?.saveCount).toBeUndefined();
+    expect(result.lists[0]?.saveCount).toBe(7);
   });
 
   it("con sort=popular incluye el conteo de guardados", async () => {
