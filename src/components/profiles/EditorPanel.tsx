@@ -3,6 +3,7 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 interface EditorPanelProps {
@@ -14,6 +15,13 @@ interface EditorPanelProps {
   /** Elemento al que devolver el foco al cerrarse (el lápiz que abrió el panel). */
   returnFocusTo?: HTMLElement | null;
   onClose: () => void;
+  /**
+   * Guarda todo lo que cambió en el panel. Si se pasa, el pie muestra «Cancelar»
+   * y un único «Guardar» (openspec redesign-owner-profile-phase3); sin él (editores
+   * que aplican al instante) no hay pie.
+   */
+  onSave?: () => void | Promise<void>;
+  saving?: boolean;
   children: ReactNode;
 }
 
@@ -26,7 +34,16 @@ const FOCUSABLE =
 // bloqueo de scroll, mismo nivel que `ConfirmDialog` — que en escritorio entra
 // por la derecha y bajo `md` se presenta como hoja inferior. No añade su propio
 // "Guardar": el editor alojado ya tiene el suyo o aplica al instante.
-export function EditorPanel({ open, title, dirty, returnFocusTo, onClose, children }: EditorPanelProps) {
+export function EditorPanel({
+  open,
+  title,
+  dirty,
+  returnFocusTo,
+  onClose,
+  onSave,
+  saving = false,
+  children,
+}: EditorPanelProps) {
   const t = useTranslations("users");
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -131,6 +148,16 @@ export function EditorPanel({ open, title, dirty, returnFocusTo, onClose, childr
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-5">{children}</div>
+        {onSave && (
+          <div className="flex items-center justify-end gap-2 border-t border-ink-border px-5 py-3">
+            <Button type="button" variant="secondary" onClick={requestClose}>
+              {t("editPanel.cancel")}
+            </Button>
+            <Button type="button" onClick={() => void onSave()} disabled={!dirty || saving}>
+              {saving ? t("editPanel.saving") : t("editPanel.save")}
+            </Button>
+          </div>
+        )}
       </div>
       <ConfirmDialog
         open={confirming}

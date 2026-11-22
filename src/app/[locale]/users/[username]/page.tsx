@@ -25,6 +25,7 @@ import {
   HeaderBackdropSection,
   IdentityCardSection,
   IdentityStripSection,
+  ProfileCompletionSection,
   InRotationSection,
   ListsCollectionRow,
   RecencySection,
@@ -212,13 +213,21 @@ async function UserProfilePage({ params, searchParams }: UserProfilePageProps) {
     <>
       {/* Nivel 1: la cabecera —quién es y qué la define— y la franja de identidad. */}
       {header}
+      {/* Franja «Tu perfil · N de 7»: solo el dueño, fuera de la vista previa (`isOwn`). */}
+      {isOwn && (
+        <div className="mx-auto w-full max-w-7xl min-w-0 px-4 xl:px-6">
+          <Suspense fallback={null}>
+            <ProfileCompletionSection profile={profile} />
+          </Suspense>
+        </div>
+      )}
       <Suspense fallback={null}>
         <AnchorsSection username={section.username} viewerId={effectiveViewerId} />
       </Suspense>
 
       <div className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-12 px-4 pt-8 xl:px-6">
         <Suspense fallback={null}>
-          <IdentityStripSection profile={profile} viewerId={effectiveViewerId} />
+          <IdentityStripSection profile={profile} viewerId={effectiveViewerId} isOwn={isOwn} />
         </Suspense>
 
         {/* Nivel 2 en filas (openspec: redesign-user-profile-phase2): cada sección enlaza su

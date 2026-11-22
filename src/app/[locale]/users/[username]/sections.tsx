@@ -21,6 +21,7 @@ import { countPendingFollowRequests } from "@/services/social/following";
 import type { ProfileView } from "@/services/profiles/profile-view";
 import { ProfileAffinity } from "@/components/profiles/ProfileAffinity";
 import { EditableBlock } from "@/components/profiles/EditableBlock";
+import { ProfileCompletion, type CompletionPart } from "@/components/profiles/ProfileCompletion";
 import { OwnerAvatarEditor } from "@/components/profiles/OwnerAvatarEditor";
 import { OwnerIdentityEditor } from "@/components/profiles/OwnerIdentityEditor";
 import { OwnerLinksEditor } from "@/components/profiles/OwnerLinksEditor";
@@ -93,9 +94,53 @@ export async function OwnerRequestsSection({ ownerId }: { ownerId: string }) {
 // (spec profile-edit-mode). Para el resto de visitantes la sección es la de
 // siempre. El `editor` se construye acá, en el servidor, con su `initial`.
 
-// Los datos de la persona en la cabecera (bio, pronombres, país, ciudad o región, zona
-// horaria, enlaces) y la ficha musical de la franja de identidad (roles, géneros,
-// formatos y preguntas): todo se edita en un mismo panel, el que antes abría la Placa.
+// Paneles de edición del dueño (openspec: redesign-owner-profile-phase3). Cada bloque abre un
+// panel corto con un solo «Guardar»: la cabecera reúne foto, datos de la persona y enlaces; la
+// Ficha, la ficha musical y las preguntas, que es lo que muestra. Se construyen en el servidor
+// con su `initial` y los usan tanto el lápiz del bloque como la franja «Tu perfil».
+function ownerHeaderEditor(profile: ProfileView): ReactNode {
+  return (
+    <div className="flex flex-col gap-6">
+      <OwnerAvatarEditor
+        username={profile.username}
+        name={profile.displayName ?? profile.username}
+        initialAvatarUrl={profile.avatarUrl}
+      />
+      <OwnerIdentityEditor
+        name={profile.displayName ?? profile.username}
+        initial={{
+          bio: profile.bio,
+          pronouns: profile.pronouns,
+          pronounSet: profile.pronounSet,
+          country: profile.country,
+          location: profile.location,
+          timezone: profile.timezone,
+          showLocalTime: profile.showLocalTime,
+        }}
+      />
+      <OwnerLinksEditor initialLinks={profile.links} />
+    </div>
+  );
+}
+
+function ownerFichaEditor(profile: ProfileView, genreLabels: Record<string, string>): ReactNode {
+  return (
+    <div className="flex flex-col gap-6">
+      <OwnerMusicIdentityEditor
+        initial={{
+          selfRoles: profile.selfRoles,
+          genres: profile.genres.filter((slug) => slug in genreLabels),
+          listeningFormats: profile.listeningFormats,
+        }}
+        genreLabels={genreLabels}
+      />
+      <OwnerPromptsEditor initial={profile.prompts} />
+    </div>
+  );
+}
+
+// Los datos de la persona en la cabecera (foto, bio, pronombres, país, ciudad o región, zona
+// horaria y enlaces): el bloque editable de la cabecera, con su panel corto.
 export async function EditablePlaca({
   profile,
   className,
@@ -106,46 +151,47 @@ export async function EditablePlaca({
   children: ReactNode;
 }) {
   const t = await getTranslations("users");
-  const genreLabels = await identityGenreLabels(profile.genres, genreLocaleOf(await getLocale()));
   return (
-    <EditableBlock
-      label={t("editMode.placa")}
-      className={className}
-      editor={
-        <div className="flex flex-col gap-6">
-          <OwnerAvatarEditor
-            username={profile.username}
-            name={profile.displayName ?? profile.username}
-            initialAvatarUrl={profile.avatarUrl}
-          />
-          <OwnerIdentityEditor
-            name={profile.displayName ?? profile.username}
-            initial={{
-              bio: profile.bio,
-              pronouns: profile.pronouns,
-              pronounSet: profile.pronounSet,
-              country: profile.country,
-              location: profile.location,
-              timezone: profile.timezone,
-              showLocalTime: profile.showLocalTime,
-            }}
-          />
-          <OwnerMusicIdentityEditor
-            initial={{
-              selfRoles: profile.selfRoles,
-              genres: profile.genres.filter((slug) => slug in genreLabels),
-              listeningFormats: profile.listeningFormats,
-            }}
-            genreLabels={genreLabels}
-          />
-          <OwnerPromptsEditor initial={profile.prompts} />
-          <OwnerLinksEditor initialLinks={profile.links} />
-        </div>
-      }
-    >
+    <EditableBlock label={t("editMode.placa")} className={className} editor={ownerHeaderEditor(profile)}>
       {children}
     </EditableBlock>
   );
+}
+
+// Franja «Tu perfil · N de 7» (spec social-profiles, "Franja «Tu perfil» del dueño"): solo el
+// dueño, fuera de la vista previa. Las siete partes salen de datos que la página ya carga
+// (`getShowcase` está cacheado por petición); lo pendiente abre el panel del bloque que lo contiene.
+export async function ProfileCompletionSection({ profile }: { profile: ProfileView }) {
+  const [t, showcase, genreLabels] = await Promise.all([
+    getTranslations("users"),
+    getShowcase(profile.id),
+    identityGenreLabels(profile.genres, genreLocaleOf(await getLocale())),
+  ]);
+  const { identityCard } = showcase;
+  const header = { title: t("editMode.placa"), editor: ownerHeaderEditor(profile) };
+  const ficha = { title: t("editMode.ficha"), editor: ownerFichaEditor(profile, genreLabels) };
+  const parts: CompletionPart[] = [
+    { key: "photo", done: Boolean(profile.avatarUrl), panel: header },
+    { key: "bio", done: Boolean(profile.bio?.trim()), panel: header },
+    {
+      key: "identityCard",
+      done: Boolean(identityCard.artist || identityCard.album || identityCard.anthem),
+      panel: { title: t("identityCard.editor.heading"), editor: <OwnerIdentityCardEditor initial={identityCard} /> },
+    },
+    {
+      key: "ficha",
+      done: profile.selfRoles.length + profile.genres.length + profile.listeningFormats.length > 0,
+      panel: ficha,
+    },
+    {
+      key: "showcase",
+      done: showcase.pinned.length > 0,
+      panel: { title: t("showcase.edit.heading"), editor: <OwnerShowcaseEditor initial={showcase} /> },
+    },
+    { key: "prompts", done: profile.prompts.length > 0, panel: ficha },
+    { key: "links", done: profile.links.length > 0, panel: header },
+  ];
+  return <ProfileCompletion parts={parts} />;
 }
 
 // "En rotación": qué está sonando últimamente, derivado del diario. Se rinde
@@ -169,9 +215,11 @@ export async function InRotationSection({
 export async function IdentityStripSection({
   profile,
   viewerId,
+  isOwn = false,
 }: {
   profile: ProfileView;
   viewerId: string | null;
+  isOwn?: boolean;
 }) {
   const [{ artists, totalCount }, affinity, fingerprint, genreLabels] = await Promise.all([
     listProfileFollowedArtists(profile.username, viewerId),
@@ -189,6 +237,10 @@ export async function IdentityStripSection({
   const phrases = fingerprint
     ? fingerprint.summary.filter((phrase) => !(topDecade && phrase.includes(topDecade)))
     : [];
+  // El dueño edita la Ficha donde se ve (spec profile-edit-mode, "Controles de edición por bloque").
+  const fichaEdit = isOwn
+    ? { label: (await getTranslations("users"))("editMode.ficha"), editor: ownerFichaEditor(profile, genreLabels) }
+    : undefined;
 
   return (
     <IdentityStrip
@@ -204,6 +256,7 @@ export async function IdentityStripSection({
       artists={artists}
       artistsTotal={totalCount}
       sharedArtistIds={sharedArtistIds}
+      fichaEdit={fichaEdit}
     />
   );
 }

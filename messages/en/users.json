@@ -447,13 +447,17 @@
     "discardTitle": "Discard changes?",
     "discardMessage": "You have unsaved changes in this editor. If you close it, they will be lost.",
     "discardConfirm": "Discard",
-    "discardCancel": "Keep editing"
+    "discardCancel": "Keep editing",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving…"
   },
   "editMode": {
     "edit": "Edit",
     "editBlock": "Edit {block}",
     "placa": "Your profile",
-    "emptyBlock": "{block}: nothing here yet. Edit to add something."
+    "emptyBlock": "{block}: nothing here yet. Edit to add something.",
+    "ficha": "Fact sheet"
   },
   "settings": {
     "title": "Settings",
@@ -873,7 +877,8 @@
     "success": "Photo updated.",
     "removed": "Photo removed.",
     "errorGeneric": "Could not complete the operation. Please try again.",
-    "helpText": "JPEG, PNG, WebP or AVIF. Max 10 MB."
+    "helpText": "JPEG, PNG, WebP or AVIF. Max 10 MB.",
+    "savesOnPick": "The photo is saved as soon as you pick it."
   },
   "requests": {
     "subtitle": "People who want to follow your private profile. Once approved, they see what you share with followers.",
@@ -970,5 +975,20 @@
   "audienceMark": {
     "followers": "Followers",
     "private": "Only you"
+  },
+  "completion": {
+    "title": "Your profile · {done} of {total}",
+    "progress": "Profile progress",
+    "doneLabel": "Done:",
+    "hide": "Hide",
+    "part": {
+      "photo": "Photo",
+      "bio": "Bio",
+      "identityCard": "Musical identity",
+      "ficha": "Fact sheet",
+      "showcase": "Start here",
+      "prompts": "Questions",
+      "links": "Links"
+    }
   }
 }

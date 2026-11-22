@@ -48,7 +48,7 @@ export const INFO_PAGES: Record<InfoPageId, InfoPageMeta> = {
   // La fecha de los Términos es también la versión que se guarda al aceptarlos (`src/lib/terms.ts`).
   terms: { namespace: "legal", path: "/terms", updated: TERMS_VERSION, pendingLegalReview: true },
   privacy: { namespace: "legal", path: "/privacy", updated: "2026-11-14", pendingLegalReview: true },
-  cookies: { namespace: "legal", path: "/cookies", updated: "2026-11-14", pendingLegalReview: true },
+  cookies: { namespace: "legal", path: "/cookies", updated: "2026-11-17", pendingLegalReview: true },
   guidelines: {
     namespace: "legal",
     path: "/guidelines",

@@ -10,7 +10,7 @@ import { TIMEZONES } from "@/lib/music-identity";
 import { isPronounSet, isValidCountry, PRONOUN_SETS, type PronounSet } from "@/lib/personal-info";
 import { PROFILE_IDENTITY_LIMITS } from "@/services/social/types";
 import { CountryPicker } from "./CountryPicker";
-import { useNotifySaved, useReportDirty, type EditorHostCallbacks } from "./editor-host";
+import { useHostedSave, useNotifySaved, useReportDirty, type EditorHostCallbacks } from "./editor-host";
 import { TimezonePicker } from "./TimezonePicker";
 
 type Field = "bio" | "location" | "timezone" | "country";
@@ -93,7 +93,8 @@ export function OwnerIdentityEditor({ initial, name, onSaved, onDirtyChange }: O
   const otherMissing = pronounChoice === "other" && otherText === "";
   useReportDirty(dirty, onDirtyChange);
 
-  async function save() {
+  async function save(): Promise<boolean> {
+    if (otherMissing) return false;
     setStatus("saving");
     setErrorCode(null);
     try {
@@ -121,11 +122,14 @@ export function OwnerIdentityEditor({ initial, name, onSaved, onDirtyChange }: O
       setBaselineShow(show);
       setStatus("saved");
       notifySaved();
+      return true;
     } catch (error) {
       setStatus("idle");
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
+      return false;
     }
   }
+  const hosted = useHostedSave(dirty, save);
 
   return (
     <form
@@ -246,10 +250,12 @@ export function OwnerIdentityEditor({ initial, name, onSaved, onDirtyChange }: O
       </div>
 
       <div className="flex items-center gap-3">
-        <Button type="submit" disabled={status === "saving" || !dirty || otherMissing}>
-          {status === "saving" ? t("edit.saving") : t("edit.save")}
-        </Button>
-        {status === "saved" && (
+        {!hosted && (
+          <Button type="submit" disabled={status === "saving" || !dirty || otherMissing}>
+            {status === "saving" ? t("edit.saving") : t("edit.save")}
+          </Button>
+        )}
+        {!hosted && status === "saved" && (
           <span role="status" className="font-data text-xs text-petrol-hover">
             {t("edit.saved")}
           </span>

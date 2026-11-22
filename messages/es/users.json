@@ -447,13 +447,17 @@
     "discardTitle": "¿Descartar los cambios?",
     "discardMessage": "Tienes cambios sin guardar en este editor. Si cierras, se pierden.",
     "discardConfirm": "Descartar",
-    "discardCancel": "Seguir editando"
+    "discardCancel": "Seguir editando",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "saving": "Guardando…"
   },
   "editMode": {
     "edit": "Editar",
     "editBlock": "Editar {block}",
     "placa": "Tu perfil",
-    "emptyBlock": "{block}: todavía no hay nada acá. Edita para agregar."
+    "emptyBlock": "{block}: todavía no hay nada acá. Edita para agregar.",
+    "ficha": "Ficha"
   },
   "settings": {
     "title": "Ajustes",
@@ -873,7 +877,8 @@
     "success": "Foto actualizada.",
     "removed": "Foto quitada.",
     "errorGeneric": "No se pudo completar la operación. Intenta de nuevo.",
-    "helpText": "JPEG, PNG, WebP o AVIF. Máximo 10 MB."
+    "helpText": "JPEG, PNG, WebP o AVIF. Máximo 10 MB.",
+    "savesOnPick": "La foto se guarda al elegirla."
   },
   "requests": {
     "subtitle": "Personas que quieren seguir tu perfil privado. Al aprobar, ven lo que compartes con tus seguidores.",
@@ -970,5 +975,20 @@
   "audienceMark": {
     "followers": "Seguidores",
     "private": "Solo tú"
+  },
+  "completion": {
+    "title": "Tu perfil · {done} de {total}",
+    "progress": "Progreso del perfil",
+    "doneLabel": "Completo:",
+    "hide": "Ocultar",
+    "part": {
+      "photo": "Foto",
+      "bio": "Bio",
+      "identityCard": "Identidad musical",
+      "ficha": "Ficha",
+      "showcase": "Empieza por aquí",
+      "prompts": "Preguntas",
+      "links": "Enlaces"
+    }
   }
 }

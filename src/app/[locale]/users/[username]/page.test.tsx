@@ -17,6 +17,7 @@ import {
   IdentityCardSection,
   IdentityStripSection,
   InRotationSection,
+  ProfileCompletionSection,
   StartRow,
   OwnerRequestsSection,
   FollowersNoteSection,
@@ -73,6 +74,7 @@ vi.mock("./sections", () => ({
   ListsCollectionRow: () => null,
   InRotationSection: () => null,
   IdentityStripSection: () => null,
+  ProfileCompletionSection: () => null,
   HeaderBackdropSection: () => null,
   AnchorsSection: () => null,
   RecencySection: () => null,
@@ -248,6 +250,8 @@ describe("UserProfilePage", () => {
     expect(header?.props?.ownerStatus).toEqual({ visibility: "public" });
     expect(findElement(header?.props?.ownerActions, OwnerHeaderActions)?.props?.username).toBe("ana");
     expect(findElement(tree, OwnerRequestsSection)).not.toBeNull();
+    // Franja «Tu perfil · N de 7» (redesign-owner-profile-phase3).
+    expect(findElement(tree, ProfileCompletionSection)).not.toBeNull();
     // Los datos de la persona de la cabecera van dentro del bloque editable.
     const wrapDetails = findElement(tree, ProfileHeader)?.props?.wrapDetails as (details: ReactNode) => ReactNode;
     expect(findElement(wrapDetails(<p />), EditablePlaca)).not.toBeNull();
@@ -266,6 +270,7 @@ describe("UserProfilePage", () => {
     const tree = await render();
     expect(findElement(tree, IdentityCardSection)?.props?.isOwn).toBe(true);
     expect(findElement(tree, StartRow)?.props?.isOwn).toBe(true);
+    expect(findElement(tree, IdentityStripSection)?.props?.isOwn).toBe(true);
     // Los estantes sin editor propio no reciben lápiz (spec: "Bloque sin editor").
     expect(findElement(tree, ListsCollectionRow)?.props?.canAct).toBe(false);
     expect(findElement(tree, InRotationSection)?.props?.isOwn).toBeUndefined();
@@ -282,6 +287,7 @@ describe("UserProfilePage", () => {
     const tree = await render("ana", "1");
     expect(getProfileView).toHaveBeenNthCalledWith(2, "ana", null);
     expect(findElement(tree, OwnerEditProvider)).toBeNull();
+    expect(findElement(tree, ProfileCompletionSection)).toBeNull();
     expect(findElement(tree, ProfileHeader)?.props?.ownerActions).toBeUndefined();
     expect(findElement(tree, ProfileHeader)?.props?.ownerStatus).toBeUndefined();
     expect(findElement(tree, ProfileHeader)?.props?.wrapDetails).toBeUndefined();

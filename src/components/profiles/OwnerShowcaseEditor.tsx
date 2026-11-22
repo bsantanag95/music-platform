@@ -10,7 +10,7 @@ import { ShowcaseResponseSchema, type Favorite } from "@/lib/api/schemas";
 import { PROFILE_IDENTITY_LIMITS, PROFILE_MAX_PINNED } from "@/services/social/types";
 import type { Showcase, ShowcaseEntity } from "@/services/profiles/showcase";
 import { FavoritePicker } from "./FavoritePicker";
-import { useNotifySaved, useReportDirty, type EditorHostCallbacks } from "./editor-host";
+import { useHostedSave, useNotifySaved, useReportDirty, type EditorHostCallbacks } from "./editor-host";
 
 interface OwnerShowcaseEditorProps extends EditorHostCallbacks {
   initial: Showcase;
@@ -58,7 +58,8 @@ export function OwnerShowcaseEditor({ initial, onSaved, onDirtyChange }: OwnerSh
   const [baseline, setBaseline] = useState(() =>
     pinSignature(initial.pinned.map((item) => ({ entity: item.entity, note: item.note ?? "" }))),
   );
-  useReportDirty(pinSignature(pins) !== baseline, onDirtyChange);
+  const dirty = pinSignature(pins) !== baseline;
+  useReportDirty(dirty, onDirtyChange);
 
   const pinnedIds = new Set(pins.map((row) => row.entity.id));
 
@@ -73,7 +74,7 @@ export function OwnerShowcaseEditor({ initial, onSaved, onDirtyChange }: OwnerSh
     setPinStatus("idle");
   }
 
-  async function savePins() {
+  async function savePins(): Promise<boolean> {
     setPinStatus("saving");
     setErrorCode(null);
     try {
@@ -93,11 +94,14 @@ export function OwnerShowcaseEditor({ initial, onSaved, onDirtyChange }: OwnerSh
       setBaseline(pinSignature(saved));
       setPinStatus("saved");
       notifySaved();
+      return true;
     } catch (error) {
       setPinStatus("idle");
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
+      return false;
     }
   }
+  const hosted = useHostedSave(dirty, savePins);
 
   return (
     <div className="flex flex-col gap-4">
@@ -204,16 +208,18 @@ export function OwnerShowcaseEditor({ initial, onSaved, onDirtyChange }: OwnerSh
         <p className="font-data text-xs text-paper-muted">{t("showcase.edit.maxPinned")}</p>
       )}
 
-      <div className="flex items-center gap-3">
-        <Button type="button" onClick={() => void savePins()} disabled={pinStatus === "saving"}>
-          {pinStatus === "saving" ? t("edit.saving") : t("showcase.edit.savePinned")}
-        </Button>
-        {pinStatus === "saved" && (
-          <span role="status" className="font-data text-xs text-petrol-hover">
-            {t("edit.saved")}
-          </span>
-        )}
-      </div>
+      {!hosted && (
+        <div className="flex items-center gap-3">
+          <Button type="button" onClick={() => void savePins()} disabled={pinStatus === "saving"}>
+            {pinStatus === "saving" ? t("edit.saving") : t("showcase.edit.savePinned")}
+          </Button>
+          {pinStatus === "saved" && (
+            <span role="status" className="font-data text-xs text-petrol-hover">
+              {t("edit.saved")}
+            </span>
+          )}
+        </div>
+      )}
 
       {errorCode && (
         <span role="alert" className="font-data text-xs text-danger">

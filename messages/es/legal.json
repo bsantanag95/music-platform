@@ -354,7 +354,7 @@
         "id": "storage",
         "title": "Almacenamiento local del navegador",
         "paragraphs": [
-          "Guardamos en tu dispositivo algunas preferencias de vista (por ejemplo, lista o cuadrícula, el agrupamiento de una discografía o el modo de vista de las listas para completar) y tus búsquedas recientes. Se quedan en tu dispositivo, nunca se envían al servidor y puedes borrarlas desde los ajustes de tu navegador."
+          "Guardamos en tu dispositivo algunas preferencias de vista (por ejemplo, lista o cuadrícula, el agrupamiento de una discografía o el modo de vista de las listas para completar, o si ocultaste la franja «Tu perfil» de tu propio perfil) y tus búsquedas recientes. Se quedan en tu dispositivo, nunca se envían al servidor y puedes borrarlas desde los ajustes de tu navegador."
         ]
       },
       {

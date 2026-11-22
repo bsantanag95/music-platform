@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { apiFetch, ApiError } from "@/lib/api/client";
 import { PromptsResponseSchema } from "@/lib/api/schemas";
 import { MUSIC_IDENTITY_LIMITS, PROMPT_KEYS, type ProfilePromptData, type PromptKey } from "@/lib/music-identity";
-import { useNotifySaved, useReportDirty, type EditorHostCallbacks } from "./editor-host";
+import { useHostedSave, useNotifySaved, useReportDirty, type EditorHostCallbacks } from "./editor-host";
 
 interface PromptRow {
   /** Identidad de la fila en pantalla: cambiar la pregunta no debe remontar el campo ni perder el foco. */
@@ -61,11 +61,11 @@ export function OwnerPromptsEditor({ initial, onSaved, onDirtyChange }: OwnerPro
     setEmptyAnswer(false);
   }
 
-  async function save() {
+  async function save(): Promise<boolean> {
     // Una respuesta vacía se rechaza acá con un mensaje claro en vez de esperar al servidor.
     if (rows.some((row) => row.answer.trim().length === 0)) {
       setEmptyAnswer(true);
-      return;
+      return false;
     }
     setStatus("saving");
     setErrorCode(null);
@@ -80,11 +80,14 @@ export function OwnerPromptsEditor({ initial, onSaved, onDirtyChange }: OwnerPro
       setRows(withUid(next));
       setStatus("saved");
       notifySaved();
+      return true;
     } catch (error) {
       setStatus("idle");
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
+      return false;
     }
   }
+  const hosted = useHostedSave(dirty, save);
 
   return (
     <form
@@ -180,10 +183,12 @@ export function OwnerPromptsEditor({ initial, onSaved, onDirtyChange }: OwnerPro
       )}
 
       <div className="flex items-center gap-3">
-        <Button type="submit" disabled={status === "saving" || !dirty}>
-          {status === "saving" ? t("edit.saving") : t("edit.save")}
-        </Button>
-        {status === "saved" && (
+        {!hosted && (
+          <Button type="submit" disabled={status === "saving" || !dirty}>
+            {status === "saving" ? t("edit.saving") : t("edit.save")}
+          </Button>
+        )}
+        {!hosted && status === "saved" && (
           <span role="status" className="font-data text-xs text-petrol-hover">
             {t("edit.saved")}
           </span>

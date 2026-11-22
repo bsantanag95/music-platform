@@ -38,7 +38,7 @@ visitante:
 |---|---|---|
 | **No autorizado** | Anónimo, sin relación aceptada, o solicitud pendiente sobre un perfil privado | La cabecera del perfil sin acceso (`ProfileHeader` con `locked`) + la franja «Solo para seguidores» (`PrivateProfileDoor`): estado exacto del visitante + una acción + siluetas sin datos. Nada más. Ver "Perfil privado". |
 | **Autorizado** | Cuenta pública, o seguidor aprobado de una privada | Identidad + Tarjeta de Identidad + resumen de huella + Empieza por aquí + valoraciones destacadas + reseñas + en rotación + huella completa (nivel 3) + afinidad + estantes (diario / favoritos / listas / colección) + recencia. |
-| **Dueño** | La persona | Lo mismo que "autorizado" + modo edición ("Editar perfil": lápiz por bloque y panel lateral con los editores de identidad/enlaces, de la Tarjeta de Identidad —artista, álbum e himno— y de Empieza por aquí) + acción de destacar valoraciones y entradas de diario + marca de visibilidad, solicitudes pendientes y "Ver como visitante" en la cabecera. Ver "Gestión del propio perfil". |
+| **Dueño** | La persona | Lo mismo que "autorizado" + modo edición ("Editar perfil": lápiz por bloque y panel lateral corto por bloque: foto/identidad/enlaces, Ficha, Tarjeta de Identidad —artista, álbum e himno— y Empieza por aquí) + franja «Tu perfil · N de 7» mientras falte algo + acción de destacar valoraciones y entradas de diario + marca de visibilidad, solicitudes pendientes y "Ver como visitante" en la cabecera. Ver "Gestión del propio perfil". |
 
 Un perfil **privado** solo expone su huella, Empieza por aquí y estantes a
 seguidores aprobados y al dueño; un visitante no autorizado ve únicamente la identidad
@@ -253,8 +253,8 @@ crudas de las consultas; es solo de dev y no existe en producción.)
 
 **Edición.** Los editores (`OwnerMusicIdentityEditor` con chips y contador sobre el máximo,
 `OwnerPromptsEditor`, y `OwnerIdentityEditor` con el selector de zona y "mostrar mi hora local")
-se montan en la pantalla **Perfil** de Ajustes y en el panel lateral de la Placa del modo edición —el
-mismo panel que ya alojaba identidad y enlaces—, con el contrato `editor-host` de siempre. Endpoints:
+se montan en la pantalla **Perfil** de Ajustes y en el modo edición: identidad en el panel de la Placa, ficha
+musical y preguntas en el de la Ficha (`redesign-owner-profile-phase3`), con el contrato `editor-host` de siempre. Endpoints:
 `PUT /api/me/profile/music-identity`, `PUT` y `DELETE /api/me/profile/prompts` y
 `PATCH /api/me/profile` (`timezone`, `showLocalTime`); ver `docs/04-api/contracts.md`.
 
@@ -1040,18 +1040,34 @@ gestión; el dueño ve el mismo perfil que un visitante hasta que activa el modo
     («+ Nueva lista»), también en sus estantes vacíos (`ProfileRail` → `ownerAction`). Abre `QuickActionsDialog` con
     `initialAction` (`listen`, `favorite`, `collection`, `newList`); si mientras estuvo abierto llegó
     `OWN_DATA_CHANGED_EVENT`, al cerrarlo hace `router.refresh()`. El foco vuelve al botón.
-  - Plan: **Fase 3** (`redesign-owner-profile-phase3`) lápiz en la Ficha, paneles cortos por bloque con un
-    solo «Guardar» y la franja «Tu perfil · N de 7».
+- **Paneles por bloque y franja «Tu perfil»** (`redesign-owner-profile-phase3`):
+  - **Paneles cortos**: el lápiz de la cabecera (`EditablePlaca`) abre foto, datos de la persona y enlaces; la
+    **Ficha** de la franja de identidad tiene su propio lápiz (`IdentityStrip` → `fichaEdit`) con la ficha musical y
+    las preguntas, que es lo que muestra. Vacía, el modo edición dibuja su marco vacío (si no hay otra parte de la
+    franja, solo el marco, sin filetes). Los editores de cada panel se construyen una vez en `sections.tsx`
+    (`ownerHeaderEditor`, `ownerFichaEditor`).
+  - **Un solo «Guardar»**: `EditorPanel` recibe `onSave` y muestra al pie «Cancelar» (= cerrar, con confirmación
+    de descarte) y «Guardar» (deshabilitado sin cambios). `OwnerEditProvider` llama en orden a los guardados de los
+    editores con cambios; si todos salen bien cierra y refresca, si alguno falla queda abierto con su error. Los
+    editores con borrador lo registran con `useHostedSave` y, con anfitrión, no dibujan su botón; sin anfitrión
+    (pantallas de Ajustes) siguen igual. Sin editores registrados (Tarjeta de Identidad, que aplica al instante) no
+    hay pie. La foto se aplica al elegirla y lo avisa dentro del panel (`useHostSaves`).
+  - **`ProfileCompletion`** («Tu perfil · N de 7», `ProfileCompletionSection`): solo el dueño fuera de la vista
+    previa, bajo la cabecera. Partes: Foto (`avatarUrl`), Bio, Identidad musical (algún slot de la Tarjeta), Ficha
+    (algún rol, género o formato), Empieza por aquí (algún elemento), Preguntas (alguna) y Enlaces (alguno). Lo
+    pendiente abre el panel de su bloque con `openEditor`, sin activar el modo edición; con 7 de 7 no se dibuja.
+    «Ocultar» se guarda en `localStorage` (`profile-completion-hidden`, por dispositivo; descrito en `/cookies`) y
+    se lee tras montar.
 - **`OwnerEditProvider`** (cliente) guarda `editing` y renderiza **una sola vez** el panel lateral.
-  **`EditableBlock`** envuelve cada bloque con editor: Placa (identidad + enlaces en un mismo
-  panel), Tarjeta de Identidad y Empieza por aquí. Con `editing` muestra un
+  **`EditableBlock`** envuelve cada bloque con editor: Placa (foto, identidad y enlaces), Ficha
+  (ficha musical y preguntas), Tarjeta de Identidad y Empieza por aquí. Con `editing` muestra un
   lápiz ("Editar {bloque}") que abre el editor en el panel. Los bloques sin editor propio (listas
   fijadas, valoraciones y diario destacados, el resto de estantes) no llevan lápiz: se fijan donde
   viven. Un bloque **vacío** (que hoy colapsa) muestra un marco solo en modo edición, para poder
   añadir el primer elemento; sin modo edición el perfil sigue idéntico al de un visitante.
 - **`EditorPanel`** — diálogo modal (portal, `role="dialog"`, foco atrapado y devuelto al lápiz,
   `Escape`, clic en el fondo, bloqueo de scroll); panel lateral desde `md`, hoja inferior por
-  debajo. **No añade su propio "Guardar"**: cada editor ya tiene el suyo o aplica al instante. Al
+  debajo. Desde `redesign-owner-profile-phase3` tiene **un solo «Guardar»** al pie (ver arriba). Al
   cerrar tras haber guardado algo hace `router.refresh()`; con cambios sin guardar pide confirmar el
   descarte (`ConfirmDialog`).
 - **Contrato editor ↔ anfitrión** (`editor-host.ts`): los editores llegan como elementos ya

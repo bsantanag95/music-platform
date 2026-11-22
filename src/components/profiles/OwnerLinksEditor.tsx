@@ -13,7 +13,7 @@ import {
   normalizeLinkInput,
 } from "@/lib/profile-links";
 import { PROFILE_LINK_KINDS, PROFILE_MAX_LINKS, type ProfileLinkKind } from "@/services/social/types";
-import { useNotifySaved, useReportDirty, type EditorHostCallbacks } from "./editor-host";
+import { useHostedSave, useNotifySaved, useReportDirty, type EditorHostCallbacks } from "./editor-host";
 
 interface OwnerLinksEditorProps extends EditorHostCallbacks {
   initialLinks: ProfileLink[];
@@ -62,7 +62,8 @@ export function OwnerLinksEditor({ initialLinks, onSaved, onDirtyChange }: Owner
 
   const [rows, setRows] = useState<Row[]>(() => initialLinks.map(rowFromStored));
   const [baseline, setBaseline] = useState(() => signature(initialLinks.map(rowFromStored)));
-  useReportDirty(signature(rows) !== baseline, onDirtyChange);
+  const dirty = signature(rows) !== baseline;
+  useReportDirty(dirty, onDirtyChange);
 
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -80,7 +81,7 @@ export function OwnerLinksEditor({ initialLinks, onSaved, onDirtyChange }: Owner
     return t(`linkKind.${kind}`);
   }
 
-  async function save() {
+  async function save(): Promise<boolean> {
     setSubmitted(true);
     setErrorCode(null);
 
@@ -89,7 +90,7 @@ export function OwnerLinksEditor({ initialLinks, onSaved, onDirtyChange }: Owner
       // Hay filas inválidas: no se envía nada y se lleva el foco a la primera.
       setStatus("idle");
       queueMicrotask(() => formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
-      return;
+      return false;
     }
 
     setStatus("saving");
@@ -106,11 +107,14 @@ export function OwnerLinksEditor({ initialLinks, onSaved, onDirtyChange }: Owner
       setSubmitted(false);
       setStatus("saved");
       notifySaved();
+      return true;
     } catch (error) {
       setStatus("idle");
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
+      return false;
     }
   }
+  const hosted = useHostedSave(dirty, save);
 
   return (
     <form
@@ -239,13 +243,15 @@ export function OwnerLinksEditor({ initialLinks, onSaved, onDirtyChange }: Owner
         >
           {t("edit.addLink")}
         </Button>
-        <Button type="submit" disabled={status === "saving"}>
-          {status === "saving" ? t("edit.saving") : t("edit.save")}
-        </Button>
+        {!hosted && (
+          <Button type="submit" disabled={status === "saving"}>
+            {status === "saving" ? t("edit.saving") : t("edit.save")}
+          </Button>
+        )}
         {rows.length >= PROFILE_MAX_LINKS && (
           <span className="font-data text-xs text-paper-muted">{t("edit.maxLinksReached")}</span>
         )}
-        {status === "saved" && (
+        {!hosted && status === "saved" && (
           <span role="status" className="font-data text-xs text-petrol-hover">
             {t("edit.saved")}
           </span>

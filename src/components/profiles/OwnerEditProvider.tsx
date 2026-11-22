@@ -11,7 +11,7 @@ import {
 } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { EditorPanel } from "./EditorPanel";
-import { EditorHostContext, type EditorHostContextValue } from "./editor-host";
+import { EditorHostContext, type EditorHostContextValue, type HostedSave } from "./editor-host";
 
 interface PanelRequest {
   /** Nombre del bloque: título accesible del panel. */
@@ -46,6 +46,11 @@ export function OwnerEditProvider({ children }: { children: ReactNode }) {
   const [panel, setPanel] = useState<PanelRequest | null>(null);
   const [dirtyEditors, setDirtyEditors] = useState<ReadonlySet<string>>(() => new Set());
   const savedRef = useRef(false);
+  // Guardados de los editores con borrador alojados en el panel (un solo «Guardar»
+  // al pie; openspec redesign-owner-profile-phase3). El conteo decide si hay pie.
+  const savesRef = useRef(new Map<string, HostedSave>());
+  const [saveCount, setSaveCount] = useState(0);
+  const [saving, setSaving] = useState(false);
 
   const host = useMemo<EditorHostContextValue>(
     () => ({
@@ -59,6 +64,14 @@ export function OwnerEditProvider({ children }: { children: ReactNode }) {
         }),
       notifySaved: () => {
         savedRef.current = true;
+      },
+      registerSave: (editorId, entry) => {
+        savesRef.current.set(editorId, entry);
+        setSaveCount(savesRef.current.size);
+        return () => {
+          savesRef.current.delete(editorId);
+          setSaveCount(savesRef.current.size);
+        };
       },
     }),
     [],
@@ -81,6 +94,20 @@ export function OwnerEditProvider({ children }: { children: ReactNode }) {
     }
   }, [router]);
 
+  // «Guardar» del pie: guarda en orden cada editor con cambios. Si todos salen
+  // bien cierra (y refresca, porque hubo guardado); si alguno falla, el panel
+  // queda abierto y ese editor muestra su error donde siempre.
+  const saveAll = useCallback(async () => {
+    setSaving(true);
+    let ok = true;
+    for (const entry of Array.from(savesRef.current.values())) {
+      if (!entry.dirty()) continue;
+      if (!(await entry.save())) ok = false;
+    }
+    setSaving(false);
+    if (ok) closeEditor();
+  }, [closeEditor]);
+
   const value = useMemo<OwnerEditContextValue>(
     () => ({ editing, setEditing, openEditor }),
     [editing, openEditor],
@@ -95,6 +122,8 @@ export function OwnerEditProvider({ children }: { children: ReactNode }) {
         dirty={dirtyEditors.size > 0}
         returnFocusTo={panel?.trigger ?? null}
         onClose={closeEditor}
+        onSave={saveCount > 0 ? saveAll : undefined}
+        saving={saving}
       >
         <EditorHostContext.Provider value={host}>{panel?.editor}</EditorHostContext.Provider>
       </EditorPanel>
