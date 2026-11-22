@@ -30,6 +30,19 @@
 
   --color-danger: #d96c5f;
 
+  /* Tonos de componente del chip de tema de lista (openspec: add-list-themes-phase1). Solo para ese chip:
+     texto en el tono sobre el mismo tono al 14 % (contraste AA medido >= 5,7:1 sobre ink). El color acompaña
+     al nombre del tema, nunca lo reemplaza. Ver docs/02-architecture/design-tokens-naming.md. */
+  --color-list-theme-start-here: #e8b84b;
+  --color-list-theme-recommendations: #8fc1a0;
+  --color-list-theme-personal-ranking: #e89a6b;
+  --color-list-theme-hidden-gems: #c9a0dc;
+  --color-list-theme-moment: #7fb2d9;
+  --color-list-theme-history: #d6c08f;
+  --color-list-theme-connections: #8fc4c4;
+  --color-list-theme-year-review: #e3a3a3;
+  --color-list-theme-curiosities: #b9b39a;
+  --color-list-theme-other: #a89e8e;
   --font-display: var(--font-display-raw), system-ui, sans-serif;
   --font-body: var(--font-body-raw), Georgia, serif;
   --font-data: var(--font-data-raw), ui-monospace, monospace;

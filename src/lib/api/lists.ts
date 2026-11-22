@@ -16,7 +16,8 @@ import {
   type UserListSummary,
   type ListEntityType,
   type ListTarget,
-  type DiaryAudience,
+  type CreateListRequest,
+  type ListTheme,
   type UpdateListRequest,
 } from "./schemas";
 import { z } from "zod";
@@ -25,6 +26,8 @@ export interface ListFiltersParams {
   q?: string;
   entityType?: ListEntityType;
   sort?: ListSort;
+  /** `none` = listas sin tema (solo `/api/me/lists`). */
+  theme?: ListTheme | "none";
 }
 
 function listFiltersQuery(filters: ListFiltersParams = {}): string {
@@ -32,6 +35,7 @@ function listFiltersQuery(filters: ListFiltersParams = {}): string {
   if (filters.q) params.set("q", filters.q);
   if (filters.entityType) params.set("entityType", filters.entityType);
   if (filters.sort) params.set("sort", filters.sort);
+  if (filters.theme) params.set("theme", filters.theme);
   const query = params.toString();
   return query ? `&${query}` : "";
 }
@@ -83,6 +87,7 @@ export interface DiscoverListFiltersParams {
   q?: string;
   entityType?: ListEntityType;
   sort?: "recent" | "popular";
+  theme?: ListTheme;
 }
 
 function discoverFiltersQuery(filters: DiscoverListFiltersParams = {}): string {
@@ -90,6 +95,7 @@ function discoverFiltersQuery(filters: DiscoverListFiltersParams = {}): string {
   if (filters.q) params.set("q", filters.q);
   if (filters.entityType) params.set("entityType", filters.entityType);
   if (filters.sort) params.set("sort", filters.sort);
+  if (filters.theme) params.set("theme", filters.theme);
   const query = params.toString();
   return query ? `&${query}` : "";
 }
@@ -162,12 +168,7 @@ export function getUserListDetail(
   );
 }
 
-export function createList(input: {
-  entityType: ListEntityType;
-  title: string;
-  description?: string | null;
-  audience?: DiaryAudience;
-}): Promise<UserListDetail> {
+export function createList(input: CreateListRequest): Promise<UserListDetail> {
   return apiFetch("/api/me/lists", ListMutationResponseSchema, {
     method: "POST",
     headers: { "content-type": "application/json" },

@@ -38,7 +38,7 @@ interface InfoPageMeta {
 
 export const INFO_PAGES: Record<InfoPageId, InfoPageMeta> = {
   about: { namespace: "info", path: "/about", updated: "2026-11-14", pendingLegalReview: false },
-  help: { namespace: "info", path: "/help", updated: "2026-11-14", pendingLegalReview: false },
+  help: { namespace: "info", path: "/help", updated: "2026-11-22", pendingLegalReview: false },
   dataSources: {
     namespace: "info",
     path: "/about/data-sources",

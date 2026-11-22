@@ -191,5 +191,51 @@
   "move": "Move",
   "removedItem": "You removed “{title}”",
   "undo": "Undo",
-  "undoError": "We couldn't undo. Try again."
+  "undoError": "We couldn't undo. Try again.",
+  "theme": {
+    "label": "Theme",
+    "required": "Choose a theme",
+    "pickerHint": "It decides where others find it. You can change it later.",
+    "filterLabel": "Theme",
+    "filterAll": "All themes",
+    "about": "about <subject>{name}</subject>",
+    "subjectLabel": "What is it about?",
+    "subjectHint": "Optional · an artist or a genre",
+    "subjectArtist": "Artist",
+    "subjectGenre": "Genre",
+    "subjectSearchArtist": "Search for an artist",
+    "subjectSearchGenre": "Search for a genre",
+    "subjectRemove": "Remove “{name}”",
+    "subjectNoResults": "No results",
+    "unthemedTitle": "{count, plural, one {# of your lists has no theme} other {# of your lists have no theme}}",
+    "unthemedDescription": "Without a theme they only show up under “All themes” and in search. Choose one for each.",
+    "unthemedSeeAll": "See all lists without a theme",
+    "unthemedAssigned": "“{title}” is now {theme}",
+    "unthemedError": "We couldn’t save the theme. Try again.",
+    "noTheme": "No theme",
+    "names": {
+      "start_here": "Where to start",
+      "recommendations": "Recommendations",
+      "personal_ranking": "Personal ranking",
+      "hidden_gems": "Hidden gems",
+      "moment": "For a moment",
+      "history": "History and context",
+      "connections": "Connections",
+      "year_review": "Year in review",
+      "curiosities": "Curiosities",
+      "other": "Other"
+    },
+    "descriptions": {
+      "start_here": "A way into an artist, a genre or a scene",
+      "recommendations": "What you would hand to someone",
+      "personal_ranking": "The best of something, in order",
+      "hidden_gems": "The barely heard that deserves more",
+      "moment": "A mood, an hour, an activity",
+      "history": "Scenes, movements, timelines",
+      "connections": "Influences, covers, “if you like X”",
+      "year_review": "What a year or a decade left",
+      "curiosities": "Covers, concepts, coincidences",
+      "other": "Fits none of these"
+    }
+  }
 }

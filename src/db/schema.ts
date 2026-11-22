@@ -1223,11 +1223,25 @@ isOfficial: boolean("is_official").notNull().default(false),
     tierLabels: text("tier_labels").array(),
     journeyArtistId: uuid("journey_artist_id").references(() => artist.id, { onDelete: "cascade" }),
     journeyArchivedAt: timestamp("journey_archived_at", { withTimezone: true }),
+    // Tema y "sobre qué" (migración 0098, openspec: add-list-themes-phase1). `theme` de LIST_THEMES
+    // (src/services/lists/types.ts); NULL = sin tema (listas previas, colecciones generadas, borradores
+    // editoriales). El "sobre" es a lo sumo uno: un artista o un género, independiente del contenido.
+    theme: text("theme"),
+    subjectArtistId: uuid("subject_artist_id").references(() => artist.id, { onDelete: "set null" }),
+    subjectGenreId: uuid("subject_genre_id").references(() => genre.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     index("idx_user_list_owner_created").on(t.ownerId, t.createdAt),
+    index("idx_user_list_theme_created").on(t.theme, t.createdAt).where(sql`${t.theme} IS NOT NULL`),
+    index("idx_user_list_subject_artist").on(t.subjectArtistId).where(sql`${t.subjectArtistId} IS NOT NULL`),
+    index("idx_user_list_subject_genre").on(t.subjectGenreId).where(sql`${t.subjectGenreId} IS NOT NULL`),
+    check(
+      "chk_user_list_theme",
+      sql`${t.theme} IS NULL OR ${t.theme} IN ('start_here', 'recommendations', 'personal_ranking', 'hidden_gems', 'moment', 'history', 'connections', 'year_review', 'curiosities', 'other')`,
+    ),
+    check("chk_user_list_single_subject", sql`num_nonnulls(${t.subjectArtistId}, ${t.subjectGenreId}) <= 1`),
     index("idx_user_list_owner_audience").on(t.ownerId, t.audience),
     // Índice único parcial (owner_id, journey_artist_id) WHERE kind =
     // 'artist_journey' definido en la migración SQL cruda — Drizzle no expresa

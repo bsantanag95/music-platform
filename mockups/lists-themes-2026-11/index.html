@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Listas por tema · Redefinición y tres propuestas — music-platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f6f5f2; --card: #fff; --tx: #17161a; --tx-2: #4b4a50; --tx-3: #6b6a70; --line: #e2e0da; --ok: #1f7a4d; --no: #b23a2e; --hi: #8a5a00; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--tx); font: 16px/1.6 "Geist", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-underline-offset: 3px; }
+  :focus-visible { outline: 2px solid #8a5a00; outline-offset: 3px; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 48px); }
+  header.doc { padding: 64px 0 40px; border-bottom: 1px solid var(--line); }
+  h1 { font-size: clamp(34px, 4.4vw, 56px); line-height: 1.05; letter-spacing: -.03em; font-weight: 700; max-width: 22ch; }
+  .intro { margin-top: 18px; font-size: 19px; color: var(--tx-2); max-width: 66ch; }
+  .meta { margin-top: 20px; font: 500 13px "Geist Mono", monospace; color: var(--tx-3); display: flex; flex-wrap: wrap; gap: 8px 20px; }
+  nav.toc { position: sticky; top: 0; z-index: 5; background: rgba(246,245,242,.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  nav.toc .wrap { display: flex; gap: 6px; overflow-x: auto; padding-top: 10px; padding-bottom: 10px; }
+  nav.toc a { white-space: nowrap; color: var(--tx-2); text-decoration: none; font-size: 14px; font-weight: 500; padding: 6px 12px; border-radius: 8px; }
+  nav.toc a:hover { background: #ebe9e3; color: var(--tx); }
+  nav.toc a.cta { background: var(--tx); color: #fff; }
+  section { padding: 72px 0 0; }
+  h2 { font-size: clamp(26px, 2.6vw, 36px); letter-spacing: -.02em; line-height: 1.1; font-weight: 700; }
+  h2 + p { margin-top: 10px; color: var(--tx-2); max-width: 70ch; font-size: 17px; }
+  h3 { font-size: 19px; letter-spacing: -.01em; font-weight: 650; }
+  .shots { margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  figure { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  figure img { display: block; width: 100%; height: auto; }
+  figcaption { padding: 12px 16px; font-size: 14px; color: var(--tx-3); border-top: 1px solid var(--line); }
+  .stats { margin-top: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+  .stat b { display: block; font-size: 30px; letter-spacing: -.02em; line-height: 1.1; }
+  .stat span { font-size: 14px; color: var(--tx-2); }
+  .issues { margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .issue { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; }
+  .issue h3 { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .sev { font: 500 12px "Geist Mono", monospace; padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+  .sev.alta { background: #fbe4e1; color: var(--no); }
+  .sev.media { background: #fdf0d6; color: #8a5a00; }
+  .sev.baja { background: #e9ece9; color: #4b5a4f; }
+  .issue ul { margin-top: 10px; padding-left: 18px; color: var(--tx-2); font-size: 15px; }
+  .issue li + li { margin-top: 6px; }
+  .issue li b { color: var(--tx); font-weight: 600; }
+  .note { margin-top: 16px; padding: 14px 18px; border-radius: 10px; background: #efede8; color: var(--tx-2); font-size: 15px; }
+  .criteria { margin-top: 28px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 40px; }
+  .criteria li { list-style: none; padding: 16px 0; border-top: 1px solid var(--line); }
+  .criteria h3 { font-size: 17px; }
+  .criteria p { color: var(--tx-2); font-size: 15px; margin-top: 4px; }
+  .props { margin-top: 28px; display: grid; gap: 24px; }
+  .prop { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: grid; grid-template-columns: 1.1fr 1fr; }
+  .prop .img { display: block; border-right: 1px solid var(--line); background: #14120f; }
+  .prop .img img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+  .prop .body { padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+  .prop h3 { font-size: 24px; letter-spacing: -.02em; }
+  .prop .thesis { color: var(--tx-2); }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tags span { font-size: 13px; padding: 3px 9px; border-radius: 6px; background: #efede8; color: var(--tx-2); }
+  .pc { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 14px; }
+  .pc h4 { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .pc .pro h4 { color: var(--ok); } .pc .con h4 { color: var(--no); }
+  .pc ul { padding-left: 16px; color: var(--tx-2); }
+  .pc li + li { margin-top: 4px; }
+  .open { margin-top: auto; display: inline-flex; align-self: start; align-items: center; gap: 8px; background: var(--tx); color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 15px; }
+  .open:hover { background: #8a5a00; }
+  table { margin-top: 28px; width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); font-size: 15px; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { background: #efede8; font-size: 13px; font-weight: 600; color: var(--tx-2); }
+  td.s { font: 500 14px "Geist Mono", monospace; white-space: nowrap; }
+  .rec { margin-top: 28px; background: var(--tx); color: #f4f3ef; border-radius: 16px; padding: clamp(28px, 4vw, 48px); display: grid; grid-template-columns: 1fr 1.3fr; gap: 40px; }
+  .rec h3 { font-size: clamp(26px, 2.8vw, 38px); letter-spacing: -.02em; line-height: 1.1; }
+  .rec p, .rec li { color: #cfcdc7; }
+  .rec ul { padding-left: 18px; margin-top: 10px; }
+  .rec li + li { margin-top: 8px; }
+  .rec b { color: #fff; }
+  .rec a { color: #f2c866; }
+  .notes { margin: 56px 0 80px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 14px; color: var(--tx-3); max-width: 90ch; }
+  .notes p + p { margin-top: 8px; }
+  @media (max-width: 900px) {
+    .shots, .issues, .criteria, .prop, .rec, .pc { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .prop .img { border-right: 0; border-bottom: 1px solid var(--line); aspect-ratio: 16/10; }
+    table { display: block; overflow-x: auto; }
+  }
+  .model { margin-top: 28px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .model .issue h3 { display: block; }
+  .model code, td code, p code, li code { font: 500 13.5px "Geist Mono", monospace; background: #efede8; padding: 1px 5px; border-radius: 4px; }
+  .vs { margin-top: 28px; }
+  .vs td:first-child { font-weight: 600; white-space: nowrap; }
+  .ok { color: var(--ok); font-weight: 600; } .no { color: var(--no); font-weight: 600; }
+  .vocab { margin-top: 20px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .vocab div { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-size: 14px; color: var(--tx-2); }
+  .vocab b { display: block; color: var(--tx); font-size: 15px; }
+  .decisions { margin-top: 24px; counter-reset: d; }
+  .decisions li { list-style: none; counter-increment: d; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px 18px 64px; position: relative; }
+  .decisions li + li { margin-top: 12px; }
+  .decisions li::before { content: "D" counter(d); position: absolute; left: 20px; top: 18px; font: 600 14px "Geist Mono", monospace; color: var(--hi); }
+  .decisions h3 { font-size: 17px; }
+  .decisions p { color: var(--tx-2); font-size: 15px; margin-top: 4px; }
+  .decisions p b { color: var(--tx); }
+  @media (max-width: 900px) { .model, .vocab { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header class="doc"><div class="wrap">
+  <h1>Listas por tema: redefinir para qué sirve /lists</h1>
+  <p class="intro">Hoy <code>/lists</code> muestra listas ordenadas por el tipo de lo que contienen. Esta exploración propone que una lista declare <b>para qué existe</b> (su tema) y <b>de qué trata</b>, y que la página pase a ser un lugar para buscar listas por eso. Hay tres propuestas de página, una de creación y la recomendación.</p>
+  <p class="meta"><span>2026-11-22</span><span>Base de scratch: 70 listas</span><span>Mockups con datos de ejemplo</span><span>Continúa el rediseño en 3 fases del 2026-11-21 (Lector + exhibidor)</span></p>
+</div></header>
+<nav class="toc" aria-label="Secciones"><div class="wrap">
+  <a href="#problema">Problema</a><a href="#valor">Qué nos diferencia</a><a href="#modelo">Modelo</a><a href="#propuestas">Propuestas</a><a href="#crear">Creación</a><a href="#comparacion">Comparación</a><a class="cta" href="#recomendacion">Recomendación</a><a href="#decisiones">Decisiones</a>
+</div></nav>
+<main class="wrap">
+<section id="problema">
+  <h2>El problema</h2>
+  <p>El rediseño recién cerrado arregló cómo se ve una lista (filas, vista previa, exhibidor). Lo que sigue sin resolver es para qué sirve entrar a la página.</p>
+  <div class="stats">
+    <div class="stat"><b>70</b><span>listas en la base de scratch (91 menos 21 restos de smoke): 42 estándar, 26 Caminos, 1 Top N y 1 tier list</span></div>
+    <div class="stat"><b>~80 %</b><span>son de álbumes. Filtrar por tipo de ítem casi no separa nada</span></div>
+    <div class="stat"><b>0</b><span>campos que digan para qué existe una lista. El tema vive solo en el título</span></div>
+    <div class="stat"><b>8 de 11</b><span>listas públicas recientes ya llevan el tema en el título: «Para entrar a Jazz», «Cumplen años en noviembre», «Un disco por década»</span></div>
+  </div>
+  <div class="issues">
+    <div class="issue"><h3>Lo que el usuario quiso decir se pierde <span class="sev alta">alta</span></h3><ul>
+      <li>«Mis 10 recomendaciones de doom» solo se encuentra si alguien escribe esas palabras. No hay forma de pedir «todas las recomendaciones» o «guías de doom».</li>
+      <li>Las tres secciones (Populares, Recientes, Para completar) ordenan, pero <b>no clasifican</b>.</li>
+    </ul></div>
+    <div class="issue"><h3>La biblioteca no se aprovecha <span class="sev alta">alta</span></h3><ul>
+      <li>La pestaña Listas de un artista o disco es una lista plana de «aparece en». Mezcla una guía sobre la banda con una lista que la nombra de pasada.</li>
+      <li>No existe la relación «esta lista <b>trata sobre</b> Pink Floyd», que no es lo mismo que «contiene a Pink Floyd».</li>
+    </ul></div>
+    <div class="issue"><h3>El buscador solo mira títulos <span class="sev media">media</span></h3><ul>
+      <li>«Buscar listas por nombre o autor» no encuentra las listas que contienen un disco.</li>
+      <li>Buscar el nombre de un artista no reconoce la entidad, aunque la tenemos en el catálogo.</li>
+    </ul></div>
+    <div class="issue"><h3>Fixtures de smoke en la base de scratch <span class="sev media">media</span></h3><ul>
+      <li>La consulta encontró <b>21 listas «Smoke CHECK 3»</b> vacías, públicas y a nombre de @exploracion en <code>music_platform_scratch</code> (la base que usa <code>.env</code>), restos del smoke de la 0094. No afectan a la base real; se pueden limpiar con la sentencia de <code>smoke-tests.md</code>.</li>
+    </ul></div>
+  </div>
+</section>
+
+<section id="valor">
+  <h2>Qué podemos hacer que Spotify y Apple Music no hacen</h2>
+  <p>Una playlist sirve para escuchar. Una lista nuestra sirve para orientarse. La diferencia tiene que verse en la página, no solo en el texto de la portada.</p>
+  <table class="vs">
+    <thead><tr><th>Capacidad</th><th>Playlist de streaming</th><th>Lista aquí</th></tr></thead>
+    <tbody>
+      <tr><td>Álbumes y artistas como ítem</td><td class="no">No: solo canciones</td><td class="ok">Sí: «10 discos para entender el post-rock»</td></tr>
+      <tr><td>Para qué existe la lista</td><td>Texto libre en el título</td><td class="ok">Tema declarado y filtrable</td></tr>
+      <tr><td>De qué trata</td><td class="no">No existe</td><td class="ok">«Sobre» un artista o un género, enlazado a su ficha</td></tr>
+      <tr><td>Saltar del ítem al contexto</td><td>A la página del artista, sin más</td><td class="ok">Discografía, créditos, integrantes, género</td></tr>
+      <tr><td>Saber qué ya escuchaste</td><td class="no">No sabe si escuchaste el disco entero</td><td class="ok">«5 sin escuchar», «2 de 7 escuchados»</td></tr>
+      <tr><td>Por qué está cada ítem</td><td class="no">No</td><td class="ok">Nota opcional por ítem</td></tr>
+      <tr><td>En qué listas aparece algo</td><td class="no">No</td><td class="ok">Pestaña Listas de cada ficha, agrupada por tema</td></tr>
+      <tr><td>Depende del catálogo de streaming</td><td>Sí</td><td class="ok">No: ediciones y artistas fuera de plataforma</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="modelo">
+  <h2>El modelo: tres ejes, una sola tabla</h2>
+  <p>Ningún tema es una entidad aparte. Todo sigue siendo <code>user_list</code>. La clave es separar lo que el usuario <b>declara</b> de lo que el sistema <b>calcula</b>, para no terminar con «recomendaciones», «Recomendados» y «recs» como tres temas distintos.</p>
+  <div class="model">
+    <div class="issue"><h3>1 · Tema (declarado)</h3><ul>
+      <li>Vocabulario <b>cerrado</b> de 9 temas + «Otro». Columna <code>theme</code> con <code>CHECK</code>, igual que <code>kind</code>.</li>
+      <li>Uno por lista, obligatorio al crear. Las listas existentes quedan en <code>NULL</code> = «Sin tema». No se deduce del título.</li>
+      <li>Es ortogonal a <code>kind</code>: un Top N puede ser «Recomendaciones».</li>
+    </ul></div>
+    <div class="issue"><h3>2 · Sobre qué (declarado, opcional)</h3><ul>
+      <li>Un artista <b>o</b> un género: <code>subject_artist_id</code> / <code>subject_genre_id</code> con <code>CHECK num_nonnulls ≤ 1</code>.</li>
+      <li>Alimenta «Guías sobre X» en la ficha, aparte de «Aparece en».</li>
+      <li>Se puede sugerir a partir del título, pero solo queda guardado si el usuario lo confirma.</li>
+    </ul></div>
+    <div class="issue"><h3>3 · Facetas (calculadas)</h3><ul>
+      <li>Género, década y país <b>de los ítems</b>. Nadie las escribe.</li>
+      <li>Los géneros heredados ya están materializados (ADR 0028). Si la consulta resulta cara, se agrega una tabla derivada <code>user_list_facet</code>.</li>
+      <li>«Recomendaciones + doom + 1990s» funciona sin que nadie etiquete a mano.</li>
+    </ul></div>
+  </div>
+  <div class="vocab">
+    <div><b>Por dónde empezar</b>guía de entrada</div><div><b>Recomendaciones</b>lo que pondrías en la mano</div><div><b>Ranking personal</b>lo mejor de algo, en orden</div><div><b>Joyas ocultas</b>lo poco escuchado</div><div><b>Para un momento</b>ánimo, hora, actividad</div>
+    <div><b>Historia y contexto</b>escenas, cronologías</div><div><b>Conexiones</b>influencias, «si te gusta X»</div><div><b>Balance del año</b>un año o una década</div><div><b>Curiosidades</b>portadas, conceptos</div><div><b>Otro</b>aparece solo en «Todas»</div>
+  </div>
+  <p class="note">Por qué no usar etiquetas libres: con 70 listas, una folksonomía libre deja casi todas las etiquetas con 1 o 2 listas, y la página por tema queda vacía. El vocabulario cerrado se puede ampliar con una migración cuando «Otro» muestre un patrón.</p>
+</section>
+
+<section id="propuestas">
+  <h2>Tres propuestas para la página</h2>
+  <p>Las tres usan el mismo modelo y el sistema visual vigente, y reaprovechan las filas y la vista previa del Lector. Cambia por dónde se entra.</p>
+  <div class="props">
+    <article class="prop"><a class="img" href="a-puertas.html"><img src="shots/a.png" alt="Propuesta A, Puertas"></a><div class="body">
+      <h3>A · Puertas</h3><p class="thesis">La portada es un índice de temas. Cada tema es una puerta a su propia página (<code>/lists/temas/&lt;tema&gt;</code>) con filtros laterales por «sobre», género, década y tipo.</p>
+      <div class="tags"><span>Índice de temas</span><span>Página por tema</span><span>Estante «Por dónde empezar con…»</span></div>
+      <div class="pc"><div class="pro"><h4>A favor</h4><ul><li>Responde de un vistazo «qué tipo de listas hay»</li><li>URLs por tema, fáciles de compartir e indexar</li><li>Funciona bien con pocos datos: las puertas siempre existen</li></ul></div><div class="con"><h4>En contra</h4><ul><li>La búsqueda queda como un accesorio</li><li>Dos niveles antes de ver una lista</li><li>Con un tema vacío, la puerta promete y no cumple</li></ul></div></div>
+      <a class="open" href="a-puertas.html">Abrir A →</a></div></article>
+    <article class="prop"><a class="img" href="b-buscador.html"><img src="shots/b.png" alt="Propuesta B, Buscador"></a><div class="body">
+      <h3>B · Buscador</h3><p class="thesis">La página es una búsqueda con facetas. Reconoce la entidad que escribes y separa las listas que <b>tratan sobre</b> eso de las que <b>lo contienen</b>, con el lugar que ocupa en cada una. Sin búsqueda muestra estantes por tema.</p>
+      <div class="tags"><span>Búsqueda en el contenido</span><span>Sobre vs contiene</span><span>Facetas en una barra</span><span>Vista previa con notas y escuchados</span></div>
+      <div class="pc"><div class="pro"><h4>A favor</h4><ul><li>Resuelve el caso de origen: encontrar «recomendaciones de X» sin conocer el título</li><li>Aprovecha el catálogo (resolución de entidad, posición del ítem)</li><li>Reutiliza el Lector casi entero</li></ul></div><div class="con"><h4>En contra</h4><ul><li>Lo más costoso: búsqueda en ítems + resolución de entidad</li><li>Sin búsqueda se parece a A, pero más plano</li></ul></div></div>
+      <a class="open" href="b-buscador.html">Abrir B →</a></div></article>
+    <article class="prop"><a class="img" href="c-biblioteca.html"><img src="shots/c.png" alt="Propuesta C, Biblioteca"></a><div class="body">
+      <h3>C · Biblioteca</h3><p class="thesis">Un fichero al estilo Metal Archives: árbol de géneros (o artistas A–Z), una matriz de temas con conteos y una tabla densa y ordenable. La otra mitad está en las fichas: la pestaña Listas pasa a «Guías sobre X» + «Aparece en», por tema.</p>
+      <div class="tags"><span>Árbol de géneros</span><span>Tabla ordenable</span><span>Pestaña Listas en las fichas</span></div>
+      <div class="pc"><div class="pro"><h4>A favor</h4><ul><li>Lo más fiel a la visión de biblioteca</li><li>La pestaña de las fichas sirve con cualquier variante</li><li>Densidad alta para quien ya sabe lo que busca</li></ul></div><div class="con"><h4>En contra</h4><ul><li>Frío para quien llega sin sesión</li><li>Depende de que el género de cada lista sea claro (hay que definir «mayormente»)</li><li>La tabla se degrada en el teléfono</li></ul></div></div>
+      <a class="open" href="c-biblioteca.html">Abrir C →</a></div></article>
+  </div>
+</section>
+
+<section id="crear">
+  <h2>Creación y listas existentes</h2>
+  <p>Vale para cualquier variante. Al crear una lista, el tema es obligatorio (con «Otro») y el «sobre» es opcional y se sugiere. Un panel explica dónde va a aparecer la lista. Las listas que ya existen quedan sin tema y el dueño las clasifica con un toque desde <code>/me/lists</code>. La nota por ítem entra después, en el editor.</p>
+  <div class="shots"><figure><a href="crear.html"><img src="shots/crear.png" alt="Formulario de nueva lista con tema"></a><figcaption>Nueva lista: tema en cuadrícula, «sobre» confirmado y dónde aparecerá.</figcaption></figure><figure><a href="crear.html"><img src="shots/crear-390.png" alt="Formulario a 390 px"></a><figcaption>390 px: la cuadrícula de temas pasa a dos columnas.</figcaption></figure></div>
+</section>
+
+<section id="comparacion">
+  <h2>Comparación</h2>
+  <table>
+    <thead><tr><th>Criterio</th><th>A · Puertas</th><th>B · Buscador</th><th>C · Biblioteca</th></tr></thead>
+    <tbody>
+      <tr><td>Encontrar «recomendaciones de X» sin saber el título</td><td class="s">media</td><td class="s">alta</td><td class="s">media</td></tr>
+      <tr><td>Explicar qué hay a quien llega sin sesión</td><td class="s">alta</td><td class="s">media</td><td class="s">baja</td></tr>
+      <tr><td>Aprovecha la navegación de biblioteca</td><td class="s">media</td><td class="s">alta</td><td class="s">alta</td></tr>
+      <tr><td>Aguanta con pocos datos (70 listas)</td><td class="s">media</td><td class="s">alta</td><td class="s">baja</td></tr>
+      <tr><td>Teléfono</td><td class="s">alta</td><td class="s">alta</td><td class="s">media</td></tr>
+      <tr><td>Reutiliza lo recién construido</td><td class="s">media</td><td class="s">alta</td><td class="s">baja</td></tr>
+      <tr><td>Costo</td><td class="s">medio</td><td class="s">alto</td><td class="s">alto</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="recomendacion">
+  <div class="rec">
+    <div><h3>Recomendación: B como página, con las puertas de A y la pestaña de C</h3></div>
+    <div>
+      <p>El caso que origina el cambio es encontrar una lista por lo que es y por lo que contiene. Eso lo resuelve B. A y C aportan piezas que B necesita:</p>
+      <ul>
+        <li><b>Sin búsqueda</b>, en vez de estantes planos, las <b>puertas de A</b> con el «Por dónde empezar con…». Las páginas por tema son las mismas facetas de B con la URL fijada (<code>/lists?tema=…</code> o <code>/lists/temas/…</code>).</li>
+        <li>La <b>pestaña Listas de las fichas</b> de C («Guías sobre X» + «Aparece en» por tema), que es donde la biblioteca suma más.</li>
+        <li>La tabla densa de C queda para <code>/search/advanced</code> si algún día se suma una pestaña Listas.</li>
+      </ul>
+      <p style="margin-top:14px">Orden en 3 fases: <b>1</b> modelo (tema + sobre, migración, creación, clasificar existentes, filtro por tema en el Lector actual) · <b>2</b> página buscador (búsqueda en el contenido, resolución de entidad, facetas calculadas, puertas) · <b>3</b> fichas (pestaña Listas por tema) + nota por ítem.</p>
+    </div>
+  </div>
+</section>
+
+<section id="decisiones">
+  <h2>Decisiones abiertas</h2>
+  <ol class="decisions">
+    <li><h3>Listas mixtas</h3><p>«Mis 10 recomendaciones» suele mezclar bandas y discos, y hoy una lista es de un solo tipo (decisión cerrada en <code>add-favorites-and-lists</code>). <b>Recomendado:</b> mantenerlo en este cambio y reabrirlo aparte. El tema no depende de eso.</p></li>
+    <li><h3>Vocabulario de temas</h3><p>Los 9 + «Otro» de arriba. <b>Recomendado:</b> aceptarlos como base y revisar los nombres («Balance del año» o «Lo mejor del año»; «Curiosidades» o «Temáticas»).</p></li>
+    <li><h3>Tema obligatorio u opcional al crear</h3><p><b>Recomendado:</b> obligatorio, con «Otro». Los Caminos, Top N y tier lists reciben uno por defecto (Caminos → «Por dónde empezar»; Top/tier → «Ranking personal») que el dueño puede cambiar.</p></li>
+    <li><h3>Qué listas cuentan para «sobre un género»</h3><p>Solo el «sobre» declarado, o también listas cuyos ítems son «mayormente» de ese género. <b>Recomendado:</b> en la ficha, solo el declarado («Guías sobre»); en la búsqueda, ambos, con la faceta calculada claramente separada.</p></li>
+    <li><h3>Nota por ítem</h3><p>Está en el backlog y es lo que vuelve útil una recomendación. <b>Recomendado:</b> fase 3, hasta 140 caracteres, visible en el detalle y en la vista previa.</p></li>
+    <li><h3>Ruta de las páginas por tema</h3><p><code>/lists/temas/&lt;slug&gt;</code> (indexable, con título propio) o <code>/lists?tema=</code>. <b>Recomendado:</b> ruta propia, que comparte componente con la búsqueda.</p></li>
+  </ol>
+</section>
+
+<div class="notes">
+  <p>Mockups estáticos con datos de ejemplo; las carátulas son recortes de 224 px del mosaico de la portada (dentro del límite de 250 px). Conteos por tema inventados para ilustrar. Los datos reales del encabezado salen de una consulta de solo lectura a la base de scratch del 2026-11-22.</p>
+  <p>Archivos: <code>a-puertas.html</code>, <code>b-buscador.html</code>, <code>c-biblioteca.html</code>, <code>crear.html</code>; estilos <code>base.css</code> (copiado de los mockups de Listas) y <code>themes.css</code>.</p>
+</div>
+</main>
+</body>
+</html>

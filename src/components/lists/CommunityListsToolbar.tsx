@@ -6,15 +6,16 @@ import { usePathname, useRouter, useSearchParams } from "@/i18n/navigation";
 import { FilterSelect } from "@/components/ui/FilterSelect";
 import { entityTypeKey } from "./lists-shared";
 import type { PublicListSort } from "./community-filters";
-import { COMMUNITY_ENTITY_TYPES, PUBLIC_LIST_SORTS_UI } from "./community-filters";
+import { COMMUNITY_ENTITY_TYPES, COMMUNITY_LIST_THEMES, PUBLIC_LIST_SORTS_UI } from "./community-filters";
 
 // Toolbar de exploración de `/lists` (cambio rework-public-lists-surface).
-// Siempre visible; escribe el estado en la URL (`?q&type&sort`) para que sea
+// Siempre visible; escribe el estado en la URL (`?q&type&theme&sort`) para que sea
 // enlazable y sobreviva a la recarga. El texto se debouncea 300 ms; los selects
 // navegan al instante. Cualquier filtro activo lleva la página al modo explorar
 // (ver `page.tsx`).
 export function CommunityListsToolbar() {
   const t = useTranslations("lists");
+  const tTheme = useTranslations("lists.theme");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -22,10 +23,13 @@ export function CommunityListsToolbar() {
 
   const currentQ = searchParams.get("q") ?? "";
   const currentType = searchParams.get("type") ?? "";
+  // Un tema desconocido en la URL se ignora (openspec: add-list-themes-phase1).
+  const rawTheme = searchParams.get("theme") ?? "";
+  const currentTheme = (COMMUNITY_LIST_THEMES as readonly string[]).includes(rawTheme) ? rawTheme : "";
   const sortParam = searchParams.get("sort") as PublicListSort | null;
   // En la vitrina el orden no tiene valor (redesign-lists-page, D4): mostrar "Recientes" daba a entender que toda la página
   // estaba ordenada así. En explorar sin `sort`, el orden efectivo es el cronológico.
-  const inExplore = Boolean(currentQ || currentType || sortParam);
+  const inExplore = Boolean(currentQ || currentType || currentTheme || sortParam);
   const currentSort: PublicListSort | "" = sortParam ?? (inExplore ? "recent" : "");
   const [searchInput, setSearchInput] = useState(currentQ);
   // Último `q` que escribió este campo. Si la URL cambia a otro valor por fuera (el "Limpiar filtros" del rótulo de la
@@ -75,7 +79,7 @@ export function CommunityListsToolbar() {
       role="search"
       aria-label={t("community.searchLabel")}
       onSubmit={(event) => event.preventDefault()}
-      className="grid w-full grid-cols-[minmax(0,1fr)_auto] gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto]"
+      className="grid w-full grid-cols-[minmax(0,1fr)_auto] gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto_auto]"
     >
       <div className="relative w-full">
         <svg
@@ -122,6 +126,24 @@ export function CommunityListsToolbar() {
             );
           })}
         </div>
+        {/* Tema (openspec: add-list-themes-phase1): desde `lg` entre los segmentos y el orden; por debajo, fila propia. */}
+        <div className="col-span-2 row-start-3 lg:col-span-1 lg:col-start-3 lg:row-start-1">
+          <FilterSelect
+            value={currentTheme}
+            onChange={(value) => update({ theme: value || undefined })}
+            ariaLabel={tTheme("filterLabel")}
+            widthClassName="h-11 w-full lg:w-[22ch]"
+            variant="boxed"
+          >
+            <option value="">{tTheme("filterAll")}</option>
+            {COMMUNITY_LIST_THEMES.map((theme) => (
+              <option key={theme} value={theme}>
+                {tTheme(`names.${theme}`)}
+              </option>
+            ))}
+          </FilterSelect>
+        </div>
+        <div className="col-start-2 row-start-1 lg:col-start-4">
         <FilterSelect
           value={currentSort}
           onChange={(value) => update({ sort: value || undefined })}
@@ -140,6 +162,7 @@ export function CommunityListsToolbar() {
             </option>
           ))}
         </FilterSelect>
+        </div>
         {/* "Limpiar filtros" vive en el rótulo de la grilla de explorar (D4), que solo existe con filtros activos. */}
     </form>
   );

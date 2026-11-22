@@ -5,13 +5,14 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { updateList } from "@/lib/api/lists";
-import type { DiaryAudience, UserListDetail } from "@/lib/api/schemas";
+import type { DiaryAudience, ListSubject, ListTheme, UserListDetail } from "@/lib/api/schemas";
+import { ListSubjectPicker, ListThemePicker, subjectFields } from "./ListThemeFields";
 import { entityTypeKey } from "./lists-shared";
 
 const AUDIENCES: DiaryAudience[] = ["private", "followers", "public"];
 
 interface ListMetaFormProps {
-  list: Pick<UserListDetail, "id" | "title" | "description" | "audience" | "entityType">;
+  list: Pick<UserListDetail, "id" | "title" | "description" | "audience" | "entityType" | "theme" | "subject">;
   onSaved: (list: UserListDetail) => void;
   onCancel: () => void;
   /** Sin caja propia: dentro de un diálogo, que ya enmarca el formulario. */
@@ -25,6 +26,9 @@ export function ListMetaForm({ list, onSaved, onCancel, bare = false }: ListMeta
   const [title, setTitle] = useState(list.title);
   const [description, setDescription] = useState(list.description ?? "");
   const [audience, setAudience] = useState<DiaryAudience>(list.audience);
+  // El tema se cambia, no se quita; el "sobre" sí (openspec: add-list-themes-phase1).
+  const [theme, setTheme] = useState<ListTheme | null>(list.theme);
+  const [subject, setSubject] = useState<ListSubject | null>(list.subject);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
 
@@ -37,6 +41,8 @@ export function ListMetaForm({ list, onSaved, onCancel, bare = false }: ListMeta
           title,
           description: description.trim() === "" ? null : description,
           audience,
+          ...(theme ? { theme } : {}),
+          ...subjectFields(subject),
         }),
       );
     } catch {
@@ -59,6 +65,8 @@ export function ListMetaForm({ list, onSaved, onCancel, bare = false }: ListMeta
           className="rounded border border-ink-border bg-ink px-3 py-2 font-body text-sm text-paper"
         />
       </label>
+      <ListThemePicker name={`list-theme-${list.id}`} value={theme} onChange={setTheme} />
+      <ListSubjectPicker value={subject} onChange={setSubject} />
       <fieldset>
         <legend className="font-data text-sm text-paper">{t("audienceLabel")}</legend>
         <div className="mt-2 flex flex-wrap items-center gap-2">

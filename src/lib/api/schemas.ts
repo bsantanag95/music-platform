@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { routing } from "@/i18n/routing";
 import { GENRE_SLUG_PATTERN } from "@/services/genres/slug";
+import { LIST_THEMES } from "@/services/lists/types";
 import {
   isSingleLine,
   isValidTimezone,
@@ -1832,12 +1833,30 @@ export const ListTargetSchema = z.object({
 });
 export type ListTarget = z.infer<typeof ListTargetSchema>;
 
+// Tema y "sobre qué" de una lista (openspec: add-list-themes-phase1). Vocabulario cerrado en LIST_THEMES.
+export const ListThemeSchema = z.enum(LIST_THEMES);
+export type ListTheme = z.infer<typeof ListThemeSchema>;
+
+export const ListSubjectSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("artist"), id: z.uuid(), name: z.string() }),
+  z.object({
+    type: z.literal("genre"),
+    id: z.uuid(),
+    slug: z.string(),
+    name: z.string(),
+    nameEs: z.string().nullable(),
+  }),
+]);
+export type ListSubject = z.infer<typeof ListSubjectSchema>;
+
 export const UserListSummarySchema = z.object({
   id: z.uuid(),
   entityType: ListEntityTypeSchema,
   title: z.string(),
   description: z.string().nullable(),
   audience: DiaryAudienceSchema,
+  theme: ListThemeSchema.nullable(),
+  subject: ListSubjectSchema.nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
   itemCount: z.number().int(),
@@ -2004,12 +2023,25 @@ export const LaminaSourceOptionsSchema = z.object({
 });
 export type LaminaSourceOptions = z.infer<typeof LaminaSourceOptionsSchema>;
 
-export const CreateListRequestSchema = z.object({
-  entityType: ListEntityTypeSchema,
-  title: z.string().trim().min(1).max(100),
-  description: z.string().trim().max(500).nullable().optional(),
-  audience: DiaryAudienceSchema.optional(),
-});
+// Un "sobre" es un artista o un género, nunca los dos con valor.
+const subjectFields = {
+  subjectArtistId: z.uuid().nullable().optional(),
+  subjectGenreId: z.uuid().nullable().optional(),
+};
+const singleSubject = (value: { subjectArtistId?: string | null; subjectGenreId?: string | null }) =>
+  !(value.subjectArtistId && value.subjectGenreId);
+
+export const CreateListRequestSchema = z
+  .object({
+    entityType: ListEntityTypeSchema,
+    title: z.string().trim().min(1).max(100),
+    description: z.string().trim().max(500).nullable().optional(),
+    audience: DiaryAudienceSchema.optional(),
+    // Obligatorio al crear (openspec: add-list-themes-phase1).
+    theme: ListThemeSchema,
+    ...subjectFields,
+  })
+  .refine(singleSubject, { message: "Una lista trata sobre un artista o un género, no ambos" });
 export type CreateListRequest = z.infer<typeof CreateListRequestSchema>;
 
 export const UpdateListRequestSchema = z
@@ -2017,10 +2049,14 @@ export const UpdateListRequestSchema = z
     title: z.string().trim().min(1).max(100).optional(),
     description: z.string().trim().max(500).nullable().optional(),
     audience: DiaryAudienceSchema.optional(),
+    // Se puede cambiar, nunca volver a null (openspec: add-list-themes-phase1).
+    theme: ListThemeSchema.optional(),
+    ...subjectFields,
   })
   .refine((changes) => Object.keys(changes).length > 0, {
     message: "Debe indicarse al menos un campo a modificar",
-  });
+  })
+  .refine(singleSubject, { message: "Una lista trata sobre un artista o un género, no ambos" });
 export type UpdateListRequest = z.infer<typeof UpdateListRequestSchema>;
 
 export const AddListItemRequestSchema = z.object({
@@ -2070,7 +2106,11 @@ export const ListTypeCountsSchema = z.object({
 export type ListTypeCounts = z.infer<typeof ListTypeCountsSchema>;
 
 // Listas propias (`/me/lists`): la página, más las cifras por tipo para los segmentos y el total de la pestaña.
-export const MyListsResponseSchema = ListsListResponseSchema.extend({ counts: ListTypeCountsSchema });
+export const MyListsResponseSchema = ListsListResponseSchema.extend({
+  counts: ListTypeCountsSchema,
+  /** Listas propias sin tema, para el aviso de clasificación (openspec: add-list-themes-phase1). */
+  unthemedCount: z.number().int(),
+});
 export type MyListsResponse = z.infer<typeof MyListsResponseSchema>;
 
 // Listado de las listas visibles de un perfil: además de la página trae el
@@ -2140,6 +2180,8 @@ export const DiscoverListSummarySchema = z.object({
   itemCount: z.number().int(),
   coverThumbs: z.array(z.string()),
   owner: ListOwnerSchema,
+  theme: ListThemeSchema.nullable(),
+  subject: ListSubjectSchema.nullable(),
   isOfficial: z.boolean(),
   saved: z.boolean(),
   following: z.boolean(),
@@ -3081,7 +3123,7 @@ export type MyRatingsListResponse = z.infer<typeof MyRatingsListResponseSchema>;
 
 // GET /api/genres/search (openspec: show-genres): géneros de estilo que coinciden con el texto.
 export const GenreSearchResponseSchema = z.object({
-  genres: z.array(z.object({ slug: z.string(), name: z.string(), nameEs: z.string().nullable() })),
+  genres: z.array(z.object({ id: z.uuid(), slug: z.string(), name: z.string(), nameEs: z.string().nullable() })),
 });
 export type GenreSearchResponse = z.infer<typeof GenreSearchResponseSchema>;
 

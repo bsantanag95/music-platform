@@ -130,14 +130,14 @@ async function main() {
     check((await s.social.getCommentPermalink(randomUUID(), null)) === null, "un comentario inexistente no da error");
 
     console.log("Lista");
-    const list = await s.lists.createList({ ownerId: author.id, entityType: "release-group", title: "Mis discos", audience: "public" });
+    const list = await s.lists.createList({ theme: "recommendations", ownerId: author.id, entityType: "release-group", title: "Mis discos", audience: "public" });
     await s.lists.addItemToList(list.id, author.id, { type: "release-group", id: album.id });
     const listTarget = await load("list", list.id, "es");
     check(listTarget?.card.meta[0] === "1 disco" && listTarget.card.subtitle === `@${author.username}`, "título, dueño y cantidad");
     check(listTarget?.canonicalPath.startsWith(`/es/users/${author.username}/lists/`), "apunta a la vista pública");
-    const followersList = await s.lists.createList({ ownerId: author.id, entityType: "release-group", title: "Para seguidores", audience: "followers" });
+    const followersList = await s.lists.createList({ theme: "recommendations", ownerId: author.id, entityType: "release-group", title: "Para seguidores", audience: "followers" });
     check((await load("list", followersList.id, "es")) === null, "una lista para seguidores no tiene objetivo");
-    const artistList = await s.lists.createList({ ownerId: author.id, entityType: "artist", title: "Bandas", audience: "public" });
+    const artistList = await s.lists.createList({ theme: "recommendations", ownerId: author.id, entityType: "artist", title: "Bandas", audience: "public" });
     await s.lists.addItemToList(artistList.id, author.id, { type: "artist", id: art.id });
     check((await load("list", artistList.id, "es"))?.card.media.type === "typographic", "una lista de artistas es tipográfica");
 

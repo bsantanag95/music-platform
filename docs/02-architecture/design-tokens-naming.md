@@ -60,3 +60,23 @@ Dos variables, mismo valor, sin comentario que justifique la duplicación. Esto 
 2. Si no hay usos: eliminar directamente.
 3. Si hay usos: migrar a `--color-amber` en la misma tanda de cambios, o aplicar el alias temporal de arriba y trackear la remoción como tarea pendiente en `04-risks.md` o en el checklist de OpenSpec correspondiente.
 4. Añadir esta tabla de mapeo (o un link a este documento) en `design-system.md`, sección Colores, para que quede visible junto a los nombres creativos.
+
+## Tokens de componente: chip de tema de lista
+
+Cambio `add-list-themes-phase1`. Diez tonos que solo usa el chip de tema de lista (`ListThemeChip`), uno por valor
+del vocabulario cerrado de temas (`LIST_THEMES`). No son roles del sistema ni acentos: el ámbar sigue siendo el único
+acento de acción. El chip pinta el texto en el tono y el fondo con el mismo tono al 14 %; el nombre del tema siempre
+acompaña al color. Contraste medido sobre `--color-ink`: entre 5,7:1 (`other`) y 8,0:1 (`history`).
+
+| Tema (`theme`) | Variable CSS | Hex |
+|---|---|---|
+| `start_here` | `--color-list-theme-start-here` | `#e8b84b` |
+| `recommendations` | `--color-list-theme-recommendations` | `#8fc1a0` |
+| `personal_ranking` | `--color-list-theme-personal-ranking` | `#e89a6b` |
+| `hidden_gems` | `--color-list-theme-hidden-gems` | `#c9a0dc` |
+| `moment` | `--color-list-theme-moment` | `#7fb2d9` |
+| `history` | `--color-list-theme-history` | `#d6c08f` |
+| `connections` | `--color-list-theme-connections` | `#8fc4c4` |
+| `year_review` | `--color-list-theme-year-review` | `#e3a3a3` |
+| `curiosities` | `--color-list-theme-curiosities` | `#b9b39a` |
+| `other` | `--color-list-theme-other` | `#a89e8e` |

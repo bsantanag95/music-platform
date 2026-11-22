@@ -4,7 +4,7 @@ import { MIN_ALBUMS_FOR_SECTION } from "../constants";
 const mocks = vi.hoisted(() => ({ db: { select: vi.fn(), transaction: vi.fn() } }));
 vi.mock("@/db", () => ({ db: mocks.db }));
 
-import { userListFeatured } from "@/db/schema";
+import { userList, userListFeatured } from "@/db/schema";
 
 import type { CoverResolver } from "./covers";
 import { generateCollection, previewCollection } from "./generate";
@@ -51,6 +51,7 @@ describe("generateCollection", () => {
     // `anniversaries` declara `ephemeris` en el registro (migración 0071: la familia vive en la fila).
     const template = { ...templateReturning(Array.from({ length: 8 }, (_, i) => `a${i}`)), key: "anniversaries" };
     const featured: Record<string, unknown>[] = [];
+    const lists: Record<string, unknown>[] = [];
     // La cuenta curadora, que `generateCollection` resuelve antes de abrir la transacción.
     mocks.db.select.mockReturnValue({
       from: () => ({ where: () => ({ limit: async () => [{ id: "curator" }] }) }),
@@ -62,6 +63,7 @@ describe("generateCollection", () => {
         insert: (table: unknown) => ({
           values: (values: Record<string, unknown>) => {
             if (table === userListFeatured) featured.push(values);
+            if (table === userList) lists.push(values);
             return { returning: async () => [{ id: "lista" }] };
           },
         }),
@@ -73,6 +75,9 @@ describe("generateCollection", () => {
     await expect(generateCollection(template, new Date(), covers)).resolves.toMatchObject({ status: "generated" });
     expect(featured).toHaveLength(1);
     expect(featured[0]).toMatchObject({ source: "template", templateKey: "anniversaries", family: "ephemeris" });
+    // Sin tema hasta la fase 2: la familia es su clasificación (openspec: add-list-themes-phase1).
+    expect(lists).toHaveLength(1);
+    expect(lists[0]).not.toHaveProperty("theme");
   });
 
   it("una plantilla que se omite explica el motivo", async () => {

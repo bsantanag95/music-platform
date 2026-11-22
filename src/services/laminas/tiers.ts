@@ -265,7 +265,7 @@ export async function createTierList(
     // Armada desde una fuente: nace privada, como un Top N desde una fuente. Publicarla es un gesto aparte.
     const [row] = await tx
       .insert(userList)
-      .values({ ownerId, entityType: params.entityType, title, audience: "private", kind: "tier", tierLabels: labels })
+      .values({ ownerId, entityType: params.entityType, title, audience: "private", kind: "tier", tierLabels: labels, theme: "personal_ranking" })
       .returning();
     if (!row) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo crear la tier list");
     await tx

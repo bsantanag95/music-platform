@@ -196,7 +196,7 @@ export async function createLamina(
   const created = await db.transaction(async (tx) => {
     const [row] = await tx
       .insert(userList)
-      .values({ ownerId, entityType: params.entityType, title: normalizeTitle(params.title), audience, kind: "top", laminaFormat: params.format })
+      .values({ ownerId, entityType: params.entityType, title: normalizeTitle(params.title), audience, kind: "top", laminaFormat: params.format, theme: "personal_ranking" })
       .returning();
     if (!row) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo crear la Lámina");
     if (fromSource) await tx.insert(userListItem).values(itemRows(row.id, params.entityType, targetIds, 0));

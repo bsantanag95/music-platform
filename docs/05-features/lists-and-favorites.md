@@ -106,6 +106,47 @@ Mantiene el mundo visual vigente ("The Vinyl Listening Room") y los principios d
 - Visibilidad por audiencia; las listas ajenas se filtran por la matriz de visibilidad (bloqueos,
   perfil privado, relación de seguimiento).
 
+## Tema y "sobre qué" (cambio `add-list-themes-phase1`)
+
+Exploración del 2026-11-22 (`mockups/lists-themes-2026-11/`): una lista no decía para qué existía, así que
+"Mis 10 recomendaciones de doom" solo se encontraba por su título. Se eligió redefinir `/lists` como un buscador por tema
+y contenido (propuesta B), con las puertas por tema de A y la pestaña Listas por tema de las fichas (C), en tres fases.
+
+- **Tema**: vocabulario cerrado de diez valores, en este orden: Por dónde empezar (`start_here`), Recomendaciones
+  (`recommendations`), Ranking personal (`personal_ranking`), Joyas ocultas (`hidden_gems`), Para un momento (`moment`),
+  Historia y contexto (`history`), Conexiones (`connections`), Balance del año (`year_review`), Curiosidades
+  (`curiosities`) y Otro (`other`). Uno por lista. No hay etiquetas libres: con pocas listas se fragmentan y la página
+  por tema queda vacía; ampliar el vocabulario es una migración nueva.
+- **Obligatorio al crear** (formulario, panel rápido "Nueva lista" y API), sin preselección; se puede cambiar, no quitar.
+  Las listas anteriores quedan **sin tema** (`NULL`): `/me/lists` avisa cuántas son y deja asignar el tema con un toque.
+  Nunca se deduce del título.
+- **Altas del sistema**: Camino y recorrido de artista → Por dónde empezar (el recorrido, con su artista como "sobre");
+  Top N y tier list → Ranking personal. Colecciones generadas y borradores editoriales siguen sin tema hasta la fase 2.
+- **"Sobre qué"**: opcional, un artista **o** un género, independiente del contenido ("Pink Floyd, de a poco" trata sobre
+  Pink Floyd). Se ve como "sobre <nombre>" enlazado a la ficha.
+- **Presentación**: chip con el nombre del tema y un tono propio (tokens `--color-list-theme-*`) en las filas y la vista
+  previa del Lector de `/lists`, el encabezado del detalle y las tarjetas de `/me/lists`. Las listas sin tema no muestran
+  chip en público.
+- **Filtro**: el toolbar de `/lists` suma un selector "Tema" (`?theme=`).
+
+Decisiones de la exploración (D1–D6, tomadas con la recomendación):
+
+1. Las listas siguen siendo de un solo tipo de entidad; las mixtas se tratan aparte.
+2. Vocabulario de 9 temas + Otro (arriba).
+3. Tema obligatorio al crear; altas del sistema con tema por defecto; las existentes, sin tema.
+4. En la ficha, "Guías sobre X" usa solo el "sobre" declarado; la búsqueda usará además las facetas calculadas.
+5. Nota por ítem de hasta 140 caracteres (fase 3).
+6. Páginas por tema en `/lists/temas/<slug>` (fase 2).
+
+Plan en tres fases:
+
+1. **`add-list-themes-phase1`**: el dato (migración `0098`), creación y edición, clasificación, chip y filtro en el Lector.
+2. **Buscador**: búsqueda en título, descripción y contenido con resolución de entidad ("Tratan sobre" / "Contienen", con
+   la posición del ítem), facetas calculadas (género, década), puertas por tema sin búsqueda y `/lists/temas/<slug>`, tema
+   de colecciones generadas y borradores editoriales.
+3. **Fichas y notas**: pestaña Listas de artista, álbum, canción y género con "Guías sobre X" y "Aparece en" por tema;
+   nota por ítem.
+
 ## Decisiones cerradas (antes del cambio)
 
 - Favorito en tres niveles (artista/álbum/canción) — contradice la definición anterior del
@@ -334,9 +375,6 @@ Se eligió la propuesta «B · Lector» con el exhibidor y la banda de «A · Ca
 - **Listas rankeadas vs. sin orden:** toggle de presentación para mostrar la lista numerada
   (ranking) o como colección sin jerarquía. El orden manual de ítems ya existe; esto es solo
   cómo se presenta.
-- **Temas / etiquetas de lista:** taxonomía ligera (p. ej. "por década", "shoegaze",
-  "regalos") para agrupar las listas propias y para alimentar el filtrado de Descubrir sin
-  recurrir a recomendación algorítmica.
 - **Clonar / derivar una lista ajena:** partir de una lista pública como base de una lista
   propia, con atribución visible al autor original.
 - **Listas colaborativas:** propiedad compartida entre varios usuarios (varios editores,

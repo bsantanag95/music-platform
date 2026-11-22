@@ -48,6 +48,8 @@ function list(overrides: Partial<UserListSummary> = {}): UserListSummary {
     description: null,
     audience: "followers",
     createdAt: "2026-01-01T00:00:00.000Z",
+    theme: null,
+    subject: null,
     updatedAt: "2026-01-01T00:00:00.000Z",
     itemCount: 3,
     coverThumbs: [],
@@ -59,7 +61,7 @@ function list(overrides: Partial<UserListSummary> = {}): UserListSummary {
 function response(lists: UserListSummary[]): MyListsResponse {
   const counts = { artist: 0, "release-group": 0, recording: 0 };
   for (const list of lists) counts[list.entityType] += 1;
-  return { lists, page: 1, pageSize: 20, hasNext: false, counts };
+  return { lists, page: 1, pageSize: 20, hasNext: false, counts, unthemedCount: 0 };
 }
 
 function renderTab(initial: MyListsResponse, props: Partial<Parameters<typeof MyListsTab>[0]> = {}): ReactElement {

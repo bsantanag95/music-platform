@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta B · Buscador — Listas por tema</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="themes.css">
+<style>
+  /* Buscador: la página es una búsqueda con facetas. Sin consulta, muestra estantes por tema (pantalla 2). */
+  .resolved { display: flex; align-items: center; gap: 14px; margin-top: 18px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+  .resolved .cv { width: 48px; border-radius: 50%; }
+  .resolved b { font-family: var(--display); font-size: 17px; font-weight: 500; }
+  .resolved span { display: block; color: var(--muted); font-size: 14px; }
+  .resolved .see { margin-left: auto; }
+
+  .facetbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+  .drop { flex: none; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; font-family: var(--display); font-size: 14px; color: var(--paper); background: var(--surface); }
+  .drop svg { width: 14px; height: 14px; color: var(--muted); }
+  .drop small { font: 500 11px var(--data); color: var(--amber); }
+  .toggle { display: inline-flex; align-items: center; gap: 10px; height: 36px; padding: 0 12px; font-family: var(--display); font-size: 14px; color: var(--muted); }
+  .toggle i { width: 30px; height: 18px; border-radius: 999px; background: var(--border-2); position: relative; }
+  .toggle i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--paper); }
+  .facetbar .sp { margin-left: auto; }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; margin-top: 24px; align-items: start; }
+  .group-h { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin: 6px 0 6px; }
+  .group-h h3 { font-family: var(--display); font-weight: 700; font-size: 20px; letter-spacing: -.01em; }
+  .group-h p { color: var(--muted); font-size: 14px; }
+  .group + .group { margin-top: 32px; }
+  .themes-count { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+  .lrow[aria-current="true"] { background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--border-2); }
+  .lrow .hit { display: block; font: 500 12px var(--data); color: var(--muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .preview { position: sticky; top: 88px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); overflow: hidden; }
+  .pv-head { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 26px; padding: 26px; background: linear-gradient(180deg, rgba(143,193,160,.07), transparent 70%); border-bottom: 1px solid var(--border); }
+  .pv-head .m { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; box-shadow: 0 24px 40px -20px #000; }
+  .pv-head .m .cv { border-radius: 3px; }
+  .pv-head h2 { font-family: var(--display); font-weight: 700; font-size: 32px; line-height: 1.02; letter-spacing: -.025em; margin-top: 10px; }
+  .pv-head .by { color: var(--muted); margin-top: 8px; }
+  .pv-head .by b { color: var(--paper); font-weight: 500; }
+  .pv-head .desc { margin-top: 10px; }
+  .pv-head .actions { display: flex; gap: 12px; align-items: center; margin-top: 16px; flex-wrap: wrap; }
+  .items { padding: 6px 26px 18px; counter-reset: n; }
+  .items li { counter-increment: n; display: grid; grid-template-columns: 24px 44px minmax(0, 1fr) auto; gap: 14px; align-items: start; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .items li::before { content: counter(n); font: 500 13px var(--data); color: var(--muted-2); text-align: right; padding-top: 12px; }
+  .items .cv { width: 44px; border-radius: 4px; }
+  .items b { font-family: var(--display); font-weight: 500; display: block; }
+  .items span { color: var(--muted); font-size: 14px; }
+  .items q { display: block; color: var(--paper); font-size: 14.5px; font-style: italic; margin-top: 3px; quotes: "«" "»"; }
+  .items small { font: 500 12px var(--data); color: var(--muted-2); padding-top: 12px; }
+  .items small.heard { color: var(--amber); }
+  .items li.hl { background: linear-gradient(90deg, rgba(232,184,75,.08), transparent); }
+  .pv-foot { display: flex; justify-content: space-between; align-items: center; padding: 14px 26px 20px; }
+
+  .divider { margin: 88px 0 0; padding: 14px 18px; border: 1px dashed var(--border-2); border-radius: 10px; font: 500 12.5px var(--data); color: var(--muted); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .divider b { color: var(--amber); font-weight: 500; }
+  .shelf { margin-top: 40px; }
+  .shelf .sec-head h2 { font-size: 26px; display: flex; gap: 12px; align-items: center; }
+  .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+  .card { display: grid; gap: 10px; }
+  .card .m { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; border-radius: 8px; overflow: hidden; }
+  .card b { font-family: var(--display); font-weight: 500; font-size: 16px; line-height: 1.2; }
+  .card small { display: block; font: 500 12px var(--data); color: var(--muted); margin-top: 4px; }
+
+  @media (max-width: 1023px) {
+    .layout { grid-template-columns: 1fr; }
+    .preview { display: none; }
+    .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .facetbar .sp { margin-left: 0; }
+  }
+  @media (max-width: 640px) {
+    .facetbar { flex-wrap: nowrap; overflow-x: auto; }
+    .resolved .see { display: none; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header"></header>
+<main class="wrap">
+  <div class="page-head">
+    <p class="crumbs">Inicio / <b>Listas</b></p>
+    <h1>Listas</h1>
+  </div>
+  <label class="bigsearch" role="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="q">Pink Floyd</span><kbd>Esc</kbd></label>
+  <div class="resolved"><i class="cv" data-c="9"></i><div><b>Pink Floyd</b><span>Artista · reconocido en tu búsqueda: también buscamos dentro de las listas</span></div><a class="see" href="#">Ir a la ficha del artista →</a></div>
+
+  <div class="facetbar" role="group" aria-label="Filtros">
+    <button class="drop">Tema <small>2</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+    <button class="drop">Tipo de ítem<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+    <button class="drop">Género<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+    <button class="drop">Década<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+    <span class="toggle"><i></i>Con algo que no escuché</span>
+    <span class="chiprow sp"><span class="fchip" aria-pressed="true">Por dónde empezar <span class="x">×</span></span><span class="fchip" aria-pressed="true">Recomendaciones <span class="x">×</span></span></span>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="group">
+        <div class="group-h"><h3>Tratan sobre Pink Floyd</h3><p>3 listas</p></div>
+        <ul class="lrows">
+          <li><a class="lrow" href="#" aria-current="true"><span class="m"><i class="cv" data-c="9"></i><i class="cv" data-c="17"></i><i class="cv" data-c="25"></i><i class="cv" data-c="1"></i></span><span><span class="tl"><span class="theme t-start">Por dónde empezar</span></span><b>Pink Floyd, de a poco</b><span class="by">Eli · hace 1 mes</span></span><small>7 álbumes<em>19 guardadas</em><em class="have">5 sin escuchar</em></small></a></li>
+          <li><a class="lrow" href="#"><span class="m"><i class="cv" data-c="17"></i><i class="cv" data-c="9"></i><i class="cv" data-c="2"></i><i class="cv" data-c="25"></i></span><span><span class="tl"><span class="theme t-rec">Recomendaciones</span></span><b>Mis 5 recomendaciones de la era Barrett</b><span class="by">Dario · hace 3 meses</span></span><small>5 canciones<em>6 guardadas</em></small></a></li>
+        </ul>
+      </div>
+      <div class="group">
+        <div class="group-h"><h3>Contienen Pink Floyd</h3><p>11 listas</p></div>
+        <div class="themes-count"><span class="theme t-start">Por dónde empezar · 4</span><span class="theme t-rec">Recomendaciones · 7</span></div>
+        <ul class="lrows">
+          <li><a class="lrow" href="#"><span class="m"><i class="cv" data-c="21"></i><i class="cv" data-c="9"></i><i class="cv" data-c="5"></i><i class="cv" data-c="13"></i></span><span><span class="tl"><span class="theme t-start">Por dónde empezar</span><span class="about">sobre <b>Rock progresivo</b></span></span><b>Progresivo para principiantes</b><span class="hit">#2 The Dark Side of the Moon · #6 Wish You Were Here</span></span><small>10 álbumes<em>22 guardadas</em></small></a></li>
+          <li><a class="lrow" href="#"><span class="m"><i class="cv" data-c="10"></i><i class="cv" data-c="18"></i><i class="cv" data-c="9"></i><i class="cv" data-c="23"></i></span><span><span class="tl"><span class="theme t-rec">Recomendaciones</span></span><b>Discos que regalo siempre</b><span class="hit">#3 The Dark Side of the Moon</span></span><small>12 álbumes<em>15 guardadas</em></small></a></li>
+          <li><a class="lrow" href="#"><span class="m"><i class="cv" data-c="24"></i><i class="cv" data-c="1"></i><i class="cv" data-c="9"></i><i class="cv" data-c="7"></i></span><span><span class="tl"><span class="theme t-rec">Recomendaciones</span><span class="about">sobre <b>Psicodelia</b></span></span><b>Psicodelia británica que vale la pena</b><span class="hit">#1 The Piper at the Gates of Dawn</span></span><small>9 álbumes<em>8 guardadas</em></small></a></li>
+        </ul>
+        <div style="display:flex;justify-content:center;margin-top:12px"><button class="btn-ghost">Ver las 11 listas</button></div>
+      </div>
+    </div>
+
+    <aside class="preview" aria-label="Vista previa">
+      <div class="pv-head">
+        <span class="m"><i class="cv" data-c="9"></i><i class="cv" data-c="17"></i><i class="cv" data-c="25"></i><i class="cv" data-c="1"></i></span>
+        <div>
+          <span class="theme t-start">Por dónde empezar</span> <span class="about" style="margin-left:6px">sobre <b>Pink Floyd</b></span>
+          <h2>Pink Floyd, de a poco</h2>
+          <p class="by">por <b>Eli</b> · 7 álbumes · actualizada hace 1 mes</p>
+          <p class="desc">Para quien solo conoce el prisma. En este orden, uno por semana.</p>
+          <div class="actions"><a class="btn-amber" href="#">Abrir la lista</a><button class="btn-ghost">Guardar</button><span class="mut">19 guardadas</span></div>
+        </div>
+      </div>
+      <ol class="items">
+        <li><i class="cv" data-c="9"></i><span><b>The Dark Side of the Moon</b><span>1973</span><q>El que ya conoces. Escúchalo entero, sin saltar.</q></span><small class="heard">escuchado</small></li>
+        <li class="hl"><i class="cv" data-c="17"></i><span><b>Wish You Were Here</b><span>1975</span><q>El más cálido. La puerta a todo lo demás.</q></span><small class="heard">escuchado</small></li>
+        <li><i class="cv" data-c="25"></i><span><b>Meddle</b><span>1971</span><q>Echoes ocupa media cara. Ahí está la banda de antes.</q></span><small>pendiente</small></li>
+        <li><i class="cv" data-c="1"></i><span><b>Animals</b><span>1977</span><q>Si te quedaste con ganas de guitarras.</q></span><small>pendiente</small></li>
+      </ol>
+      <div class="pv-foot"><span class="mut">2 de 7 escuchados</span><a class="see" href="#">Ver la lista completa →</a></div>
+    </aside>
+  </div>
+
+  <div class="divider"><span><b>Pantalla 2</b> · /lists sin búsqueda</span><span>estantes por tema, en el orden de uso</span></div>
+  <div class="page-head" style="padding-bottom:0"><h1 style="font-size:48px">Listas</h1><p>Busca por artista, disco, género o título. Sin búsqueda, esto es lo que hay por tema.</p></div>
+  <label class="bigsearch" role="search" style="margin-top:20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Artista, disco, género o título de lista</span><kbd>/</kbd></label>
+  <div class="chiprow" style="margin-top:16px"><span class="fchip">Por dónde empezar <small>41</small></span><span class="fchip">Recomendaciones <small>63</small></span><span class="fchip">Ranking personal <small>58</small></span><span class="fchip">Para un momento <small>34</small></span><span class="fchip">Balance del año <small>31</small></span><span class="fchip">Joyas ocultas <small>27</small></span><span class="fchip">Conexiones <small>22</small></span><span class="fchip">Historia y contexto <small>19</small></span><span class="fchip">Curiosidades <small>16</small></span></div>
+  <section class="shelf">
+    <div class="sec-head"><div><h2><span class="theme t-start">Por dónde empezar</span></h2></div><a class="see" href="#">41 listas →</a></div>
+    <div class="cards">
+      <a class="card" href="#"><span class="m"><i class="cv" data-c="4"></i><i class="cv" data-c="12"></i><i class="cv" data-c="20"></i><i class="cv" data-c="28"></i></span><span><b>Para entrar a Jazz</b><small>sobre Jazz · 12 álbumes</small></span></a>
+      <a class="card" href="#"><span class="m"><i class="cv" data-c="9"></i><i class="cv" data-c="17"></i><i class="cv" data-c="25"></i><i class="cv" data-c="1"></i></span><span><b>Pink Floyd, de a poco</b><small>sobre Pink Floyd · 7 álbumes</small></span></a>
+      <a class="card" href="#"><span class="m"><i class="cv" data-c="14"></i><i class="cv" data-c="22"></i><i class="cv" data-c="30"></i><i class="cv" data-c="6"></i></span><span><b>Para entrar a Hip hop</b><small>sobre Hip hop · 9 álbumes</small></span></a>
+      <a class="card" href="#"><span class="m"><i class="cv" data-c="30"></i><i class="cv" data-c="3"></i><i class="cv" data-c="11"></i><i class="cv" data-c="19"></i></span><span><b>Para entrar a Punk y hardcore</b><small>sobre Punk · 12 álbumes</small></span></a>
+    </div>
+  </section>
+  <section class="shelf">
+    <div class="sec-head"><div><h2><span class="theme t-rec">Recomendaciones</span></h2></div><a class="see" href="#">63 listas →</a></div>
+    <div class="cards">
+      <a class="card" href="#"><span class="m"><i class="cv" data-c="10"></i><i class="cv" data-c="2"></i><i class="cv" data-c="26"></i><i class="cv" data-c="13"></i></span><span><b>Mis 10 recomendaciones de doom</b><small>Nora · 10 álbumes</small></span></a>
+      <a class="card" href="#"><span class="m"><i class="cv" data-c="10"></i><i class="cv" data-c="18"></i><i class="cv" data-c="9"></i><i class="cv" data-c="23"></i></span><span><b>Discos que regalo siempre</b><small>Fran · 12 álbumes</small></span></a>
+      <a class="card" href="#"><span class="m"><i class="cv" data-c="24"></i><i class="cv" data-c="1"></i><i class="cv" data-c="9"></i><i class="cv" data-c="7"></i></span><span><b>Psicodelia británica que vale la pena</b><small>Mateo · 9 álbumes</small></span></a>
+      <a class="card" href="#"><span class="m"><i class="cv" data-c="5"></i><i class="cv" data-c="23"></i><i class="cv" data-c="15"></i><i class="cv" data-c="3"></i></span><span><b>Para descubrir de a poco</b><small>Cami · 4 artistas</small></span></a>
+    </div>
+  </section>
+</main>
+<footer class="site-foot"><div class="wrap">Pie del sitio (sin cambios)</div></footer>
+<nav class="mock-bar" aria-label="Mockups"><span>Mockup · datos de ejemplo</span><a href="index.html">Resumen</a><a href="a-puertas.html">A · Puertas</a><a href="b-buscador.html" aria-current="page">B · Buscador</a><a href="c-biblioteca.html">C · Biblioteca</a><a href="crear.html">Crear</a></nav>
+<script src="shared.js"></script>
+</body>
+</html>

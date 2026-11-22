@@ -416,9 +416,9 @@ interfaz enlaza a MusicBrainz).
 Búsqueda **pública** (sin sesión) de géneros de estilo por nombre en español o inglés, sin distinguir mayúsculas ni
 tildes (`search_normalize`). `q` de 1 a 60 caracteres; sin `q` devuelve los 12 géneros más usados. Orden: coincidencia
 exacta, prefijo, resto; dentro, por uso y nombre; máximo 20. Nunca devuelve descriptores ni ocultos.
-**200 OK:** `{ genres: [{ slug, name, nameEs }] }` (`name` de MusicBrainz, `nameEs` de Wikidata o `null`; el cliente
+**200 OK:** `{ genres: [{ id, slug, name, nameEs }] }` (`id` aditivo de `add-list-themes-phase1`, para el "sobre" de una lista; `name` de MusicBrainz, `nameEs` de Wikidata o `null`; el cliente
 elige según el idioma). **400 `VALIDATION_ERROR`** con más de 60 caracteres. Lo usa el selector de "Géneros que me
-mueven".
+mueven" y el "sobre" del formulario de lista.
 
 ## `GET /api/catalog/release-group/{id}/genre-votes` (cambio `add-genre-votes`)
 
@@ -1630,10 +1630,17 @@ ajenas aplican la matriz de visibilidad.
 
 Crea una lista vacía. `entityType` queda fijo y no es modificable después.
 
-**Body:** `{ entityType, title, description?, audience? }`.
-**201 OK:** `{ list }` con `{ id, entityType, title, description, audience, createdAt, updatedAt, items: [] }`.
+**Body:** `{ entityType, title, description?, audience?, theme, subjectArtistId?, subjectGenreId? }`.
+`theme` es **obligatorio** (cambio `add-list-themes-phase1`): uno de `start_here`, `recommendations`,
+`personal_ranking`, `hidden_gems`, `moment`, `history`, `connections`, `year_review`, `curiosities`, `other`. El "sobre"
+es opcional: un artista **o** un género (ids locales); los dos con valor, un id inexistente o un tema fuera del
+vocabulario responden **400** `VALIDATION_ERROR`.
+**201 OK:** `{ list }` con `{ id, entityType, title, description, audience, theme, subject, createdAt, updatedAt, items: [] }`.
 
-### `GET /api/me/lists?page=&pageSize=&q=&entityType=&sort=`
+**Tema y "sobre" en las respuestas de lista** (propias, de perfil, públicas, detalle): `theme` (uno de los diez o
+`null` = sin tema) y `subject`: `{ type: "artist", id, name }`, `{ type: "genre", id, slug, name, nameEs }` o `null`.
+
+### `GET /api/me/lists?page=&pageSize=&q=&entityType=&theme=&sort=`
 
 Lista paginada de las listas propias (cambio `rework-lists-section`). Query params opcionales:
 `q` (búsqueda parcial por título), `entityType` (`artist`/`release-group`/`recording`), `sort`
@@ -1641,9 +1648,10 @@ Lista paginada de las listas propias (cambio `rework-lists-section`). Query para
 con `VALIDATION_ERROR`. Las listas **fijadas** aparecen primero. Cada lista incluye `itemCount`,
 `coverThumbs` (hasta 4 carátulas de sus ítems) y `pinned`. `counts` (cambio `redesign-me-lists-toolbar`) dice cuántas
 listas propias hay de cada tipo, contadas **sin** `q` ni `entityType`: son las cifras de los segmentos de tipo y su suma es
-el total de la pestaña "Mis listas".
+el total de la pestaña "Mis listas". `theme` (cambio `add-list-themes-phase1`) filtra por tema; `theme=none` devuelve las
+listas sin tema; un valor desconocido se ignora. `unthemedCount` cuenta las listas propias sin tema (aviso de clasificación).
 
-**200 OK:** `{ lists: [{ id, entityType, title, description, audience, createdAt, updatedAt, itemCount, coverThumbs, pinned }], page, pageSize, hasNext, counts: { artist, "release-group", recording } }`.
+**200 OK:** `{ lists: [{ id, entityType, title, description, audience, theme, subject, createdAt, updatedAt, itemCount, coverThumbs, pinned }], page, pageSize, hasNext, counts: { artist, "release-group", recording }, unthemedCount }`.
 
 ### `POST` / `DELETE /api/me/lists/{listId}/pin`
 
@@ -1663,10 +1671,11 @@ carátula de un álbum representativo que la contiene, `null` si ninguna edició
 
 ### `PATCH /api/me/lists/{listId}`
 
-Modifica título, descripción o audiencia de una lista propia. Al menos un campo obligatorio;
-`entityType` no es modificable.
+Modifica título, descripción, audiencia, tema o "sobre" de una lista propia. Al menos un campo obligatorio;
+`entityType` no es modificable. `theme` se puede cambiar pero no volver a `null` (400). Fijar `subjectArtistId` o
+`subjectGenreId` limpia el otro; `null` quita el "sobre".
 
-**Body:** `{ title?, description?, audience? }`. **200 OK:** `{ list }`. **404** con `LIST_NOT_FOUND`.
+**Body:** `{ title?, description?, audience?, theme?, subjectArtistId?, subjectGenreId? }`. **200 OK:** `{ list }`. **404** con `LIST_NOT_FOUND`.
 
 ### `DELETE /api/me/lists/{listId}`
 
@@ -1751,7 +1760,7 @@ un valor fuera de vocabulario responde `400` con `VALIDATION_ERROR`. `counts` cu
 por plantilla (el cliente deriva su título en el idioma activo y enlaza a `/explore/collections/<slug>-<id>`), o `null`
 (cambio `localize-collection-titles`).
 
-### `GET /api/lists/discover?page=&pageSize=&q=&entityType=&sort=` (cambio `rework-public-lists-surface`)
+### `GET /api/lists/discover?page=&pageSize=&q=&entityType=&theme=&sort=` (cambio `rework-public-lists-surface`)
 
 Listas de audiencia `public` de perfiles `public`, excluyendo cualquier bloqueo y —con
 sesión— las propias, en orden cronológico descendente (sin recomendación algorítmica).
@@ -1763,6 +1772,8 @@ Parámetros opcionales (cambio `rework-public-lists-surface`):
 - `q` — texto libre; coincide con título **y** descripción de la lista.
 - `entityType` — `artist` | `release-group` | `recording`.
 - `sort` — `recent` (default, cronológico) | `popular`.
+- `theme` — uno de los diez temas (cambio `add-list-themes-phase1`): solo listas con ese tema. Un valor desconocido se
+  ignora; las listas sin tema solo aparecen sin este filtro. Cada lista de la respuesta trae `theme` y `subject`.
 
 Sin texto (`q`), la respuesta excluye las colecciones generadas por plantilla de `@exploracion`, también con
 `sort` o `entityType` (cambio `redesign-lists-page`: antes un orden o un tipo sin texto las traía); una búsqueda por

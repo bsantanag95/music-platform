@@ -30,6 +30,8 @@ function list(overrides: Partial<UserListSummary> = {}): UserListSummary {
     description: null,
     audience: "public",
     createdAt: "2026-01-01T00:00:00.000Z",
+    theme: null,
+    subject: null,
     updatedAt: "2026-01-01T00:00:00.000Z",
     itemCount: 3,
     coverThumbs: [],

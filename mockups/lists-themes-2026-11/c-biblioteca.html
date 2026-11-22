@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta C · Biblioteca — Listas por tema</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="themes.css">
+<style>
+  /* Biblioteca: las listas se ordenan como un fichero, por lo que tratan (árbol de géneros y artistas) y por tema,
+     en una tabla densa y ordenable. La otra mitad de la propuesta vive en las fichas: pestaña Listas agrupada por tema. */
+  .lib { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 36px; margin-top: 28px; align-items: start; }
+  .tree { position: sticky; top: 88px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); padding: 14px; }
+  .tree h4 { font: 500 11.5px var(--data); text-transform: uppercase; letter-spacing: .08em; color: var(--muted-2); margin: 6px 8px 8px; }
+  .tree .seg2 { display: grid; grid-template-columns: 1fr 1fr; padding: 3px; border-radius: 8px; background: var(--ink-2); margin-bottom: 12px; }
+  .tree .seg2 span { text-align: center; padding: 7px 0; border-radius: 6px; font-family: var(--display); font-size: 14px; color: var(--muted); }
+  .tree .seg2 span:first-child { background: var(--surface-2); color: var(--paper); }
+  .tree a { display: flex; justify-content: space-between; align-items: center; min-height: 34px; padding: 0 8px; border-radius: 6px; font-family: var(--display); font-size: 14.5px; color: var(--muted); }
+  .tree a:hover { background: var(--surface-2); color: var(--paper); }
+  .tree a small { font: 500 11.5px var(--data); color: var(--muted-2); }
+  .tree a.open { color: var(--paper); }
+  .tree a.sub { padding-left: 24px; font-size: 14px; }
+  .tree a.cur { background: var(--surface-2); color: var(--amber); box-shadow: inset 2px 0 var(--amber); }
+
+  .lhead { display: flex; justify-content: space-between; align-items: end; gap: 20px; flex-wrap: wrap; }
+  .lhead h2 { font-family: var(--display); font-weight: 700; font-size: 34px; letter-spacing: -.025em; line-height: 1; }
+  .lhead p { color: var(--muted); margin-top: 6px; }
+  .matrix { margin-top: 18px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+  .matrix a { padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); display: grid; gap: 6px; }
+  .matrix a b { font: 700 22px var(--display); color: var(--paper); }
+  .matrix a[aria-pressed="true"] { border-color: currentColor; }
+
+  table.ix { width: 100%; border-collapse: collapse; margin-top: 22px; font-size: 15px; }
+  .ix th { text-align: left; font: 500 11.5px var(--data); text-transform: uppercase; letter-spacing: .08em; color: var(--muted-2); padding: 10px 10px; border-bottom: 1px solid var(--border-2); white-space: nowrap; }
+  .ix th.s::after { content: " ↓"; color: var(--amber); }
+  .ix td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .ix tr:hover td { background: var(--surface); }
+  .ix td.t { display: flex; align-items: center; gap: 12px; }
+  .ix td.t .m { width: 40px; flex: none; display: grid; grid-template-columns: 1fr 1fr; gap: 1px; }
+  .ix td.t .m .cv { border-radius: 1px; }
+  .ix td.t b { font-family: var(--display); font-weight: 500; }
+  .ix td.n { font: 500 13px var(--data); color: var(--muted); white-space: nowrap; text-align: right; }
+  .ix td.u { color: var(--muted); font-size: 14px; white-space: nowrap; }
+  .ix td.ab { font: 500 12.5px var(--data); color: var(--muted); white-space: nowrap; }
+
+  .divider { margin: 88px 0 0; padding: 14px 18px; border: 1px dashed var(--border-2); border-radius: 10px; font: 500 12.5px var(--data); color: var(--muted); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .divider b { color: var(--amber); font-weight: 500; }
+  .ahead { display: flex; gap: 24px; align-items: center; padding: 36px 0 0; }
+  .ahead .cv { width: 112px; border-radius: 50%; }
+  .ahead h2 { font-family: var(--display); font-weight: 700; font-size: 48px; letter-spacing: -.03em; line-height: 1; }
+  .ahead p { color: var(--muted); margin-top: 6px; }
+  .atabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-top: 28px; overflow-x: auto; }
+  .atabs span { height: 46px; display: inline-flex; align-items: center; padding: 0 14px; font-family: var(--display); color: var(--muted); white-space: nowrap; }
+  .atabs span.on { color: var(--paper); box-shadow: inset 0 -2px var(--amber); }
+  .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; margin-top: 28px; }
+  .two h3 { font-family: var(--display); font-weight: 700; font-size: 22px; letter-spacing: -.01em; }
+  .two h3 + p { color: var(--muted); font-size: 14.5px; margin: 4px 0 12px; }
+  .guide { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 16px; padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: linear-gradient(90deg, rgba(232,184,75,.06), transparent 60%); }
+  .guide + .guide { margin-top: 10px; }
+  .guide .m { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+  .guide .m .cv { border-radius: 2px; }
+  .guide b { font-family: var(--display); font-weight: 500; font-size: 17px; display: block; margin-top: 6px; }
+  .guide span.by { color: var(--muted); font-size: 14px; }
+  .bytheme h4 { display: flex; justify-content: space-between; margin: 16px 0 4px; }
+  .bytheme h4:first-of-type { margin-top: 0; }
+
+  @media (max-width: 1023px) {
+    .lib { grid-template-columns: 1fr; }
+    .tree { position: static; }
+    .matrix { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .ix th:nth-child(4), .ix td:nth-child(4), .ix th:nth-child(5), .ix td:nth-child(5) { display: none; }
+    .two { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .matrix { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ix th:nth-child(3), .ix td:nth-child(3) { display: none; }
+    .ahead h2 { font-size: 34px; }
+    .ahead .cv { width: 72px; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header"></header>
+<main class="wrap">
+  <div class="page-head">
+    <p class="crumbs">Inicio / Listas / Géneros / Rock / <b>Rock progresivo</b></p>
+    <h1>Listas</h1>
+    <p>Un fichero de listas ordenado como la biblioteca: por el género o el artista del que tratan, y dentro, por tema.</p>
+  </div>
+  <label class="bigsearch" role="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Buscar en las listas de Rock progresivo</span><kbd>/</kbd></label>
+
+  <div class="lib">
+    <nav class="tree" aria-label="Fichero">
+      <div class="seg2"><span>Géneros</span><span>Artistas A–Z</span></div>
+      <a href="#">Todas <small>318</small></a>
+      <a class="open" href="#">Rock <small>96</small></a>
+      <a class="sub" href="#">Hard rock <small>14</small></a>
+      <a class="sub cur" href="#">Rock progresivo <small>11</small></a>
+      <a class="sub" href="#">Psicodelia <small>8</small></a>
+      <a class="sub" href="#">Post-rock <small>6</small></a>
+      <a href="#">Metal <small>52</small></a>
+      <a href="#">Jazz <small>27</small></a>
+      <a href="#">Hip hop <small>24</small></a>
+      <a href="#">Pop <small>38</small></a>
+      <a href="#">Electrónica <small>19</small></a>
+      <a href="#">Latina <small>21</small></a>
+      <a href="#">Sin género claro <small>23</small></a>
+    </nav>
+
+    <div>
+      <div class="lhead"><div><h2>Rock progresivo</h2><p>11 listas que tratan sobre este género o cuyos discos son mayormente de él.</p></div><a class="see" href="#">Ficha del género →</a></div>
+      <div class="matrix" role="group" aria-label="Tema">
+        <a class="t-start" href="#" aria-pressed="true"><span class="theme t-start">Por dónde empezar</span><b>3</b></a>
+        <a class="t-rec" href="#"><span class="theme t-rec">Recomendaciones</span><b>4</b></a>
+        <a class="t-rank" href="#"><span class="theme t-rank">Ranking</span><b>2</b></a>
+        <a class="t-hist" href="#"><span class="theme t-hist">Historia</span><b>1</b></a>
+        <a class="t-gems" href="#"><span class="theme t-gems">Joyas ocultas</span><b>1</b></a>
+      </div>
+      <table class="ix">
+        <thead><tr><th>Lista</th><th>Tema</th><th>Sobre</th><th>Autor</th><th style="text-align:right">Ítems</th><th class="s" style="text-align:right">Guardadas</th></tr></thead>
+        <tbody>
+          <tr><td class="t"><span class="m"><i class="cv" data-c="21"></i><i class="cv" data-c="9"></i><i class="cv" data-c="5"></i><i class="cv" data-c="13"></i></span><b>Progresivo para principiantes</b></td><td><span class="theme t-start">Por dónde empezar</span></td><td class="ab">Rock progresivo</td><td class="u">Nora</td><td class="n">10 álb.</td><td class="n">22</td></tr>
+          <tr><td class="t"><span class="m"><i class="cv" data-c="9"></i><i class="cv" data-c="17"></i><i class="cv" data-c="25"></i><i class="cv" data-c="1"></i></span><b>Pink Floyd, de a poco</b></td><td><span class="theme t-start">Por dónde empezar</span></td><td class="ab">Pink Floyd</td><td class="u">Eli</td><td class="n">7 álb.</td><td class="n">19</td></tr>
+          <tr><td class="t"><span class="m"><i class="cv" data-c="5"></i><i class="cv" data-c="29"></i><i class="cv" data-c="13"></i><i class="cv" data-c="21"></i></span><b>Prog italiano que nadie te nombró</b></td><td><span class="theme t-gems">Joyas ocultas</span></td><td class="ab">Rock progresivo</td><td class="u">Mateo</td><td class="n">8 álb.</td><td class="n">11</td></tr>
+          <tr><td class="t"><span class="m"><i class="cv" data-c="13"></i><i class="cv" data-c="5"></i><i class="cv" data-c="2"></i><i class="cv" data-c="30"></i></span><b>Top 10 de Yes</b></td><td><span class="theme t-rank">Ranking</span></td><td class="ab">Yes</td><td class="u">Dario</td><td class="n">10 can.</td><td class="n">7</td></tr>
+          <tr><td class="t"><span class="m"><i class="cv" data-c="29"></i><i class="cv" data-c="21"></i><i class="cv" data-c="9"></i><i class="cv" data-c="11"></i></span><b>De Canterbury al neo-prog</b></td><td><span class="theme t-hist">Historia</span></td><td class="ab">Rock progresivo</td><td class="u">Fran</td><td class="n">15 álb.</td><td class="n">6</td></tr>
+          <tr><td class="t"><span class="m"><i class="cv" data-c="17"></i><i class="cv" data-c="13"></i><i class="cv" data-c="24"></i><i class="cv" data-c="5"></i></span><b>Para quien viene del metal</b></td><td><span class="theme t-rec">Recomendaciones</span></td><td class="ab">—</td><td class="u">Cami</td><td class="n">9 álb.</td><td class="n">4</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="divider"><span><b>Pantalla 2</b> · la pestaña Listas en la ficha de un artista</span><span>/artist/…/lists (hoy: una sola lista plana)</span></div>
+  <div class="ahead"><i class="cv" data-c="9"></i><div><p class="crumbs">Artista · Reino Unido · 1965–2014</p><h2>Pink Floyd</h2></div></div>
+  <div class="atabs"><span>Resumen</span><span>Discografía</span><span>Integrantes</span><span>Géneros</span><span class="on">Listas</span><span>Comunidad</span></div>
+  <div class="two">
+    <div>
+      <h3>Guías sobre Pink Floyd</h3><p>Listas que tratan sobre la banda: por dónde empezar, rankings de su obra.</p>
+      <a class="guide" href="#"><span class="m"><i class="cv" data-c="9"></i><i class="cv" data-c="17"></i><i class="cv" data-c="25"></i><i class="cv" data-c="1"></i></span><span><span class="theme t-start">Por dónde empezar</span><b>Pink Floyd, de a poco</b><span class="by">Eli · 7 álbumes · 19 guardadas</span></span></a>
+      <a class="guide" href="#" style="background:linear-gradient(90deg,rgba(232,154,107,.06),transparent 60%)"><span class="m"><i class="cv" data-c="17"></i><i class="cv" data-c="9"></i><i class="cv" data-c="2"></i><i class="cv" data-c="25"></i></span><span><span class="theme t-rank">Ranking personal</span><b>Todos sus discos, del mejor al peor</b><span class="by">Dario · 15 álbumes · 9 guardadas</span></span></a>
+      <a class="guide" href="#" style="background:linear-gradient(90deg,rgba(143,193,160,.06),transparent 60%)"><span class="m"><i class="cv" data-c="25"></i><i class="cv" data-c="1"></i><i class="cv" data-c="17"></i><i class="cv" data-c="9"></i></span><span><span class="theme t-rec">Recomendaciones</span><b>Mis 5 recomendaciones de la era Barrett</b><span class="by">Dario · 5 canciones · 6 guardadas</span></span></a>
+    </div>
+    <div class="bytheme">
+      <h3>Aparece en</h3><p>11 listas que incluyen a Pink Floyd o alguno de sus discos, por tema.</p>
+      <h4><span class="theme t-rec">Recomendaciones</span><span class="mut">7</span></h4>
+      <ul class="lrows"><li><a class="lrow" href="#" style="padding:10px 4px"><span class="m"><i class="cv" data-c="10"></i><i class="cv" data-c="18"></i><i class="cv" data-c="9"></i><i class="cv" data-c="23"></i></span><span><b>Discos que regalo siempre</b><span class="by">Fran · #3 The Dark Side of the Moon</span></span><small>15</small></a></li><li><a class="lrow" href="#" style="padding:10px 4px"><span class="m"><i class="cv" data-c="24"></i><i class="cv" data-c="1"></i><i class="cv" data-c="9"></i><i class="cv" data-c="7"></i></span><span><b>Psicodelia británica que vale la pena</b><span class="by">Mateo · #1 The Piper at the Gates of Dawn</span></span><small>8</small></a></li></ul>
+      <h4><span class="theme t-start">Por dónde empezar</span><span class="mut">4</span></h4>
+      <ul class="lrows"><li><a class="lrow" href="#" style="padding:10px 4px"><span class="m"><i class="cv" data-c="21"></i><i class="cv" data-c="9"></i><i class="cv" data-c="5"></i><i class="cv" data-c="13"></i></span><span><b>Progresivo para principiantes</b><span class="by">Nora · sobre Rock progresivo</span></span><small>22</small></a></li></ul>
+      <a class="see" href="#" style="margin-top:8px">Ver las 11 →</a>
+    </div>
+  </div>
+</main>
+<footer class="site-foot"><div class="wrap">Pie del sitio (sin cambios)</div></footer>
+<nav class="mock-bar" aria-label="Mockups"><span>Mockup · datos de ejemplo</span><a href="index.html">Resumen</a><a href="a-puertas.html">A · Puertas</a><a href="b-buscador.html">B · Buscador</a><a href="c-biblioteca.html" aria-current="page">C · Biblioteca</a><a href="crear.html">Crear</a></nav>
+<script src="shared.js"></script>
+</body>
+</html>

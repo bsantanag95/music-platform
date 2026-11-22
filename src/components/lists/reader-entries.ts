@@ -1,4 +1,4 @@
-import type { DiscoverListSummary, ListEntityType } from "@/lib/api/schemas";
+import type { DiscoverListSummary, ListEntityType, ListSubject, ListTheme } from "@/lib/api/schemas";
 import { presentList } from "@/lib/list-presentation";
 import { PLATFORM_OWNER_NAME, titleLocaleOf } from "@/services/discovery/collections/titles";
 
@@ -24,6 +24,9 @@ export interface ReaderEntry {
   description: string | null;
   saveCount: number | null;
   isOfficial: boolean;
+  /** Tema y "sobre" de la lista (openspec: add-list-themes-phase1). */
+  theme: ListTheme | null;
+  subject: ListSubject | null;
   /** Estado de guardado para la acción Guardar; `null` si no se ofrece (sin sesión o lista propia). */
   save: { saved: boolean; following: boolean } | null;
 }
@@ -46,6 +49,8 @@ export function entryFromList(list: DiscoverListSummary, locale: string, canSave
     description: list.description,
     saveCount: typeof list.saveCount === "number" ? list.saveCount : null,
     isOfficial: list.isOfficial,
+    theme: list.theme,
+    subject: list.subject,
     save: canSave && !list.isOwn ? { saved: list.saved, following: list.following } : null,
   };
 }

@@ -274,16 +274,28 @@ describe("NewListPanel", () => {
     expect(mocks.createList).not.toHaveBeenCalled();
   });
 
+  // Tema obligatorio, sin preselección (openspec: add-list-themes-phase1).
+  it("sin tema no crea la lista y lo indica", async () => {
+    renderWithIntl(<NewListPanel onAddItems={vi.fn()} onNavigate={vi.fn()} />);
+    await userEvent.type(screen.getByLabelText("Nombre de la lista"), "Para el auto");
+    expect(screen.getByRole("radio", { name: "Recomendaciones" })).not.toBeChecked();
+    await userEvent.click(screen.getByRole("button", { name: "Crear lista" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Elige un tema");
+    expect(mocks.createList).not.toHaveBeenCalled();
+  });
+
   it("crea la lista SIN audiencia para que aplique la audiencia por defecto", async () => {
     mocks.createList.mockResolvedValue({ id: "l1", title: "Para el auto", entityType: "release-group" });
     renderWithIntl(<NewListPanel onAddItems={() => {}} onNavigate={() => {}} />);
 
     await userEvent.type(screen.getByLabelText("Nombre de la lista"), "Para el auto");
+
+    await userEvent.click(screen.getByRole("radio", { name: "Recomendaciones" }));
     await userEvent.click(screen.getByRole("button", { name: "Crear lista" }));
 
     expect(mocks.createList).toHaveBeenCalledTimes(1);
     const input = mocks.createList.mock.calls[0]![0];
-    expect(input).toEqual({ entityType: "release-group", title: "Para el auto" });
+    expect(input).toEqual({ entityType: "release-group", title: "Para el auto", theme: "recommendations" });
     expect("audience" in input).toBe(false);
     expect(await screen.findByText("Lista creada")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Ver lista" })).toHaveAttribute("href", "/me/lists/l1");
@@ -295,9 +307,10 @@ describe("NewListPanel", () => {
 
     await userEvent.click(screen.getByRole("radio", { name: "Artistas" }));
     await userEvent.type(screen.getByLabelText("Nombre de la lista"), "Mis artistas");
+    await userEvent.click(screen.getByRole("radio", { name: "Recomendaciones" }));
     await userEvent.click(screen.getByRole("button", { name: "Crear lista" }));
 
-    expect(mocks.createList).toHaveBeenCalledWith({ entityType: "artist", title: "Mis artistas" });
+    expect(mocks.createList).toHaveBeenCalledWith({ entityType: "artist", title: "Mis artistas", theme: "recommendations" });
   });
 
   it("'Agregar a esta lista' entrega el tipo de la lista creada", async () => {
@@ -307,6 +320,7 @@ describe("NewListPanel", () => {
 
     await userEvent.click(screen.getByRole("radio", { name: "Canciones" }));
     await userEvent.type(screen.getByLabelText("Nombre de la lista"), "Para el auto");
+    await userEvent.click(screen.getByRole("radio", { name: "Recomendaciones" }));
     await userEvent.click(screen.getByRole("button", { name: "Crear lista" }));
     await userEvent.click(await screen.findByRole("button", { name: "Agregar a esta lista" }));
 
@@ -317,6 +331,7 @@ describe("NewListPanel", () => {
     mocks.createList.mockRejectedValue(new ApiError("INTERNAL_ERROR", 500, "boom interno"));
     renderWithIntl(<NewListPanel onAddItems={() => {}} onNavigate={() => {}} />);
     await userEvent.type(screen.getByLabelText("Nombre de la lista"), "X");
+    await userEvent.click(screen.getByRole("radio", { name: "Recomendaciones" }));
     await userEvent.click(screen.getByRole("button", { name: "Crear lista" }));
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("No pudimos guardar");

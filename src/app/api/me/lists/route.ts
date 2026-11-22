@@ -10,7 +10,7 @@ import { createList, listMyLists } from "@/services/lists/lists";
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const { page, pageSize } = parsePagination(searchParams);
-  const filters = parseListFilters(searchParams);
+  const filters = parseListFilters(searchParams, { allowNoTheme: true });
   const user = await requireUser();
   return NextResponse.json(await listMyLists(user.id, page, pageSize, filters));
 });
@@ -29,6 +29,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     title: parsed.data.title,
     description: parsed.data.description ?? null,
     audience: parsed.data.audience,
+    theme: parsed.data.theme,
+    subjectArtistId: parsed.data.subjectArtistId ?? null,
+    subjectGenreId: parsed.data.subjectGenreId ?? null,
   });
   return NextResponse.json({ list }, { status: 201 });
 });

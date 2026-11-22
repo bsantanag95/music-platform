@@ -269,6 +269,7 @@ describe("QuickActionsDialog", () => {
     await userEvent.click(await screen.findByRole("radio", { name: "Nueva lista" }));
     await userEvent.click(screen.getByRole("radio", { name: "Artistas" }));
     await userEvent.type(screen.getByLabelText("Nombre de la lista"), "Para el auto");
+    await userEvent.click(screen.getByRole("radio", { name: "Recomendaciones" }));
     await userEvent.click(screen.getByRole("button", { name: "Crear lista" }));
     await userEvent.click(await screen.findByRole("button", { name: "Agregar a esta lista" }));
 

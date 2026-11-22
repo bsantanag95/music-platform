@@ -951,6 +951,20 @@ lectura contra `listen_entry` (`src/services/journeys/progress.ts`) — nunca lo
 quedan excluidos de toda lectura genérica de `user_list` (Mis listas, Guardadas, Descubrir,
 conteos de la huella de gusto).
 
+**Tema y "sobre qué"** (migración `0098`, cambio `add-list-themes-phase1`):
+
+- `theme`: para qué existe la lista, de un vocabulario cerrado (`chk_user_list_theme`):
+  `start_here`, `recommendations`, `personal_ranking`, `hidden_gems`, `moment`, `history`,
+  `connections`, `year_review`, `curiosities`, `other`. `NULL` = sin tema: listas previas a la
+  migración (sin backfill) y altas del sistema que todavía no lo declaran (colecciones generadas,
+  borradores editoriales). La API lo exige al crear una lista y no deja volver a `NULL`. Camino y
+  recorrido de artista nacen con `start_here`; Top N y tier list, con `personal_ranking`.
+- `subject_artist_id` / `subject_genre_id`: de qué trata la lista, a lo sumo uno
+  (`chk_user_list_single_subject`), `ON DELETE SET NULL`. Independiente del contenido. El recorrido
+  de artista guarda su artista también aquí.
+- Índices parciales: `idx_user_list_theme_created` (`theme, created_at` donde hay tema) para el
+  filtro de `/lists`, e `idx_user_list_subject_artist` / `idx_user_list_subject_genre`.
+
 ## `user_list_featured`
 
 **Propósito:** marca una `user_list` como **colección destacada** del descubrimiento

@@ -53,6 +53,26 @@ describe("CommunityListsToolbar", () => {
     expect(nav.replace).toHaveBeenLastCalledWith("/lists", { scroll: false });
   });
 
+  // Filtro por tema (openspec: add-list-themes-phase1).
+  it("el selector Tema navega con theme y marca el tema de la URL; uno desconocido se ignora", () => {
+    const { unmount } = renderWithIntl(<CommunityListsToolbar />);
+    const select = screen.getByRole("combobox", { name: "Tema" });
+    expect(select).toHaveValue("");
+    expect(select.closest("div.col-span-2")?.className).toContain("row-start-3");
+    fireEvent.change(select, { target: { value: "recommendations" } });
+    expect(nav.replace).toHaveBeenCalledWith("/lists?theme=recommendations", { scroll: false });
+    unmount();
+
+    nav.search = new URLSearchParams("theme=hidden_gems");
+    const second = renderWithIntl(<CommunityListsToolbar />);
+    expect(screen.getByRole("combobox", { name: "Tema" })).toHaveValue("hidden_gems");
+    second.unmount();
+
+    nav.search = new URLSearchParams("theme=recs");
+    renderWithIntl(<CommunityListsToolbar />);
+    expect(screen.getByRole("combobox", { name: "Tema" })).toHaveValue("");
+  });
+
   it("debouncea la búsqueda y navega con q", () => {
     vi.useFakeTimers();
     renderWithIntl(<CommunityListsToolbar />);

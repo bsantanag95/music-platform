@@ -170,7 +170,9 @@ contenido o su cuenta, un **hito** de su comentario o de su lista, un **lanzamie
 - **Diario de escucha**: registro histórico de escuchas sobre Artista, Álbum o Canción.
 - **Lista**: colección curada armada por un Usuario, de **un solo tipo de entidad** (solo
   Álbumes, solo Canciones o solo Artistas), con orden manual y audiencia propia. En la primera
-  versión cada lista es propiedad de un único usuario (no colaborativa).
+  versión cada lista es propiedad de un único usuario (no colaborativa). Declara un **tema** (para qué existe:
+  Por dónde empezar, Recomendaciones, Ranking personal, Joyas ocultas, Para un momento, Historia y contexto,
+  Conexiones, Balance del año, Curiosidades u Otro) y, opcionalmente, **de qué trata** (un Artista o un Género).
 - **Favorito**: marca simple de un Usuario sobre un Artista, Álbum o Canción. Es un toggle
   idempotente (un usuario tiene a lo sumo un favorito por objetivo), con audiencia propia e
   independiente de escucha, valoración y comentario.
