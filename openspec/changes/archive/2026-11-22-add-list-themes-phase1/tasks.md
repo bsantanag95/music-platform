@@ -40,7 +40,7 @@
 - [x] 5.1 `docs/05-features/lists-and-favorites.md`: tema y "sobre", vocabulario, altas del sistema, plan de 3 fases y decisiones D1–D6; sacar "Temas / etiquetas" del backlog
 - [x] 5.2 `docs/01-domain/domain-model.md` y `business-rules.md`: tema obligatorio al crear, uno por lista, "sobre" a lo sumo uno
 - [x] 5.3 Ayuda (`messages/{es,en}/info.json`, línea "Listas: …"): mencionar que cada lista elige un tema; actualizar la fecha en `src/lib/info-pages.ts`
-- [ ] 5.4 Agregar `## Purpose` a la spec nueva `list-themes` al archivar
+- [x] 5.4 Agregar `## Purpose` a la spec nueva `list-themes` al archivar
 
 ## 6. Verificación
 
