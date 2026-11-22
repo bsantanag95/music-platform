@@ -124,7 +124,7 @@ describe("EditableBlock", () => {
     expect(screen.getByRole("button", { name: "Editar Placa" })).toHaveFocus();
   });
 
-  it("tras guardar un cambio, cerrar refresca el perfil y no pide confirmar", async () => {
+  it("un solo «Guardar» al pie: guarda, cierra y refresca el perfil sin pedir confirmar", async () => {
     const user = userEvent.setup();
     mocks.apiFetch.mockResolvedValue({ user: {} });
     renderProfile();
@@ -132,39 +132,50 @@ describe("EditableBlock", () => {
     await user.click(screen.getByRole("button", { name: "Editar Placa" }));
     await screen.findByRole("dialog", { name: "Placa" });
 
-    await user.type(screen.getByLabelText("Bio"), "Colecciono casetes");
-    await user.click(screen.getAllByRole("button", { name: "Guardar" })[0]!);
-    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Guardado"));
-    expect(mocks.refresh).not.toHaveBeenCalled(); // el refresco es al cerrar, no al guardar
+    // Los editores alojados no dibujan su propio botón: solo queda el del pie, deshabilitado sin cambios.
+    expect(screen.getAllByRole("button", { name: "Guardar" })).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Guardar" })).toBeDisabled();
 
-    await user.keyboard("{Escape}");
+    await user.type(screen.getByLabelText("Bio"), "Colecciono casetes");
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
 
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(screen.queryByRole("dialog", { name: "¿Descartar los cambios?" })).not.toBeInTheDocument();
+    expect(mocks.apiFetch).toHaveBeenCalledTimes(1);
     expect(mocks.refresh).toHaveBeenCalledTimes(1);
   });
 
-  // Escape en el mismo instante en que "Guardado" entra al DOM, sin esperar a React: el panel ya debe saber que no
-  // quedan cambios. Fija lo que antes solo se veía bajo carga, cuando el aviso de "limpio" llegaba tarde.
-  it("Escape justo al aparecer «Guardado» cierra sin pedir confirmar", async () => {
+  it("«Guardar» guarda todos los editores con cambios del panel", async () => {
     const user = userEvent.setup();
-    mocks.apiFetch.mockResolvedValue({ user: {} });
+    mocks.apiFetch.mockImplementation((url: string) =>
+      Promise.resolve(url === "/api/me/profile/links" ? { links: [{ kind: "other", url: "https://ana.example" }] } : { user: {} }),
+    );
     renderProfile();
     await user.click(screen.getByRole("button", { name: "interruptor" }));
     await user.click(screen.getByRole("button", { name: "Editar Placa" }));
     await screen.findByRole("dialog", { name: "Placa" });
-    await user.type(screen.getByLabelText("Bio"), "Colecciono casetes");
 
-    const observer = new MutationObserver(() => {
-      if (!document.querySelector('[role="status"]')?.textContent?.includes("Guardado")) return;
-      observer.disconnect();
-      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-    });
-    observer.observe(document.body, { subtree: true, childList: true, characterData: true });
-    await user.click(screen.getAllByRole("button", { name: "Guardar" })[0]!);
+    await user.type(screen.getByLabelText("Bio"), "hola");
+    await user.click(screen.getByRole("button", { name: "Agregar enlace" }));
+    await user.type(screen.getByLabelText("Dirección web"), "https://ana.example");
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
 
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(mocks.apiFetch.mock.calls.map(([url]) => url)).toEqual(["/api/me/profile", "/api/me/profile/links"]);
     expect(mocks.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("«Cancelar» con cambios pide confirmar el descarte", async () => {
+    const user = userEvent.setup();
+    renderProfile();
+    await user.click(screen.getByRole("button", { name: "interruptor" }));
+    await user.click(screen.getByRole("button", { name: "Editar Placa" }));
+    await screen.findByRole("dialog", { name: "Placa" });
+
+    await user.type(screen.getByLabelText("Bio"), "sin guardar");
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    expect(await screen.findByRole("dialog", { name: "¿Descartar los cambios?" })).toBeInTheDocument();
   });
 
   it("con cambios sin guardar pide confirmar el descarte antes de cerrar", async () => {
@@ -185,25 +196,29 @@ describe("EditableBlock", () => {
     expect(mocks.refresh).not.toHaveBeenCalled();
   });
 
-  it("con dos editores en el panel, limpiar uno no oculta que el otro sigue sin guardar", async () => {
+  it("si un guardado falla, el panel queda abierto con el error y lo no guardado sigue pendiente", async () => {
     const user = userEvent.setup();
-    mocks.apiFetch.mockResolvedValue({ user: {} });
+    mocks.apiFetch.mockImplementation((url: string) =>
+      url === "/api/me/profile/links"
+        ? Promise.reject(new mocks.ApiError("INTERNAL_ERROR", 500, "falló"))
+        : Promise.resolve({ user: {} }),
+    );
     renderProfile();
     await user.click(screen.getByRole("button", { name: "interruptor" }));
     await user.click(screen.getByRole("button", { name: "Editar Placa" }));
     await screen.findByRole("dialog", { name: "Placa" });
 
-    // Editor de identidad: cambia y guarda (queda limpio).
     await user.type(screen.getByLabelText("Bio"), "hola");
-    await user.click(screen.getAllByRole("button", { name: "Guardar" })[0]!);
-    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Guardado"));
-
-    // Editor de enlaces: cambia y NO guarda.
     await user.click(screen.getByRole("button", { name: "Agregar enlace" }));
     await user.type(screen.getByLabelText("Dirección web"), "https://ana.example");
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
 
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Placa" })).toBeInTheDocument();
+    expect(mocks.refresh).not.toHaveBeenCalled();
+
+    // La bio ya quedó guardada; los enlaces no: cerrar pide confirmar el descarte.
     await user.keyboard("{Escape}");
-
     expect(await screen.findByRole("dialog", { name: "¿Descartar los cambios?" })).toBeInTheDocument();
   });
 

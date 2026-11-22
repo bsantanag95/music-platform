@@ -6,7 +6,7 @@ import { UserAvatar } from "@/components/social/UserAvatar";
 import { apiFetch } from "@/lib/api/client";
 import { z } from "zod";
 import type { EditorHostCallbacks } from "./editor-host";
-import { useNotifySaved } from "./editor-host";
+import { useNotifySaved, useHostSaves } from "./editor-host";
 
 const AvatarResponseSchema = z.object({ avatarUrl: z.string().nullable() });
 
@@ -37,6 +37,9 @@ export function OwnerAvatarEditor({
   const t = useTranslations("users");
   const tErrors = useTranslations("errors");
   const notifySaved = useNotifySaved(onSaved);
+  // Dentro del panel con un solo «Guardar», la foto sigue aplicándose al elegirla:
+  // se avisa para que no parezca que espera al botón del pie.
+  const hostSaves = useHostSaves();
   const inputRef = useRef<HTMLInputElement>(null);
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
   const [status, setStatus] = useState<"idle" | "uploading" | "removing">("idle");
@@ -137,6 +140,7 @@ export function OwnerAvatarEditor({
             )}
           </div>
           <p className="font-data text-xs text-paper-muted">{t("avatar.helpText")}</p>
+          {hostSaves && <p className="font-data text-xs text-paper-muted">{t("avatar.savesOnPick")}</p>}
         </div>
       </div>
       {error && (

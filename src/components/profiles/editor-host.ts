@@ -21,6 +21,19 @@ export interface EditorHostCallbacks {
 export interface EditorHostContextValue {
   setDirty: (editorId: string, dirty: boolean) => void;
   notifySaved: () => void;
+  /**
+   * El anfitrión tiene un único «Guardar» propio (panel lateral; openspec
+   * redesign-owner-profile-phase3): cada editor con borrador registra su guardado
+   * y deja de dibujar su botón. Devuelve la función que anula el registro.
+   */
+  registerSave?: (editorId: string, entry: HostedSave) => () => void;
+}
+
+/** Guardado de un editor alojado: el anfitrión solo lo llama si `dirty()` es verdadero. */
+export interface HostedSave {
+  dirty: () => boolean;
+  /** `true` si guardó; `false` si falló o no se podía guardar (el editor ya muestra por qué). */
+  save: () => Promise<boolean>;
 }
 
 export const EditorHostContext = createContext<EditorHostContextValue | null>(null);
@@ -58,6 +71,34 @@ export function useReportDirty(dirty: boolean, onDirtyChange?: (dirty: boolean) 
     },
     [editorId],
   );
+}
+
+/**
+ * Registra el guardado del editor en un anfitrión con «Guardar» propio. Devuelve
+ * `true` si hay tal anfitrión: el editor entonces no dibuja su botón ni su aviso
+ * de «Guardado». Sin anfitrión (pantallas de ajustes) devuelve `false` y no hace nada.
+ */
+export function useHostedSave(dirty: boolean, save: () => Promise<boolean>): boolean {
+  const host = useContext(EditorHostContext);
+  const editorId = useId();
+  const latest = useRef({ dirty, save });
+  useLayoutEffect(() => {
+    latest.current = { dirty, save };
+  });
+  const register = host?.registerSave;
+  useLayoutEffect(() => {
+    if (!register) return;
+    return register(editorId, {
+      dirty: () => latest.current.dirty,
+      save: () => latest.current.save(),
+    });
+  }, [register, editorId]);
+  return Boolean(register);
+}
+
+/** Si el anfitrión tiene un «Guardar» propio (para editores que aplican al instante y lo avisan). */
+export function useHostSaves(): boolean {
+  return Boolean(useContext(EditorHostContext)?.registerSave);
 }
 
 /** Devuelve la función a llamar tras cada guardado exitoso: avisa a la prop y al anfitrión. */

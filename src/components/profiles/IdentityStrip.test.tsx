@@ -20,6 +20,15 @@ vi.mock("./ExploreSection", () => ({
   ExploreSection: ({ totalCount }: { totalCount: number }) => <div data-testid="artists">{totalCount}</div>,
 }));
 
+// El modo edición se prueba en EditableBlock: acá solo importa dónde se envuelve la Ficha.
+vi.mock("./EditableBlock", () => ({
+  EditableBlock: ({ label, empty, children }: { label: string; empty?: boolean; children: ReactNode }) => (
+    <div data-testid="editable" data-label={label} data-empty={String(Boolean(empty))}>
+      {children}
+    </div>
+  ),
+}));
+
 const empty: MusicIdentityData = { selfRoles: [], genres: [], listeningFormats: [], prompts: [] };
 const withMusic = {
   selfRoles: ["collector", "dj"],
@@ -90,5 +99,33 @@ describe("IdentityStrip (spec social-profiles, 'Franja de identidad')", () => {
     expect(
       await strip({ identity: empty, fingerprint: { topDecade: null, phrases: [] }, artists: [] }),
     ).toBeNull();
+  });
+
+  describe("Ficha editable del dueño (redesign-owner-profile-phase3)", () => {
+    const fichaEdit = { label: "Ficha", editor: <p>editor</p> };
+
+    it("envuelve la Ficha en su bloque editable", async () => {
+      renderWithIntl(await strip({ fichaEdit }));
+      const block = screen.getByTestId("editable");
+      expect(block).toHaveAttribute("data-label", "Ficha");
+      expect(block).toHaveAttribute("data-empty", "false");
+      expect(screen.getByRole("heading", { name: "strip.ficha" })).toBeInTheDocument();
+    });
+
+    it("Ficha vacía con otras partes: bloque vacío dentro de la franja", async () => {
+      renderWithIntl(await strip({ identity: empty, fichaEdit }));
+      expect(screen.getByTestId("editable")).toHaveAttribute("data-empty", "true");
+      expect(screen.getByTestId("fingerprint")).toBeInTheDocument();
+    });
+
+    it("sin ninguna parte, el dueño igual recibe el bloque vacío de la Ficha", async () => {
+      const tree = await strip({ identity: empty, fingerprint: null, artists: [], fichaEdit });
+      renderWithIntl(<>{tree}</>);
+      expect(screen.getByTestId("editable")).toHaveAttribute("data-empty", "true");
+    });
+
+    it("sin ninguna parte y sin edición (visitante) no hay franja", async () => {
+      expect(await strip({ identity: empty, fingerprint: null, artists: [] })).toBeNull();
+    });
   });
 });

@@ -14,7 +14,7 @@ import {
   type SelfRole,
 } from "@/lib/music-identity";
 import { GenreMultiSelect } from "./GenreMultiSelect";
-import { useNotifySaved, useReportDirty, type EditorHostCallbacks } from "./editor-host";
+import { useHostedSave, useNotifySaved, useReportDirty, type EditorHostCallbacks } from "./editor-host";
 
 interface MusicIdentityValues {
   selfRoles: SelfRole[];
@@ -112,7 +112,7 @@ export function OwnerMusicIdentityEditor({ initial, genreLabels, onSaved, onDirt
     setStatus("idle");
   }
 
-  async function save() {
+  async function save(): Promise<boolean> {
     setStatus("saving");
     setErrorCode(null);
     try {
@@ -125,11 +125,14 @@ export function OwnerMusicIdentityEditor({ initial, genreLabels, onSaved, onDirt
       setValues(saved);
       setStatus("saved");
       notifySaved();
+      return true;
     } catch (error) {
       setStatus("idle");
       setErrorCode(error instanceof ApiError ? error.code : "INTERNAL_ERROR");
+      return false;
     }
   }
+  const hosted = useHostedSave(dirty, save);
 
   const counter = (count: number, max: number) => t("musicIdentity.editor.counter", { count, max });
 
@@ -172,10 +175,12 @@ export function OwnerMusicIdentityEditor({ initial, genreLabels, onSaved, onDirt
       />
 
       <div className="flex items-center gap-3">
-        <Button type="submit" disabled={status === "saving" || !dirty}>
-          {status === "saving" ? t("edit.saving") : t("edit.save")}
-        </Button>
-        {status === "saved" && (
+        {!hosted && (
+          <Button type="submit" disabled={status === "saving" || !dirty}>
+            {status === "saving" ? t("edit.saving") : t("edit.save")}
+          </Button>
+        )}
+        {!hosted && status === "saved" && (
           <span role="status" className="font-data text-xs text-petrol-hover">
             {t("edit.saved")}
           </span>

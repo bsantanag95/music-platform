@@ -12,9 +12,11 @@ import {
   PinnedSection,
   ReviewsDiaryRow,
   OwnerRequestsSection,
+  ProfileCompletionSection,
   StartRow,
   DIARY_PROFILE_PREVIEW,
 } from "./sections";
+import { ProfileCompletion, type CompletionPart } from "@/components/profiles/ProfileCompletion";
 import { ProfileRail } from "@/components/profiles/ProfileRail";
 import { OwnerAddAction } from "@/components/profiles/OwnerAddAction";
 import { ProfileRow } from "@/components/profiles/ProfileRow";
@@ -384,6 +386,22 @@ describe("secciones del Nivel 1 y 2", () => {
     expect(tree?.props?.genreLabels).toEqual({ jazz: "jazz" });
     expect(tree?.props?.fingerprint).toBeNull();
     expect(tree?.props?.sharedArtistIds).toBeUndefined();
+    // Para un visitante la Ficha no es editable.
+    expect(tree?.props?.fichaEdit).toBeUndefined();
+  });
+
+  it("IdentityStripSection del dueño: la Ficha se edita con la ficha musical y las preguntas", async () => {
+    svc.listProfileFollowedArtists.mockResolvedValue(followed);
+    svc.getProfileAffinity.mockResolvedValue(null);
+    svc.getTasteFingerprint.mockResolvedValue(null);
+    const tree = (await IdentityStripSection({ profile: stripProfile, viewerId: "v", isOwn: true })) as {
+      props?: { fichaEdit?: { label: string; editor: { props: { children: { type: unknown }[] } } } };
+    };
+    expect(tree?.props?.fichaEdit?.label).toBe("editMode.ficha");
+    expect(tree?.props?.fichaEdit?.editor.props.children.map((child) => child.type)).toEqual([
+      OwnerMusicIdentityEditor,
+      OwnerPromptsEditor,
+    ]);
   });
 
   it("IdentityStripSection marca los artistas seguidos en común vía la afinidad", async () => {
@@ -551,34 +569,34 @@ describe("secciones editables del dueño", () => {
     expect(card.type).toBe(IdentityCard);
   });
 
-  it("EditablePlaca: aloja identidad, identidad musical, preguntas y enlaces en un mismo editor, con los valores del perfil", async () => {
-    const prompts = [{ promptKey: "first-record", answer: "Un casete", position: 0 }];
-    const profile = {
-      username: "ana",
-      displayName: null,
-      bio: "Colecciono casetes",
-      pronouns: "él",
-      pronounSet: null,
-      country: "CL",
-      location: "Quilpué",
-      timezone: "America/Santiago",
-      showLocalTime: true,
-      selfRoles: ["collector"],
-      genres: ["jazz"],
-      listeningFormats: ["vinyl"],
-      prompts,
-      links: [{ id: "l1", kind: "other", url: "https://ana.example", position: 0 }],
-    } as unknown as ProfileView;
+  const placaProfile = {
+    id: "owner",
+    username: "ana",
+    displayName: null,
+    avatarUrl: null,
+    bio: "Colecciono casetes",
+    pronouns: "él",
+    pronounSet: null,
+    country: "CL",
+    location: "Quilpué",
+    timezone: "America/Santiago",
+    showLocalTime: true,
+    selfRoles: ["collector"],
+    genres: ["jazz"],
+    listeningFormats: ["vinyl"],
+    prompts: [] as { promptKey: string; answer: string; position: number }[],
+    links: [{ id: "l1", kind: "other", url: "https://ana.example", position: 0 }],
+  };
 
+  it("EditablePlaca: aloja foto, datos de la persona y enlaces, sin ficha ni preguntas", async () => {
+    const profile = placaProfile as unknown as ProfileView;
     const tree = (await EditablePlaca({ profile, children: "placa" })) as Wrapped;
 
     expect(tree.type).toBe(EditableBlock);
     expect(tree.props?.label).toBe("editMode.placa");
     const inner = (tree.props?.editor?.props as { children?: { type?: unknown; props?: Record<string, unknown> }[] }).children;
-    // El editor de foto de perfil abre la Placa (spec avatar-upload).
-    expect(inner?.[0]?.type).toBe(OwnerAvatarEditor);
+    expect(inner?.map((child) => child.type)).toEqual([OwnerAvatarEditor, OwnerIdentityEditor, OwnerLinksEditor]);
     expect(inner?.[0]?.props?.username).toBe("ana");
-    expect(inner?.[1]?.type).toBe(OwnerIdentityEditor);
     expect(inner?.[1]?.props?.initial).toEqual({
       bio: "Colecciono casetes",
       pronouns: "él",
@@ -590,16 +608,35 @@ describe("secciones editables del dueño", () => {
     });
     // Sin nombre visible, el ejemplo de los pronombres usa el usuario.
     expect(inner?.[1]?.props?.name).toBe("ana");
-    expect(inner?.[2]?.type).toBe(OwnerMusicIdentityEditor);
-    expect(inner?.[2]?.props?.initial).toEqual({
-      selfRoles: ["collector"],
-      genres: ["jazz"],
-      listeningFormats: ["vinyl"],
+    expect(inner?.[2]?.props?.initialLinks).toBe(profile.links);
+  });
+
+  it("ProfileCompletionSection: las siete partes con su estado y el panel que las contiene", async () => {
+    svc.getShowcase.mockResolvedValue({
+      identityCard: { artist: null, album: null, anthem: null },
+      pinned: [{ entity: { id: "p1" }, note: null }],
     });
-    expect(inner?.[3]?.type).toBe(OwnerPromptsEditor);
-    expect(inner?.[3]?.props?.initial).toBe(prompts);
-    expect(inner?.[4]?.type).toBe(OwnerLinksEditor);
-    expect(inner?.[4]?.props?.initialLinks).toBe(profile.links);
+    const tree = (await ProfileCompletionSection({ profile: placaProfile as unknown as ProfileView })) as {
+      type?: unknown;
+      props: { parts: CompletionPart[] };
+    };
+    expect(tree.type).toBe(ProfileCompletion);
+    const parts = tree.props.parts;
+    expect(parts.map((part) => [part.key, part.done])).toEqual([
+      ["photo", false],
+      ["bio", true],
+      ["identityCard", false],
+      ["ficha", true],
+      ["showcase", true],
+      ["prompts", false],
+      ["links", true],
+    ]);
+    const panel = (key: string) => parts.find((part) => part.key === key)!.panel;
+    expect(panel("photo").title).toBe("editMode.placa");
+    expect(panel("links").title).toBe("editMode.placa");
+    expect(panel("prompts").title).toBe("editMode.ficha");
+    expect((panel("identityCard").editor as { type: unknown }).type).toBe(OwnerIdentityCardEditor);
+    expect((panel("showcase").editor as { type: unknown }).type).toBe(OwnerShowcaseEditor);
   });
 
   it("OwnerRequestsSection: con solicitudes, una línea a /me/follow-requests con el recuento", async () => {

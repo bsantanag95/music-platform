@@ -354,7 +354,7 @@
         "id": "storage",
         "title": "Browser local storage",
         "paragraphs": [
-          "We store some view preferences on your device (for example, list or grid, how a discography is grouped or the view mode of the lists to complete) and your recent searches. They stay on your device, are never sent to the server and you can delete them from your browser settings."
+          "We store some view preferences on your device (for example, list or grid, how a discography is grouped or the view mode of the lists to complete, or whether you hid the \"Your profile\" strip on your own profile) and your recent searches. They stay on your device, are never sent to the server and you can delete them from your browser settings."
         ]
       },
       {
