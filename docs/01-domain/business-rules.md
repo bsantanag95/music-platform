@@ -177,6 +177,10 @@ Reglas explícitas que gobiernan el comportamiento del producto, independientes 
 - Una Lista es de un solo tipo de entidad (solo artistas, solo álbumes o solo canciones) y su
   `entityType` no es modificable después de crearla. Un mismo objetivo aparece a lo sumo una
   vez por lista.
+- Una Lista declara **un tema** de un vocabulario cerrado (cambio `add-list-themes-phase1`): obligatorio al crearla,
+  se puede cambiar pero no quitar; las listas anteriores al cambio quedan sin tema hasta que su dueño elija uno (nunca se
+  deduce del título). Caminos y recorridos nacen con "Por dónde empezar"; Top N y tier list, con "Ranking personal".
+- Una Lista puede declarar **de qué trata**: un artista **o** un género, a lo sumo uno, independiente de su contenido.
 - Escucha, favorito y lista tienen audiencia propia (`private`/`followers`/`public`),
   independiente entre sí; el usuario puede cambiar la audiencia después de publicar.
 - Valoraciones y comentarios **no** tienen audiencia propia. Una valoración la ven el dueño y sus

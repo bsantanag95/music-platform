@@ -221,7 +221,7 @@ async function main() {
     const pool = byType[entityType];
     if (pool.length >= 2) {
       const items = pick(pool, Math.min(4, pool.length));
-      const list = await createList({ ownerId: userId, entityType, title: randomOf(LIST_TITLES[entityType]), audience: "public" });
+      const list = await createList({ theme: "recommendations", ownerId: userId, entityType, title: randomOf(LIST_TITLES[entityType]), audience: "public" });
       for (const item of items) {
         await addItemToList(list.id, userId, { type: item.type, id: item.id });
       }

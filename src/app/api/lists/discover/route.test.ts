@@ -47,6 +47,17 @@ describe("GET /api/lists/discover", () => {
     });
   });
 
+  it("pasa el tema y descarta uno desconocido (openspec: add-list-themes-phase1)", async () => {
+    mocks.getCurrentUser.mockResolvedValue(null);
+    mocks.listDiscoverLists.mockResolvedValue({ lists: [], page: 1, pageSize: 20, hasNext: false });
+    await GET(new NextRequest("http://localhost/api/lists/discover?theme=recommendations"));
+    expect(mocks.listDiscoverLists).toHaveBeenLastCalledWith(null, 1, 20, expect.objectContaining({ theme: "recommendations" }));
+    await GET(new NextRequest("http://localhost/api/lists/discover?theme=recs"));
+    expect(mocks.listDiscoverLists).toHaveBeenLastCalledWith(null, 1, 20, undefined);
+    await GET(new NextRequest("http://localhost/api/lists/discover?theme=none"));
+    expect(mocks.listDiscoverLists).toHaveBeenLastCalledWith(null, 1, 20, undefined);
+  });
+
   it("filtros inválidos responden 400 sin ejecutar la lectura", async () => {
     const badEntity = await GET(
       new NextRequest("http://localhost/api/lists/discover?entityType=album"),

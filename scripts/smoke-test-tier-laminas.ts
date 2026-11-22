@@ -204,6 +204,8 @@ async function checkPhase3(s: Services, owner: { id: string; username: string },
   await db.insert(rating).values({ userId: follower.id, releaseGroupId: rated, stars: "4", detailedScore: 72 });
   const built = await s.tiers.createTierList(follower.id, { title: "La mía", entityType: "release-group", source: source(false) });
   check(JSON.stringify(ids(built.tiers[2]!)) === JSON.stringify([rated]), "un disco que valoró con 72 queda en B, por su nota");
+  const [themed] = await db.select({ theme: userList.theme }).from(userList).where(eq(userList.id, built.id));
+  check(themed?.theme === "personal_ranking", "nace con el tema Ranking personal (add-list-themes-phase1)");
   check(JSON.stringify(ids(built.tray)) === JSON.stringify(visible.filter((id) => id !== rated)), "los demás, en su bandeja, en el orden de la otra");
   check(hiddenInTray.every((id) => !JSON.stringify(built).includes(id)), "no hereda la bandeja ajena");
   check(built.audience === "private" && built.showScores === false, "nace privada y sin notas");

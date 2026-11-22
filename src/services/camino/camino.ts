@@ -173,6 +173,8 @@ export async function createCamino(
       description: normalizeDescription(params.description ?? null),
       audience: await resolveNewContentAudience(ownerId, "list", params.audience),
       kind: "custom_journey",
+      // Un Camino es una guía de entrada (openspec: add-list-themes-phase1); el dueño puede cambiarlo.
+      theme: "start_here",
     })
     .returning();
   if (!created) throw new ApiError("INTERNAL_ERROR", 500, "No se pudo crear el Camino");

@@ -27,6 +27,8 @@ const list = {
   items: [],
 };
 
+const GENRE = "5e0ce000-0000-4000-8000-000000000001";
+
 describe("lists API (POST /api/me/lists)", () => {
   beforeEach(() => vi.clearAllMocks());
 
@@ -37,7 +39,7 @@ describe("lists API (POST /api/me/lists)", () => {
       new NextRequest("http://localhost/api/me/lists", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ entityType: "artist", title: "Favoritos de los 80", audience: "followers" }),
+        body: JSON.stringify({ entityType: "artist", title: "Favoritos de los 80", audience: "followers", theme: "start_here", subjectGenreId: GENRE }),
       }),
     );
     expect(response.status).toBe(201);
@@ -48,7 +50,29 @@ describe("lists API (POST /api/me/lists)", () => {
       title: "Favoritos de los 80",
       description: null,
       audience: "followers",
+      theme: "start_here",
+      subjectArtistId: null,
+      subjectGenreId: GENRE,
     });
+  });
+
+  // Tema obligatorio y "sobre" único (openspec: add-list-themes-phase1).
+  it.each([
+    ["sin tema", { entityType: "artist", title: "ok" }],
+    ["con un tema fuera del vocabulario", { entityType: "artist", title: "ok", theme: "recs" }],
+    ["con artista y género a la vez", { entityType: "artist", title: "ok", theme: "other", subjectArtistId: GENRE, subjectGenreId: GENRE }],
+  ])("rechaza crear %s", async (_label, body) => {
+    mocks.requireUser.mockResolvedValue(user);
+    const response = await POST(
+      new NextRequest("http://localhost/api/me/lists", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      }),
+    );
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(mocks.createList).not.toHaveBeenCalled();
   });
 
   it("rechaza un body inválido con VALIDATION_ERROR", async () => {
@@ -70,7 +94,7 @@ describe("lists API (POST /api/me/lists)", () => {
       new NextRequest("http://localhost/api/me/lists", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ entityType: "artist", title: "ok" }),
+        body: JSON.stringify({ entityType: "artist", title: "ok", theme: "other" }),
       }),
     );
     expect(response.status).toBe(401);
@@ -93,6 +117,15 @@ describe("lists API (GET /api/me/lists)", () => {
       entityType: undefined,
       sort: undefined,
     });
+  });
+
+  it("pasa theme=none (listas sin tema) e ignora un tema desconocido", async () => {
+    mocks.requireUser.mockResolvedValue(user);
+    mocks.listMyLists.mockResolvedValue(page);
+    await GET(new NextRequest("http://localhost/api/me/lists?theme=none"));
+    expect(mocks.listMyLists).toHaveBeenLastCalledWith(user.id, 1, 20, expect.objectContaining({ theme: "none" }));
+    await GET(new NextRequest("http://localhost/api/me/lists?theme=recs"));
+    expect(mocks.listMyLists).toHaveBeenLastCalledWith(user.id, 1, 20, expect.objectContaining({ theme: undefined }));
   });
 
   it("pasa q, entityType y sort al servicio", async () => {

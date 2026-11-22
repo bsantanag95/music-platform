@@ -10,12 +10,13 @@ import { and, count, desc, eq, ilike, isNull, ne, or, sql, type SQL } from "driz
 import { db } from "@/db";
 import { appUser, listSave, userBlock, userList, userListItem } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
-import { enrichLists } from "./lists";
+import { enrichLists, type ListSubject } from "./lists";
 import { saveCountsFor, savedStateFor } from "./saved-lists";
 import {
   LIST_ENTITY_TYPES,
   PUBLIC_LIST_SORTS,
   type ListEntityType,
+  type ListTheme,
   type PublicListSort,
 } from "./types";
 import { activeUserCondition } from "@/services/auth/account-status";
@@ -30,6 +31,8 @@ export interface DiscoverListFilters {
   entityType?: ListEntityType;
   /** `recent` (default) o `popular` (conteo agregado de guardados). */
   sort?: PublicListSort;
+  /** Solo listas con este tema (openspec: add-list-themes-phase1). Sin tema = sin filtro. */
+  theme?: ListTheme;
 }
 
 export interface DiscoverListSummary {
@@ -42,6 +45,9 @@ export interface DiscoverListSummary {
   itemCount: number;
   coverThumbs: string[];
   owner: { id: string; username: string; displayName: string | null };
+  /** Tema y "sobre" de la lista (openspec: add-list-themes-phase1). */
+  theme: ListTheme | null;
+  subject: ListSubject | null;
   isOfficial: boolean;
   saved: boolean;
   following: boolean;
@@ -130,6 +136,8 @@ export async function enrichPublicLists(
       updatedAt: row.updatedAt.toISOString(),
       itemCount: enriched?.itemCount ?? 0,
       coverThumbs: enriched?.coverThumbs ?? [],
+      theme: enriched?.theme ?? null,
+      subject: enriched?.subject ?? null,
       owner: {
         id: row.ownerId,
         username: row.ownerUsername,
@@ -154,6 +162,7 @@ export function assertPagination(page: number, pageSize: number): void {
 function normalizeDiscoverFilters(filters?: DiscoverListFilters): {
   q: string | undefined;
   entityType: ListEntityType | undefined;
+  theme: ListTheme | undefined;
   sort: PublicListSort;
 } {
   const q = filters?.q?.trim();
@@ -164,7 +173,7 @@ function normalizeDiscoverFilters(filters?: DiscoverListFilters): {
   if (!PUBLIC_LIST_SORTS.includes(sort)) {
     throw new ApiError("VALIDATION_ERROR", 400, "El orden no es válido");
   }
-  return { q: q ? q : undefined, entityType: filters?.entityType, sort };
+  return { q: q ? q : undefined, entityType: filters?.entityType, theme: filters?.theme, sort };
 }
 
 /**
@@ -180,7 +189,7 @@ export async function listDiscoverLists(
   filters?: DiscoverListFilters,
 ) {
   assertPagination(page, pageSize);
-  const { q, entityType, sort } = normalizeDiscoverFilters(filters);
+  const { q, entityType, theme, sort } = normalizeDiscoverFilters(filters);
 
   const conditions: (SQL | undefined)[] = [
     eq(userList.audience, "public"),
@@ -203,6 +212,7 @@ export async function listDiscoverLists(
   // las listas de la comunidad, no de buscar en el catálogo de la plataforma.
   if (!filters?.q?.trim()) conditions.push(notGeneratedCollectionCondition());
   if (entityType) conditions.push(eq(userList.entityType, entityType));
+  if (theme) conditions.push(eq(userList.theme, theme));
   if (q) {
     conditions.push(
       or(ilike(userList.title, `%${q}%`), ilike(userList.description, `%${q}%`)),

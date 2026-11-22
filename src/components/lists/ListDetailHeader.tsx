@@ -12,6 +12,7 @@ import { entityTypeKey } from "./lists-shared";
 import { deleteList } from "@/lib/api/lists";
 import { ListMetaForm } from "./ListMetaForm";
 import { DeleteListDialog } from "./DeleteListDialog";
+import { ListThemeLine } from "./ListThemeChip";
 import type { UserListDetail } from "@/lib/api/schemas";
 
 interface OwnerInfo {
@@ -86,6 +87,7 @@ export function ListDetailHeader({
           className="hidden w-28 shrink-0 sm:block"
         />
         <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <ListThemeLine theme={list.theme} subject={list.subject} />
           <div className="flex items-start justify-between gap-3">
             <h1 className="font-display text-2xl text-paper">{list.title}</h1>
             {canManage ? (

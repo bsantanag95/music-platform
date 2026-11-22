@@ -5,6 +5,7 @@ import { ApiError } from "@/lib/api/errors";
 import { getCurrentUser } from "@/services/auth/authorization";
 import { listDiscoverLists, type DiscoverListFilters } from "@/services/lists/discovery";
 import { LIST_ENTITY_TYPES, PUBLIC_LIST_SORTS } from "@/services/lists/types";
+import { parseThemeParam } from "@/lib/api/list-filters";
 
 function parseEnumParam<T extends string>(
   searchParams: URLSearchParams,
@@ -25,12 +26,14 @@ function parseDiscoverFilters(searchParams: URLSearchParams): DiscoverListFilter
   const q = searchParams.get("q")?.trim();
   const entityType = parseEnumParam(searchParams, "entityType", LIST_ENTITY_TYPES);
   const sort = parseEnumParam(searchParams, "sort", PUBLIC_LIST_SORTS);
-  if (!q && !entityType && !sort) return undefined;
-  return { q: q ? q : undefined, entityType, sort };
+  // Un tema fuera del vocabulario se ignora (openspec: add-list-themes-phase1).
+  const theme = parseThemeParam(searchParams);
+  if (!q && !entityType && !sort && !theme) return undefined;
+  return { q: q ? q : undefined, entityType, sort, theme: theme === "none" ? undefined : theme };
 }
 
 // Descubrir listas públicas de la comunidad. Por defecto en orden cronológico;
-// con `q`, `entityType` o `sort` se convierte en el listado de exploración.
+// con `q`, `entityType`, `theme` o `sort` se convierte en el listado de exploración.
 // Público: con sesión excluye las listas propias y refleja el estado de
 // guardado; sin sesión devuelve las mismas listas sin ese estado. Alimenta la
 // pestaña "Descubrir" de `/me/lists`, la sección "Recientes" y el modo explorar

@@ -23,6 +23,8 @@ import { DeleteListDialog } from "./DeleteListDialog";
 import { ListMetaForm } from "./ListMetaForm";
 import { MyListCardMenu } from "./MyListCardMenu";
 import { ListCard } from "./ListCard";
+import { ListThemeChip } from "./ListThemeChip";
+import { UnthemedListsNotice } from "./UnthemedListsNotice";
 import { ListsGrid, entityTypeKey } from "./lists-shared";
 import { ListsToolbar } from "./ListsToolbar";
 import { useListsSection } from "./ListsSection";
@@ -81,6 +83,7 @@ export function MyListsTab({
 
   const lists = data?.pages.flatMap((page) => page.lists) ?? [];
   const counts = data?.pages[0]?.counts ?? initial.counts;
+  const unthemedCount = data?.pages[0]?.unthemedCount ?? initial.unthemedCount;
 
   // El total de la pestaña sigue a las cifras de cada respuesta: crear o borrar una lista lo actualiza (D4).
   useEffect(() => {
@@ -135,6 +138,7 @@ export function MyListsTab({
       itemCount={list.itemCount}
       entityType={list.entityType}
       emptyHint={t(EMPTY_HINT[list.entityType])}
+      badge={list.theme ? <ListThemeChip theme={list.theme} /> : undefined}
       meta={
         <>
           <span>{t(entityTypeKey(list.entityType))}</span>
@@ -182,6 +186,9 @@ export function MyListsTab({
     <div className="flex flex-col gap-4">
       {/* Sin ninguna lista no hay nada que filtrar: solo el estado vacío con su acción. */}
       {counts.artist + counts["release-group"] + counts.recording > 0 || isFiltered ? toolbar : null}
+
+      {/* Aviso de listas sin tema (openspec: add-list-themes-phase1); no aparece mientras se busca. */}
+      {isFiltered ? null : <UnthemedListsNotice count={unthemedCount} />}
 
       <span role="status" aria-live="polite" className="sr-only">
         {announce}

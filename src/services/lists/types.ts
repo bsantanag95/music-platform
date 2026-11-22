@@ -7,6 +7,31 @@ export { type Audience } from "@/services/social/types";
 export const LIST_ENTITY_TYPES = ["artist", "release-group", "recording"] as const;
 export type ListEntityType = (typeof LIST_ENTITY_TYPES)[number];
 
+// Temas de lista (openspec: add-list-themes-phase1), en orden de presentación. Debe coincidir con
+// `chk_user_list_theme` de drizzle/0098_list_theme.sql (types.test.ts lo compara). Vocabulario cerrado:
+// ampliarlo es una migración nueva, nunca etiquetas libres.
+export const LIST_THEMES = [
+  "start_here",
+  "recommendations",
+  "personal_ranking",
+  "hidden_gems",
+  "moment",
+  "history",
+  "connections",
+  "year_review",
+  "curiosities",
+  "other",
+] as const;
+export type ListTheme = (typeof LIST_THEMES)[number];
+
+export function isListTheme(value: unknown): value is ListTheme {
+  return typeof value === "string" && (LIST_THEMES as readonly string[]).includes(value);
+}
+
+/** Tipo de entidad del "sobre" de una lista: un artista o un género. */
+export const LIST_SUBJECT_TYPES = ["artist", "genre"] as const;
+export type ListSubjectType = (typeof LIST_SUBJECT_TYPES)[number];
+
 // Orden de la superficie propia de listas (cambio rework-lists-section).
 // `recent`: por creación descendente (comportamiento previo).
 // `alpha`: por título, sin distinguir mayúsculas.

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta A · Puertas — Listas por tema</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="themes.css">
+<style>
+  /* Puertas: la portada es un índice de temas. Cada tema es una puerta a su propia página con filtros. */
+  .doors { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
+  .door { position: relative; display: flex; flex-direction: column; gap: 14px; padding: 22px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); overflow: hidden; min-height: 236px; }
+  .door::after { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: currentColor; opacity: .9; }
+  .door:hover { border-color: var(--border-2); background: var(--surface-2); }
+  .door .theme { align-self: flex-start; }
+  .door h3 { font-family: var(--display); font-weight: 700; font-size: 24px; letter-spacing: -.02em; line-height: 1.05; color: var(--paper); }
+  .door p { color: var(--muted); font-size: 15px; }
+  .door .samples { margin-top: auto; display: grid; gap: 8px; }
+  .door .samples span { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; align-items: center; font-family: var(--display); font-size: 14px; color: var(--paper); }
+  .door .samples span .cv { border-radius: 3px; }
+  .door .samples span em { font-style: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .door .count { position: absolute; top: 20px; right: 22px; font: 500 12px var(--data); color: var(--muted-2); }
+  .door.big { grid-column: span 2; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+  .door.big .lead { display: flex; flex-direction: column; gap: 12px; }
+  .door.big .fan { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-content: center; }
+  .door.big .fan .fi { display: grid; gap: 8px; font-family: var(--display); font-size: 13.5px; color: var(--paper); }
+  .door.big .fan .m { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; box-shadow: 0 16px 30px -18px #000; }
+  .door.big .fan .m .cv { border-radius: 2px; }
+  .door.big .fan small { color: var(--muted); font: 500 11.5px var(--data); }
+
+  .subjects { display: grid; grid-auto-flow: column; grid-auto-columns: 168px; gap: 14px; overflow-x: auto; padding-bottom: 8px; margin-top: 20px; }
+  .subj { display: grid; gap: 10px; }
+  .subj .cv { border-radius: 10px; }
+  .subj.artist .cv { border-radius: 50%; }
+  .subj b { font-family: var(--display); font-weight: 500; font-size: 16px; }
+  .subj small { display: block; font: 500 12px var(--data); color: var(--muted); }
+
+  .divider { margin: 88px 0 0; padding: 14px 18px; border: 1px dashed var(--border-2); border-radius: 10px; font: 500 12.5px var(--data); color: var(--muted); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .divider b { color: var(--amber); font-weight: 500; }
+
+  .thead { padding: 36px 0 22px; border-bottom: 1px solid var(--border); }
+  .thead .theme { height: 28px; font-size: 12.5px; padding: 0 12px; }
+  .thead h2 { font-family: var(--display); font-weight: 700; font-size: clamp(34px, 4vw, 52px); letter-spacing: -.03em; line-height: 1; margin-top: 14px; }
+  .thead p { color: var(--muted); font-size: 17px; margin-top: 10px; max-width: 62ch; }
+  .tbody { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 40px; margin-top: 28px; align-items: start; }
+  .facets { position: sticky; top: 88px; display: grid; gap: 22px; }
+  .facet h4 { font: 500 11.5px var(--data); text-transform: uppercase; letter-spacing: .08em; color: var(--muted-2); margin-bottom: 10px; }
+  .facet .opts { display: grid; gap: 2px; }
+  .facet .opts label { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 36px; padding: 0 10px; border-radius: 6px; font-family: var(--display); font-size: 14.5px; color: var(--muted); }
+  .facet .opts label:hover { background: var(--surface); color: var(--paper); }
+  .facet .opts label[aria-checked="true"] { background: var(--surface-2); color: var(--paper); }
+  .facet .opts label small { font: 500 11.5px var(--data); color: var(--muted-2); }
+  .facet .mini { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--muted); font-size: 14px; }
+  .facet .mini svg { width: 15px; height: 15px; }
+  .rhead { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 8px; }
+  .rhead .chiprow .fchip { height: 32px; }
+
+  @media (max-width: 1023px) {
+    .doors { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .door.big { grid-column: span 2; }
+    .tbody { grid-template-columns: 1fr; }
+    .facets { position: static; display: flex; gap: 8px; overflow-x: auto; }
+    .facet { display: none; }
+  }
+  @media (max-width: 640px) {
+    .doors { grid-template-columns: 1fr; }
+    .door.big { grid-column: auto; grid-template-columns: 1fr; }
+    .door { min-height: 0; }
+    .rhead { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header"></header>
+<main class="wrap">
+  <div class="page-head">
+    <p class="crumbs">Inicio / <b>Listas</b></p>
+    <h1>Listas</h1>
+    <p>Guías para empezar, recomendaciones y rankings que arma la comunidad. Entra por un tema, o busca una lista por lo que contiene o por lo que trata.</p>
+  </div>
+  <label class="bigsearch" role="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Busca un artista, un disco o un género: «Pink Floyd», «shoegaze», «Kind of Blue»…</span><kbd>/</kbd></label>
+  <p class="hint">Encuentra las listas <b>que lo contienen</b> y las listas <b>que tratan sobre eso</b>.</p>
+
+  <section style="margin-top:56px">
+    <div class="sec-head"><div><h2>Explora por tema</h2><p>Cada lista elige un tema al crearse. Por eso «Mis 10 recomendaciones de doom» aparece aquí aunque su título no diga nada.</p></div></div>
+    <div class="doors">
+      <a class="door big t-start" href="#tema" style="background:linear-gradient(180deg,rgba(232,184,75,.07),var(--surface) 60%)">
+        <div class="lead">
+          <span class="theme t-start">Por dónde empezar</span>
+          <h3>Guías para entrar a un artista, un género o una escena</h3>
+          <p>Lo primero que conviene escuchar, en orden, elegido por alguien que ya lo recorrió.</p>
+          <span class="mut" style="margin-top:auto">41 listas · 18 sobre géneros · 23 sobre artistas</span>
+        </div>
+        <div class="fan">
+          <span class="fi"><span class="m"><i class="cv" data-c="4"></i><i class="cv" data-c="12"></i><i class="cv" data-c="20"></i><i class="cv" data-c="28"></i></span>Para entrar a Jazz<small>sobre Jazz · 12 álbumes</small></span>
+          <span class="fi"><span class="m"><i class="cv" data-c="9"></i><i class="cv" data-c="17"></i><i class="cv" data-c="25"></i><i class="cv" data-c="1"></i></span>Pink Floyd, de a poco<small>sobre Pink Floyd · 7 álbumes</small></span>
+          <span class="fi"><span class="m"><i class="cv" data-c="14"></i><i class="cv" data-c="22"></i><i class="cv" data-c="30"></i><i class="cv" data-c="6"></i></span>Para entrar a Hip hop<small>sobre Hip hop · 9 álbumes</small></span>
+        </div>
+      </a>
+      <a class="door t-rec" href="#"><span class="count">63</span><span class="theme t-rec">Recomendaciones</span><h3>Lo que alguien te pondría en la mano</h3><div class="samples"><span><i class="cv" data-c="10"></i><em>Mis 10 recomendaciones de doom</em></span><span><i class="cv" data-c="18"></i><em>Discos que regalo siempre</em></span></div></a>
+      <a class="door t-gems" href="#"><span class="count">27</span><span class="theme t-gems">Joyas ocultas</span><h3>Lo que casi nadie escuchó y debería</h3><div class="samples"><span><i class="cv" data-c="26"></i><em>Debuts olvidados de los 70</em></span><span><i class="cv" data-c="13"></i><em>Bandas de un solo disco</em></span></div></a>
+      <a class="door t-rank" href="#"><span class="count">58</span><span class="theme t-rank">Ranking personal</span><h3>Lo mejor de algo, en orden</h3><div class="samples"><span><i class="cv" data-c="2"></i><em>Top 10 de Iron Maiden</em></span><span><i class="cv" data-c="19"></i><em>Best AOR songs</em></span></div></a>
+      <a class="door t-mood" href="#"><span class="count">34</span><span class="theme t-mood">Para un momento</span><h3>Un ánimo, una hora, una actividad</h3><div class="samples"><span><i class="cv" data-c="24"></i><em>Discos para un domingo lento</em></span><span><i class="cv" data-c="7"></i><em>Para manejar de noche</em></span></div></a>
+      <a class="door t-hist" href="#"><span class="count">19</span><span class="theme t-hist">Historia y contexto</span><h3>Escenas, movimientos, cronologías</h3><div class="samples"><span><i class="cv" data-c="5"></i><em>Un disco por década</em></span><span><i class="cv" data-c="21"></i><em>La NWOBHM en 15 discos</em></span></div></a>
+      <a class="door t-link" href="#"><span class="count">22</span><span class="theme t-link">Conexiones</span><h3>Si te gusta esto, sigue por acá</h3><div class="samples"><span><i class="cv" data-c="15"></i><em>Si te gusta Radiohead</em></span><span><i class="cv" data-c="3"></i><em>Versiones mejores que el original</em></span></div></a>
+      <a class="door t-year" href="#"><span class="count">31</span><span class="theme t-year">Balance del año</span><h3>Lo que dejó un año o una década</h3><div class="samples"><span><i class="cv" data-c="11"></i><em>Lo mejor de 2025</em></span><span><i class="cv" data-c="27"></i><em>Novedades esenciales</em></span></div></a>
+      <a class="door t-curio" href="#"><span class="count">16</span><span class="theme t-curio">Curiosidades</span><h3>Portadas, conceptos, coincidencias</h3><div class="samples"><span><i class="cv" data-c="0"></i><em>Cumplen años en noviembre</em></span><span><i class="cv" data-c="29"></i><em>Portadas con animales</em></span></div></a>
+    </div>
+  </section>
+
+  <section style="margin-top:64px">
+    <div class="sec-head"><div><h2>Por dónde empezar con…</h2><p>Los géneros y artistas que más guías tienen. Cada uno abre sus guías, no un resultado de búsqueda.</p></div><a class="see" href="#">Ver todos →</a></div>
+    <div class="subjects">
+      <a class="subj" href="#"><i class="cv" data-c="4"></i><span><b>Jazz</b><small>6 guías</small></span></a>
+      <a class="subj artist" href="#"><i class="cv" data-c="9"></i><span><b>Pink Floyd</b><small>4 guías</small></span></a>
+      <a class="subj" href="#"><i class="cv" data-c="14"></i><span><b>Hip hop</b><small>4 guías</small></span></a>
+      <a class="subj" href="#"><i class="cv" data-c="21"></i><span><b>Heavy metal</b><small>3 guías</small></span></a>
+      <a class="subj artist" href="#"><i class="cv" data-c="16"></i><span><b>David Bowie</b><small>3 guías</small></span></a>
+      <a class="subj" href="#"><i class="cv" data-c="30"></i><span><b>Punk y hardcore</b><small>2 guías</small></span></a>
+      <a class="subj" href="#"><i class="cv" data-c="8"></i><span><b>R&amp;B, soul y funk</b><small>2 guías</small></span></a>
+    </div>
+  </section>
+
+  <div class="divider" id="tema"><span><b>Pantalla 2</b> · al entrar por una puerta</span><span>/lists/temas/por-donde-empezar</span></div>
+
+  <div class="thead">
+    <p class="crumbs">Listas / <b>Por dónde empezar</b></p>
+    <div style="margin-top:14px"><span class="theme t-start">Por dónde empezar</span></div>
+    <h2>Guías para empezar</h2>
+    <p>Listas pensadas como puerta de entrada. Filtra por lo que tratan, por el tipo de ítem o por la época de sus discos.</p>
+  </div>
+  <div class="tbody">
+    <aside class="facets" aria-label="Filtros">
+      <div class="facet"><h4>Sobre</h4><div class="mini"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Artista o género</div>
+        <div class="opts" style="margin-top:8px"><label aria-checked="true">Géneros <small>18</small></label><label>Artistas <small>23</small></label></div></div>
+      <div class="facet"><h4>Género de los discos</h4><div class="opts"><label>Rock <small>14</small></label><label aria-checked="true">Jazz <small>6</small></label><label>Hip hop <small>5</small></label><label>Metal <small>5</small></label><label>Electrónica <small>3</small></label></div></div>
+      <div class="facet"><h4>Década</h4><div class="opts"><label>1960s <small>8</small></label><label>1970s <small>12</small></label><label>1990s <small>9</small></label></div></div>
+      <div class="facet"><h4>Tipo</h4><div class="opts"><label>Álbumes <small>34</small></label><label>Artistas <small>5</small></label><label>Canciones <small>2</small></label></div></div>
+    </aside>
+    <div>
+      <div class="rhead"><div class="chiprow"><span class="fchip" aria-pressed="true">Sobre géneros <span class="x">×</span></span><span class="fchip" aria-pressed="true">Jazz <span class="x">×</span></span></div><span class="mut">6 listas · más guardadas</span></div>
+      <ul class="lrows">
+        <li><a class="lrow" href="#"><span class="m"><i class="cv" data-c="4"></i><i class="cv" data-c="12"></i><i class="cv" data-c="20"></i><i class="cv" data-c="28"></i></span><span><span class="tl"><span class="about">sobre <b>Jazz</b></span></span><b>Para entrar a Jazz</b><span class="by">Exploración · editorial</span></span><small>12 álbumes<em>31 guardadas</em></small></a></li>
+        <li><a class="lrow" href="#"><span class="m"><i class="cv" data-c="12"></i><i class="cv" data-c="4"></i><i class="cv" data-c="31"></i><i class="cv" data-c="23"></i></span><span><span class="tl"><span class="about">sobre <b>Hard bop</b></span></span><b>Hard bop sin miedo</b><span class="by">Nora · hace 2 semanas</span><span class="why">«Empieza por Moanin’ y no te saltes el orden»</span></span><small>8 álbumes<em>14 guardadas</em></small></a></li>
+        <li><a class="lrow" href="#"><span class="m"><i class="cv" data-c="28"></i><i class="cv" data-c="20"></i><i class="cv" data-c="6"></i><i class="cv" data-c="18"></i></span><span><span class="tl"><span class="about">sobre <b>Jazz fusión</b></span></span><b>Del jazz al jazz-rock en 10 discos</b><span class="by">Mateo · hace 1 mes</span></span><small>10 álbumes<em>9 guardadas</em></small></a></li>
+        <li><a class="lrow" href="#"><span class="m"><i class="cv" data-c="20"></i><i class="cv" data-c="1"></i><i class="cv" data-c="22"></i><i class="cv" data-c="7"></i></span><span><span class="tl"><span class="about">sobre <b>Jazz</b></span></span><b>Jazz para gente que dice que no le gusta el jazz</b><span class="by">Fran · hace 3 meses</span></span><small>6 álbumes<em>8 guardadas</em></small></a></li>
+      </ul>
+    </div>
+  </div>
+</main>
+<footer class="site-foot"><div class="wrap">Pie del sitio (sin cambios)</div></footer>
+<nav class="mock-bar" aria-label="Mockups"><span>Mockup · datos de ejemplo</span><a href="index.html">Resumen</a><a href="a-puertas.html" aria-current="page">A · Puertas</a><a href="b-buscador.html">B · Buscador</a><a href="c-biblioteca.html">C · Biblioteca</a><a href="crear.html">Crear</a></nav>
+<script src="shared.js"></script>
+</body>
+</html>

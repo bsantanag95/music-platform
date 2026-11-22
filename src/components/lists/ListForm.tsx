@@ -1,12 +1,13 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { createList } from "@/lib/api/lists";
 import { ApiError } from "@/lib/api/client";
-import type { DiaryAudience, ListEntityType, UserListDetail } from "@/lib/api/schemas";
+import type { DiaryAudience, ListEntityType, ListSubject, ListTheme, UserListDetail } from "@/lib/api/schemas";
+import { ListSubjectPicker, ListThemePicker, subjectFields } from "./ListThemeFields";
 
 function entityTypeLabelKey(entityType: ListEntityType): "entityTypeArtist" | "entityTypeAlbum" | "entityTypeSong" {
   if (entityType === "artist") return "entityTypeArtist";
@@ -32,10 +33,15 @@ export function ListForm({ onCreated, onCancel, fixedEntityType, bare = false }:
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [audience, setAudience] = useState<DiaryAudience>("followers");
+  // Tema obligatorio, sin preselección; "sobre" opcional (openspec: add-list-themes-phase1).
+  const [theme, setTheme] = useState<ListTheme | null>(null);
+  const [subject, setSubject] = useState<ListSubject | null>(null);
+  const themeGroup = useId();
   const [busy, setBusy] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
 
   const handleSubmit = async () => {
+    if (!theme) return;
     setBusy(true);
     setErrorCode(null);
     try {
@@ -44,6 +50,8 @@ export function ListForm({ onCreated, onCancel, fixedEntityType, bare = false }:
         title,
         description: description.trim() === "" ? null : description,
         audience,
+        theme,
+        ...subjectFields(subject),
       });
       onCreated?.(list);
     } catch (error) {
@@ -84,6 +92,10 @@ export function ListForm({ onCreated, onCancel, fixedEntityType, bare = false }:
         placeholder={t("titlePlaceholder")}
       />
 
+      <ListThemePicker name={`list-theme-${themeGroup}`} value={theme} onChange={setTheme} />
+
+      <ListSubjectPicker value={subject} onChange={setSubject} />
+
       <label className="flex flex-col gap-1">
         <span className="font-data text-sm text-paper">{t("descriptionLabel")}</span>
         <textarea
@@ -121,7 +133,7 @@ export function ListForm({ onCreated, onCancel, fixedEntityType, bare = false }:
       </fieldset>
 
       <div className="flex items-center gap-2">
-        <Button variant="primary" disabled={busy || title.trim() === ""} onClick={() => void handleSubmit()}>
+        <Button variant="primary" disabled={busy || title.trim() === "" || !theme} onClick={() => void handleSubmit()}>
           {busy ? t("saving") : t("createList")}
         </Button>
         {onCancel ? (

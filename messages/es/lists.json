@@ -191,5 +191,51 @@
   "move": "Mover",
   "removedItem": "Quitaste “{title}”",
   "undo": "Deshacer",
-  "undoError": "No pudimos deshacer. Intenta de nuevo."
+  "undoError": "No pudimos deshacer. Intenta de nuevo.",
+  "theme": {
+    "label": "Tema",
+    "required": "Elige un tema",
+    "pickerHint": "Decide dónde la encuentran los demás. Se puede cambiar después.",
+    "filterLabel": "Tema",
+    "filterAll": "Todos los temas",
+    "about": "sobre <subject>{name}</subject>",
+    "subjectLabel": "¿Sobre qué es?",
+    "subjectHint": "Opcional · un artista o un género",
+    "subjectArtist": "Artista",
+    "subjectGenre": "Género",
+    "subjectSearchArtist": "Buscar un artista",
+    "subjectSearchGenre": "Buscar un género",
+    "subjectRemove": "Quitar «{name}»",
+    "subjectNoResults": "Sin resultados",
+    "unthemedTitle": "{count, plural, one {# de tus listas no tiene tema} other {# de tus listas no tienen tema}}",
+    "unthemedDescription": "Sin tema solo aparecen en «Todos los temas» y en la búsqueda. Elige uno para cada una.",
+    "unthemedSeeAll": "Ver todas las listas sin tema",
+    "unthemedAssigned": "«{title}» quedó en {theme}",
+    "unthemedError": "No pudimos guardar el tema. Intenta de nuevo.",
+    "noTheme": "Sin tema",
+    "names": {
+      "start_here": "Por dónde empezar",
+      "recommendations": "Recomendaciones",
+      "personal_ranking": "Ranking personal",
+      "hidden_gems": "Joyas ocultas",
+      "moment": "Para un momento",
+      "history": "Historia y contexto",
+      "connections": "Conexiones",
+      "year_review": "Balance del año",
+      "curiosities": "Curiosidades",
+      "other": "Otro"
+    },
+    "descriptions": {
+      "start_here": "Una guía de entrada a un artista, un género o una escena",
+      "recommendations": "Lo que le pondrías en la mano a alguien",
+      "personal_ranking": "Lo mejor de algo, en orden",
+      "hidden_gems": "Lo poco escuchado que merece más",
+      "moment": "Un ánimo, una hora, una actividad",
+      "history": "Escenas, movimientos, cronologías",
+      "connections": "Influencias, versiones, «si te gusta X»",
+      "year_review": "Lo que dejó un año o una década",
+      "curiosities": "Portadas, conceptos, coincidencias",
+      "other": "No encaja en ninguno"
+    }
+  }
 }

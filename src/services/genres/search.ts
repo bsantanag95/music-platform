@@ -11,13 +11,15 @@ export const GENRE_SUGGESTIONS_LIMIT = 12;
 export const GENRE_SEARCH_MAX_LENGTH = 60;
 
 export interface GenreSearchResult {
+  /** Id del género: lo usa el "sobre" de una lista (openspec: add-list-themes-phase1). */
+  id: string;
   slug: string;
   name: string;
   nameEs: string | null;
 }
 
 /** Fila cruda de la consulta (`db.execute` exige un tipo con firma de índice). */
-type GenreSearchRow = { slug: string; name: string; nameEs: string | null };
+type GenreSearchRow = { id: string; slug: string; name: string; nameEs: string | null };
 
 /** Texto válido (recortado, ≤60) o vacío; más de 60 caracteres es un error de validación. */
 export function normalizeGenreQuery(raw: string | null | undefined): string {
@@ -48,19 +50,19 @@ export async function searchGenres(rawQuery: string | null | undefined): Promise
 
   if (query.length === 0) {
     const rows = await db.execute<GenreSearchRow>(sql`
-      SELECT g.slug, g.name, g.name_es AS "nameEs"
+      SELECT g.id, g.slug, g.name, g.name_es AS "nameEs"
       FROM genre g
       WHERE g.kind = 'style'
       ORDER BY ${USAGE} DESC, g.name ASC
       LIMIT ${GENRE_SUGGESTIONS_LIMIT}
     `);
-    return rows.map(({ slug, name, nameEs }) => ({ slug, name, nameEs }));
+    return rows.map(({ id, slug, name, nameEs }) => ({ id, slug, name, nameEs }));
   }
 
   const like = escapeLike(query);
   const rows = await db.execute<GenreSearchRow>(sql`
     WITH q AS (SELECT search_normalize(${query}) AS exact, search_normalize(${like}) AS pattern)
-    SELECT g.slug, g.name, g.name_es AS "nameEs"
+    SELECT g.id, g.slug, g.name, g.name_es AS "nameEs"
     FROM genre g, q
     WHERE g.kind = 'style' AND (
       search_normalize(g.name) LIKE '%' || q.pattern || '%' ESCAPE '\\'
@@ -77,5 +79,5 @@ export async function searchGenres(rawQuery: string | null | undefined): Promise
       g.name ASC
     LIMIT ${GENRE_SEARCH_LIMIT}
   `);
-  return rows.map(({ slug, name, nameEs }) => ({ slug, name, nameEs }));
+  return rows.map(({ id, slug, name, nameEs }) => ({ id, slug, name, nameEs }));
 }

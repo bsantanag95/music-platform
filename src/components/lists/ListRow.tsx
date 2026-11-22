@@ -7,6 +7,7 @@ import { RelativeDate } from "@/components/feed/feed-row-parts";
 import { ListCoverMosaic } from "./ListCoverMosaic";
 import { SaveListButton } from "./SaveListButton";
 import { entityTypeKey } from "./lists-shared";
+import { ListThemeLine } from "./ListThemeChip";
 import type { ReaderEntry } from "./reader-entries";
 
 /** Ancho desde el que el lector tiene vista previa (`lg`). */
@@ -61,6 +62,8 @@ export function ListRow({
               {t("officialBadge")}
             </span>
           ) : null}
+          {/* Tema y "sobre" sin enlace: la fila entera ya es un enlace (openspec: add-list-themes-phase1). */}
+          <ListThemeLine theme={entry.theme} subject={entry.subject} linked={false} className="mb-0.5" />
           <span
             className={`truncate font-display text-base transition-colors group-hover:text-amber ${selected ? "text-amber" : "text-paper"}`}
           >

@@ -164,12 +164,15 @@ describe("servicio de artist-journeys", () => {
       .mockReturnValueOnce(chain([{ releaseGroupId: sg1 }])) // selectedReleaseGroupIds
       .mockReturnValueOnce(chain([])); // listenedReleaseGroupIds
     let insertedItems: unknown;
+    let insertedList: unknown;
     mocks.db.insert
-      .mockReturnValueOnce(chain([journeyRow])) // insert userList
+      .mockReturnValueOnce(chain([journeyRow], (values) => (insertedList = values))) // insert userList
       .mockReturnValueOnce(chain([], (values) => (insertedItems = values))); // pre-población
 
     const detail = await activateArtistJourney(ownerId, artistId);
 
+    // Guía de entrada sobre su artista (openspec: add-list-themes-phase1).
+    expect(insertedList).toMatchObject({ theme: "start_here", subjectArtistId: artistId });
     expect(detail.state).toBe("in_progress");
     expect(detail.progress).toEqual({ selectedCount: 1, listenedCount: 0 });
     expect(detail.albums.find((a) => a.id === sg1)?.selected).toBe(true);

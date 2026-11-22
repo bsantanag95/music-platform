@@ -196,7 +196,7 @@ async function checkSources(s: Services) {
   check(same(await favorites({ decade: 1990 }), [a7, a6]), "también se filtran");
 
   console.log("Fuente: lista");
-  const list = await s.lists.createList({ ownerId: person.id, entityType: "release-group", title: `Smoke lista ${suffix}` });
+  const list = await s.lists.createList({ theme: "recommendations", ownerId: person.id, entityType: "release-group", title: `Smoke lista ${suffix}` });
   await s.lists.addItemToList(list.id, person.id, { type: "release-group", id: a8.id });
   await s.lists.addItemToList(list.id, person.id, { type: "release-group", id: a1.id });
   const fromList = (userId: string, entityType: "release-group" | "recording" = "release-group", extra: object = {}) =>
@@ -225,6 +225,8 @@ async function checkSources(s: Services) {
   const built = await s.laminas.createLamina(person.id, { ...params, targetIds: [a2.id, a1.id, a2.id] });
   check(built.audience === "private", "nace privada aunque el defecto sea público");
   check(built.showScores === false, "las notas siguen apagadas");
+  const [themed] = await db.select({ theme: userList.theme }).from(userList).where(eq(userList.id, built.id));
+  check(themed?.theme === "personal_ranking", "nace con el tema Ranking personal (add-list-themes-phase1)");
   check(same(built.items, [a2, a1]), "guarda el orden y omite repetidos");
   check((await s.laminas.createLamina(person.id, params)).audience === "public", "a mano sigue el defecto");
   check((await codeOf(() => s.laminas.createLamina(person.id, { ...params, audience: "public", targetIds: [a1.id] }))) === "VALIDATION_ERROR", "una fuente no admite audiencia");

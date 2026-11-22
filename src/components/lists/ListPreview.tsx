@@ -10,6 +10,7 @@ import type { UserListItem } from "@/lib/api/schemas";
 import { ListCoverMosaic } from "./ListCoverMosaic";
 import { SaveListButton } from "./SaveListButton";
 import { entityTypeKey } from "./lists-shared";
+import { ListThemeLine } from "./ListThemeChip";
 import type { ReaderEntry } from "./reader-entries";
 
 /** Elementos que muestra la vista previa; el resto, en la lista. */
@@ -58,8 +59,11 @@ export function ListPreview({
           className="w-full self-start shadow-[0_24px_40px_-20px_rgba(0,0,0,0.9)]"
         />
         <div className="flex min-w-0 flex-col items-start gap-2">
-          <span className="rounded bg-ink px-1.5 py-0.5 font-data text-xs text-paper-muted">
-            {t(entityTypeKey(entry.entityType))} · {t("itemsCount", { count: entry.itemCount })}
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="rounded bg-ink px-1.5 py-0.5 font-data text-xs text-paper-muted">
+              {t(entityTypeKey(entry.entityType))} · {t("itemsCount", { count: entry.itemCount })}
+            </span>
+            <ListThemeLine theme={entry.theme} subject={entry.subject} />
           </span>
           <h2 className="text-balance font-display text-[clamp(1.75rem,2.4vw,2.375rem)] font-bold leading-[1.02] tracking-[-0.025em] text-paper">
             {entry.title}

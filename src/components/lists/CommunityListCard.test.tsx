@@ -26,6 +26,8 @@ function summary(overrides: Partial<DiscoverListSummary> = {}): DiscoverListSumm
     title: "Ganadores del Grammy 2025",
     description: null,
     createdAt: "2026-08-01T00:00:00.000Z",
+    theme: null,
+    subject: null,
     updatedAt: "2026-08-01T00:00:00.000Z",
     itemCount: 10,
     coverThumbs: [],

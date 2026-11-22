@@ -177,6 +177,9 @@ export async function activateArtistJourney(
       audience: "private",
       kind: "artist_journey",
       journeyArtistId: artistId,
+      // Guía de entrada sobre su artista (openspec: add-list-themes-phase1).
+      theme: "start_here",
+      subjectArtistId: artistId,
     })
     // Condición de carrera de doble activación: el índice único parcial
     // (owner_id, journey_artist_id) arbitra el conflicto.

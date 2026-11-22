@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { createList } from "@/lib/api/lists";
 import { ApiError } from "@/lib/api/client";
-import type { ListEntityType, UserListDetail } from "@/lib/api/schemas";
+import type { ListEntityType, ListTheme, UserListDetail } from "@/lib/api/schemas";
+import { ListThemePicker } from "@/components/lists/ListThemeFields";
 import { useNotifyQuickActionChange } from "../quick-actions-changes";
 import { ActionNotice } from "../ActionNotice";
 import { PanelFooter, PanelAction, PanelLink } from "../PanelActions";
@@ -29,6 +30,10 @@ export function NewListPanel({ onAddItems, onNavigate }: NewListPanelProps) {
   const [entityType, setEntityType] = useState<ListEntityType>("release-group");
   const [title, setTitle] = useState("");
   const [titleError, setTitleError] = useState(false);
+  // Tema obligatorio, sin preselección; sin "sobre" en el panel rápido (openspec: add-list-themes-phase1).
+  const [theme, setTheme] = useState<ListTheme | null>(null);
+  const [themeError, setThemeError] = useState(false);
+  const tTheme = useTranslations("lists.theme");
   const [busy, setBusy] = useState(false);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [created, setCreated] = useState<UserListDetail | null>(null);
@@ -39,15 +44,14 @@ export function NewListPanel({ onAddItems, onNavigate }: NewListPanelProps) {
 
   const submit: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
-    if (title.trim() === "") {
-      setTitleError(true);
-      return;
-    }
-    setTitleError(false);
+    const missingTitle = title.trim() === "";
+    setTitleError(missingTitle);
+    setThemeError(!theme);
+    if (missingTitle || !theme) return;
     setBusy(true);
     setErrorCode(null);
     try {
-      setCreated(await createList({ entityType, title: title.trim() }));
+      setCreated(await createList({ entityType, title: title.trim(), theme }));
       notifyChanged();
     } catch (err) {
       setErrorCode(err instanceof ApiError ? err.code : "INTERNAL_ERROR");
@@ -105,6 +109,22 @@ export function NewListPanel({ onAddItems, onNavigate }: NewListPanelProps) {
           })}
         </div>
       </fieldset>
+      <div className="flex flex-col gap-1.5">
+        <ListThemePicker
+          name="quick-new-list-theme"
+          variant="chips"
+          value={theme}
+          onChange={(next) => {
+            setTheme(next);
+            setThemeError(false);
+          }}
+        />
+        {themeError ? (
+          <span role="alert" className="font-data text-xs text-danger">
+            {tTheme("required")}
+          </span>
+        ) : null}
+      </div>
       {errorCode === "AUTH_REQUIRED" ? (
         <Link href="/auth/login" className="font-data text-sm text-amber underline">
           {t("signIn")}

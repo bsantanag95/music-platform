@@ -100,7 +100,7 @@ export async function seedE2eData(): Promise<SeededData> {
     await db.update(schema.appUser).set({ onboardedAt: now }).where(eq(schema.appUser.id, id));
   }
 
-  await createList({ ownerId: user.id, entityType: "release-group", title: LIST_TITLE });
+  await createList({ theme: "recommendations", ownerId: user.id, entityType: "release-group", title: LIST_TITLE });
 
   return { userId: user.id, releaseGroupId: releaseGroup.id, artistId: artist.id };
 }

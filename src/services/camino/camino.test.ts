@@ -121,6 +121,7 @@ describe("servicio de Camino", () => {
         ownerId,
         entityType: "release-group",
         kind: "custom_journey",
+        theme: "start_here",
       });
       expect(mocks.resolveNewContentAudience).toHaveBeenCalledWith(ownerId, "list", undefined);
     });

@@ -9,6 +9,7 @@ import {
   pinList,
   unpinList,
   updateList,
+  resolveListSubject,
   addItemToList,
   removeItemFromList,
   reorderListItems,
@@ -104,7 +105,7 @@ describe("servicio de listas", () => {
     mocks.db.insert.mockReturnValue(chain([listRow]));
     mockOwnedList(listRow);
 
-    const result = await createList({ ownerId: owner, entityType: "artist", title: "  Favoritos de los 80  " });
+    const result = await createList({ theme: "recommendations", ownerId: owner, entityType: "artist", title: "  Favoritos de los 80  " });
     expect(result.title).toBe("Favoritos de los 80");
     expect(result.entityType).toBe("artist");
     expect(result.audience).toBe("followers");
@@ -115,14 +116,14 @@ describe("servicio de listas", () => {
   });
 
   it("rechaza título vacío", async () => {
-    await expect(createList({ ownerId: owner, entityType: "artist", title: "   " })).rejects.toMatchObject({
+    await expect(createList({ theme: "recommendations", ownerId: owner, entityType: "artist", title: "   " })).rejects.toMatchObject({
       code: "VALIDATION_ERROR",
     });
   });
 
   it("rechaza descripción demasiado larga", async () => {
     await expect(
-      createList({ ownerId: owner, entityType: "artist", title: "ok", description: "x".repeat(501) }),
+      createList({ theme: "recommendations", ownerId: owner, entityType: "artist", title: "ok", description: "x".repeat(501) }),
     ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
   });
 
@@ -243,6 +244,57 @@ describe("servicio de listas", () => {
     });
   });
 
+  // Tema y "sobre" (openspec: add-list-themes-phase1).
+  it("updateList cambia el tema y, al fijar un género, limpia el artista", async () => {
+    let set: Record<string, unknown> | undefined;
+    mocks.db.update.mockReturnValue({
+      set: (values: Record<string, unknown>) => {
+        set = values;
+        return chain([listRow]);
+      },
+    });
+    mocks.db.select.mockReturnValueOnce(chain([{ id: "g1" }])); // el género existe
+    mockOwnedList(listRow);
+
+    await updateList(listRow.id, owner, { theme: "hidden_gems", subjectGenreId: "g1" });
+    expect(set).toEqual({ theme: "hidden_gems", subjectArtistId: null, subjectGenreId: "g1" });
+  });
+
+  it("updateList con subjectGenreId null quita el sobre", async () => {
+    let set: Record<string, unknown> | undefined;
+    mocks.db.update.mockReturnValue({
+      set: (values: Record<string, unknown>) => {
+        set = values;
+        return chain([listRow]);
+      },
+    });
+    mockOwnedList(listRow);
+
+    await updateList(listRow.id, owner, { subjectGenreId: null });
+    expect(set).toEqual({ subjectArtistId: null, subjectGenreId: null });
+  });
+
+  it("resolveListSubject rechaza los dos a la vez y un id inexistente", async () => {
+    await expect(resolveListSubject({ subjectArtistId: "a1", subjectGenreId: "g1" })).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+    });
+    mocks.db.select.mockReturnValueOnce(chain([]));
+    await expect(resolveListSubject({ subjectArtistId: "a1" })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+  });
+
+  it("createList guarda el tema", async () => {
+    let values: Record<string, unknown> | undefined;
+    mocks.db.insert.mockReturnValue({
+      values: (v: Record<string, unknown>) => {
+        values = v;
+        return chain([listRow]);
+      },
+    });
+    mockOwnedList(listRow);
+    await createList({ theme: "moment", ownerId: owner, entityType: "artist", title: "Para manejar" });
+    expect(values).toMatchObject({ theme: "moment", subjectArtistId: null, subjectGenreId: null });
+  });
+
   it("deleteList borra solo listas propias", async () => {
     mocks.db.delete.mockReturnValue(chain([{ id: listRow.id }]));
     await expect(deleteList(listRow.id, owner)).resolves.toBeUndefined();
@@ -257,6 +309,12 @@ describe("servicio de listas", () => {
       .mockReturnValueOnce(chain([{ list: albumListRow, pinnedAt: new Date("2026-02-01T00:00:00Z") }]))
       // cifras por tipo (openspec: redesign-me-lists-toolbar)
       .mockReturnValueOnce(chain([{ entityType: "release-group", n: 5 }, { entityType: "artist", n: 2 }]))
+      // listas sin tema (openspec: add-list-themes-phase1)
+      .mockReturnValueOnce(chain([{ n: 4 }]))
+      // enrichLists: tema y "sobre"
+      .mockReturnValueOnce(
+        chain([{ id: albumListRow.id, theme: "recommendations", artistId: null, artistName: null, genreId: "g1", genreSlug: "doom-metal", genreName: "Doom metal", genreNameEs: null }]),
+      )
       // enrichLists: conteos
       .mockReturnValueOnce(chain([{ listId: albumListRow.id, n: 3 }]))
       // enrichLists: carátulas
@@ -272,6 +330,9 @@ describe("servicio de listas", () => {
     expect(result.lists[0]?.coverThumbs).toEqual(["http://c/1", "http://c/2"]);
     expect(result.lists[0]?.pinned).toBe(true);
     expect(result.counts).toEqual({ artist: 2, "release-group": 5, recording: 0 });
+    expect(result.unthemedCount).toBe(4);
+    expect(result.lists[0]?.theme).toBe("recommendations");
+    expect(result.lists[0]?.subject).toEqual({ type: "genre", id: "g1", slug: "doom-metal", name: "Doom metal", nameEs: null });
 
     await expect(listMyLists(owner, 0)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
   });
@@ -280,6 +341,8 @@ describe("servicio de listas", () => {
     mocks.db.select
       .mockReturnValueOnce(chain([{ list: albumListRow, pinnedAt: null }]))
       .mockReturnValueOnce(chain([]))
+      .mockReturnValueOnce(chain([{ n: 0 }])) // listas sin tema
+      .mockReturnValueOnce(chain([])) // tema y "sobre"
       .mockReturnValueOnce(chain([{ listId: albumListRow.id, n: 2 }]))
       .mockReturnValueOnce(
         chain([
@@ -362,6 +425,7 @@ describe("servicio de listas", () => {
     mocks.db.select
       .mockReturnValueOnce(chain([{ list: albumListRow, pinnedAt: null }]))
       .mockReturnValueOnce(chain([{ n: 23 }]))
+      .mockReturnValueOnce(chain([])) // tema y "sobre"
       .mockReturnValueOnce(chain([{ listId: albumListRow.id, n: 5 }]))
       .mockReturnValueOnce(chain([{ listId: albumListRow.id, cover: "http://c/1", rn: 1 }]));
     const result = await listUserLists("usuario", owner);
@@ -522,7 +586,7 @@ describe("createList — audiencia del contenido nuevo (spec default-audience)",
     const values = arrangeCreate();
     audience.resolve.mockResolvedValueOnce("public");
 
-    await createList({ ownerId: owner, entityType: "artist", title: "Mi lista" });
+    await createList({ theme: "recommendations", ownerId: owner, entityType: "artist", title: "Mi lista" });
 
     expect(audience.resolve).toHaveBeenCalledWith(owner, "list", undefined);
     expect(values).toHaveBeenCalledWith(expect.objectContaining({ audience: "public" }));
@@ -531,7 +595,7 @@ describe("createList — audiencia del contenido nuevo (spec default-audience)",
   it("le pasa al resolvedor la audiencia explícita de la petición", async () => {
     arrangeCreate();
 
-    await createList({ ownerId: owner, entityType: "artist", title: "Mi lista", audience: "private" });
+    await createList({ theme: "recommendations", ownerId: owner, entityType: "artist", title: "Mi lista", audience: "private" });
 
     expect(audience.resolve).toHaveBeenCalledWith(owner, "list", "private");
   });
@@ -539,7 +603,7 @@ describe("createList — audiencia del contenido nuevo (spec default-audience)",
   it("sin preferencia ni valor explícito nace con el default de listas (`followers`)", async () => {
     const values = arrangeCreate();
 
-    await createList({ ownerId: owner, entityType: "artist", title: "Mi lista" });
+    await createList({ theme: "recommendations", ownerId: owner, entityType: "artist", title: "Mi lista" });
 
     expect(values).toHaveBeenCalledWith(expect.objectContaining({ audience: "followers" }));
   });

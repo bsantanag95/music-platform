@@ -1,7 +1,8 @@
-import { and, asc, count, desc, eq, ilike, inArray, max, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, inArray, isNull, max, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import {
   artist,
+  genre,
   recording,
   releaseGroup,
   userList,
@@ -17,6 +18,7 @@ import {
   LIST_TITLE_MAX,
   type ListEntityType,
   type ListSort,
+  type ListTheme,
 } from "./types";
 import { resolveNewContentAudience } from "@/services/social/default-audience";
 import { scheduleCoverMirrorsForUrls } from "@/services/catalog/cover-mirror";
@@ -34,7 +36,14 @@ export interface ListFilters {
   q?: string;
   entityType?: ListEntityType;
   sort?: ListSort;
+  /** Tema; `none` = listas sin tema (solo en la superficie propia, para clasificarlas). */
+  theme?: ListTheme | "none";
 }
+
+/** De qué trata una lista (openspec: add-list-themes-phase1): un artista o un género. */
+export type ListSubject =
+  | { type: "artist"; id: string; name: string }
+  | { type: "genre"; id: string; slug: string; name: string; nameEs: string | null };
 
 export interface UserListSummary {
   id: string;
@@ -42,6 +51,9 @@ export interface UserListSummary {
   title: string;
   description: string | null;
   audience: Audience;
+  /** Tema de la lista; `null` = sin tema (listas previas a 0098 y altas del sistema sin tema). */
+  theme: ListTheme | null;
+  subject: ListSubject | null;
   createdAt: string;
   updatedAt: string;
   /** Cantidad total de ítems de la lista. */
@@ -83,6 +95,32 @@ export interface UpdateListChanges {
   title?: string;
   description?: string | null;
   audience?: Audience;
+  /** Cambia el tema; nunca vuelve a `null` (el contrato lo rechaza antes). */
+  theme?: ListTheme;
+  /** Fijar uno limpia el otro; `null` quita el "sobre". */
+  subjectArtistId?: string | null;
+  subjectGenreId?: string | null;
+}
+
+/** "Sobre" a guardar: valida que exista y que no vengan los dos. */
+export async function resolveListSubject(input: {
+  subjectArtistId?: string | null;
+  subjectGenreId?: string | null;
+}): Promise<{ subjectArtistId: string | null; subjectGenreId: string | null }> {
+  const artistId = input.subjectArtistId ?? null;
+  const genreId = input.subjectGenreId ?? null;
+  if (artistId && genreId) {
+    throw new ApiError("VALIDATION_ERROR", 400, "Una lista trata sobre un artista o un género, no ambos");
+  }
+  if (artistId) {
+    const [row] = await db.select({ id: artist.id }).from(artist).where(eq(artist.id, artistId)).limit(1);
+    if (!row) throw new ApiError("VALIDATION_ERROR", 400, "El artista de la lista no existe");
+  }
+  if (genreId) {
+    const [row] = await db.select({ id: genre.id }).from(genre).where(eq(genre.id, genreId)).limit(1);
+    if (!row) throw new ApiError("VALIDATION_ERROR", 400, "El género de la lista no existe");
+  }
+  return { subjectArtistId: artistId, subjectGenreId: genreId };
 }
 
 function targetValues(type: ListEntityType, id: string) {
@@ -181,7 +219,11 @@ export async function createList(params: {
   title: string;
   description?: string | null;
   audience?: Audience;
+  theme: ListTheme;
+  subjectArtistId?: string | null;
+  subjectGenreId?: string | null;
 }): Promise<UserListDetail> {
+  const subject = await resolveListSubject(params);
   const [created] = await db
     .insert(userList)
     .values({
@@ -189,6 +231,8 @@ export async function createList(params: {
       entityType: params.entityType,
       title: normalizeTitle(params.title),
       description: normalizeDescription(params.description ?? null),
+      theme: params.theme,
+      ...subject,
       audience: await resolveNewContentAudience(params.ownerId, "list", params.audience),
     })
     .returning();
@@ -211,7 +255,7 @@ export async function getOwnedList(listId: string, ownerId: string): Promise<Use
       .where(and(eq(userListPin.ownerId, ownerId), eq(userListPin.listId, listId)))
       .limit(1),
   ]);
-  return serializeDetail(listRow, items, pin !== undefined);
+  return withThemeMeta(serializeDetail(listRow, items, pin !== undefined));
 }
 
 export async function updateList(
@@ -219,10 +263,24 @@ export async function updateList(
   ownerId: string,
   changes: UpdateListChanges,
 ): Promise<UserListDetail> {
-  const set: Partial<{ title: string; description: string | null; audience: Audience }> = {};
+  const set: Partial<{
+    title: string;
+    description: string | null;
+    audience: Audience;
+    theme: ListTheme;
+    subjectArtistId: string | null;
+    subjectGenreId: string | null;
+  }> = {};
   if (changes.title !== undefined) set.title = normalizeTitle(changes.title);
   if (changes.description !== undefined) set.description = normalizeDescription(changes.description);
   if (changes.audience !== undefined) set.audience = changes.audience;
+  if (changes.theme !== undefined) set.theme = changes.theme;
+  if (changes.subjectArtistId !== undefined || changes.subjectGenreId !== undefined) {
+    // Fijar uno limpia el otro: cambiar de artista a género es una sola operación.
+    const subject = await resolveListSubject(changes);
+    set.subjectArtistId = subject.subjectArtistId;
+    set.subjectGenreId = subject.subjectGenreId;
+  }
 
   if (Object.keys(set).length === 0) {
     throw new ApiError("VALIDATION_ERROR", 400, "No hay campos para actualizar");
@@ -248,6 +306,51 @@ export async function deleteList(listId: string, ownerId: string): Promise<void>
 export interface ListEnrichment {
   itemCount: number;
   coverThumbs: string[];
+  theme: ListTheme | null;
+  subject: ListSubject | null;
+}
+
+type ThemeMeta = { theme: ListTheme | null; subject: ListSubject | null };
+
+/** Tema y "sobre" (con su nombre) de un conjunto de listas, en una sola consulta. */
+export async function listThemeMeta(listIds: string[]): Promise<Map<string, ThemeMeta>> {
+  const result = new Map<string, ThemeMeta>();
+  if (listIds.length === 0) return result;
+  const rows = await db
+    .select({
+      id: userList.id,
+      theme: userList.theme,
+      artistId: artist.id,
+      artistName: artist.name,
+      genreId: genre.id,
+      genreSlug: genre.slug,
+      genreName: genre.name,
+      genreNameEs: genre.nameEs,
+    })
+    .from(userList)
+    .leftJoin(artist, eq(userList.subjectArtistId, artist.id))
+    .leftJoin(genre, eq(userList.subjectGenreId, genre.id))
+    .where(inArray(userList.id, listIds));
+  for (const row of rows) {
+    let subject: ListSubject | null = null;
+    if (row.artistId) subject = { type: "artist", id: row.artistId, name: row.artistName ?? "" };
+    else if (row.genreId) {
+      subject = {
+        type: "genre",
+        id: row.genreId,
+        slug: row.genreSlug ?? "",
+        name: row.genreName ?? "",
+        nameEs: row.genreNameEs,
+      };
+    }
+    result.set(row.id, { theme: (row.theme as ListTheme | null) ?? null, subject });
+  }
+  return result;
+}
+
+async function withThemeMeta<T extends UserListSummary>(summary: T): Promise<T> {
+  const meta = (await listThemeMeta([summary.id])).get(summary.id);
+  return { ...summary, theme: meta?.theme ?? null, subject: meta?.subject ?? null };
 }
 
 /**
@@ -263,7 +366,12 @@ export async function enrichLists(
 ): Promise<Map<string, ListEnrichment>> {
   const result = new Map<string, ListEnrichment>();
   if (listIds.length === 0) return result;
-  for (const id of listIds) result.set(id, { itemCount: 0, coverThumbs: [] });
+  for (const id of listIds) result.set(id, { itemCount: 0, coverThumbs: [], theme: null, subject: null });
+
+  for (const [id, meta] of await listThemeMeta(listIds)) {
+    const entry = result.get(id);
+    if (entry) Object.assign(entry, meta);
+  }
 
   const counts = await db
     .select({ listId: userListItem.listId, n: count() })
@@ -314,11 +422,13 @@ function withEnrichment(
     ...summary,
     itemCount: found?.itemCount ?? 0,
     coverThumbs: found?.coverThumbs ?? [],
+    theme: found?.theme ?? null,
+    subject: found?.subject ?? null,
   };
 }
 
 export function normalizeListFilters(filters?: ListFilters): Required<Pick<ListFilters, "sort">> &
-  Pick<ListFilters, "q" | "entityType"> {
+  Pick<ListFilters, "q" | "entityType" | "theme"> {
   const sort = filters?.sort ?? "recent";
   if (!LIST_SORTS.includes(sort)) {
     throw new ApiError("VALIDATION_ERROR", 400, "El orden no es válido");
@@ -327,15 +437,36 @@ export function normalizeListFilters(filters?: ListFilters): Required<Pick<ListF
     throw new ApiError("VALIDATION_ERROR", 400, "El tipo de contenido no es válido");
   }
   const q = filters?.q?.trim();
-  return { q: q ? q : undefined, entityType: filters?.entityType, sort };
+  return { q: q ? q : undefined, entityType: filters?.entityType, theme: filters?.theme, sort };
 }
 
-/** Condiciones de tipo y búsqueda por título, compartidas por los listados propio y ajeno. */
-export function listFilterConditions({ q, entityType }: Pick<ListFilters, "q" | "entityType">): SQL[] {
+/** Condición de tema: un tema concreto, o `none` para las listas sin tema. */
+export function listThemeCondition(theme: ListFilters["theme"]): SQL | undefined {
+  if (!theme) return undefined;
+  return theme === "none" ? isNull(userList.theme) : eq(userList.theme, theme);
+}
+
+/** Condiciones de tipo, tema y búsqueda por título, compartidas por los listados propio y ajeno. */
+export function listFilterConditions({
+  q,
+  entityType,
+  theme,
+}: Pick<ListFilters, "q" | "entityType" | "theme">): SQL[] {
   const conditions: SQL[] = [];
   if (entityType) conditions.push(eq(userList.entityType, entityType));
+  const themeCondition = listThemeCondition(theme);
+  if (themeCondition) conditions.push(themeCondition);
   if (q) conditions.push(ilike(userList.title, `%${q}%`));
   return conditions;
+}
+
+/** Cuántas listas propias de "Mis listas" no tienen tema (aviso de clasificación). */
+export async function countMyUnthemedLists(ownerId: string): Promise<number> {
+  const [row] = await db
+    .select({ n: count() })
+    .from(userList)
+    .where(and(eq(userList.ownerId, ownerId), eq(userList.kind, "standard"), isNull(userList.theme)));
+  return Number(row?.n ?? 0);
 }
 
 /** Cuántas listas hay de cada tipo de entidad (openspec: redesign-me-lists-toolbar, D1). */
@@ -375,12 +506,12 @@ export async function listMyLists(
   if (page < 1 || pageSize < 1 || pageSize > 50) {
     throw new ApiError("VALIDATION_ERROR", 400, "La paginación no es válida");
   }
-  const { q, entityType, sort } = normalizeListFilters(filters);
+  const { q, entityType, theme, sort } = normalizeListFilters(filters);
 
   const conditions: SQL[] = [
     eq(userList.ownerId, ownerId),
     eq(userList.kind, "standard"),
-    ...listFilterConditions({ q, entityType }),
+    ...listFilterConditions({ q, entityType, theme }),
   ];
   const sortOrder = listSortOrder(sort);
 
@@ -405,7 +536,11 @@ export async function listMyLists(
     .limit(pageSize + 1)
     .offset((page - 1) * pageSize);
 
-  const [rows, counts] = await Promise.all([rowsQuery, countMyListsByType(ownerId)]);
+  const [rows, counts, unthemedCount] = await Promise.all([
+    rowsQuery,
+    countMyListsByType(ownerId),
+    countMyUnthemedLists(ownerId),
+  ]);
   const pageRows = rows.slice(0, pageSize);
   const enrichment = await enrichLists(pageRows.map((row) => row.list.id));
 
@@ -418,6 +553,7 @@ export async function listMyLists(
     pageSize,
     hasNext: rows.length > pageSize,
     counts,
+    unthemedCount,
   };
 }
 
@@ -550,7 +686,7 @@ export async function getUserListDetail(
     )
     .limit(1);
   if (!listRow) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
-  return serializeDetail(listRow, await listItems(listId));
+  return withThemeMeta(serializeDetail(listRow, await listItems(listId)));
 }
 
 /** Agrega un ítem al final de la lista propia. Idempotente: no duplica. */
@@ -721,6 +857,9 @@ function serializeSummary(row: {
     title: row.title,
     description: row.description,
     audience: row.audience as Audience,
+    // Tema y "sobre" los ponen enrichLists / withThemeMeta (el "sobre" necesita el nombre).
+    theme: null,
+    subject: null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     // Los consumidores que enriquecen (listMyLists / listUserLists) sobrescriben
