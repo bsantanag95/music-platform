@@ -271,7 +271,7 @@ Fuentes, en este orden:
    `/explore/collections/…`, con la plataforma como dueña (`presentList`, como en las guardadas).
 
 **Sin riel** (`redesign-lists-phase2`; antes `ListsContextRail`, `redesign-lists-page`): con sesión, **Tus listas**
-(`ListsYourLine`) es una línea bajo la frase de entrada que retoma la lista propia con actividad más reciente
+(`ListsYourLine`) es una franja bajo la frase de entrada: a la izquierda, el mosaico y el título de la lista propia con actividad más reciente («Sigue con tu última lista»; antes una línea mono en la que rótulo, lista y accesos se leían iguales), y a la derecha los accesos; retoma la lista propia con actividad más reciente
 (`getMostRecentEditedList`, el criterio de "Retoma una lista" de Inicio) y enlaza a `/me/lists` y a las guardadas; sin listas,
 invita a crear la primera. Sin sesión, la banda **Arma tus propias listas** (`ListsSignUpBand`) va después del lector. **Para
 completar** es la última pestaña: hasta 8 de las listas de `/caminos` (`discoverCaminos`), con "N personas la están completando"

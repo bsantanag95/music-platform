@@ -127,7 +127,7 @@
       "seeFull": "Ver la lista completa",
       "loadError": "No se pudo cargar esta lista. Puedes abrirla igual.",
       "shownOf": "{shown} de {total}",
-      "resume": "Retoma «{title}»",
+      "resumeLabel": "Sigue con tu última lista",
       "noLists": "Aún no tienes listas",
       "allTypes": "Buscar en todos los tipos"
     },

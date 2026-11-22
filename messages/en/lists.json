@@ -127,7 +127,7 @@
       "seeFull": "See the full list",
       "loadError": "This list could not be loaded. You can still open it.",
       "shownOf": "{shown} of {total}",
-      "resume": "Pick up “{title}”",
+      "resumeLabel": "Continue your latest list",
       "noLists": "You have no lists yet",
       "allTypes": "Search all types"
     },
