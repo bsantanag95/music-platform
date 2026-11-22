@@ -35,11 +35,10 @@ export function ListPreview({
   enabled: boolean;
 }) {
   const t = useTranslations("lists");
-  const tCamino = useTranslations("camino");
   const query = useQuery({
     queryKey: listPreviewKey(entry.id),
     queryFn: () => getUserListDetail(entry.ownerUsername, entry.id).then((list) => list.items),
-    enabled: enabled && entry.previewable,
+    enabled,
     initialData: initialItems,
     staleTime: 60_000,
     retry: false,
@@ -100,15 +99,11 @@ export function ListPreview({
             {entry.saveCount ? (
               <span className="font-data text-xs text-paper-muted">{t("savesCount", { count: entry.saveCount })}</span>
             ) : null}
-            {entry.trackingCount !== null ? (
-              <span className="font-data text-xs text-petrol-hover">{tCamino("trackingCount", { count: entry.trackingCount })}</span>
-            ) : null}
           </div>
         </div>
       </div>
 
-      {entry.previewable ? (
-        <div className="px-6 pb-5 pt-2 xl:px-7">
+      <div className="px-6 pb-5 pt-2 xl:px-7">
           {items ? (
             items.length > 0 ? (
               <ol className="flex flex-col">
@@ -160,7 +155,6 @@ export function ListPreview({
             </Link>
           </div>
         </div>
-      ) : null}
     </section>
   );
 }

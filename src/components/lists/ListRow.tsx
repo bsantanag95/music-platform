@@ -14,7 +14,7 @@ export const READER_PREVIEW_QUERY = "(min-width: 1024px)";
 
 /**
  * Fila del lector de `/lists` (openspec: redesign-lists-phase2): mosaico, título, dueño · fecha y una línea de datos con tipo,
- * elementos y guardadas (o cuántas personas la completan). Es un enlace a la lista; desde `lg`, un clic primario sin teclas
+ * elementos y guardadas. Es un enlace a la lista; desde `lg`, un clic primario sin teclas
  * (o Enter) la elige para la vista previa en vez de navegar. Ctrl/Cmd + clic y el clic central siguen abriendo la lista.
  */
 export function ListRow({
@@ -28,7 +28,6 @@ export function ListRow({
   onSelect?: (entry: ReaderEntry) => void;
 }) {
   const t = useTranslations("lists");
-  const tCamino = useTranslations("camino");
 
   const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
     if (!onSelect || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -77,21 +76,15 @@ export function ListRow({
             ) : null}
           </span>
           <span className="truncate font-data text-xs text-paper-muted">
-            {entry.trackingCount !== null ? (
-              <span className="text-petrol-hover">{tCamino("trackingCount", { count: entry.trackingCount })}</span>
-            ) : (
+            {t(entityTypeKey(entry.entityType))}
+            <span aria-hidden> · </span>
+            {t("itemsCount", { count: entry.itemCount })}
+            {entry.saveCount ? (
               <>
-                {t(entityTypeKey(entry.entityType))}
                 <span aria-hidden> · </span>
-                {t("itemsCount", { count: entry.itemCount })}
-                {entry.saveCount ? (
-                  <>
-                    <span aria-hidden> · </span>
-                    {t("savesCount", { count: entry.saveCount })}
-                  </>
-                ) : null}
+                {t("savesCount", { count: entry.saveCount })}
               </>
-            )}
+            ) : null}
           </span>
         </span>
       </Link>

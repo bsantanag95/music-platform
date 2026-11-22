@@ -13,13 +13,14 @@ import { FeaturedExhibit } from "@/components/lists/FeaturedExhibit";
 import { CommunityListsToolbar } from "@/components/lists/CommunityListsToolbar";
 import { ListsReader, type InitialPreview, type ReaderTab } from "@/components/lists/ListsReader";
 import { ListsBand, ListsSignUpBand } from "@/components/lists/ListsSignUpBand";
+import { ListsToComplete, matchToComplete } from "@/components/lists/ListsToComplete";
 import { ListsYourLine } from "@/components/lists/ListsYourLine";
 import { getMostRecentEditedList } from "@/services/home/home";
 import { parseCommunityFilters, toDiscoverFilters } from "@/components/lists/community-filters";
 import { withClientMessages } from "@/i18n/client-messages";
 
-/** "Para completar" como pestaña del lector: hasta 8 (openspec: redesign-lists-phase2). */
-const READER_TO_COMPLETE = 8;
+/** Listas "para completar" que se piden: luego se filtran por texto y se muestran hasta 4 (separate-lists-to-complete). */
+const TO_COMPLETE_FETCHED = 8;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("lists");
@@ -62,14 +63,21 @@ async function CommunityListsPage({
 
   let content;
   if (filters) {
-    const initial = await listDiscoverLists(viewerId, 1, 20, toDiscoverFilters(filters));
+    // Las listas para completar son de álbumes: con "Artistas" o "Canciones" no hay ninguna que mostrar.
+    const albumsOnly = filters.type === undefined || filters.type === "release-group";
+    const [initial, toComplete] = await Promise.all([
+      listDiscoverLists(viewerId, 1, 20, toDiscoverFilters(filters)),
+      albumsOnly ? discoverCaminos({}, 1, TO_COMPLETE_FETCHED) : Promise.resolve({ caminos: [] }),
+    ]);
     const first = initial.lists[0];
     const initialPreview = await previewFor(
       first ? { id: first.id, ownerUsername: first.owner.username, previewable: true } : null,
       viewerId,
     );
     content = (
-      <ListsReader
+      <>
+        <ListsToComplete caminos={matchToComplete(toComplete.caminos, filters.q)} />
+        <ListsReader
         // Cambiar de filtros reinicia la lista elegida.
         key={JSON.stringify(filters)}
         mode="explore"
@@ -78,6 +86,7 @@ async function CommunityListsPage({
         canSave={canSave}
         initialPreview={initialPreview}
       />
+      </>
     );
   } else {
     const [featured, popular, fromFollowing, recent, toComplete] = await Promise.all([
@@ -85,7 +94,7 @@ async function CommunityListsPage({
       listPopularLists(viewerId, 1, 20),
       viewerId ? listsFromFollowing(viewerId, 1, 20) : Promise.resolve(null),
       listDiscoverLists(viewerId, 1, 20),
-      discoverCaminos({}, 1, READER_TO_COMPLETE),
+      discoverCaminos({}, 1, TO_COMPLETE_FETCHED),
     ]);
 
     // Lo que ya está en Destacadas no se repite en las pestañas; entre pestañas sí puede repetirse, porque solo se ve una.
@@ -101,35 +110,15 @@ async function CommunityListsPage({
     if (visible(recent.lists).length > 0) {
       tabs.push({ key: "recent", label: t("community.recentHeading"), initial: recent, excludeIds: featuredIds });
     }
-    if (toComplete.caminos.length > 0) {
-      tabs.push({
-        key: "to-complete",
-        label: tCamino("hub.toComplete"),
-        caminos: toComplete.caminos,
-        seeAll: { href: "/caminos", label: tCamino("hub.seeAll") },
-      });
-    }
-
     const firstTab = tabs[0];
-    const firstList =
-      firstTab === undefined
-        ? null
-        : firstTab.key === "to-complete"
-          ? (firstTab.caminos[0] ?? null)
-          : (visible(firstTab.initial.lists)[0] ?? null);
+    const firstList = firstTab === undefined ? null : (visible(firstTab.initial.lists)[0] ?? null);
     const initialPreview = await previewFor(
-      firstList === null || firstTab === undefined
-        ? null
-        : {
-            id: firstList.id,
-            ownerUsername: firstList.owner.username,
-            // Un recorrido propio de "Para completar" no es una lista: no tiene elementos que mostrar.
-            previewable: !("kind" in firstList) || firstList.kind === "standard",
-          },
+      firstList === null ? null : { id: firstList.id, ownerUsername: firstList.owner.username, previewable: true },
       viewerId,
     );
 
-    const anyContent = featured.lists.length > 0 || tabs.some((tab) => tab.key !== "to-complete");
+    // "Para completar" sola no evita el estado vacío global: es progreso sobre listas que ya existen.
+    const anyContent = featured.lists.length > 0 || tabs.length > 0;
     // Elementos de la primera destacada para su exhibidor (redesign-lists-phase3); sin ellos se muestra igual.
     const firstFeatured = featured.lists[0];
     const exhibitItems = firstFeatured
@@ -140,7 +129,8 @@ async function CommunityListsPage({
     // Fundas de la banda sin sesión: una carátula de cada una de las primeras listas que tengan alguna.
     const bandCovers = [
       ...featured.lists,
-      ...tabs.flatMap((tab): { coverThumbs: string[] }[] => (tab.key === "to-complete" ? tab.caminos : tab.initial.lists)),
+      ...toComplete.caminos,
+      ...tabs.flatMap((tab) => tab.initial.lists),
     ]
       .map((list) => list.coverThumbs[0])
       .filter((cover): cover is string => Boolean(cover))
@@ -183,6 +173,9 @@ async function CommunityListsPage({
             ) : null}
           </section>
         ) : null}
+
+        {/* Sección propia tras Destacadas (separate-lists-to-complete): completar una lista es una acción, no otra pestaña. */}
+        {anyContent ? <ListsToComplete caminos={toComplete.caminos} /> : null}
 
         {tabs.length > 0 ? (
           <ListsReader mode="showcase" tabs={tabs} tabsLabel={t("community.reader.tabsLabel")} canSave={canSave} initialPreview={initialPreview} />

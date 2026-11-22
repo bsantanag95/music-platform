@@ -132,7 +132,11 @@
       "allTypes": "Search all types"
     },
     "emptyAction": "Create the first list",
-    "emptySignedOutAction": "Sign in to create the first one"
+    "emptySignedOutAction": "Sign in to create the first one",
+    "toComplete": {
+      "description": "Lists someone is listening to from start to finish. Pick one, listen and keep track of what you have left.",
+      "action": "Complete it"
+    }
   },
   "moveUp": "Move “{title}” up",
   "moveDown": "Move “{title}” down",
