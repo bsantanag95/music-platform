@@ -132,7 +132,11 @@
       "allTypes": "Buscar en todos los tipos"
     },
     "emptyAction": "Crear la primera lista",
-    "emptySignedOutAction": "Inicia sesión para crear la primera"
+    "emptySignedOutAction": "Inicia sesión para crear la primera",
+    "toComplete": {
+      "description": "Listas que alguien está escuchando de principio a fin. Elige una, escúchala y lleva la cuenta de lo que te falta.",
+      "action": "Completarla"
+    }
   },
   "moveUp": "Subir “{title}”",
   "moveDown": "Bajar “{title}”",

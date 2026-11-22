@@ -3,16 +3,15 @@
 import { useId, useRef, useState, useSyncExternalStore, type KeyboardEvent } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { getDiscoverLists, getListsFromFollowing, getPopularLists, type DiscoverListFiltersParams } from "@/lib/api/lists";
 import { queryKeys } from "@/lib/query/keys";
 import type { DiscoverListsResponse, UserListItem } from "@/lib/api/schemas";
-import type { CaminoDiscoverySummary } from "@/services/camino/discovery";
 import { ListPreview } from "./ListPreview";
 import { ListRow, READER_PREVIEW_QUERY } from "./ListRow";
 import { toDiscoverFilters, type CommunityListFilters } from "./community-filters";
-import { entryFromCamino, entryFromList, type ReaderEntry } from "./reader-entries";
+import { entryFromList, type ReaderEntry } from "./reader-entries";
 
 const PAGE_SIZE = 20;
 
@@ -24,10 +23,13 @@ const SOURCES = {
   recent: { fetch: getDiscoverLists, queryKey: queryKeys.discoverLists() },
 } as const;
 
-/** Una pestaña del lector: listas de la comunidad paginadas, o "Para completar". */
-export type ReaderTab =
-  | { key: ListsTabSource; label: string; initial: DiscoverListsResponse; excludeIds: string[] }
-  | { key: "to-complete"; label: string; caminos: CaminoDiscoverySummary[]; seeAll: { href: string; label: string } };
+/** Una pestaña del lector: listas de la comunidad paginadas. "Para completar" es una sección aparte (separate-lists-to-complete). */
+export interface ReaderTab {
+  key: ListsTabSource;
+  label: string;
+  initial: DiscoverListsResponse;
+  excludeIds: string[];
+}
 
 /** Vista previa resuelta en el servidor: la primera lista de la primera pestaña. */
 export interface InitialPreview {
@@ -51,7 +53,6 @@ function useDesktop(): boolean {
 }
 
 function defaultEntry(tab: ReaderTab, locale: string, canSave: boolean): ReaderEntry | null {
-  if (tab.key === "to-complete") return tab.caminos[0] ? entryFromCamino(tab.caminos[0]) : null;
   const excluded = new Set(tab.excludeIds);
   const first = tab.initial.lists.find((list) => !excluded.has(list.id));
   return first ? entryFromList(first, locale, canSave) : null;
@@ -195,11 +196,7 @@ function ShowcaseTabs({
           hidden={index !== active}
           className="pt-2"
         >
-          {tab.key === "to-complete" ? (
-            <CaminoPanel tab={tab} selectedId={selectedId} onSelect={onSelect} />
-          ) : (
-            <ListsPanel tab={tab} canSave={canSave} selectedId={selectedId} onSelect={onSelect} />
-          )}
+          <ListsPanel tab={tab} canSave={canSave} selectedId={selectedId} onSelect={onSelect} />
         </div>
       ))}
     </div>
@@ -212,7 +209,7 @@ function ListsPanel({
   selectedId,
   onSelect,
 }: {
-  tab: Extract<ReaderTab, { initial: DiscoverListsResponse }>;
+  tab: ReaderTab;
   canSave: boolean;
   selectedId: string | null;
   onSelect: (entry: ReaderEntry) => void;
@@ -253,32 +250,6 @@ function ListsPanel({
           </Button>
         </div>
       ) : null}
-    </>
-  );
-}
-
-function CaminoPanel({
-  tab,
-  selectedId,
-  onSelect,
-}: {
-  tab: Extract<ReaderTab, { key: "to-complete" }>;
-  selectedId: string | null;
-  onSelect: (entry: ReaderEntry) => void;
-}) {
-  return (
-    <>
-      <ul className="flex flex-col">
-        {tab.caminos.map((camino) => {
-          const entry = entryFromCamino(camino);
-          return <ListRow key={entry.id} entry={entry} selected={entry.id === selectedId} onSelect={onSelect} />;
-        })}
-      </ul>
-      <div className="mt-4 flex justify-center">
-        <Link href={tab.seeAll.href} className="inline-flex min-h-11 items-center font-data text-sm text-paper-muted transition-colors hover:text-amber">
-          {tab.seeAll.label} →
-        </Link>
-      </div>
     </>
   );
 }

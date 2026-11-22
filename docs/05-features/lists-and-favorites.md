@@ -230,7 +230,7 @@ eran chips de 28 px que se salían de la pantalla junto al orden):
   ("Más guardadas", para no confundirlo con la sección Populares) incluye las listas sin guardados al final. Sin pestañas,
   sin Destacadas ni banda; la vista previa también aparece.
 
-**Lector** (`ListsReader`, cambio `redesign-lists-phase2`): las fuentes 2–4 de abajo y **Para completar** son **pestañas**, en ese
+**Lector** (`ListsReader`, cambio `redesign-lists-phase2`): las fuentes 2–4 de abajo son **pestañas**, en ese
 orden y solo las que tienen contenido (con sesión, lo de la gente que sigues primero y abierta). Cada lista es una **fila**
 (`ListRow`): mosaico de 64 px (56 en el teléfono), título, dueño · fecha y una línea con tipo, elementos y **guardados en todas las
 pestañas** (`saveCount`, que ahora traen las tres fuentes), con Guardar de 44 px con sesión; «Ver más» pagina cada pestaña. Lo
@@ -273,9 +273,17 @@ Fuentes, en este orden:
 **Sin riel** (`redesign-lists-phase2`; antes `ListsContextRail`, `redesign-lists-page`): con sesión, **Tus listas**
 (`ListsYourLine`) es una franja bajo la frase de entrada: a la izquierda, el mosaico y el título de la lista propia con actividad más reciente («Sigue con tu última lista»; antes una línea mono en la que rótulo, lista y accesos se leían iguales), y a la derecha los accesos; retoma la lista propia con actividad más reciente
 (`getMostRecentEditedList`, el criterio de "Retoma una lista" de Inicio) y enlaza a `/me/lists` y a las guardadas; sin listas,
-invita a crear la primera. Sin sesión, la banda **Arma tus propias listas** (`ListsSignUpBand`) va después del lector. **Para
-completar** es la última pestaña: hasta 8 de las listas de `/caminos` (`discoverCaminos`), con "N personas la están completando"
-y "Ver todas". Con ninguna sección con
+invita a crear la primera. Sin sesión, la banda **Arma tus propias listas** (`ListsSignUpBand`) va después del lector.
+
+**Para completar** (`ListsToComplete`, cambio `separate-lists-to-complete`; antes una pestaña del lector, donde perdía
+protagonismo y desaparecía al filtrar por tipo): una **sección propia** tras Destacadas y antes del lector, porque completar una
+lista es una acción y no otra forma de descubrir listas. Encabezado con una frase que explica qué es completar una lista y «Ver
+todas» → `/caminos`; hasta 4 **tarjetas con acción** (tira de cuatro carátulas, título, dueño, "N personas la están completando" y
+el botón «Completarla», que lleva a su lectura en `/caminos`), en 4 columnas desde `lg`, 2 desde `sm` y fila táctil en el
+teléfono. Las listas de `/caminos` son siempre de álbumes, así que en el modo explorar la sección se ve encima del lector con el
+tipo «Todas» o «Álbumes» y, con texto, solo las que lo contienen en el título (`matchToComplete`, en memoria sobre las 8 que trae
+`discoverCaminos`; sin distinguir mayúsculas ni acentos); con «Artistas» o «Canciones» se omite. Sola no evita el estado vacío
+global. Con ninguna sección con
 contenido, el estado vacío ofrece crear la primera lista o iniciar sesión para crearla.
 
 **Cabecera.** Junto al título, con sesión, el botón **Crear lista**: lleva a `/me/lists?new=1`, que abre el formulario de nueva

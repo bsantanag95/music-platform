@@ -44,6 +44,11 @@ vi.mock("@/components/lists/ListsReader", () => ({
     />
   ),
 }));
+vi.mock("@/components/lists/ListsToComplete", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/components/lists/ListsToComplete")>()),
+  ListsToComplete: ({ caminos }: { caminos: { id: string }[] }) =>
+    caminos.length > 0 ? <div data-testid="to-complete" data-ids={caminos.map((c) => c.id).join(",")} /> : null,
+}));
 vi.mock("@/components/lists/ListsYourLine", () => ({
   ListsYourLine: ({ resume }: { resume: { id: string } | null }) => <div data-testid="your-line" data-resume={resume?.id ?? "sin-listas"} />,
 }));
@@ -100,7 +105,11 @@ describe("/lists (openspec: redesign-lists-phase2)", () => {
     expect(screen.getByTestId("featured-card")).toBeInTheDocument();
     expect(screen.getByTestId("toolbar")).toBeInTheDocument();
     expect(reader().dataset.mode).toBe("showcase");
-    expect(reader().dataset.tabs).toBe("from-following,popular,recent,to-complete");
+    expect(reader().dataset.tabs).toBe("from-following,popular,recent");
+    // Para completar es una sección propia, antes del lector (separate-lists-to-complete).
+    const section = screen.getByTestId("to-complete");
+    expect(section.dataset.ids).toBe("c1");
+    expect(section.compareDocumentPosition(reader()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(mocks.discoverCaminos).toHaveBeenCalledWith({}, 1, 8);
   });
 
@@ -145,16 +154,6 @@ describe("/lists (openspec: redesign-lists-phase2)", () => {
     await renderPage();
 
     expect(reader().dataset.preview).toBe("");
-  });
-
-  it("un recorrido propio de Para completar no pide vista previa", async () => {
-    mocks.resolveSession.mockResolvedValue(null);
-    mocks.discoverCaminos.mockResolvedValue({ caminos: [camino("c1", "custom_journey")], page: 1, pageSize: 8, hasNext: false });
-
-    await renderPage();
-
-    expect(reader().dataset.tabs).toBe("to-complete");
-    expect(mocks.getUserListDetail).not.toHaveBeenCalled();
   });
 
   it("con sesión: 'Tus listas' bajo la entrada, 'Crear lista' y sin banda; sin listas propias invita a crear", async () => {
@@ -282,5 +281,47 @@ describe("/lists: exhibidor, banda y estados (openspec: redesign-lists-phase3)",
 
     expect(screen.getByTestId("empty-band")).toHaveTextContent("community.emptyTitle");
     expect(screen.queryByTestId("band")).not.toBeInTheDocument();
+  });
+});
+
+describe("/lists: Para completar como sección (openspec: separate-lists-to-complete)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.resolveSession.mockResolvedValue(null);
+    mocks.listFeaturedLists.mockResolvedValue({ lists: [] });
+    mocks.listPopularLists.mockResolvedValue(page([]));
+    mocks.listDiscoverLists.mockResolvedValue(page([list("r1")]));
+    mocks.getUserListDetail.mockResolvedValue({ items: [] });
+    mocks.discoverCaminos.mockResolvedValue({
+      caminos: [
+        { ...camino("c1"), title: "Best of Sabrina" },
+        { ...camino("c2"), title: "Best of Hard Rock Albums" },
+      ],
+      page: 1,
+      pageSize: 8,
+      hasNext: false,
+    });
+  });
+
+  it("con el filtro de álbumes sigue visible encima de los resultados", async () => {
+    await renderPage({ type: "release-group" });
+    expect(screen.getByTestId("to-complete").dataset.ids).toBe("c1,c2");
+    expect(reader().dataset.mode).toBe("explore");
+  });
+
+  it("con artistas o canciones no aparece y ni se consulta", async () => {
+    await renderPage({ type: "artist" });
+    expect(screen.queryByTestId("to-complete")).not.toBeInTheDocument();
+    expect(mocks.discoverCaminos).not.toHaveBeenCalled();
+  });
+
+  it("con texto muestra solo las que lo contienen en el título, sin distinguir mayúsculas ni acentos", async () => {
+    await renderPage({ q: "SABRÍNA" });
+    expect(screen.getByTestId("to-complete").dataset.ids).toBe("c1");
+  });
+
+  it("si ninguna coincide con el texto, se omite", async () => {
+    await renderPage({ q: "metal" });
+    expect(screen.queryByTestId("to-complete")).not.toBeInTheDocument();
   });
 });

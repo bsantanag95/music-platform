@@ -66,12 +66,6 @@ function renderReader(ui: ReactElement) {
 const tabs: ReaderTab[] = [
   { key: "popular", label: "Populares", initial: page([list("a", { saveCount: 12 }), list("b")]), excludeIds: [] },
   { key: "recent", label: "Recientes", initial: page([list("c"), list("a")]), excludeIds: ["a"] },
-  {
-    key: "to-complete",
-    label: "Para completar",
-    caminos: [{ id: "k1", title: "Best of Hard Rock", kind: "standard", owner: { id: "o", username: "eli", displayName: null }, itemCount: 10, coverThumbs: [], trackingCount: 1 }],
-    seeAll: { href: "/caminos", label: "Ver todas" },
-  },
 ];
 
 describe("ListsReader (openspec: redesign-lists-phase2)", () => {
@@ -94,7 +88,7 @@ describe("ListsReader (openspec: redesign-lists-phase2)", () => {
 
     const tablist = screen.getByRole("tablist", { name: "Listas de la comunidad" });
     const tabEls = within(tablist).getAllByRole("tab");
-    expect(tabEls.map((tab) => tab.textContent)).toEqual(["Populares", "Recientes", "Para completar"]);
+    expect(tabEls.map((tab) => tab.textContent)).toEqual(["Populares", "Recientes"]);
     expect(tabEls[0]).toHaveAttribute("aria-selected", "true");
 
     fireEvent.keyDown(tabEls[0]!, { key: "ArrowRight" });
@@ -104,13 +98,13 @@ describe("ListsReader (openspec: redesign-lists-phase2)", () => {
     expect(within(panel).getAllByRole("link").map((a) => a.textContent)).toEqual([expect.stringContaining("Lista c")]);
   });
 
-  it("cada fila dice dueño, tipo, elementos y guardadas; Para completar, cuántas personas la completan", () => {
+  it("cada fila dice dueño, tipo, elementos y guardados; Para completar ya no es una pestaña", () => {
     renderReader(<ListsReader mode="showcase" tabs={tabs} tabsLabel="Listas" canSave={false} initialPreview={null} />);
 
     const first = screen.getAllByRole("link", { name: /Lista a/ })[0]!;
     expect(first).toHaveTextContent("Dueño a");
     expect(first).toHaveTextContent(/4 elementos.*12 guardados/);
-    expect(screen.getByRole("link", { name: /Best of Hard Rock/, hidden: true })).toHaveTextContent("1 persona la está completando");
+    expect(screen.queryByRole("tab", { name: "Para completar" })).not.toBeInTheDocument();
   });
 
   it("la vista previa muestra la primera lista con los elementos resueltos en el servidor, sin pedirlos", () => {
