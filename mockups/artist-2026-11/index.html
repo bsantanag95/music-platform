@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ficha de artista · Auditoría y tres direcciones — music-platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f6f5f2; --card: #fff; --tx: #17161a; --tx-2: #4b4a50; --tx-3: #6b6a70; --line: #e2e0da; --ok: #1f7a4d; --no: #b23a2e; --hi: #2433d1; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--tx); font: 16px/1.6 "Geist", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--hi); text-underline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--hi); outline-offset: 3px; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 48px); }
+  header.doc { padding: 64px 0 40px; border-bottom: 1px solid var(--line); }
+  h1 { font-size: clamp(34px, 4.4vw, 56px); line-height: 1.05; letter-spacing: -.03em; font-weight: 700; max-width: 22ch; }
+  .intro { margin-top: 18px; font-size: 19px; color: var(--tx-2); max-width: 66ch; }
+  .meta { margin-top: 20px; font: 500 13px "Geist Mono", monospace; color: var(--tx-3); display: flex; flex-wrap: wrap; gap: 8px 20px; }
+  nav.toc { position: sticky; top: 0; z-index: 5; background: rgba(246,245,242,.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  nav.toc .wrap { display: flex; gap: 6px; overflow-x: auto; padding-top: 10px; padding-bottom: 10px; }
+  nav.toc a { white-space: nowrap; color: var(--tx-2); text-decoration: none; font-size: 14px; font-weight: 500; padding: 6px 12px; border-radius: 8px; }
+  nav.toc a:hover { background: #ebe9e3; color: var(--tx); }
+  nav.toc a.cta { background: var(--tx); color: #fff; }
+  section { padding: 72px 0 0; }
+  h2 { font-size: clamp(26px, 2.6vw, 36px); letter-spacing: -.02em; line-height: 1.1; font-weight: 700; }
+  h2 + p { margin-top: 10px; color: var(--tx-2); max-width: 72ch; font-size: 17px; }
+  h3 { font-size: 19px; letter-spacing: -.01em; font-weight: 650; }
+  .shots { margin-top: 28px; display: grid; grid-template-columns: 1.3fr 1fr .5fr; gap: 16px; align-items: start; }
+  figure { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  figure img { display: block; width: 100%; height: auto; }
+  figcaption { padding: 12px 16px; font-size: 14px; color: var(--tx-3); border-top: 1px solid var(--line); }
+  .stats { margin-top: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+  .stat b { display: block; font-size: 30px; letter-spacing: -.02em; line-height: 1.1; }
+  .stat span { font-size: 14px; color: var(--tx-2); }
+  .issues { margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .issue { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; }
+  .issue h3 { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .sev { font: 500 12px "Geist Mono", monospace; padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+  .sev.alta { background: #fbe4e1; color: var(--no); }
+  .sev.media { background: #fdf0d6; color: #8a5a00; }
+  .sev.baja { background: #e9ece9; color: #4b5a4f; }
+  .issue ul { margin-top: 10px; padding-left: 18px; color: var(--tx-2); font-size: 15px; }
+  .issue li + li { margin-top: 6px; }
+  .issue li b { color: var(--tx); font-weight: 600; }
+  .criteria { margin-top: 28px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 40px; }
+  .criteria li { list-style: none; padding: 16px 0; border-top: 1px solid var(--line); }
+  .criteria h3 { font-size: 17px; }
+  .criteria p { color: var(--tx-2); font-size: 15px; margin-top: 4px; }
+  .props { margin-top: 28px; display: grid; gap: 24px; }
+  .prop { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: grid; grid-template-columns: 1.1fr 1fr; }
+  .prop .img { display: block; border-right: 1px solid var(--line); background: #14120f; }
+  .prop .img img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+  .prop .body { padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+  .prop h3 { font-size: 24px; letter-spacing: -.02em; }
+  .prop .thesis { color: var(--tx-2); }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tags span { font-size: 13px; padding: 3px 9px; border-radius: 6px; background: #efede8; color: var(--tx-2); }
+  .pc { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 14px; }
+  .pc h4 { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .pc .pro h4 { color: var(--ok); } .pc .con h4 { color: var(--no); }
+  .pc ul { padding-left: 16px; color: var(--tx-2); }
+  .pc li + li { margin-top: 4px; }
+  .open { margin-top: auto; display: inline-flex; align-self: start; align-items: center; gap: 8px; background: var(--tx); color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 15px; }
+  .open:hover { background: var(--hi); }
+  table { margin-top: 28px; width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: 15px; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { background: #efede8; font-size: 13px; font-weight: 600; color: var(--tx-2); }
+  td.s { font: 500 14px "Geist Mono", monospace; white-space: nowrap; }
+  .rec { margin-top: 28px; background: var(--tx); color: #f4f3ef; border-radius: 16px; padding: clamp(28px, 4vw, 48px); display: grid; grid-template-columns: 1fr 1.3fr; gap: 40px; }
+  .rec h3 { font-size: clamp(26px, 2.8vw, 38px); letter-spacing: -.02em; line-height: 1.1; }
+  .rec p, .rec li { color: #cfcdc7; }
+  .rec ul { padding-left: 18px; margin-top: 10px; }
+  .rec li + li { margin-top: 8px; }
+  .rec b { color: #fff; }
+  .rec a { color: #ffcd5e; }
+  .notes { margin: 56px 0 80px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 14px; color: var(--tx-3); max-width: 90ch; }
+  .notes p + p { margin-top: 8px; }
+  @media (max-width: 900px) {
+    .shots, .issues, .criteria, .prop, .rec, .pc { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .prop .img { border-right: 0; border-bottom: 1px solid var(--line); aspect-ratio: 16/10; }
+    table { display: block; overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+<header class="doc">
+  <div class="wrap">
+    <h1>Ficha de artista: auditoría y tres direcciones de modernización</h1>
+    <p class="intro">Revisión de <code>/artist/[id]</code> tal como la ve un visitante sin sesión, con Iron Maiden como caso (36 discos en «Principal», alineación de 25 personas, biografía y foto con licencia libre) y tres mockups completos que replantean su composición sin cambiar el sistema visual de la portada y Explorar.</p>
+    <p class="meta"><span>21 nov 2026</span><span>main 84ba9ab8 · /es sin sesión</span><span>Revisado a 1440, 1024, 820 y 390 px</span><span>Datos reales de la base local</span></p>
+  </div>
+</header>
+<nav class="toc" aria-label="Contenido"><div class="wrap"><a href="#estado">Estado actual</a><a href="#problemas">Problemas</a><a href="#criterios">Criterios</a><a href="#propuestas">Propuestas</a><a href="#mezcla">D · Mezcla</a><a href="#comparacion">Comparación</a><a href="#recomendacion">Recomendación</a><a class="cta" href="d-mezcla.html">Abrir D · Mezcla</a></div></nav>
+
+<main class="wrap">
+  <section id="estado" aria-labelledby="h-estado">
+    <h2 id="h-estado">Estado actual</h2>
+    <p>La ficha es rica en datos (ficha técnica, alineación con períodos, biografía de Wikipedia, premios, conciertos) y ya pasó dos rediseños. El problema ahora es de composición: la cabecera ocupa la primera pantalla entera, la columna «Tu relación» no tiene nada que ofrecer a quien no inició sesión, y la discografía —el motivo principal de la visita— empieza debajo del pliegue y detrás de trece controles.</p>
+    <div class="shots">
+      <figure><img src="shots/actual.jpg" alt="Ficha actual de Iron Maiden a 1440 px: foto pequeña, nombre, ficha técnica, resumen, fila de comunidad con <5, 0 y 0, y la columna Tu relación con una frase"><figcaption>Primer viewport a 1440 px. La discografía no aparece.</figcaption></figure>
+      <figure><img src="shots/actual-discografia.jpg" alt="Discografía actual: seis secciones, buscador, agrupación y vista; rejilla de seis columnas con discos sin carátula"><figcaption>Dos filas de controles antes del primer disco. En este entorno faltan las carátulas del espejo local.</figcaption></figure>
+      <figure><img src="shots/actual-movil.jpg" alt="Ficha actual a 390 px: la cabecera, la ficha y el panel Tu relación ocupan dos pantallas"><figcaption>390 px: la discografía empieza a 1559 px.</figcaption></figure>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>699 px</b><span>hasta las pestañas a 1440 px: la cabecera mide 488 px y el primer disco queda bajo el pliegue</span></div>
+      <div class="stat"><b>1559 px</b><span>hasta las pestañas en un teléfono; la página mide 6534 px</span></div>
+      <div class="stat"><b>13</b><span>controles entre las pestañas y el primer disco</span></div>
+      <div class="stat"><b>1152 px</b><span>de ancho máximo, frente a los 1408 de la portada y Explorar</span></div>
+    </div>
+  </section>
+
+  <section id="problemas" aria-labelledby="h-prob">
+    <h2 id="h-prob">Problemas detectados</h2>
+    <p>Ordenados por el impacto en quien llega desde una búsqueda o un enlace y quiere ver qué grabó el artista.</p>
+    <div class="issues">
+      <article class="issue"><h3>La discografía llega tarde <span class="sev alta">Alta</span></h3><ul>
+        <li>La cabecera mide <b>488 px</b> y las pestañas empiezan a 699 px: a 1440 px la primera pantalla no muestra ni un disco.</li>
+        <li>En un teléfono, foto, ficha, resumen, panel y comunidad suman <b>dos pantallas</b> antes de las pestañas (1559 px).</li>
+        <li>La pestaña «Discografía» es un <code>h2</code> de 16 px, más chico que «Comentarios» (20 px): la jerarquía está invertida.</li>
+      </ul></article>
+      <article class="issue"><h3>Espacio que no trabaja para el visitante <span class="sev alta">Alta</span></h3><ul>
+        <li>Sin sesión, «Tu relación» es una columna de <b>288 × 488 px</b> con una frase y un enlace «Iniciar sesión» de texto.</li>
+        <li>La fila de comunidad muestra «<b>&lt;5 · 0 · 0</b>» con el mismo peso que la ficha: una prueba social negativa para casi cualquier artista de la base.</li>
+        <li>Comentarios vacíos con cinco filtros de tema, el primero en ámbar.</li>
+      </ul></article>
+      <article class="issue"><h3>Controles de la discografía <span class="sev media">Media</span></h3><ul>
+        <li>Seis secciones, buscador, agrupación de tres opciones y vista de dos: <b>13 controles</b> en dos filas, que en el teléfono se desplazan de lado.</li>
+        <li>«Principal» mezcla 17 álbumes y 19 EP, videos y cajas en una sola rejilla cuando no se agrupa por tipo.</li>
+        <li>Rejilla de 6 columnas de 173 px: carátulas chicas para una página cuyo contenido son carátulas.</li>
+      </ul></article>
+      <article class="issue"><h3>Defectos visibles <span class="sev media">Media</span></h3><ul>
+        <li>En los discos sin carátula, la etiqueta <b>«EP» tapa el comienzo del título</b> («EP stmas EP»): <code>TitleTile</code> pone el título arriba a la izquierda, justo donde la discografía coloca la etiqueta.</li>
+        <li>Varias carátulas que no cargaron mostraron el <b>icono de imagen rota</b> del navegador en lugar del disco de reserva. Aquí faltaba el espejo local, pero el respaldo debería cubrir cualquier fallo (probablemente falla cuando el error ocurre antes de hidratar).</li>
+      </ul></article>
+      <article class="issue"><h3>Ancho y ritmo <span class="sev media">Media</span></h3><ul>
+        <li><code>max-w-6xl</code> (1152 px) frente a los 88rem de la portada y Explorar: al pasar de una a otra, el contenido «salta».</li>
+        <li>Foto de 150 px en una página de artista con foto de licencia libre de buena calidad.</li>
+      </ul></article>
+      <article class="issue"><h3>Tipografía <span class="sev baja">Baja</span></h3><ul>
+        <li>96 textos de 12 px y 4 de 10,4 px; rótulos de la ficha en monoespaciada aunque no sean datos.</li>
+        <li>Nombre de 36 px: chico para el único titular de la página.</li>
+      </ul></article>
+    </div>
+  </section>
+
+  <section id="criterios" aria-labelledby="h-crit">
+    <h2 id="h-crit">Criterios de las propuestas</h2>
+    <p>Las tres usan el sistema visual vigente (tinta, papel, ámbar; Space Grotesk, Source Serif 4, IBM Plex Mono) y el contenido real de la ficha. Lo que cambia es la composición.</p>
+    <ul class="criteria">
+      <li><h3>La obra cerca del principio</h3><p>Al menos el comienzo de la discografía visible o a un gesto del primer viewport.</p></li>
+      <li><h3>Mismo ancho que el resto del sitio</h3><p>88rem y márgenes fluidos, como la portada y Explorar.</p></li>
+      <li><h3>Invitar sin ocupar una columna</h3><p>Sin sesión, una invitación concreta («Seguir», «Crear cuenta») del tamaño que merece.</p></li>
+      <li><h3>Comunidad sin ceros</h3><p>Los números aparecen cuando dicen algo; si no, una frase que invita a ser de los primeros.</p></li>
+      <li><h3>Menos controles a la vista</h3><p>Sección como selector y agrupación por década implícita; la tabla sigue a un clic.</p></li>
+      <li><h3>Álbumes primero, el resto aparte</h3><p>17 álbumes de estudio con carátula grande; EP, videos y cajas en su propio bloque.</p></li>
+      <li><h3>La alineación como historia</h3><p>Quién está hoy y, de un vistazo, cómo cambió la banda.</p></li>
+      <li><h3>Sin defectos de respaldo</h3><p>Ficha tipográfica sin solapes y disco de reserva ante cualquier fallo de imagen.</p></li>
+    </ul>
+  </section>
+
+  <section id="propuestas" aria-labelledby="h-props">
+    <h2 id="h-props">Las tres propuestas</h2>
+    <p>Tres estructuras distintas, sorteadas entre siete candidatas para esta ficha. Usan los datos reales de Iron Maiden y sus carátulas en miniatura de 250 px del Cover Art Archive.</p>
+    <div class="props">
+      <article class="prop">
+        <a class="img" href="a-indice.html"><img src="shots/a.jpg" alt="Propuesta A: foto grande a la izquierda, nombre de 80 px, cuatro datos clave, invitación en línea e índice lateral con Discografía, Integrantes, Biografía, Conciertos y Comentarios"></a>
+        <div class="body">
+          <h3>A · Índice</h3>
+          <p class="thesis">Una sola página larga en lugar de pestañas. Un índice lateral fijo lleva a cada sección (en el teléfono, una fila fija desplazable). La cabecera da la foto en grande, cuatro datos clave y una invitación en línea. En Integrantes, la alineación actual y una <b>línea de tiempo</b> de la banda desde 1975.</p>
+          <div class="tags"><span>Una página</span><span>Índice fijo</span><span>Línea de tiempo</span></div>
+          <div class="pc"><div class="pro"><h4>Ventajas</h4><ul><li>Todo se recorre sin cambiar de página; el índice dice qué hay.</li><li>La línea de tiempo explica la banda mejor que una lista.</li><li>La invitación ocupa lo justo.</li></ul></div><div class="con"><h4>Desventajas</h4><ul><li>Página muy larga (8550 px en un teléfono).</li><li>Rehace la navegación por pestañas y sus URL (/members, /biography…).</li><li>La foto grande sigue empujando la discografía (1292 px en el teléfono).</li></ul></div></div>
+          <a class="open" href="a-indice.html">Abrir propuesta A</a>
+        </div>
+      </article>
+      <article class="prop">
+        <a class="img" href="b-estanteria.html"><img src="shots/b.jpg" alt="Propuesta B: la foto del concierto a sangre de fondo, nombre gigante, botón Seguir a Iron Maiden, pestañas fijas y un estante horizontal de álbumes de estudio"></a>
+        <div class="body">
+          <h3>B · Estantería</h3>
+          <p class="thesis">La foto del artista a sangre con el nombre en grande y un solo botón: «Seguir a Iron Maiden». Debajo, pestañas fijas y la discografía como <b>estantes horizontales</b> de carátulas grandes, uno por tipo, con el año como marca. Las secciones grandes (En vivo, Recopilatorios, Sencillos) son accesos, no rejillas.</p>
+          <div class="tags"><span>Foto a sangre</span><span>Estantes</span><span>Carátulas grandes</span></div>
+          <div class="pc"><div class="pro"><h4>Ventajas</h4><ul><li>La más atractiva y propia de la música; las carátulas mandan.</li><li>La página más corta en el teléfono (3319 px).</li><li>Recorrer la carrera de 1980 a 2021 es deslizar.</li></ul></div><div class="con"><h4>Desventajas</h4><ul><li>Depende de una buena foto: muchos artistas no tienen y la cabecera quedaría vacía.</li><li>Los estantes esconden parte de la obra detrás del desplazamiento horizontal.</li><li>Peor para comparar y buscar que una rejilla o tabla.</li></ul></div></div>
+          <a class="open" href="b-estanteria.html">Abrir propuesta B</a>
+        </div>
+      </article>
+      <article class="prop">
+        <a class="img" href="c-ficha.html"><img src="shots/c.jpg" alt="Propuesta C: cabecera de una banda con foto pequeña, nombre y datos en una línea, discografía a la izquierda agrupada por década y columna lateral fija con invitación, ficha e integrantes"></a>
+        <div class="body">
+          <h3>C · Ficha</h3>
+          <p class="thesis">Cabecera de una sola banda (foto, nombre, descripción, origen, años y géneros en una línea; «Seguir» y «Compartir» a la derecha) y la <b>discografía en el primer viewport</b>, agrupada por década con el rótulo fijo. Una columna lateral fija reúne la invitación, la ficha, los integrantes, la biografía y la comunidad sin ceros.</p>
+          <div class="tags"><span>Discografía arriba</span><span>Columna lateral fija</span><span>Una fila de controles</span></div>
+          <div class="pc"><div class="pro"><h4>Ventajas</h4><ul><li>Primer disco a 403 px en escritorio y 494 px en el teléfono (hoy las pestañas empiezan a 699 y 1559 px).</li><li>Mantiene pestañas y URL: es la más barata de llevar al código.</li><li>La columna lateral aprovecha el ancho y sirve igual con o sin sesión.</li></ul></div><div class="con"><h4>Desventajas</h4><ul><li>La foto pierde protagonismo.</li><li>La más «herramienta»: menos emoción que B.</li><li>En el teléfono la columna lateral queda debajo de una discografía larga.</li></ul></div></div>
+          <a class="open" href="c-ficha.html">Abrir propuesta C</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="mezcla" aria-labelledby="h-mez">
+    <h2 id="h-mez">D · Mezcla: tus decisiones del 22 y 23 nov</h2>
+    <p>La cabecera de B con las carátulas del propio artista siempre de fondo y su foto de hoy como retrato circular, las pestañas horizontales actuales, la discografía con su orden y agrupación de hoy, y la línea de tiempo de A en Integrantes, sobre la alineación estilo Metal Archives.</p>
+    <div class="props">
+      <article class="prop">
+        <a class="img" href="d-mezcla.html"><img src="shots/d.jpg" alt="Propuesta D con 17 carátulas: muro de carátulas de Iron Maiden de fondo, foto circular de la banda, nombre gigante, botón Seguir a Iron Maiden y pestañas horizontales"></a>
+        <div class="body">
+          <h3>Cabecera: portada de carátulas, retrato circular</h3>
+          <p class="thesis">La portada sale siempre de la discografía del artista, así no depende de que la foto tenga buen encuadre. Se adapta a cuántas carátulas haya (el mockup tiene un selector):</p>
+          <ol style="padding-left:18px;color:var(--tx-2);font-size:15px;display:grid;gap:6px">
+            <li><b>8 carátulas o más</b> → muro de carátulas atenuado, a sangre.</li>
+            <li><b>De 1 a 7</b> → fondo con el color desenfocado de la primera carátula y las fundas en abanico a la derecha; con una sola, el disco asoma de la funda. En el teléfono el abanico sube junto al retrato.</li>
+            <li><b>Ninguna</b> → fondo de tinta con un disco dibujado.</li>
+          </ol>
+          <p class="thesis" style="font-size:14px">El retrato es la foto de hoy, circular. Si no hay foto, la carátula de su álbum más valorado (o el último) en cuadrado; si tampoco hay carátulas, las iniciales. No hace falta guardar el tamaño de la foto. Las carátulas siguen en 250 px; de fondo van atenuadas o desenfocadas, nunca ampliadas a la vista.</p>
+          <a class="open" href="d-mezcla.html">Abrir propuesta D</a>
+        </div>
+      </article>
+      <article class="prop">
+        <a class="img" href="d-mezcla.html"><img src="shots/d-pocos.jpg" alt="Propuesta D con dos carátulas: fondo con el color de la primera carátula y las dos fundas en abanico a la derecha del nombre"></a>
+        <div class="body">
+          <h3>Navegación, integrantes y discografía</h3>
+          <ul style="padding-left:18px;color:var(--tx-2);font-size:15px;display:grid;gap:8px">
+            <li><b>Pestañas horizontales fijas</b> (Discografía, Integrantes, Biografía, Conciertos): cada sección en su espacio.</li>
+            <li><b>«Ver alineación →»</b> abre la pestaña Integrantes, como hoy: arriba, <b>la banda a lo largo del tiempo</b>; debajo, la alineación estilo Metal Archives (Completa, Actual, Antiguos, Apoyo; roles con años; ★ fundador; † muerte; «También en»).</li>
+            <li><b>Discografía con los controles de hoy</b> (secciones, buscador, agrupar Tipo/Década/Sin agrupar, vista Grilla/Tabla), en orden de año ascendente. Por defecto: los álbumes de estudio con carátula y el resto en lista; lo que elijas a mano se mantiene.</li>
+            <li>Sin columna «Tu relación» para quien no inició sesión: un botón «Seguir a Iron Maiden» en la cabecera.</li>
+          </ul>
+          <div class="pc"><div class="pro"><h4>Ventajas</h4><ul><li>El impacto de B sin depender del encuadre de la foto.</li><li>Pestañas y URL de hoy: bajo riesgo.</li><li>La discografía conserva su lógica.</li></ul></div><div class="con"><h4>Desventajas</h4><ul><li>La cabecera es alta: en el teléfono el primer disco queda a 1076 px.</li><li>Un artista sin carátulas ni foto queda sobrio (disco dibujado e iniciales).</li></ul></div></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="comparacion" aria-labelledby="h-comp">
+    <h2 id="h-comp">Comparación</h2>
+    <p>Valoración de 1 a 5 contra los problemas detectados y el coste de llevarla al producto.</p>
+    <table>
+      <thead><tr><th>Criterio</th><th>A · Índice</th><th>B · Estantería</th><th>C · Ficha</th></tr></thead>
+      <tbody>
+        <tr><td>Discografía cerca del principio</td><td class="s">2</td><td class="s">4</td><td class="s">5</td></tr>
+        <tr><td>Uso del espacio sin sesión</td><td class="s">4</td><td class="s">4</td><td class="s">5</td></tr>
+        <tr><td>Recorrer y buscar en la obra</td><td class="s">4</td><td class="s">2</td><td class="s">5</td></tr>
+        <tr><td>Contar la banda (alineación, biografía)</td><td class="s">5</td><td class="s">3</td><td class="s">3</td></tr>
+        <tr><td>Atractivo y carácter</td><td class="s">3</td><td class="s">5</td><td class="s">3</td></tr>
+        <tr><td>Funciona sin foto ni carátulas</td><td class="s">4</td><td class="s">2</td><td class="s">5</td></tr>
+        <tr><td>Coste de implementación</td><td class="s">Alto</td><td class="s">Medio</td><td class="s">Medio</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="recomendacion" aria-labelledby="h-rec">
+    <div class="rec">
+      <div><h3 id="h-rec">Recomendación: C · Ficha, con la línea de tiempo de A</h3></div>
+      <div>
+        <p><b>C ataca el problema principal —la obra llega tarde— sin rehacer la navegación.</b> Pone la discografía en el primer viewport, convierte la columna vacía de «Tu relación» en una columna útil para todos, quita los ceros de la comunidad y deja una sola fila de controles. Conserva pestañas y URL, así que se puede llevar por fases como las páginas anteriores.</p>
+        <ul>
+          <li><b>Tomar de A la línea de tiempo de la alineación</b> para la pestaña Integrantes: cuenta en un vistazo 50 años de cambios, con datos que ya existen (períodos por integrante).</li>
+          <li><b>Tomar de B las carátulas grandes</b> para los 17 álbumes de estudio, y dejar EP, videos y cajas en un bloque aparte más denso.</li>
+          <li><b>Guardar B</b> como posible cabecera para artistas con foto de buena calidad, cuando haya datos para decidir cuándo usarla.</li>
+          <li><b>Independiente de la dirección:</b> corregir el solape de la etiqueta en las fichas sin carátula y el icono de imagen rota cuando una carátula falla.</li>
+        </ul>
+        <p style="margin-top:16px"><a href="c-ficha.html">Abrir la propuesta C →</a></p>
+      </div>
+    </div>
+  </section>
+
+  <div class="notes">
+    <p><b>Sobre los mockups.</b> Son páginas estáticas independientes; no modifican el sitio. Los datos (discos, años, alineación, ficha, biografía) son los de Iron Maiden en la base local; la biografía viene de Wikipedia (CC BY-SA 4.0) y la foto, de Wikimedia Commons (Anne Varak, CC BY 2.0). Las carátulas se piden al Cover Art Archive en miniatura de 250 px, la misma fuente y tamaño que usa la app; no se copian al repositorio.</p>
+    <p>Cada mockup se revisó a 1440, 1024, 820 y 390 px sin desbordes horizontales y respeta <code>prefers-reduced-motion</code>. Las capturas del estado actual son sin sesión.</p>
+  </div>
+</main>
+</body>
+</html>

@@ -1,58 +1,63 @@
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ThresholdedTileValue } from "@/components/album/AlbumHeader";
+import type { ThresholdedCount } from "@/services/catalog/album-community-shared";
 import type { ArtistCommunityStats } from "@/services/catalog/artist-community";
 
-// Bloque de comunidad del artista (openspec: redesign-artist-page, capability
-// `artist-community-stats`): oyentes, seguidores con favoritos y listas, con el umbral de 5
-// del álbum ("<5" a la vista y "menos de 5" para lectores de pantalla, también en el detalle de
-// favoritos). Sin promedio de estrellas del artista ni agregado de recorridos. Es una franja
-// compacta de tres celdas con la cifra primero y la etiqueta debajo (openspec:
-// polish-artist-header): con la etiqueta a la izquierda y la cifra al borde derecho quedaban
-// separadas por media celda vacía.
+// Comunidad del artista (openspec: redesign-artist-page, capability `artist-community-stats`; en una línea de la ficha
+// desde modernize-artist-page-phase1): oyentes, seguidores con favoritos como detalle y listas, con el umbral de 5 del
+// álbum ("<5" a la vista y "menos de 5" para lectores de pantalla). Cada cifra en 0 se omite y, si las tres son 0, la
+// línea entera. Sin promedio de estrellas del artista ni agregado de recorridos.
 
-function Stat({ label, value, detail }: { label: string; value: React.ReactNode; detail?: React.ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-0.5 px-3 py-2.5 sm:px-4">
-      {/* La cifra va primero a la vista; en el DOM el `dt` sigue antes del `dd`, como pide `<dl>`. */}
-      <dt className="order-2 font-data text-xs text-paper-muted">{label}</dt>
-      <dd className="order-1 font-display text-xl leading-tight text-paper tabular-nums">{value}</dd>
-      {detail ? <dd className="order-3 font-data text-xs text-paper-muted">{detail}</dd> : null}
-    </div>
-  );
+const isZero = (count: ThresholdedCount) => count.kind === "exact" && count.value === 0;
+/** Número para elegir el plural: "<5" se lee en plural. */
+const pluralOf = (count: ThresholdedCount) => (count.kind === "exact" ? count.value : count.threshold);
+
+/** `true` si la comunidad tiene algo que mostrar. */
+export function hasCommunity(stats: ArtistCommunityStats): boolean {
+  return !isZero(stats.listeners) || !isZero(stats.followers) || stats.listCount > 0;
 }
 
 export function ArtistCommunity({ stats, listsHref }: { stats: ArtistCommunityStats; listsHref: string }) {
   const t = useTranslations("catalog.artist.community");
-  const locale = useLocale();
-  const hasFavorites = !(stats.favorites.kind === "exact" && stats.favorites.value === 0);
-
+  if (!hasCommunity(stats)) return null;
+  const parts: React.ReactNode[] = [];
+  if (!isZero(stats.listeners)) {
+    parts.push(
+      <span key="listeners">
+        {t.rich("listenersLine", { n: pluralOf(stats.listeners), count: () => <ThresholdedTileValue count={stats.listeners} /> })}
+      </span>,
+    );
+  }
+  if (!isZero(stats.followers)) {
+    parts.push(
+      <span key="followers">
+        {t.rich("followersLine", { n: pluralOf(stats.followers), count: () => <ThresholdedTileValue count={stats.followers} /> })}
+        {!isZero(stats.favorites) && (
+          <span className="text-paper-muted">
+            {" ("}
+            {t.rich("favorites", { count: () => <ThresholdedTileValue count={stats.favorites} /> })}
+            {")"}
+          </span>
+        )}
+      </span>,
+    );
+  }
+  if (stats.listCount > 0) {
+    parts.push(
+      <Link key="lists" href={listsHref} className="hover:text-amber hover:underline">
+        {t("listsLine", { count: stats.listCount })}
+      </Link>,
+    );
+  }
   return (
-    <section aria-label={t("heading")}>
-      <dl className="grid grid-cols-3 divide-x divide-ink-border rounded border border-ink-border bg-ink-surface">
-        <Stat label={t("listeners")} value={<ThresholdedTileValue count={stats.listeners} />} />
-        <Stat
-          label={t("followers")}
-          value={<ThresholdedTileValue count={stats.followers} />}
-          detail={
-            hasFavorites
-              ? t.rich("favorites", { count: () => <ThresholdedTileValue count={stats.favorites} /> })
-              : undefined
-          }
-        />
-        <Stat
-          label={t("lists")}
-          value={
-            stats.listCount > 0 ? (
-              <Link href={listsHref} className="hover:text-amber hover:underline">
-                {new Intl.NumberFormat(locale).format(stats.listCount)} →
-              </Link>
-            ) : (
-              "0"
-            )
-          }
-        />
-      </dl>
-    </section>
+    <span>
+      {parts.map((part, index) => (
+        <span key={index}>
+          {index > 0 ? " · " : null}
+          {part}
+        </span>
+      ))}
+    </span>
   );
 }

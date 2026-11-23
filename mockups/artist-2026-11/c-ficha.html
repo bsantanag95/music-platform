@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta C · Ficha — Iron Maiden</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:opsz,wght@8..60,400..600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<style>
+  /* ——— Cabecera compacta: una banda ——— */
+  .band { padding: 22px 0 22px; border-bottom: 1px solid var(--border); }
+  .band .crumbs { margin-bottom: 16px; }
+  .band-grid { display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; gap: 22px; align-items: center; }
+  .avatar { width: 112px; height: 112px; border-radius: 12px; background: var(--surface-2) center / cover no-repeat; }
+  .kind { font: 500 12px var(--data); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-family: var(--display); font-weight: 700; font-size: clamp(36px, 4.2vw, 56px); line-height: 1; letter-spacing: -.03em; margin-top: 4px; }
+  .line { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; color: var(--muted); font-size: 15px; }
+  .line .chip { font: 500 12px var(--data); padding: 3px 9px; border: 1px solid var(--border-2); border-radius: 999px; color: var(--paper); }
+  .line .dot::before { content: "·"; margin-right: 14px; color: var(--muted-2); }
+  .actions { display: flex; gap: 8px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 8px; font: 500 14px var(--display); white-space: nowrap; }
+  .btn.amber { background: var(--amber); color: var(--amber-ink); }
+  .btn.line-b { border: 1px solid var(--border-2); color: var(--paper); }
+  .btn svg { width: 15px; height: 15px; }
+
+  /* ——— Cuerpo: discografía + columna lateral ——— */
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 40px; padding-top: 26px; }
+  .tabs-row { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
+  .tabs-row a { padding: 10px 12px; font: 500 15px var(--display); color: var(--muted); white-space: nowrap; }
+  .tabs-row a span { font: 500 12px var(--data); color: var(--muted-2); margin-left: 4px; }
+  .tabs-row a[aria-current] { color: var(--paper); box-shadow: inset 0 -2px var(--amber); }
+  .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+  .select { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); font: 500 13px var(--display); }
+  .select span { font: 500 12px var(--data); color: var(--muted); }
+  .select svg { width: 12px; height: 12px; color: var(--muted); }
+  .search-mini { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-size: 14px; flex: 1; max-width: 280px; }
+  .search-mini svg { width: 14px; height: 14px; }
+  .grow { flex: 1; }
+  .seg { display: inline-flex; padding: 3px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+  .seg button { padding: 5px 11px; border-radius: 6px; font: 500 12px var(--data); color: var(--muted); }
+  .seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--paper); }
+  .decade { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 16px; padding: 16px 0; border-top: 1px solid var(--border); }
+  .decade > b { font: 700 20px var(--display); color: var(--muted-2); letter-spacing: -.01em; position: sticky; top: 80px; align-self: start; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 18px 14px; }
+  .album .cv { background-size: cover; }
+  .album b { display: block; margin-top: 8px; font: 500 14px var(--display); line-height: 1.25; }
+  .album span { font: 500 12px var(--data); color: var(--muted); }
+  .album .tt { aspect-ratio: 1; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); padding: 10px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; }
+  .album .tt strong { font: 600 14px/1.2 var(--display); }
+  .album .tag { font: 500 10.5px var(--data); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .eps-title { margin: 28px 0 4px; display: flex; align-items: baseline; gap: 10px; font: 600 17px var(--display); }
+  .eps-title span { font: 500 12px var(--data); color: var(--muted); }
+
+  /* Columna lateral */
+  .side { position: sticky; top: 84px; align-self: start; display: flex; flex-direction: column; gap: 14px; }
+  .card { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); padding: 16px; }
+  .card h2 { font: 600 15px var(--display); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: baseline; }
+  .card h2 a { font: 500 12px var(--data); color: var(--muted); }
+  .facts { display: grid; gap: 9px; }
+  .facts div { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 10px; font-size: 14px; }
+  .facts dt { font: 500 12px var(--data); color: var(--muted); padding-top: 2px; }
+  .members li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: center; padding: 6px 0; }
+  .members li + li { border-top: 1px solid var(--border); }
+  .members .av { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); font: 600 11px var(--display); border: 1px solid var(--border-2); }
+  .members b { display: block; font: 500 14px var(--display); }
+  .members span { font-size: 12.5px; color: var(--muted); }
+  .bio-ex { font-size: 15px; line-height: 1.55; color: var(--muted); }
+  .bio-ex + p { margin-top: 8px; font: 500 12px var(--data); color: var(--muted-2); }
+  .card.invite { background: linear-gradient(160deg, rgba(232,184,75,.12), transparent 60%), var(--surface); border-color: rgba(232,184,75,.3); }
+  .card.invite p { font-size: 14px; color: var(--muted); margin-bottom: 12px; }
+  .card.invite .btn { width: 100%; justify-content: center; }
+  .card.invite small { display: block; text-align: center; margin-top: 8px; font: 500 12px var(--data); color: var(--muted); }
+  .quiet { font-size: 14px; color: var(--muted); }
+
+  .below { margin-top: 56px; max-width: 760px; }
+  .empty { padding: 20px; border: 1px dashed var(--border-2); border-radius: 12px; color: var(--muted); }
+
+  @media (max-width: 1023px) {
+    .layout { grid-template-columns: minmax(0, 1fr); }
+    .side { position: static; display: grid; grid-template-columns: 1fr 1fr; }
+    .side .invite { grid-column: 1 / -1; order: -1; }
+  }
+  @media (max-width: 640px) {
+    .band-grid { grid-template-columns: 72px minmax(0, 1fr); }
+    .avatar { width: 72px; height: 72px; }
+    .actions { grid-column: 1 / -1; }
+    .actions .btn { flex: 1; justify-content: center; }
+    .line .dot { display: none; }
+    .decade { grid-template-columns: 1fr; gap: 10px; }
+    .decade > b { position: static; font-size: 16px; }
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .side { grid-template-columns: 1fr; }
+    .search-mini { max-width: none; order: 3; flex-basis: 100%; }
+    .toolbar .grow { display: block; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header"></header>
+
+<main class="wrap">
+  <section class="band" aria-labelledby="h1">
+    <p class="crumbs">Inicio / <b>Iron Maiden</b></p>
+    <div class="band-grid">
+      <div class="avatar" role="img" aria-label="Iron Maiden en concierto (Foto: Anne Varak · CC BY 2.0)" style="background-image:url(https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Iron_Maiden_Irvine_2008.jpg/500px-Iron_Maiden_Irvine_2008.jpg)"></div>
+      <div>
+        <h1 id="h1">Iron Maiden</h1>
+        <p class="line"><span>Banda británica de heavy metal</span><span class="dot">Leyton, Reino Unido</span><span class="dot num">1975 – hoy</span><a class="chip" href="#">NWOBHM</a><a class="chip" href="#">heavy metal</a></p>
+      </div>
+      <div class="actions"><a class="btn amber" href="#">Seguir</a><a class="btn line-b" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12M7 8l5-5 5 5M5 14v5h14v-5"/></svg>Compartir</a></div>
+    </div>
+  </section>
+
+  <div class="layout">
+    <div>
+      <nav class="tabs-row" aria-label="Secciones del artista"><a href="#" aria-current="page">Discografía<span>36</span></a><a href="#">Integrantes<span>24</span></a><a href="#">Biografía</a><a href="#">Conciertos</a></nav>
+      <div class="toolbar">
+        <button class="select">Principal <span>36</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+        <label class="search-mini"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Buscar en la discografía</label>
+        <span class="grow"></span>
+        <div class="seg" role="group" aria-label="Vista"><button aria-pressed="true">Grilla</button><button>Tabla</button></div>
+      </div>
+      <div id="decades"></div>
+      <p class="eps-title">EP, videos y otros <span class="num">19</span></p>
+      <div id="others-decades"></div>
+    </div>
+
+    <aside class="side" aria-label="Ficha del artista">
+      <div class="card invite">
+        <p>Sigue a Iron Maiden, registra lo que escuchas y marca qué discos tienes.</p>
+        <a class="btn amber" href="#">Crear cuenta</a>
+        <small>¿Ya tienes una? <a href="#" style="color:var(--paper)">Inicia sesión</a></small>
+      </div>
+      <div class="card">
+        <h2>Ficha</h2>
+        <dl class="facts">
+          <div><dt>Origen</dt><dd>Leyton, Reino Unido</dd></div>
+          <div><dt>Actividad</dt><dd>desde 1975 · Activa</dd></div>
+          <div><dt>Álbumes</dt><dd>17 · de 1980 a 2021</dd></div>
+          <div><dt>Enlaces</dt><dd>Sitio oficial ↗ · Wikipedia ↗ · Spotify ↗</dd></div>
+          <div><dt>En vivo</dt><dd>setlist.fm ↗</dd></div>
+        </dl>
+      </div>
+      <div class="card">
+        <h2>Integrantes <a href="#">Ver los 24 →</a></h2>
+        <ul class="members" id="members"></ul>
+      </div>
+      <div class="card">
+        <h2>Biografía <a href="#">Leer →</a></h2>
+        <p class="bio-ex">Banda británica de heavy metal fundada en Londres en 1975 por el bajista Steve Harris; una de las más representativas del género.</p>
+        <p>Fuente: Wikipedia · CC BY-SA 4.0</p>
+      </div>
+      <div class="card">
+        <h2>Comunidad</h2>
+        <p class="quiet">Aún pocas personas la escuchan aquí. Sé de las primeras en valorar sus discos.</p>
+      </div>
+    </aside>
+  </div>
+
+  <section class="below" aria-labelledby="h-com">
+    <div class="sec-head"><div><h2 id="h-com">Comentarios</h2></div></div>
+    <p class="empty">Todavía nadie comentó sobre Iron Maiden. <a href="#" style="color:var(--amber)">Inicia sesión</a> para empezar la conversación.</p>
+  </section>
+</main>
+
+<footer class="site-foot"><div class="wrap">La metadata del catálogo proviene de MusicBrainz (CC0) y las carátulas, del Cover Art Archive, en baja resolución.</div></footer>
+
+<nav class="mock-bar" aria-label="Mockups"><span>Mockup · Iron Maiden, datos reales de la base local</span><a href="index.html">Resumen</a><a href="a-indice.html">A · Índice</a><a href="b-estanteria.html">B · Estantería</a><a href="c-ficha.html" aria-current="page">C · Ficha</a><a href="d-mezcla.html">D · Mezcla</a></nav>
+
+<script src="shared.js"></script>
+<script>
+  window.renderMockup = function () {
+    var A = window.ARTIST;
+    function byDecade(list, withTag) {
+      var groups = {};
+      list.forEach(function (x) { var d = Math.floor(x[1] / 10) * 10; (groups[d] = groups[d] || []).push(x); });
+      return Object.keys(groups).sort().map(function (d) {
+        return '<div class="decade"><b class="num">' + d + 's</b><div class="grid">' + groups[d].map(function (x) {
+          var art = x[2] ? '<i class="cv" data-mb="' + x[2] + '"></i>' : '<span class="tt"><span class="tag">' + (x[3] || "") + "</span><strong>" + x[0] + "</strong></span>";
+          return '<a class="album" href="#">' + art + "<b>" + x[0] + '</b><span class="num">' + x[1] + (withTag && x[3] ? " · " + x[3] : "") + "</span></a>";
+        }).join("") + "</div></div>";
+      }).join("");
+    }
+    document.getElementById("decades").innerHTML = byDecade(A.ALBUMS, false);
+    document.getElementById("others-decades").innerHTML = byDecade(A.OTHERS, true);
+    document.getElementById("members").innerHTML = A.CURRENT.map(function (m) {
+      return '<li><span class="av" aria-hidden="true">' + window.initials(m[0]) + "</span><span><b>" + m[0] + "</b><span>" + m[1] + "</span></span></li>";
+    }).join("");
+  };
+</script>
+</body>
+</html>

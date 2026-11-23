@@ -3,11 +3,11 @@ import { screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../messages/es/catalog.json";
 import type { ArtistProfile } from "@/services/catalog/artist-profile-read";
-import { ArtistFacts, ArtistIdentity, ArtistPhoto, ArtistSummary } from "./ArtistHeader";
+import { ArtistFacts, ArtistFollowInvite, ArtistIdentity, ArtistPhotoCredit, ArtistPortrait } from "./ArtistHeader";
 
 vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) => (
-    <a href={href} className={className}>
+  Link: ({ href, children, className, ...rest }: { href: string; children: React.ReactNode; className?: string }) => (
+    <a href={href} className={className} {...rest}>
       {children}
     </a>
   ),
@@ -35,44 +35,62 @@ function dd(label: string): HTMLElement {
   return screen.getByText(label).nextElementSibling as HTMLElement;
 }
 
-describe("ArtistPhoto", () => {
-  it("foto CC BY-SA con crédito: autor al archivo y licencia a su texto", () => {
-    renderWithIntl(
-      <ArtistPhoto
-        name="Kuervos del Sur"
-        photo={{
-          url: "https://thumb.wikimedia.org/k.jpg",
-          author: "Carolina Gatica",
-          license: "CC BY-SA 4.0",
-          licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0",
-          sourceUrl: "https://commons.wikimedia.org/wiki/File:K.jpg",
-        }}
-      />,
-    );
-    expect(screen.getByRole("img", { name: "Foto de Kuervos del Sur" })).toHaveAttribute("src", "https://thumb.wikimedia.org/k.jpg");
-    expect(screen.getByRole("link", { name: "Foto: Carolina Gatica" })).toHaveAttribute("href", "https://commons.wikimedia.org/wiki/File:K.jpg");
-    expect(screen.getByRole("link", { name: "CC BY-SA 4.0" })).toHaveAttribute("href", "https://creativecommons.org/licenses/by-sa/4.0");
+const photo = {url: "https://thumb.wikimedia.org/k.jpg",author: "Carolina Gatica",license: "CC BY-SA 4.0",licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0",sourceUrl: "https://commons.wikimedia.org/wiki/File:K.jpg"};
+
+describe("ArtistPortrait (modernize-artist-page-phase1)", () => {
+  it("con foto: retrato circular con la foto", () => {
+    const { container } = renderWithIntl(<ArtistPortrait name="Kuervos del Sur" photo={photo} portrait={{ kind: "photo" }} />);
+    expect(screen.getByRole("img", { name: "Foto de Kuervos del Sur" })).toHaveAttribute("src", photo.url);
+    expect(container.firstElementChild).toHaveClass("rounded-full");
   });
 
-  it("sin foto muestra el placeholder y ningún crédito", () => {
-    renderWithIntl(<ArtistPhoto name="X" photo={null} />);
-    expect(screen.getByRole("img", { name: artistEs.noPhotoAlt })).toBeInTheDocument();
-    expect(screen.queryByText(/Foto:/)).not.toBeInTheDocument();
+  it("sin foto: la carátula en cuadrado, enlazada al disco", () => {
+    renderWithIntl(
+      <ArtistPortrait name="Iron Maiden" photo={null} portrait={{ kind: "cover", cover: { id: "rg1", title: "Piece of Mind", year: 1983, thumbUrl: "/c/rg1.jpg" } }} />,
+    );
+    const link = screen.getByRole("link", { name: "Carátula de Piece of Mind" });
+    expect(link.getAttribute("href")).toContain("rg1");
+    expect(link).toHaveClass("rounded-xl");
+  });
+
+  it("sin foto ni carátulas: las iniciales", () => {
+    renderWithIntl(<ArtistPortrait name="Iron Maiden" photo={null} portrait={{ kind: "initials", initials: "IM" }} />);
+    expect(screen.getByRole("img", { name: "Iron Maiden" })).toHaveTextContent("IM");
+  });
+});
+
+describe("ArtistPhotoCredit", () => {
+  it("crédito de la foto: autor al archivo y licencia a su texto", () => {
+    renderWithIntl(<ArtistPhotoCredit photo={photo} />);
+    expect(screen.getByRole("link", { name: "Foto: Carolina Gatica" })).toHaveAttribute("href", photo.sourceUrl);
+    expect(screen.getByRole("link", { name: "CC BY-SA 4.0" })).toHaveAttribute("href", photo.licenseUrl);
+  });
+
+  it("sin foto no hay crédito", () => {
+    const { container } = renderWithIntl(<ArtistPhotoCredit photo={null} />);
+    expect(container).toBeEmptyDOMElement();
   });
 });
 
 describe("ArtistIdentity", () => {
-  it("antetítulo de tipo, nombre y descripción traducida", () => {
-    renderWithIntl(<ArtistIdentity type="group" name="Pink Floyd" description="banda de rock británica" />);
-    expect(screen.getByText("Banda")).toBeInTheDocument();
+  it("nombre y descripción traducida, sin antetítulo de tipo", () => {
+    renderWithIntl(<ArtistIdentity name="Pink Floyd" description="banda de rock británica" />);
     expect(screen.getByRole("heading", { name: "Pink Floyd" })).toBeInTheDocument();
     expect(screen.getByText("banda de rock británica")).toBeInTheDocument();
+    expect(screen.queryByText("Banda")).not.toBeInTheDocument();
   });
 
   it("sin descripción no deja una línea vacía", () => {
-    const { container } = renderWithIntl(<ArtistIdentity type="person" name="X" description={null} />);
-    expect(screen.getByText("Solista")).toBeInTheDocument();
-    expect(container.querySelectorAll("p")).toHaveLength(1);
+    const { container } = renderWithIntl(<ArtistIdentity name="X" description={null} />);
+    expect(container.querySelectorAll("p")).toHaveLength(0);
+  });
+});
+
+describe("ArtistFollowInvite", () => {
+  it("lleva al inicio de sesión con el nombre del artista y la frase", () => {
+    renderWithIntl(<ArtistFollowInvite name="Iron Maiden" />);
+    expect(screen.getByRole("link", { name: "Seguir a Iron Maiden" })).toHaveAttribute("href", "/auth/login");
+    expect(screen.getByText(artistEs.followInviteNote)).toBeInTheDocument();
   });
 });
 
@@ -173,7 +191,7 @@ describe("ArtistFacts", () => {
   });
 
   it("un artista de tipo varios no tiene fila En vivo", () => {
-    const { container } = renderWithIntl(
+    renderWithIntl(
       <ArtistFacts
         type="various"
         name="Various Artists"
@@ -181,35 +199,29 @@ describe("ArtistFacts", () => {
         profile={profile({ links: [{ kind: "setlistfm", url: "https://www.setlist.fm/setlists/x.html" }] })}
       />,
     );
-    expect(container).toBeEmptyDOMElement();
+    expect(dd(artistEs.facts.type)).toHaveTextContent("Varios artistas");
+    expect(screen.queryByText(artistEs.facts.live)).not.toBeInTheDocument();
   });
 
-  it("sin ningún dato, la ficha no se renderiza", () => {
-    const { container } = renderWithIntl(<ArtistFacts type="group" firstMainYear={null} profile={profile()} />);
-    expect(container).toBeEmptyDOMElement();
-  });
-});
-
-describe("ArtistSummary", () => {
-  const summary = { text: "Pink Floyd fue una banda de rock británica.\nSegundo párrafo.", title: "Pink Floyd", url: "https://es.wikipedia.org/wiki/Pink_Floyd", language: "es" as const };
-
-  it("resumen en el idioma de la interfaz: primer párrafo, seguir leyendo y atribución", () => {
-    renderWithIntl(<ArtistSummary artistId="a1" summary={summary} />);
-    expect(screen.getByText("Pink Floyd fue una banda de rock británica.")).toBeInTheDocument();
-    expect(screen.queryByText("Segundo párrafo.")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: `${artistEs.summary.readMore} →` })).toHaveAttribute("href", "/artist/a1/biography#artist-tabs");
-    expect(screen.getByRole("link", { name: artistEs.summary.source })).toHaveAttribute("href", summary.url);
-    expect(screen.getByRole("link", { name: artistEs.summary.license })).toBeInTheDocument();
-    expect(screen.queryByText(/Resumen en/)).not.toBeInTheDocument();
+  it("sin ningún dato, la ficha solo dice el tipo", () => {
+    renderWithIntl(<ArtistFacts type="group" firstMainYear={null} profile={profile()} />);
+    expect(dd(artistEs.facts.type)).toHaveTextContent("Banda");
+    expect(screen.getAllByRole("definition")).toHaveLength(1);
   });
 
-  it("resumen en otro idioma: lo indica", () => {
-    renderWithIntl(<ArtistSummary artistId="a1" summary={summary} />, "en");
-    expect(screen.getByText("Summary in Spanish")).toBeInTheDocument();
-  });
-
-  it("sin resumen no renderiza nada", () => {
-    const { container } = renderWithIntl(<ArtistSummary artistId="a1" summary={null} />);
-    expect(container).toBeEmptyDOMElement();
+  it("géneros abren la primera línea, comunidad la cierra y los enlaces van en la segunda", () => {
+    const { container } = renderWithIntl(
+      <ArtistFacts
+        type="group"
+        name="Pink Floyd"
+        firstMainYear={null}
+        genres={<span>rock</span>}
+        community={<span>312 oyentes</span>}
+        profile={profile({ links: [{ kind: "official", url: "https://pinkfloyd.com" }] })}
+      />,
+    );
+    const lines = container.querySelectorAll("dl > div");
+    expect([...lines[0]!.querySelectorAll("[data-fact]")].map((el) => el.getAttribute("data-fact"))).toEqual(["genres", "type", "community"]);
+    expect([...lines[1]!.querySelectorAll("[data-fact]")].map((el) => el.getAttribute("data-fact"))).toEqual(["links", "live"]);
   });
 });

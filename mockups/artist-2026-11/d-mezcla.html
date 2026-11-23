@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta D · Mezcla — Iron Maiden</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:opsz,wght@8..60,400..600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<style>
+  /* ——— Cabecera: el fondo siempre sale de las carátulas del artista, según cuántas haya ———
+     8 o más: muro. 1 a 7: el color de la primera, desenfocado, y las fundas en abanico (con 1, el disco asoma).
+     0: un disco dibujado. El retrato es la foto del artista (circular, como hoy). */
+  .stage { position: relative; isolation: isolate; overflow: hidden; border-bottom: 1px solid var(--border); background: var(--ink); }
+  .stage .wall { position: absolute; inset: -6% -4%; z-index: -3; display: none; grid-template-columns: repeat(9, 1fr); gap: 10px; transform: rotate(-4deg); opacity: .5; }
+  .stage .wall i { aspect-ratio: 1; border-radius: 6px; background: var(--surface-2) center / cover no-repeat; }
+  .stage .ambient { position: absolute; inset: -20%; z-index: -3; display: none; background: center / cover no-repeat; filter: blur(60px) saturate(1.2); opacity: .55; }
+  .stage .fan { position: absolute; z-index: -3; display: none; right: max(4%, calc(50% - 44rem + 3rem)); top: 40%; width: min(480px, 36vw); height: min(280px, 21vw); transform: translateY(-50%); }
+  .fan .sleeve { position: absolute; top: 0; height: 100%; aspect-ratio: 1; border-radius: 6px; background: var(--surface-2) center / cover no-repeat; box-shadow: 0 30px 60px -24px rgba(0,0,0,.95), 0 0 0 1px rgba(242,237,228,.08); }
+  .fan .peek { position: absolute; top: 4%; height: 92%; aspect-ratio: 1; border-radius: 50%;
+      background: radial-gradient(circle, #14120f 0 1.4%, rgba(232,184,75,.9) 1.5% 15%, #14120f 15.2% 17%, transparent 17.2%), repeating-radial-gradient(circle, #181512 0 2px, #26211c 2px 3px);
+      box-shadow: 0 30px 60px -24px rgba(0,0,0,.95); }
+  /* Sin imagen: un disco grande dibujado (surcos concéntricos y etiqueta ámbar) a la derecha. */
+  .stage .grooves { position: absolute; inset: 0; z-index: -3; display: none; background: linear-gradient(160deg, #1f1b17, var(--ink) 70%); }
+  .stage .grooves .vinyl { position: absolute; right: 6%; top: 50%; width: min(620px, 46vw); aspect-ratio: 1; transform: translateY(-50%); border-radius: 50%;
+      background: radial-gradient(circle, #14120f 0 1.4%, rgba(232,184,75,.9) 1.5% 15%, #14120f 15.2% 17%, transparent 17.2%),
+                  repeating-radial-gradient(circle, #181512 0 2px, #26211c 2px 3px);
+      box-shadow: 0 40px 80px -30px rgba(0,0,0,.9), inset 0 0 0 1px rgba(242,237,228,.06); opacity: .75; }
+  .stage::before { content: ""; position: absolute; inset: 0; z-index: -2; background: linear-gradient(90deg, rgba(20,18,15,.96) 0%, rgba(20,18,15,.8) 45%, rgba(20,18,15,.3) 100%), linear-gradient(180deg, rgba(20,18,15,.15) 40%, var(--ink) 100%); }
+  .stage .wrap { min-height: min(56vh, 500px); display: flex; flex-direction: column; justify-content: space-between; padding-top: 22px; padding-bottom: 30px; gap: 28px; }
+  .top-row { display: flex; justify-content: space-between; align-items: center; }
+  .share { display: inline-flex; gap: 8px; align-items: center; padding: 7px 12px; border: 1px solid rgba(242,237,228,.25); border-radius: 8px; font: 500 12px var(--data); color: var(--paper); background: rgba(20,18,15,.4); }
+  .share svg { width: 14px; height: 14px; }
+  .id-row { display: flex; align-items: end; justify-content: space-between; gap: 28px; }
+  .who { display: flex; align-items: end; gap: 22px; min-width: 0; }
+  .portrait { flex: none; width: 148px; height: 148px; border-radius: 50%; background: var(--surface-2) center / cover no-repeat; box-shadow: 0 24px 40px -20px rgba(0,0,0,.9); border: 3px solid rgba(20,18,15,.9); outline: 1px solid rgba(242,237,228,.14); display: grid; place-items: center; font: 700 46px var(--display); color: var(--muted); }
+  .portrait.cover { border-radius: 12px; }
+  h1 { font-family: var(--display); font-weight: 700; font-size: clamp(52px, 8vw, 124px); line-height: .88; letter-spacing: -.045em; }
+  .lede { margin-top: 12px; font-size: 20px; color: rgba(242,237,228,.85); }
+  .line { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; font: 500 13px var(--data); color: rgba(242,237,228,.78); }
+  .line a:hover { color: var(--amber); }
+  .chip { padding: 3px 10px; border: 1px solid rgba(242,237,228,.28); border-radius: 999px; color: var(--paper); }
+  .cta { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; text-align: right; flex: none; }
+  .cta p { font-size: 13.5px; color: rgba(242,237,228,.72); max-width: 28ch; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: 8px; font: 500 15px var(--display); white-space: nowrap; }
+  .btn.amber { background: var(--amber); color: var(--amber-ink); }
+  .credit { position: absolute; right: var(--pad); bottom: 8px; font: 500 11px var(--data); color: rgba(242,237,228,.6); }
+  .why { margin-top: 6px; font: 500 11px var(--data); color: rgba(242,237,228,.55); }
+
+  /* Modos del fondo */
+  [data-bg="wall"] .stage .wall { display: grid; }
+  [data-bg="fan"] .stage .ambient, [data-bg="fan"] .stage .fan { display: block; }
+  [data-bg="none"] .stage .grooves { display: block; }
+  [data-photo="no"] .credit { display: none; }
+
+  /* ——— Pestañas horizontales fijas ——— */
+  .tabsbar { position: sticky; top: 64px; z-index: 30; background: rgba(20,18,15,.94); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
+  .tabsbar .wrap { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+  .tabsbar button { padding: 14px 14px 12px; font: 500 15px var(--display); color: var(--muted); white-space: nowrap; }
+  .tabsbar button span { font: 500 12px var(--data); color: var(--muted-2); margin-left: 4px; }
+  .tabsbar button[aria-selected="true"] { color: var(--paper); box-shadow: inset 0 -2px var(--amber); }
+  .panel { padding-top: 30px; }
+  .panel[hidden] { display: none; }
+
+  /* ——— Discografía: controles actuales ——— */
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .toolbar + .toolbar { margin-bottom: 26px; }
+  .chipsec { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+  .chipsec button { padding: 6px 11px; border: 1px solid var(--border); border-radius: 8px; font: 500 13px var(--display); color: var(--muted); }
+  .chipsec button span { font: 500 11.5px var(--data); color: var(--muted-2); margin-left: 4px; }
+  .chipsec button[aria-pressed="true"] { border-color: var(--amber); color: var(--paper); }
+  .search-mini { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-size: 14px; min-width: 240px; }
+  .search-mini svg { width: 14px; height: 14px; }
+  .seg { display: inline-flex; padding: 3px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+  .seg button { padding: 5px 10px; border-radius: 6px; font: 500 12px var(--data); color: var(--muted); white-space: nowrap; }
+  .seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--paper); }
+  .seg-label { font: 500 11px var(--data); color: var(--muted-2); text-transform: uppercase; letter-spacing: .08em; margin-left: 6px; }
+  h3.block { display: flex; align-items: baseline; gap: 10px; font: 600 19px var(--display); margin: 0 0 16px; }
+  h3.block span { font: 500 12px var(--data); color: var(--muted); }
+  .albums { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 24px 18px; }
+  .album .cv { background-size: cover; transition: transform .25s cubic-bezier(.16,1,.3,1); }
+  .album:hover .cv { transform: translateY(-3px); }
+  .album b { display: block; margin-top: 10px; font: 500 15px var(--display); line-height: 1.25; }
+  .album span { font: 500 12px var(--data); color: var(--muted); }
+  .list { margin-top: 40px; }
+  .rows { border-top: 1px solid var(--border-2); }
+  .row { display: grid; grid-template-columns: 56px 44px minmax(0, 1fr) 90px; gap: 14px; align-items: center; padding: 9px 4px; border-bottom: 1px solid var(--border); }
+  .row:hover { background: var(--surface); }
+  .row .y { font: 500 13px var(--data); color: var(--muted); }
+  .row .cv, .row .tt { width: 44px; border-radius: 4px; background-size: cover; }
+  .tt { aspect-ratio: 1; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted-2); }
+  .tt svg { width: 70%; height: 70%; }
+  .row b { font: 500 15px var(--display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .k { justify-self: end; }
+
+  /* ——— Integrantes: línea de tiempo + lista estilo Metal Archives ——— */
+  .timeline { border: 1px solid var(--border); border-radius: 12px; padding: 18px 18px 12px; margin-bottom: 34px; }
+  .timeline .tl-title { font: 600 16px var(--display); margin-bottom: 12px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .timeline .tl-title span { font: 500 12px var(--data); color: var(--muted); }
+  .tl-row { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 12px; align-items: center; height: 26px; }
+  .tl-row b { font: 500 13px var(--display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tl-track { position: relative; height: 10px; background: repeating-linear-gradient(90deg, transparent 0 calc(20% - 1px), var(--border) calc(20% - 1px) 20%); border-radius: 2px; }
+  .tl-track i { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: var(--muted-2); }
+  .tl-track i.voz { background: var(--amber); }
+  .tl-axis { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 12px; margin-top: 6px; }
+  .tl-axis div { display: flex; justify-content: space-between; font: 500 11px var(--data); color: var(--muted-2); }
+  .tl-legend { margin-top: 10px; font: 500 11px var(--data); color: var(--muted); display: flex; gap: 14px; }
+  .tl-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 5px; background: var(--muted-2); }
+  .tl-legend i.voz { background: var(--amber); }
+  .ma-filter { margin-bottom: 18px; }
+  .ma-group { font: 500 12px var(--data); color: var(--muted); text-transform: uppercase; letter-spacing: .1em; margin: 22px 0 6px; }
+  .ma-row { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 20px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .ma-row b { font: 500 16px var(--display); }
+  .ma-row .star { margin-left: 4px; }
+  .ma-row .dead { font: 500 12px var(--data); color: var(--muted); margin-left: 6px; }
+  .ma-row .also { display: block; margin-top: 3px; font: 500 12px var(--data); color: var(--muted); }
+  .ma-row .roles { font-size: 15px; }
+  .ma-note { margin-top: 14px; font: 500 12px var(--data); color: var(--muted); }
+
+  .bio { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 40px; }
+  .bio p { font-size: 18px; line-height: 1.65; max-width: 66ch; }
+  .bio .src { margin-top: 14px; font: 500 12px var(--data); color: var(--muted); }
+  .bio dl { border-left: 1px solid var(--border); padding-left: 20px; display: grid; gap: 14px; align-content: start; }
+  .bio dt { font: 500 11px var(--data); color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+  .bio dd { font-family: var(--display); margin-top: 2px; }
+  .live { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--muted); }
+  .comments { margin-top: 64px; max-width: 760px; }
+  .empty { padding: 20px; border: 1px dashed var(--border-2); border-radius: 12px; color: var(--muted); }
+
+  /* Selector de estados del mockup (no es parte del diseño) */
+  .states { position: fixed; right: 14px; top: 76px; z-index: 70; background: #f2ede4; color: #14120f; border-radius: 12px; padding: 10px; box-shadow: 0 10px 30px -10px rgba(0,0,0,.8); font: 500 12px system-ui, sans-serif; width: 220px; }
+  .states p { margin-bottom: 6px; opacity: .7; }
+  .states .st-row { display: flex; gap: 3px; margin-bottom: 10px; } .states button { flex: 1; padding: 6px 4px; border-radius: 6px; color: #14120f; border: 1px solid #ddd5c8; }
+  .states button[aria-pressed="true"] { background: #14120f; color: #f2ede4; }
+
+  @media (max-width: 1023px) {
+    .tabsbar { top: 60px; }
+    .states { top: auto; bottom: 64px; right: 10px; width: 200px; }
+  }
+  @media (max-width: 760px) {
+    .id-row { flex-direction: column; align-items: flex-start; }
+    .who { flex-direction: column; align-items: flex-start; gap: 14px; }
+    .portrait { width: 96px; height: 96px; }
+    .cta { align-items: flex-start; text-align: left; }
+    .stage::before { background: linear-gradient(180deg, rgba(20,18,15,.3) 0%, rgba(20,18,15,.86) 52%, var(--ink) 100%); }
+    .stage .wall { grid-template-columns: repeat(5, 1fr); }
+    .stage .fan { top: 96px; right: 16px; width: 52vw; height: 30vw; transform: none; opacity: .85; }
+    .albums { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 14px; }
+    .row { grid-template-columns: 44px 40px minmax(0, 1fr); }
+    .row .k { display: none; }
+    .search-mini { min-width: 0; flex: 1 1 100%; }
+    .ma-row { grid-template-columns: 1fr; gap: 4px; }
+    .tl-row, .tl-axis { grid-template-columns: 104px minmax(0, 1fr); }
+    .bio { grid-template-columns: 1fr; }
+    .bio dl { border-left: 0; padding-left: 0; grid-template-columns: 1fr 1fr; }
+    .live { flex-direction: column; align-items: flex-start; }
+    .credit { top: 64px; bottom: auto; }
+    .states { position: static; width: auto; margin: 12px var(--pad); }
+  }
+</style>
+</head>
+<body data-bg="wall" data-photo="yes">
+<header class="site-header"></header>
+
+<aside class="states" aria-label="Casos de la cabecera (solo para el mockup)">
+  <p>Carátulas del artista con imagen</p>
+  <div class="st-row" data-group="count"><button data-count="17" aria-pressed="true">17</button><button data-count="5">5</button><button data-count="2">2</button><button data-count="1">1</button><button data-count="0">0</button></div>
+  <p>Foto del artista</p>
+  <div class="st-row" data-group="photo"><button data-photo="yes" aria-pressed="true">Con foto</button><button data-photo="no">Sin foto</button></div>
+</aside>
+
+<main>
+  <section class="stage" aria-labelledby="h1">
+    <div class="ambient" id="ambient" aria-hidden="true"></div>
+    <div class="fan" id="fan" aria-hidden="true"></div>
+    <div class="wall" id="wall" aria-hidden="true"></div>
+    <div class="grooves" aria-hidden="true"><span class="vinyl"></span></div>
+    <div class="wrap">
+      <div class="top-row"><span class="crumbs">Inicio / <b>Iron Maiden</b></span><a class="share" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12M7 8l5-5 5 5M5 14v5h14v-5"/></svg>Compartir</a></div>
+      <div class="id-row">
+        <div class="who">
+          <div class="portrait" id="portrait" role="img" aria-label=""></div>
+          <div>
+            <h1 id="h1">Iron Maiden</h1>
+            <p class="lede">Banda británica de heavy metal</p>
+            <p class="line">
+              <a class="chip" href="#">NWOBHM</a><a class="chip" href="#">heavy metal</a>
+              <span>Leyton, Reino Unido</span><span>desde 1975 · Activa</span>
+              <a href="#" data-goto="members">6 integrantes · Ver alineación →</a>
+            </p>
+            <p class="line"><a href="#">Sitio oficial ↗</a><a href="#">Wikipedia ↗</a><a href="#">Spotify ↗</a><a href="#">Conciertos en setlist.fm ↗</a></p>
+            <p class="why" id="why"></p>
+          </div>
+        </div>
+        <div class="cta">
+          <a class="btn amber" href="#">Seguir a Iron Maiden</a>
+          <p>Necesitas una cuenta para seguir artistas y registrar tus escuchas.</p>
+        </div>
+      </div>
+    </div>
+    <span class="credit">Foto: Anne Varak · CC BY 2.0</span>
+  </section>
+
+  <nav class="tabsbar" aria-label="Secciones del artista"><div class="wrap" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="disc">Discografía<span>36</span></button>
+    <button role="tab" aria-selected="false" data-tab="members">Integrantes<span>25</span></button>
+    <button role="tab" aria-selected="false" data-tab="bio">Biografía</button>
+    <button role="tab" aria-selected="false" data-tab="live">Conciertos</button>
+  </div></nav>
+
+  <div class="wrap">
+    <section class="panel" data-panel="disc" aria-label="Discografía">
+      <div class="toolbar">
+        <div class="chipsec" role="group" aria-label="Sección"><button aria-pressed="true">Principal<span>36</span></button><button>En vivo<span>37</span></button><button>Recopilatorios<span>32</span></button><button>Sencillos<span>68</span></button><button>Otros<span>14</span></button><button>Apariciones<span>8</span></button></div>
+      </div>
+      <div class="toolbar">
+        <label class="search-mini"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Buscar en la discografía</label>
+        <span class="seg-label">Agrupar</span>
+        <div class="seg" role="group" aria-label="Agrupar"><button aria-pressed="true">Tipo</button><button>Década</button><button>Sin agrupar</button></div>
+        <span class="seg-label">Vista</span>
+        <div class="seg" role="group" aria-label="Vista"><button aria-pressed="true">Grilla</button><button>Tabla</button></div>
+      </div>
+
+      <h3 class="block">Álbumes <span class="num">17</span></h3>
+      <div class="albums" id="albums"></div>
+
+      <div class="list">
+        <h3 class="block">EP, videos y otros <span class="num">19</span></h3>
+        <div class="rows" id="rows"></div>
+      </div>
+
+      <section class="comments" aria-labelledby="h-com">
+        <div class="sec-head"><div><h2 id="h-com">Comentarios</h2></div></div>
+        <p class="empty">Todavía nadie comentó sobre Iron Maiden. <a href="#" style="color:var(--amber)">Inicia sesión</a> para empezar la conversación.</p>
+      </section>
+    </section>
+
+    <section class="panel" data-panel="members" aria-label="Integrantes" hidden>
+      <div class="timeline" aria-label="Línea de tiempo de la alineación">
+        <p class="tl-title">La banda a lo largo del tiempo <span>voces, guitarras, bajo y batería</span></p>
+        <div id="tl"></div>
+        <div class="tl-axis"><span></span><div><span>1975</span><span>1985</span><span>1995</span><span>2005</span><span>2015</span><span>hoy</span></div></div>
+        <p class="tl-legend"><span><i class="voz"></i>Voz</span><span><i></i>Instrumentos</span></p>
+      </div>
+      <div class="seg ma-filter" role="group" aria-label="Filtrar integrantes"><button aria-pressed="true">Completa</button><button>Actual</button><button>Antiguos</button><button>Apoyo</button></div>
+      <div id="ma"></div>
+      <p class="ma-note">★ integrante fundador · † año de muerte</p>
+    </section>
+
+    <section class="panel" data-panel="bio" aria-label="Biografía" hidden>
+      <div class="bio">
+        <div>
+          <p>Iron Maiden es una banda británica de heavy metal fundada en Londres en 1975 por el bajista Steve Harris. Considerada una de las agrupaciones más importantes y representativas del género, han vendido más de 180 millones de discos en el mundo, a pesar de haber contado con poco apoyo de los medios de comunicación masiva durante la mayor parte de su carrera.</p>
+          <p class="src">Fuente: Wikipedia · CC BY-SA 4.0</p>
+        </div>
+        <dl><div><dt>Primer álbum</dt><dd>Iron Maiden (1980)</dd></div><div><dt>Último álbum</dt><dd>Senjutsu (2021)</dd></div><div><dt>Álbumes</dt><dd>17</dd></div><div><dt>Integrantes</dt><dd>6 actuales · 18 antiguos</dd></div></dl>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="live" aria-label="Conciertos" hidden>
+      <div class="live"><p>Fechas y setlists de sus giras en setlist.fm. ¿Fuiste a alguno? Regístralo en tu cuenta.</p><a class="btn amber" href="#">Conciertos en setlist.fm ↗</a></div>
+    </section>
+  </div>
+</main>
+
+<footer class="site-foot"><div class="wrap">La metadata del catálogo proviene de MusicBrainz (CC0) y las carátulas, del Cover Art Archive, en baja resolución.</div></footer>
+
+<nav class="mock-bar" aria-label="Mockups"><span>Mockup · Iron Maiden, datos reales de la base local</span><a href="index.html">Resumen</a><a href="a-indice.html">A</a><a href="b-estanteria.html">B</a><a href="c-ficha.html">C</a><a href="d-mezcla.html" aria-current="page">D · Mezcla</a></nav>
+
+<script src="shared.js"></script>
+<script>
+  // Alineación estilo Metal Archives (datos reales de la pestaña Integrantes).
+  var MA = [
+    ["Actual", [
+      ["Steve Harris", true, null, "Coros, bajo, teclados (1975–presente)", "British Lion, The Full Metal Rackets, ex-Gypsy's Kiss"],
+      ["Dave Murray", false, null, "Guitarra (1976–1977, 1978–presente)", "ex-Urchin"],
+      ["Adrian Smith", false, null, "Coros (1980–1990, 1999–presente) · Guitarra, teclados (1980–1990) · Bajo (1999–presente)", "A.S.A.P., Psycho Motel, Smith/Kotzen"],
+      ["Bruce Dickinson", false, null, "Voz principal (1981–1993, 1999–presente)", "Speed, ex-Samson, ex-Shots"],
+      ["Janick Gers", false, null, "Guitarra (1990–presente)", "ex-Gillan, ex-White Spirit"],
+      ["Simon Dawson", false, null, "Batería (2024–presente)", "British Lion, ex-The Outfield"],
+    ]],
+    ["Antiguos", [
+      ["Dave Sullivan", true, null, "Guitarra (1975–1976)", null],
+      ["Paul Day", true, 2025, "Voz principal (1975–1976)", "ex-Andy Scott’s Sweet, ex-More"],
+      ["Ron \"Rebel\" Matthews", true, null, "Batería (1975–1977)", "ex-Gibraltar, ex-McCoy"],
+      ["Terry Rance", true, null, "Guitarra (1975–1976)", null],
+      ["Dennis Wilcock", false, null, "Voz principal (1976–1978)", "ex-Smiler"],
+      ["Doug Sampson", false, null, "Batería, percusión (1977–1979)", "ex-Smiler"],
+      ["Paul Di’Anno", false, 2024, "Voz principal (1978–1981)", "ex-Di’Anno, ex-Killers"],
+      ["Clive Burr", false, 2013, "Batería, percusión (1979–1982)", "ex-Desperado, ex-Samson, ex-Trust"],
+      ["Dennis Stratton", false, null, "Coros, guitarra (1979–1980)", "Lionheart, Remus Down Boulevard"],
+      ["Nicko McBrain", false, null, "Batería, percusión (1982–2024)", "The Full Metal Rackets, ex-Pat Travers Band"],
+      ["Blaze Bayley", false, null, "Voz principal (1994–1999)", "Wolfsbane, ex-Blaze"],
+    ]],
+    ["Músicos de apoyo · actuales", [
+      ["Michael Kenney", false, null, "Teclados (1988–presente)", null],
+    ]],
+  ];
+
+  window.renderMockup = function () {
+    var A = window.ARTIST;
+    document.getElementById("albums").innerHTML = A.ALBUMS.map(function (a) {
+      return '<a class="album" href="#"><i class="cv" data-mb="' + a[2] + '"></i><b>' + a[0] + '</b><span class="num">' + a[1] + "</span></a>";
+    }).join("");
+    document.getElementById("rows").innerHTML = A.OTHERS.map(function (o) {
+      var art = o[2] ? '<i class="cv" data-mb="' + o[2] + '"></i>' : '<span class="tt disc" aria-hidden="true"></span>';
+      return '<a class="row" href="#"><span class="y num">' + o[1] + "</span>" + art + "<b>" + o[0] + '</b><span class="badge k">' + o[3] + "</span></a>";
+    }).join("");
+    // Muro de carátulas propias (estado «sin foto, con carátulas»).
+    var wall = "";
+    for (var i = 0; i < 27; i++) wall += '<i data-mb="' + A.ALBUMS[i % A.ALBUMS.length][2] + '"></i>';
+    document.getElementById("wall").innerHTML = wall;
+    var span = 2026 - 1975;
+    document.getElementById("tl").innerHTML = A.ERAS.map(function (e) {
+      return '<div class="tl-row"><b>' + e[0] + '</b><div class="tl-track" title="' + e[1] + '">' + e[2].map(function (p) {
+        return '<i class="' + (e[1] === "Voz" ? "voz" : "") + '" style="left:' + ((p[0] - 1975) / span) * 100 + "%;width:" + ((p[1] - p[0]) / span) * 100 + '%"></i>';
+      }).join("") + "</div></div>";
+    }).join("");
+    document.getElementById("ma").innerHTML = MA.map(function (g) {
+      return '<p class="ma-group">' + g[0] + "</p>" + g[1].map(function (m) {
+        return '<div class="ma-row"><div><b>' + m[0] + "</b>" + (m[1] ? '<span class="star" title="integrante fundador">★</span>' : "") + (m[2] ? '<span class="dead">†' + m[2] + "</span>" : "") + (m[4] ? '<span class="also">También en: ' + m[4] + "</span>" : "") + '</div><div class="roles">' + m[3] + "</div></div>";
+      }).join("");
+    }).join("");
+    renderStage(17, true);
+  };
+
+  var stage = { count: 17, photo: true };
+  var WHY = {
+    wall: "8 carátulas o más: muro de carátulas del artista de fondo.",
+    fan: "1 a 7 carátulas: el color de su primera carátula de fondo y las fundas en abanico (con una sola, el disco asoma).",
+    none: "Sin carátulas: un disco dibujado de fondo.",
+  };
+  function renderStage(count, photo) {
+    stage = { count: count, photo: photo };
+    var A = window.ARTIST, covers = A.ALBUMS.slice(0, count).map(function (a) { return a[2]; });
+    var mode = count >= 8 ? "wall" : count >= 1 ? "fan" : "none";
+    document.body.dataset.bg = mode;
+    document.body.dataset.photo = photo ? "yes" : "no";
+    if (mode === "wall") {
+      var w = ""; for (var i = 0; i < 27; i++) w += '<i style="background-image:url(' + window.coverUrl(covers[i % covers.length]) + ')"></i>';
+      document.getElementById("wall").innerHTML = w;
+    }
+    if (mode === "fan") {
+      document.getElementById("ambient").style.backgroundImage = "url(" + window.coverUrl(covers[0]) + ")";
+      var shown = covers.slice(0, 5), n = shown.length, html = "";
+      if (n === 1) html += '<span class="peek" style="left:34%"></span>';
+      shown.forEach(function (mb, k) {
+        var left = n === 1 ? 0 : (k * (100 - 59)) / Math.max(1, n - 1);
+        var rot = n === 1 ? -2 : (k - (n - 1) / 2) * 3;
+        html += '<span class="sleeve" style="left:' + left + '%;z-index:' + (10 - k) + ';transform:rotate(' + rot + 'deg);background-image:url(' + window.coverUrl(mb) + ')"></span>';
+      });
+      document.getElementById("fan").innerHTML = html;
+    }
+    var p = document.getElementById("portrait");
+    p.classList.toggle("cover", !photo && count > 0);
+    p.textContent = "";
+    if (photo) {
+      p.style.backgroundImage = "url(https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Iron_Maiden_Irvine_2008.jpg/500px-Iron_Maiden_Irvine_2008.jpg)";
+      p.setAttribute("aria-label", "Foto de Iron Maiden (Anne Varak · CC BY 2.0)");
+    } else if (count > 0) {
+      p.style.backgroundImage = "url(" + window.coverUrl(covers[covers.length - 1]) + ")";
+      p.setAttribute("aria-label", "Carátula de su álbum más valorado");
+    } else {
+      p.style.backgroundImage = "none";
+      p.textContent = "IM";
+      p.setAttribute("aria-label", "Iron Maiden");
+    }
+    document.getElementById("why").textContent = WHY[mode] + (photo ? " Retrato: la foto del artista." : count ? " Sin foto: retrato con la carátula de su álbum más valorado (o el último)." : " Sin foto ni carátulas: iniciales.");
+    document.querySelectorAll("[data-count]").forEach(function (b) { b.setAttribute("aria-pressed", String(+b.dataset.count === count)); });
+    document.querySelectorAll(".states [data-photo]").forEach(function (b) { b.setAttribute("aria-pressed", String((b.dataset.photo === "yes") === photo)); });
+  }
+  document.querySelectorAll("[data-count]").forEach(function (b) { b.addEventListener("click", function () { renderStage(+b.dataset.count, stage.photo); }); });
+  document.querySelectorAll(".states [data-photo]").forEach(function (b) { b.addEventListener("click", function () { renderStage(stage.count, b.dataset.photo === "yes"); }); });
+
+  function showTab(t) {
+    document.querySelectorAll(".tabsbar button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.tab === t)); });
+    document.querySelectorAll(".panel").forEach(function (p) { p.hidden = p.dataset.panel !== t; });
+  }
+  document.querySelectorAll(".tabsbar button").forEach(function (b) { b.addEventListener("click", function () { showTab(b.dataset.tab); }); });
+  document.querySelectorAll("[data-goto]").forEach(function (a) { a.addEventListener("click", function (e) { e.preventDefault(); showTab(a.dataset.goto); document.querySelector(".tabsbar").scrollIntoView(); }); });
+</script>
+</body>
+</html>

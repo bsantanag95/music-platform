@@ -328,9 +328,10 @@ describe("layout de la página de artista", () => {
     expect(screen.queryByRole("link", { name: artistEs.tabs.biography })).not.toBeInTheDocument();
   });
 
-  it("anónimo: el panel invita a iniciar sesión y no hay botones sueltos", async () => {
+  it("anónimo: «Seguir a {artista}» en lugar del panel y sin controles de escritura", async () => {
     await renderLayout();
-    expect(screen.getByText(artistEs.relation.signInPrompt)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Seguir a Pink Floyd" })).toHaveAttribute("href", "/auth/login");
+    expect(screen.queryByText(artistEs.relation.signInPrompt)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: artistEs.relation.follow })).not.toBeInTheDocument();
   });
 

@@ -78,12 +78,3 @@ export function ArtistTabs({ artistId, artistName = "", hasBiography, hasAwards 
     </nav>
   );
 }
-
-/**
- * Oculta su contenido en una pestaña (openspec: refine-artist-page-phase1, design D3): el resumen de la cabecera no
- * se repite en Biografía, que ya muestra el texto completo.
- */
-export function HiddenOnTab({ tab, children }: { tab: "biography"; children: React.ReactNode }) {
-  const segment = useSelectedLayoutSegment();
-  return segment === SEGMENTS[tab] ? null : children;
-}

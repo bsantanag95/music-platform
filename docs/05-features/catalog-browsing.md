@@ -183,6 +183,22 @@ se revisa antes de una exposición pública o cuando el catálogo tenga volumen 
 
 ## 2. Perfil de artista
 
+**Portada (cambio `modernize-artist-page-phase1`, 2026-11 — propuesta «D · Mezcla» de la auditoría del 2026-11-21, mockups en
+`mockups/artist-2026-11/`).** La cabecera es una franja a todo el ancho cuyo fondo sale **siempre** de las carátulas de la
+discografía principal (miniaturas de 250 px): con 8 o más, un muro atenuado; con 1 a 7, el color desenfocado de la primera y hasta
+5 fundas en abanico (con una sola, el disco asoma; en el teléfono el abanico sube junto al retrato); sin carátulas, un disco
+dibujado. La foto de Commons es un **retrato circular** con su crédito en la esquina de la portada; sin foto, la carátula del disco
+mejor valorado (o del más reciente) en cuadrado y enlazada al disco; sin carátulas, las iniciales. Nombre grande, descripción
+debajo y la ficha en dos líneas: géneros, tipo (ya no es antetítulo), los datos de abajo, alineación, premios y la **comunidad**
+en una línea («312 oyentes · 120 seguidores (34 lo tienen de favorito) · 12 listas», cada cifra en 0 omitida); luego enlaces y
+En vivo. Sin sesión, la acción principal es «Seguir a {artista}» (al inicio de sesión) con una frase, en lugar del panel; con
+sesión, el panel «Tu relación» ocupa la columna derecha de la portada. El resumen de Wikipedia salió de la cabecera: lo muestra
+la pestaña Biografía. La página usa el contenedor de 88rem. Fases siguientes: **2** — «La banda a lo largo del tiempo» sobre la
+alineación estilo Metal Archives y la Biografía con ficha lateral; **3** — barra de la discografía en dos filas (mismo orden,
+agrupación y vista por defecto), carátulas sin choque con la etiqueta de tipo ni icono de imagen rota, escala de títulos.
+
+Lo que sigue describe la estructura original; donde contradiga el párrafo anterior, manda la portada.
+
 **Estructura** (cambio `redesign-artist-page`, 2026-09 — la página es un híbrido entre ficha
 de biblioteca y biografía, con la misma estructura que el álbum):
 

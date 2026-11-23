@@ -553,7 +553,9 @@
       "awards": "Awards",
       "seeAwards": "See",
       "live": "Live",
-      "setlistfm": "Concerts on setlist.fm"
+      "setlistfm": "Concerts on setlist.fm",
+      "type": "Type",
+      "genres": "Genres"
     },
     "summary": {
       "readMore": "Keep reading",
@@ -631,10 +633,10 @@
     },
     "community": {
       "heading": "Community",
-      "listeners": "Listeners",
-      "followers": "Followers",
       "favorites": "<count></count> favorited it",
-      "lists": "In lists"
+      "listenersLine": "<count></count> {n, plural, one {listener} other {listeners}}",
+      "followersLine": "<count></count> {n, plural, one {follower} other {followers}}",
+      "listsLine": "{count, plural, one {# list} other {# lists}}"
     },
     "discography": {
       "heading": "Discography",
@@ -755,7 +757,10 @@
       "less": "Show less",
       "pending": "We are adding the members’ other bands; they will show up on your next visit.",
       "mainCount": "{count, plural, one {# main record} other {# main records}}"
-    }
+    },
+    "followInvite": "Follow {name}",
+    "followInviteNote": "You need an account to follow artists and log your listens.",
+    "portraitCover": "Cover of {title}"
   },
   "album": {
     "tracklistHeading": "Tracklist",
