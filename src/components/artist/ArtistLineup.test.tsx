@@ -144,6 +144,38 @@ describe("GroupLineupView", () => {
   });
 });
 
+describe("línea de tiempo de la alineación (modernize-artist-page-phase2)", () => {
+  const group = { lifeBegin: "1981-01-17", lifeEnd: null, lifeEnded: false };
+  const timeline = () => screen.queryByRole("figure");
+
+  it("en Completa, Actual y Antiguos: título, una fila por integrante fechado y su texto accesible", () => {
+    for (const view of ["all", "current", "past"] as const) {
+      const { unmount } = renderWithIntl(<GroupLineupView artistId="crue" lineup={CRUE} view={view} group={group} />);
+      const figure = timeline()!;
+      expect(within(figure).getByText(lineupEs.timeline.title)).toBeInTheDocument();
+      // DJ Larceny no tiene años: no tiene fila. Los músicos de apoyo tampoco.
+      expect(within(figure).getAllByRole("listitem")).toHaveLength(3);
+      expect(within(figure).getByRole("link", { name: "Vince Neil: Voz principal (1981–1992, 1997–2015, 2018–presente)" })).toBeInTheDocument();
+      expect(within(figure).queryByText("Samantha Maloney")).not.toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it("no aparece en Apoyo ni sin los años del grupo", () => {
+    const { unmount } = renderWithIntl(<GroupLineupView artistId="crue" lineup={CRUE} view="support" group={group} />);
+    expect(timeline()).not.toBeInTheDocument();
+    unmount();
+    renderWithIntl(<GroupLineupView artistId="crue" lineup={CRUE} view="all" />);
+    expect(timeline()).not.toBeInTheDocument();
+  });
+
+  it("con menos de dos integrantes fechados no aparece", () => {
+    const sparse: GroupLineup = { ...CRUE, current: [CRUE.current[2]!], past: [CRUE.past[0]!] };
+    renderWithIntl(<GroupLineupView artistId="crue" lineup={sparse} view="all" group={group} />);
+    expect(timeline()).not.toBeInTheDocument();
+  });
+});
+
 describe("PersonLineupView", () => {
   const TOMMY: PersonLineup = {
     kind: "person",

@@ -197,6 +197,14 @@ la pestaña Biografía. La página usa el contenedor de 88rem. Fases siguientes:
 alineación estilo Metal Archives y la Biografía con ficha lateral; **3** — barra de la discografía en dos filas (mismo orden,
 agrupación y vista por defecto), carátulas sin choque con la etiqueta de tipo ni icono de imagen rota, escala de títulos.
 
+**Línea de tiempo de la alineación (cambio `modernize-artist-page-phase2`, 2026-11).** La pestaña Integrantes de un grupo
+muestra, encima del filtro de sub-vistas (en Completa, Actual y Antiguos; no en Apoyo), «La banda a lo largo del tiempo»: una fila
+por integrante actual y antiguo con un tramo por período de cada rol (voz en ámbar, instrumentos en papel atenuado) sobre un eje de
+la formación a hoy o a la separación. No inventa fechas: sin año de inicio el tramo arranca en la formación con el inicio
+desvanecido, terminado sin año de fin dura un año con el fin desvanecido, y un período sin años no se dibuja; con menos de dos
+integrantes fechados no aparece. Cada fila lleva para lectores de pantalla el mismo texto de roles y años que la lista estilo Metal
+Archives, que no cambia. La Biografía ya tenía su ficha lateral (`refine-artist-page-phase3`), así que esta fase no la toca.
+
 Lo que sigue describe la estructura original; donde contradiga el párrafo anterior, manda la portada.
 
 **Estructura** (cambio `redesign-artist-page`, 2026-09 — la página es un híbrido entre ficha

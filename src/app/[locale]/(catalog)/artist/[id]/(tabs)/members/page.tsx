@@ -7,7 +7,8 @@ import { artistSegment } from "@/lib/catalog-links";
 import { resolveCatalogRoute } from "@/lib/catalog-route";
 import { parseCatalogSegment } from "@/lib/slug";
 import { scheduleLineupMembersSync } from "@/services/catalog/artist-lineup-sync";
-import { loadArtist, loadLineup } from "../../artist-data";
+import type { ProfileLocale } from "@/services/catalog/artist-profile-read";
+import { loadArtist, loadLineup, loadProfile } from "../../artist-data";
 import { withClientMessages } from "@/i18n/client-messages";
 
 // Pestaña Integrantes de un grupo o Bandas de una persona (openspec: add-artist-members-tab,
@@ -42,8 +43,9 @@ async function ArtistMembersPage({ params, searchParams }: ArtistMembersPageProp
   if (!artist) notFound();
   if (!lineup || !lineupTabOf(lineup)) notFound();
   const query = (await searchParams) ?? {};
+  const locale = await getLocale();
   resolveCatalogRoute({
-    locale: await getLocale(),
+    locale,
     kind: "artist",
     segment,
     canonical: artistSegment(artist.name, artist.id),
@@ -54,12 +56,15 @@ async function ArtistMembersPage({ params, searchParams }: ArtistMembersPageProp
   if (lineup.kind === "group") {
     // Otras bandas y fecha de muerte de los integrantes, en segundo plano (design D5).
     scheduleLineupMembersSync(parsed.id);
+    // Mismo `cache()` por request que el layout: los años del grupo para el eje de la línea de tiempo.
+    const profile = await loadProfile(parsed.id, locale as ProfileLocale);
     return (
       <GroupLineupView
         artistId={parsed.id}
         artistName={artist.name}
         lineup={lineup}
         view={isView(query.view) ? query.view : "all"}
+        group={profile?.facts}
       />
     );
   }

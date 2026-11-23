@@ -15,6 +15,8 @@ import type {
 import type { InstrumentLine } from "@/services/catalog/lineup-classify";
 import { formatInstrumentLine, formatLineupPeriod } from "./artist-format";
 import { LineupAlsoIn, type AlsoInItem } from "./LineupAlsoIn";
+import { LineupTimeline } from "./LineupTimeline";
+import { lineupTimeline, type TimelineGroup } from "./lineup-timeline";
 
 // Pestaña Integrantes de un grupo y Bandas de una persona (openspec: add-artist-members-tab,
 // capability `artist-lineup-view`). Componentes sin estado, renderizados en el servidor; solo
@@ -145,14 +147,18 @@ export function GroupLineupView({
   artistName = "",
   lineup,
   view,
+  group,
 }: {
   artistId: string;
   /** Nombre del artista, para las direcciones con slug; opcional para los tests. */
   artistName?: string;
   lineup: GroupLineup;
   view: LineupView;
+  /** Formación y separación del grupo: el eje de la línea de tiempo (openspec: modernize-artist-page-phase2). */
+  group?: TimelineGroup;
 }) {
   const t = useTranslations("catalog.artist.lineup");
+  const format = useInstrumentFormatter();
   const membersBase = `${artistHref(artistName, artistId)}/members`;
   const views = availableViews(lineup);
   const active = views.includes(view) ? view : "all";
@@ -163,9 +169,21 @@ export function GroupLineupView({
     ...(show("past") ? lineup.past : []),
     ...(show("support") ? [...lineup.supportCurrent, ...lineup.supportPast] : []),
   ];
+  // La historia del grupo es la misma en Completa, Actual y Antiguos; Apoyo no la muestra.
+  const timeline =
+    group && active !== "support" ? lineupTimeline(lineup, group, new Date().getUTCFullYear()) : null;
+  const descriptions = timeline
+    ? Object.fromEntries(
+        [...lineup.current, ...lineup.past].map((person) => [
+          person.artistId,
+          person.lines.map((line, index) => format(line, index === 0 && person.isAdditional)).join("; "),
+        ]),
+      )
+    : {};
 
   return (
     <div className="flex flex-col gap-5">
+      {timeline ? <LineupTimeline data={timeline} descriptions={descriptions} /> : null}
       {/* Con una sola sub-vista además de Completa, la barra no aporta nada. */}
       {views.length > 2 ? (
         <nav aria-label={t("views.label")}>

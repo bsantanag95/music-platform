@@ -756,7 +756,13 @@
       "moreLabel": "{count, plural, one {Ver # banda más de {name}} other {Ver # bandas más de {name}}}",
       "less": "Ver menos",
       "pending": "Estamos sumando las otras bandas de los integrantes; van a aparecer en tu próxima visita.",
-      "mainCount": "{count, plural, one {# disco principal} other {# discos principales}}"
+      "mainCount": "{count, plural, one {# disco principal} other {# discos principales}}",
+      "timeline": {
+        "title": "La banda a lo largo del tiempo",
+        "voice": "Voz",
+        "instruments": "Instrumentos",
+        "now": "hoy"
+      }
     },
     "followInvite": "Seguir a {name}",
     "followInviteNote": "Necesitas una cuenta para seguir artistas y registrar tus escuchas.",
