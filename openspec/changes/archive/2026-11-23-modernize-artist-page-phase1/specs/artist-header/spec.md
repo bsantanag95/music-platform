@@ -13,7 +13,7 @@ disco, sin crédito. Sin foto ni carátulas, el retrato SHALL mostrar las inicia
 - **WHEN** el artista tiene una foto de Carolina Gatica con licencia CC BY-SA 4.0
 - **THEN** la cabecera muestra la foto en un círculo y en la portada "Foto: Carolina Gatica · CC BY-SA 4.0", con ambos enlaces
 
-#### Scenario: Sin foto, con carátulas
+#### Scenario: Sin foto
 
 - **WHEN** el artista no tiene foto y su disco mejor valorado tiene carátula
 - **THEN** el retrato es esa carátula en cuadrado, enlazada al disco, y no hay crédito de foto

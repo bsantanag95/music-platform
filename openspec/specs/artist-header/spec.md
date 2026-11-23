@@ -1,47 +1,53 @@
 # artist-header Specification
 
 ## Purpose
-Presentar en la cabecera del artista la foto con su crédito, la identidad, la ficha y el resumen de la biografía, omitiendo sin huecos cada dato que falte.
+Presentar en la portada del artista el fondo de carátulas, el retrato con su crédito, la identidad y la ficha, omitiendo sin huecos cada dato que falte.
 ## Requirements
 ### Requirement: Foto con crédito
 
-La cabecera SHALL mostrar la foto del artista en formato rectangular 4:3 (no circular), a lo
-sumo a 200 px de ancho en escritorio y a 96 px en móvil, junto al nombre. Debajo de la foto
-SHALL mostrarse el crédito que exige la licencia: autor y licencia, enlazados a la página del
-archivo en Commons y al texto de la licencia. Sin foto, SHALL mostrarse el placeholder
-visual del catálogo en el mismo formato. La página SHALL NOT mostrar una imagen de portada.
+La cabecera SHALL mostrar la foto del artista como retrato **circular** junto al nombre, de 148 px en escritorio y 96 px en
+móvil. El crédito que exige la licencia (autor y licencia, enlazados a la página del archivo en Commons y al texto de la licencia)
+SHALL mostrarse en la portada, en la esquina inferior derecha. Sin foto, el retrato SHALL ser la carátula del disco mejor valorado
+de la discografía principal o, si no lo hay, la del disco principal más reciente con carátula, en formato cuadrado y enlazada a ese
+disco, sin crédito. Sin foto ni carátulas, el retrato SHALL mostrar las iniciales del nombre.
 
 #### Scenario: Foto con licencia CC BY-SA
 
 - **WHEN** el artista tiene una foto de Carolina Gatica con licencia CC BY-SA 4.0
-- **THEN** la cabecera muestra la foto 4:3 y debajo "Foto: Carolina Gatica · CC BY-SA 4.0",
-  con ambos enlaces
+- **THEN** la cabecera muestra la foto en un círculo y en la portada "Foto: Carolina Gatica · CC BY-SA 4.0", con ambos enlaces
 
 #### Scenario: Sin foto
 
-- **WHEN** el artista no tiene foto
-- **THEN** la cabecera muestra el placeholder 4:3 y ningún crédito
+- **WHEN** el artista no tiene foto y su disco mejor valorado tiene carátula
+- **THEN** el retrato es esa carátula en cuadrado, enlazada al disco, y no hay crédito de foto
+
+#### Scenario: Sin foto ni carátulas
+
+- **WHEN** el artista no tiene foto ni ningún disco con carátula
+- **THEN** el retrato muestra sus iniciales y no hay crédito de foto
 
 ### Requirement: Identidad del artista
 
-La cabecera SHALL mostrar el antetítulo de tipo traducido (banda, solista, etc.), el nombre
-del artista y, debajo, la descripción corta de Wikidata en el idioma de la interfaz. Sin
-descripción en ese idioma, la línea SHALL omitirse. La cabecera SHALL NOT mostrar la
-desambiguación de MusicBrainz ni el nombre legal.
+La cabecera SHALL mostrar el nombre del artista como título principal y, debajo, la descripción corta de Wikidata en el idioma de
+la interfaz. Sin descripción en ese idioma, la línea SHALL omitirse. El tipo de artista traducido SHALL mostrarse en la ficha, no
+como antetítulo. La cabecera SHALL NOT mostrar la desambiguación de MusicBrainz ni el nombre legal.
 
 #### Scenario: Descripción traducida
 
 - **WHEN** una persona abre Pink Floyd en español
-- **THEN** ve "BANDA", "Pink Floyd" y "banda de rock británica"
+- **THEN** ve "Pink Floyd", "banda de rock británica" y la ficha empieza con "Banda"
 
 #### Scenario: Sin descripción
 
 - **WHEN** el artista no tiene descripción en el idioma de la interfaz
-- **THEN** la cabecera muestra tipo y nombre, sin una línea vacía
+- **THEN** la cabecera muestra el nombre y la ficha, sin una línea vacía
 
 ### Requirement: Ficha del artista
 
-La cabecera SHALL mostrar una ficha con estas filas, omitiendo las que no tienen dato:
+La cabecera SHALL mostrar una ficha compacta en dos líneas separadas por `·`: la primera con los géneros, el tipo de artista
+(«Banda», «Solista»…), los datos de identidad, la alineación, los premios y la comunidad; la segunda con Enlaces y En vivo. Cada
+fila SHALL conservar su rótulo para lectores de pantalla, aunque no se muestre. La ficha SHALL incluir estas filas, omitiendo las
+que no tienen dato:
 
 - Grupos: **Origen** (lugar de formación, traducido y con país) y **Actividad** (año de
   formación, año de separación si terminó, y estado "Activa" o "Separada").
@@ -108,26 +114,41 @@ La cabecera SHALL mostrar una ficha con estas filas, omitiendo las que no tienen
 - **WHEN** una persona abre "Various Artists"
 - **THEN** la ficha no muestra la fila En vivo
 
-### Requirement: Resumen de la biografía
+### Requirement: Portada de carátulas
 
-La cabecera SHALL mostrar el resumen de Wikipedia recortado a tres líneas, con una acción
-"Seguir leyendo" que lleva a la pestaña Biografía, y la atribución visible "Fuente:
-Wikipedia · CC BY-SA 4.0" con enlaces al artículo y a la licencia. Cuando el resumen está en
-otro idioma que la interfaz, SHALL indicarlo ("Resumen en español"). Sin resumen, el bloque
-SHALL omitirse.
+La cabecera SHALL ocupar todo el ancho de la ventana con un fondo hecho de las carátulas de la discografía principal del artista
+(miniaturas de 250 px, nunca la resolución completa), en el orden de la discografía y sin repetir disco salvo para llenar el muro:
 
-#### Scenario: Resumen en el idioma de la interfaz
+- Con **8 o más** carátulas, un muro de carátulas atenuado.
+- Con **1 a 7**, el color desenfocado de la primera carátula de fondo y hasta 5 fundas en abanico a un lado; con una sola, un disco
+  asoma de la funda.
+- **Sin carátulas**, un fondo de tinta con un disco dibujado.
 
-- **WHEN** una persona abre en español un artista con artículo en la Wikipedia en español
-- **THEN** ve tres líneas del resumen, "Seguir leyendo" y la atribución
+El fondo SHALL ser decorativo (oculto para lectores de pantalla) y el texto de la cabecera SHALL leerse con contraste suficiente
+sobre él. La página SHALL NOT desbordar en horizontal en ningún caso.
 
-#### Scenario: Resumen en otro idioma
+#### Scenario: Muchas carátulas
 
-- **WHEN** una persona abre en inglés un artista que solo tiene artículo en español
-- **THEN** ve el resumen en español con la indicación de su idioma
+- **WHEN** una persona abre Iron Maiden, con 17 álbumes con carátula
+- **THEN** la cabecera muestra un muro de carátulas de Iron Maiden detrás del nombre
 
-#### Scenario: Sin resumen
+#### Scenario: Dos carátulas
 
-- **WHEN** el artista no tiene resumen
-- **THEN** la cabecera no muestra el bloque ni "Seguir leyendo"
+- **WHEN** un artista tiene dos discos con carátula
+- **THEN** el fondo toma el color de la primera y las dos fundas aparecen en abanico, sin celdas vacías ni repetidas
+
+#### Scenario: Una carátula
+
+- **WHEN** un artista tiene un solo disco con carátula
+- **THEN** la funda aparece con el disco asomando
+
+#### Scenario: Sin carátulas
+
+- **WHEN** un artista no tiene ningún disco con carátula
+- **THEN** la cabecera muestra el disco dibujado sobre tinta
+
+#### Scenario: Teléfono
+
+- **WHEN** una persona abre un artista con dos carátulas en 390 px
+- **THEN** el abanico queda junto al retrato, sin tapar el nombre ni la ficha, y la página no desborda
 
