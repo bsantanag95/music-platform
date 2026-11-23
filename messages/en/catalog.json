@@ -756,7 +756,13 @@
       "moreLabel": "{count, plural, one {Show # more band for {name}} other {Show # more bands for {name}}}",
       "less": "Show less",
       "pending": "We are adding the members’ other bands; they will show up on your next visit.",
-      "mainCount": "{count, plural, one {# main record} other {# main records}}"
+      "mainCount": "{count, plural, one {# main record} other {# main records}}",
+      "timeline": {
+        "title": "The band through the years",
+        "voice": "Vocals",
+        "instruments": "Instruments",
+        "now": "now"
+      }
     },
     "followInvite": "Follow {name}",
     "followInviteNote": "You need an account to follow artists and log your listens.",
