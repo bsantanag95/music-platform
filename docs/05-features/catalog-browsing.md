@@ -205,6 +205,13 @@ desvanecido, terminado sin año de fin dura un año con el fin desvanecido, y un
 integrantes fechados no aparece. Cada fila lleva para lectores de pantalla el mismo texto de roles y años que la lista estilo Metal
 Archives, que no cambia. La Biografía ya tenía su ficha lateral (`refine-artist-page-phase3`), así que esta fase no la toca.
 
+**Discografía (cambio `modernize-artist-page-phase3`, 2026-11; cierra la propuesta D en tres fases).** La barra fija de la
+discografía tiene dos filas: arriba las secciones (en el teléfono, una línea que se desplaza de lado); debajo el buscador y los
+grupos Filtrar (con sesión y marcas), Agrupar (grilla) y Vista, con su rótulo corto visible desde la tableta. El orden, la
+agrupación y la vista por defecto no cambian. En la grilla, el relleno de un disco sin carátula baja su título cuando la tarjeta
+lleva «★ Mejor valorado» o «EP», y una carátula que falla —también antes de que la página se hidrate— cae a ese relleno (en la tabla,
+al disco dibujado) en lugar del icono de imagen rota. Los títulos de bloque y de grupo de la tabla usan la escala de «Comentarios».
+
 Lo que sigue describe la estructura original; donde contradiga el párrafo anterior, manda la portada.
 
 **Estructura** (cambio `redesign-artist-page`, 2026-09 — la página es un híbrido entre ficha

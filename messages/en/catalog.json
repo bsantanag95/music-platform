@@ -720,7 +720,12 @@
       "fewRatingsLabel": "fewer than 5 ratings",
       "favorite": "Favorite",
       "pendingMark": "On your to-listen list",
-      "actionsColumn": "Actions"
+      "actionsColumn": "Actions",
+      "barLabels": {
+        "filter": "Filter",
+        "grouping": "Group",
+        "view": "View"
+      }
     },
     "lineup": {
       "views": {

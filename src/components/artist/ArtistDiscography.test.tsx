@@ -192,7 +192,7 @@ describe("ArtistDiscography", () => {
       });
       fireEvent.click(screen.getByRole("button", { name: d.viewTable }));
       const groups = screen.getAllByRole("rowheader").map((h) => h.textContent);
-      expect(groups).toEqual([`${d.blocks.albums} · 1`, `${d.blocks.eps} · 1`]);
+      expect(groups).toEqual([`${d.blocks.albums} 1`, `${d.blocks.eps} 1`]);
     });
 
     it("disco sin carátula: título y año en el cuadro en lugar del vinilo", () => {
@@ -202,6 +202,25 @@ describe("ArtistDiscography", () => {
       const tile = screen.getByTestId("title-tile");
       expect(tile).toHaveTextContent("Christmas EP1983");
       expect(tile).toHaveAttribute("aria-hidden", "true");
+    });
+
+    it("disco sin carátula con etiqueta: el título baja para no quedar debajo (modernize-artist-page-phase3)", () => {
+      renderDiscography({
+        bestRatedId: "sin",
+        sections: [{ key: "main", items: [studio("sin", 1983, { coverThumbUrl: null, title: "Christmas EP" }), studio("otro", 1984)] }],
+      });
+      expect(screen.getByTestId("title-tile")).toHaveClass("pt-8");
+    });
+
+    it("barra en dos filas: secciones arriba y controles con rótulo debajo (modernize-artist-page-phase3)", () => {
+      const { container } = renderDiscography({
+        sections: [{ key: "main", items: [studio("e1", 1979, { isEp: true }), studio("a1", 1980)] }],
+      });
+      const controls = container.querySelector("[data-discography-controls]")!;
+      expect(controls.previousElementSibling).toHaveAttribute("aria-label", d.sectionsLabel);
+      expect(controls).toHaveTextContent(d.barLabels.grouping);
+      expect(controls).toHaveTextContent(d.barLabels.view);
+      expect(screen.getByRole("group", { name: d.grouping.label })).toBeInTheDocument();
     });
 
     it("por defecto no separa por décadas, aunque haya muchos discos", () => {
