@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import catalogEs from "../../../messages/es/catalog.json";
 import { ArtistCommunity } from "./ArtistCommunity";
 import { ArtistBiography } from "./ArtistBiography";
-import { ArtistTabs, HiddenOnTab } from "./ArtistTabs";
+import { ArtistTabs } from "./ArtistTabs";
 
 const mocks = vi.hoisted(() => ({ segment: null as string | null }));
 
@@ -25,32 +25,33 @@ const artistEs = catalogEs.artist;
 const exact = (value: number) => ({ kind: "exact" as const, value });
 const fewer = { kind: "fewer" as const, threshold: 5 };
 
-describe("ArtistCommunity", () => {
-  it("tres tarjetas: oyentes, seguidores con favoritos y listas enlazadas", () => {
-    renderWithIntl(
+describe("ArtistCommunity (una línea, modernize-artist-page-phase1)", () => {
+  it("oyentes, seguidores con favoritos y listas enlazadas", () => {
+    const { container } = renderWithIntl(
       <ArtistCommunity stats={{ listeners: exact(312), followers: exact(120), favorites: exact(34), listCount: 12 }} listsHref="/artist/a1/lists" />,
     );
-    const block = screen.getByRole("region", { name: artistEs.community.heading });
-    expect(within(block).getByText("312")).toBeInTheDocument();
-    expect(within(block).getByText("120")).toBeInTheDocument();
-    expect(within(block).getByText((_, el) => el?.tagName === "DD" && el.textContent === "34 lo tienen de favorito")).toBeInTheDocument();
-    expect(within(block).getByRole("link", { name: "12 →" })).toHaveAttribute("href", "/artist/a1/lists");
+    expect(container).toHaveTextContent("312 oyentes · 120 seguidores (34 lo tienen de favorito) · 12 listas");
+    expect(screen.getByRole("link", { name: "12 listas" })).toHaveAttribute("href", "/artist/a1/lists");
   });
 
-  it("menos de 5: '<5' a la vista y el texto completo para lectores de pantalla", () => {
-    renderWithIntl(<ArtistCommunity stats={{ listeners: fewer, followers: fewer, favorites: exact(0), listCount: 0 }} listsHref="/x" />);
-    expect(screen.getAllByText("Menos de 5").length).toBe(2);
-    expect(screen.getAllByText("<5").length).toBe(2);
-    expect(screen.queryByText(/de favorito/)).not.toBeInTheDocument();
-    expect(screen.getByText("0")).toBeInTheDocument();
+  it("menos de 5: '<5' a la vista y el texto completo para lectores de pantalla; las cifras en 0 se omiten", () => {
+    const { container } = renderWithIntl(<ArtistCommunity stats={{ listeners: fewer, followers: exact(0), favorites: exact(0), listCount: 0 }} listsHref="/x" />);
+    expect(screen.getByText("<5")).toBeInTheDocument();
+    expect(screen.getByText("Menos de 5")).toHaveClass("sr-only");
+    expect(container.textContent).toContain("oyentes");
+    expect(container.textContent).not.toContain("seguidor");
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 
-  it("favoritos por debajo del umbral: '<5' a la vista, como la cifra principal", () => {
+  it("favoritos por debajo del umbral: '<5' como la cifra principal", () => {
     renderWithIntl(<ArtistCommunity stats={{ listeners: exact(9), followers: exact(9), favorites: fewer, listCount: 0 }} listsHref="/x" />);
-    const detail = screen.getByText((_, el) => el?.tagName === "DD" && /lo tienen de favorito$/.test(el.textContent ?? ""));
-    expect(within(detail).getByText("<5")).toBeInTheDocument();
-    expect(within(detail).getByText("Menos de 5")).toHaveClass("sr-only");
+    expect(screen.getByText("<5")).toBeInTheDocument();
+    expect(screen.getByText(/lo tienen de favorito/)).toBeInTheDocument();
+  });
+
+  it("sin actividad no muestra nada", () => {
+    const { container } = renderWithIntl(<ArtistCommunity stats={{ listeners: exact(0), followers: exact(0), favorites: exact(0), listCount: 0 }} listsHref="/x" />);
+    expect(container).toBeEmptyDOMElement();
   });
 
   it("no muestra promedio de estrellas del artista", () => {
@@ -115,18 +116,5 @@ describe("ArtistTabs", () => {
     mocks.segment = null;
     renderWithIntl(<ArtistTabs artistId="a1" hasBiography={false} lineupTab={null} />);
     expect(screen.queryByRole("link", { name: artistEs.tabs.biography })).not.toBeInTheDocument();
-  });
-});
-
-describe("HiddenOnTab (refine-artist-page-phase1)", () => {
-  it("oculta el resumen en Biografía y lo muestra en las demás pestañas", () => {
-    mocks.segment = "biography";
-    const { unmount } = renderWithIntl(<HiddenOnTab tab="biography">resumen</HiddenOnTab>);
-    expect(screen.queryByText("resumen")).not.toBeInTheDocument();
-    unmount();
-    mocks.segment = "members";
-    renderWithIntl(<HiddenOnTab tab="biography">resumen</HiddenOnTab>);
-    expect(screen.getByText("resumen")).toBeInTheDocument();
-    mocks.segment = null;
   });
 });

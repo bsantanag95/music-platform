@@ -379,7 +379,7 @@ export function ArtistDiscography({
           </ul>
         </nav>
         {/* En móvil el buscador es un botón que despliega el campo en su propia fila (design D7). */}
-        <div className={`flex shrink-0 items-center gap-2 ${searchExpanded ? "basis-full sm:basis-auto" : ""}`}>
+        <div className={`flex min-w-0 max-w-full flex-wrap items-center gap-2 sm:shrink-0 ${searchExpanded ? "basis-full sm:basis-auto" : ""}`}>
           {searchable && !searchExpanded && (
             <button
               type="button"

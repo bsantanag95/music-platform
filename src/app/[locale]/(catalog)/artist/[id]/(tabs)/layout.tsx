@@ -6,10 +6,12 @@ import { GenreChips } from "@/components/genres/GenreChips";
 import { getArtistGenres } from "@/services/genres/display";
 import { getArtistAwards } from "@/services/awards/artist-awards";
 import { artistHref } from "@/lib/catalog-links";
-import { ArtistCommunity } from "@/components/artist/ArtistCommunity";
-import { ArtistFacts, ArtistIdentity, ArtistPhoto, ArtistPhotoCreditMobile, ArtistSummary } from "@/components/artist/ArtistHeader";
+import { ArtistCommunity, hasCommunity } from "@/components/artist/ArtistCommunity";
+import { ArtistFacts, ArtistFollowInvite, ArtistIdentity, ArtistPhotoCredit, ArtistPortrait } from "@/components/artist/ArtistHeader";
+import { ArtistStage } from "@/components/artist/ArtistStage";
+import { stageBackdrop, stageCovers, stagePortrait } from "@/components/artist/artist-stage";
 import { ArtistRelationPanel } from "@/components/artist/ArtistRelationPanel";
-import { ArtistTabs, HiddenOnTab } from "@/components/artist/ArtistTabs";
+import { ArtistTabs } from "@/components/artist/ArtistTabs";
 import { ARTIST_TABS_ANCHOR, lineupFact, lineupTabOf } from "@/components/artist/lineup-fact";
 import { itemListsHref } from "@/components/lists/lists-shared";
 import { Comments } from "@/components/social/Comments";
@@ -35,11 +37,10 @@ import {
 import { withClientMessages } from "@/i18n/client-messages";
 import { buildShareMetadata } from "@/services/share/metadata";
 
-// Layout común de la página de artista (openspec: redesign-artist-page, design D1): la
-// cabecera (foto, identidad, ficha, resumen, comunidad y panel "Tu relación"), la barra de
-// pestañas y las notas se renderizan una vez (los integrantes tienen su pestaña, openspec:
-// add-artist-members-tab); cada pestaña es un segmento
-// propio. En escritorio el panel ocupa una columna lateral solo a la altura de la cabecera.
+// Layout común de la página de artista (openspec: redesign-artist-page, design D1): la portada, la barra de pestañas y
+// los comentarios se renderizan una vez; cada pestaña es un segmento propio. La portada (openspec:
+// modernize-artist-page-phase1) va a todo el ancho con el fondo de carátulas, el retrato, la identidad, la ficha y la
+// acción principal: «Seguir a {artista}» sin sesión o el panel «Tu relación» con sesión, en una columna a la derecha.
 
 interface ArtistLayoutProps {
   children: ReactNode;
@@ -106,21 +107,24 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
     live_other: t("categories.live_other"),
   } satisfies Record<ReleaseGroupCategory, string>;
 
-  return (
-    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:py-12">
-      <Breadcrumbs
-        items={[{ label: tCommon("home"), href: "/" }, { label: artist.name }]}
-        action={<ShareAction kind="artist" refId={artist.id} />}
-      />
+  const covers = stageCovers(discography);
+  const backdrop = stageBackdrop(covers);
+  const portrait = stagePortrait(profile.photo !== null, covers, discography?.bestRatedId ?? null, artist.name);
+  const frame = "mx-auto w-full max-w-[88rem] px-4 sm:px-8 xl:px-12";
 
-      <header className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-stretch">
-        <div className="flex min-w-0 flex-col gap-5">
-          <div className="flex items-start gap-4 sm:gap-6">
-            <ArtistPhoto name={artist.name} photo={profile.photo} />
-            <div className="flex min-w-0 flex-1 flex-col gap-4">
-              <ArtistIdentity type={type} name={artist.name} description={profile.description} />
-              <GenreChips genres={artistGenres.genres} />
-              <div className="hidden sm:block">
+  return (
+    <main className="flex min-h-screen w-full flex-col">
+      <ArtistStage backdrop={backdrop} credit={<ArtistPhotoCredit photo={portrait.kind === "photo" ? profile.photo : null} />}>
+        <div className={`${frame} flex min-h-[min(56vh,500px)] flex-col justify-between gap-7 pb-9 pt-6`}>
+          <Breadcrumbs
+            items={[{ label: tCommon("home"), href: "/" }, { label: artist.name }]}
+            action={<ShareAction kind="artist" refId={artist.id} />}
+          />
+          <header className="grid grid-cols-1 items-end gap-7 lg:grid-cols-[minmax(0,1fr)_18rem]">
+            <div className="flex min-w-0 flex-col items-start gap-4 sm:flex-row sm:items-end sm:gap-6">
+              <ArtistPortrait name={artist.name} photo={profile.photo} portrait={portrait} />
+              <div className="flex min-w-0 flex-1 flex-col gap-4">
+                <ArtistIdentity name={artist.name} description={profile.description} />
                 <ArtistFacts
                   type={type}
                   name={artist.name}
@@ -128,67 +132,56 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
                   firstMainYear={discography?.firstMainYear ?? null}
                   lineup={fact}
                   awards={awardsFact}
+                  genres={artistGenres.genres.length > 0 ? <GenreChips genres={artistGenres.genres} /> : null}
+                  community={
+                    hasCommunity(stats) ? <ArtistCommunity stats={stats} listsHref={itemListsHref({ type: "artist", id: artist.id })} /> : null
+                  }
                 />
               </div>
             </div>
-          </div>
-          <ArtistPhotoCreditMobile photo={profile.photo} />
-          <div className="sm:hidden">
-            <ArtistFacts
-              type={type}
-              name={artist.name}
-              profile={profile}
-              firstMainYear={discography?.firstMainYear ?? null}
-              lineup={fact}
-              awards={awardsFact}
-            />
-          </div>
-          <HiddenOnTab tab="biography">
-            <ArtistSummary artistId={artist.id} artistName={artist.name} summary={profile.summary} />
-          </HiddenOnTab>
-          <div className="hidden lg:block">
-            <ArtistCommunity stats={stats} listsHref={itemListsHref({ type: "artist", id: artist.id })} />
-          </div>
+            {userId ? (
+              <ArtistRelationPanel
+                artistId={artist.id}
+                artistName={artist.name}
+                state={personal}
+                discographyHref={discographyHref}
+                categoryLabels={categoryLabels}
+              />
+            ) : (
+              <ArtistFollowInvite name={artist.name} />
+            )}
+          </header>
         </div>
-        <ArtistRelationPanel
-          artistId={artist.id}
-          artistName={artist.name}
-          state={personal}
-          discographyHref={discographyHref}
-          categoryLabels={categoryLabels}
-        />
-        <div className="lg:hidden">
-          <ArtistCommunity stats={stats} listsHref={itemListsHref({ type: "artist", id: artist.id })} />
+      </ArtistStage>
+
+      <div className={`${frame} flex flex-col gap-8 pb-12 pt-2`}>
+        {/* Alturas de las barras fijas: el encabezado del sitio y las pestañas (openspec: refine-artist-page-phase2, D4). */}
+        <div
+          id={ARTIST_TABS_ANCHOR}
+          className="flex scroll-mt-[var(--site-header-h)] flex-col gap-6 [--artist-sticky-top:calc(var(--site-header-h)+var(--artist-tabs-h))] [--artist-tabs-h:2.375rem] [--site-header-h:3.625rem]"
+        >
+          <ArtistTabs
+            artistId={artist.id}
+            artistName={artist.name}
+            hasBiography={profile.summary !== null}
+            hasAwards={awards.ceremonies.length > 0}
+            lineupTab={lineupTabOf(lineup)}
+            hasConcerts={type === "group" || type === "person"}
+          />
+          {children}
         </div>
-      </header>
 
-      {/* Alturas de las barras fijas: el encabezado del sitio y las pestañas (openspec: refine-artist-page-phase2, D4). */}
-      <div
-        id={ARTIST_TABS_ANCHOR}
-        className="flex scroll-mt-[var(--site-header-h)] flex-col gap-6 [--artist-sticky-top:calc(var(--site-header-h)+var(--artist-tabs-h))] [--artist-tabs-h:2.375rem] [--site-header-h:3.625rem]"
-      >
-        <ArtistTabs
-          artistId={artist.id}
-          artistName={artist.name}
-          hasBiography={profile.summary !== null}
-          hasAwards={awards.ceremonies.length > 0}
-          lineupTab={lineupTabOf(lineup)}
-          hasConcerts={type === "group" || type === "person"}
-        />
-        {children}
-      </div>
-
-
-      <div className="w-full max-w-3xl">
-        <Comments
-          target="artist"
-          targetId={artist.id}
-          initial={comments}
-          authenticated={Boolean(userId)}
-          userId={userId ?? undefined}
-          canModerate={canModerate}
-          topics
-        />
+        <div className="w-full max-w-3xl">
+          <Comments
+            target="artist"
+            targetId={artist.id}
+            initial={comments}
+            authenticated={Boolean(userId)}
+            userId={userId ?? undefined}
+            canModerate={canModerate}
+            topics
+          />
+        </div>
       </div>
     </main>
   );

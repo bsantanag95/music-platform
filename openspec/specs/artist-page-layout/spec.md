@@ -5,27 +5,24 @@ Organizar la página de artista como ficha de biblioteca y biografía: cabecera,
 ## Requirements
 ### Requirement: Zonas de la página de artista
 
-La página de artista SHALL organizarse, de arriba hacia abajo, en: breadcrumb; cabecera con
-la foto, la identidad (antetítulo de tipo, nombre, descripción), la ficha, el
-resumen de la biografía, el bloque de comunidad y el panel "Tu relación"; la barra de
-pestañas; el contenido de la pestaña activa; y los comentarios de la comunidad. Los integrantes o
-grupos SHALL mostrarse en su pestaña (capability `artist-lineup-view`), no debajo de las
-pestañas. En escritorio el panel "Tu relación" SHALL ocupar una columna lateral solo a
-la altura de la cabecera, de modo que las pestañas y su contenido usen el ancho completo.
+La página de artista SHALL organizarse, de arriba hacia abajo, en: la portada a todo el ancho con la miga de pan y Compartir, el
+retrato, la identidad (nombre y descripción), la ficha y la acción principal (el botón «Seguir a {artista}» sin sesión o el panel
+«Tu relación» con sesión); la barra de pestañas; el contenido de la pestaña activa; y los comentarios de la comunidad. El contenido
+SHALL usar el mismo ancho máximo que el resto del sitio (88rem). Los integrantes o grupos SHALL mostrarse en su pestaña
+(capability `artist-lineup-view`), no debajo de las pestañas. En escritorio la acción principal SHALL ocupar una columna a la
+derecha de la portada, de modo que las pestañas y su contenido usen el ancho completo.
 
 #### Scenario: Escritorio
 
 - **WHEN** una persona abre un artista en un viewport de escritorio
-- **THEN** la cabecera muestra foto, identidad, ficha y resumen junto al panel
-  "Tu relación", y la discografía ocupa el ancho completo bajo las pestañas
+- **THEN** la portada muestra retrato, identidad y ficha junto a la acción principal, y la discografía ocupa el ancho completo
+  bajo las pestañas
 
 #### Scenario: Móvil
 
 - **WHEN** una persona abre un artista en un viewport móvil
-- **THEN** las zonas se apilan en este orden: foto chica junto al tipo, el nombre y la
-  descripción; ficha; resumen de la biografía; panel "Tu relación"; bloque de
-  comunidad; pestañas; contenido de la pestaña; comentarios, sin desbordamiento horizontal de la
-  página
+- **THEN** las zonas se apilan en este orden: retrato; nombre y descripción; ficha; acción principal; pestañas; contenido de la
+  pestaña; comentarios, sin desbordamiento horizontal de la página
 
 ### Requirement: Pestañas del artista
 
@@ -83,16 +80,6 @@ la página, después del contenido de la pestaña, con cualquier pestaña activa
 
 - **WHEN** la pestaña activa es Integrantes
 - **THEN** los comentarios de la comunidad se ven debajo de la alineación
-
-### Requirement: Bloque de comunidad en una fila
-
-El bloque de comunidad SHALL mostrar sus tres cifras (Oyentes, Seguidores y En listas) en una sola fila de tres celdas
-en cualquier viewport, también en móvil, sin desbordamiento horizontal.
-
-#### Scenario: Comunidad en 375 px
-
-- **WHEN** una persona abre un artista en 375 px
-- **THEN** Oyentes, Seguidores y En listas aparecen lado a lado en una fila
 
 ### Requirement: Pestañas fijas
 

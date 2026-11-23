@@ -1,14 +1,14 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AppImage } from "@/components/ui/AppImage";
-import { DiscPlaceholder } from "@/components/catalog/DiscPlaceholder";
-import { artistHref } from "@/lib/catalog-links";
+import { initialsOf, type StagePortrait } from "./artist-stage";
+import { albumHref, artistHref } from "@/lib/catalog-links";
 import type { ArtistProfile } from "@/services/catalog/artist-profile-read";
-import { countryName, formatPartialDate, repairSentenceSpacing, setlistFmSearchUrl, streamingName, yearOf } from "./artist-format";
-import { ARTIST_TABS_ANCHOR, type LineupFact } from "./lineup-fact";
+import { countryName, formatPartialDate, setlistFmSearchUrl, streamingName, yearOf } from "./artist-format";
+import type { LineupFact } from "./lineup-fact";
 
 // Cabecera de la página de artista (openspec: redesign-artist-page, capability
-// `artist-header`): foto con crédito, identidad, ficha y resumen de la biografía. Componentes
+// `artist-header`; portada desde modernize-artist-page-phase1): retrato con crédito, identidad y ficha. Componentes
 // sin estado: se renderizan en el servidor. Cada dato que falta se omite sin dejar huecos.
 
 type ArtistType = "person" | "group" | "various" | "unknown";
@@ -20,46 +20,19 @@ const internalMore = "text-paper-muted hover:text-paper hover:underline";
 // Crédito de la foto: lo exige la licencia, pero no compite con la ficha.
 const creditText = "font-data text-[0.65rem] leading-snug text-paper-muted/70";
 
-export function ArtistPhoto({ name, photo }: { name: string; photo: ArtistProfile["photo"] }) {
-  const t = useTranslations("catalog.artist");
-  const frame = "relative aspect-[4/3] w-24 shrink-0 overflow-hidden rounded sm:w-[200px]";
-  if (!photo) return <DiscPlaceholder alt={t("noPhotoAlt")} className={frame} />;
-  return (
-    <figure className="flex w-24 shrink-0 flex-col gap-1 sm:w-[200px]">
-      <div className={frame}>
-        <AppImage src={photo.url} alt={t("photo.alt", { name })} fill sizes="(min-width: 640px) 200px, 96px" className="object-cover object-[center_20%]" />
-      </div>
-      {/* Crédito obligatorio de la licencia (ADR 0021): autor enlazado al archivo en Commons
-          y licencia enlazada a su texto. */}
-      <figcaption className={`hidden ${creditText} sm:block`}>
-        <a href={photo.sourceUrl} target="_blank" rel="noopener noreferrer" className="hover:text-paper hover:underline">
-          {photo.author ? t("photo.credit", { author: photo.author }) : t("photo.creditNoAuthor")}
-        </a>
-        {" · "}
-        {photo.licenseUrl ? (
-          <a href={photo.licenseUrl} target="_blank" rel="noopener noreferrer license" className="whitespace-nowrap hover:text-paper hover:underline">
-            {photo.license}
-          </a>
-        ) : (
-          <span className="whitespace-nowrap">{photo.license}</span>
-        )}
-      </figcaption>
-    </figure>
-  );
-}
-
-/** Crédito de la foto en móvil, donde la foto va chica junto al nombre. */
-export function ArtistPhotoCreditMobile({ photo }: { photo: ArtistProfile["photo"] }) {
+/** Crédito obligatorio de la licencia de la foto (ADR 0021): autor enlazado al archivo en Commons y licencia enlazada a
+ *  su texto. Va en la esquina inferior derecha de la portada (openspec: modernize-artist-page-phase1). */
+export function ArtistPhotoCredit({ photo }: { photo: ArtistProfile["photo"] }) {
   const t = useTranslations("catalog.artist");
   if (!photo) return null;
   return (
-    <p className={`${creditText} sm:hidden`}>
-      <a href={photo.sourceUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
+    <p className={`absolute bottom-2 right-4 z-10 max-w-[70%] text-right sm:right-8 xl:right-12 ${creditText}`}>
+      <a href={photo.sourceUrl} target="_blank" rel="noopener noreferrer" className="hover:text-paper hover:underline">
         {photo.author ? t("photo.credit", { author: photo.author }) : t("photo.creditNoAuthor")}
       </a>
       {" · "}
       {photo.licenseUrl ? (
-        <a href={photo.licenseUrl} target="_blank" rel="noopener noreferrer license" className="whitespace-nowrap hover:underline">
+        <a href={photo.licenseUrl} target="_blank" rel="noopener noreferrer license" className="whitespace-nowrap hover:text-paper hover:underline">
           {photo.license}
         </a>
       ) : (
@@ -69,13 +42,45 @@ export function ArtistPhotoCreditMobile({ photo }: { photo: ArtistProfile["photo
   );
 }
 
-export function ArtistIdentity({ type, name, description }: { type: ArtistType; name: string; description: string | null }) {
+const portraitFrame =
+  "relative grid size-24 shrink-0 place-items-center overflow-hidden border-[3px] border-ink/90 bg-ink-surface shadow-[0_24px_40px_-20px_rgba(0,0,0,.9)] outline outline-1 outline-paper/15 sm:size-[148px]";
+
+/**
+ * Retrato de la portada (openspec: modernize-artist-page-phase1): la foto en un círculo; sin foto, la carátula del disco
+ * mejor valorado (o del más reciente) en cuadrado y enlazada al disco; sin carátulas, las iniciales.
+ */
+export function ArtistPortrait({ name, photo, portrait }: { name: string; photo: ArtistProfile["photo"]; portrait: StagePortrait }) {
   const t = useTranslations("catalog.artist");
+  if (portrait.kind === "photo" && photo) {
+    return (
+      <div className={`${portraitFrame} rounded-full`}>
+        <AppImage src={photo.url} alt={t("photo.alt", { name })} fill sizes="(min-width: 640px) 148px, 96px" className="object-cover object-[center_20%]" />
+      </div>
+    );
+  }
+  if (portrait.kind === "cover") {
+    return (
+      <Link
+        href={albumHref(name, portrait.cover.title, portrait.cover.id)}
+        aria-label={t("portraitCover", { title: portrait.cover.title })}
+        className={`${portraitFrame} rounded-xl hover:outline-amber`}
+      >
+        <AppImage src={portrait.cover.thumbUrl} alt="" fill sizes="(min-width: 640px) 148px, 96px" className="object-cover" />
+      </Link>
+    );
+  }
   return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <p className="font-data text-xs uppercase tracking-wider text-paper-muted">{t(`typeEyebrow.${type}`)}</p>
-      <h1 className="font-display text-3xl leading-tight text-paper [overflow-wrap:anywhere] sm:text-4xl">{name}</h1>
-      {description && <p className="font-body text-base text-paper-muted first-letter:uppercase">{description}</p>}
+    <div role="img" aria-label={name} className={`${portraitFrame} rounded-full font-display text-3xl font-bold text-paper-muted sm:text-5xl`}>
+      <span aria-hidden="true">{portrait.kind === "initials" ? portrait.initials : initialsOf(name)}</span>
+    </div>
+  );
+}
+
+export function ArtistIdentity({ name, description }: { name: string; description: string | null }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-3">
+      <h1 className="font-display text-[clamp(2.5rem,6vw,5.5rem)] font-bold leading-[0.92] tracking-[-0.04em] text-paper [overflow-wrap:anywhere]">{name}</h1>
+      {description && <p className="font-body text-lg text-paper/85 first-letter:uppercase sm:text-xl">{description}</p>}
     </div>
   );
 }
@@ -91,10 +96,14 @@ interface ArtistFactsProps {
   awards?: { wins: number; nominations: number; inductions: number; href: string } | null;
   /** Nombre del artista: arma la búsqueda en setlist.fm cuando no hay enlace guardado (openspec: add-setlistfm-artist-link). */
   name?: string;
+  /** Fichas de géneros: abren la primera línea (openspec: modernize-artist-page-phase1). */
+  genres?: React.ReactNode;
+  /** Comunidad en línea (`ArtistCommunity`): cierra la primera línea; `null` si no hay nada que mostrar. */
+  community?: React.ReactNode;
 }
 
 /**
- * Filas de la ficha con dato, en orden: origen o nacimiento, fallecimiento, actividad,
+ * Filas de la ficha con dato, en orden: tipo, origen o nacimiento, fallecimiento, actividad,
  * integrantes o bandas, premios, enlaces y en vivo.
  */
 export function artistFactRows(
@@ -107,6 +116,8 @@ export function artistFactRows(
   const country = countryName(facts.country, locale);
   // El lugar de Wikidata ya viene traducido y con país; el respaldo de MusicBrainz no.
   const fromWikidata = profile.placeLabel !== null && profile.placeLabel !== facts.beginAreaName;
+  // El tipo abre la ficha: ya no es antetítulo del nombre (openspec: modernize-artist-page-phase1).
+  rows.push({ key: "type", label: t("facts.type"), value: t(`typeEyebrow.${type}`) });
 
   if (type === "person") {
     const birthDate = formatPartialDate(facts.lifeBegin, locale);
@@ -228,19 +239,35 @@ export function artistFactRows(
   return rows;
 }
 
+/** Filas de la segunda línea de la ficha: lo que sale del sitio. */
+const OUTBOUND_ROWS = new Set(["links", "live"]);
+
+/**
+ * Ficha compacta en dos líneas (openspec: modernize-artist-page-phase1): géneros, tipo, datos, alineación, premios y
+ * comunidad; debajo, enlaces y En vivo. Cada fila conserva su rótulo para lectores de pantalla.
+ */
 export function ArtistFacts(props: ArtistFactsProps) {
   const t = useTranslations("catalog.artist");
   const locale = useLocale();
   const rows = artistFactRows(props, locale, t);
+  if (props.genres) rows.unshift({ key: "genres", label: t("facts.genres"), value: props.genres });
+  if (props.community) rows.push({ key: "community", label: t("community.heading"), value: props.community });
   if (rows.length === 0) return null;
+  const line = (items: typeof rows) =>
+    items.length === 0 ? null : (
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        {items.map((row) => (
+          <div key={row.key} data-fact={row.key} className="min-w-0">
+            <dt className="sr-only">{row.label}</dt>
+            <dd>{row.value}</dd>
+          </div>
+        ))}
+      </div>
+    );
   return (
-    <dl aria-label={t("facts.heading")} className="grid grid-cols-[max-content_minmax(0,1fr)] items-baseline gap-x-4 gap-y-1.5">
-      {rows.map((row) => (
-        <div key={row.key} className="contents">
-          <dt className="font-data text-xs text-paper-muted">{row.label}</dt>
-          <dd className="font-body text-sm text-paper">{row.value}</dd>
-        </div>
-      ))}
+    <dl aria-label={t("facts.heading")} className="flex flex-col gap-2.5 font-data text-[0.8125rem] text-paper/80">
+      {line(rows.filter((row) => !OUTBOUND_ROWS.has(row.key)))}
+      {line(rows.filter((row) => OUTBOUND_ROWS.has(row.key)))}
     </dl>
   );
 }
@@ -266,35 +293,21 @@ export function WikipediaAttribution({ url }: { url: string }) {
   );
 }
 
-export function ArtistSummary({
-  artistId,
-  summary,
-  artistName = "",
-}: {
-  artistId: string;
-  summary: ArtistProfile["summary"];
-  artistName?: string;
-}) {
-  const t = useTranslations("catalog.artist.summary");
-  const locale = useLocale();
-  if (!summary) return null;
-  const firstParagraph = repairSentenceSpacing(summary.text.split(/\n+/)[0] ?? summary.text);
+/**
+ * Acción principal de la portada para un visitante sin sesión (openspec: modernize-artist-page-phase1): en lugar del panel
+ * «Tu relación», el botón «Seguir a {artista}» hacia el inicio de sesión y una frase que explica para qué sirve una cuenta.
+ */
+export function ArtistFollowInvite({ name }: { name: string }) {
+  const t = useTranslations("catalog.artist");
   return (
-    <section aria-label={t("readMore")} className="flex flex-col gap-1.5">
-      {summary.language !== locale && (
-        <p className="font-data text-xs text-paper-muted">
-          {t("languageNote", { language: t(`languages.${summary.language}`) })}
-        </p>
-      )}
-      <p lang={summary.language} className="line-clamp-3 font-body text-sm leading-relaxed text-paper">
-        {firstParagraph}
-      </p>
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <Link href={`${artistHref(artistName, artistId)}/biography#${ARTIST_TABS_ANCHOR}`} className="font-data text-xs text-amber hover:underline">
-          {t("readMore")} →
-        </Link>
-        <WikipediaAttribution url={summary.url} />
-      </div>
-    </section>
+    <div className="flex flex-col items-start gap-2 lg:items-end lg:text-right">
+      <Link
+        href="/auth/login"
+        className="inline-flex h-11 max-w-full items-center rounded-lg bg-amber px-5 font-display text-[0.9375rem] font-medium text-ink hover:bg-amber-hover"
+      >
+        <span className="truncate">{t("followInvite", { name })}</span>
+      </Link>
+      <p className="max-w-[28ch] font-body text-sm text-paper/70">{t("followInviteNote")}</p>
+    </div>
   );
 }
