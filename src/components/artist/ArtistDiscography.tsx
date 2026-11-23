@@ -322,15 +322,16 @@ export function ArtistDiscography({
       id={DISCOGRAPHY_ANCHOR}
       aria-labelledby="discography-heading"
       data-menu-bounds
-      className="flex scroll-mt-[var(--artist-sticky-top)] flex-col gap-4"
+      className="flex scroll-mt-[var(--artist-sticky-top)] flex-col gap-4 [--discography-bar-h:5.5rem]"
     >
       <h2 id="discography-heading" className="sr-only">
         {t("heading")}
       </h2>
-      {/* Barra fija bajo las pestañas (openspec: refine-artist-page-phase2, design D4). En móvil las secciones van en una
-          línea con desplazamiento y comparten la fila con el buscador y la vista. */}
-      <div className="sticky top-[var(--artist-sticky-top)] z-10 -mx-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-transparent bg-ink px-4 py-2 sm:mx-0 sm:px-0">
-        <nav aria-label={t("sectionsLabel")} className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none] sm:flex-initial sm:overflow-visible">
+      {/* Barra fija bajo las pestañas (openspec: refine-artist-page-phase2, design D4), en dos filas (openspec:
+          modernize-artist-page-phase3): arriba las secciones (en móvil, una línea con desplazamiento); debajo el buscador y
+          los grupos de opciones, con su rótulo visible desde la tableta. */}
+      <div className="sticky top-[var(--artist-sticky-top)] z-10 -mx-4 flex flex-col gap-2 border-b border-ink-border bg-ink px-4 py-2 sm:mx-0 sm:px-0">
+        <nav aria-label={t("sectionsLabel")} className="min-w-0 overflow-x-auto [scrollbar-width:none] sm:overflow-visible">
           <ul className="flex min-w-max gap-1.5 sm:min-w-0 sm:flex-wrap">
             {sections.map((section) => {
               const label = t(`sections.${section.key}`);
@@ -378,8 +379,9 @@ export function ArtistDiscography({
             })}
           </ul>
         </nav>
+        <div data-discography-controls className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
         {/* En móvil el buscador es un botón que despliega el campo en su propia fila (design D7). */}
-        <div className={`flex min-w-0 max-w-full flex-wrap items-center gap-2 sm:shrink-0 ${searchExpanded ? "basis-full sm:basis-auto" : ""}`}>
+        <div className={`flex min-w-0 items-center gap-2 ${searchExpanded ? "basis-full sm:basis-auto" : ""}`}>
           {searchable && !searchExpanded && (
             <button
               type="button"
@@ -421,7 +423,11 @@ export function ArtistDiscography({
               )}
             </div>
           )}
+        </div>
+        {/* En el teléfono los grupos comparten la línea con el botón de búsqueda y se desplazan de lado. */}
+        <div className="ml-auto flex min-w-0 flex-1 flex-nowrap items-center gap-x-3 overflow-x-auto [scrollbar-width:none] sm:flex-none sm:flex-wrap sm:gap-x-4 sm:gap-y-2 sm:overflow-visible">
           {!result && filterable && (
+            <OptionGroup label={t("barLabels.filter")}>
             <div role="group" aria-label={t("filter.label")} className={SEGMENT_GROUP}>
               {(["all", "unrated", "yours"] as const).map((option) => {
                 const count =
@@ -444,8 +450,10 @@ export function ArtistDiscography({
                 );
               })}
             </div>
+            </OptionGroup>
           )}
           {!result && view === "grid" && active.items.length > 1 && (
+            <OptionGroup label={t("barLabels.grouping")}>
             <div role="group" aria-label={t("grouping.label")} className={SEGMENT_GROUP}>
               {GROUPINGS.filter((option) => option !== "type" || typeAvailable).map((option) => (
                 <button
@@ -459,8 +467,10 @@ export function ArtistDiscography({
                 </button>
               ))}
             </div>
+            </OptionGroup>
           )}
           {!result && (
+            <OptionGroup label={t("barLabels.view")}>
             <div role="group" aria-label={t("viewLabel")} className={SEGMENT_GROUP}>
               {(["grid", "table"] as const).map((option) => (
                 <button
@@ -474,7 +484,9 @@ export function ArtistDiscography({
                 </button>
               ))}
             </div>
+            </OptionGroup>
           )}
+        </div>
         </div>
       </div>
 
@@ -546,6 +558,21 @@ export function ArtistDiscography({
   );
 }
 
+/**
+ * Grupo de opciones de la barra con su rótulo visible desde la tableta (openspec: modernize-artist-page-phase3). El rótulo
+ * visible (corto: «Agrupar») es decorativo y está contenido en el `aria-label` del grupo («Agrupar discos»).
+ */
+function OptionGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex shrink-0 items-center gap-2">
+      <span aria-hidden="true" className="hidden font-data text-xs text-paper-muted sm:inline">
+        {label}
+      </span>
+      {children}
+    </div>
+  );
+}
+
 const groupAnchor = (section: DiscographySection) => `discography-group-${section}`;
 const blockAnchor = (block: string) => `discography-block-${block}`;
 
@@ -553,16 +580,19 @@ function Cover({
   item,
   className,
   titleTile = false,
+  badged = false,
 }: {
   item: ArtistDiscographyItem;
   className: string;
-  /** En la grilla, un disco sin carátula muestra su título y año en lugar del vinilo vacío. */
+  /** En la grilla, un disco sin carátula (o cuya imagen falla) muestra su título y año en lugar del vinilo vacío. */
   titleTile?: boolean;
+  /** La tarjeta lleva etiquetas arriba a la izquierda: el título del relleno baja para no quedar debajo. */
+  badged?: boolean;
 }) {
   const tArtist = useTranslations("catalog.artist");
-  const tile = titleTile ? <TitleTile title={item.title} year={item.year} className={className} /> : undefined;
+  const tile = titleTile ? <TitleTile title={item.title} year={item.year} className={className} insetTop={badged} /> : undefined;
   if (item.coverResolved) {
-    return tile && !item.coverThumbUrl ? tile : <CoverThumb cover={item.coverThumbUrl} label="" className={className} />;
+    return <CoverThumb cover={item.coverThumbUrl} label="" className={className} fallback={tile} />;
   }
   return (
     <LazyCoverImage releaseGroupId={item.id} coverLabel={tArtist("albumCoverLabel")} className={className} fallback={tile} />
@@ -648,7 +678,7 @@ function DiscographyGrid({
       {heading && (
         <h3
           id={heading.id}
-          className="flex scroll-mt-[var(--artist-sticky-top)] items-baseline gap-2 border-b border-ink-border pb-1.5 font-display text-base text-paper"
+          className="flex scroll-mt-[calc(var(--artist-sticky-top)+var(--discography-bar-h))] items-baseline gap-2 border-b border-ink-border pb-1.5 font-display text-lg text-paper sm:text-xl"
         >
           {heading.label}
           <span className="font-data text-xs text-paper-muted">{items.length}</span>
@@ -685,7 +715,7 @@ function DiscographyGrid({
                 className="group flex flex-col gap-1.5"
               >
                 <span className="relative block">
-                  <Cover item={item} className="aspect-square w-full" titleTile />
+                  <Cover item={item} className="aspect-square w-full" titleTile badged={best || (showEpBadge && item.isEp)} />
                   {(best || (showEpBadge && item.isEp)) && (
                     <span className="absolute left-1.5 top-1.5 flex flex-col items-start gap-1">
                       {best && (
@@ -938,9 +968,9 @@ function DiscographyTable({
                 scope="rowgroup"
                 colSpan={columnCount}
                 id={group.heading.id}
-                className="scroll-mt-[var(--artist-sticky-top)] pb-1.5 pt-5 text-left font-data text-xs font-normal uppercase tracking-wide text-paper-muted"
+                className="scroll-mt-[calc(var(--artist-sticky-top)+var(--discography-bar-h))] pb-1.5 pt-6 text-left font-display text-lg font-normal text-paper sm:text-xl"
               >
-                {group.heading.label} <span className="text-paper-muted/70">· {group.heading.count}</span>
+                {group.heading.label} <span className="font-data text-xs text-paper-muted">{group.heading.count}</span>
               </th>
             </tr>
           )}

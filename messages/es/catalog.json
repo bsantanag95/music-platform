@@ -720,7 +720,12 @@
       "fewRatingsLabel": "menos de 5 valoraciones",
       "favorite": "Favorito",
       "pendingMark": "En Pendiente",
-      "actionsColumn": "Acciones"
+      "actionsColumn": "Acciones",
+      "barLabels": {
+        "filter": "Filtrar",
+        "grouping": "Agrupar",
+        "view": "Vista"
+      }
     },
     "lineup": {
       "views": {
