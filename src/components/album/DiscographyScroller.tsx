@@ -49,7 +49,7 @@ export function DiscographyScroller({ children }: { children: ReactNode }) {
     <ol
       ref={scrollerRef}
       style={{ WebkitMaskImage: maskImage, maskImage }}
-      className="themed-scrollbar relative -mx-1 flex gap-3 overflow-x-auto px-1 pt-1 pb-3"
+      className="themed-scrollbar relative -mx-2 flex gap-4 overflow-x-auto px-2 pt-2 pb-3"
     >
       {children}
     </ol>

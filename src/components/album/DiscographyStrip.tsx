@@ -13,7 +13,8 @@ import type {
 // Franja de discografía al pie de la página de álbum (openspec: redesign-album-page, D15):
 // álbumes del artista principal del mismo tipo, en orden cronológico, con el actual
 // resaltado y accesos directos al anterior y al siguiente. Cada disco, salvo el actual, lleva el
-// menú de acciones en la esquina de la portada (openspec: extend-album-quick-actions).
+// menú de acciones en la esquina de la portada (openspec: extend-album-quick-actions). Proporciones del mockup A
+// Portada (openspec: modernize-album-page-phase1): portadas de 128 px, título de sección grande y vecinos en una línea.
 
 interface DiscographyStripProps {
   artistName: string;
@@ -29,15 +30,22 @@ export function DiscographyStrip({ artistName, strip, authenticated = false }: D
   return (
     <section
       aria-labelledby="discography-heading"
-      className="flex w-full flex-col gap-3 border-t border-ink-border pt-6"
+      className="flex w-full flex-col gap-5 pt-6 sm:pt-10"
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-        <h2 id="discography-heading" className="font-display text-xl text-paper">
+      <div className="flex flex-col items-start gap-x-6 gap-y-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+        <h2
+          id="discography-heading"
+          className="font-display text-[clamp(1.625rem,2.4vw,2.125rem)] font-bold leading-[1.05] tracking-[-0.02em] text-paper"
+        >
           {t("heading", { artist: artistName })}
         </h2>
         {(previous || next) && (
-          <nav aria-label={t("neighbors")} className="flex min-w-0 flex-wrap gap-x-5 gap-y-1 text-sm">
+          <nav
+            aria-label={t("neighbors")}
+            className="flex min-w-0 max-w-full items-center gap-x-2 py-1.5 font-data text-[0.8125rem] text-paper-muted"
+          >
             {previous && <NeighborLink item={previous} label={t("previous")} side="previous" artistName={artistName} />}
+            {previous && next && <span aria-hidden="true">·</span>}
             {next && <NeighborLink item={next} label={t("next")} side="next" artistName={artistName} />}
           </nav>
         )}
@@ -48,22 +56,20 @@ export function DiscographyStrip({ artistName, strip, authenticated = false }: D
           const body = (
             <>
               <span
-                className={`relative block aspect-square w-20 overflow-hidden rounded border bg-ink-surface ${
-                  current
-                    ? "border-amber ring-2 ring-amber ring-offset-2 ring-offset-ink"
-                    : "border-ink-border opacity-75 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+                className={`relative block aspect-square w-28 overflow-hidden rounded-md bg-ink-surface sm:w-32 ${
+                  current ? "outline outline-2 outline-offset-[3px] outline-amber" : ""
                 }`}
               >
                 {item.coverThumbUrl ? (
                   <CoverThumb cover={item.coverThumbUrl} label="" className="size-full" />
                 ) : (
-                  <TitleTile title={item.title} year={item.firstReleaseYear} className="size-full border-0 p-1.5 sm:p-1.5" />
+                  <TitleTile title={item.title} year={item.firstReleaseYear} className="size-full border-0" />
                 )}
               </span>
               {/* Dos líneas reservadas siempre, para que los años queden alineados entre álbumes. */}
               <span
-                className={`line-clamp-2 min-h-[2lh] w-20 font-body text-xs ${
-                  current ? "font-semibold text-amber" : "text-paper group-hover:underline"
+                className={`mt-1 line-clamp-2 min-h-[2lh] w-28 font-display text-sm font-semibold leading-snug sm:w-32 ${
+                  current ? "text-paper" : "text-paper group-hover:text-amber"
                 }`}
               >
                 {item.title}
@@ -123,17 +129,18 @@ function NeighborLink({
   );
 
   // Solo el título se trunca: la etiqueta y el año quedan siempre completos.
-  // En reposo, neutro (regla de rareza del ámbar, DESIGN.md); el ámbar llega con el hover.
+  // En reposo, neutro (regla de rareza del ámbar, DESIGN.md); el ámbar llega con el hover. «Anterior»/«Siguiente» queda
+  // para lectores de pantalla: las flechas ya lo dicen a la vista, como en el mockup.
   return (
     <Link
       href={albumHref(artistName, item.title, item.id)}
       rel={side === "previous" ? "prev" : "next"}
-      className="group flex min-w-0 max-w-80 items-center gap-1.5 whitespace-nowrap text-paper-muted transition-colors hover:text-paper"
+      className="group flex min-w-0 max-w-64 items-center gap-1.5 whitespace-nowrap transition-colors hover:text-amber"
     >
       {side === "previous" && chevron}
-      <span className="shrink-0">{label} ·</span>
-      <span className="min-w-0 truncate text-paper transition-colors group-hover:text-amber">{item.title}</span>
-      {item.firstReleaseYear !== null && <span className="shrink-0 font-data">({item.firstReleaseYear})</span>}
+      <span className="sr-only">{label}: </span>
+      <span className="min-w-0 truncate">{item.title}</span>
+      {item.firstReleaseYear !== null && <span className="shrink-0">({item.firstReleaseYear})</span>}
       {side === "next" && chevron}
     </Link>
   );
