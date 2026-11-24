@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta B · Funda — The Number of the Beast</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:opsz,wght@8..60,400..600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<style>
+  /* B · Funda: el álbum como una funda abierta (gatefold). Izquierda fija: carátula grande, ficha y acciones. Derecha: una sola
+     lectura con anclas — Canciones, En este disco, Ediciones y Reseñas — sin pestañas, como las notas interiores de un LP. */
+  .page { display: grid; grid-template-columns: minmax(300px, 400px) minmax(0, 1fr); gap: 64px; padding-top: 28px; }
+  .left { position: sticky; top: 88px; align-self: start; display: flex; flex-direction: column; gap: 20px; }
+  .left .cv { background-size: cover; border-radius: 8px; box-shadow: 0 40px 70px -34px rgba(0,0,0,.95), 0 0 0 1px rgba(242,237,228,.08); }
+  .crumbs { margin-bottom: 4px; }
+  .kind { font: 500 12px var(--data); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+  h1 { font-family: var(--display); font-weight: 700; font-size: clamp(32px, 3.2vw, 46px); line-height: 1; letter-spacing: -.03em; }
+  .by { font-family: var(--display); font-size: 19px; color: var(--amber); }
+  dl.facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; font-size: 15px; }
+  dl.facts dt { font: 500 12px var(--data); color: var(--muted); padding-top: 3px; }
+  .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 14px; border-radius: 8px; font: 500 14px var(--display); }
+  .btn.amber { background: var(--amber); color: var(--amber-ink); }
+  .btn.ghost { border: 1px solid var(--border-2); }
+  .note { font-size: 13px; color: var(--muted); }
+  .share { font: 500 12px var(--data); color: var(--muted); }
+
+  .anchors { position: sticky; top: 64px; z-index: 20; display: flex; gap: 22px; padding: 14px 0 12px; background: rgba(20,18,15,.94); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); font: 500 13px var(--data); color: var(--muted); overflow-x: auto; scrollbar-width: none; }
+  .anchors a { white-space: nowrap; }
+  .anchors a[aria-current] { color: var(--paper); }
+  .right section { padding: 40px 0 8px; }
+  .right h2 { font-family: var(--display); font-weight: 700; font-size: 28px; letter-spacing: -.02em; margin-bottom: 18px; }
+  .side-label { font: 500 12px var(--data); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin: 6px 0 8px; }
+  .tr { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 14px; align-items: baseline; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .tr .n { font: 500 13px var(--data); color: var(--muted-2); }
+  .tr .t { font-family: var(--body); font-size: 19px; }
+  .tr .w { display: block; font-size: 13.5px; color: var(--muted); font-style: italic; }
+  .tr .d { font: 500 13px var(--data); color: var(--muted); }
+  .people { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+  .person { display: flex; gap: 12px; align-items: center; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .person i { width: 40px; height: 40px; border-radius: 50%; background: var(--surface-2); display: grid; place-items: center; font: 600 14px var(--display); font-style: normal; color: var(--muted); flex: none; }
+  .person b { display: block; font: 600 15px var(--display); }
+  .person small { color: var(--muted); font-size: 13px; }
+  .fmt { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .fmt span { padding: 6px 12px; border: 1px solid var(--border); border-radius: 999px; font: 500 12px var(--data); color: var(--muted); }
+  .fmt b { color: var(--paper); font-weight: 500; margin-left: 4px; }
+  table { width: 100%; border-collapse: collapse; font: 500 13px var(--data); }
+  td, th { text-align: left; padding: 9px 8px 9px 0; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 500; }
+  td:last-child, th:last-child { text-align: right; }
+  .see { margin-top: 12px; }
+  .invite { padding: 22px; border: 1px dashed var(--border-2); border-radius: 12px; color: var(--muted); }
+  .invite b { display: block; color: var(--paper); font: 600 17px var(--display); margin-bottom: 6px; }
+  .invite a { color: var(--amber); }
+  .strip { margin-top: 64px; }
+  .strip-row { display: flex; gap: 14px; overflow-x: auto; scrollbar-width: none; }
+  .strip-row a { flex: none; width: 112px; }
+  .strip-row .cv { background-size: cover; }
+  .strip-row a[aria-current] .cv { outline: 2px solid var(--amber); outline-offset: 3px; }
+  .strip-row b { display: block; margin-top: 6px; font: 600 13px var(--display); }
+  .strip-row small { font: 500 12px var(--data); color: var(--muted); }
+
+  @media (max-width: 1023px) {
+    .page { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+    .left { position: static; display: grid; grid-template-columns: 160px minmax(0, 1fr); align-items: start; gap: 16px 20px; }
+    .left .cv { grid-row: span 4; }
+    .left .crumbs { grid-column: 1 / -1; }
+    .left dl, .left .acts, .left .note, .left .share { grid-column: 1 / -1; }
+    .anchors { top: 60px; }
+  }
+  @media (max-width: 640px) {
+    .left { grid-template-columns: 110px minmax(0, 1fr); }
+    .left .cv { grid-row: span 3; }
+    .tr .t { font-size: 17px; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header"></header>
+<main class="wrap">
+  <div class="page">
+    <aside class="left" aria-label="Ficha del disco">
+      <span class="crumbs">Inicio / Iron Maiden / <b>The Number of the Beast</b></span>
+      <span class="cv" data-mb="4ebfe175-e7ed-34cd-8e91-67c7e4a53579" role="img" aria-label="Carátula de The Number of the Beast"></span>
+      <div><p class="kind">Álbum de estudio</p><h1>The Number of the Beast</h1><p class="by"><a href="#">Iron Maiden</a></p></div>
+      <dl class="facts">
+        <dt>Lanzamiento</dt><dd>29 de marzo de 1982</dd>
+        <dt>Duración</dt><dd>8 pistas · 40:22</dd>
+        <dt>Sello</dt><dd>EMI</dd>
+        <dt>Género</dt><dd><a href="#">heavy metal</a></dd>
+      </dl>
+      <div class="acts"><a class="btn amber" href="#">Valorar</a><a class="btn ghost" href="#">Lo quiero escuchar</a></div>
+      <p class="note">Con una cuenta guardas tus valoraciones, escuchas y colección.</p>
+      <a class="share" href="#">Compartir ↗</a>
+    </aside>
+
+    <div class="right">
+      <nav class="anchors" aria-label="En esta página"><a href="#canciones" aria-current="true">Canciones</a><a href="#formacion">En este disco</a><a href="#ediciones">Ediciones · 51</a><a href="#resenas">Reseñas</a><a href="#discografia">Discografía</a></nav>
+      <section id="canciones" aria-labelledby="h-c">
+        <h2 id="h-c">Canciones</h2>
+        <p class="side-label">Cara A</p><ol id="sideA"></ol>
+        <p class="side-label" style="margin-top:22px">Cara B</p><ol id="sideB"></ol>
+      </section>
+      <section id="formacion" aria-labelledby="h-f">
+        <h2 id="h-f">En este disco</h2>
+        <div class="people" id="people"></div>
+        <a class="see" href="#">Créditos por canción →</a>
+      </section>
+      <section id="ediciones" aria-labelledby="h-e">
+        <h2 id="h-e">Ediciones</h2>
+        <div class="fmt" id="fmt"></div>
+        <table><thead><tr><th>Año</th><th>País</th><th>Formato</th><th>Sello · catálogo</th><th>Pistas</th></tr></thead><tbody id="eds"></tbody></table>
+        <a class="see" href="#">Ver las 51 ediciones →</a>
+      </section>
+      <section id="resenas" aria-labelledby="h-r">
+        <h2 id="h-r">Reseñas</h2>
+        <div class="invite"><b>Todavía nadie reseñó este disco.</b>¿Ya lo escuchaste? <a href="#">Inicia sesión</a> y cuenta qué te pareció. Los comentarios sueltos van debajo de las reseñas.</div>
+      </section>
+      <section id="discografia" class="strip" aria-labelledby="h-d">
+        <h2 id="h-d">Discografía de Iron Maiden</h2>
+        <div class="strip-row" id="strip"></div>
+      </section>
+    </div>
+  </div>
+</main>
+<footer class="site-foot"><div class="wrap">Mockup · datos reales de la base local · carátulas del Cover Art Archive (250 px)</div></footer>
+<nav class="mock-bar" aria-label="Propuestas"><span>Mockup · The Number of the Beast</span><a href="index.html">Resumen</a><a href="a-portada.html">A</a><a href="b-funda.html" aria-current="page">B</a><a href="c-ficha.html">C</a></nav>
+<script src="shared.js"></script>
+<script>
+  window.renderMockup = function () {
+    var A = window.ALBUM, e = window.esc;
+    var row = function (t, i) { return '<li class="tr"><span class="n">' + (i + 1) + '</span><a href="#"><span class="t">' + e(t[0]) + '</span><span class="w">' + e(t[2].join(" y ")) + '</span></a><span class="d num">' + t[1] + '</span></li>'; };
+    document.getElementById("sideA").innerHTML = A.tracks.slice(0, 4).map(row).join("");
+    document.getElementById("sideB").innerHTML = A.tracks.slice(4).map(function (t, i) { return row(t, i + 4); }).join("");
+    document.getElementById("people").innerHTML = A.lineup.concat(A.production).map(function (p) {
+      var ini = p[0].split(" ").map(function (w) { return w[0]; }).join("").slice(0, 2);
+      return '<a class="person" href="#"><i>' + ini + '</i><span><b>' + e(p[0]) + '</b><small>' + e(p[1]) + '</small></span></a>';
+    }).join("");
+    document.getElementById("fmt").innerHTML = A.editions.formats.map(function (f) { return '<span>' + f[0] + '<b>' + f[1] + '</b></span>'; }).join("");
+    document.getElementById("eds").innerHTML = A.editions.rows.map(function (r) { return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td><td>' + e(r[2]) + '</td><td>' + e(r[3]) + '</td><td>' + r[4] + '</td></tr>'; }).join("");
+    document.getElementById("strip").innerHTML = A.strip.map(function (s) {
+      return '<a href="#"' + (s[0] === A.title ? ' aria-current="page"' : "") + '><span class="cv" data-mb="' + s[2] + '"></span><b>' + e(s[0]) + '</b><small>' + s[1] + '</small></a>';
+    }).join("");
+  };
+</script>
+</body>
+</html>

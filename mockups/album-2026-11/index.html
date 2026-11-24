@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ficha de álbum · Auditoría y tres direcciones — music-platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:opsz,wght@8..60,400..600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<style>
+  main { max-width: 72rem; margin: 0 auto; padding: 40px var(--pad) 120px; }
+  h1 { font-family: var(--display); font-weight: 700; font-size: clamp(34px, 4.4vw, 56px); line-height: 1; letter-spacing: -.03em; }
+  .lede { margin-top: 14px; max-width: 62ch; color: var(--muted); font-size: 18px; }
+  section { margin-top: 64px; }
+  h2 { font-family: var(--display); font-weight: 700; font-size: clamp(24px, 2.4vw, 32px); letter-spacing: -.02em; margin-bottom: 14px; }
+  h3 { font-family: var(--display); font-size: 20px; margin-bottom: 6px; }
+  p, li { color: var(--tx, var(--paper)); }
+  .muted { color: var(--muted); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin: 18px 0; }
+  .stat { padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .stat b { display: block; font: 700 26px var(--display); }
+  .stat span { font: 500 12px var(--data); color: var(--muted); }
+  .shots { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; align-items: start; }
+  .shots img, .prop img { width: 100%; border-radius: 10px; border: 1px solid var(--border); display: block; }
+  figcaption { margin-top: 6px; font: 500 12px var(--data); color: var(--muted); }
+  ol.problems { counter-reset: p; display: grid; gap: 12px; }
+  ol.problems li { counter-increment: p; display: grid; grid-template-columns: 34px 1fr; gap: 10px; padding: 14px; border: 1px solid var(--border); border-radius: 10px; }
+  ol.problems li::before { content: counter(p); font: 700 18px var(--display); color: var(--amber); }
+  ol.problems b { font-family: var(--display); }
+  ul.dots { display: grid; gap: 8px; padding-left: 18px; list-style: disc; color: var(--muted); }
+  .props { display: grid; gap: 28px; }
+  .prop { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; padding: 18px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+  .prop .thesis { color: var(--muted); margin: 6px 0 12px; }
+  .pc { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; font-size: 14.5px; }
+  .pc h4 { font: 500 12px var(--data); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+  .pc ul { display: grid; gap: 4px; padding-left: 16px; list-style: disc; }
+  .open { display: inline-flex; margin-top: 14px; padding: 9px 14px; border-radius: 8px; background: var(--amber); color: var(--amber-ink); font: 500 14px var(--display); }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font: 500 12px var(--data); color: var(--muted); }
+  td.s { font: 600 15px var(--data); }
+  .rec { padding: 22px; border: 1px solid var(--amber); border-radius: 14px; background: rgba(232,184,75,.06); }
+  .rec ul { margin-top: 10px; }
+  @media (max-width: 860px) { .shots, .prop, .pc { grid-template-columns: minmax(0, 1fr); } table { font-size: 13.5px; } }
+</style>
+</head>
+<body>
+<header class="site-header"></header>
+<main>
+  <p class="crumbs">Auditoría · 24 nov 2026 · <b>/es/album/iron-maiden-the-number-of-the-beast</b> sin sesión</p>
+  <h1>Ficha de álbum: auditoría y tres direcciones</h1>
+  <p class="lede">La ficha de artista acaba de estrenar su portada a sangre; la del álbum sigue con la cabecera de recuadros de octubre. Revisé <em>The Number of the Beast</em> sin sesión a 1440 y 390 px, con sus cuatro pestañas, y propongo tres maneras de modernizarla con datos reales de la base local.</p>
+
+  <section id="estado" aria-labelledby="h-est">
+    <h2 id="h-est">Estado actual</h2>
+    <div class="stats">
+      <div class="stat"><b>536 px</b><span>pestañas en escritorio</span></div>
+      <div class="stat"><b>743 px</b><span>primera canción en 390 px</span></div>
+      <div class="stat"><b>1152 px</b><span>ancho (artista: 1408)</span></div>
+      <div class="stat"><b>3</b><span>invitaciones a iniciar sesión</span></div>
+      <div class="stat"><b>0 · 0</b><span>comunidad que se muestra</span></div>
+      <div class="stat"><b>36 px</b><span>título del disco</span></div>
+    </div>
+    <div class="shots">
+      <figure><img src="shots/actual.jpg" alt="Ficha actual en escritorio: carátula de 250 px, título, ficha, dos tarjetas de comunidad en cero y el panel Tu relación con una frase"><figcaption>Escritorio, sin sesión</figcaption></figure>
+      <figure><img src="shots/actual-movil.jpg" alt="Ficha actual en el teléfono: carátula de 96 px junto al título, ficha, comunidad en cero y panel Tu relación"><figcaption>390 px</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="problemas" aria-labelledby="h-prob">
+    <h2 id="h-prob">Problemas</h2>
+    <ol class="problems">
+      <li><span><b>Sin impacto y distinta de la ficha de artista.</b> La carátula —lo más reconocible de un disco— va en un recuadro de 250 px; el artista ya tiene portada a sangre, retrato circular y ficha en líneas. Pasar de una a otra se siente como cambiar de sitio.</span></li>
+      <li><span><b>La columna «Tu relación» vacía para el visitante.</b> una caja de 288 px de ancho con una frase y un enlace, igual que tenía el artista antes de su rediseño.</span></li>
+      <li><span><b>Comunidad en cero.</b> «0 Valoraciones · 0 Lo coleccionan» ocupa una fila entera y comunica que nadie usa el sitio.</span></li>
+      <li><span><b>Las canciones dicen poco.</b> Título y duración; los compositores existen (Steve Harris firma 7 de 8) pero hay que ir a Créditos → Por canción.</span></li>
+      <li><span><b>Dos lugares para opinar y tres invitaciones.</b> Reseñas (vacía, con su invitación propia), Comentarios al final (otra) y el panel (otra). Quien llega no sabe dónde escribir.</span></li>
+      <li><span><b>Marco y escala.</b> 1152 px frente a los 1408 del artista; el título mide 36 px y «Canciones» 16 px, menos que «Comentarios» (20 px).</span></li>
+    </ol>
+    <p class="muted" style="margin-top:14px">Lo que funciona y se conserva: pestañas enlazables y fijas, Créditos por persona y por canción, la tabla de 51 ediciones con filtros por formato, la franja de discografía con anterior y siguiente.</p>
+  </section>
+
+  <section id="criterios" aria-labelledby="h-crit">
+    <h2 id="h-crit">Criterios</h2>
+    <ul class="dots">
+      <li>Coherencia con la ficha de artista recién publicada (portada, ficha en líneas, «Seguir»/«Valorar» para el visitante, 88rem).</li>
+      <li>La lista de canciones antes que nada: no más abajo que hoy en el teléfono.</li>
+      <li>Sin ceros ni cajas vacías para quien no inició sesión.</li>
+      <li>Profundidad tipo Metal Archives sin perder la navegación actual.</li>
+      <li>Carátulas siempre en 250 px (licencia).</li>
+    </ul>
+  </section>
+
+  <section id="propuestas" aria-labelledby="h-props">
+    <h2 id="h-props">Propuestas</h2>
+    <div class="props">
+      <article class="prop">
+        <a href="a-portada.html"><img src="shots/a.jpg" alt="Propuesta A: portada con la carátula desenfocada de fondo, carátula grande con el disco asomando, título gigante, botón Valorar este disco y pestañas"></a>
+        <div>
+          <h3>A · Portada</h3>
+          <p class="thesis">La misma portada a sangre que el artista: fondo con la carátula desenfocada, la carátula grande saliendo de su funda con el disco asomando, título gigante y «Valorar este disco» para el visitante. Pestañas fijas; las canciones con sus compositores y, al lado, quién toca en el disco.</p>
+          <div class="pc"><div><h4>Ventajas</h4><ul><li>Una sola familia visual con el artista.</li><li>Compositores y formación sin cambiar de pestaña.</li><li>Primera canción a 733 px en el teléfono.</li></ul></div><div><h4>Desventajas</h4><ul><li>La portada se apoya en la carátula: un disco sin carátula queda sobrio.</li><li>Cabecera más alta en escritorio (586 px).</li></ul></div></div>
+          <a class="open" href="a-portada.html">Abrir propuesta A</a>
+        </div>
+      </article>
+      <article class="prop">
+        <a href="b-funda.html"><img src="shots/b.jpg" alt="Propuesta B: columna izquierda fija con la carátula grande, título y ficha; a la derecha las canciones por cara A y B"></a>
+        <div>
+          <h3>B · Funda</h3>
+          <p class="thesis">El disco como una funda abierta: a la izquierda, fija, la carátula grande, la ficha y las acciones; a la derecha, una lectura continua con anclas —Canciones por cara, En este disco, Ediciones, Reseñas— sin pestañas.</p>
+          <div class="pc"><div><h4>Ventajas</h4><ul><li>La primera canción a 260 px en escritorio.</li><li>Todo el disco en una lectura, como las notas interiores.</li></ul></div><div><h4>Desventajas</h4><ul><li>Rompe con las pestañas y las URL actuales.</li><li>Las caras A/B piden saber el lado de cada pista en la edición vinilo (dato nuevo).</li><li>Se aleja del artista.</li></ul></div></div>
+          <a class="open" href="b-funda.html">Abrir propuesta B</a>
+        </div>
+      </article>
+      <article class="prop">
+        <a href="c-ficha.html"><img src="shots/c.jpg" alt="Propuesta C: cabecera compacta con ficha en dos columnas, canciones en tabla con compositores y formación en una columna lateral"></a>
+        <div>
+          <h3>C · Ficha</h3>
+          <p class="thesis">La ficha de biblioteca estilo Metal Archives: cabecera compacta con la ficha en dos columnas (sello, ediciones, producción), canciones en tabla con compositores, formación y comunidad al lado, resumen de reseñas debajo.</p>
+          <div class="pc"><div><h4>Ventajas</h4><ul><li>La más densa: todo el dato a la vista.</li><li>Fiel a la visión «profundidad de Metal Archives».</li></ul></div><div><h4>Desventajas</h4><ul><li>Poco impacto visual; no acompaña a la portada del artista.</li><li>Tabla incómoda en el teléfono (los compositores bajan bajo el título).</li></ul></div></div>
+          <a class="open" href="c-ficha.html">Abrir propuesta C</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="comparacion" aria-labelledby="h-comp">
+    <h2 id="h-comp">Comparación</h2>
+    <table>
+      <thead><tr><th>Criterio</th><th>A · Portada</th><th>B · Funda</th><th>C · Ficha</th></tr></thead>
+      <tbody>
+        <tr><td>Coherencia con el artista</td><td class="s">5</td><td class="s">2</td><td class="s">3</td></tr>
+        <tr><td>Impacto visual</td><td class="s">5</td><td class="s">4</td><td class="s">2</td></tr>
+        <tr><td>Canciones pronto (escritorio · 390 px)</td><td>586 · 733 px</td><td>260 · 728 px</td><td>526 · 785 px</td></tr>
+        <tr><td>Profundidad visible</td><td class="s">4</td><td class="s">4</td><td class="s">5</td></tr>
+        <tr><td>Visitante sin ceros ni cajas vacías</td><td class="s">5</td><td class="s">5</td><td class="s">4</td></tr>
+        <tr><td>Coste de llevarla al producto</td><td>Medio (reusa la portada del artista)</td><td>Alto (sin pestañas, dato de caras)</td><td>Medio</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="recomendacion" aria-labelledby="h-rec">
+    <h2 id="h-rec">Recomendación</h2>
+    <div class="rec">
+      <p><b>A · Portada</b>, porque la ficha de álbum es el siguiente clic desde la del artista y debe sentirse de la misma familia, y porque sus pestañas y URL siguen como hoy. Con dos préstamos:</p>
+      <ul class="dots">
+        <li>De <b>C</b>: los compositores bajo cada canción (ya van en A) y la producción en la ficha.</li>
+        <li>De <b>B</b>: «En este disco», la formación con su instrumento, al lado de las canciones.</li>
+        <li>Para todas: reseñas y comentarios en una sola sección al final, con una sola invitación; la comunidad aparece solo con cifras; contenedor de 88rem.</li>
+      </ul>
+      <p class="muted" style="margin-top:12px">Decisiones que conviene tomar antes de planificar: ¿unificar reseñas y comentarios o mantenerlos separados? ¿El resumen de ediciones por formato va en la columna lateral o solo en su pestaña?</p>
+    </div>
+  </section>
+</main>
+<nav class="mock-bar" aria-label="Propuestas"><span>Ficha de álbum</span><a href="index.html" aria-current="page">Resumen</a><a href="a-portada.html">A</a><a href="b-funda.html">B</a><a href="c-ficha.html">C</a></nav>
+<script src="shared.js"></script>
+</body>
+</html>

@@ -50,18 +50,17 @@ escuchas previas.
 
 ### Requirement: Estados del panel
 
-El panel SHALL tener tres estados: **anónimo** — una invitación a iniciar sesión para
-valorar, reseñar y registrar escuchas, sin controles que simulen poder hacerlo; **sin
-interacción** — todas las filas visibles con sus acciones mínimas (estrellas vacías,
-escribir reseña, registrar escucha, Favorito y Pendiente inactivos, agregar a la colección
-y abrir el selector de listas); **con interacción** — el estado de cada señal según el
-requisito anterior. El panel SHALL NOT esconder filas detrás de un menú `···` ni de una
-acción "Más acciones".
+El panel SHALL tener dos estados con sesión: **sin interacción** — todas las filas visibles con sus acciones mínimas (estrellas
+vacías, escribir reseña, registrar escucha, Favorito y Pendiente inactivos, agregar a la colección y abrir el selector de listas); y
+**con interacción** — el estado de cada señal según el requisito anterior. Sin sesión, la página SHALL NOT mostrar el panel: en su
+lugar, la portada SHALL mostrar el botón «Valorar este disco», que lleva al inicio de sesión, y una frase que explica para qué sirve
+una cuenta, sin controles que simulen poder valorar. El panel SHALL NOT esconder filas detrás de un menú `···` ni de una acción
+"Más acciones".
 
 #### Scenario: Visitante anónimo
 
 - **WHEN** una persona sin sesión abre un álbum
-- **THEN** el panel muestra la invitación a iniciar sesión y ningún control de escritura
+- **THEN** la portada muestra «Valorar este disco» y la frase, sin el panel ni ningún control de escritura
 
 #### Scenario: Primera visita autenticada
 
@@ -83,9 +82,9 @@ puedan confundirse entre sí.
 
 ### Requirement: Panel en móvil
 
-En viewport móvil el panel SHALL mostrarse entre la identidad del álbum y las pestañas con
-las mismas filas que en escritorio, en una sola columna y sin desbordamiento horizontal.
-Las estrellas y los conmutadores SHALL tener un área táctil de al menos 40 px de alto.
+En viewport móvil el panel SHALL mostrarse después de la ficha y la comunidad de la portada y antes de las pestañas, con las mismas
+filas que en escritorio, en una sola columna y sin desbordamiento horizontal. Las estrellas y los conmutadores SHALL tener un área
+táctil de al menos 40 px de alto.
 
 #### Scenario: Panel compacto
 

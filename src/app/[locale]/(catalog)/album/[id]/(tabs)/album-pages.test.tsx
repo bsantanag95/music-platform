@@ -237,7 +237,7 @@ describe("layout de la página de álbum", () => {
   it("muestra el título sin traducir, el tipo de obra y el breadcrumb con artista", async () => {
     await renderLayout();
     expect(screen.getByRole("heading", { level: 1, name: "The Dark Side of the Moon" })).toBeInTheDocument();
-    expect(screen.getByText(catalogEs.album.workType.studio)).toBeInTheDocument();
+    expect(screen.getByText((_, el) => el?.tagName === "P" && (el.textContent ?? "").startsWith(catalogEs.album.workType.studio))).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Pink Floyd" })[0]).toHaveAttribute("href", artistHref("Pink Floyd", ARTIST_ID));
   });
 
@@ -266,9 +266,10 @@ describe("layout de la página de álbum", () => {
     expect(screen.getByRole("heading", { name: catalogEs.social.commentsHeading })).toBeInTheDocument();
   });
 
-  it("a un visitante anónimo le muestra el panel para iniciar sesión", async () => {
+  it("a un visitante anónimo le muestra «Valorar este disco» en lugar del panel (modernize-album-page-phase1)", async () => {
     await renderLayout();
-    expect(screen.getByText(catalogEs.album.relation.signInPrompt)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: catalogEs.album.rateInvite })).toHaveAttribute("href", "/auth/login");
+    expect(screen.queryByText(catalogEs.album.relation.signInPrompt)).not.toBeInTheDocument();
     expect(mocks.loadPersonalState).not.toHaveBeenCalled();
   });
 

@@ -802,7 +802,11 @@
       "editionOriginal": "Original",
       "seeEditions": "See editions",
       "label": "Label",
-      "releaseUpcoming": "Out <date></date>"
+      "releaseUpcoming": "Out <date></date>",
+      "genres": "Genres",
+      "producers": "Production",
+      "editionValue": "{name} edition",
+      "editionsCount": "{count, plural, one {# edition} other {# editions}}"
     },
     "community": {
       "heading": "Community",
@@ -1246,7 +1250,9 @@
     },
     "upcomingTracksTitle": "Tracklist not available yet",
     "upcomingTracksDescription": "It will be available once the record is released.",
-    "noEditionsUpcomingTitle": "Out {date}"
+    "noEditionsUpcomingTitle": "Out {date}",
+    "rateInvite": "Rate this record",
+    "rateInviteNote": "You need an account to rate, review and log your listens."
   },
   "song": {
     "kicker": "Song",

@@ -6,7 +6,8 @@ import { formatReleaseDate, isUpcomingRelease } from "@/components/album/album-f
 import { GenreChips } from "@/components/genres/GenreChips";
 import { getAlbumGenres } from "@/services/genres/display";
 import { AlbumCover } from "@/components/catalog/AlbumCover";
-import { AlbumFacts, AlbumIdentity, CommunityStats } from "@/components/album/AlbumHeader";
+import { AlbumFacts, AlbumIdentity, AlbumRateInvite, CommunityStats } from "@/components/album/AlbumHeader";
+import { AlbumSleeve, AlbumStage } from "@/components/album/AlbumStage";
 import { AlbumRelationPanel } from "@/components/album/AlbumRelationPanel";
 import { AlbumTabs } from "@/components/album/AlbumTabs";
 import { DiscographyStrip } from "@/components/album/DiscographyStrip";
@@ -32,12 +33,11 @@ import {
 import { withClientMessages } from "@/i18n/client-messages";
 import { buildShareMetadata } from "@/services/share/metadata";
 
-// Layout común de la página de álbum (openspec: redesign-album-page, D2 y D15): la cabecera
-// (carátula, identidad, ficha, comunidad y panel "Tu relación"), la barra de pestañas, la
-// franja de discografía y los comentarios se renderizan una vez; cada pestaña es un
-// segmento propio. `modal` recibe la reseña interceptada desde el índice de reseñas.
-// En escritorio, la cuarta fila (`1fr`) absorbe el alto sobrante cuando el panel lateral
-// crece, para que identidad, ficha y comunidad no se separen (rework-album-relation-panel).
+// Layout común de la página de álbum (openspec: redesign-album-page, D2 y D15): la portada
+// (openspec: modernize-album-page-phase1: carátula en su funda, identidad, ficha, comunidad y la acción principal, el panel
+// "Tu relación" con sesión o «Valorar este disco» sin ella), la barra de pestañas, la franja de discografía y los
+// comentarios se renderizan una vez; cada pestaña es un segmento propio. `modal` recibe la reseña interceptada desde el índice de reseñas.
+// Con el panel abierto, la columna izquierda queda arriba (`items-start`) y el alto sobrante debajo (rework-album-relation-panel).
 
 interface AlbumLayoutProps {
   children: ReactNode;
@@ -120,93 +120,106 @@ async function AlbumLayout({ children, modal, params }: AlbumLayoutProps) {
     { label: detail.releaseGroup.title },
   ];
 
+  // Productores del disco para la ficha (openspec: modernize-album-page-phase1): el nivel producción, solo la relación «producer».
+  const producers = (personnel?.levels.production ?? [])
+    .filter((entry) => entry.roles.some((role) => role.relationType === "producer"))
+    .map((entry) => ({ id: entry.artistId, name: entry.name }));
+  const frame = "mx-auto w-full max-w-[88rem] px-4 sm:px-8 xl:px-12";
+
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:py-12">
-      <Breadcrumbs items={breadcrumbItems} action={<ShareAction kind="album" refId={parsed.id} />} />
-
-      <header
-        className="grid grid-cols-[6rem_minmax(0,1fr)] gap-x-4 gap-y-5 [grid-template-areas:'cover_identity'_'facts_facts'_'community_community'_'panel_panel'] sm:gap-x-5 sm:grid-cols-[200px_minmax(0,1fr)] sm:[grid-template-areas:'cover_identity'_'cover_facts'_'community_community'_'panel_panel'] lg:grid-cols-[250px_minmax(0,1fr)_18rem] lg:grid-rows-[auto_auto_auto_1fr] lg:[grid-template-areas:'cover_identity_panel'_'cover_facts_panel'_'cover_community_panel'_'._._panel']"
-      >
-        <div className="[grid-area:cover]">
-          <AlbumCover
-            cover={detail.cover}
-            coverLabel={t("album.coverLabel")}
-            coverPlaceholderAlt={t("album.coverPlaceholderAlt")}
-            coverFailed={t("album.coverFailed")}
-            className="size-24 sm:size-[200px] lg:size-[250px]"
-          />
-        </div>
-        <div className="[grid-area:identity]">
-          <AlbumIdentity
-            title={detail.releaseGroup.title}
-            category={detail.releaseGroup.category as "studio" | "compilation" | "live_other" | "single_ep"}
-            artists={detail.primaryArtists}
-          />
-          <div className="mt-2">
-            <GenreChips
-              genres={albumGenres.genres}
-              descriptors={albumGenres.descriptors}
-              inheritedFrom={detail.primaryArtist?.name ?? null}
-            />
-          </div>
-        </div>
-        <div className="[grid-area:facts]">
-          <AlbumFacts
-            releaseGroupId={releaseGroupId}
-            firstReleaseDate={detail.releaseGroup.firstReleaseDate}
-            firstReleaseYear={detail.releaseGroup.firstReleaseYear}
-            tracks={detail.tracks}
-            editionLabel={detail.release.editionLabel}
-            editionsAvailable={availableTabs.editions}
-            label={representativeLabel}
-          />
-        </div>
-        <div className="[grid-area:community]">
-          <CommunityStats stats={stats} listsHref={itemListsHref({ type: "release-group", id: releaseGroupId })} />
-        </div>
-        <div className="[grid-area:panel]">
-          <AlbumRelationPanel
-            releaseGroupId={releaseGroupId}
-            reviewsHref={`${canonicalHref}/reviews`}
-            state={
-              personal
-                ? {
-                    ratings,
-                    ownReviewId: personal.ownReviewId,
-                    listens: personal.listens,
-                    favorited: personal.favorited,
-                    pending: personal.pending,
-                    collectionEntries: personal.collectionEntries,
-                    wantedEntries: personal.wantedEntries,
-                    ownListMemberships: personal.ownListMemberships,
+    <main className="flex min-h-screen w-full flex-col">
+      <AlbumStage cover={detail.cover}>
+        <div className={`${frame} flex flex-col gap-6 pb-6 pt-6 sm:gap-7 sm:pb-9`}>
+          <Breadcrumbs items={breadcrumbItems} action={<ShareAction kind="album" refId={parsed.id} />} />
+          <header className="grid grid-cols-1 items-start gap-7 lg:grid-cols-[minmax(0,1fr)_18rem]">
+            <div className="flex min-w-0 flex-col items-start gap-6 sm:flex-row sm:items-end sm:gap-8">
+              <AlbumSleeve>
+                <AlbumCover
+                  cover={detail.cover}
+                  coverLabel={t("album.coverLabel")}
+                  coverPlaceholderAlt={t("album.coverPlaceholderAlt")}
+                  coverFailed={t("album.coverFailed")}
+                  className="aspect-square w-full"
+                />
+              </AlbumSleeve>
+              <div className="relative z-10 flex min-w-0 flex-1 flex-col gap-4">
+                <AlbumIdentity
+                  title={detail.releaseGroup.title}
+                  category={detail.releaseGroup.category as "studio" | "compilation" | "live_other" | "single_ep"}
+                  artists={detail.primaryArtists}
+                  year={detail.releaseGroup.firstReleaseYear}
+                />
+                <AlbumFacts
+                  releaseGroupId={releaseGroupId}
+                  firstReleaseDate={detail.releaseGroup.firstReleaseDate}
+                  firstReleaseYear={detail.releaseGroup.firstReleaseYear}
+                  tracks={detail.tracks}
+                  editionLabel={detail.release.editionLabel}
+                  editionsAvailable={availableTabs.editions}
+                  editionCount={editions.editions.length}
+                  label={representativeLabel}
+                  producers={producers}
+                  genres={
+                    albumGenres.genres.length > 0 ? (
+                      <GenreChips
+                        genres={albumGenres.genres}
+                        descriptors={albumGenres.descriptors}
+                        inheritedFrom={detail.primaryArtist?.name ?? null}
+                      />
+                    ) : null
                   }
-                : null
-            }
+                />
+                <CommunityStats stats={stats} listsHref={itemListsHref({ type: "release-group", id: releaseGroupId })} />
+              </div>
+            </div>
+            {/* Sin sesión, «Valorar este disco» en lugar del panel; con sesión, el panel entero en la columna derecha. */}
+            {personal ? (
+              <AlbumRelationPanel
+                releaseGroupId={releaseGroupId}
+                reviewsHref={`${canonicalHref}/reviews`}
+                state={{
+                  ratings,
+                  ownReviewId: personal.ownReviewId,
+                  listens: personal.listens,
+                  favorited: personal.favorited,
+                  pending: personal.pending,
+                  collectionEntries: personal.collectionEntries,
+                  wantedEntries: personal.wantedEntries,
+                  ownListMemberships: personal.ownListMemberships,
+                }}
+              />
+            ) : (
+              <div className="lg:self-end">
+                <AlbumRateInvite />
+              </div>
+            )}
+          </header>
+        </div>
+      </AlbumStage>
+
+      <div className={`${frame} flex flex-col gap-8 pb-12 pt-2`}>
+        {/* Alturas de las barras fijas: el encabezado del sitio y las pestañas, las mismas que en artista
+            (openspec: refine-album-page-phase1, D1). */}
+        <div className="flex flex-col gap-6 [--album-tabs-h:2.375rem] [--site-header-h:3.625rem]">
+          <AlbumTabs releaseGroupId={releaseGroupId} available={availableTabs} reviewCount={stats.reviewCount} />
+          {children}
+        </div>
+
+        {strip && detail.primaryArtist && <DiscographyStrip artistName={detail.primaryArtist.name} strip={strip} authenticated={userId !== null} />}
+
+        <div className="w-full max-w-3xl">
+          <Comments
+            target="release-group"
+            targetId={releaseGroupId}
+            initial={comments}
+            authenticated={Boolean(userId)}
+            userId={userId ?? undefined}
+            canModerate={canModerate}
           />
         </div>
-      </header>
 
-      {/* Alturas de las barras fijas: el encabezado del sitio y las pestañas, las mismas que en artista
-          (openspec: refine-album-page-phase1, D1). */}
-      <div className="flex flex-col gap-6 [--album-tabs-h:2.375rem] [--site-header-h:3.625rem]">
-        <AlbumTabs releaseGroupId={releaseGroupId} available={availableTabs} reviewCount={stats.reviewCount} />
-        {children}
+        {modal}
       </div>
-
-      {strip && detail.primaryArtist && <DiscographyStrip artistName={detail.primaryArtist.name} strip={strip} authenticated={userId !== null} />}
-
-      <div className="w-full max-w-3xl">
-        <Comments
-          target="release-group"
-          targetId={releaseGroupId}
-          initial={comments}
-          authenticated={Boolean(userId)}
-          userId={userId ?? undefined}
-          canModerate={canModerate}
-        />
-      </div>
-
-      {modal}
     </main>
   );
 }

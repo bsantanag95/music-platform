@@ -22,20 +22,23 @@ interface AlbumIdentityProps {
   title: string;
   category: WorkCategory;
   artists: AlbumArtistCredit[];
+  /** Año del primer lanzamiento: acompaña al tipo de obra en la línea de contexto (openspec: modernize-album-page-phase1). */
+  year?: number | null;
 }
 
-export function AlbumIdentity({ title, category, artists }: AlbumIdentityProps) {
+export function AlbumIdentity({ title, category, artists, year = null }: AlbumIdentityProps) {
   const t = useTranslations("catalog.album");
   return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <p className="font-data text-xs uppercase tracking-wider text-paper-muted">
+    <div className="flex min-w-0 flex-col gap-3">
+      <p className="font-data text-xs uppercase tracking-wider text-paper/70">
         {t(`workType.${category}`)}
+        {year !== null ? ` · ${year}` : null}
       </p>
-      <h1 className="font-display text-2xl leading-tight text-paper [overflow-wrap:anywhere] sm:text-4xl">
+      <h1 className="font-display text-[clamp(2.25rem,5.6vw,5.25rem)] font-bold leading-[0.95] tracking-[-0.04em] text-paper [overflow-wrap:anywhere]">
         {title}
       </h1>
       {artists.length > 0 && (
-        <p className="font-body text-base text-paper sm:text-lg">
+        <p className="font-display text-lg sm:text-xl">
           {artists.map((artist, index) => (
             <Fragment key={artist.id}>
               <Link href={artistHref(artist.name, artist.id)} className="text-amber hover:text-amber-hover hover:underline">
@@ -56,10 +59,16 @@ interface AlbumFactsProps {
   firstReleaseYear: number | null;
   tracks: { durationSec: number | null }[];
   editionLabel: string;
-  /** Pestaña Ediciones visible: la fila Edición enlaza a ella. */
+  /** Pestaña Ediciones visible: la edición enlaza a ella con la cantidad. */
   editionsAvailable: boolean;
+  /** Cantidad de ediciones conocidas, para «N ediciones →». */
+  editionCount?: number;
   /** Sello de la edición representativa, cuando el catálogo lo conoce. */
   label?: string | null;
+  /** Productores del disco (nivel producción de los créditos), hasta 2 (openspec: modernize-album-page-phase1). */
+  producers?: { id: string; name: string }[];
+  /** Fichas de géneros: abren la línea. */
+  genres?: React.ReactNode;
 }
 
 /** Etiqueta legible de `release.edition_label` (`standard`, `original` o la desambiguación de MusicBrainz). */
@@ -70,14 +79,22 @@ function useEditionName(editionLabel: string): string {
   return editionLabel;
 }
 
-function FactRows({
+/**
+ * Ficha técnica en una línea (openspec: modernize-album-page-phase1): géneros, lanzamiento, pistas y duración, sello,
+ * producción y edición con «N ediciones →». Cada dato conserva su rótulo para lectores de pantalla; solo se dibujan los que
+ * tienen dato.
+ */
+export function AlbumFacts({
   releaseGroupId,
   firstReleaseDate,
   firstReleaseYear,
   tracks,
   editionLabel,
   editionsAvailable,
+  editionCount = 0,
   label,
+  producers = [],
+  genres,
 }: AlbumFactsProps) {
   const t = useTranslations("catalog.album.facts");
   const locale = useLocale();
@@ -85,71 +102,93 @@ function FactRows({
   const durations = summarizeDurations(tracks);
   const total = formatDuration(durations.totalSeconds);
   const editionName = useEditionName(editionLabel);
+  const rows: { key: string; label: string; value: React.ReactNode }[] = [];
+
+  if (genres) rows.push({ key: "genres", label: t("genres"), value: genres });
+  if (release) {
+    rows.push({
+      key: "release",
+      label: t("release"),
+      value: isUpcomingRelease(firstReleaseDate) ? (
+        t.rich("releaseUpcoming", { date: () => <time dateTime={firstReleaseDate ?? undefined}>{release}</time> })
+      ) : (
+        <time dateTime={firstReleaseDate ?? String(firstReleaseYear)}>{release}</time>
+      ),
+    });
+  }
+  if (durations.trackCount > 0) {
+    rows.push({
+      key: "duration",
+      label: t("duration"),
+      value: (
+        <>
+          {t("durationValue", { tracks: durations.trackCount, total: durations.partial ? t("durationPartial", { total }) : total })}
+          {durations.partial && <span className="sr-only"> ({t("durationPartialHint")})</span>}
+        </>
+      ),
+    });
+  }
+  if (label) rows.push({ key: "label", label: t("label"), value: label });
+  if (producers.length > 0) {
+    rows.push({
+      key: "producers",
+      label: t("producers"),
+      value: producers.slice(0, 2).map((producer, index) => (
+        <Fragment key={producer.id}>
+          {index > 0 ? ", " : null}
+          <Link href={artistHref(producer.name, producer.id)} className="hover:text-amber hover:underline">
+            {producer.name}
+          </Link>
+        </Fragment>
+      )),
+    });
+  }
+  rows.push({
+    key: "edition",
+    label: t("edition"),
+    value: (
+      <>
+        {t("editionValue", { name: editionName })}
+        {editionsAvailable && (
+          <>
+            {" · "}
+            <Link href={`${albumHref(null, "", releaseGroupId)}/editions`} className={`whitespace-nowrap ${SECONDARY_LINK}`}>
+              {editionCount > 1 ? t("editionsCount", { count: editionCount }) : t("seeEditions")} →
+            </Link>
+          </>
+        )}
+      </>
+    ),
+  });
 
   return (
-    <>
-      {release && (
-        <div className="contents">
-          <dt className="font-data text-xs text-paper-muted">{t("release")}</dt>
-          <dd className="font-body text-sm text-paper">
-            {isUpcomingRelease(firstReleaseDate) ? (
-              t.rich("releaseUpcoming", {
-                date: () => <time dateTime={firstReleaseDate ?? undefined}>{release}</time>,
-              })
-            ) : (
-              <time dateTime={firstReleaseDate ?? String(firstReleaseYear)}>{release}</time>
-            )}
-          </dd>
+    <dl aria-label={t("heading")} className="flex flex-wrap items-center gap-x-4 gap-y-2 font-data text-[0.8125rem] text-paper/80">
+      {rows.map((row) => (
+        <div key={row.key} data-fact={row.key} className="min-w-0">
+          <dt className="sr-only">{row.label}</dt>
+          <dd>{row.value}</dd>
         </div>
-      )}
-      {durations.trackCount > 0 && (
-        <div className="contents">
-          <dt className="font-data text-xs text-paper-muted">{t("duration")}</dt>
-          <dd className="font-body text-sm text-paper">
-            {t("durationValue", {
-              tracks: durations.trackCount,
-              total: durations.partial ? t("durationPartial", { total }) : total,
-            })}
-            {durations.partial && <span className="sr-only"> ({t("durationPartialHint")})</span>}
-          </dd>
-        </div>
-      )}
-      <div className="contents">
-        <dt className="font-data text-xs text-paper-muted">{t("edition")}</dt>
-        <dd className="font-body text-sm text-paper">
-          {editionName}
-          {editionsAvailable && (
-            <>
-              {" · "}
-              <Link href={`${albumHref(null, "", releaseGroupId)}/editions`} className={SECONDARY_LINK}>
-                {t("seeEditions")}
-              </Link>
-            </>
-          )}
-        </dd>
-      </div>
-      {label && (
-        <div className="contents">
-          <dt className="font-data text-xs text-paper-muted">{t("label")}</dt>
-          <dd className="font-body text-sm text-paper">{label}</dd>
-        </div>
-      )}
-    </>
+      ))}
+    </dl>
   );
 }
 
-const factsGrid = "grid grid-cols-[max-content_minmax(0,1fr)] items-baseline gap-x-4 gap-y-1.5";
-
 /**
- * Ficha técnica: abierta en cualquier ancho, como la del artista (openspec: refine-album-page-phase2, D4); cuatro
- * filas cortas no justifican plegarse en móvil. Solo se renderizan las filas con dato.
+ * Acción principal de la portada para un visitante sin sesión (openspec: modernize-album-page-phase1): en lugar del panel «Tu
+ * relación», «Valorar este disco» hacia el inicio de sesión y una frase que explica para qué sirve una cuenta.
  */
-export function AlbumFacts(props: AlbumFactsProps) {
-  const t = useTranslations("catalog.album.facts");
+export function AlbumRateInvite() {
+  const t = useTranslations("catalog.album");
   return (
-    <dl aria-label={t("heading")} className={factsGrid}>
-      <FactRows {...props} />
-    </dl>
+    <div className="flex flex-col items-start gap-2 lg:items-stretch">
+      <Link
+        href="/auth/login"
+        className="inline-flex h-11 items-center justify-center rounded-lg bg-amber px-5 font-display text-[0.9375rem] font-medium text-ink hover:bg-amber-hover"
+      >
+        {t("rateInvite")}
+      </Link>
+      <p className="hidden max-w-[30ch] font-body text-sm text-paper/70 sm:block">{t("rateInviteNote")}</p>
+    </div>
   );
 }
 
@@ -233,28 +272,39 @@ export function CommunityStats({ stats, listsHref }: CommunityStatsProps) {
   const { ratings } = stats;
   const hasAverage = ratings.averageStars !== null;
   const hasSeekers = !(stats.seekers.kind === "exact" && stats.seekers.value === 0);
-
-  return (
-    <section aria-label={t("heading")} className="flex flex-col gap-3">
-      <CommunityStrip
-        cells={[
-          ...(hasAverage
-            ? [{ key: "average", label: t("average"), value: t("averageValue", { stars: formatStars(ratings.averageStars ?? 0, locale) }) }]
-            : []),
+  // Sin ceros (openspec: modernize-album-page-phase1): cada celda en 0 se omite y, sin nada que contar, el bloque entero.
+  const hasRatings = ratings.count > 0;
+  const hasCollectors = !(stats.collectors.kind === "exact" && stats.collectors.value === 0);
+  if (!hasAverage && !hasRatings && !hasCollectors && stats.listCount === 0 && !ratings.histogram) return null;
+  const cells = [
+    ...(hasAverage
+      ? [{ key: "average", label: t("average"), value: t("averageValue", { stars: formatStars(ratings.averageStars ?? 0, locale) }) }]
+      : []),
+    ...(hasRatings
+      ? [
           {
             key: "ratings",
             label: t("ratings"),
             value: number(ratings.count),
             detail: stats.reviewCount > 0 ? t("reviewCount", { count: stats.reviewCount }) : undefined,
           },
+        ]
+      : []),
+    ...(hasCollectors
+      ? [
           {
             key: "collectors",
             label: t("collectors"),
             value: <ThresholdedTileValue count={stats.collectors} />,
             detail: hasSeekers ? t("seekers", { value: thresholded(stats.seekers, true) }) : undefined,
           },
-        ]}
-      />
+        ]
+      : []),
+  ];
+
+  return (
+    <section aria-label={t("heading")} className="flex flex-col gap-3">
+      {cells.length > 0 && <CommunityStrip cells={cells} />}
       {stats.listCount > 0 && (
         <Link href={listsHref} className={`self-start font-data text-xs ${SECONDARY_LINK}`}>
           {t("appearsInLists", { count: stats.listCount })} →

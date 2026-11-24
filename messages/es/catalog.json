@@ -802,7 +802,11 @@
       "editionOriginal": "Original",
       "seeEditions": "Ver ediciones",
       "label": "Sello",
-      "releaseUpcoming": "Se lanza el <date></date>"
+      "releaseUpcoming": "Se lanza el <date></date>",
+      "genres": "Géneros",
+      "producers": "Producción",
+      "editionValue": "Edición {name}",
+      "editionsCount": "{count, plural, one {# edición} other {# ediciones}}"
     },
     "community": {
       "heading": "Comunidad",
@@ -1246,7 +1250,9 @@
     },
     "upcomingTracksTitle": "Tracklist aún no disponible",
     "upcomingTracksDescription": "Estará disponible cuando se publique el disco.",
-    "noEditionsUpcomingTitle": "Se lanza el {date}"
+    "noEditionsUpcomingTitle": "Se lanza el {date}",
+    "rateInvite": "Valorar este disco",
+    "rateInviteNote": "Necesitas una cuenta para valorar, reseñar y registrar tus escuchas."
   },
   "song": {
     "kicker": "Canción",

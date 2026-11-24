@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta A · Portada — The Number of the Beast</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:opsz,wght@8..60,400..600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<style>
+  /* A · Portada: la misma portada a sangre que la ficha de artista (D · Mezcla). El fondo es la propia carátula desenfocada;
+     la carátula grande sale de su funda con el disco asomando. Pestañas horizontales fijas; Canciones primero. */
+  .stage { position: relative; isolation: isolate; overflow: hidden; border-bottom: 1px solid var(--border); }
+  .stage .ambient { position: absolute; inset: -25%; z-index: -3; background: var(--surface-2) center / cover no-repeat; filter: blur(70px) saturate(1.3); opacity: .85; }
+  .stage::before { content: ""; position: absolute; inset: 0; z-index: -2; background: linear-gradient(90deg, rgba(20,18,15,.25) 0%, rgba(20,18,15,.7) 55%, rgba(20,18,15,.88) 100%), linear-gradient(180deg, transparent 50%, var(--ink) 100%); }
+  .stage .wrap { padding-top: 22px; padding-bottom: 36px; display: flex; flex-direction: column; gap: 30px; }
+  .top-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .share { display: inline-flex; gap: 8px; align-items: center; padding: 7px 12px; border: 1px solid rgba(242,237,228,.25); border-radius: 8px; font: 500 12px var(--data); background: rgba(20,18,15,.4); }
+  .share svg { width: 14px; height: 14px; }
+  .hero { display: grid; grid-template-columns: auto minmax(0, 1fr) 18rem; gap: 40px; align-items: end; }
+  .sleeve { position: relative; width: clamp(220px, 24vw, 320px); }
+  .sleeve .cv { position: relative; z-index: 2; border-radius: 6px; background-size: cover; box-shadow: 0 40px 70px -30px rgba(0,0,0,.95), 0 0 0 1px rgba(242,237,228,.08); }
+  .sleeve .vinyl { position: absolute; z-index: 1; top: 4%; left: 30%; width: 92%; aspect-ratio: 1; border-radius: 50%;
+      background: radial-gradient(circle, #14120f 0 1.4%, rgba(232,184,75,.9) 1.5% 15%, #14120f 15.2% 17%, transparent 17.2%), repeating-radial-gradient(circle, #181512 0 2px, #26211c 2px 3px);
+      box-shadow: 0 30px 60px -24px rgba(0,0,0,.95); }
+  .id { min-width: 0; padding-left: 18%; }
+  .kind { font: 500 12px var(--data); color: rgba(242,237,228,.7); letter-spacing: .06em; text-transform: uppercase; }
+  h1 { margin-top: 10px; font-family: var(--display); font-weight: 700; font-size: clamp(40px, 5.6vw, 86px); line-height: .92; letter-spacing: -.04em; }
+  .by { margin-top: 14px; font-family: var(--display); font-size: 22px; color: var(--amber); }
+  .line { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; font: 500 13px var(--data); color: rgba(242,237,228,.8); }
+  .chip { padding: 3px 10px; border: 1px solid rgba(242,237,228,.28); border-radius: 999px; color: var(--paper); }
+  .cta { display: flex; flex-direction: column; gap: 10px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: 8px; font: 500 15px var(--display); white-space: nowrap; }
+  .btn.amber { background: var(--amber); color: var(--amber-ink); }
+  .btn.ghost { border: 1px solid rgba(242,237,228,.25); background: rgba(20,18,15,.4); }
+  .cta p { font-size: 13.5px; color: rgba(242,237,228,.7); }
+  .credit { position: absolute; right: var(--pad); bottom: 8px; font: 500 11px var(--data); color: rgba(242,237,228,.5); }
+
+  .tabsbar { position: sticky; top: 64px; z-index: 30; background: rgba(20,18,15,.94); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
+  .tabsbar .wrap { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+  .tabsbar a { padding: 14px 14px 12px; font: 500 15px var(--display); color: var(--muted); white-space: nowrap; }
+  .tabsbar a span { margin-left: 6px; font: 500 12px var(--data); color: var(--muted-2); }
+  .tabsbar a[aria-current] { color: var(--paper); box-shadow: inset 0 -2px var(--amber); }
+
+  .body { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; gap: 56px; padding-top: 36px; }
+  .tracks { counter-reset: t; }
+  .tr { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto 32px; align-items: center; gap: 14px; padding: 14px 4px; border-bottom: 1px solid var(--border); }
+  .tr .n { font: 500 13px var(--data); color: var(--muted-2); text-align: right; }
+  .tr .t { font-family: var(--display); font-size: 18px; }
+  .tr .w { display: block; margin-top: 2px; font: 500 12px var(--data); color: var(--muted); }
+  .tr .d { font: 500 13px var(--data); color: var(--muted); }
+  .tr .m { color: var(--muted); text-align: center; }
+  .tr:hover .t { color: var(--amber); }
+  .tot { display: flex; justify-content: space-between; padding: 14px 4px; font: 500 12px var(--data); color: var(--muted); }
+  aside.side { display: flex; flex-direction: column; gap: 28px; }
+  .side h3 { font: 500 12px var(--data); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px; }
+  .side li { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 15px; }
+  .side li span:last-child { color: var(--muted); font-size: 13.5px; text-align: right; }
+  .side .more { display: inline-block; margin-top: 10px; font: 500 13px var(--data); color: var(--muted); }
+  .side .more:hover { color: var(--amber); }
+
+  .strip { margin-top: 72px; }
+  .strip-row { display: flex; gap: 16px; overflow-x: auto; scrollbar-width: none; padding-bottom: 6px; }
+  .strip-row a { flex: none; width: 128px; }
+  .strip-row .cv { background-size: cover; }
+  .strip-row a[aria-current] .cv { outline: 2px solid var(--amber); outline-offset: 3px; }
+  .strip-row b { display: block; margin-top: 8px; font: 600 14px var(--display); }
+  .strip-row small { font: 500 12px var(--data); color: var(--muted); }
+  .talk { margin-top: 72px; max-width: 48rem; }
+  .talk .empty { color: var(--muted); }
+  .talk .empty a { color: var(--amber); }
+
+  @media (max-width: 1023px) {
+    .tabsbar { top: 60px; }
+    .hero { grid-template-columns: auto minmax(0, 1fr); }
+    .cta { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; align-items: center; }
+    .body { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 640px) {
+    .hero { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+    .sleeve { width: 50%; }
+    .cta p { display: none; }
+    .id { padding-left: 0; }
+    .by { font-size: 19px; }
+    .tr .t { font-size: 16px; }
+    .cta .btn { flex: 1; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header"></header>
+<main>
+  <section class="stage" aria-labelledby="h1">
+    <div class="ambient" data-mb="4ebfe175-e7ed-34cd-8e91-67c7e4a53579" aria-hidden="true"></div>
+    <div class="wrap">
+      <div class="top-row"><span class="crumbs">Inicio / Iron Maiden / <b>The Number of the Beast</b></span><a class="share" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12M7 8l5-5 5 5M5 14v5h14v-5"/></svg>Compartir</a></div>
+      <div class="hero">
+        <div class="sleeve"><span class="vinyl" aria-hidden="true"></span><span class="cv" data-mb="4ebfe175-e7ed-34cd-8e91-67c7e4a53579" role="img" aria-label="Carátula de The Number of the Beast"></span></div>
+        <div class="id">
+          <p class="kind">Álbum de estudio · 1982</p>
+          <h1 id="h1">The Number of the Beast</h1>
+          <p class="by"><a href="#">Iron Maiden</a></p>
+          <p class="line"><a class="chip" href="#">heavy metal</a><span>29 de marzo de 1982</span><span>8 pistas · 40:22</span><span>EMI</span><a href="#ediciones">51 ediciones →</a></p>
+        </div>
+        <div class="cta">
+          <a class="btn amber" href="#">Valorar este disco</a>
+          <a class="btn ghost" href="#">Lo quiero escuchar</a>
+          <p>Necesitas una cuenta para valorar, reseñar y registrar tus escuchas.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <nav class="tabsbar" aria-label="Secciones del álbum"><div class="wrap">
+    <a href="#" aria-current="page">Canciones<span>8</span></a><a href="#">Créditos</a><a href="#" id="ediciones">Ediciones<span>51</span></a><a href="#">Reseñas</a>
+  </div></nav>
+
+  <div class="wrap">
+    <div class="body">
+      <section aria-label="Canciones">
+        <ol class="tracks" id="tracks"></ol>
+        <p class="tot"><span>8 pistas</span><span>40:22</span></p>
+      </section>
+      <aside class="side">
+        <section><h3>En este disco</h3><ul id="lineup"></ul><a class="more" href="#">Todos los créditos →</a></section>
+        <section><h3>Producción</h3><ul><li><span>Martin Birch</span><span>producción, ingeniería</span></li></ul></section>
+        <section><h3>Ediciones</h3><ul><li><span>CD</span><span>28</span></li><li><span>Vinilo</span><span>15</span></li><li><span>Digital</span><span>4</span></li><li><span>Casete</span><span>3</span></li></ul><a class="more" href="#">Ver las 51 ediciones →</a></section>
+      </aside>
+    </div>
+
+    <section class="strip" aria-labelledby="h-strip">
+      <div class="sec-head"><h2 id="h-strip">Discografía de Iron Maiden</h2><span class="see">‹ Killers (1981) · Piece of Mind (1983) ›</span></div>
+      <div class="strip-row" id="strip"></div>
+    </section>
+
+    <section class="talk" aria-labelledby="h-talk">
+      <div class="sec-head"><h2 id="h-talk">Reseñas y comentarios</h2></div>
+      <p class="empty">Nadie ha reseñado ni comentado este disco todavía. <a href="#">Inicia sesión</a> para ser el primero.</p>
+    </section>
+  </div>
+</main>
+<footer class="site-foot"><div class="wrap">Mockup · datos reales de la base local · carátulas del Cover Art Archive (250 px)</div></footer>
+<nav class="mock-bar" aria-label="Propuestas"><span>Mockup · The Number of the Beast</span><a href="index.html">Resumen</a><a href="a-portada.html" aria-current="page">A</a><a href="b-funda.html">B</a><a href="c-ficha.html">C</a></nav>
+<script src="shared.js"></script>
+<script>
+  window.renderMockup = function () {
+    var A = window.ALBUM, e = window.esc;
+    document.getElementById("tracks").innerHTML = A.tracks.map(function (t, i) {
+      return '<li class="tr"><span class="n">' + (i + 1) + '</span><a href="#"><span class="t">' + e(t[0]) + '</span><span class="w">' + e(t[2].join(", ")) + '</span></a><span class="d num">' + t[1] + '</span><span class="m" aria-label="Acciones">⋯</span></li>';
+    }).join("");
+    document.getElementById("lineup").innerHTML = A.lineup.map(function (p) { return '<li><a href="#">' + e(p[0]) + '</a><span>' + e(p[1]) + '</span></li>'; }).join("");
+    document.getElementById("strip").innerHTML = A.strip.map(function (s) {
+      return '<a href="#"' + (s[0] === A.title ? ' aria-current="page"' : "") + '><span class="cv" data-mb="' + s[2] + '"></span><b>' + e(s[0]) + '</b><small>' + s[1] + '</small></a>';
+    }).join("");
+  };
+</script>
+</body>
+</html>
