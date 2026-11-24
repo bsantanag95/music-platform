@@ -53,14 +53,14 @@ escuchas previas.
 El panel SHALL tener dos estados con sesión: **sin interacción** — todas las filas visibles con sus acciones mínimas (estrellas
 vacías, escribir reseña, registrar escucha, Favorito y Pendiente inactivos, agregar a la colección y abrir el selector de listas); y
 **con interacción** — el estado de cada señal según el requisito anterior. Sin sesión, la página SHALL NOT mostrar el panel: en su
-lugar, la portada SHALL mostrar el botón «Valorar este disco», que lleva al inicio de sesión, y una frase que explica para qué sirve
-una cuenta, sin controles que simulen poder valorar. El panel SHALL NOT esconder filas detrás de un menú `···` ni de una acción
+lugar, la portada SHALL mostrar los botones «Valorar este disco» y «Lo quiero escuchar», que llevan al inicio de sesión, sin frase
+explicativa debajo y sin controles que simulen poder valorar. El panel SHALL NOT esconder filas detrás de un menú `···` ni de una acción
 "Más acciones".
 
 #### Scenario: Visitante anónimo
 
 - **WHEN** una persona sin sesión abre un álbum
-- **THEN** la portada muestra «Valorar este disco» y la frase, sin el panel ni ningún control de escritura
+- **THEN** la portada muestra «Valorar este disco» y «Lo quiero escuchar», sin la frase, sin el panel ni ningún control de escritura
 
 #### Scenario: Primera visita autenticada
 

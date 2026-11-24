@@ -175,19 +175,24 @@ export function AlbumFacts({
 
 /**
  * Acción principal de la portada para un visitante sin sesión (openspec: modernize-album-page-phase1): en lugar del panel «Tu
- * relación», «Valorar este disco» hacia el inicio de sesión y una frase que explica para qué sirve una cuenta.
+ * relación», «Valorar este disco» y «Lo quiero escuchar», los dos hacia el inicio de sesión, sin frase debajo.
  */
 export function AlbumRateInvite() {
   const t = useTranslations("catalog.album");
   return (
-    <div className="flex flex-col items-start gap-2 lg:items-stretch">
+    <div className="flex flex-wrap gap-2.5 lg:flex-col">
       <Link
         href="/auth/login"
-        className="inline-flex h-11 items-center justify-center rounded-lg bg-amber px-5 font-display text-[0.9375rem] font-medium text-ink hover:bg-amber-hover"
+        className="inline-flex h-11 flex-1 items-center justify-center whitespace-nowrap rounded-lg bg-amber px-5 font-display text-[0.9375rem] font-medium text-ink hover:bg-amber-hover sm:flex-none lg:w-full"
       >
         {t("rateInvite")}
       </Link>
-      <p className="hidden max-w-[30ch] font-body text-sm text-paper/70 sm:block">{t("rateInviteNote")}</p>
+      <Link
+        href="/auth/login"
+        className="inline-flex h-11 flex-1 items-center justify-center whitespace-nowrap rounded-lg border border-paper/25 bg-ink/40 px-5 font-display text-[0.9375rem] font-medium text-paper hover:border-paper/50 sm:flex-none lg:w-full"
+      >
+        {t("wantInvite")}
+      </Link>
     </div>
   );
 }
