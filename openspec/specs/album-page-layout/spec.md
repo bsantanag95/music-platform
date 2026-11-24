@@ -43,7 +43,7 @@ mostrarse primero, a media anchura, y la primera canción SHALL NOT quedar más 
 La página SHALL ofrecer las pestañas Canciones, Créditos, Ediciones y Reseñas, en ese
 orden. Canciones SHALL ser siempre la pestaña activa al llegar a la página sin pestaña
 explícita. Solo la pestaña Reseñas SHALL mostrar un contador (cantidad de reseñas
-visibles), escrito tras el nombre sin paréntesis. Una pestaña sin contenido que mostrar
+visibles), escrito tras el nombre sin paréntesis, y solo cuando hay al menos una reseña. Una pestaña sin contenido que mostrar
 SHALL ocultarse, salvo Canciones y Reseñas. La página SHALL NOT ofrecer una pestaña de
 notas adicionales.
 
@@ -61,6 +61,11 @@ notas adicionales.
 
 - **WHEN** el álbum no tiene créditos de personal registrados
 - **THEN** la pestaña Créditos no se muestra
+
+#### Scenario: Sin reseñas
+
+- **WHEN** el álbum no tiene reseñas visibles
+- **THEN** la pestaña se rotula "Reseñas", sin "0"
 
 ### Requirement: Pestañas enlazables
 
@@ -93,7 +98,8 @@ discografía, fuera de la barra de pestañas y visibles con cualquier pestaña a
 
 La página SHALL mostrar, bajo el contenido de las pestañas, una franja con los álbumes del
 artista principal ordenados por fecha de lanzamiento, con el álbum actual resaltado y
-enlaces directos al álbum anterior y al siguiente cuando existan.
+enlaces directos al álbum anterior y al siguiente cuando existan. Su título SHALL usar la misma escala que el de los
+comentarios.
 
 #### Scenario: Álbum intermedio
 
@@ -193,4 +199,20 @@ edición, y una familia en 0 SHALL omitirse. Sin ningún bloque, la lista SHALL 
 
 - **WHEN** un disco no tiene créditos ni más de una edición
 - **THEN** la lista de canciones ocupa todo el ancho y no hay columna
+
+### Requirement: Comentarios sin sesión en una frase
+
+Sin sesión, la sección de comentarios SHALL invitar a iniciar sesión una sola vez. Sin comentarios, SHALL mostrar una única frase que
+dice que todavía no hay comentarios y enlaza al inicio de sesión para comentar; con comentarios, el enlace SHALL ir arriba de la lista.
+El mismo comportamiento SHALL aplicarse en las páginas de álbum, artista y canción, que comparten la sección.
+
+#### Scenario: Álbum sin comentarios
+
+- **WHEN** una persona sin sesión abre un álbum sin comentarios
+- **THEN** ve «Todavía no hay comentarios. Inicia sesión para comentar» en una sola línea, con el enlace
+
+#### Scenario: Con comentarios
+
+- **WHEN** una persona sin sesión abre un álbum con comentarios
+- **THEN** ve el enlace «Inicia sesión para comentar» arriba de la lista
 
