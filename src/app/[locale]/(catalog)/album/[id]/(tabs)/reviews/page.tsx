@@ -56,6 +56,8 @@ async function AlbumReviewsPage({ params, searchParams }: AlbumReviewsPageProps)
     userId ? loadPersonalState(userId, releaseGroupId) : Promise.resolve(null),
   ]);
   const ownReview = personal?.ownReviewId ? await getReviewDetail(personal.ownReviewId) : null;
+  // Sin reseñas, una sola invitación: la del bloque vacío (openspec: modernize-album-page-phase3).
+  const empty = reviews.reviews.length === 0;
 
   return (
     <div className="flex flex-col gap-8">
@@ -66,6 +68,7 @@ async function AlbumReviewsPage({ params, searchParams }: AlbumReviewsPageProps)
         sort={sort}
         albumTitle={result.detail.releaseGroup.title}
         albumArtistName={result.detail.primaryArtist?.name ?? null}
+        emptyInvite={empty ? { authenticated: Boolean(userId) } : undefined}
       />
       <ReviewComposer
         releaseGroupId={releaseGroupId}
@@ -73,6 +76,7 @@ async function AlbumReviewsPage({ params, searchParams }: AlbumReviewsPageProps)
         ownStars={personal?.ownRating?.stars ?? 0}
         ownReview={ownReview?.review ?? null}
         albumTitle={result.detail.releaseGroup.title}
+        inviteInEmptyState={empty}
       />
     </div>
   );

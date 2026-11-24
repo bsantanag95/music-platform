@@ -32,7 +32,7 @@ export function DiscographyStrip({ artistName, strip, authenticated = false }: D
       className="flex w-full flex-col gap-3 border-t border-ink-border pt-6"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-        <h2 id="discography-heading" className="font-display text-lg text-paper">
+        <h2 id="discography-heading" className="font-display text-xl text-paper">
           {t("heading", { artist: artistName })}
         </h2>
         {(previous || next) && (

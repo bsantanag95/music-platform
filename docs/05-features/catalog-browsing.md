@@ -358,6 +358,13 @@ este disco»: la formación (integrantes del artista principal con sus instrumen
 filtro de Ediciones (solo con más de una edición, «Ver las N ediciones →»). Cada bloque se omite sin datos; sin ninguno, la lista
 ocupa el ancho completo. Las familias de formato viven en `src/components/album/edition-formats.ts`.
 
+**Conversación (cambio `modernize-album-page-phase3`, 2026-11; cierra la propuesta A en tres fases).** Una sola invitación por lugar:
+sin reseñas, la pestaña Reseñas muestra un único bloque «Todavía nadie reseñó este disco» con la acción (sin sesión, «Inicia sesión
+para reseñar»; con sesión, «Escribir reseña», que abre el formulario) en lugar de la caja vacía más la fila de invitación; sin sesión y
+sin comentarios, Comentarios dice en una frase «Todavía no hay comentarios. Inicia sesión para comentar» (la sección es compartida, así
+que también en artista y canción). La pestaña se rotula «Reseñas» sin «0» y el título de la franja de discografía usa la escala de
+Comentarios. Reseñas y Comentarios siguen separados.
+
 Lo que sigue describe la estructura anterior; donde contradiga el párrafo anterior, manda la portada.
 
 **Estructura** (cambio `redesign-album-page`, 2026-09 — la página se lee como ficha de

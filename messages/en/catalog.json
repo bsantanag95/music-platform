@@ -976,7 +976,7 @@
         "best": "Highest rated",
         "worst": "Lowest rated"
       },
-      "empty": "No reviews of this album yet.",
+      "empty": "Nobody has reviewed this record yet.",
       "loadMore": "Load more",
       "loadingMore": "Loading...",
       "loadError": "We could not load the reviews. Try again.",

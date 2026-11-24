@@ -46,13 +46,25 @@ interface ReviewComposerProps {
   ownReview: Review | null;
   /** Título del álbum, para el enlace canónico de la reseña. */
   albumTitle?: string;
+  /**
+   * El álbum no tiene reseñas: la invitación la dibuja el bloque vacío del índice (openspec: modernize-album-page-phase3) y
+   * aquí no se repite. Con sesión queda el ancla, para que «Escribir reseña» abra el formulario.
+   */
+  inviteInEmptyState?: boolean;
 }
 
 /** Invitación a escribir: una franja discreta con su acción, en el ancho de lectura. */
 const invite =
   "flex w-full max-w-3xl scroll-mt-32 flex-wrap items-center justify-between gap-3 rounded border border-dashed border-ink-border px-4 py-3";
 
-export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownReview, albumTitle }: ReviewComposerProps) {
+export function ReviewComposer({
+  releaseGroupId,
+  authenticated,
+  ownStars,
+  ownReview,
+  albumTitle,
+  inviteInEmptyState = false,
+}: ReviewComposerProps) {
   const t = useTranslations("catalog.social");
   const tAlbum = useTranslations("catalog.album.reviews");
   const tRelation = useTranslations("catalog.album.relation");
@@ -103,6 +115,7 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
   const needsStars = showStarPicker && !stars;
 
   if (!authenticated) {
+    if (inviteInEmptyState) return null;
     return (
       <div className={invite}>
         <p className="font-body text-sm text-paper-muted">{tAlbum("invite")}</p>
@@ -114,6 +127,9 @@ export function ReviewComposer({ releaseGroupId, authenticated, ownStars, ownRev
   }
 
   if (!review && !open) {
+    if (inviteInEmptyState) {
+      return <section ref={sectionRef} id={REVIEW_COMPOSER_ANCHOR} aria-label={tAlbum("writeHeading")} className="scroll-mt-32" />;
+    }
     return (
       <section ref={sectionRef} id={REVIEW_COMPOSER_ANCHOR} aria-label={tAlbum("writeHeading")} className={invite}>
         <p className="font-body text-sm text-paper-muted">{tAlbum("invite")}</p>
