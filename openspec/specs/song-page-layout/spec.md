@@ -1,33 +1,30 @@
 # song-page-layout Specification
 
 ## Purpose
-Definir la estructura de la página de canción como ficha compacta de biblioteca: cabecera con el disco principal, tira de pistas, composición y créditos, discos que la contienen, versiones y comentarios, sin pestañas.
+Definir la estructura de la página de canción como ficha compacta de biblioteca: una tarjeta con el disco principal, la ficha en dos columnas y «Recorrer el disco», composición y créditos, discos que la contienen, versiones y comentarios, sin pestañas.
 ## Requirements
 ### Requirement: Zonas de la página de canción
 
-La página de canción SHALL organizarse, de arriba hacia abajo, en: breadcrumb; cabecera con
-la carátula del disco principal, el bloque de identidad (antetítulo, título, artistas), la
-ficha técnica, el bloque de comunidad y el panel "Tu relación"; la tira de pistas; los
-bloques Composición y Créditos de esta grabación; "Esta grabación aparece en"; "Otras
-versiones de la canción"; y los comentarios. La página SHALL NOT tener pestañas. En
-escritorio el panel "Tu relación" SHALL ocupar una columna lateral solo a la altura de la
-cabecera, y el resto de las zonas SHALL usar el ancho completo. La carátula SHALL mostrarse
-como máximo a 250 px de lado y, en móvil, a 96 px junto al bloque de identidad. Una zona sin
-datos SHALL NOT renderizarse, salvo la cabecera, el panel y los comentarios.
+La página de canción SHALL organizarse, de arriba hacia abajo, en: breadcrumb con Compartir; una **tarjeta** de cabecera (superficie
+con borde) con la carátula del disco principal, el bloque de identidad (antetítulo, título, artistas), la ficha técnica, el bloque de
+comunidad y una columna lateral con «Recorrer el disco» y la acción principal (la invitación a valorar o el panel "Tu relación"); los
+bloques Composición y Créditos de esta grabación; "Esta grabación aparece en"; "Otras versiones de la canción"; y los comentarios. La
+página SHALL NOT tener pestañas y SHALL usar el contenedor de 88rem de las páginas de álbum y artista. La tarjeta SHALL NOT llevar el
+fondo desenfocado de la portada del álbum. La carátula SHALL mostrarse como máximo a 250 px de lado y, en móvil, pequeña junto al
+bloque de identidad. Una zona sin datos SHALL NOT renderizarse, salvo la tarjeta y los comentarios.
 
 #### Scenario: Escritorio
 
 - **WHEN** una persona abre una canción en un viewport de escritorio
-- **THEN** la cabecera muestra carátula, identidad, ficha y comunidad junto al panel "Tu
-  relación", y debajo, a ancho completo, la tira de pistas, composición y créditos, los
-  discos, las versiones y los comentarios
+- **THEN** la tarjeta muestra la carátula, la identidad con la ficha en dos columnas y la columna lateral con «Recorrer el disco» y la
+  acción principal, y debajo van los créditos, los discos, las versiones y los comentarios
 
 #### Scenario: Móvil
 
 - **WHEN** una persona abre una canción en un viewport móvil
-- **THEN** las zonas se apilan en este orden: carátula junto a la identidad, la ficha
-  técnica, la franja de comunidad, el panel "Tu relación", la tira de pistas, composición,
-  créditos, discos, versiones y comentarios, sin desbordamiento horizontal de la página
+- **THEN** la tarjeta apila la carátula junto a la identidad, la ficha en una columna, «Recorrer el disco» en una fila y la acción
+  principal; después siguen composición, créditos, discos, versiones y comentarios, sin desbordamiento horizontal de la página, y
+  los créditos empiezan a no más de 680 px del inicio a 390 px de ancho
 
 #### Scenario: Canción sin créditos ni versiones
 
@@ -63,19 +60,20 @@ página desde la que llegó la persona.
 
 ### Requirement: Identidad y ficha técnica de la canción
 
-La cabecera SHALL mostrar el antetítulo "Canción" (la posición de la pista y el disco los
-nombran la tira de pistas y las migas); el título; y todos los artistas principales con su
-`joinPhrase`, con enlace a cada uno. La carátula SHALL enlazar al disco principal y ofrecer su
-título como ayuda. La ficha técnica SHALL mostrar, solo cuando existan: duración; "Escrita
-por" con los autores de la obra; primera aparición (disco más temprano que contiene la
-grabación, con su año y, cuando no es el disco principal, su tipo: álbum, single/EP,
-recopilación, en vivo u otro); y la línea de versión definida en `song-versions`.
+La tarjeta SHALL mostrar el antetítulo "Canción"; el título; y todos los artistas principales con su `joinPhrase`, con enlace a cada
+uno. La carátula SHALL enlazar al disco principal y ofrecer su título como ayuda. La ficha técnica SHALL presentarse en dos columnas
+de pares rótulo–valor (una en móvil) y mostrar, solo cuando existan y en este orden: duración; **disco** (el disco principal,
+enlazado); "Escrita por" con los autores de la obra; **pista** ("N de M", cuando la grabación está en la lista de la edición
+representativa del disco principal); **género** (los géneros del disco principal, enlazados); primera aparición; **producción** (hasta
+dos productores de la grabación, enlazados); la línea de versión definida en `song-versions`; y **versiones** ("N versiones →", con la
+cantidad de otras versiones de la canción y enlace a su sección). La primera aparición SHALL mostrar solo la fecha cuando es el disco
+principal, y en otro caso el disco más temprano con su año y su tipo (álbum, single/EP, recopilación, en vivo u otro).
 
 #### Scenario: Canción de estudio
 
 - **WHEN** una persona abre "November Rain", pista 10 de "Use Your Illusion I"
-- **THEN** la cabecera muestra "Canción", el título, "Guns N' Roses" y la ficha con duración,
-  "Escrita por Axl Rose" y "Primera aparición: Use Your Illusion I · 1991"
+- **THEN** la tarjeta muestra "Canción", el título, "Guns N' Roses" y la ficha con duración, "Disco: Use Your Illusion I",
+  "Escrita por Axl Rose", "Pista: 10 de 16" y "Primera aparición: 1991"
 
 #### Scenario: Sin duración conocida
 
@@ -89,38 +87,39 @@ recopilación, en vivo u otro); y la línea de versión definida en `song-versio
 - **THEN** la ficha muestra "Primera aparición: Manchild (single/EP) · 2025" y la carátula
   enlaza a "Man's Best Friend"
 
+#### Scenario: Producción y versiones
+
+- **WHEN** una persona abre "Hallowed Be Thy Name", producida por Martin Birch y con 17 otras versiones
+- **THEN** la ficha muestra "Producción: Martin Birch" y "17 versiones →", que lleva a la sección de versiones
+
 ### Requirement: Tira de pistas
 
-Cuando la grabación está en la lista de canciones de la edición representativa del disco
-principal, la página SHALL mostrar una tira con el disco principal y la posición ("*Disco* · N
-de M"), y a cada lado la pista anterior y la siguiente de esa lista, cada una con la etiqueta
-"Anterior" / "Siguiente" y debajo su número separado del título ("2 · Tears"), con toda el
-área como enlace. En discos de varios medios, la numeración SHALL seguir la de la lista del
-álbum y la tira SHALL cruzar de un disco al siguiente. En la primera pista, el lado anterior
-SHALL decir "Inicio del disco" sin enlace, y en la última el lado siguiente SHALL decir "Fin
-del disco" sin enlace. Si la grabación no está en la lista de la edición representativa, la
-tira SHALL NOT renderizarse.
+Cuando la grabación está en la lista de canciones de la edición representativa del disco principal, la columna lateral de la tarjeta
+SHALL mostrar «Recorrer el disco» con la pista anterior y la siguiente de esa lista, cada una con su número separado del título
+("2 · Tears") y el chevron común, con toda el área como enlace. En discos de varios medios, la numeración SHALL seguir la de la lista
+del álbum y el recorrido SHALL cruzar de un disco al siguiente. En la primera pista, el lado anterior SHALL decir "Inicio del disco" sin
+enlace, y en la última el lado siguiente SHALL decir "Fin del disco" sin enlace. En móvil, los dos lados SHALL ir en una fila. Si la
+grabación no está en la lista de la edición representativa, el bloque SHALL NOT renderizarse.
 
 #### Scenario: Pista intermedia
 
 - **WHEN** una persona abre la pista 10 de un disco de 16 pistas
-- **THEN** la tira enlaza a la pista 9 y a la 11, con sus títulos, y muestra "10 de 16"
+- **THEN** «Recorrer el disco» enlaza a la pista 9 y a la 11, con sus títulos, y la ficha muestra "Pista: 10 de 16"
 
 #### Scenario: Recorrer el disco
 
 - **WHEN** la persona sigue el enlace a la pista siguiente
-- **THEN** llega a la página de la pista 11 con su propia tira
+- **THEN** llega a la página de la pista 11 con su propia tarjeta
 
 #### Scenario: Pista solo en una edición ampliada
 
 - **WHEN** la grabación solo aparece como pista adicional de otra edición del disco
-- **THEN** la página no muestra la tira de pistas
+- **THEN** la tarjeta no muestra «Recorrer el disco» ni la fila Pista
 
 #### Scenario: Primera pista
 
 - **WHEN** una persona abre la pista 1 de "Man's Best Friend"
-- **THEN** la tira muestra "Inicio del disco" a la izquierda y "Siguiente" con "2 · Tears" a la
-  derecha
+- **THEN** «Recorrer el disco» muestra "Inicio del disco" a un lado y "2 · Tears" enlazada al otro
 
 ### Requirement: Composición y créditos de la grabación
 

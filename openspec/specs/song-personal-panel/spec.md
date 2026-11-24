@@ -95,16 +95,17 @@ que el álbum, filtrado a listas de canciones.
 
 ### Requirement: Estados del panel de la canción
 
-El panel SHALL tener tres estados, como el del álbum: **anónimo** — invitación a iniciar
-sesión, sin controles de escritura; **sin interacción** — todas las filas con sus acciones
-mínimas; **con interacción** — el estado de cada señal. En móvil SHALL mostrarse entre la
-identidad y la ficha técnica, con las mismas filas, en una columna y con áreas táctiles de
-al menos 40 px de alto para estrellas y conmutadores.
+El panel SHALL tener dos estados con sesión, como el del álbum: **sin interacción** — todas las filas con sus acciones mínimas; **con
+interacción** — el estado de cada señal. Con sesión, el panel SHALL ir en la columna lateral de la tarjeta, debajo de «Recorrer el
+disco», sin caja propia. Sin sesión, la página SHALL NOT mostrar el panel: en su lugar, la columna lateral SHALL mostrar el botón
+«Valorar esta canción», que lleva al inicio de sesión, y una frase que explica para qué sirve una cuenta (oculta en móvil), sin
+controles que simulen poder valorar. En móvil el panel SHALL mostrarse dentro de la tarjeta, después de la ficha, con las mismas
+filas, en una columna y con áreas táctiles de al menos 40 px de alto para estrellas y conmutadores.
 
 #### Scenario: Visitante anónimo
 
 - **WHEN** una persona sin sesión abre una canción
-- **THEN** el panel muestra la invitación a iniciar sesión y ningún control de escritura
+- **THEN** la tarjeta muestra «Valorar esta canción» y la frase, sin el panel ni ningún control de escritura
 
 #### Scenario: Móvil
 

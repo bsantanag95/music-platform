@@ -5,17 +5,14 @@ Mostrar en la cabecera de la canción los agregados de la comunidad (media, reac
 ## Requirements
 ### Requirement: Bloque de comunidad de la canción
 
-La cabecera de la canción SHALL mostrar un bloque de comunidad como una franja dividida en
-celdas, la misma que el álbum, con la cifra arriba y su etiqueta debajo: **valoraciones**
-(cantidad) siempre; **media** de estrellas cuando la hay; **reacción común** (reacción
-predominante, con la cantidad de reacciones como detalle) cuando la hay; y **favorita**
-(personas que la tienen de favorita) cuando hay alguna. Bajo la franja, el enlace "Aparece
-en N listas" hacia las listas visibles que la contienen, solo cuando N > 0. Cuando no hay
-media, ni reacción predominante, ni favoritas, el bloque SHALL reemplazar la franja por una
-sola línea ("Todavía hay poca actividad de la comunidad") seguida de las cantidades mayores
-que 0 (valoraciones, reacciones), o por "Todavía sin actividad de la comunidad" si no hay
-ninguna; el enlace de listas se mantiene. Los agregados SHALL ser iguales para cualquier
-visitante, autenticado o no, y SHALL NOT mostrar porcentajes, histogramas ni rachas. La
+La tarjeta de la canción SHALL mostrar, debajo de la ficha, un bloque de comunidad como una franja dividida en celdas, la misma que el
+álbum, con la cifra arriba y su etiqueta debajo: **valoraciones** (cantidad) siempre; **media** de estrellas cuando la hay; **reacción
+común** (reacción predominante, con la cantidad de reacciones como detalle) cuando la hay; y **favorita** (personas que la tienen de
+favorita) cuando hay alguna. Bajo la franja, el enlace "Aparece en N listas" hacia las listas visibles que la contienen, solo cuando
+N > 0. Cuando no hay media, ni reacción predominante, ni favoritas, el bloque SHALL reemplazar la franja por una sola línea ("Todavía
+hay poca actividad de la comunidad") seguida de las cantidades mayores que 0 (valoraciones, reacciones); el enlace de listas se
+mantiene. Cuando no hay valoraciones, ni reacciones públicas, ni favoritas, ni listas, el bloque SHALL NOT renderizarse. Los
+agregados SHALL ser iguales para cualquier visitante, autenticado o no, y SHALL NOT mostrar porcentajes, histogramas ni rachas. La
 franja SHALL mostrarse igual en móvil, en una fila.
 
 #### Scenario: Canción con actividad
@@ -39,8 +36,8 @@ franja SHALL mostrarse igual en móvil, en una fila.
 
 #### Scenario: Sin actividad
 
-- **WHEN** una canción no tiene valoraciones, reacciones públicas ni favoritas
-- **THEN** el bloque dice "Todavía sin actividad de la comunidad"
+- **WHEN** una canción no tiene valoraciones, reacciones públicas, favoritas ni listas
+- **THEN** la tarjeta no muestra bloque de comunidad ni ninguna línea que lo diga
 
 ### Requirement: Umbrales de la comunidad de la canción
 
