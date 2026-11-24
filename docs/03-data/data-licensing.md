@@ -37,7 +37,8 @@ La metadata de qué imágenes existen es abierta, pero **las imágenes en sí so
 usa de fondo las carátulas de la discografía principal de ese mismo artista, siempre las miniaturas de 250 px (espejo o CAA) que la
 discografía ya muestra: en un muro atenuado con celdas de menos de 250 px, o la primera ampliada pero desenfocada (solo color) junto
 a fundas de como mucho 280 px. Identifican la obra del artista de la página, como el muro de la portada de Inicio; nunca se usa otra
-resolución ni carátulas de otros artistas.
+resolución ni carátulas de otros artistas. La portada de la página de álbum (cambio `modernize-album-page-phase1`) usa de fondo la
+miniatura de ese mismo disco, ampliada pero desenfocada (solo color), y la muestra legible en su funda a lo sumo a 250 px.
 
 **Política vigente — espejo propio de baja resolución (ADR 0018):** la app mantiene un espejo
 de la miniatura `front-250` en Object Storage (R2 detrás del CDN de Cloudflare) bajo condiciones

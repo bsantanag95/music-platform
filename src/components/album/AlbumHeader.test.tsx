@@ -53,7 +53,27 @@ describe("AlbumFacts", () => {
     renderWithIntl(<AlbumFacts {...base} firstReleaseDate="1973-03-24" firstReleaseYear={1973} />);
     expect(screen.getAllByText("24 de marzo de 1973").length).toBeGreaterThan(0);
     expect(screen.getAllByText("2 pistas · 3:00").length).toBeGreaterThan(0);
-    expect(screen.getAllByText(album.facts.editionStandard).length).toBeGreaterThan(0);
+    expect(screen.getAllByText((_, el) => el?.tagName === "DD" && el.textContent === "Edición Estándar").length).toBeGreaterThan(0);
+  });
+
+  it("ficha en una línea (modernize-album-page-phase1): géneros primero, producción enlazada y «N ediciones →»", () => {
+    const { container } = renderWithIntl(
+      <AlbumFacts
+        {...base}
+        firstReleaseDate="1982-03-29"
+        firstReleaseYear={1982}
+        label="EMI"
+        editionsAvailable
+        editionCount={51}
+        producers={[{ id: "p1", name: "Martin Birch" }]}
+        genres={<span>heavy metal</span>}
+      />,
+    );
+    const keys = [...container.querySelectorAll("[data-fact]")].map((el) => el.getAttribute("data-fact"));
+    expect(keys).toEqual(["genres", "release", "duration", "label", "producers", "edition"]);
+    expect(screen.getByRole("link", { name: "Martin Birch" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "51 ediciones →" })).toHaveAttribute("href", expect.stringContaining("/editions"));
+    expect(screen.getByText(album.facts.producers)).toHaveClass("sr-only");
   });
 
   it("un disco anunciado muestra «Se lanza el …» con la fecha futura", () => {
@@ -100,6 +120,37 @@ function makeStats(overrides: Partial<AlbumCommunityStats> = {}): AlbumCommunity
 }
 
 describe("CommunityStats", () => {
+  it("sin actividad no dibuja nada, ni ceros (modernize-album-page-phase1)", () => {
+    const { container } = renderWithIntl(
+      <CommunityStats
+        stats={makeStats({
+          ratings: { count: 0, averageStars: null, averageDetailedScore: null, histogram: null },
+          reviewCount: 0,
+          collectors: { kind: "exact", value: 0 },
+          seekers: { kind: "exact", value: 0 },
+          listCount: 0,
+        })}
+        listsHref="/x"
+      />,
+    );
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it("omite la celda en 0 y deja las demás", () => {
+    renderWithIntl(
+      <CommunityStats
+        stats={makeStats({
+          ratings: { count: 0, averageStars: null, averageDetailedScore: null, histogram: null },
+          reviewCount: 0,
+          listCount: 0,
+        })}
+        listsHref="/x"
+      />,
+    );
+    expect(screen.queryByText(album.community.ratings)).not.toBeInTheDocument();
+    expect(screen.getByText(album.community.collectors)).toBeInTheDocument();
+  });
+
   it("muestra media, conteos, listas e histograma sobre el umbral, sin la media del puntaje detallado", () => {
     renderWithIntl(<CommunityStats stats={makeStats()} listsHref="/album/rg-1/lists" />);
     expect(screen.getByText("★ 4,6")).toBeInTheDocument();

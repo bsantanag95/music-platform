@@ -340,6 +340,19 @@ disparan 200 requests al abrir la página.
 
 ## 3. Detalle de álbum
 
+**Portada (cambio `modernize-album-page-phase1`, 2026-11 — propuesta «A · Portada» de la auditoría del 2026-11-24, mockups en
+`mockups/album-2026-11/`).** La cabecera es una franja a todo el ancho con la propia carátula desenfocada de fondo (solo color) o,
+sin carátula, el disco dibujado: las mismas capas que la portada del artista (`src/components/catalog/stage-layers.tsx`). La
+carátula sale de su funda con un vinilo asomando detrás, sin pasar de 250 px. Arriba del título, una línea con el tipo de obra y el
+año; el título va grande y los artistas debajo; la ficha es una línea (géneros, fecha, pistas y duración, sello, producción —los
+productores de los créditos— y la edición con «N ediciones →»). La franja de comunidad omite las celdas en 0 y no aparece si no hay
+nada que contar. Sin sesión, la acción principal es «Valorar este disco» (al inicio de sesión) en lugar del panel; con sesión, el
+panel «Tu relación» ocupa la columna derecha. En el teléfono la funda va primero. Contenedor de 88rem. Fases siguientes: **2** —
+compositores bajo cada canción y columna «En este disco» (formación, producción, ediciones por formato); **3** — una sola invitación a
+opinar (Reseñas y Comentarios siguen separados), franja de discografía y estados vacíos.
+
+Lo que sigue describe la estructura anterior; donde contradiga el párrafo anterior, manda la portada.
+
 **Estructura** (cambio `redesign-album-page`, 2026-09 — la página se lee como ficha de
 biblioteca, con Metal-Archives como referencia y la capa personal de Letterboxd):
 
