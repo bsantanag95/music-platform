@@ -15,7 +15,8 @@ comunidad del artista: Media (solo cuando hay media según el umbral), Valoracio
 coleccionan. El detalle de reseñas bajo Valoraciones y el de "lo buscan" bajo Lo
 coleccionan SHALL omitirse cuando su cifra es 0. La cantidad de listas SHALL mostrarse
 como un enlace de texto bajo la franja ("Aparece en N listas") solo cuando N > 0, y SHALL
-omitirse cuando N = 0.
+omitirse cuando N = 0. Cada celda cuya cifra es 0 (Valoraciones, Lo coleccionan) SHALL omitirse, y el bloque entero SHALL omitirse
+cuando no queda ninguna celda, ni enlace de listas, ni histograma.
 
 #### Scenario: Álbum con actividad
 
@@ -51,6 +52,11 @@ omitirse cuando N = 0.
 
 - **WHEN** una persona abre un álbum en 375 px
 - **THEN** la franja de comunidad se ve en una fila, sin desbordamiento horizontal
+
+#### Scenario: Sin actividad
+
+- **WHEN** un álbum no tiene valoraciones, ni coleccionistas, ni listas
+- **THEN** la cabecera no muestra la franja de comunidad ni ningún "0"
 
 ### Requirement: Histograma de valoraciones
 
