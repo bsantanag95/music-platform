@@ -7,10 +7,11 @@ import { albumHref, reviewHref } from "@/lib/catalog-links";
 import { getReviews } from "@/lib/api/social";
 import { REVIEW_SORTS, type ReviewSort, type ReviewsResponse } from "@/lib/api/schemas";
 import { StarRatingDisplay } from "@/components/social/StarRatingDisplay";
-import { SEGMENT_GROUP, SEGMENT_OPTION } from "@/components/ui/segmented";
+import { SECONDARY_LINK, SEGMENT_GROUP, SEGMENT_OPTION } from "@/components/ui/segmented";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { UserAvatar } from "@/components/social/UserAvatar";
 import { formatStars, reviewHeadline } from "./album-format";
+import { revealReviewComposer } from "./ReviewComposer";
 
 // Índice de reseñas de la pestaña Reseñas (openspec: redesign-album-page; lista con monograma y extracto desde
 // refine-album-page-phase3): una fila por reseña con título (o extracto), nota, autor y fecha. Cada
@@ -26,10 +27,16 @@ interface ReviewIndexProps {
   albumTitle?: string;
   /** Artista principal del álbum, para el segmento canónico de la pestaña. */
   albumArtistName?: string | null;
+  /**
+   * Sin reseñas, el bloque vacío lleva la invitación a reseñar (openspec: modernize-album-page-phase3): sin sesión, al inicio
+   * de sesión; con sesión, «Escribir reseña» abre el formulario. Sin este dato, el bloque vacío de siempre.
+   */
+  emptyInvite?: { authenticated: boolean };
 }
 
-export function ReviewIndex({ releaseGroupId, initial, sort, albumTitle, albumArtistName }: ReviewIndexProps) {
+export function ReviewIndex({ releaseGroupId, initial, sort, albumTitle, albumArtistName, emptyInvite }: ReviewIndexProps) {
   const t = useTranslations("catalog.album.reviews");
+  const tCatalogSocial = useTranslations("catalog.social");
   const tSocial = useTranslations("catalog.social");
   const format = useFormatter();
   const locale = useLocale();
@@ -90,7 +97,30 @@ export function ReviewIndex({ releaseGroupId, initial, sort, albumTitle, albumAr
       )}
 
       {reviews.length === 0 ? (
-        <EmptyState compact title={t("empty")} description={t("emptyDescription")} />
+        emptyInvite ? (
+          <EmptyState
+            compact
+            title={t("empty")}
+            description={t("invite")}
+            action={
+              emptyInvite.authenticated ? (
+                <button
+                  type="button"
+                  onClick={() => revealReviewComposer()}
+                  className="rounded bg-amber px-3 py-1.5 font-display text-sm text-ink transition-colors hover:bg-amber-hover"
+                >
+                  {t("writeAction")}
+                </button>
+              ) : (
+                <Link href="/auth/login" className={`font-data text-xs ${SECONDARY_LINK}`}>
+                  {tCatalogSocial("loginToReview")}
+                </Link>
+              )
+            }
+          />
+        ) : (
+          <EmptyState compact title={t("empty")} description={t("emptyDescription")} />
+        )
       ) : (
         // Lista y no tabla (openspec: refine-album-page-phase3, D1): con monograma y extracto se decide qué abrir.
         <ul className="flex flex-col divide-y divide-ink-border border-y border-ink-border">

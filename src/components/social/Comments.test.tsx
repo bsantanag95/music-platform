@@ -222,6 +222,16 @@ describe("Comments con temas (artista)", () => {
 });
 
 describe("Comments sin temas (álbum y canción)", () => {
+  it("sin sesión y sin comentarios: una sola frase con el enlace (modernize-album-page-phase3)", () => {
+    const { container } = renderWithIntl(
+      <Comments target="release-group" targetId="00000000-0000-4000-8000-000000000002" authenticated={false} initial={page([])} />,
+    );
+    const line = container.querySelector("[data-comments-empty]")!;
+    expect(line).toHaveTextContent("Todavía no hay comentarios. Inicia sesión para comentar");
+    expect(within(line as HTMLElement).getByRole("link")).toHaveAttribute("href", "/auth/login");
+    expect(screen.getAllByText(/Todavía no hay comentarios/)).toHaveLength(1);
+  });
+
   beforeEach(() => vi.clearAllMocks());
 
   it("no muestra chips, selector ni etiqueta de tema", () => {

@@ -40,6 +40,19 @@ function page(reviews: Review[], hasNext = false): ReviewsResponse {
 beforeEach(() => vi.clearAllMocks());
 
 describe("ReviewIndex", () => {
+  it("sin reseñas y sin sesión: un solo bloque con la invitación al inicio de sesión (modernize-album-page-phase3)", () => {
+    renderWithIntl(<ReviewIndex releaseGroupId={RG} initial={page([])} sort="recent" emptyInvite={{ authenticated: false }} />);
+    expect(screen.getByText(reviewsEs.empty)).toBeInTheDocument();
+    expect(screen.getByText(reviewsEs.invite)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: catalogEs.social.loginToReview })).toHaveAttribute("href", "/auth/login");
+    expect(screen.queryByText(reviewsEs.emptyDescription)).not.toBeInTheDocument();
+  });
+
+  it("sin reseñas y con sesión: «Escribir reseña» en el bloque", () => {
+    renderWithIntl(<ReviewIndex releaseGroupId={RG} initial={page([])} sort="recent" emptyInvite={{ authenticated: true }} />);
+    expect(screen.getByRole("button", { name: reviewsEs.writeAction })).toBeInTheDocument();
+  });
+
   it("lista título, nota, autor y fecha, con cada fila apuntando a la página de la reseña", () => {
     renderWithIntl(<ReviewIndex releaseGroupId={RG} initial={page([review("1")])} sort="recent" />);
     expect(screen.getByRole("link", { name: "Título 1" })).toHaveAttribute("href", "/review/1");

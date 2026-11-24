@@ -129,7 +129,7 @@ export function AlbumTabs({ releaseGroupId, available, reviewCount }: AlbumTabsP
                 }`}
               >
                 {t(tab)}
-                {tab === "reviews" && <> <span className="font-data text-xs text-paper-muted">{reviewCount}</span></>}
+                {tab === "reviews" && reviewCount > 0 && <> <span className="font-data text-xs text-paper-muted">{reviewCount}</span></>}
               </Link>
             </li>
           );
