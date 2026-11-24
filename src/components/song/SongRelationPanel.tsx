@@ -35,9 +35,12 @@ interface SongRelationPanelProps {
   recordingId: string;
   /** `null` para visitantes anónimos. */
   state: SongRelationState | null;
+  /** Sin caja propia: la tarjeta de la canción ya es la superficie (openspec: modernize-song-page-phase1). */
+  bare?: boolean;
 }
 
 const panelClass = "flex flex-col gap-3 rounded border border-ink-border bg-ink-surface p-4";
+const barePanelClass = "flex flex-col gap-3";
 const divider = "border-t border-ink-border";
 
 function Row({ label, children }: { label: ReactNode; children: ReactNode }) {
@@ -49,7 +52,7 @@ function Row({ label, children }: { label: ReactNode; children: ReactNode }) {
   );
 }
 
-export function SongRelationPanel({ recordingId, state }: SongRelationPanelProps) {
+export function SongRelationPanel({ recordingId, state, bare = false }: SongRelationPanelProps) {
   const t = useTranslations("catalog.song.relation");
   const tAlbum = useTranslations("catalog.album.relation");
 
@@ -65,10 +68,10 @@ export function SongRelationPanel({ recordingId, state }: SongRelationPanelProps
     );
   }
 
-  return <AuthenticatedPanel recordingId={recordingId} state={state} />;
+  return <AuthenticatedPanel recordingId={recordingId} state={state} bare={bare} />;
 }
 
-function AuthenticatedPanel({ recordingId, state }: { recordingId: string; state: SongRelationState }) {
+function AuthenticatedPanel({ recordingId, state, bare }: { recordingId: string; state: SongRelationState; bare: boolean }) {
   const t = useTranslations("catalog.song.relation");
   const tAlbum = useTranslations("catalog.album.relation");
   const tReaction = useTranslations("diary.reaction");
@@ -190,7 +193,7 @@ function AuthenticatedPanel({ recordingId, state }: { recordingId: string; state
     : null;
 
   return (
-    <aside aria-label={tAlbum("heading")} className={panelClass}>
+    <aside aria-label={tAlbum("heading")} className={bare ? barePanelClass : panelClass}>
       <h2 className="font-display text-sm text-paper-muted">{tAlbum("heading")}</h2>
 
       {/* Sin Pendiente en la canción: Favorita va sola, a todo el ancho (openspec: refine-song-page-phase2, D3). */}

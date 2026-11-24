@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta D · Mezcla — Hallowed Be Thy Name</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:opsz,wght@8..60,400..600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<style>
+  /* D · Mezcla (elegida por el usuario, 24 nov): la tarjeta de C arriba —se distingue de la portada del álbum— y el cuerpo de A
+     con sus préstamos: créditos con «En el disco» al lado, apariciones en franja de carátulas, versiones con año y duración. */
+  .head { padding-top: 24px; }
+  .top-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .share { font: 500 12px var(--data); color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; }
+  .card { display: grid; grid-template-columns: 168px minmax(0, 1fr) 17rem; gap: 28px; padding: 22px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+  .card .cv { background-size: cover; }
+  .kind { font: 500 12px var(--data); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+  h1 { margin-top: 6px; font: 700 clamp(30px, 3.4vw, 44px)/1 var(--display); letter-spacing: -.03em; }
+  .by { margin-top: 8px; font: 500 18px var(--display); color: var(--amber); }
+  dl.f { margin-top: 16px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr); gap: 7px 16px; font-size: 15px; }
+  dl.f dt { font: 500 12px var(--data); color: var(--muted); padding-top: 2px; }
+  dl.f a { text-decoration: underline; text-decoration-color: var(--border-2); text-underline-offset: 3px; }
+  dl.f a:hover { color: var(--amber); }
+  .side { display: flex; flex-direction: column; gap: 14px; border-left: 1px solid var(--border); padding-left: 24px; }
+  .side h3 { font: 500 12px var(--data); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+  .walk li a { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 14.5px; }
+  .walk li a span { font: 500 11.5px var(--data); color: var(--muted); }
+  .walk li.here { padding: 6px 0; border-bottom: 1px solid var(--border); font: 500 12px var(--data); color: var(--amber); }
+  .btn { display: inline-flex; justify-content: center; align-items: center; height: 40px; padding: 0 14px; border-radius: 8px; font: 500 14.5px var(--display); background: var(--amber); color: var(--amber-ink); }
+  .side small { font-size: 13px; color: var(--muted); }
+
+  .body { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; gap: 56px; padding-top: 40px; }
+  h2.h { font: 700 24px var(--display); letter-spacing: -.02em; margin-bottom: 14px; }
+  .credits { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; }
+  .credits h3, aside h3 { font: 500 12px var(--data); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 8px; }
+  .people li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .people li a { font: 500 17px var(--display); }
+  .people li a:hover { color: var(--amber); }
+  .people li span { font: 500 12.5px var(--data); color: var(--muted); text-align: right; }
+  .note { margin-top: 12px; font: 500 12.5px var(--data); color: var(--muted); }
+  .note a:hover { color: var(--amber); }
+  .ondisc li a { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; padding: 7px 6px; border-bottom: 1px solid var(--border); font-size: 15px; border-radius: 4px; }
+  .ondisc li a span:first-child, .ondisc li a span:last-child { font: 500 12px var(--data); color: var(--muted); align-self: center; }
+  .ondisc li a:hover span:nth-child(2) { color: var(--amber); }
+  .ondisc li a[aria-current] { background: rgba(232,184,75,.1); }
+  .ondisc li a[aria-current] span:nth-child(2) { color: var(--amber); }
+
+  .sec { margin-top: 64px; }
+  .apps { display: flex; gap: 16px; overflow-x: auto; scrollbar-width: none; padding-bottom: 6px; }
+  .apps a { flex: none; width: 128px; }
+  .apps .cv { background-size: cover; }
+  .apps b { display: block; margin-top: 8px; font: 600 14px var(--display); }
+  .apps small { font: 500 12px var(--data); color: var(--muted); }
+  .apps .badge { display: inline-block; margin-top: 4px; }
+  .vers .tabs { margin-bottom: 12px; }
+  .vrow { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 16px; align-items: baseline; padding: 11px 0; border-bottom: 1px solid var(--border); }
+  .vrow .y { font: 500 12.5px var(--data); color: var(--muted); }
+  .vrow a { font-size: 16px; }
+  .vrow a:hover { color: var(--amber); }
+  .vrow .d { font: 500 12.5px var(--data); color: var(--muted); display: flex; gap: 10px; }
+  .vrow .d a { font: inherit; color: var(--paper); text-decoration: underline; text-decoration-color: var(--border-2); text-underline-offset: 3px; }
+  .vers .more { margin-top: 10px; font: 500 13px var(--data); color: var(--muted); }
+  .talk { max-width: 48rem; }
+  .talk .empty { color: var(--muted); }
+  .talk .empty a { color: var(--amber); }
+
+  @media (max-width: 1023px) {
+    .card { grid-template-columns: 128px minmax(0, 1fr); }
+    .side { grid-column: 1 / -1; border-left: 0; padding-left: 0; border-top: 1px solid var(--border); padding-top: 14px; }
+    .body { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  }
+  @media (max-width: 640px) {
+    .card { grid-template-columns: 88px minmax(0, 1fr); gap: 16px; padding: 16px; }
+    dl.f { grid-column: 1 / -1; grid-template-columns: auto minmax(0, 1fr); }
+    .card > div:nth-child(2) { display: contents; }
+    .card .idn { min-width: 0; }
+    dl.f { margin-top: 4px; gap: 4px 14px; font-size: 14.5px; }
+    .side { gap: 10px; padding-top: 12px; }
+    .side h3, .side small { display: none; }
+    .walk { display: flex; justify-content: space-between; gap: 12px; }
+    .walk li a, .walk li.here { border-bottom: 0; padding: 0; }
+    .walk li a { display: flex; gap: 8px; align-items: baseline; }
+    .walk .lg { display: none; }
+    .walk li.here { white-space: nowrap; }
+    .walk li.here { align-self: center; }
+    .credits { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .vrow { grid-template-columns: 40px minmax(0, 1fr); }
+    .vrow .d { grid-column: 2; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header"></header>
+<main>
+  <div class="wrap">
+  <div class="head">
+    <div class="top-row"><span class="crumbs">Inicio / Iron Maiden / The Number of the Beast / <b>Hallowed Be Thy Name</b></span><a class="share" href="#">Compartir</a></div>
+    <div class="card">
+      <a href="#"><span class="cv" data-mb="4ebfe175-e7ed-34cd-8e91-67c7e4a53579" role="img" aria-label="Carátula de The Number of the Beast"></span></a>
+      <div>
+        <div class="idn">
+          <p class="kind">Canción</p>
+          <h1>Hallowed Be Thy Name</h1>
+          <p class="by"><a href="#">Iron Maiden</a></p>
+        </div>
+        <dl class="f">
+          <dt>Duración</dt><dd>7:11</dd>
+          <dt>Disco</dt><dd><a href="#">The Number of the Beast</a></dd>
+          <dt>Escrita por</dt><dd><a href="#">Steve Harris</a></dd>
+          <dt>Pista</dt><dd>8 de 8</dd>
+          <dt>Género</dt><dd><a href="#">heavy metal</a></dd>
+          <dt>Publicada</dt><dd>29 mar 1982</dd>
+          <dt>Producción</dt><dd><a href="#">Martin Birch</a></dd>
+          <dt>Versiones</dt><dd><a href="#versiones">17 versiones →</a></dd>
+        </dl>
+      </div>
+      <div class="side">
+        <h3>Recorrer el disco</h3>
+        <ol class="walk"><li><a href="#"><span>‹ pista 7</span>Gangland</a></li><li class="here"><span class="lg">8 · esta canción · </span>fin del disco</li></ol>
+        <a class="btn" href="#">Valorar esta canción</a>
+        <small>Con una cuenta puedes valorarla y registrar tus escuchas.</small>
+      </div>
+    </div>
+  </div>
+
+  </div>
+  <div class="wrap">
+    <div class="body">
+      <section aria-labelledby="h-cred">
+        <h2 class="h" id="h-cred">Créditos de esta grabación</h2>
+        <div class="credits">
+          <div><h3>Intérpretes</h3><ul class="people" id="performers"></ul></div>
+          <div><h3>Producción y sonido</h3><ul class="people"><li><a href="#">Martin Birch</a><span>producción, ingeniería</span></li></ul>
+            <p class="note"><a href="#">Créditos completos del disco →</a></p></div>
+        </div>
+      </section>
+      <aside aria-labelledby="h-disc">
+        <h3 id="h-disc">En el disco · 1982</h3>
+        <ol class="ondisc" id="ondisc"></ol>
+        <p class="note">8 pistas · 40:22</p>
+      </aside>
+    </div>
+
+    <section class="sec" aria-labelledby="h-apps">
+      <div class="sec-head"><h2 id="h-apps">Aparece en</h2><span class="see">1 álbum · 7 recopilaciones</span></div>
+      <div class="apps" id="apps"></div>
+    </section>
+
+    <section class="sec vers" id="versiones" aria-labelledby="h-vers">
+      <div class="sec-head"><h2 id="h-vers">Otras versiones</h2></div>
+      <div class="tabs" role="tablist"><button role="tab" aria-selected="true">En vivo 15</button><button role="tab" aria-selected="false">Otras 2</button></div>
+      <ol id="live"></ol>
+      <p class="more">+3 más</p>
+    </section>
+
+    <section class="sec talk" aria-labelledby="h-talk">
+      <div class="sec-head"><h2 id="h-talk">Comentarios</h2></div>
+      <p class="empty">Nadie ha comentado esta canción todavía. <a href="#">Inicia sesión</a> para ser el primero.</p>
+    </section>
+  </div>
+</main>
+<footer class="site-foot"><div class="wrap">Mockup · datos reales de la base local · carátulas del Cover Art Archive (250 px)</div></footer>
+<nav class="mock-bar" aria-label="Propuestas"><span>Mockup · Hallowed Be Thy Name</span><a href="index.html">Resumen</a><a href="a-escenario.html">A</a><a href="b-pista.html">B</a><a href="c-ficha.html">C</a><a href="d-mezcla.html" aria-current="page">D</a></nav>
+<script src="shared.js"></script>
+<script>
+  window.renderMockup = function () {
+    var S = window.SONG, e = window.esc;
+    document.getElementById("performers").innerHTML = S.performers.map(function (p) { return '<li><a href="#">' + e(p[0]) + '</a><span>' + e(p[1]) + '</span></li>'; }).join("");
+    document.getElementById("ondisc").innerHTML = S.tracks.map(function (t, i) {
+      return '<li><a href="#"' + (i + 1 === S.position ? ' aria-current="page"' : "") + '><span>' + (i + 1) + '</span><span>' + e(t[0]) + '</span><span class="num">' + t[1] + '</span></a></li>';
+    }).join("");
+    document.getElementById("apps").innerHTML = S.appearances.map(function (a, i) {
+      return '<a href="#"><span class="cv" data-mb="' + a[2] + '"></span><b>' + e(a[0]) + '</b><small>' + e(a[1]) + '</small>' + (i === 0 ? '<br><span class="badge next">Primer lanzamiento</span>' : "") + '</a>';
+    }).join("");
+    document.getElementById("live").innerHTML = S.live.slice(0, 10).map(function (v) {
+      var d = v[2].length > 1 ? v[2].map(function (x, i) { return '<a href="#">Grabación ' + (i + 1) + '</a> ' + x; }).join(" · ") : (v[2][0] || "");
+      return '<li class="vrow"><span class="y">' + v[0] + '</span><a href="#">' + e(v[1]) + '</a><span class="d num">' + d + '</span></li>';
+    }).join("");
+  };
+</script>
+</body>
+</html>

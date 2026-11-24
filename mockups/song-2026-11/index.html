@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ficha de canción · Auditoría y tres direcciones — music-platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:opsz,wght@8..60,400..600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<style>
+  main { max-width: 72rem; margin: 0 auto; padding: 40px var(--pad) 120px; }
+  h1 { font-family: var(--display); font-weight: 700; font-size: clamp(34px, 4.4vw, 56px); line-height: 1; letter-spacing: -.03em; }
+  .lede { margin-top: 14px; max-width: 62ch; color: var(--muted); font-size: 18px; }
+  section { margin-top: 64px; }
+  h2 { font-family: var(--display); font-weight: 700; font-size: clamp(24px, 2.4vw, 32px); letter-spacing: -.02em; margin-bottom: 14px; }
+  h3 { font-family: var(--display); font-size: 20px; margin-bottom: 6px; }
+  p, li { color: var(--tx, var(--paper)); }
+  .muted { color: var(--muted); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin: 18px 0; }
+  .stat { padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .stat b { display: block; font: 700 26px var(--display); }
+  .stat span { font: 500 12px var(--data); color: var(--muted); }
+  .shots { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; align-items: start; }
+  .shots img, .prop img { width: 100%; border-radius: 10px; border: 1px solid var(--border); display: block; }
+  figcaption { margin-top: 6px; font: 500 12px var(--data); color: var(--muted); }
+  ol.problems { counter-reset: p; display: grid; gap: 12px; }
+  ol.problems li { counter-increment: p; display: grid; grid-template-columns: 34px 1fr; gap: 10px; padding: 14px; border: 1px solid var(--border); border-radius: 10px; }
+  ol.problems li::before { content: counter(p); font: 700 18px var(--display); color: var(--amber); }
+  ol.problems b { font-family: var(--display); }
+  ul.dots { display: grid; gap: 8px; padding-left: 18px; list-style: disc; color: var(--muted); }
+  .props { display: grid; gap: 28px; }
+  .prop { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; padding: 18px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+  .prop .thesis { color: var(--muted); margin: 6px 0 12px; }
+  .pc { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; font-size: 14.5px; }
+  .pc h4 { font: 500 12px var(--data); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+  .pc ul { display: grid; gap: 4px; padding-left: 16px; list-style: disc; }
+  .open { display: inline-flex; margin-top: 14px; padding: 9px 14px; border-radius: 8px; background: var(--amber); color: var(--amber-ink); font: 500 14px var(--display); }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font: 500 12px var(--data); color: var(--muted); }
+  td.s { font: 600 15px var(--data); }
+  .rec { padding: 22px; border: 1px solid var(--amber); border-radius: 14px; background: rgba(232,184,75,.06); }
+  .rec ul { margin-top: 10px; }
+  @media (max-width: 860px) { .shots, .prop, .pc { grid-template-columns: minmax(0, 1fr); } table { font-size: 13.5px; } }
+  .duo { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; align-items: start; }
+  @media (max-width: 860px) { .duo { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<header class="site-header"></header>
+<main>
+  <p class="crumbs">Auditoría · 24 nov 2026 · <b>/es/song/iron-maiden-hallowed-be-thy-name</b> sin sesión</p>
+  <h1>Ficha de canción: auditoría y tres direcciones</h1>
+  <p class="lede">Artista y álbum ya estrenaron su portada a sangre; la canción —el siguiente clic desde la lista de pistas— sigue con la cabecera de recuadros de octubre. Revisé <em>Hallowed Be Thy Name</em> sin sesión a 1152 y 390 px y propongo tres maneras de modernizarla con datos reales de la base local.</p>
+
+  <section id="estado" aria-labelledby="h-est">
+    <h2 id="h-est">Estado actual</h2>
+    <div class="stats">
+      <div class="stat"><b>588 px</b><span>primer bloque tras la cabecera (escritorio)</span></div>
+      <div class="stat"><b>759 px</b><span>créditos en 390 px</span></div>
+      <div class="stat"><b>1152 px</b><span>ancho (álbum y artista: 1408)</span></div>
+      <div class="stat"><b>36 px</b><span>título (álbum: hasta 84)</span></div>
+      <div class="stat"><b>11 ×</b><span>«Ver versión» en la tabla de versiones</span></div>
+      <div class="stat"><b>3 530 px</b><span>alto de la página en 390 px</span></div>
+    </div>
+    <div class="shots">
+      <figure><img src="shots/actual.jpg" alt="Ficha actual en escritorio: carátula de 200 px, título de 36 px, ficha en tres filas, línea Todavía sin actividad de la comunidad, panel Tu relación con una frase, tira anterior y siguiente y créditos en una caja"><figcaption>Escritorio, sin sesión</figcaption></figure>
+      <figure><img src="shots/actual-movil.jpg" alt="Ficha actual en el teléfono: carátula pequeña junto al título, ficha, línea de comunidad vacía, panel Tu relación y la tira de pistas"><figcaption>390 px</figcaption></figure>
+    </div>
+    <figure style="margin-top:14px"><img src="shots/actual-versiones.jpg" alt="Apariciones en dos columnas y la tabla de versiones en vivo con Ver versión repetido en cada fila" style="width:100%;max-width:560px;border-radius:10px;border:1px solid var(--border)"><figcaption>Apariciones y versiones, escritorio</figcaption></figure>
+  </section>
+
+  <section id="problemas" aria-labelledby="h-prob">
+    <h2 id="h-prob">Problemas</h2>
+    <ol class="problems">
+      <li><span><b>Otra familia visual.</b> Se llega desde la ficha del álbum —portada desenfocada, funda con disco, título gigante— y se aterriza en recuadros de 1152 px con un título de 36 px. El salto se nota más que en ninguna otra página porque la canción comparte carátula con el disco.</span></li>
+      <li><span><b>La caja «Tu relación» para el visitante.</b> Una caja con una frase y un enlace (118 px de alto en el teléfono, antes de cualquier contenido), la misma que el álbum ya cambió por «Valorar este disco».</span></li>
+      <li><span><b>Una línea de comunidad vacía.</b> «Todavía sin actividad de la comunidad» ocupa su propia fila y no aporta nada a quien llega.</span></li>
+      <li><span><b>El disco, solo por los lados.</b> La tira dice la pista anterior y la siguiente, pero no deja ver el disco entero; para saltar a otra pista hay que volver al álbum.</span></li>
+      <li><span><b>Versiones repetitivas.</b> Cada fila dice «Ver versión»; lo que distingue una grabación en vivo de otra —el año y la duración— queda lejos del título y en gris.</span></li>
+      <li><span><b>Larga en el teléfono.</b> 3 530 px; los créditos empiezan a 759 px, debajo del panel vacío y de la tira.</span></li>
+    </ol>
+    <p class="muted" style="margin-top:14px">Lo que funciona y se conserva: la carátula enlaza al disco, la ficha corta (duración, autoría, primera aparición), créditos por grupos con integrantes primero, «Primer lanzamiento» en las apariciones, versiones agrupadas por tipo según MusicBrainz y la tira para recorrer el disco.</p>
+  </section>
+
+  <section id="criterios" aria-labelledby="h-crit">
+    <h2 id="h-crit">Criterios</h2>
+    <ul class="dots">
+      <li>Misma familia que el álbum y el artista recién publicados (portada, ficha en una línea, «Valorar» para el visitante, 88rem).</li>
+      <li>La canción dentro de su disco: recorrerlo sin volver al álbum.</li>
+      <li>Sin ceros ni cajas vacías para quien no inició sesión.</li>
+      <li>Profundidad tipo Metal Archives: créditos, apariciones y versiones a la vista.</li>
+      <li>Carátulas siempre en 250 px (licencia); el fondo desenfocado ya está documentado.</li>
+    </ul>
+  </section>
+
+  <section id="propuestas" aria-labelledby="h-props">
+    <h2 id="h-props">Propuestas</h2>
+    <div class="props">
+      <article class="prop">
+        <div class="duo"><a href="a-escenario.html"><img src="shots/a.jpg" alt="Propuesta A: portada con la carátula desenfocada de fondo, funda pequeña, título grande, botón Valorar esta canción y la tira de pistas como borde inferior; debajo créditos y En el disco"></a><a href="a-escenario.html"><img src="shots/a-movil.jpg" alt="Propuesta A en el teléfono"></a></div>
+        <div>
+          <h3>A · Escenario</h3>
+          <p class="thesis">La portada del álbum a menor escala: fondo con la carátula desenfocada, funda de 200 px, título grande, ficha en una línea y «Valorar esta canción». La tira anterior/siguiente se vuelve el borde inferior de la portada. Debajo, créditos con «En el disco» —las 8 pistas con esta marcada— al lado; apariciones en franja de carátulas y versiones con año y duración.</p>
+          <div class="pc"><div><h4>Ventajas</h4><ul><li>Una sola familia con álbum y artista; reusa sus piezas (portada, funda, invitación).</li><li>Créditos a 515 px en escritorio y 558 en el teléfono (hoy 588 · 759).</li><li>Se recorre el disco entero sin volver.</li></ul></div><div><h4>Desventajas</h4><ul><li>Dos portadas seguidas casi iguales (álbum → canción): la escala menor es lo que las distingue.</li><li>«En el disco» baja bajo los créditos en el teléfono.</li></ul></div></div>
+          <a class="open" href="a-escenario.html">Abrir propuesta A</a>
+        </div>
+      </article>
+      <article class="prop">
+        <div class="duo"><a href="b-pista.html"><img src="shots/b.jpg" alt="Propuesta B: columna izquierda fija con la carátula y la lista de pistas con esta marcada; a la derecha título, ficha en cuatro celdas y una línea de vida de las versiones"></a><a href="b-pista.html"><img src="shots/b-movil.jpg" alt="Propuesta B en el teléfono"></a></div>
+        <div>
+          <h3>B · Pista</h3>
+          <p class="thesis">La canción leída dentro de su disco: a la izquierda, fija, la carátula y las 8 pistas con esta marcada (sustituye a la tira); a la derecha, la canción con su ficha en celdas y una «línea de vida» de las versiones —cada grabación en su año, más alta cuanto más larga— seguida de quién la toca y dónde aparece.</p>
+          <div class="pc"><div><h4>Ventajas</h4><ul><li>El disco siempre a la vista: la navegación más directa.</li><li>Las versiones se entienden de un vistazo (de 6:58 a 7:53, 1985–2020).</li><li>Versiones a 435 px en escritorio.</li></ul></div><div><h4>Desventajas</h4><ul><li>En el teléfono la columna del disco baja al final (2 729 px) y la carátula desaparece.</li><li>La carátula a 304 px estira la miniatura de 250.</li><li>La línea de vida es un componente nuevo y solo luce con muchas versiones.</li></ul></div></div>
+          <a class="open" href="b-pista.html">Abrir propuesta B</a>
+        </div>
+      </article>
+      <article class="prop">
+        <div class="duo"><a href="c-ficha.html"><img src="shots/c.jpg" alt="Propuesta C: tarjeta compacta con carátula, ficha en dos columnas y una columna con la pista anterior y el botón Valorar; pestañas Créditos, Aparece en, Versiones, Comentarios"></a><a href="c-ficha.html"><img src="shots/c-movil.jpg" alt="Propuesta C en el teléfono"></a></div>
+        <div>
+          <h3>C · Ficha</h3>
+          <p class="thesis">La ficha de biblioteca estilo Metal Archives: tarjeta compacta con la ficha en dos columnas (disco, pista, producción, versiones), la pista anterior y «Valorar» al lado, y el resto en pestañas: Créditos, Aparece en, Versiones, Comentarios.</p>
+          <div class="pc"><div><h4>Ventajas</h4><ul><li>La más densa y la más corta (1 238 px en escritorio).</li><li>Cada bloque con su URL, como las pestañas del álbum.</li></ul></div><div><h4>Desventajas</h4><ul><li>Sin portada: rompe la familia que acaban de estrenar álbum y artista.</li><li>Pestañas a 796 px en el teléfono; la ficha en ocho filas empuja todo.</li><li>Las pestañas esconden versiones y apariciones, que hoy se ven al bajar.</li></ul></div></div>
+          <a class="open" href="c-ficha.html">Abrir propuesta C</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="comparacion" aria-labelledby="h-comp">
+    <h2 id="h-comp">Comparación</h2>
+    <table>
+      <thead><tr><th>Criterio</th><th>A · Escenario</th><th>B · Pista</th><th>C · Ficha</th></tr></thead>
+      <tbody>
+        <tr><td>Coherencia con álbum y artista</td><td class="s">5</td><td class="s">3</td><td class="s">2</td></tr>
+        <tr><td>Recorrer el disco</td><td class="s">4</td><td class="s">5</td><td class="s">2</td></tr>
+        <tr><td>Contenido pronto (escritorio · 390 px)</td><td>515 · 558 px</td><td>435 · 529 px</td><td>493 · 839 px</td></tr>
+        <tr><td>Profundidad visible</td><td class="s">4</td><td class="s">5</td><td class="s">4</td></tr>
+        <tr><td>Teléfono</td><td class="s">5</td><td class="s">2</td><td class="s">3</td></tr>
+        <tr><td>Coste de llevarla al producto</td><td>Bajo-medio (reusa la portada del álbum y la invitación)</td><td>Alto (columna fija, gráfico nuevo)</td><td>Medio (pestañas y rutas nuevas)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="decision" aria-labelledby="h-dec">
+    <h2 id="h-dec">Decisión (24 nov): D · Mezcla</h2>
+    <article class="prop">
+      <div class="duo"><a href="d-mezcla.html"><img src="shots/d.jpg" alt="Propuesta D: la tarjeta compacta de C con la ficha en dos columnas, recorrer el disco y Valorar esta canción; debajo créditos con En el disco al lado"></a><a href="d-mezcla.html"><img src="shots/d-movil.jpg" alt="Propuesta D en el teléfono"></a></div>
+      <div>
+        <h3>Cabecera de C, cuerpo de A</h3>
+        <p class="thesis">La tarjeta de C arriba —se distingue de la portada del álbum— con «17 versiones →» en la ficha; debajo, el cuerpo de A con sus préstamos: créditos con «En el disco» al lado, apariciones en franja de carátulas, versiones con año y duración en lugar de «Ver versión», comentarios con una sola invitación.</p>
+        <div class="pc"><div><h4>Medidas</h4><ul><li>Créditos a 466 px en escritorio y 644 en 390 px (hoy 588 · 759).</li><li>Página de 2 190 px en escritorio (hoy 2 423).</li></ul></div><div><h4>En el teléfono</h4><ul><li>Ficha en una columna más apretada; «Recorrer el disco» en una sola fila; sin la frase bajo «Valorar».</li></ul></div></div>
+        <a class="open" href="d-mezcla.html">Abrir propuesta D</a>
+      </div>
+    </article>
+  </section>
+
+  <section id="recomendacion" aria-labelledby="h-rec">
+    <h2 id="h-rec">Recomendación</h2>
+    <div class="rec">
+      <p><b>A · Escenario</b>, porque la canción es el siguiente clic desde la lista de pistas del álbum y debe sentirse de la misma familia, y porque reutiliza lo que ya está en producción (la portada del álbum, la funda, la invitación «Valorar»). Con dos préstamos:</p>
+      <ul class="dots">
+        <li>De <b>B</b>: «En el disco» con las pistas y esta marcada (ya va en A), y en Versiones el año y la duración junto al título en lugar de «Ver versión».</li>
+        <li>De <b>C</b>: el número de versiones en la ficha («17 versiones →») como atajo a su sección.</li>
+        <li>Para todas: sin la caja «Tu relación» ni la línea de comunidad vacía para el visitante; contenedor de 88rem; comentarios con una sola invitación (ya lo hace el componente compartido).</li>
+      </ul>
+      <p class="muted" style="margin-top:12px">Decisiones que conviene tomar antes de planificar: ¿«Aparece en» como franja de carátulas (A) o se queda la lista en dos columnas de hoy? ¿La línea de vida de B entra como mejora posterior o se descarta?</p>
+    </div>
+  </section>
+</main>
+<nav class="mock-bar" aria-label="Propuestas"><span>Ficha de canción</span><a href="index.html" aria-current="page">Resumen</a><a href="a-escenario.html">A</a><a href="b-pista.html">B</a><a href="c-ficha.html">C</a><a href="d-mezcla.html">D</a></nav>
+<script src="shared.js"></script>
+</body>
+</html>

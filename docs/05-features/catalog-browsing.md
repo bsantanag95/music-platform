@@ -598,6 +598,17 @@ Nació mínima (`rebalance-catalog-detail-pages`); desde `redesign-song-page` (2
 cerca de un tercio del contenido de un álbum). Reutiliza los componentes del álbum. De arriba
 hacia abajo:
 
+> **Modernización (noviembre 2026, `modernize-song-page-phase1..3`).** Tras la auditoría y los mockups de
+> `mockups/song-2026-11/`, el usuario eligió **D · Mezcla**: la cabecera de C (una tarjeta, que se distingue de la portada
+> del álbum) y el cuerpo de A. **Fase 1** (hecha): contenedor de 88rem y una **tarjeta** con la carátula (≤ 250 px, enlaza al
+> disco), la identidad, la **ficha en dos columnas** (duración, disco, escrita por, pista "N de M", género, primera aparición
+> —solo la fecha si es el disco principal—, producción con hasta 2 productores, versión y "N versiones →") y una columna
+> lateral con **«Recorrer el disco»** (pista anterior y siguiente; reemplaza la franja de la tira) y la acción principal:
+> **«Valorar esta canción»** para el visitante (al inicio de sesión, en lugar del panel) o el panel "Tu relación" sin caja.
+> Sin ninguna actividad ni listas, el bloque de comunidad no se dibuja. **Fase 2**: créditos con la columna «En el disco»
+> (todas las pistas, esta marcada). **Fase 3**: «Aparece en» como franja de carátulas, versiones con año y duración en
+> lugar de "Ver versión", comentarios con la escala nueva. Los puntos de abajo describen lo anterior que sigue vigente.
+
 - **Cabecera**: carátula del **disco principal** (el primer disco de estudio que contiene la
   grabación; si no hay, el más temprano), que enlaza a ese disco; antetítulo "Canción" (la posición y
   el disco los nombran la tira y las migas); título, artistas, **ficha técnica** (duración,
