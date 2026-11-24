@@ -864,7 +864,8 @@
       "removeRatingMessage": "Your rating for this song will be deleted.",
       "removeRatingConfirm": "Remove",
       "cancel": "Cancel",
-      "addDetails": "Add details"
+      "addDetails": "Add details",
+      "songwriters": "Songwriting"
     },
     "discography": {
       "heading": "{artist} discography",
@@ -1252,7 +1253,15 @@
     "upcomingTracksDescription": "It will be available once the record is released.",
     "noEditionsUpcomingTitle": "Out {date}",
     "rateInvite": "Rate this record",
-    "rateInviteNote": "You need an account to rate, review and log your listens."
+    "rateInviteNote": "You need an account to rate, review and log your listens.",
+    "onThisRecord": {
+      "heading": "On this record",
+      "lineup": "Line-up",
+      "production": "Production",
+      "editions": "Editions",
+      "allCredits": "All credits",
+      "allEditions": "{count, plural, one {See the edition} other {See all # editions}}"
+    }
   },
   "song": {
     "kicker": "Song",

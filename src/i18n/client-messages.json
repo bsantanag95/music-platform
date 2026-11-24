@@ -396,6 +396,7 @@
     "catalog.album.tracks.removeRatingMessage",
     "catalog.album.tracks.removeRatingTitle",
     "catalog.album.tracks.scoreDropped",
+    "catalog.album.tracks.songwriters",
     "catalog.album.tracks.starsLegend",
     "catalog.album.tracks.starsValue",
     "catalog.album.tracks.total",

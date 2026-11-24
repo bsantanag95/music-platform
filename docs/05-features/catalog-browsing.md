@@ -351,6 +351,13 @@ panel «Tu relación» ocupa la columna derecha. En el teléfono la funda va pri
 compositores bajo cada canción y columna «En este disco» (formación, producción, ediciones por formato); **3** — una sola invitación a
 opinar (Reseñas y Comentarios siguen separados), franja de discografía y estados vacíos.
 
+**Canciones (cambio `modernize-album-page-phase2`, 2026-11).** Cada pista muestra bajo el título sus compositores (la autoría de
+la obra que ya lee Créditos), enlazados; sin autoría no hay línea. Junto a la lista (debajo en pantallas angostas) va la columna «En
+este disco»: la formación (integrantes del artista principal con sus instrumentos, con las traducciones de Créditos), la producción
+(productores primero, hasta 4, con «Todos los créditos →») y las ediciones contadas por familia de formato con el mismo alcance que el
+filtro de Ediciones (solo con más de una edición, «Ver las N ediciones →»). Cada bloque se omite sin datos; sin ninguno, la lista
+ocupa el ancho completo. Las familias de formato viven en `src/components/album/edition-formats.ts`.
+
 Lo que sigue describe la estructura anterior; donde contradiga el párrafo anterior, manda la portada.
 
 **Estructura** (cambio `redesign-album-page`, 2026-09 — la página se lee como ficha de
