@@ -35,12 +35,19 @@ export function DrawnVinylLayer() {
   );
 }
 
-/** Velo de tinta: más denso a la izquierda (donde va el texto) y hacia abajo (donde empiezan las pestañas). */
-export function StageVeil() {
+/** Velo de tinta por defecto (artista): más denso a la izquierda (donde va el texto) y hacia abajo (donde empiezan las pestañas). */
+const VEIL_DEFAULT =
+  "sm:bg-[linear-gradient(90deg,rgba(20,18,15,.96)_0%,rgba(20,18,15,.8)_45%,rgba(20,18,15,.3)_100%),linear-gradient(180deg,rgba(20,18,15,.15)_40%,var(--color-ink)_100%)]";
+
+/**
+ * Velo de tinta que deja el texto legible. Desde `sm` cada portada elige su degradado horizontal con `wideClassName` (clases
+ * literales, para que Tailwind las genere); en móvil siempre el vertical.
+ */
+export function StageVeil({ wideClassName = VEIL_DEFAULT }: { wideClassName?: string }) {
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-0 -z-[5] bg-[linear-gradient(180deg,rgba(20,18,15,.3)_0%,rgba(20,18,15,.86)_52%,var(--color-ink)_100%)] sm:bg-[linear-gradient(90deg,rgba(20,18,15,.96)_0%,rgba(20,18,15,.8)_45%,rgba(20,18,15,.3)_100%),linear-gradient(180deg,rgba(20,18,15,.15)_40%,var(--color-ink)_100%)]"
+      className={`pointer-events-none absolute inset-0 -z-[5] bg-[linear-gradient(180deg,rgba(20,18,15,.3)_0%,rgba(20,18,15,.86)_52%,var(--color-ink)_100%)] ${wideClassName}`}
     />
   );
 }

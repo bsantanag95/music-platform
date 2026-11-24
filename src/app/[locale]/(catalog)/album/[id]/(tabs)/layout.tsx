@@ -35,7 +35,7 @@ import { buildShareMetadata } from "@/services/share/metadata";
 
 // Layout común de la página de álbum (openspec: redesign-album-page, D2 y D15): la portada
 // (openspec: modernize-album-page-phase1: carátula en su funda, identidad, ficha, comunidad y la acción principal, el panel
-// "Tu relación" con sesión o «Valorar este disco» sin ella), la barra de pestañas, la franja de discografía y los
+// "Tu relación" con sesión o «Valorar este disco» y «Lo quiero escuchar» sin ella), la barra de pestañas, la franja de discografía y los
 // comentarios se renderizan una vez; cada pestaña es un segmento propio. `modal` recibe la reseña interceptada desde el índice de reseñas.
 // Con el panel abierto, la columna izquierda queda arriba (`items-start`) y el alto sobrante debajo (rework-album-relation-panel).
 
@@ -132,7 +132,9 @@ async function AlbumLayout({ children, modal, params }: AlbumLayoutProps) {
         <div className={`${frame} flex flex-col gap-6 pb-6 pt-6 sm:gap-7 sm:pb-9`}>
           <Breadcrumbs items={breadcrumbItems} action={<ShareAction kind="album" refId={parsed.id} />} />
           <header className="grid grid-cols-1 items-start gap-7 lg:grid-cols-[minmax(0,1fr)_18rem]">
-            <div className="flex min-w-0 flex-col items-start gap-6 sm:flex-row sm:items-end sm:gap-8">
+            {/* Funda y texto alineados arriba: la comunidad o un título largo crecen hacia abajo sin mover la carátula. El texto deja
+                el margen por el que asoma el vinilo. */}
+            <div className="flex min-w-0 flex-col items-start gap-6 sm:flex-row sm:gap-8">
               <AlbumSleeve>
                 <AlbumCover
                   cover={detail.cover}
@@ -142,7 +144,7 @@ async function AlbumLayout({ children, modal, params }: AlbumLayoutProps) {
                   className="aspect-square w-full"
                 />
               </AlbumSleeve>
-              <div className="relative z-10 flex min-w-0 flex-1 flex-col gap-4">
+              <div className="relative z-10 flex min-w-0 flex-1 flex-col gap-4 sm:pl-10">
                 <AlbumIdentity
                   title={detail.releaseGroup.title}
                   category={detail.releaseGroup.category as "studio" | "compilation" | "live_other" | "single_ep"}
@@ -172,7 +174,7 @@ async function AlbumLayout({ children, modal, params }: AlbumLayoutProps) {
                 <CommunityStats stats={stats} listsHref={itemListsHref({ type: "release-group", id: releaseGroupId })} />
               </div>
             </div>
-            {/* Sin sesión, «Valorar este disco» en lugar del panel; con sesión, el panel entero en la columna derecha. */}
+            {/* Sin sesión, «Valorar este disco» y «Lo quiero escuchar» en lugar del panel; con sesión, el panel entero en la columna derecha. */}
             {personal ? (
               <AlbumRelationPanel
                 releaseGroupId={releaseGroupId}

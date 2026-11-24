@@ -269,6 +269,7 @@ describe("layout de la página de álbum", () => {
   it("a un visitante anónimo le muestra «Valorar este disco» en lugar del panel (modernize-album-page-phase1)", async () => {
     await renderLayout();
     expect(screen.getByRole("link", { name: catalogEs.album.rateInvite })).toHaveAttribute("href", "/auth/login");
+    expect(screen.getByRole("link", { name: catalogEs.album.wantInvite })).toHaveAttribute("href", "/auth/login");
     expect(screen.queryByText(catalogEs.album.relation.signInPrompt)).not.toBeInTheDocument();
     expect(mocks.loadPersonalState).not.toHaveBeenCalled();
   });
