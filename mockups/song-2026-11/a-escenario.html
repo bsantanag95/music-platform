@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta A · Escenario — Hallowed Be Thy Name</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:opsz,wght@8..60,400..600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<style>
+  /* A · Escenario: la misma portada que la ficha de álbum recién publicada, a menor escala. Fondo con la carátula del disco
+     desenfocada, la funda pequeña con el disco asomando, título grande, ficha en una línea y «Valorar esta canción». La tira
+     anterior/siguiente pasa a ser el borde inferior de la portada. Debajo, créditos con «En el disco» al lado. */
+  .stage { position: relative; isolation: isolate; overflow: hidden; border-bottom: 1px solid var(--border); }
+  .stage .ambient { position: absolute; inset: -25%; z-index: -3; background: var(--surface-2) center / cover no-repeat; filter: blur(70px) saturate(1.3); opacity: .85; }
+  .stage::before { content: ""; position: absolute; inset: 0; z-index: -2; background: linear-gradient(90deg, rgba(20,18,15,.3) 0%, rgba(20,18,15,.72) 55%, rgba(20,18,15,.9) 100%), linear-gradient(180deg, transparent 45%, var(--ink) 100%); }
+  .stage .wrap { padding-top: 22px; padding-bottom: 0; display: flex; flex-direction: column; gap: 28px; }
+  .top-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .share { display: inline-flex; gap: 8px; align-items: center; padding: 7px 12px; border: 1px solid rgba(242,237,228,.25); border-radius: 8px; font: 500 12px var(--data); background: rgba(20,18,15,.4); }
+  .share svg { width: 14px; height: 14px; }
+  .hero { display: grid; grid-template-columns: auto minmax(0, 1fr) 18rem; gap: 36px; align-items: end; }
+  .sleeve { position: relative; width: clamp(150px, 15vw, 200px); }
+  .sleeve .cv { position: relative; z-index: 2; border-radius: 6px; background-size: cover; box-shadow: 0 30px 60px -26px rgba(0,0,0,.95), 0 0 0 1px rgba(242,237,228,.08); }
+  .sleeve .vinyl { position: absolute; z-index: 1; top: 4%; left: 14%; width: 92%; aspect-ratio: 1; border-radius: 50%;
+      background: radial-gradient(circle, #14120f 0 1.4%, rgba(232,184,75,.9) 1.5% 15%, #14120f 15.2% 17%, transparent 17.2%), repeating-radial-gradient(circle, #181512 0 2px, #26211c 2px 3px);
+      box-shadow: 0 30px 60px -24px rgba(0,0,0,.95); }
+  .id { min-width: 0; position: relative; z-index: 3; }
+  .kind { font: 500 12px var(--data); color: rgba(242,237,228,.72); letter-spacing: .06em; text-transform: uppercase; }
+  .kind a { text-transform: none; letter-spacing: 0; color: var(--paper); }
+  .kind a:hover { color: var(--amber); }
+  h1 { margin-top: 10px; font-family: var(--display); font-weight: 700; font-size: clamp(36px, 5vw, 76px); line-height: .94; letter-spacing: -.04em; }
+  .by { margin-top: 12px; font-family: var(--display); font-size: 21px; color: var(--amber); }
+  .line { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; font: 500 13px var(--data); color: rgba(242,237,228,.8); }
+  .line b { color: var(--paper); font-weight: 500; }
+  .chip { padding: 3px 10px; border: 1px solid rgba(242,237,228,.28); border-radius: 999px; color: var(--paper); }
+  .cta { display: flex; flex-direction: column; gap: 10px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: 8px; font: 500 15px var(--display); white-space: nowrap; }
+  .btn.amber { background: var(--amber); color: var(--amber-ink); }
+  .cta p { font-size: 13.5px; color: rgba(242,237,228,.7); }
+
+  /* La tira anterior / siguiente como borde inferior de la portada. */
+  .walk { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 16px; border-top: 1px solid rgba(242,237,228,.12); padding: 12px 0 14px; font: 500 12px var(--data); color: rgba(242,237,228,.7); }
+  .walk a { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .walk a b { font: 500 15px var(--display); color: var(--paper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .walk a:hover b { color: var(--amber); }
+  .walk .mid { text-align: center; }
+  .walk .end { text-align: right; }
+  .dots { display: inline-flex; gap: 5px; margin-top: 6px; }
+  .dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(242,237,228,.25); }
+  .dots i.on { background: var(--amber); }
+
+  .body { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; gap: 56px; padding-top: 40px; }
+  h2.h { font: 700 24px var(--display); letter-spacing: -.02em; margin-bottom: 14px; }
+  .credits { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; }
+  .credits h3, aside h3 { font: 500 12px var(--data); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 8px; }
+  .people li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .people li a { font: 500 17px var(--display); }
+  .people li a:hover { color: var(--amber); }
+  .people li span { font: 500 12.5px var(--data); color: var(--muted); text-align: right; }
+  .note { margin-top: 12px; font: 500 12.5px var(--data); color: var(--muted); }
+  .note a:hover { color: var(--amber); }
+  .ondisc li a { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; padding: 7px 6px; border-bottom: 1px solid var(--border); font-size: 15px; border-radius: 4px; }
+  .ondisc li a span:first-child, .ondisc li a span:last-child { font: 500 12px var(--data); color: var(--muted); align-self: center; }
+  .ondisc li a:hover span:nth-child(2) { color: var(--amber); }
+  .ondisc li a[aria-current] { background: rgba(232,184,75,.1); }
+  .ondisc li a[aria-current] span:nth-child(2) { color: var(--amber); }
+
+  .sec { margin-top: 64px; }
+  .apps { display: flex; gap: 16px; overflow-x: auto; scrollbar-width: none; padding-bottom: 6px; }
+  .apps a { flex: none; width: 128px; }
+  .apps .cv { background-size: cover; }
+  .apps b { display: block; margin-top: 8px; font: 600 14px var(--display); }
+  .apps small { font: 500 12px var(--data); color: var(--muted); }
+  .apps .badge { display: inline-block; margin-top: 4px; }
+  .vers .tabs { margin-bottom: 12px; }
+  .vrow { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 16px; align-items: baseline; padding: 11px 0; border-bottom: 1px solid var(--border); }
+  .vrow .y { font: 500 12.5px var(--data); color: var(--muted); }
+  .vrow a { font-size: 16px; }
+  .vrow a:hover { color: var(--amber); }
+  .vrow .d { font: 500 12.5px var(--data); color: var(--muted); display: flex; gap: 10px; }
+  .vrow .d a { font: inherit; color: var(--paper); text-decoration: underline; text-decoration-color: var(--border-2); text-underline-offset: 3px; }
+  .vers .more { margin-top: 10px; font: 500 13px var(--data); color: var(--muted); }
+  .talk { max-width: 48rem; }
+  .talk .empty { color: var(--muted); }
+  .talk .empty a { color: var(--amber); }
+
+  @media (max-width: 1023px) {
+    .hero { grid-template-columns: auto minmax(0, 1fr); }
+    .cta { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; align-items: center; }
+    .body { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  }
+  @media (max-width: 640px) {
+    .hero { grid-template-columns: 116px minmax(0, 1fr); gap: 18px; align-items: start; }
+    .sleeve { width: 104px; }
+    h1 { font-size: 34px; }
+    .by { font-size: 18px; }
+    .line { grid-column: 1 / -1; }
+    .id .line { display: none; }
+    .line.phone { display: flex; margin-top: 0; }
+    .cta p { display: none; }
+    .cta .btn { flex: 1; }
+    .credits { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .walk .mid { display: none; }
+    .walk { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .vrow { grid-template-columns: 40px minmax(0, 1fr); }
+    .vrow .d { grid-column: 2; }
+  }
+  @media (min-width: 641px) { .line.phone { display: none; } }
+</style>
+</head>
+<body>
+<header class="site-header"></header>
+<main>
+  <section class="stage" aria-labelledby="h1">
+    <div class="ambient" data-mb="4ebfe175-e7ed-34cd-8e91-67c7e4a53579" aria-hidden="true"></div>
+    <div class="wrap">
+      <div class="top-row"><span class="crumbs">Inicio / Iron Maiden / The Number of the Beast / <b>Hallowed Be Thy Name</b></span><a class="share" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12M7 8l5-5 5 5M5 14v5h14v-5"/></svg>Compartir</a></div>
+      <div class="hero">
+        <a class="sleeve" href="#" aria-label="Ir a The Number of the Beast"><span class="vinyl" aria-hidden="true"></span><span class="cv" data-mb="4ebfe175-e7ed-34cd-8e91-67c7e4a53579"></span></a>
+        <div class="id">
+          <p class="kind">Canción · pista 8 de <a href="#">The Number of the Beast</a></p>
+          <h1 id="h1">Hallowed Be Thy Name</h1>
+          <p class="by"><a href="#">Iron Maiden</a></p>
+          <p class="line"><a class="chip" href="#">heavy metal</a><span><b>7:11</b></span><span>Escrita por <b>Steve Harris</b></span><span>1982</span><a href="#versiones">17 versiones →</a></p>
+        </div>
+        <p class="line phone"><a class="chip" href="#">heavy metal</a><span><b>7:11</b></span><span>Steve Harris</span><span>1982</span><a href="#versiones">17 versiones →</a></p>
+        <div class="cta">
+          <a class="btn amber" href="#">Valorar esta canción</a>
+          <p>Necesitas una cuenta para valorar, registrar escuchas y guardarla en tus listas.</p>
+        </div>
+      </div>
+      <nav class="walk" aria-label="Recorrer el disco">
+        <a href="#"><span>‹ Anterior</span><b>7 · Gangland</b></a>
+        <div class="mid">The Number of the Beast · 8 de 8<br><span class="dots" id="dots" aria-hidden="true"></span></div>
+        <span class="end">Fin del disco</span>
+      </nav>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="body">
+      <section aria-labelledby="h-cred">
+        <h2 class="h" id="h-cred">Créditos de esta grabación</h2>
+        <div class="credits">
+          <div><h3>Intérpretes</h3><ul class="people" id="performers"></ul></div>
+          <div><h3>Producción y sonido</h3><ul class="people"><li><a href="#">Martin Birch</a><span>producción, ingeniería</span></li></ul>
+            <p class="note"><a href="#">Créditos completos del disco →</a></p></div>
+        </div>
+      </section>
+      <aside aria-labelledby="h-disc">
+        <h3 id="h-disc">En el disco · 1982</h3>
+        <ol class="ondisc" id="ondisc"></ol>
+        <p class="note">8 pistas · 40:22</p>
+      </aside>
+    </div>
+
+    <section class="sec" aria-labelledby="h-apps">
+      <div class="sec-head"><h2 id="h-apps">Aparece en</h2><span class="see">1 álbum · 7 recopilaciones</span></div>
+      <div class="apps" id="apps"></div>
+    </section>
+
+    <section class="sec vers" id="versiones" aria-labelledby="h-vers">
+      <div class="sec-head"><h2 id="h-vers">Otras versiones</h2></div>
+      <div class="tabs" role="tablist"><button role="tab" aria-selected="true">En vivo 15</button><button role="tab" aria-selected="false">Otras 2</button></div>
+      <ol id="live"></ol>
+      <p class="more">+3 más</p>
+    </section>
+
+    <section class="sec talk" aria-labelledby="h-talk">
+      <div class="sec-head"><h2 id="h-talk">Comentarios</h2></div>
+      <p class="empty">Nadie ha comentado esta canción todavía. <a href="#">Inicia sesión</a> para ser el primero.</p>
+    </section>
+  </div>
+</main>
+<footer class="site-foot"><div class="wrap">Mockup · datos reales de la base local · carátulas del Cover Art Archive (250 px)</div></footer>
+<nav class="mock-bar" aria-label="Propuestas"><span>Mockup · Hallowed Be Thy Name</span><a href="index.html">Resumen</a><a href="a-escenario.html" aria-current="page">A</a><a href="b-pista.html">B</a><a href="c-ficha.html">C</a><a href="d-mezcla.html">D</a></nav>
+<script src="shared.js"></script>
+<script>
+  window.renderMockup = function () {
+    var S = window.SONG, e = window.esc;
+    document.getElementById("performers").innerHTML = S.performers.map(function (p) { return '<li><a href="#">' + e(p[0]) + '</a><span>' + e(p[1]) + '</span></li>'; }).join("");
+    document.getElementById("ondisc").innerHTML = S.tracks.map(function (t, i) {
+      return '<li><a href="#"' + (i + 1 === S.position ? ' aria-current="page"' : "") + '><span>' + (i + 1) + '</span><span>' + e(t[0]) + '</span><span class="num">' + t[1] + '</span></a></li>';
+    }).join("");
+    document.getElementById("dots").innerHTML = S.tracks.map(function (t, i) { return '<i' + (i + 1 === S.position ? ' class="on"' : "") + '></i>'; }).join("");
+    document.getElementById("apps").innerHTML = S.appearances.map(function (a, i) {
+      return '<a href="#"><span class="cv" data-mb="' + a[2] + '"></span><b>' + e(a[0]) + '</b><small>' + e(a[1]) + '</small>' + (i === 0 ? '<br><span class="badge next">Primer lanzamiento</span>' : "") + '</a>';
+    }).join("");
+    document.getElementById("live").innerHTML = S.live.slice(0, 10).map(function (v) {
+      var d = v[2].length > 1 ? v[2].map(function (x, i) { return '<a href="#">Grabación ' + (i + 1) + '</a> ' + x; }).join(" · ") : (v[2][0] || "");
+      return '<li class="vrow"><span class="y">' + v[0] + '</span><a href="#">' + e(v[1]) + '</a><span class="d num">' + d + '</span></li>';
+    }).join("");
+  };
+</script>
+</body>
+</html>

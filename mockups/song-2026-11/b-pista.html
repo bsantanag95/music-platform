@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta B · Pista — Hallowed Be Thy Name</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:opsz,wght@8..60,400..600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<style>
+  /* B · Pista: la canción leída dentro de su disco. A la izquierda, fija, la funda del disco con su lista de pistas y esta
+     marcada (sustituye a la tira anterior/siguiente); a la derecha, la canción: identidad, ficha, la línea de vida de sus
+     versiones (año y duración de cada grabación) y los créditos. */
+  .layout { display: grid; grid-template-columns: 19rem minmax(0, 1fr); gap: 56px; padding-top: 28px; }
+  .disc-col { position: sticky; top: 88px; align-self: start; display: flex; flex-direction: column; gap: 14px; }
+  .disc-col .cv { background-size: cover; box-shadow: 0 24px 50px -26px rgba(0,0,0,.9); }
+  .disc-col .t { font: 600 17px var(--display); }
+  .disc-col .t small { display: block; font: 500 12px var(--data); color: var(--muted); margin-top: 2px; }
+  .tl li a { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; padding: 7px 8px; border-radius: 6px; font-size: 15px; color: var(--muted); }
+  .tl li a span:first-child, .tl li a span:last-child { font: 500 12px var(--data); align-self: center; }
+  .tl li a:hover { color: var(--paper); background: var(--surface); }
+  .tl li a[aria-current] { background: var(--surface-2); color: var(--paper); box-shadow: inset 2px 0 var(--amber); }
+  .tl .walk { display: flex; justify-content: space-between; margin-top: 8px; font: 500 12px var(--data); color: var(--muted); }
+
+  .crumbs { display: block; margin-bottom: 18px; }
+  .kind { font: 500 12px var(--data); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+  h1 { margin-top: 8px; font-family: var(--display); font-weight: 700; font-size: clamp(36px, 4.6vw, 64px); line-height: .95; letter-spacing: -.035em; }
+  .by { margin-top: 10px; font: 500 20px var(--display); color: var(--amber); }
+  .facts { margin-top: 22px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .facts div { padding: 12px 14px 12px 0; }
+  .facts dt { font: 500 11.5px var(--data); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .facts dd { margin-top: 4px; font: 500 16px var(--display); }
+  .actions { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+  .btn { display: inline-flex; align-items: center; height: 42px; padding: 0 16px; border-radius: 8px; font: 500 15px var(--display); }
+  .btn.amber { background: var(--amber); color: var(--amber-ink); }
+  .actions .ghost { font: 500 13px var(--data); color: var(--muted); }
+  .actions .ghost svg { width: 13px; height: 13px; vertical-align: -2px; }
+
+  .sec { margin-top: 52px; }
+  h2.h { font: 700 24px var(--display); letter-spacing: -.02em; }
+  .sub { margin-top: 4px; color: var(--muted); font-size: 15px; }
+  /* Línea de vida: cada grabación es un punto en su año, más alto cuanto más larga. */
+  .life { margin-top: 18px; position: relative; height: 150px; border-bottom: 1px solid var(--border-2); }
+  .life .pt { position: absolute; bottom: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; }
+  .life .pt i { width: 2px; background: var(--border-2); }
+  .life .pt b { width: 11px; height: 11px; border-radius: 50%; background: var(--paper); border: 2px solid var(--ink); }
+  .life .pt.studio b { background: var(--amber); width: 15px; height: 15px; }
+  .life .pt:hover b { background: var(--amber); }
+  .life .tip { position: absolute; bottom: calc(100% + 4px); white-space: nowrap; font: 500 11px var(--data); color: var(--muted); }
+  .axis { position: relative; height: 16px; margin-top: 6px; font: 500 11px var(--data); color: var(--muted-2); }
+  .axis span { position: absolute; transform: translateX(-50%); }
+  .legend { margin-top: 10px; display: flex; gap: 16px; flex-wrap: wrap; font: 500 12px var(--data); color: var(--muted); }
+  .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; background: var(--paper); }
+  .legend i.a { background: var(--amber); }
+  .vlist { margin-top: 16px; columns: 2; column-gap: 32px; }
+  .vlist li { break-inside: avoid; display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 14.5px; }
+  .vlist li span { font: 500 12px var(--data); color: var(--muted); }
+  .vlist li a:hover { color: var(--amber); }
+
+  .people { margin-top: 12px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .people a { padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .people a b { display: block; font: 600 16px var(--display); }
+  .people a span { font: 500 12px var(--data); color: var(--muted); }
+  .people a:hover { border-color: var(--border-2); }
+  .apps { margin-top: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 4px 20px; }
+  .apps a { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: center; padding: 6px 0; }
+  .apps .cv { background-size: cover; border-radius: 3px; }
+  .apps b { display: block; font: 500 14.5px var(--body); line-height: 1.25; }
+  .apps small { font: 500 11.5px var(--data); color: var(--muted); }
+  .talk .empty { margin-top: 8px; color: var(--muted); }
+  .talk .empty a { color: var(--amber); }
+
+  @media (max-width: 1023px) {
+    .layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .disc-col { position: static; order: 2; margin-top: 52px; }
+    .disc-col .cv { display: none; }
+    .people { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 640px) {
+    .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .facts div:nth-child(-n+2) { border-bottom: 1px solid var(--border); }
+    .vlist { columns: 1; }
+    .people { grid-template-columns: minmax(0, 1fr); }
+    .life { height: 120px; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header"></header>
+<main class="wrap">
+  <div class="layout">
+    <aside class="disc-col" aria-labelledby="h-disc">
+      <a href="#"><span class="cv" data-mb="4ebfe175-e7ed-34cd-8e91-67c7e4a53579" role="img" aria-label="Carátula de The Number of the Beast"></span></a>
+      <p class="t" id="h-disc"><a href="#">The Number of the Beast</a><small>Álbum de estudio · 1982 · 8 pistas · 40:22</small></p>
+      <div class="tl"><ol id="tracks"></ol><p class="walk"><a href="#">‹ Gangland</a><span>Fin del disco</span></p></div>
+    </aside>
+
+    <div>
+      <span class="crumbs">Inicio / Iron Maiden / The Number of the Beast / <b>Hallowed Be Thy Name</b></span>
+      <p class="kind">Canción · pista 8</p>
+      <h1>Hallowed Be Thy Name</h1>
+      <p class="by"><a href="#">Iron Maiden</a></p>
+      <dl class="facts">
+        <div><dt>Duración</dt><dd>7:11</dd></div>
+        <div><dt>Escrita por</dt><dd><a href="#">Steve Harris</a></dd></div>
+        <div><dt>Primera aparición</dt><dd>mar 1982</dd></div>
+        <div><dt>Género</dt><dd><a href="#">heavy metal</a></dd></div>
+      </dl>
+      <div class="actions"><a class="btn amber" href="#">Valorar esta canción</a><a class="ghost" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12M7 8l5-5 5 5M5 14v5h14v-5"/></svg> Compartir</a></div>
+
+      <section class="sec" aria-labelledby="h-life">
+        <h2 class="h" id="h-life">38 años de versiones</h2>
+        <p class="sub">La grabación de estudio y las 15 en vivo de Iron Maiden: cada punto es una grabación; la altura, su duración.</p>
+        <div class="life" id="life" role="img" aria-label="De 7:11 en 1982 a 7:53 en 2009; la más corta, 6:58 en 2001"></div>
+        <div class="axis" id="axis"></div>
+        <p class="legend"><span><i class="a"></i>Estudio · 7:11</span><span><i></i>En vivo · de 6:58 a 7:53</span><span>Otras 2</span></p>
+        <ol class="vlist" id="vlist"></ol>
+      </section>
+
+      <section class="sec" aria-labelledby="h-cred">
+        <h2 class="h" id="h-cred">Quién la toca</h2>
+        <div class="people" id="people"></div>
+        <p class="sub" style="margin-top:12px">Producción e ingeniería: <a href="#">Martin Birch</a> · <a href="#">créditos del disco →</a></p>
+      </section>
+
+      <section class="sec" aria-labelledby="h-apps">
+        <h2 class="h" id="h-apps">Aparece en 8 discos</h2>
+        <div class="apps" id="apps"></div>
+      </section>
+
+      <section class="sec talk" aria-labelledby="h-talk">
+        <h2 class="h" id="h-talk">Comentarios</h2>
+        <p class="empty">Nadie ha comentado esta canción todavía. <a href="#">Inicia sesión</a> para ser el primero.</p>
+      </section>
+    </div>
+  </div>
+</main>
+<footer class="site-foot"><div class="wrap">Mockup · datos reales de la base local · carátulas del Cover Art Archive (250 px)</div></footer>
+<nav class="mock-bar" aria-label="Propuestas"><span>Mockup · Hallowed Be Thy Name</span><a href="index.html">Resumen</a><a href="a-escenario.html">A</a><a href="b-pista.html" aria-current="page">B</a><a href="c-ficha.html">C</a><a href="d-mezcla.html">D</a></nav>
+<script src="shared.js"></script>
+<script>
+  window.renderMockup = function () {
+    var S = window.SONG, e = window.esc;
+    document.getElementById("tracks").innerHTML = S.tracks.map(function (t, i) {
+      return '<li><a href="#"' + (i + 1 === S.position ? ' aria-current="page"' : "") + '><span>' + (i + 1) + '</span><span>' + e(t[0]) + '</span><span class="num">' + t[1] + '</span></a></li>';
+    }).join("");
+    var sec = function (d) { var p = d.split(":"); return +p[0] * 60 + +p[1]; };
+    var pts = [[1982, "7:11", "The Number of the Beast", true]];
+    S.live.forEach(function (v) { v[2].forEach(function (d) { if (d) pts.push([v[0], d, v[1], false]); }); });
+    var min = 400, max = 480;
+    document.getElementById("life").innerHTML = pts.map(function (p, i) {
+      var x = ((p[0] - 1980) / 42) * 100 + (i % 2 ? 0.5 : 0), h = 18 + ((sec(p[1]) - min) / (max - min)) * 100;
+      return '<a href="#" class="pt' + (p[3] ? " studio" : "") + '" style="left:' + x + '%" title="' + e(p[2]) + ' · ' + p[0] + ' · ' + p[1] + '"><b></b><i style="height:' + h + 'px"></i></a>';
+    }).join("");
+    document.getElementById("axis").innerHTML = [1980, 1990, 2000, 2010, 2020].map(function (y) { return '<span style="left:' + ((y - 1980) / 42) * 100 + '%">' + y + '</span>'; }).join("");
+    document.getElementById("vlist").innerHTML = S.live.map(function (v) {
+      return '<li><span>' + v[0] + '</span><a href="#">' + e(v[1]) + '</a><span class="num">' + v[2].filter(Boolean).join(" · ") + '</span></li>';
+    }).join("") + S.others.map(function (v) { return '<li><span>' + v[0] + '</span><a href="#">' + e(v[1]) + '</a><span>' + e(v[2][0]) + '</span></li>'; }).join("");
+    document.getElementById("people").innerHTML = S.performers.map(function (p) { return '<a href="#"><b>' + e(p[0]) + '</b><span>' + e(p[1]) + '</span></a>'; }).join("");
+    document.getElementById("apps").innerHTML = S.appearances.map(function (a, i) {
+      return '<a href="#"><span class="cv" data-mb="' + a[2] + '"></span><span><b>' + e(a[0]) + '</b><small>' + e(a[1]) + (i === 0 ? ' · primer lanzamiento' : ' · ' + a[3].toLowerCase()) + '</small></span></a>';
+    }).join("");
+  };
+</script>
+</body>
+</html>

@@ -8,7 +8,7 @@ import { SongAppearances } from "@/components/song/SongAppearances";
 import { SongComposition, SongRecordingCredits } from "@/components/song/SongCredits";
 import { GenreChips } from "@/components/genres/GenreChips";
 import { getSongGenres } from "@/services/genres/display";
-import { SongCommunity, SongFacts, SongIdentity } from "@/components/song/SongHeader";
+import { SongCommunity, SongFacts, SongIdentity, SongRateInvite } from "@/components/song/SongHeader";
 import { SongRelationPanel } from "@/components/song/SongRelationPanel";
 import { SongTrackStrip } from "@/components/song/SongTrackStrip";
 import { SongVersions } from "@/components/song/SongVersions";
@@ -37,10 +37,10 @@ import { withClientMessages } from "@/i18n/client-messages";
 import { buildShareMetadata } from "@/services/share/metadata";
 
 // Página de canción como ficha compacta de biblioteca (openspec: redesign-song-page): sin
-// pestañas; cabecera con carátula del disco principal, identidad, ficha técnica y comunidad
-// junto al panel "Tu relación"; después la tira de pistas, composición y créditos, los discos
-// que la contienen, las otras versiones de su obra y los comentarios. Sin reseñas. Ninguna
-// zona vacía se renderiza (salvo cabecera, panel y comentarios).
+// pestañas; una tarjeta con la carátula del disco principal, la identidad, la ficha en dos columnas y la comunidad, y una
+// columna lateral con «Recorrer el disco» y la acción principal («Valorar esta canción» o el panel "Tu relación")
+// (openspec: modernize-song-page-phase1); después composición y créditos, los discos que la contienen, las otras versiones
+// de su obra y los comentarios. Sin reseñas. Ninguna zona vacía se renderiza (salvo la tarjeta y los comentarios).
 
 interface SongPageProps {
   params: Promise<{ id: string }>;
@@ -111,7 +111,7 @@ async function SongPage({ params }: SongPageProps) {
       coverLabel={t("album.coverLabel")}
       coverPlaceholderAlt={t("album.coverPlaceholderAlt")}
       coverFailed={t("album.coverFailed")}
-      className="size-24 sm:size-[160px] lg:size-[200px]"
+      className="size-[5.5rem] sm:size-32 lg:size-[168px]"
     />
   );
 
@@ -126,13 +126,19 @@ async function SongPage({ params }: SongPageProps) {
       : []),
     { label: detail.recording.title },
   ];
+  // Productores de la ficha: quienes tienen el rol de producción, no los demás del grupo (ingeniería de producción, etc.).
+  const producers = credits.groups.production.filter((person) => person.roles.some((role) => role.relationType === "producer"));
+  const versionsCount = versions ? versions.covers.length + versions.live.length + versions.others.length : 0;
+  const genres = songGenres.genres.length > 0 ? <GenreChips genres={songGenres.genres} max={3} /> : null;
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:py-12">
+    <main className="mx-auto flex min-h-screen w-full max-w-[88rem] flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-8 sm:py-10 xl:px-12">
       <Breadcrumbs items={breadcrumbItems} action={<ShareAction kind="song" refId={parsed.id} />} />
 
-      <header className="grid grid-cols-[6rem_minmax(0,1fr)] gap-x-4 gap-y-5 [grid-template-areas:'cover_identity'_'facts_facts'_'community_community'_'panel_panel'] sm:gap-x-5 sm:grid-cols-[160px_minmax(0,1fr)] sm:[grid-template-areas:'cover_identity'_'cover_facts'_'community_community'_'panel_panel'] lg:grid-cols-[200px_minmax(0,1fr)_18rem] lg:grid-rows-[auto_auto_auto_1fr] lg:[grid-template-areas:'cover_identity_panel'_'cover_facts_panel'_'cover_community_panel'_'._._panel']">
-        <div className="[grid-area:cover]">
+      {/* Tarjeta: carátula · identidad y ficha · columna lateral. En el teléfono la carátula va junto a la identidad y el
+          resto a todo el ancho. Sin fondo desenfocado: es lo que la distingue de la portada del álbum. */}
+      <header className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-x-4 gap-y-3 rounded-lg border border-ink-border bg-ink-surface p-4 sm:grid-cols-[8rem_minmax(0,1fr)] sm:gap-x-6 sm:gap-y-4 sm:p-5 lg:grid-cols-[168px_minmax(0,1fr)_17rem] lg:gap-x-7 lg:p-6">
+        <div className="sm:row-span-2">
           {detail.principalDisc ? (
             // La carátula es del disco principal: lleva a él (openspec: polish-song-header).
             <Link
@@ -147,45 +153,43 @@ async function SongPage({ params }: SongPageProps) {
             cover
           )}
         </div>
-        <div className="[grid-area:identity]">
-          <SongIdentity
-            title={detail.recording.title}
-            artists={primaryArtists}
-          />
-          <div className="mt-2">
-            <GenreChips genres={songGenres.genres} />
-          </div>
+        <div className="min-w-0 self-center sm:self-start">
+          <SongIdentity title={detail.recording.title} artists={primaryArtists} />
         </div>
-        <div className="[grid-area:facts]">
+        <div className="col-span-2 flex min-w-0 flex-col gap-4 sm:col-span-1 sm:col-start-2">
           <SongFacts
             durationSec={detail.recording.durationSec}
+            disc={detail.principalDisc}
+            position={strip ? { index: strip.index, total: strip.total } : null}
+            genres={genres}
+            producers={producers}
+            versionsCount={versionsCount}
+            versionsHref="#song-versions"
             songwriters={credits.groups.songwriting}
             firstAppearance={firstAppearance}
             principalDiscId={detail.principalDisc?.releaseGroupId ?? null}
             versionLine={versionLine}
           />
-        </div>
-        <div className="[grid-area:community]">
           <SongCommunity stats={stats} listsHref={itemListsHref({ type: "recording", id: recordingId })} />
         </div>
-        <div className="[grid-area:panel]">
-          <SongRelationPanel
-            recordingId={recordingId}
-            state={
-              personal
-                ? {
-                    ratings,
-                    listens: personal.listens,
-                    favorited: personal.favorited,
-                    ownListMemberships: personal.ownListMemberships,
-                  }
-                : null
-            }
-          />
+        <div className="col-span-2 flex min-w-0 flex-col gap-4 border-t border-ink-border pt-3 empty:hidden sm:pt-4 lg:col-span-1 lg:col-start-3 lg:row-span-2 lg:row-start-1 lg:border-l lg:border-t-0 lg:pl-7 lg:pt-0">
+          {strip && <SongTrackStrip strip={strip} />}
+          {personal ? (
+            <SongRelationPanel
+              recordingId={recordingId}
+              bare
+              state={{
+                ratings,
+                listens: personal.listens,
+                favorited: personal.favorited,
+                ownListMemberships: personal.ownListMemberships,
+              }}
+            />
+          ) : (
+            <SongRateInvite />
+          )}
         </div>
       </header>
-
-      {strip && detail.principalDisc && <SongTrackStrip strip={strip} disc={detail.principalDisc} />}
 
       {/* Apilados a ancho completo: Composición es corta y los créditos usan dos columnas. */}
       <div className="flex flex-col gap-4 empty:hidden">

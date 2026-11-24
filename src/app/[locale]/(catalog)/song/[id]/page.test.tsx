@@ -232,13 +232,15 @@ describe("página de canción", () => {
     await expect(SongPage({ params: Promise.resolve({ id: RID }) })).rejects.toThrow("NEXT_NOT_FOUND");
   });
 
-  it("cabecera: antetítulo con la pista del disco principal, ficha técnica y comunidad", async () => {
+  it("tarjeta: antetítulo, ficha en dos columnas con disco y pista, y comunidad", async () => {
     await renderPage();
     expect(screen.getByRole("heading", { level: 1, name: "November Rain" })).toBeInTheDocument();
-    // El antetítulo ya no repite el disco: lo nombran las migas y la tira.
-    // La posición vive solo en la tira; el antetítulo es "Canción".
+    // El antetítulo es "Canción"; disco y posición los dice la ficha (openspec: modernize-song-page-phase1).
     expect(screen.getByText(song.kicker)).toBeInTheDocument();
-    expect(screen.queryByText(/Pista 10/)).not.toBeInTheDocument();
+    expect(screen.getByText(song.disc, { selector: "dt" }).nextElementSibling).toHaveTextContent("Use Your Illusion I");
+    expect(screen.getByText(song.track, { selector: "dt" }).nextElementSibling).toHaveTextContent("10 de 16");
+    // La primera aparición es el disco principal: solo su fecha (aquí, el año).
+    expect(screen.getByText(song.firstAppearance).nextElementSibling).toHaveTextContent(/^1991$/);
     expect(screen.getByRole("link", { name: "Ir a Use Your Illusion I" })).toHaveAttribute("href", UYI_ALBUM);
     expect(screen.getByText("8:57")).toBeInTheDocument();
     expect(screen.getByText(song.writtenBy)).toBeInTheDocument();
@@ -279,6 +281,37 @@ describe("página de canción", () => {
     expect(within(strip).queryByText("—")).not.toBeInTheDocument();
   });
 
+  it("sin ninguna actividad ni listas, la tarjeta no dibuja el bloque de comunidad", async () => {
+    mocks.loadSongCommunity.mockResolvedValue({
+      ratings: { count: 0, averageStars: null },
+      reactions: { count: 0, top: null },
+      favorites: { kind: "exact", value: 0 },
+      listCount: 0,
+    });
+    await renderPage();
+    expect(screen.queryByRole("region", { name: catalogEs.album.community.heading })).not.toBeInTheDocument();
+    expect(screen.queryByText(/actividad de la comunidad/)).not.toBeInTheDocument();
+  });
+
+  it("producción y versiones en la ficha", async () => {
+    mocks.loadRecordingCredits.mockResolvedValue({
+      ...CREDITS,
+      groups: {
+        ...CREDITS.groups,
+        production: [
+          { artistId: "mike", name: "Mike Clink", creditedAs: null, roles: [{ relationType: "producer", attributes: [] }] },
+          { artistId: "eng", name: "Ingeniera", creditedAs: null, roles: [{ relationType: "engineer", attributes: [] }] },
+        ],
+      },
+    });
+    await renderPage();
+    const production = screen.getByText(song.production, { selector: "dt" }).nextElementSibling!;
+    expect(within(production as HTMLElement).getByRole("link", { name: "Mike Clink" })).toBeInTheDocument();
+    expect(production).not.toHaveTextContent("Ingeniera");
+    // Una cover y una en vivo: dos versiones, con enlace a su sección.
+    expect(screen.getByRole("link", { name: "2 versiones →" })).toHaveAttribute("href", "#song-versions");
+  });
+
   it("primera aparición en un disco distinto del principal: dice su tipo", async () => {
     const single = disc("single", "Manchild", "single_ep", 1985);
     mocks.loadRecordingDetail.mockResolvedValue({
@@ -300,7 +333,7 @@ describe("página de canción", () => {
   it("tira de pistas con la anterior y la siguiente", async () => {
     await renderPage();
     const strip = screen.getByRole("navigation", { name: song.strip.label });
-    expect(within(strip).getByText("· 10 de 16")).toBeInTheDocument();
+    expect(within(strip).getByText(song.strip.heading)).toBeInTheDocument();
     // Chevron SVG común, no flechas tipográficas (refine-song-page-phase1).
     expect(within(strip).getByText(song.strip.previousLabel)).toBeInTheDocument();
     expect(within(strip).getByText(song.strip.nextLabel)).toBeInTheDocument();
@@ -331,6 +364,7 @@ describe("página de canción", () => {
     mocks.loadTrackStrip.mockResolvedValue(null);
     await renderPage();
     expect(screen.queryByRole("navigation", { name: song.strip.label })).not.toBeInTheDocument();
+    expect(screen.queryByText(song.track)).not.toBeInTheDocument();
     expect(screen.getByText(song.kicker)).toBeInTheDocument();
   });
 
@@ -607,9 +641,12 @@ describe("página de canción", () => {
     expect(screen.queryByText(song.writtenBy)).not.toBeInTheDocument();
   });
 
-  it("anónimo: el panel invita a iniciar sesión y no hay reseñas", async () => {
+  it("anónimo: «Valorar esta canción» en lugar del panel, y no hay reseñas", async () => {
     await renderPage();
-    expect(screen.getByText(song.relation.signInPrompt)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: song.rateInvite })).toHaveAttribute("href", "/auth/login");
+    expect(screen.getByText(song.rateInviteNote)).toBeInTheDocument();
+    expect(screen.queryByRole("complementary", { name: catalogEs.album.relation.heading })).not.toBeInTheDocument();
+    expect(screen.queryByText(song.relation.signInPrompt)).not.toBeInTheDocument();
     expect(screen.queryByText(catalogEs.album.relation.writeReview)).not.toBeInTheDocument();
   });
 
@@ -623,6 +660,7 @@ describe("página de canción", () => {
     });
     await renderPage();
     expect(screen.getByRole("button", { name: song.relation.favorite })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByRole("link", { name: song.rateInvite })).not.toBeInTheDocument();
     expect(mocks.loadSongPersonalState).toHaveBeenCalledWith("u1", RID);
   });
 });
