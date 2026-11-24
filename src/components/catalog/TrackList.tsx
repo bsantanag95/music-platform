@@ -42,6 +42,8 @@ interface TrackListProps {
   favoriteIds: string[];
   /** Valoraciones propias por `recordingId` (vacío sin sesión). */
   ownRatings?: Record<string, TrackRatingValue>;
+  /** Autores de la obra de cada pista por `recordingId` (openspec: modernize-album-page-phase2); sin entrada, no hay línea. */
+  songwriters?: Record<string, { id: string; name: string }[]>;
 }
 
 type Panel =
@@ -109,6 +111,7 @@ export function TrackList({
   listenedIds,
   favoriteIds,
   ownRatings = {},
+  songwriters = {},
 }: TrackListProps) {
   const t = useTranslations("catalog.album.tracks");
   const tFacts = useTranslations("catalog.album.facts");
@@ -377,6 +380,19 @@ export function TrackList({
                           )}
                           <VersionAttributeTags attributes={track.versionAttributes} />
                         </span>
+                        {(songwriters[track.recordingId]?.length ?? 0) > 0 && (
+                          <span data-songwriters className="font-data text-xs text-paper-muted">
+                            <span className="sr-only">{t("songwriters")}: </span>
+                            {songwriters[track.recordingId]!.map((person, index) => (
+                              <Fragment key={person.id}>
+                                {index > 0 ? ", " : null}
+                                <Link href={artistHref(person.name, person.id)} className="transition-colors hover:text-paper">
+                                  {person.name}
+                                </Link>
+                              </Fragment>
+                            ))}
+                          </span>
+                        )}
                         {otherArtist.length > 0 && (
                           <span className="font-data text-xs">
                             <CreditLinks credits={otherArtist} />

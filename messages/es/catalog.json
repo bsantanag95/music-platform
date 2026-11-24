@@ -864,7 +864,8 @@
       "removeRatingMessage": "Se borrará tu valoración de esta canción.",
       "removeRatingConfirm": "Quitar",
       "cancel": "Cancelar",
-      "addDetails": "Agregar detalles"
+      "addDetails": "Agregar detalles",
+      "songwriters": "Composición"
     },
     "discography": {
       "heading": "Discografía de {artist}",
@@ -1252,7 +1253,15 @@
     "upcomingTracksDescription": "Estará disponible cuando se publique el disco.",
     "noEditionsUpcomingTitle": "Se lanza el {date}",
     "rateInvite": "Valorar este disco",
-    "rateInviteNote": "Necesitas una cuenta para valorar, reseñar y registrar tus escuchas."
+    "rateInviteNote": "Necesitas una cuenta para valorar, reseñar y registrar tus escuchas.",
+    "onThisRecord": {
+      "heading": "En este disco",
+      "lineup": "Formación",
+      "production": "Producción",
+      "editions": "Ediciones",
+      "allCredits": "Todos los créditos",
+      "allEditions": "{count, plural, one {Ver la edición} other {Ver las # ediciones}}"
+    }
   },
   "song": {
     "kicker": "Canción",

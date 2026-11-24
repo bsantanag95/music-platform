@@ -66,6 +66,23 @@ function renderList(tracks: AlbumTrack[], props: Partial<React.ComponentProps<ty
 beforeEach(() => vi.clearAllMocks());
 
 describe("TrackList", () => {
+  it("compositores bajo el título (modernize-album-page-phase2): uno, varios o ninguno", () => {
+    const { container } = renderList([makeTrack(1, 1, "Invaders"), makeTrack(1, 2, "Gangland"), makeTrack(1, 3, "Sin autoría")], {
+      songwriters: {
+        "rec-1-1": [{ id: "sh", name: "Steve Harris" }],
+        "rec-1-2": [
+          { id: "as", name: "Adrian Smith" },
+          { id: "cb", name: "Clive Burr" },
+        ],
+      },
+    });
+    const lines = container.querySelectorAll("[data-songwriters]");
+    expect(lines).toHaveLength(2);
+    expect(lines[0]).toHaveTextContent(`${tracksEs.songwriters}: Steve Harris`);
+    expect(lines[1]).toHaveTextContent("Adrian Smith, Clive Burr");
+    expect(screen.getByRole("link", { name: "Steve Harris" })).toHaveAttribute("href", expect.stringContaining("sh"));
+  });
+
   it("muestra posición, título completo enlazado, duración; título y edición sin duplicar la cabecera", () => {
     const longTitle = "The Great Gig in the Sky (Instrumental Version With Vocal Improvisation, 2011 Remaster)";
     renderList([makeTrack(1, 1, "Breathe", { durationSec: 163 }), makeTrack(1, 2, longTitle)]);

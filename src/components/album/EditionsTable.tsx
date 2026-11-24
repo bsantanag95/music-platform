@@ -6,13 +6,15 @@ import { Link } from "@/i18n/navigation";
 import { albumHref } from "@/lib/catalog-links";
 import { musicBrainzReleaseUrl } from "@/lib/site-links";
 import { SECONDARY_LINK, SEGMENT_GROUP, SEGMENT_OPTION } from "@/components/ui/segmented";
+import { FAMILY_ORDER, formatFamily, hasFamily, type FormatFamily } from "./edition-formats";
 
 // Pestaña Ediciones del álbum (openspec: redesign-album-page, tarea 8.3): tabla de todas las
 // ediciones con filtro por formato y solo las oficiales por defecto. Las ediciones no tienen
 // página propia: cada fila enlaza a MusicBrainz, y las que agregan pistas llevan a su sección
 // en la pestaña Canciones. Elegir o filtrar no cambia la tracklist principal.
 
-export type FormatFamily = "vinyl" | "cd" | "digital" | "cassette" | "other";
+// Las familias de formato viven en `edition-formats.ts`: también las usa el resumen de «En este disco» (servidor).
+export { formatFamily, type FormatFamily };
 
 export interface EditionRow {
   id: string;
@@ -30,18 +32,6 @@ export interface EditionRow {
 }
 
 const PAGE = 50;
-
-/** Familia de formato para el filtro ("12\" Vinyl" → vinyl, "Hybrid SACD (CD layer)" → cd). */
-export function formatFamily(format: string): FormatFamily {
-  if (/vinyl/i.test(format)) return "vinyl";
-  if (/\bcd\b|sacd|hdcd|blu-spec|shm-cd/i.test(format)) return "cd";
-  if (/digital/i.test(format)) return "digital";
-  if (/cassette/i.test(format)) return "cassette";
-  return "other";
-}
-
-/** Orden fijo de los filtros (openspec: refine-album-page-phase3, D4): el formato más común primero. */
-const FAMILY_ORDER: FormatFamily[] = ["cd", "vinyl", "cassette", "digital", "other"];
 
 /** Formatos de MusicBrainz con nombre en la interfaz; el resto ("SACD", "Blu-ray") es nombre propio del dato. */
 const KNOWN_FORMATS: Record<string, "vinyl" | "cassette" | "digital" | "eightTrack" | "cdr" | "enhancedCd"> = {
@@ -91,7 +81,6 @@ export function EditionsTable({ releaseGroupId, editions, representativeMbid }: 
   const inScope = editions.filter(
     (e) => includeUnofficial || e.status === "Official" || e.mbid === representativeMbid,
   );
-  const hasFamily = (e: EditionRow, option: FormatFamily) => e.formats.some((f) => formatFamily(f) === option);
   // Solo las familias con alguna edición visible: un filtro con 0 llevaría a una tabla vacía.
   const families = FAMILY_ORDER.filter((option) => inScope.some((e) => hasFamily(e, option)));
   const countOf = (option: FormatFamily | "all") =>
