@@ -5,7 +5,7 @@ import { fanLayout, wallCells, type StageBackdrop } from "./artist-stage";
 
 // Portada de la página de artista (openspec: modernize-artist-page-phase1, capability `artist-header`, requisito «Portada
 // de carátulas»): franja a todo el ancho cuyo fondo sale de las carátulas de la discografía principal. Con 8 o más, un
-// muro atenuado; con 1 a 7, el color desenfocado de la primera y las fundas en abanico (con una sola, el disco asoma); sin
+// muro atenuado; con 1 a 7, el color desenfocado del último trabajo y las fundas en abanico, con el último al frente (con una sola, el disco asoma); sin
 // carátulas, un disco dibujado. Las capas son decorativas (`aria-hidden`) y usan las miniaturas de 250 px, nunca la
 // resolución completa (docs/03-data/data-licensing.md). Un velo de tinta deja el texto legible.
 

@@ -38,6 +38,17 @@ describe("stageBackdrop", () => {
     expect(stageBackdrop([])).toEqual({ mode: "none", covers: [] });
   });
 
+  it("el abanico pone al frente el último trabajo; los discos sin año van al final", () => {
+    const three = [
+      { id: "a", title: "A", year: 2017, thumbUrl: "/a" },
+      { id: "x", title: "X", year: null, thumbUrl: "/x" },
+      { id: "b", title: "B", year: 2020, thumbUrl: "/b" },
+      { id: "c", title: "C", year: 2023, thumbUrl: "/c" },
+    ];
+    expect(stageBackdrop(three).covers.map((c) => c.id)).toEqual(["c", "b", "a", "x"]);
+    expect(stageBackdrop(covers(7)).covers.map((c) => c.id)).toEqual(["6", "5", "4", "3", "2"]);
+  });
+
   it("el muro repite las carátulas en ciclo", () => {
     expect(wallCells(covers(2), 5).map((c) => c.id)).toEqual(["0", "1", "0", "1", "0"]);
   });
