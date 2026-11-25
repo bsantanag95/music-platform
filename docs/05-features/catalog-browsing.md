@@ -512,7 +512,9 @@ hacia abajo:
 > «Primer lanzamiento» y un resumen por tipo junto al título, sin «+N»); en Versiones, un disco con una sola grabación que no agrega
 > nada al título enlaza a esa versión y muestra su duración (nunca «Ver versión»; las demás sin agregado son «Grabación N»), y la
 > columna se llama «Duración y variantes»; el título de los comentarios toma la escala de las secciones (prop `headingClassName`
-> de `Comments`; álbum y artista no cambian). Con esto la modernización de la canción queda completa. Los puntos de abajo describen lo anterior que sigue vigente.
+> de `Comments`; álbum y artista no cambian). Con esto la modernización de la canción queda completa. Ajuste posterior
+> (`fix-song-card-height`): con sesión, el panel "Tu relación" va fuera de la tarjeta, en la columna derecha del cuerpo encima de
+> «En el disco» (en el teléfono, justo después de la tarjeta), para que su alto no estire la cabecera. Los puntos de abajo describen lo anterior que sigue vigente.
 
 - **Cabecera**: carátula del **disco principal** (el primer disco de estudio que contiene la
   grabación; si no hay, el más temprano), que enlaza a ese disco; antetítulo "Canción" (la posición y

@@ -130,7 +130,7 @@ export function SongFacts({
     ) : null;
 
   return (
-    <dl className="grid grid-cols-[auto_minmax(0,1fr)] items-baseline gap-x-4 gap-y-0.5 sm:grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] sm:gap-y-1.5 lg:grid-cols-[auto_minmax(0,1fr)] xl:grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)]">
+    <dl className="grid grid-cols-[auto_minmax(0,1fr)] items-baseline gap-x-4 gap-y-0.5 md:grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] sm:gap-y-1.5 lg:grid-cols-[auto_minmax(0,1fr)] xl:grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)]">
       {durationSec !== null && <Fact label={t("duration")}>{formatDuration(durationSec)}</Fact>}
       {disc && (
         <Fact label={t("disc")}>

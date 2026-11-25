@@ -137,6 +137,21 @@ async function SongPage({ params }: SongPageProps) {
     strip && detail.principalDisc && albumHrefValue ? (
       <SongOnDisc strip={strip} disc={detail.principalDisc} discHref={albumHrefValue} />
     ) : null;
+  // El panel "Tu relación" va fuera de la tarjeta, en la columna derecha del cuerpo: su alto no debe decidir el de la
+  // tarjeta (fix-song-card-height). En el teléfono, justo debajo de la tarjeta.
+  const panel = personal ? (
+    <SongRelationPanel
+      recordingId={recordingId}
+      state={{
+        ratings,
+        listens: personal.listens,
+        favorited: personal.favorited,
+        ownListMemberships: personal.ownListMemberships,
+      }}
+    />
+  ) : null;
+  // Columna lateral de la tarjeta: «Recorrer el disco» y, para el visitante, la invitación a valorar.
+  const hasCardSide = Boolean(strip) || !personal;
   const genres = songGenres.genres.length > 0 ? <GenreChips genres={songGenres.genres} max={3} /> : null;
 
   return (
@@ -145,7 +160,11 @@ async function SongPage({ params }: SongPageProps) {
 
       {/* Tarjeta: carátula · identidad y ficha · columna lateral. En el teléfono la carátula va junto a la identidad y el
           resto a todo el ancho. Sin fondo desenfocado: es lo que la distingue de la portada del álbum. */}
-      <header className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-x-4 gap-y-3 rounded-lg border border-ink-border bg-ink-surface p-4 sm:grid-cols-[8rem_minmax(0,1fr)] sm:gap-x-6 sm:gap-y-4 sm:p-5 lg:grid-cols-[168px_minmax(0,1fr)_17rem] lg:gap-x-7 lg:p-6">
+      <header
+        className={`grid grid-cols-[5.5rem_minmax(0,1fr)] gap-x-4 gap-y-3 rounded-lg border border-ink-border bg-ink-surface p-4 sm:grid-cols-[8rem_minmax(0,1fr)] sm:grid-rows-[auto_1fr] sm:gap-x-6 sm:gap-y-4 sm:p-5 lg:gap-x-7 lg:p-6 ${
+          hasCardSide ? "lg:grid-cols-[168px_minmax(0,1fr)_17rem]" : "lg:grid-cols-[168px_minmax(0,1fr)]"
+        }`}
+      >
         <div className="sm:row-span-2">
           {detail.principalDisc ? (
             // La carátula es del disco principal: lleva a él (openspec: polish-song-header).
@@ -180,42 +199,38 @@ async function SongPage({ params }: SongPageProps) {
           />
           <SongCommunity stats={stats} listsHref={itemListsHref({ type: "recording", id: recordingId })} />
         </div>
-        <div className="col-span-2 flex min-w-0 flex-col gap-4 border-t border-ink-border pt-3 empty:hidden sm:pt-4 lg:col-span-1 lg:col-start-3 lg:row-span-2 lg:row-start-1 lg:border-l lg:border-t-0 lg:pl-7 lg:pt-0">
-          {strip && <SongTrackStrip strip={strip} />}
-          {personal ? (
-            <SongRelationPanel
-              recordingId={recordingId}
-              bare
-              state={{
-                ratings,
-                listens: personal.listens,
-                favorited: personal.favorited,
-                ownListMemberships: personal.ownListMemberships,
-              }}
-            />
-          ) : (
-            <SongRateInvite />
-          )}
-        </div>
+        {hasCardSide && (
+          <div className="col-span-2 flex min-w-0 flex-col gap-4 self-start border-t border-ink-border pt-3 sm:pt-4 lg:col-span-1 lg:col-start-3 lg:row-span-2 lg:row-start-1 lg:border-l lg:border-t-0 lg:pl-7 lg:pt-0">
+            {strip && <SongTrackStrip strip={strip} />}
+            {!personal && <SongRateInvite />}
+          </div>
+        )}
       </header>
 
-      {/* Composición y Créditos apilados, con «En el disco» al lado en escritorio y debajo en el teléfono. */}
-      {hasCredits && onDisc ? (
-        <div className="grid grid-cols-1 gap-x-14 gap-y-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <div className="flex min-w-0 flex-col gap-8">
+      {/* Cuerpo: Composición y Créditos a la izquierda; a la derecha el panel "Tu relación" (con sesión) y «En el disco». En el
+          teléfono, en orden del DOM: panel, créditos, «En el disco». La fila del panel no se estira: el resto del alto de los
+          créditos va a la de «En el disco». */}
+      {(hasCredits || panel || onDisc) &&
+        (hasCredits && (panel || onDisc) ? (
+          <div className="grid grid-cols-1 gap-x-14 gap-y-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_1fr]">
+            {panel && <div className="min-w-0 lg:col-start-2 lg:row-start-1">{panel}</div>}
+            <div className={`flex min-w-0 flex-col gap-8 lg:col-start-1 lg:row-start-1 ${panel && onDisc ? "lg:row-span-2" : ""}`}>
+              <SongComposition credits={credits} />
+              <SongRecordingCredits credits={credits} principalReleaseGroupId={principalDiscId} />
+            </div>
+            {onDisc && <div className={`min-w-0 lg:col-start-2 ${panel ? "lg:row-start-2" : "lg:row-start-1"}`}>{onDisc}</div>}
+          </div>
+        ) : hasCredits ? (
+          <div className="flex flex-col gap-8">
             <SongComposition credits={credits} />
             <SongRecordingCredits credits={credits} principalReleaseGroupId={principalDiscId} />
           </div>
-          {onDisc}
-        </div>
-      ) : hasCredits ? (
-        <div className="flex flex-col gap-8">
-          <SongComposition credits={credits} />
-          <SongRecordingCredits credits={credits} principalReleaseGroupId={principalDiscId} />
-        </div>
-      ) : (
-        onDisc && <div className="w-full max-w-[20rem]">{onDisc}</div>
-      )}
+        ) : (
+          <div className="flex w-full max-w-[20rem] flex-col gap-10">
+            {panel}
+            {onDisc}
+          </div>
+        ))}
 
       <SongAppearances grouped={grouped} years={years} />
 

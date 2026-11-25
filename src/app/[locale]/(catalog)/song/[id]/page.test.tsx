@@ -737,6 +737,10 @@ describe("página de canción", () => {
     await renderPage();
     expect(screen.getByRole("button", { name: song.relation.favorite })).toHaveAttribute("aria-pressed", "true");
     expect(screen.queryByRole("link", { name: song.rateInvite })).not.toBeInTheDocument();
+    // El panel va fuera de la tarjeta, en la columna del cuerpo: su alto no estira la cabecera (fix-song-card-height).
+    const panel = screen.getByRole("complementary", { name: catalogEs.album.relation.heading });
+    expect(panel.closest("header")).toBeNull();
+    expect(screen.getByRole("navigation", { name: song.strip.label }).closest("header")).not.toBeNull();
     expect(mocks.loadSongPersonalState).toHaveBeenCalledWith("u1", RID);
   });
 });
