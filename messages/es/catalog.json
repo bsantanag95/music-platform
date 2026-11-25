@@ -1303,6 +1303,13 @@
       "discStart": "Inicio del disco",
       "discEnd": "Fin del disco"
     },
+    "onDisc": {
+      "heading": "En el disco",
+      "headingYear": "En el disco · {year}",
+      "disc": "Disco {number}",
+      "count": "{count, plural, one {# pista} other {# pistas}}",
+      "seeAll": "Ver las {count} pistas en el disco"
+    },
     "appearances": {
       "heading": "Esta grabación aparece en",
       "groups": {

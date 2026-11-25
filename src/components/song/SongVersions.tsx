@@ -180,7 +180,7 @@ export function SongVersions({ versions, songTitle, songArtistIds }: SongVersion
 
   return (
     <section aria-labelledby="song-versions" className="flex flex-col gap-3">
-      <h2 id="song-versions" className="font-display text-lg text-paper">
+      <h2 id="song-versions" className="font-display text-2xl font-bold tracking-tight text-paper">
         {t("heading")}
       </h2>
       {groups.length === 1 ? (

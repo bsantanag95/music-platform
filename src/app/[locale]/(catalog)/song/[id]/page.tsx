@@ -5,7 +5,8 @@ import { Link } from "@/i18n/navigation";
 import { AlbumCover } from "@/components/catalog/AlbumCover";
 import { itemListsHref } from "@/components/lists/lists-shared";
 import { SongAppearances } from "@/components/song/SongAppearances";
-import { SongComposition, SongRecordingCredits } from "@/components/song/SongCredits";
+import { SongComposition, SongRecordingCredits, hasCompositionBlock, hasRecordingCreditsBlock } from "@/components/song/SongCredits";
+import { SongOnDisc } from "@/components/song/SongOnDisc";
 import { GenreChips } from "@/components/genres/GenreChips";
 import { getSongGenres } from "@/services/genres/display";
 import { SongCommunity, SongFacts, SongIdentity, SongRateInvite } from "@/components/song/SongHeader";
@@ -129,6 +130,13 @@ async function SongPage({ params }: SongPageProps) {
   // Productores de la ficha: quienes tienen el rol de producción, no los demás del grupo (ingeniería de producción, etc.).
   const producers = credits.groups.production.filter((person) => person.roles.some((role) => role.relationType === "producer"));
   const versionsCount = versions ? versions.covers.length + versions.live.length + versions.others.length : 0;
+  // Cuerpo (openspec: modernize-song-page-phase2): créditos a la izquierda y «En el disco» a la derecha cuando hay de los dos.
+  const principalDiscId = detail.principalDisc?.releaseGroupId ?? null;
+  const hasCredits = hasCompositionBlock(credits) || hasRecordingCreditsBlock(credits, principalDiscId);
+  const onDisc =
+    strip && detail.principalDisc && albumHrefValue ? (
+      <SongOnDisc strip={strip} disc={detail.principalDisc} discHref={albumHrefValue} />
+    ) : null;
   const genres = songGenres.genres.length > 0 ? <GenreChips genres={songGenres.genres} max={3} /> : null;
 
   return (
@@ -167,7 +175,7 @@ async function SongPage({ params }: SongPageProps) {
             versionsHref="#song-versions"
             songwriters={credits.groups.songwriting}
             firstAppearance={firstAppearance}
-            principalDiscId={detail.principalDisc?.releaseGroupId ?? null}
+            principalDiscId={principalDiscId}
             versionLine={versionLine}
           />
           <SongCommunity stats={stats} listsHref={itemListsHref({ type: "recording", id: recordingId })} />
@@ -191,11 +199,23 @@ async function SongPage({ params }: SongPageProps) {
         </div>
       </header>
 
-      {/* Apilados a ancho completo: Composición es corta y los créditos usan dos columnas. */}
-      <div className="flex flex-col gap-4 empty:hidden">
-        <SongComposition credits={credits} />
-        <SongRecordingCredits credits={credits} principalReleaseGroupId={detail.principalDisc?.releaseGroupId ?? null} />
-      </div>
+      {/* Composición y Créditos apilados, con «En el disco» al lado en escritorio y debajo en el teléfono. */}
+      {hasCredits && onDisc ? (
+        <div className="grid grid-cols-1 gap-x-14 gap-y-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
+          <div className="flex min-w-0 flex-col gap-8">
+            <SongComposition credits={credits} />
+            <SongRecordingCredits credits={credits} principalReleaseGroupId={principalDiscId} />
+          </div>
+          {onDisc}
+        </div>
+      ) : hasCredits ? (
+        <div className="flex flex-col gap-8">
+          <SongComposition credits={credits} />
+          <SongRecordingCredits credits={credits} principalReleaseGroupId={principalDiscId} />
+        </div>
+      ) : (
+        onDisc && <div className="w-full max-w-[20rem]">{onDisc}</div>
+      )}
 
       <SongAppearances grouped={grouped} years={years} />
 

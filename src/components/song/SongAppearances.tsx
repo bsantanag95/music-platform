@@ -123,7 +123,7 @@ export function SongAppearances({ grouped, years }: SongAppearancesProps) {
 
   return (
     <section aria-labelledby="song-appearances" className="flex flex-col gap-3">
-      <h2 id="song-appearances" className="font-display text-lg text-paper">
+      <h2 id="song-appearances" className="font-display text-2xl font-bold tracking-tight text-paper">
         {t("heading")}
       </h2>
       {byOrigin ? (

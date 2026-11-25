@@ -15,10 +15,11 @@ import { orderSound, splitMembers } from "./song-credits";
 // créditos del álbum. La composición va aparte porque en la canción la obra es lo que une a sus
 // versiones.
 
-// Título de sección como Apariciones y Versiones; la caja envuelve solo el contenido (openspec: refine-song-page-phase1, D3).
+// Título de sección como Apariciones y Versiones. Sin caja desde modernize-song-page-phase2: la tarjeta de arriba ya es la
+// superficie y las filas se separan con un filete; títulos a la escala de los bloques (24 px, negrita).
 const sectionClass = "flex min-w-0 flex-col gap-3";
-const boxClass = "flex min-w-0 flex-col gap-2 rounded border border-ink-border bg-ink-surface px-4 py-3";
-const headingClass = "font-display text-lg text-paper";
+const boxClass = "flex min-w-0 flex-col gap-2";
+const headingClass = "font-display text-2xl font-bold tracking-tight text-paper";
 
 /** El bloque Composición solo aparece cuando agrega algo: roles distintos entre autores. */
 export function hasCompositionBlock(credits: RecordingCredits): boolean {
@@ -78,7 +79,7 @@ function PersonRow({ kind, person, prominent }: { kind: TrackCreditKind; person:
   const hidden = collapse ? roles.slice(ROLES_VISIBLE) : [];
 
   return (
-    <li className="grid grid-cols-1 gap-x-4 gap-y-0.5 py-1.5 sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] sm:items-baseline">
+    <li className="grid grid-cols-1 gap-x-4 gap-y-0.5 border-b border-ink-border py-1.5 sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] sm:items-baseline">
       <Link
         href={artistHref(person.name, person.artistId)}
         className={`min-w-0 hover:text-amber hover:underline ${prominent ? "font-display text-paper" : "font-body text-sm text-paper"}`}
@@ -192,7 +193,7 @@ export function SongRecordingCredits({
       </h2>
       <div className={boxClass}>
         {/* Intérpretes a la izquierda y el resto apilado a la derecha: se leen en orden. */}
-        <div className={`grid grid-cols-1 gap-x-8 gap-y-4 ${hasPerformers && hasRest ? "lg:grid-cols-2" : ""}`}>
+        <div className={`grid grid-cols-1 gap-x-8 gap-y-4 ${hasPerformers && hasRest ? "xl:grid-cols-2" : ""}`}>
           {hasPerformers && <CreditGroup kind="performers" credits={credits} />}
           {hasRest && (
             <div className="flex min-w-0 flex-col gap-4">
