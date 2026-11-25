@@ -209,6 +209,8 @@ export interface StripTrack {
   discNumber: number;
   position: number;
   title: string;
+  /** Duración de la grabación, para la columna «En el disco» (openspec: modernize-song-page-phase2). */
+  durationSec?: number | null;
 }
 
 export interface TrackStrip {
@@ -220,6 +222,8 @@ export interface TrackStrip {
   multiDisc: boolean;
   previous: StripTrack | null;
   next: StripTrack | null;
+  /** La lista completa, en orden de disco y posición: la columna «En el disco». */
+  tracks: StripTrack[];
 }
 
 /**
@@ -236,6 +240,7 @@ export function buildTrackStrip(tracks: StripTrack[], recordingId: string): Trac
     multiDisc: new Set(tracks.map((t) => t.discNumber)).size > 1,
     previous: tracks[index - 1] ?? null,
     next: tracks[index + 1] ?? null,
+    tracks,
   };
 }
 
@@ -257,6 +262,7 @@ export async function getTrackStrip(recordingId: string, representativeReleaseId
       discNumber: track.discNumber,
       position: track.position,
       title: recording.title,
+      durationSec: recording.durationSec,
     })
     .from(track)
     .innerJoin(recording, eq(recording.id, track.recordingId))

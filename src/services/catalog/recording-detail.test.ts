@@ -117,6 +117,8 @@ describe("buildTrackStrip", () => {
     expect(strip).toMatchObject({ index: 2, total: 3, multiDisc: true });
     expect(strip?.previous?.recordingId).toBe("a");
     expect(strip?.next?.recordingId).toBe("c");
+    // La lista completa viaja con la tira: la usa la columna «En el disco».
+    expect(strip?.tracks.map((t) => t.recordingId)).toEqual(["a", "b", "c"]);
   });
 
   it("la primera no tiene anterior y la última no tiene siguiente", () => {

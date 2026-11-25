@@ -183,6 +183,18 @@ const VERSIONS: RecordingVersions = {
   others: [],
 };
 
+/** Lista de un disco de `total` pistas con la grabación de la página en `at` (1-based), para la tira y «En el disco». */
+function discTracks(total: number, at: number, discs = 1) {
+  const perDisc = Math.ceil(total / discs);
+  return Array.from({ length: total }, (_, i) => ({
+    recordingId: i + 1 === at ? RID : i + 1 === at - 1 ? "prev" : i + 1 === at + 1 ? "next" : `t${i + 1}`,
+    discNumber: Math.floor(i / perDisc) + 1,
+    position: (i % perDisc) + 1,
+    title: i + 1 === at ? "November Rain" : i + 1 === at - 1 ? "Double Talkin' Jive" : i + 1 === at + 1 ? "The Garden" : `Pista ${i + 1}`,
+    durationSec: 200,
+  }));
+}
+
 const STATS = {
   ratings: { count: 128, averageStars: 4.3 },
   reactions: { count: 60, top: "obsessed" },
@@ -202,6 +214,7 @@ beforeEach(() => {
     multiDisc: false,
     previous: { recordingId: "prev", discNumber: 1, position: 9, title: "Double Talkin' Jive" },
     next: { recordingId: "next", discNumber: 1, position: 11, title: "The Garden" },
+    tracks: discTracks(16, 10),
   });
   mocks.loadRecordingCredits.mockResolvedValue(CREDITS);
   mocks.loadVersions.mockResolvedValue(VERSIONS);
@@ -350,6 +363,7 @@ describe("página de canción", () => {
       multiDisc: false,
       previous: null,
       next: { recordingId: "next", discNumber: 1, position: 2, title: "Tears" },
+      tracks: discTracks(16, 1),
     });
     await renderPage();
     const strip = screen.getByRole("navigation", { name: song.strip.label });
@@ -365,7 +379,58 @@ describe("página de canción", () => {
     await renderPage();
     expect(screen.queryByRole("navigation", { name: song.strip.label })).not.toBeInTheDocument();
     expect(screen.queryByText(song.track)).not.toBeInTheDocument();
+    expect(screen.queryByRole("complementary", { name: /En el disco/ })).not.toBeInTheDocument();
     expect(screen.getByText(song.kicker)).toBeInTheDocument();
+  });
+
+  it("«En el disco»: todas las pistas, la actual marcada sin enlace, y el total", async () => {
+    await renderPage();
+    const column = screen.getByRole("complementary", { name: "En el disco · 1991" });
+    const items = within(column).getAllByRole("listitem");
+    expect(items).toHaveLength(16);
+    const current = within(column).getByText("November Rain").closest("[aria-current]");
+    expect(current).toHaveAttribute("aria-current", "page");
+    expect(current?.closest("a")).toBeNull();
+    expect(within(column).getByRole("link", { name: /The Garden/ })).toHaveAttribute("href", "/song/next");
+    expect(within(column).getByText("16 pistas · 53:20")).toBeInTheDocument();
+    expect(within(column).queryByText(/Ver las/)).not.toBeInTheDocument();
+  });
+
+  it("«En el disco» de un disco largo: ventana de 11 pistas, cortes y enlace al disco", async () => {
+    mocks.loadTrackStrip.mockResolvedValue({
+      current: { recordingId: RID, discNumber: 1, position: 15, title: "November Rain" },
+      index: 15,
+      total: 40,
+      multiDisc: false,
+      previous: null,
+      next: null,
+      tracks: discTracks(40, 15),
+    });
+    await renderPage();
+    const column = screen.getByRole("complementary", { name: "En el disco · 1991" });
+    expect(within(column).getByText("Pista 10")).toBeInTheDocument();
+    expect(within(column).getByText("Pista 20")).toBeInTheDocument();
+    expect(within(column).queryByText("Pista 9")).not.toBeInTheDocument();
+    expect(within(column).queryByText("Pista 21")).not.toBeInTheDocument();
+    expect(within(column).getAllByText("…")).toHaveLength(2);
+    expect(within(column).getByRole("link", { name: "Ver las 40 pistas en el disco →" })).toHaveAttribute("href", UYI_ALBUM);
+  });
+
+  it("«En el disco» de dos medios: un rótulo por disco y numeración disco-pista", async () => {
+    mocks.loadTrackStrip.mockResolvedValue({
+      current: { recordingId: RID, discNumber: 1, position: 2, title: "November Rain" },
+      index: 2,
+      total: 6,
+      multiDisc: true,
+      previous: null,
+      next: null,
+      tracks: discTracks(6, 2, 2),
+    });
+    await renderPage();
+    const column = screen.getByRole("complementary", { name: "En el disco · 1991" });
+    expect(within(column).getByText("Disco 1")).toBeInTheDocument();
+    expect(within(column).getByText("Disco 2")).toBeInTheDocument();
+    expect(within(column).getByText("2-1")).toBeInTheDocument();
   });
 
   it("un solo autor: la ficha lo nombra y no hay bloque Composición", async () => {

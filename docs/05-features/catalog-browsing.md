@@ -605,8 +605,11 @@ hacia abajo:
 > —solo la fecha si es el disco principal—, producción con hasta 2 productores, versión y "N versiones →") y una columna
 > lateral con **«Recorrer el disco»** (pista anterior y siguiente; reemplaza la franja de la tira) y la acción principal:
 > **«Valorar esta canción»** para el visitante (al inicio de sesión, en lugar del panel) o el panel "Tu relación" sin caja.
-> Sin ninguna actividad ni listas, el bloque de comunidad no se dibuja. **Fase 2**: créditos con la columna «En el disco»
-> (todas las pistas, esta marcada). **Fase 3**: «Aparece en» como franja de carátulas, versiones con año y duración en
+> Sin ninguna actividad ni listas, el bloque de comunidad no se dibuja. **Fase 2** (hecha): Composición y Créditos sin caja
+> (filas con filete; Intérpretes y el resto en dos columnas desde `xl`) y, a su lado, la columna **«En el disco»**: las pistas de la
+> edición representativa con número, título y duración, esta marcada y sin enlace, «Disco N» en varios medios y «N pistas ·
+> total» (con «≈» si falta alguna duración); con más de 20 pistas, 5 antes y 5 después y «Ver las N pistas en el disco». Sale de la
+> misma consulta que «Recorrer el disco». Los títulos de sección pasan a 24 px en negrita. **Fase 3**: «Aparece en» como franja de carátulas, versiones con año y duración en
 > lugar de "Ver versión", comentarios con la escala nueva. Los puntos de abajo describen lo anterior que sigue vigente.
 
 - **Cabecera**: carátula del **disco principal** (el primer disco de estudio que contiene la

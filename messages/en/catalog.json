@@ -1303,6 +1303,13 @@
       "discStart": "Start of the record",
       "discEnd": "End of the record"
     },
+    "onDisc": {
+      "heading": "On the disc",
+      "headingYear": "On the disc · {year}",
+      "disc": "Disc {number}",
+      "count": "{count, plural, one {# track} other {# tracks}}",
+      "seeAll": "See all {count} tracks on the disc"
+    },
     "appearances": {
       "heading": "This recording appears on",
       "groups": {
