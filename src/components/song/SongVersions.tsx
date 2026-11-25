@@ -49,10 +49,24 @@ function RecordingItem({ entry, label }: { entry: VersionEntry; label: string })
   );
 }
 
+/** Duración y atributos extra de una grabación sola en su fila, sin enlace propio: lo lleva el disco. */
+function SoleRecording({ entry }: { entry: VersionEntry }) {
+  const extra = entry.attributes.filter((attribute) => attribute !== "live" && attribute !== "cover");
+  return (
+    <span className="min-w-0">
+      {entry.durationSec !== null && <span className="font-data text-xs text-paper-muted">{formatDuration(entry.durationSec)}</span>}
+      <VersionAttributeTags attributes={extra} />
+    </span>
+  );
+}
+
 function DiscRow({ row, songTitle, withArtist }: { row: VersionDiscRow; songTitle: string; withArtist: boolean }) {
   const t = useTranslations("catalog.song.versions");
   const labels = row.recordings.map((entry) => variantLabel(entry.title, songTitle));
-  const unnamedTotal = labels.filter((label) => label === null).length;
+  // Una sola grabación que no agrega nada al título: el disco enlaza a ella y no hace falta "Ver versión"
+  // (openspec: modernize-song-page-phase3).
+  const sole = row.recordings.length === 1 && labels[0] === null ? row.recordings[0]! : null;
+  const discClass = "text-paper [overflow-wrap:anywhere] hover:text-amber hover:underline";
   let unnamed = 0;
   // El artista comodín de MusicBrainz se nombra en la interfaz y sin enlace (openspec: refine-song-page-phase1, D2).
   const artist =
@@ -73,11 +87,12 @@ function DiscRow({ row, songTitle, withArtist }: { row: VersionDiscRow; songTitl
       <span className="font-data text-xs text-paper-muted">{row.disc?.year ?? "—"}</span>
       {withArtist && <span className="min-w-0 font-body text-sm">{artist}</span>}
       <span className={`min-w-0 font-body text-sm ${withArtist ? "col-start-2 sm:col-start-auto" : ""}`}>
-        {row.disc ? (
-          <Link
-            href={albumHref(row.artist?.name ?? null, row.disc.title, row.disc.releaseGroupId)}
-            className="text-paper [overflow-wrap:anywhere] hover:text-amber hover:underline"
-          >
+        {sole ? (
+          <Link href={songHref(sole.artist?.name ?? null, sole.title, sole.recordingId)} className={row.disc ? discClass : `${discClass} text-paper-muted`}>
+            {row.disc ? row.disc.title : t("noDisc")}
+          </Link>
+        ) : row.disc ? (
+          <Link href={albumHref(row.artist?.name ?? null, row.disc.title, row.disc.releaseGroupId)} className={discClass}>
             {row.disc.title}
           </Link>
         ) : (
@@ -86,14 +101,21 @@ function DiscRow({ row, songTitle, withArtist }: { row: VersionDiscRow; songTitl
         {/* En los grupos propios, una grabación acreditada a otra entrada del catálogo. */}
         {!withArtist && artist && <span className="block font-data text-xs">{artist}</span>}
       </span>
-      <ul className="col-start-2 flex min-w-0 flex-wrap gap-x-4 gap-y-1 sm:col-start-auto">
-        {row.recordings.map((entry, index) => {
-          const variant = labels[index] ?? null;
-          if (variant === null) unnamed += 1;
-          const label = variant ?? (unnamedTotal > 1 ? t("recordingN", { n: unnamed }) : t("openVersion"));
-          return <RecordingItem key={entry.recordingId} entry={entry} label={label} />;
-        })}
-      </ul>
+      {sole ? (
+        <span className="col-start-2 sm:col-start-auto">
+          <SoleRecording entry={sole} />
+        </span>
+      ) : (
+        <ul className="col-start-2 flex min-w-0 flex-wrap gap-x-4 gap-y-1 sm:col-start-auto">
+          {row.recordings.map((entry, index) => {
+            const variant = labels[index] ?? null;
+            if (variant === null) unnamed += 1;
+            // En una fila de varias grabaciones, la que no agrega nada se numera: nunca "Ver versión".
+            const label = variant ?? t("recordingN", { n: unnamed });
+            return <RecordingItem key={entry.recordingId} entry={entry} label={label} />;
+          })}
+        </ul>
+      )}
     </li>
   );
 }

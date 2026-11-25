@@ -159,9 +159,6 @@ export async function getRecordingDetail(recordingId: string): Promise<Recording
 export const APPEARANCE_CATEGORY_ORDER = ["studio", "single_ep", "compilation", "live_other"] as const;
 export type AppearanceCategory = (typeof APPEARANCE_CATEGORY_ORDER)[number];
 
-/** Discos visibles por grupo antes del "+N". */
-export const APPEARANCES_VISIBLE_PER_GROUP = 3;
-
 export interface AppearanceGroup {
   category: AppearanceCategory;
   discs: ContainingAlbum[];
