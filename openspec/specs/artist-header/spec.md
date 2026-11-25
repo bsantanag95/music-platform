@@ -120,7 +120,8 @@ La cabecera SHALL ocupar todo el ancho de la ventana con un fondo hecho de las c
 (miniaturas de 250 px, nunca la resolución completa), en el orden de la discografía y sin repetir disco salvo para llenar el muro:
 
 - Con **8 o más** carátulas, un muro de carátulas atenuado.
-- Con **1 a 7**, el color desenfocado de la primera carátula de fondo y hasta 5 fundas en abanico a un lado; con una sola, un disco
+- Con **1 a 7**, el color desenfocado de la carátula del último trabajo de fondo y hasta 5 fundas en abanico a un lado, de la más
+  reciente (al frente) a la más antigua; con una sola, un disco
   asoma de la funda.
 - **Sin carátulas**, un fondo de tinta con un disco dibujado.
 
@@ -135,7 +136,8 @@ sobre él. La página SHALL NOT desbordar en horizontal en ningún caso.
 #### Scenario: Dos carátulas
 
 - **WHEN** un artista tiene dos discos con carátula
-- **THEN** el fondo toma el color de la primera y las dos fundas aparecen en abanico, sin celdas vacías ni repetidas
+- **THEN** el fondo toma el color del más reciente y las dos fundas aparecen en abanico, con el más reciente al frente, sin
+  celdas vacías ni repetidas
 
 #### Scenario: Una carátula
 

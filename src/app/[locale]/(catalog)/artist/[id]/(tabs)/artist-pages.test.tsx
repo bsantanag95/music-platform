@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, within } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { artistHref, artistSegment } from "@/lib/catalog-links";
@@ -258,6 +258,12 @@ beforeEach(() => {
 });
 
 describe("layout de la página de artista", () => {
+  // La primera importación del layout (portada, ficha, panel, comentarios) tarda varios segundos en frío: se hace aquí, con su
+  // propio plazo, para que no cuente contra el primer test.
+  beforeAll(async () => {
+    await import("./layout");
+  }, 30_000);
+
   it("con premios suma la pestaña Premios y la fila de la ficha (refine-artist-page-phase3)", async () => {
     mocks.getArtistAwards.mockResolvedValue(SOME_AWARDS);
     await renderLayout();

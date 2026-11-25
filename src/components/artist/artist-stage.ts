@@ -40,13 +40,20 @@ export function stageCovers(discography: DiscographyLike | null): StageCover[] {
 
 export interface StageBackdrop {
   mode: StageMode;
-  /** Muro: las carátulas distintas que se repiten; abanico: las fundas en orden; sin carátulas: vacío. */
+  /** Muro: las carátulas distintas que se repiten; abanico: las fundas de la más reciente a la más antigua; sin carátulas: vacío. */
   covers: StageCover[];
+}
+
+/** Del disco más reciente al más antiguo; los que no tienen año, al final en su orden. */
+export function newestFirst(covers: StageCover[]): StageCover[] {
+  const dated = covers.filter((cover) => cover.year !== null).reverse();
+  return [...dated, ...covers.filter((cover) => cover.year === null)];
 }
 
 export function stageBackdrop(covers: StageCover[]): StageBackdrop {
   if (covers.length >= WALL_MIN) return { mode: "wall", covers: covers.slice(0, WALL_DISTINCT_MAX) };
-  if (covers.length >= 1) return { mode: "fan", covers: covers.slice(0, FAN_MAX) };
+  // En el abanico manda el último trabajo: va al frente y su color tiñe el fondo.
+  if (covers.length >= 1) return { mode: "fan", covers: newestFirst(covers).slice(0, FAN_MAX) };
   return { mode: "none", covers: [] };
 }
 

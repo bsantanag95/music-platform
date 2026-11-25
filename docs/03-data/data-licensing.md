@@ -35,7 +35,7 @@ La metadata de qué imágenes existen es abierta, pero **las imágenes en sí so
 
 **Carátulas como fondo de la portada del artista** (cambio `modernize-artist-page-phase1`): la portada de la página de artista
 usa de fondo las carátulas de la discografía principal de ese mismo artista, siempre las miniaturas de 250 px (espejo o CAA) que la
-discografía ya muestra: en un muro atenuado con celdas de menos de 250 px, o la primera ampliada pero desenfocada (solo color) junto
+discografía ya muestra: en un muro atenuado con celdas de menos de 250 px, o la del último trabajo ampliada pero desenfocada (solo color) junto
 a fundas de como mucho 280 px. Identifican la obra del artista de la página, como el muro de la portada de Inicio; nunca se usa otra
 resolución ni carátulas de otros artistas. La portada de la página de álbum (cambio `modernize-album-page-phase1`) usa de fondo la
 miniatura de ese mismo disco, ampliada pero desenfocada (solo color), y la muestra legible en su funda a lo sumo a 250 px.

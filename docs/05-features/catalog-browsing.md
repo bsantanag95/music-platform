@@ -185,7 +185,7 @@ se revisa antes de una exposición pública o cuando el catálogo tenga volumen 
 
 **Portada (cambio `modernize-artist-page-phase1`, 2026-11 — propuesta «D · Mezcla» de la auditoría del 2026-11-21, mockups en
 `mockups/artist-2026-11/`).** La cabecera es una franja a todo el ancho cuyo fondo sale **siempre** de las carátulas de la
-discografía principal (miniaturas de 250 px): con 8 o más, un muro atenuado; con 1 a 7, el color desenfocado de la primera y hasta
+discografía principal (miniaturas de 250 px): con 8 o más, un muro atenuado; con 1 a 7, el color desenfocado del último trabajo y hasta
 5 fundas en abanico (con una sola, el disco asoma; en el teléfono el abanico sube junto al retrato); sin carátulas, un disco
 dibujado. La foto de Commons es un **retrato circular** con su crédito en la esquina de la portada; sin foto, la carátula del disco
 mejor valorado (o del más reciente) en cuadrado y enlazada al disco; sin carátulas, las iniciales. Nombre grande, descripción
