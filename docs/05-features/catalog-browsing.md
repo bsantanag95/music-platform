@@ -609,8 +609,12 @@ hacia abajo:
 > (filas con filete; Intérpretes y el resto en dos columnas desde `xl`) y, a su lado, la columna **«En el disco»**: las pistas de la
 > edición representativa con número, título y duración, esta marcada y sin enlace, «Disco N» en varios medios y «N pistas ·
 > total» (con «≈» si falta alguna duración); con más de 20 pistas, 5 antes y 5 después y «Ver las N pistas en el disco». Sale de la
-> misma consulta que «Recorrer el disco». Los títulos de sección pasan a 24 px en negrita. **Fase 3**: «Aparece en» como franja de carátulas, versiones con año y duración en
-> lugar de "Ver versión", comentarios con la escala nueva. Los puntos de abajo describen lo anterior que sigue vigente.
+> misma consulta que «Recorrer el disco». Los títulos de sección pasan a 24 px en negrita. **Fase 3** (hecha): «Aparece en» como
+> **franja de carátulas** (la de la discografía del álbum: todos los discos por tipo y fecha, tipo bajo la fecha si no es de estudio,
+> «Primer lanzamiento» y un resumen por tipo junto al título, sin «+N»); en Versiones, un disco con una sola grabación que no agrega
+> nada al título enlaza a esa versión y muestra su duración (nunca «Ver versión»; las demás sin agregado son «Grabación N»), y la
+> columna se llama «Duración y variantes»; el título de los comentarios toma la escala de las secciones (prop `headingClassName`
+> de `Comments`; álbum y artista no cambian). Con esto la modernización de la canción queda completa. Los puntos de abajo describen lo anterior que sigue vigente.
 
 - **Cabecera**: carátula del **disco principal** (el primer disco de estudio que contiene la
   grabación; si no hay, el más temprano), que enlaza a ese disco; antetítulo "Canción" (la posición y
@@ -644,16 +648,16 @@ hacia abajo:
   álbum, la página agenda en segundo plano la sincronización de créditos y autoría del disco
   principal.
 - **"Esta grabación aparece en"**: los discos que contienen esta misma grabación, por tipo
-  (estudio, singles y EP, recopilaciones, en vivo y otros), 3 por grupo más "+N", con mes y año
+  (estudio, singles y EP, recopilaciones, en vivo y otros), en una franja de carátulas (Fase 3), con mes y año
   cuando la fecha los tiene y la marca "Primer lanzamiento" (fecha completa como ayuda) en el más
-  temprano. Con recopilaciones y discos del artista, cada origen va en su columna.
+  temprano.
 - **"Otras versiones de la canción"**: las demás grabaciones de su obra, por grupo —
   Versiones de otros artistas (`cover`), En vivo (`live`) y Otras grabaciones (sin marca) — según
   los atributos de MusicBrainz, sin deducir nada (ADR 0020). Cada grupo es una pestaña (un grupo
   único va como subtítulo) con una tabla de una columna: una fila por disco (Año | Disco |
   Grabaciones, más Artista en los covers) con sus grabaciones como variantes enlazadas —lo que
-  el título agrega al de la canción, "version 1", o "Ver versión"/"Grabación N"— y "+N más"
-  pasados 10 discos (`song-versions-tabs`).
+  el título agrega al de la canción, "version 1", o "Grabación N"; con una sola grabación sin agregado, el
+  disco enlaza a ella y se ve su duración (Fase 3)— y "+N más" pasados 10 discos (`song-versions-tabs`).
 - **Comentarios** al final. Sin reseñas de canción.
 
 ## 4. Navegación por membresías (banda → integrantes) — diferida a Fase 4

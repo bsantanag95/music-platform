@@ -230,6 +230,7 @@ async function SongPage({ params }: SongPageProps) {
           authenticated={Boolean(userId)}
           userId={userId ?? undefined}
           canModerate={canModerate}
+          headingClassName="font-display text-2xl font-bold tracking-tight text-paper"
         />
       </div>
     </main>

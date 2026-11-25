@@ -1321,8 +1321,17 @@
       "original": "Primer lanzamiento",
       "originalOn": "Primer lanzamiento: {date}",
       "unknownYear": "Año desconocido",
-      "showMore": "+{count} más",
-      "showLess": "Mostrar menos"
+      "counts": {
+        "studio": "{count, plural, one {# álbum de estudio} other {# álbumes de estudio}}",
+        "single_ep": "{count, plural, one {# single o EP} other {# singles y EP}}",
+        "compilation": "{count, plural, one {# recopilación} other {# recopilaciones}}",
+        "live_other": "{count, plural, one {# en vivo u otro} other {# en vivo y otros}}"
+      },
+      "types": {
+        "single_ep": "single/EP",
+        "compilation": "recopilación",
+        "live_other": "en vivo u otro"
+      }
     },
     "versions": {
       "heading": "Otras versiones de la canción",
@@ -1334,14 +1343,13 @@
       "showMore": "+{count} más",
       "showLess": "Mostrar menos",
       "tablist": "Tipos de versión",
-      "openVersion": "Ver versión",
       "recordingN": "Grabación {n}",
       "noDisc": "Sin disco",
       "columns": {
         "year": "Año",
         "artist": "Artista",
         "disc": "Disco",
-        "recordings": "Grabaciones"
+        "recordings": "Duración y variantes"
       },
       "unknownArtist": "Artista desconocido"
     },

@@ -582,16 +582,17 @@ describe("página de canción", () => {
     expect(within(credits).getByText("+2")).toBeInTheDocument();
   });
 
-  it("discos por tipo, con la marca original y el '+N' en recopilaciones", async () => {
+  it("apariciones en franja: todos los discos por tipo, la marca original y el resumen por tipo", async () => {
     await renderPage();
     const section = screen.getByRole("region", { name: song.appearances.heading });
-    expect(within(section).getByText(song.appearances.groups.studio, { exact: false })).toBeInTheDocument();
+    // Sin "+N": los 7 discos a la vista, en el orden de los tipos (estudio, singles, recopilaciones).
+    const titles = within(section).getAllByRole("link").map((link) => link.querySelector(".line-clamp-2")?.textContent);
+    expect(titles).toEqual(["Use Your Illusion I", "November Rain", "Yesterdays", "Use Your Illusion", "Greatest Hits", "Best Ballads", "Roses N' Guns"]);
+    expect(within(section).queryByRole("button")).not.toBeInTheDocument();
     expect(within(section).getByText(song.appearances.original)).toBeInTheDocument();
-    // Un solo disco en el grupo: sin "· 1".
-    expect(within(section).getByText(song.appearances.groups.studio).textContent).toBe(song.appearances.groups.studio);
-    const more = within(section).getByRole("button", { name: "+1 más" });
-    fireEvent.click(more);
-    expect(within(section).getByRole("link", { name: /Roses N' Guns/ })).toBeInTheDocument();
+    expect(within(section).getByText("1 álbum de estudio · 2 singles y EP · 4 recopilaciones")).toBeInTheDocument();
+    // El tipo solo cuando no es de estudio.
+    expect(within(section).getAllByText("recopilación")).toHaveLength(4);
   });
 
   it("apariciones: mes y año cuando la fecha lo tiene y la fecha completa del primer lanzamiento", async () => {
@@ -620,13 +621,15 @@ describe("página de canción", () => {
     expect(tabs[0]).toHaveAttribute("aria-selected", "true");
     // Otros artistas: año, artista, disco y la versión con sus atributos extra.
     expect(within(section).getByRole("link", { name: "Rockabye Baby!" })).toHaveAttribute("href", "/artist/rockabye");
-    expect(within(section).getByRole("link", { name: "Lullaby Renditions" })).toHaveAttribute("href", "/album/lull");
-    expect(within(section).getByRole("link", { name: song.versions.openVersion })).toHaveAttribute("href", "/song/cover-1");
+    // Una sola grabación sin variante: el disco enlaza a la versión, sin "Ver versión".
+    expect(within(section).getByRole("link", { name: "Lullaby Renditions" })).toHaveAttribute("href", "/song/cover-1");
+    expect(within(section).queryByText("Ver versión")).not.toBeInTheDocument();
+    expect(within(section).getByText("4:47")).toBeInTheDocument();
     expect(within(section).getByText(catalogEs.versionAttributes.instrumental)).toBeInTheDocument();
     fireEvent.click(tabs[1]!);
     expect(tabs[1]).toHaveAttribute("aria-selected", "true");
     expect(within(section).queryByRole("link", { name: "Rockabye Baby!" })).not.toBeInTheDocument();
-    expect(within(section).getByRole("link", { name: "Live Era '87–'93" })).toHaveAttribute("href", "/album/era");
+    expect(within(section).getByRole("link", { name: "Live Era '87–'93" })).toHaveAttribute("href", "/song/live-1");
   });
 
   it("una versión del artista comodín de MusicBrainz dice «Artista desconocido» sin enlace", async () => {
@@ -665,8 +668,9 @@ describe("página de canción", () => {
     expect(within(section).getByRole("link", { name: "Grabación 1" })).toHaveAttribute("href", "/song/plain-a");
     expect(within(section).getByRole("link", { name: "Grabación 2" })).toHaveAttribute("href", "/song/plain-b");
     // Sin disco: su propia fila.
-    expect(within(section).getByText(song.versions.noDisc)).toBeInTheDocument();
-    expect(within(section).getByRole("link", { name: song.versions.openVersion })).toHaveAttribute("href", "/song/loose");
+    expect(within(section).getByRole("link", { name: song.versions.noDisc })).toHaveAttribute("href", "/song/loose");
+    // Varias grabaciones en el disco: el disco enlaza al disco.
+    expect(within(section).getByRole("link", { name: "Live Era '87–'93" })).toHaveAttribute("href", "/album/era");
   });
 
   it("otras versiones: más de 10 discos muestran '+N más'", async () => {
@@ -704,6 +708,13 @@ describe("página de canción", () => {
     expect(screen.queryByRole("region", { name: song.recordingCredits })).not.toBeInTheDocument();
     expect(screen.queryByRole("region", { name: song.versions.heading })).not.toBeInTheDocument();
     expect(screen.queryByText(song.writtenBy)).not.toBeInTheDocument();
+  });
+
+  it("el título de los comentarios tiene el estilo de las secciones de la canción", async () => {
+    await renderPage();
+    const comments = screen.getByRole("heading", { level: 2, name: catalogEs.social.commentsHeading });
+    const versions = screen.getByRole("heading", { level: 2, name: song.versions.heading });
+    expect(comments.className).toBe(versions.className);
   });
 
   it("anónimo: «Valorar esta canción» en lugar del panel, y no hay reseñas", async () => {

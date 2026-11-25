@@ -33,6 +33,8 @@ interface CommentsProps {
   topics?: boolean;
   /** El visitante tiene `moderation.suspend_social`. */
   canModerate?: boolean;
+  /** Clase del título; la canción usa la de sus secciones (openspec: modernize-song-page-phase3). Álbum y artista no la pasan. */
+  headingClassName?: string;
 }
 
 export function Comments({
@@ -43,6 +45,7 @@ export function Comments({
   userId,
   topics = false,
   canModerate = false,
+  headingClassName = "font-display text-xl text-paper",
 }: CommentsProps) {
   const t = useTranslations("catalog.social");
   const tErrors = useTranslations("errors");
@@ -189,7 +192,7 @@ export function Comments({
 
   return (
     <section aria-labelledby="comments-heading" className="flex w-full flex-col gap-4 border-t border-ink-border pt-6">
-      <h2 id="comments-heading" className="font-display text-xl text-paper">{t("commentsHeading")}</h2>
+      <h2 id="comments-heading" className={headingClassName}>{t("commentsHeading")}</h2>
       {topics && (
         <div role="group" aria-label={t("topicFilterLabel")} className="flex flex-wrap gap-2">
           {[null, ...TOPICS].map((topic) => (
