@@ -50,7 +50,18 @@ export async function RecentListensShelf({
                 </span>
               </Link>
               {target.artistName ? (
-                <p className="truncate font-body text-sm text-paper-muted">{target.artistName}</p>
+                <p className="truncate font-body text-sm text-paper-muted">
+                  {target.artistId ? (
+                    <Link
+                      href={targetHref("artist", target.artistId, target.artistName)}
+                      className="transition-colors hover:text-paper"
+                    >
+                      {target.artistName}
+                    </Link>
+                  ) : (
+                    target.artistName
+                  )}
+                </p>
               ) : null}
               <p className="mt-1 flex flex-wrap items-baseline gap-x-1.5 font-data text-xs text-paper-muted">
                 {listen.rating ? (

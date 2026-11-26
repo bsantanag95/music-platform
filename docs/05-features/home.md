@@ -134,12 +134,15 @@ entró) seguido de los mismos bloques de descubrimiento. Este cambio cierra su j
 4. **Lo último que escuchaste** (`RecentListensShelf`, `redesign-signed-in-home-phase2`): estante
    con los últimos objetivos **distintos** anotados como escucha (hasta 8; `listMyRecentListens`
    lee las 60 escuchas más recientes y deduplica por objetivo), cada uno con tu valoración en
-   forma compacta o el contexto de la escucha, y la fecha. No filtra por audiencia (contenido
-   propio). Rejilla de 8 desde `lg`, riel horizontal por debajo. Se oculta sin escuchas.
+   forma compacta o el contexto de la escucha, y la fecha. El título enlaza a la entidad y el
+   artista acreditado a su página (`artistId`, `PRIMARY_ARTIST_ID_SQL`). No filtra por audiencia
+   (contenido propio). Rejilla de 8 desde `lg`, riel horizontal por debajo. Se oculta sin escuchas.
 5. **De quienes sigues** (`FeedPreview`): `listFeed` con `pageSize = 30` y
    `selectHomeFeedCards` (`home-feed-cards.ts`) eligen hasta 7 tarjetas (`ActivityCard`, la
    primera ancha): escucha, valoración, reseña, comentario y favorito de álbum; las escuchas
-   seguidas de una persona se unen en una tarjeta de racha (mosaico 2×2 y títulos). Los eventos
+   seguidas de una persona se unen en una tarjeta de racha (mosaico 2×2 y títulos). En cada
+   tarjeta el título enlaza a la entidad, el artista acreditado a su página (si la entrada trae
+   `artistId`) y una reseña lleva «Leer reseña» a su página, como en el feed completo. Los eventos
    de poco valor del mismo tramo (listas, listas para completar, colección, búsqueda,
    seguimientos, favoritos de canción o artista) van en una línea por persona («Luis armó 6
    listas para completar»). «Ver más actividad» lleva a `/me/feed`. **Sin seguidos**, ese lugar

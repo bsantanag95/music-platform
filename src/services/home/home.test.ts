@@ -119,6 +119,7 @@ describe("servicio de datos de Inicio", () => {
       artistName: null,
       artistPhoto: null,
       creditedArtist: "Def Leppard",
+      creditedArtistId: "00000000-0000-4000-8000-000000000a01",
       releaseTitle: title,
       releaseCover: `https://covers/${title}.jpg`,
       recordingTitle: null,
@@ -146,7 +147,13 @@ describe("servicio de datos de Inicio", () => {
       expect(listens[0]).toMatchObject({
         id: "l3",
         listenContext: "relisten",
-        target: { type: "release-group", id: rg(1), artistName: "Def Leppard", coverThumbUrl: "https://covers/Hysteria.jpg" },
+        target: {
+          type: "release-group",
+          id: rg(1),
+          artistName: "Def Leppard",
+          artistId: "00000000-0000-4000-8000-000000000a01",
+          coverThumbUrl: "https://covers/Hysteria.jpg",
+        },
         rating: { stars: "4.5", detailedScore: 88 },
       });
       expect(listens[1]!.rating).toBeNull();

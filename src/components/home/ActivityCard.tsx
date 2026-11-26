@@ -8,6 +8,7 @@ import { FEED_KIND_ICONS } from "@/components/feed/FeedKindIcons";
 import { CoverThumb } from "@/components/catalog/CoverThumb";
 import { UserHoverCard } from "@/components/profiles/UserHoverCard";
 import { CommentTopicLabel } from "@/components/social/CommentTopicLabel";
+import { reviewHref } from "@/lib/catalog-links";
 import { compactRatingValue } from "./compact-rating";
 import type { CompactActivityEntry } from "@/components/feed/CompactActivityRow";
 import type { FeedFavorite, FeedListenEntry } from "@/lib/api/schemas";
@@ -106,7 +107,10 @@ export function ActivityCard({ entry, wide = false }: { entry: ActivityCardEntry
                 {target.title}
               </Link>
               {target.artistName ? (
-                <span className="font-body text-sm text-paper-muted"> · {target.artistName}</span>
+                <span className="font-body text-sm text-paper-muted">
+                  {" · "}
+                  <ArtistName name={target.artistName} id={target.artistId} />
+                </span>
               ) : null}
             </p>
           ) : null}
@@ -146,7 +150,10 @@ export function ActivityCard({ entry, wide = false }: { entry: ActivityCardEntry
                     {listen.target.title}
                   </Link>
                   {listen.target.artistName ? (
-                    <span className="font-body text-xs text-paper-muted"> · {listen.target.artistName}</span>
+                    <span className="font-body text-xs text-paper-muted">
+                      {" · "}
+                      <ArtistName name={listen.target.artistName} id={listen.target.artistId} />
+                    </span>
                   ) : null}
                 </li>
               ))}
@@ -159,8 +166,28 @@ export function ActivityCard({ entry, wide = false }: { entry: ActivityCardEntry
               {body}
             </p>
           ) : null}
+          {entry.kind === "review" ? (
+            // La tarjeta muestra solo un extracto: la reseña completa (y sus comentarios) está en su página.
+            <Link
+              href={reviewHref(entry.author.username, entry.target.title, entry.id)}
+              className="mt-1 w-fit font-data text-xs text-paper-muted underline decoration-dotted underline-offset-2 transition-colors hover:text-amber"
+            >
+              {t("community.readReview")}
+            </Link>
+          ) : null}
         </div>
       </article>
     </li>
+  );
+}
+
+// Nombre del artista acreditado: enlaza a su página cuando la entrada trae su id (`artistId` viene nulo cuando
+// el objetivo ya es el artista, y entonces el título ya enlaza ahí).
+function ArtistName({ name, id }: { name: string; id: string | null | undefined }) {
+  if (!id) return <>{name}</>;
+  return (
+    <Link href={targetHref("artist", id, name)} className="transition-colors hover:text-paper">
+      {name}
+    </Link>
   );
 }
