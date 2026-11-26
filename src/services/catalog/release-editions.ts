@@ -2,6 +2,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { label, release, releaseEdition, releaseEditionLabel, releaseGroup } from "@/db/schema";
 import { pickRepresentativeRelease } from "./representative-release";
+import { singleFlight, withEntityLock } from "@/db/entity-sync";
 import { musicbrainz, RELEASE_BROWSE_PAGE_SIZE } from "../musicbrainz/client";
 import { normalizeReleaseDate, yearFromMbDate } from "../musicbrainz/mappers";
 import type { MBReleaseBrowseByGroupItem } from "../musicbrainz/types";
@@ -221,12 +222,24 @@ export async function syncReleaseEditions(
   releaseGroupId: string,
   { dryRun = false }: { dryRun?: boolean } = {},
 ): Promise<EditionsSyncResult> {
-  return db.transaction(async (tx) => {
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${`editions:${releaseGroupId}`}, 0))`);
-    const [rg] = await tx.select().from(releaseGroup).where(eq(releaseGroup.id, releaseGroupId)).limit(1);
-    if (!rg?.mbid || rg.editionsSyncedAt) return { status: "skipped" };
+  return singleFlight(`editions:${releaseGroupId}:${dryRun}`, () => runEditionsSync(releaseGroupId, dryRun));
+}
 
-    const { editions } = await fetchReleaseEditions(rg.mbid);
+/**
+ * La request a MusicBrainz sale fuera de toda transacción y la escritura va en una transacción corta con el
+ * candado por release-group, que relee la marca (ADR 0063): si otro proceso ya guardó las ediciones, no escribe.
+ */
+async function runEditionsSync(releaseGroupId: string, dryRun: boolean): Promise<EditionsSyncResult> {
+  const [before] = await db.select().from(releaseGroup).where(eq(releaseGroup.id, releaseGroupId)).limit(1);
+  if (!before?.mbid || before.editionsSyncedAt) return { status: "skipped" };
+  const mbid = before.mbid;
+
+  const { editions } = await fetchReleaseEditions(mbid);
+
+  return withEntityLock(`editions:${releaseGroupId}`, async (tx): Promise<EditionsSyncResult> => {
+    const [rg] = await tx.select().from(releaseGroup).where(eq(releaseGroup.id, releaseGroupId)).limit(1);
+    if (!rg || rg.mbid !== mbid || rg.editionsSyncedAt) return { status: "skipped" };
+
     const [current] = await tx
       .select({ mbid: release.mbid })
       .from(release)

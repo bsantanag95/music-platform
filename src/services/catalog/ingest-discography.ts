@@ -15,6 +15,7 @@ import { wikidataIdOf } from "../musicbrainz/artist-profile-mappers";
 import { mapReleaseGroupCategory } from "../musicbrainz/mappers";
 import { upsertArtistStub } from "./ingest-artist";
 import { canonicalDateValues } from "./ingest-release-group";
+import { singleFlight, withEntityLock, type Tx } from "@/db/entity-sync";
 import type { MBArtistCreditItem, MBReleaseGroup, MBReleaseGroupBrowseResponse } from "../musicbrainz/types";
 
 // Discografía de un artista (openspec: fix-artist-discography-ingestion, capability
@@ -232,14 +233,14 @@ export async function fetchDiscographyPages(
  * Upsert de los release-groups del browse con sus tipos crudos, sus créditos y la entidad de
  * Wikidata que declara MusicBrainz (NULL si dejó de declararla; openspec: add-genre-taxonomy).
  */
-async function saveDiscographyReleaseGroups(groups: MBReleaseGroup[]): Promise<void> {
+async function saveDiscographyReleaseGroups(tx: Tx, groups: MBReleaseGroup[]): Promise<void> {
   for (const rg of groups) {
     const category = mapReleaseGroupCategory(rg["primary-type"], rg["secondary-types"]);
     const canonicalDate = canonicalDateValues({ firstReleaseDate: rg["first-release-date"] });
     const types = { primaryType: rg["primary-type"] ?? null, secondaryTypes: rg["secondary-types"] ?? [] };
     const wikidataId = wikidataIdOf(rg);
 
-    const inserted = await db
+    const inserted = await tx
       .insert(releaseGroup)
       // La fecha canónica solo se escribe al crear el stub: un release_group
       // ya enriquecido conserva la que resolvió `findOrIngestTracklist`.
@@ -260,7 +261,7 @@ async function saveDiscographyReleaseGroups(groups: MBReleaseGroup[]): Promise<v
 
     const row = inserted[0];
     if (row && rg["artist-credit"]?.length) {
-      await ingestCredits(rg["artist-credit"], { releaseGroupId: row.id });
+      await ingestCredits(rg["artist-credit"], { releaseGroupId: row.id }, tx);
     }
   }
 }
@@ -315,8 +316,9 @@ export interface DiscographySyncOptions {
 }
 
 /**
- * Sincroniza la discografía de un artista bajo un candado por artista: dos visitas
- * simultáneas hacen una sola sincronización (la segunda relee el artista y la omite).
+ * Sincroniza la discografía de un artista. Las páginas se piden a MusicBrainz FUERA de toda transacción y se
+ * guardan en una transacción corta con el candado por artista, que relee el artista y no escribe si otro proceso
+ * ya la sincronizó mientras tanto (ADR 0063). Dos visitas simultáneas en el proceso comparten la misma ejecución.
  * Solo una sincronización que recorrió todas las páginas marca y desmarca los
  * release-groups fuera de la discografía y fija `discography_complete_at`.
  *
@@ -325,52 +327,79 @@ export interface DiscographySyncOptions {
  * queda verificada (openspec: refresh-discography-on-new-releases). El total no dice qué discos
  * cambiaron (el orden del browse no está documentado), así que el atajo no marca nada.
  */
-export async function syncArtistDiscography(
+export function syncArtistDiscography(artistId: string, options: DiscographySyncOptions): Promise<DiscographySyncResult> {
+  const { mode, dryRun = false, forceFullWalk = false, ignoreFreshness = false } = options;
+  const key = `discography:${artistId}:${mode}:${dryRun}:${forceFullWalk}:${ignoreFreshness}`;
+  return singleFlight(key, () => syncDiscographyOnce(artistId, { mode, dryRun, forceFullWalk, ignoreFreshness }));
+}
+
+/** ¿Hay algo que sincronizar? La misma condición antes de pedir y al releer bajo el candado. */
+function discographyPending(current: ArtistRow, mode: DiscographySyncOptions["mode"], ignoreFreshness: boolean): boolean {
+  if (!current.mbid) return false;
+  if (mode === "initial") return current.discographySyncedAt === null;
+  return ignoreFreshness || needsDiscographyRefresh(current);
+}
+
+async function syncDiscographyOnce(
   artistId: string,
-  { mode, dryRun = false, forceFullWalk = false, ignoreFreshness = false }: DiscographySyncOptions,
+  { mode, dryRun, forceFullWalk, ignoreFreshness }: Required<DiscographySyncOptions>,
 ): Promise<DiscographySyncResult> {
-  return db.transaction(async (tx) => {
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${`discography:${artistId}`}, 0))`);
-    const [current] = await tx.select().from(artist).where(eq(artist.id, artistId)).limit(1);
-    if (!current?.mbid) return { status: "skipped" };
-    if (mode === "initial" && current.discographySyncedAt) return { status: "skipped" };
-    if (mode === "full" && !ignoreFreshness && !needsDiscographyRefresh(current)) return { status: "skipped" };
+  const [before] = await db.select().from(artist).where(eq(artist.id, artistId)).limit(1);
+  if (!before?.mbid || !discographyPending(before, mode, ignoreFreshness)) return { status: "skipped" };
+  const mbid = before.mbid;
 
-    let firstPage: MBReleaseGroupBrowseResponse | undefined;
-    if (mode === "full" && !forceFullWalk && !needsFullWalk(current)) {
-      firstPage = await musicbrainz.browseReleaseGroupsByArtist(current.mbid, 0);
-      const total = firstPage["release-group-count"];
-      if (total > RELEASE_BROWSE_PAGE_SIZE && total === current.discographyMbTotal) {
-        if (!dryRun) {
-          await saveDiscographyReleaseGroups(firstPage["release-groups"]);
-          await tx.update(artist).set({ discographyCheckedAt: new Date() }).where(eq(artist.id, artistId));
-        }
-        return { status: "verified", saved: firstPage["release-groups"].length, total };
-      }
-    }
+  /** Escribe bajo el candado solo si el artista sigue pendiente (y con el mismo mbid). */
+  const writeIfPending = (write: (tx: Tx) => Promise<void>): Promise<boolean> =>
+    withEntityLock(`discography:${artistId}`, async (tx) => {
+      const [current] = await tx.select().from(artist).where(eq(artist.id, artistId)).limit(1);
+      if (!current || current.mbid !== mbid || !discographyPending(current, mode, ignoreFreshness)) return false;
+      await write(tx);
+      return true;
+    });
 
-    const pages = await fetchDiscographyPages(
-      current.mbid,
-      mode === "initial" ? DISCOGRAPHY_INITIAL_PAGES : DISCOGRAPHY_MAX_PAGES,
-      firstPage,
-    );
-    const saved = pages.releaseGroups.length;
-    const now = new Date();
-
-    if (!pages.complete && !pages.truncated) {
+  let firstPage: MBReleaseGroupBrowseResponse | undefined;
+  if (mode === "full" && !forceFullWalk && !needsFullWalk(before)) {
+    firstPage = await musicbrainz.browseReleaseGroupsByArtist(mbid, 0);
+    const total = firstPage["release-group-count"];
+    if (total > RELEASE_BROWSE_PAGE_SIZE && total === before.discographyMbTotal) {
+      const groups = firstPage["release-groups"];
       if (!dryRun) {
-        await saveDiscographyReleaseGroups(pages.releaseGroups);
-        await tx.update(artist).set({ discographySyncedAt: now }).where(eq(artist.id, artistId));
+        const written = await writeIfPending(async (tx) => {
+          await saveDiscographyReleaseGroups(tx, groups);
+          await tx.update(artist).set({ discographyCheckedAt: new Date() }).where(eq(artist.id, artistId));
+        });
+        if (!written) return { status: "skipped" };
       }
-      return { status: "partial", saved, total: pages.total };
+      return { status: "verified", saved: groups.length, total };
     }
+  }
 
-    // Con el tope alcanzado no se sabe qué hay más allá: no se marca nada.
-    let marks = { unlisted: 0, relisted: 0 };
-    if (dryRun) {
-      if (!pages.truncated) marks = await countUnlistedChanges(tx, artistId, pages.releaseGroups);
-    } else {
-      await saveDiscographyReleaseGroups(pages.releaseGroups);
+  const pages = await fetchDiscographyPages(
+    mbid,
+    mode === "initial" ? DISCOGRAPHY_INITIAL_PAGES : DISCOGRAPHY_MAX_PAGES,
+    firstPage,
+  );
+  const saved = pages.releaseGroups.length;
+
+  if (!pages.complete && !pages.truncated) {
+    if (!dryRun) {
+      const written = await writeIfPending(async (tx) => {
+        await saveDiscographyReleaseGroups(tx, pages.releaseGroups);
+        await tx.update(artist).set({ discographySyncedAt: new Date() }).where(eq(artist.id, artistId));
+      });
+      if (!written) return { status: "skipped" };
+    }
+    return { status: "partial", saved, total: pages.total };
+  }
+
+  // Con el tope alcanzado no se sabe qué hay más allá: no se marca nada.
+  let marks = { unlisted: 0, relisted: 0 };
+  if (dryRun) {
+    if (!pages.truncated) marks = await countUnlistedChanges(db, artistId, pages.releaseGroups);
+  } else {
+    const written = await writeIfPending(async (tx) => {
+      const now = new Date();
+      await saveDiscographyReleaseGroups(tx, pages.releaseGroups);
       if (!pages.truncated) marks = await applyUnlistedMarks(tx, artistId, pages.releaseGroups, now);
       await tx
         .update(artist)
@@ -382,15 +411,14 @@ export async function syncArtistDiscography(
           discographyMbTotal: pages.truncated ? null : pages.total,
         })
         .where(eq(artist.id, artistId));
-    }
-    return { status: "complete", saved, total: pages.total, ...marks, truncated: pages.truncated };
-  });
+    });
+    if (!written) return { status: "skipped" };
+  }
+  return { status: "complete", saved, total: pages.total, ...marks, truncated: pages.truncated };
 }
 
-type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
-
 /** Release-groups acreditados al artista, con MBID (los únicos que MusicBrainz puede devolver). */
-function creditedReleaseGroupIds(tx: Tx, artistId: string) {
+function creditedReleaseGroupIds(tx: Pick<Tx, "select">, artistId: string) {
   return tx
     .select({ id: credit.releaseGroupId })
     .from(credit)
@@ -431,7 +459,7 @@ async function applyUnlistedMarks(tx: Tx, artistId: string, groups: MBReleaseGro
 }
 
 /** Lo que `applyUnlistedMarks` cambiaría, sin escribir (simulación del backfill). */
-async function countUnlistedChanges(tx: Tx, artistId: string, groups: MBReleaseGroup[]) {
+async function countUnlistedChanges(tx: Pick<Tx, "select">, artistId: string, groups: MBReleaseGroup[]) {
   const returned = new Set(groups.map((rg) => rg.id));
   const rows = await tx
     .select({ mbid: releaseGroup.mbid, unlistedAt: releaseGroup.discographyUnlistedAt })
@@ -510,13 +538,15 @@ export async function ingestReleaseGroupCreditsBatch(
 export async function ingestCredits(
   mbCredits: MBArtistCreditItem[],
   target: { releaseGroupId?: string; recordingId?: string },
+  // Dentro de una transacción, su ejecutor: el cliente global pediría otra conexión del pool (ADR 0063).
+  executor: Pick<typeof db, "select" | "insert"> = db,
 ) {
   for (let position = 0; position < mbCredits.length; position++) {
     const item = mbCredits[position];
     if (!item) continue;
-    const creditedArtist = await upsertArtistStub(item.artist.id, item.artist.name);
+    const creditedArtist = await upsertArtistStub(item.artist.id, item.artist.name, executor);
 
-    await db
+    await executor
       .insert(credit)
       .values({
         artistId: creditedArtist.id,

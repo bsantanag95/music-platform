@@ -4,6 +4,7 @@ import { recording, recordingWork, release, track, work, workCredit } from "@/db
 import type { MBRelease } from "../musicbrainz/types";
 import { upsertArtistStub } from "./ingest-artist";
 import { mapRelation, type MappedPersonnelRelation } from "./credit-relations";
+import { inTransaction, type Tx } from "@/db/entity-sync";
 
 // Autoría de obras (openspec: add-songwriter-credits, capability `personnel-credits`): en
 // MusicBrainz compositores y letristas cuelgan de la OBRA, no de la grabación, y la misma
@@ -76,31 +77,32 @@ export function countWorkCredits(full: MBRelease): number {
  * respuesta de MusicBrainz, en una transacción: un fallo a mitad conserva los anteriores.
  * Las obras se identifican por MBID (una sola fila aunque la compartan varias grabaciones).
  * Los artistas que no existen se crean como stub antes (idempotente). Marca
- * `works_synced_at` al terminar.
+ * `works_synced_at` al terminar. Con `tx`, todo va por esa transacción (ADR 0063).
  */
-export async function saveWorkCredits(releaseId: string, full: MBRelease): Promise<void> {
+export async function saveWorkCredits(releaseId: string, full: MBRelease, tx?: Tx): Promise<void> {
+  const executor = tx ?? db;
   const mapped = mapWorkRelations(full);
   const allCredits = [...mapped.works.values()].flatMap((w) => w.credits);
 
   const artistIdByMbid = new Map<string, string>();
   for (const credit of allCredits) {
     if (artistIdByMbid.has(credit.artistMbid)) continue;
-    const row = await upsertArtistStub(credit.artistMbid, credit.artistName);
+    const row = await upsertArtistStub(credit.artistMbid, credit.artistName, executor);
     artistIdByMbid.set(credit.artistMbid, row.id);
   }
 
   const recordingMbids = [...mapped.byRecordingMbid.keys()];
   const recordingRows = recordingMbids.length
-    ? await db.select({ id: recording.id, mbid: recording.mbid }).from(recording).where(inArray(recording.mbid, recordingMbids))
+    ? await executor.select({ id: recording.id, mbid: recording.mbid }).from(recording).where(inArray(recording.mbid, recordingMbids))
     : [];
   const recordingIdByMbid = new Map(recordingRows.flatMap((row) => (row.mbid ? [[row.mbid, row.id] as const] : [])));
 
   // Grabaciones de ESTA edición: sus vínculos se reemplazan aunque MusicBrainz ya no traiga obra.
   const releaseRecordingIds = (
-    await db.select({ recordingId: track.recordingId }).from(track).where(eq(track.releaseId, releaseId))
+    await executor.select({ recordingId: track.recordingId }).from(track).where(eq(track.releaseId, releaseId))
   ).map((row) => row.recordingId);
 
-  await db.transaction(async (tx) => {
+  await inTransaction(tx, async (tx) => {
     const workIdByMbid = new Map<string, string>();
     for (const [mbid, mappedWork] of mapped.works) {
       const [row] = await tx

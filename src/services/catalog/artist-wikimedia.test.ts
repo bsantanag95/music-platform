@@ -15,6 +15,10 @@ import monLaferteImage from "../wikimedia/__fixtures__/mon-laferte-imageinfo.jso
 // registra lo que se escribe (el SQL real lo cubre scripts/smoke-test-artist-profile.ts).
 const state = vi.hoisted(() => ({
   current: null as Record<string, unknown> | null,
+  /** Lo que ve la relectura bajo el candado, si difiere de la lectura previa. */
+  reread: null as Record<string, unknown> | null,
+  /** Hay una transacción abierta. */
+  open: false,
   updates: [] as Record<string, unknown>[],
   upserts: [] as { values: Record<string, unknown>; set: Record<string, unknown> }[],
   deletes: 0,
@@ -32,7 +36,9 @@ vi.mock("@/db", () => {
         state.deletes++;
       },
     }),
-    select: () => ({ from: () => ({ where: () => ({ limit: async () => (state.current ? [state.current] : []) }) }) }),
+    select: () => ({
+      from: () => ({ where: () => ({ limit: async () => { const row = state.reread ?? state.current; return row ? [row] : []; } }) }),
+    }),
     update: () => ({
       set: (values: Record<string, unknown>) => ({
         where: async () => {
@@ -48,7 +54,20 @@ vi.mock("@/db", () => {
       }),
     }),
   };
-  return { db: { transaction: async (fn: (t: typeof tx) => unknown) => fn(tx) } };
+  return {
+    db: {
+      transaction: async (fn: (t: typeof tx) => unknown) => {
+        state.open = true;
+        try {
+          return await fn(tx);
+        } finally {
+          state.open = false;
+        }
+      },
+      // Lectura previa, sin transacción.
+      select: () => ({ from: () => ({ where: () => ({ limit: async () => (state.current ? [state.current] : []) }) }) }),
+    },
+  };
 });
 vi.mock("../wikimedia/client", () => ({ wikimedia: mocks }));
 vi.mock("../genres/seeds", () => seeds);
@@ -73,6 +92,8 @@ function upsertFor(locale: string) {
 beforeEach(() => {
   vi.clearAllMocks();
   state.current = artistRow();
+  state.reread = null;
+  state.open = false;
   state.updates = [];
   state.upserts = [];
   state.deletes = 0;
@@ -208,5 +229,39 @@ describe("enrichArtistFromWikimedia", () => {
     await enrichArtistFromWikimedia("a1", { dryRun: true });
     expect(state.updates).toHaveLength(0);
     expect(state.upserts).toHaveLength(0);
+  });
+});
+
+describe("transacción corta (ADR 0063)", () => {
+  it("todas las requests a Wikimedia salen sin transacción abierta", async () => {
+    const openDuring: boolean[] = [];
+    const record = <T extends (...args: never[]) => unknown>(impl: T) =>
+      (async (...args: Parameters<T>) => {
+        openDuring.push(state.open);
+        return impl(...args);
+      }) as unknown as T;
+    mocks.getEntities.mockImplementation(record(entitiesFrom(kuervosEntity, kuervosPlace, kuervosCountry)));
+    mocks.getIntroExtract.mockImplementation(record(async () => kuervosExtractEs));
+    mocks.getImageInfo.mockImplementation(record(async () => kuervosImage));
+
+    await enrichArtistFromWikimedia("a1");
+
+    expect(openDuring.length).toBeGreaterThan(0);
+    expect(openDuring.every((open) => !open)).toBe(true);
+  });
+
+  it("si la foto se retiró a pedido mientras se esperaba a Wikimedia, no escribe nada", async () => {
+    state.reread = artistRow({ photoBlockedAt: new Date() });
+
+    await expect(enrichArtistFromWikimedia("a1")).resolves.toEqual({ status: "skipped" });
+    expect(state.updates).toEqual([]);
+    expect(state.upserts).toEqual([]);
+  });
+
+  it("si otro proceso lo enriqueció mientras tanto, no escribe nada", async () => {
+    state.reread = artistRow({ wikimediaSyncedAt: new Date() });
+
+    await expect(enrichArtistFromWikimedia("a1")).resolves.toEqual({ status: "skipped" });
+    expect(state.updates).toEqual([]);
   });
 });

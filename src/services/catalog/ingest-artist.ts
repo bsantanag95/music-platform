@@ -1,4 +1,4 @@
-import { and, eq, ilike, inArray, sql } from "drizzle-orm";
+import { and, eq, ilike, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, membership, type ArtistRow } from "@/db/schema";
 import { musicbrainz } from "../musicbrainz/client";
@@ -7,6 +7,7 @@ import { mapArtistProfileFacts } from "../musicbrainz/artist-profile-mappers";
 import { saveArtistProfileFacts } from "./artist-profile";
 import { mergeMembershipDates, saveArtistLineup } from "./artist-lineup-save";
 import { upsertArtistFromMb, VARIOUS_ARTISTS_MBID } from "./artist-upsert";
+import { singleFlight, withEntityLock } from "@/db/entity-sync";
 
 export { mergeMembershipDates, upsertArtistFromMb };
 
@@ -36,16 +37,28 @@ export async function getArtistMemberships(target: ArtistRow): Promise<ArtistMem
   return rows;
 }
 
-/** Ingesta memberships de una sola llamada externa; la lectura permanece en getArtistMemberships. */
-export async function ensureArtistMemberships(target: ArtistRow): Promise<void> {
-  await db.transaction(async (tx) => {
-    // El lock cubre también la llamada externa: la relectura del flag decide
-    // dentro de la misma transacción quién es el único proceso que ingiere.
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${target.id}, 0))`);
-    const [current] = await tx.select().from(artist).where(eq(artist.id, target.id)).limit(1);
-    if (!current || current.membershipsSyncedAt) return;
+/**
+ * Ingesta memberships de una sola llamada externa; la lectura permanece en getArtistMemberships. La request sale
+ * fuera de toda transacción (ADR 0063): dos visitas simultáneas en el proceso comparten la misma ejecución y,
+ * entre procesos, la relectura del flag bajo el candado decide quién escribe.
+ */
+export function ensureArtistMemberships(target: ArtistRow): Promise<void> {
+  if (target.membershipsSyncedAt) return Promise.resolve();
+  return singleFlight(`memberships:${target.id}`, () => syncArtistMemberships(target.id));
+}
 
-    const detail = current.mbid ? await musicbrainz.getArtistWithRelations(current.mbid) : null;
+async function syncArtistMemberships(artistId: string): Promise<void> {
+  const [before] = await db.select().from(artist).where(eq(artist.id, artistId)).limit(1);
+  if (!before || before.membershipsSyncedAt) return;
+
+  const detail = before.mbid ? await musicbrainz.getArtistWithRelations(before.mbid) : null;
+
+  // La clave del candado es el id pelado (la de siempre), compartida con procesos que corran una versión anterior.
+  await withEntityLock(artistId, async (tx) => {
+    const [current] = await tx.select().from(artist).where(eq(artist.id, artistId)).limit(1);
+    // Otro proceso la completó mientras se esperaba a MusicBrainz, o cambió el mbid: no se escribe.
+    if (!current || current.membershipsSyncedAt || current.mbid !== before.mbid) return;
+
     if (detail) {
       // Pertenencias con sus períodos y músicos de apoyo (openspec: add-artist-lineup-data) y la
       // ficha (país, áreas, fechas, enlaces; openspec: enrich-artist-profile), todo de la misma
@@ -123,11 +136,16 @@ export async function findOrIngestArtist(name: string): Promise<ArtistRow | null
  * MusicBrainz solo para conocer el tipo — se enriquece cuando alguien
  * visita el perfil de ese artista directamente.
  */
-export async function upsertArtistStub(mbid: string, name: string): Promise<ArtistRow> {
-  const [existing] = await db.select().from(artist).where(eq(artist.mbid, mbid)).limit(1);
+export async function upsertArtistStub(
+  mbid: string,
+  name: string,
+  // Dentro de una transacción, su ejecutor: el cliente global pediría otra conexión del pool (ADR 0063).
+  executor: Pick<typeof db, "select" | "insert"> = db,
+): Promise<ArtistRow> {
+  const [existing] = await executor.select().from(artist).where(eq(artist.mbid, mbid)).limit(1);
   if (existing) return existing;
 
-  const rows = await db
+  const rows = await executor
     .insert(artist)
     .values({ mbid, name, type: "unknown" })
     .onConflictDoUpdate({ target: artist.mbid, set: { name } })

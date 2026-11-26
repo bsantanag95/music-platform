@@ -4,6 +4,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // real y el candado los cubre el smoke test contra Postgres).
 const state = vi.hoisted(() => ({
   current: null as Record<string, unknown> | null,
+  /** Lo que ve la relectura bajo el candado, si difiere de la lectura previa. */
+  reread: null as Record<string, unknown> | null,
+  /** Hay una transacción abierta. */
+  open: false,
   updates: [] as Record<string, unknown>[],
   upserts: [] as { values: Record<string, unknown>; set: Record<string, unknown> }[],
   locks: 0,
@@ -15,7 +19,9 @@ vi.mock("@/db", () => {
     execute: async () => {
       state.locks++;
     },
-    select: () => ({ from: () => ({ where: () => ({ limit: async () => (state.current ? [state.current] : []) }) }) }),
+    select: () => ({
+      from: () => ({ where: () => ({ limit: async () => { const row = state.reread ?? state.current; return row ? [row] : []; } }) }),
+    }),
     update: () => ({
       set: (values: Record<string, unknown>) => ({
         where: async () => {
@@ -31,7 +37,20 @@ vi.mock("@/db", () => {
       }),
     }),
   };
-  return { db: { transaction: async (fn: (t: typeof tx) => unknown) => fn(tx) } };
+  return {
+    db: {
+      transaction: async (fn: (t: typeof tx) => unknown) => {
+        state.open = true;
+        try {
+          return await fn(tx);
+        } finally {
+          state.open = false;
+        }
+      },
+      // Lectura previa, sin transacción.
+      select: () => ({ from: () => ({ where: () => ({ limit: async () => (state.current ? [state.current] : []) }) }) }),
+    },
+  };
 });
 vi.mock("../wikimedia/client", () => ({ wikimedia: mocks }));
 vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -56,6 +75,8 @@ const upsert = (locale: string) => state.upserts.find((u) => u.values.locale ===
 beforeEach(() => {
   vi.clearAllMocks();
   state.current = genreRow();
+  state.reread = null;
+  state.open = false;
   state.updates = [];
   state.upserts = [];
   state.locks = 0;
@@ -162,5 +183,39 @@ describe("enrichGenreFromWikimedia", () => {
     mocks.getIntroExtract.mockResolvedValue({ query: { pages: [{ title: "Shoegaze", missing: true }] } });
     await enrichGenreFromWikimedia("g1");
     expect(upsert("es")).toMatchObject({ summary: null, summaryTitle: null, summaryUrl: null });
+  });
+});
+
+describe("enrichGenreFromWikimedia: transacción corta (ADR 0063)", () => {
+  it("las requests a Wikimedia salen sin transacción abierta", async () => {
+    const openDuring: boolean[] = [];
+    mocks.getEntities.mockImplementation(async () => {
+      openDuring.push(state.open);
+      return entity({ eswiki: "Shoegaze", enwiki: "Shoegaze (music)" });
+    });
+    mocks.getIntroExtract.mockImplementation(async (lang: string, title: string) => {
+      openDuring.push(state.open);
+      return extract(title, `Texto de ${title}.`, lang);
+    });
+
+    await enrichGenreFromWikimedia("g1");
+
+    expect(openDuring.length).toBeGreaterThan(0);
+    expect(openDuring.every((open) => !open)).toBe(true);
+  });
+
+  it("si otro proceso lo sincronizó mientras tanto, no escribe", async () => {
+    state.reread = genreRow({ wikimediaSyncedAt: new Date() });
+
+    await expect(enrichGenreFromWikimedia("g1")).resolves.toEqual({ status: "skipped" });
+    expect(state.updates).toEqual([]);
+    expect(state.upserts).toEqual([]);
+  });
+
+  it("si cambió su entidad de Wikidata mientras tanto, no escribe el texto de la anterior", async () => {
+    state.reread = genreRow({ wikidataId: "Q2" });
+
+    await expect(enrichGenreFromWikimedia("g1")).resolves.toEqual({ status: "skipped" });
+    expect(state.upserts).toEqual([]);
   });
 });

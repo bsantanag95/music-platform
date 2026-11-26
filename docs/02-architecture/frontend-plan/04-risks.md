@@ -93,6 +93,11 @@ Cuando múltiples requests HTTP hacen cache-miss de la misma entidad de catálog
   consulta repetida sin tocar la cola — cubre el caso más frecuente de dogpile (re-render del
   servidor de la página de resultados al cambiar de idioma). Esto **no** aplica a `get`/`browse`
   de ingestas, que siguen siempre a MusicBrainz; el trigger de revisión para esos sigue vigente.
+- **Estado (fix-cold-ingest-pool-exhaustion, ADR 0063):** las sincronizaciones con candado por entidad
+  (pertenencias, discografía, ficha, Wikimedia, ediciones, personal, texto y semillas de género) comparten
+  la ejecución en curso dentro del proceso (`singleFlight`): dos visitas simultáneas a la misma entidad
+  hacen una sola serie de requests. Entre procesos el dogpile sigue aceptado. La llamada externa ya no va
+  dentro de la transacción del candado, que solo relee y escribe.
 
 ## Riesgo 11 — Costo del agregado de rating en vivo
 

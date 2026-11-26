@@ -6,8 +6,9 @@ import type { MBReleaseBrowseByGroupItem, MBReleaseBrowseByGroupResponse } from 
 const mocks = vi.hoisted(() => ({
   browse: vi.fn(),
   transaction: vi.fn(),
+  select: vi.fn(),
 }));
-vi.mock("@/db", () => ({ db: { transaction: mocks.transaction } }));
+vi.mock("@/db", () => ({ db: { transaction: mocks.transaction, select: mocks.select } }));
 vi.mock("../musicbrainz/client", () => ({
   musicbrainz: { browseReleasesByReleaseGroup: mocks.browse },
   RELEASE_BROWSE_PAGE_SIZE: 100,
@@ -178,13 +179,23 @@ describe("saveReleaseEditions", () => {
 });
 
 describe("syncReleaseEditions", () => {
-  /** Transacción con lock, relectura del álbum y de la representativa actual. */
-  function syncTransaction(rgRow: unknown, currentMbid: string | null) {
+  /**
+   * Lectura previa sin transacción (`before`) y transacción con lock, relectura del álbum (`rgRow`) y de la
+   * representativa actual. `open` dice si la transacción está abierta.
+   */
+  function syncTransaction(rgRow: unknown, currentMbid: string | null, before: unknown = rgRow) {
     const executed: unknown[] = [];
     const writes: string[] = [];
+    const state = { open: false };
     let selectCount = 0;
-    mocks.transaction.mockImplementation(async (cb: (tx: unknown) => Promise<unknown>) =>
-      cb({
+    mocks.select.mockImplementation(() => {
+      const c = { from: () => c, where: () => c, limit: async () => (before ? [before] : []) };
+      return c;
+    });
+    mocks.transaction.mockImplementation(async (cb: (tx: unknown) => Promise<unknown>) => {
+      state.open = true;
+      try {
+        return await cb({
         execute: async (query: unknown) => {
           executed.push(query);
         },
@@ -211,9 +222,12 @@ describe("syncReleaseEditions", () => {
           writes.push("update");
           return { set: () => ({ where: async () => undefined }) };
         },
-      }),
-    );
-    return { executed, writes };
+        });
+      } finally {
+        state.open = false;
+      }
+    });
+    return { executed, writes, state };
   }
 
   const RG = { id: "rg-1", mbid: "mbid-rg-1", editionsSyncedAt: null };
@@ -233,7 +247,29 @@ describe("syncReleaseEditions", () => {
     expect(writes).toContain("update");
   });
 
-  it("omite un álbum ya sincronizado sin llamar a MusicBrainz (otra visita ganó el lock)", async () => {
+  it("pide las ediciones sin transacción abierta (ADR 0063)", async () => {
+    const { state } = syncTransaction(RG, "mbid-original");
+    const openDuringRequest: boolean[] = [];
+    mocks.browse.mockImplementationOnce(async () => {
+      openDuringRequest.push(state.open);
+      return { "release-count": 2, releases: EDITIONS };
+    });
+
+    await syncReleaseEditions("rg-1");
+
+    expect(openDuringRequest).toEqual([false]);
+  });
+
+  it("si otra visita guardó las ediciones mientras se esperaba a MusicBrainz, la relectura no escribe", async () => {
+    mocks.browse.mockResolvedValueOnce({ "release-count": 2, releases: EDITIONS });
+    const { writes } = syncTransaction({ ...RG, editionsSyncedAt: new Date() }, null, RG);
+
+    await expect(syncReleaseEditions("rg-1")).resolves.toEqual({ status: "skipped" });
+    expect(mocks.browse).toHaveBeenCalledTimes(1);
+    expect(writes).toEqual([]);
+  });
+
+  it("omite un álbum ya sincronizado sin llamar a MusicBrainz", async () => {
     syncTransaction({ ...RG, editionsSyncedAt: new Date() }, null);
 
     await expect(syncReleaseEditions("rg-1")).resolves.toEqual({ status: "skipped" });

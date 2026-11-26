@@ -559,7 +559,7 @@ export async function linkOrCreateEntry(
       city: target.city ? target.city.slice(0, 100) : null,
       country: target.country,
       tour: await tourNameFor(executor, target.seriesId),
-      audience: await resolveNewContentAudience(userId, "concert"),
+      audience: await resolveNewContentAudience(userId, "concert", null, executor),
       concertId: target.id,
       fromConcert: true,
     })

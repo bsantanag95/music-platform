@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, artistGenreSeed, artistLocalizedText, type ArtistLocalizedTextRow, type ArtistRow } from "@/db/schema";
 import { replaceArtistGenreSeeds } from "../genres/seeds";
@@ -17,6 +17,7 @@ import {
 } from "../wikimedia/mappers";
 import type { WDEntity } from "../wikimedia/types";
 import { isStale } from "./artist-profile";
+import { singleFlight, withEntityLock } from "@/db/entity-sync";
 
 // Enriquecimiento del perfil de artista desde Wikidata, Wikipedia y Commons (openspec:
 // enrich-artist-profile, capability `artist-wikimedia-enrichment`, ADR 0021). Se llega a
@@ -186,24 +187,43 @@ export async function enrichArtistFromWikimedia(
     wikidataId?: string | null;
   } = {},
 ): Promise<WikimediaSyncResult> {
-  return db.transaction(async (tx) => {
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${`artist-wikimedia:${artistId}`}, 0))`);
+  const key = `artist-wikimedia:${artistId}:${dryRun}:${force}:${wikidataId === undefined ? "-" : String(wikidataId)}`;
+  return singleFlight(key, () => runWikimediaEnrichment(artistId, dryRun, force, wikidataId));
+}
+
+/**
+ * Las requests a Wikimedia salen fuera de toda transacción y la escritura va en una transacción corta con el
+ * candado por artista (ADR 0063). Bajo el candado se relee el artista: si otro proceso lo enriqueció, si cambió su
+ * entidad de Wikidata o si se bloqueó o desbloqueó su foto mientras tanto, lo pedido ya no vale y no se escribe.
+ */
+async function runWikimediaEnrichment(
+  artistId: string,
+  dryRun: boolean,
+  force: boolean,
+  wikidataId: string | null | undefined,
+): Promise<WikimediaSyncResult> {
+  const [before] = await db.select().from(artist).where(eq(artist.id, artistId)).limit(1);
+  if (!before?.mbid) return { status: "skipped" };
+  if (!force && !isStale(before.wikimediaSyncedAt)) return { status: "skipped" };
+
+  const source = dryRun && wikidataId !== undefined ? { ...before, wikidataId } : before;
+  const enrichment = await fetchWikimediaEnrichment(source);
+  if (dryRun) return enrichment ? { status: "enriched", ...enrichment } : { status: "no-wikidata" };
+
+  return withEntityLock(`artist-wikimedia:${artistId}`, async (tx): Promise<WikimediaSyncResult> => {
     const [current] = await tx.select().from(artist).where(eq(artist.id, artistId)).limit(1);
-    if (!current?.mbid) return { status: "skipped" };
+    if (!current?.mbid || current.wikidataId !== before.wikidataId) return { status: "skipped" };
+    if ((current.photoBlockedAt === null) !== (before.photoBlockedAt === null)) return { status: "skipped" };
     if (!force && !isStale(current.wikimediaSyncedAt)) return { status: "skipped" };
 
     const now = new Date();
-    const source = dryRun && wikidataId !== undefined ? { ...current, wikidataId } : current;
-    const enrichment = await fetchWikimediaEnrichment(source);
     if (!enrichment) {
-      if (!dryRun) {
-        await tx.update(artist).set({ wikimediaSyncedAt: now }).where(eq(artist.id, artistId));
-        // Sin entidad de Wikidata (p. ej. MusicBrainz quitó la relación) no hay semillas.
-        await tx.delete(artistGenreSeed).where(eq(artistGenreSeed.artistId, artistId));
-      }
+      await tx.update(artist).set({ wikimediaSyncedAt: now }).where(eq(artist.id, artistId));
+      // Sin entidad de Wikidata (p. ej. MusicBrainz quitó la relación) no hay semillas.
+      await tx.delete(artistGenreSeed).where(eq(artistGenreSeed.artistId, artistId));
       return { status: "no-wikidata" };
     }
-    if (!dryRun) await saveEnrichment(tx, artistId, enrichment, now);
+    await saveEnrichment(tx, artistId, enrichment, now);
     return { status: "enriched", ...enrichment };
   });
 }

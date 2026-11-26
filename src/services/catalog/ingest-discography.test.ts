@@ -18,6 +18,10 @@ const { state, db } = vi.hoisted(() => {
     inserts: [] as Call[][],
     updates: [] as Call[][],
     execute: 0,
+    /** Hay una transacción abierta (el mock de `db.transaction` la marca mientras corre). */
+    inTx: false,
+    /** Usos del cliente global con la transacción abierta: pedirían otra conexión del pool (ADR 0063). */
+    globalInTx: [] as string[],
   };
 
   function chain(calls: Call[], next: () => unknown): unknown {
@@ -37,7 +41,19 @@ const { state, db } = vi.hoisted(() => {
   }
 
   let insertCount = 0;
+  const insert = (table: unknown) => {
+    const calls: Call[] = [["table", [table]]];
+    state.inserts.push(calls);
+    insertCount += 1;
+    const id = `rg-${insertCount}`;
+    return chain(calls, () => [{ id }]);
+  };
+  const global = <T extends unknown[], R>(name: string, fn: (...args: T) => R) => (...args: T): R => {
+    if (state.inTx) state.globalInTx.push(name);
+    return fn(...args);
+  };
   const tx = {
+    insert,
     execute: async () => {
       state.execute += 1;
     },
@@ -49,16 +65,17 @@ const { state, db } = vi.hoisted(() => {
     },
   };
   const db = {
-    transaction: async (fn: (t: typeof tx) => unknown) => fn(tx),
-    select: () => chain([], () => state.selects.shift() ?? []),
-    selectDistinct: () => chain([], () => state.selects.shift() ?? []),
-    insert: (table: unknown) => {
-      const calls: Call[] = [["table", [table]]];
-      state.inserts.push(calls);
-      insertCount += 1;
-      const id = `rg-${insertCount}`;
-      return chain(calls, () => [{ id }]);
+    transaction: async (fn: (t: typeof tx) => unknown) => {
+      state.inTx = true;
+      try {
+        return await fn(tx);
+      } finally {
+        state.inTx = false;
+      }
     },
+    select: global("select", () => chain([], () => state.selects.shift() ?? [])),
+    selectDistinct: global("selectDistinct", () => chain([], () => state.selects.shift() ?? [])),
+    insert: global("insert", insert),
   };
   return { state, db };
 });
@@ -179,10 +196,18 @@ function releaseGroupInserts() {
     .map((calls) => calls.find(([method]) => method === "values")?.[1][0] as Record<string, unknown>);
 }
 
+/** El artista que leen la lectura previa (sin transacción) y la relectura bajo el candado. */
+function queueArtist(row: ArtistRow): void {
+  state.selects.push([row]);
+  state.txSelects.push([row]);
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   state.selects = [];
   state.txSelects = [];
+  state.inTx = false;
+  state.globalInTx = [];
   state.updateResults = [];
   state.inserts = [];
   state.updates = [];
@@ -234,7 +259,7 @@ describe("fetchDiscographyPages", () => {
 
 describe("syncArtistDiscography", () => {
   it("primera visita de un artista de una página: guarda tipos crudos, marca y fija la discografía completa", async () => {
-    state.txSelects.push([makeArtist()]);
+    queueArtist(makeArtist());
     state.updateResults.push([{ id: "bootleg" }], [{ id: "vuelto" }]);
     mocks.browse.mockResolvedValueOnce(BUNKERS);
 
@@ -268,7 +293,7 @@ describe("syncArtistDiscography", () => {
       ...second!,
       relations: [{ type: "wikidata", ended: true, url: { resource: "https://www.wikidata.org/wiki/Q1" } }],
     };
-    state.txSelects.push([makeArtist()]);
+    queueArtist(makeArtist());
     mocks.browse.mockResolvedValueOnce({ ...BUNKERS, "release-groups": [withRelation, endedRelation, ...rest] });
 
     await syncArtistDiscography("artist-1", { mode: "initial" });
@@ -285,7 +310,7 @@ describe("syncArtistDiscography", () => {
   });
 
   it("primera visita de un artista con más de 300: trae 3 páginas, guarda y no marca nada", async () => {
-    state.txSelects.push([makeArtist()]);
+    queueArtist(makeArtist());
     mocks.browse.mockResolvedValue({ ...PF1, "release-group-count": 450 });
 
     const result = await syncArtistDiscography("artist-1", { mode: "initial" });
@@ -298,7 +323,7 @@ describe("syncArtistDiscography", () => {
   });
 
   it("con el tope alcanzado fija la discografía completa sin marcar nada", async () => {
-    state.txSelects.push([makeArtist()]);
+    queueArtist(makeArtist());
     mocks.browse.mockResolvedValue({ ...PF1, "release-group-count": 5000 });
 
     const result = await syncArtistDiscography("artist-1", { mode: "full" });
@@ -308,17 +333,62 @@ describe("syncArtistDiscography", () => {
     expect(sets.map((s) => s.table)).toEqual([artist]);
   });
 
-  it("la primera visita se omite si otra ya sincronizó (candado + relectura)", async () => {
-    state.txSelects.push([makeArtist({ discographySyncedAt: new Date() })]);
+  it("la primera visita se omite sin pedir nada si la lectura previa ya la ve sincronizada", async () => {
+    queueArtist(makeArtist({ discographySyncedAt: new Date() }));
     const result = await syncArtistDiscography("artist-1", { mode: "initial" });
     expect(result).toEqual({ status: "skipped" });
-    expect(state.execute).toBe(1);
+    expect(state.execute).toBe(0);
     expect(mocks.browse).not.toHaveBeenCalled();
+  });
+
+  it("si otro proceso la sincronizó mientras se esperaba a MusicBrainz, la relectura bajo el candado no escribe", async () => {
+    state.selects.push([makeArtist()]);
+    state.txSelects.push([makeArtist({ discographySyncedAt: new Date() })]);
+    mocks.browse.mockResolvedValueOnce(BUNKERS);
+
+    const result = await syncArtistDiscography("artist-1", { mode: "initial" });
+
+    expect(result).toEqual({ status: "skipped" });
+    expect(mocks.browse).toHaveBeenCalledTimes(1);
+    expect(state.execute).toBe(1);
+    expect(state.inserts).toHaveLength(0);
+    expect(state.updates).toHaveLength(0);
+  });
+
+  it("pide a MusicBrainz sin transacción abierta y guarda todo por la transacción (ADR 0063)", async () => {
+    queueArtist(makeArtist());
+    const browseInTx: boolean[] = [];
+    mocks.browse.mockImplementation(async () => {
+      browseInTx.push(state.inTx);
+      return BUNKERS;
+    });
+
+    await syncArtistDiscography("artist-1", { mode: "initial" });
+
+    expect(browseInTx).toEqual([false]);
+    expect(releaseGroupInserts()).toHaveLength(18);
+    expect(state.globalInTx).toEqual([]);
+    // Los artistas acreditados se crean con el ejecutor de la transacción.
+    expect(mocks.upsertArtistStub).toHaveBeenCalledWith(expect.any(String), expect.any(String), expect.anything());
+  });
+
+  it("dos llamadas simultáneas comparten una sola sincronización", async () => {
+    queueArtist(makeArtist());
+    mocks.browse.mockResolvedValueOnce(BUNKERS);
+
+    const [a, b] = await Promise.all([
+      syncArtistDiscography("artist-1", { mode: "initial" }),
+      syncArtistDiscography("artist-1", { mode: "initial" }),
+    ]);
+
+    expect(a).toEqual(b);
+    expect(a.status).toBe("complete");
+    expect(mocks.browse).toHaveBeenCalledTimes(1);
   });
 
   it("la sincronización completa se omite si la discografía está al día", async () => {
     const fresh = new Date(Date.now() - DAY);
-    state.txSelects.push([makeArtist({ discographySyncedAt: fresh, discographyCompleteAt: fresh })]);
+    queueArtist(makeArtist({ discographySyncedAt: fresh, discographyCompleteAt: fresh }));
     const result = await syncArtistDiscography("artist-1", { mode: "full" });
     expect(result).toEqual({ status: "skipped" });
     expect(mocks.browse).not.toHaveBeenCalled();
@@ -326,20 +396,21 @@ describe("syncArtistDiscography", () => {
 
   it("la sincronización completa corre si la discografía tiene más de 7 días", async () => {
     const stale = new Date(Date.now() - 8 * DAY);
-    state.txSelects.push([makeArtist({ discographySyncedAt: stale, discographyCompleteAt: stale })]);
+    queueArtist(makeArtist({ discographySyncedAt: stale, discographyCompleteAt: stale }));
     mocks.browse.mockResolvedValueOnce(BUNKERS);
     const result = await syncArtistDiscography("artist-1", { mode: "full" });
     expect(result.status).toBe("complete");
   });
 
   it("un artista sin MBID se omite", async () => {
-    state.txSelects.push([makeArtist({ mbid: null })]);
+    queueArtist(makeArtist({ mbid: null }));
     expect(await syncArtistDiscography("artist-1", { mode: "full" })).toEqual({ status: "skipped" });
   });
 
   it("en simulación calcula las marcas sin escribir", async () => {
     const returnedMbid = BUNKERS["release-groups"][0]!.id;
-    state.txSelects.push(
+    // En simulación no se abre transacción: el artista y los créditos se leen con el cliente global.
+    state.selects.push(
       [makeArtist()],
       [
         { mbid: "bootleg-mbid", unlistedAt: null },
@@ -370,7 +441,7 @@ describe("syncArtistDiscography: verificación barata", () => {
     });
 
   it("con el mismo total hace una sola request, guarda la primera página y no marca nada", async () => {
-    state.txSelects.push([bigArtist()]);
+    queueArtist(bigArtist());
     mocks.browse.mockResolvedValueOnce(PF1);
 
     const result = await syncArtistDiscography("artist-1", { mode: "full" });
@@ -382,7 +453,7 @@ describe("syncArtistDiscography: verificación barata", () => {
   });
 
   it("con otro total sigue desde la segunda página sin repetir la primera", async () => {
-    state.txSelects.push([bigArtist({ discographyMbTotal: 218 })]);
+    queueArtist(bigArtist({ discographyMbTotal: 218 }));
     mocks.browse.mockResolvedValueOnce(PF1).mockResolvedValueOnce(PF2).mockResolvedValueOnce(PF3);
 
     const result = await syncArtistDiscography("artist-1", { mode: "full" });
@@ -394,7 +465,7 @@ describe("syncArtistDiscography: verificación barata", () => {
   });
 
   it("un artista de una sola página se sincroniza completo, con marcas", async () => {
-    state.txSelects.push([bigArtist({ discographyMbTotal: 18 })]);
+    queueArtist(bigArtist({ discographyMbTotal: 18 }));
     state.updateResults.push([{ id: "bootleg" }], []);
     mocks.browse.mockResolvedValueOnce(BUNKERS);
 
@@ -409,7 +480,7 @@ describe("syncArtistDiscography: verificación barata", () => {
     ["el total anterior es desconocido", { discographyMbTotal: null }],
     ["hay una solicitud del calendario pendiente", { discographyRefreshRequestedAt: new Date(Date.now() - DAY) }],
   ])("recorre todas las páginas si %s", async (_label, overrides) => {
-    state.txSelects.push([bigArtist(overrides)]);
+    queueArtist(bigArtist(overrides));
     mocks.browse.mockResolvedValueOnce(PF1).mockResolvedValueOnce(PF2).mockResolvedValueOnce(PF3);
 
     const result = await syncArtistDiscography("artist-1", { mode: "full" });
@@ -420,7 +491,7 @@ describe("syncArtistDiscography: verificación barata", () => {
 
   it("ignoreFreshness corre aunque la discografía esté al día (backfill --fill-total)", async () => {
     const fresh = new Date(Date.now() - DAY);
-    state.txSelects.push([bigArtist({ discographyCompleteAt: fresh, discographyCheckedAt: null, discographyMbTotal: null })]);
+    queueArtist(bigArtist({ discographyCompleteAt: fresh, discographyCheckedAt: null, discographyMbTotal: null }));
     mocks.browse.mockResolvedValueOnce(PF1).mockResolvedValueOnce(PF2).mockResolvedValueOnce(PF3);
 
     const result = await syncArtistDiscography("artist-1", { mode: "full", forceFullWalk: true, ignoreFreshness: true });
@@ -431,7 +502,7 @@ describe("syncArtistDiscography: verificación barata", () => {
 
   it("sin ignoreFreshness una discografía al día se omite, aunque falte el total", async () => {
     const fresh = new Date(Date.now() - DAY);
-    state.txSelects.push([bigArtist({ discographyCompleteAt: fresh, discographyCheckedAt: null, discographyMbTotal: null })]);
+    queueArtist(bigArtist({ discographyCompleteAt: fresh, discographyCheckedAt: null, discographyMbTotal: null }));
 
     const result = await syncArtistDiscography("artist-1", { mode: "full", forceFullWalk: true });
 
@@ -440,7 +511,7 @@ describe("syncArtistDiscography: verificación barata", () => {
   });
 
   it("forceFullWalk salta el atajo aunque el total coincida", async () => {
-    state.txSelects.push([bigArtist()]);
+    queueArtist(bigArtist());
     mocks.browse.mockResolvedValueOnce(PF1).mockResolvedValueOnce(PF2).mockResolvedValueOnce(PF3);
 
     const result = await syncArtistDiscography("artist-1", { mode: "full", forceFullWalk: true });
@@ -450,7 +521,7 @@ describe("syncArtistDiscography: verificación barata", () => {
   });
 
   it("en simulación informa el atajo sin escribir", async () => {
-    state.txSelects.push([bigArtist()]);
+    queueArtist(bigArtist());
     mocks.browse.mockResolvedValueOnce(PF1);
 
     const result = await syncArtistDiscography("artist-1", { mode: "full", dryRun: true });
@@ -461,7 +532,7 @@ describe("syncArtistDiscography: verificación barata", () => {
   });
 
   it("con el tope de páginas alcanzado no guarda el total", async () => {
-    state.txSelects.push([bigArtist({ discographyMbTotal: null })]);
+    queueArtist(bigArtist({ discographyMbTotal: null }));
     mocks.browse.mockResolvedValue({ ...PF1, "release-group-count": 5000 });
 
     await syncArtistDiscography("artist-1", { mode: "full" });
@@ -536,7 +607,7 @@ describe("findOrIngestDiscography", () => {
   });
 
   it("primera visita parcial: guarda las páginas iniciales y programa el resto", async () => {
-    state.txSelects.push([makeArtist()]);
+    queueArtist(makeArtist());
     state.selects.push([]);
     mocks.browse.mockResolvedValue({ ...PF1, "release-group-count": 450 });
 
@@ -547,7 +618,7 @@ describe("findOrIngestDiscography", () => {
   });
 
   it("primera visita completa: no programa más discografía, solo los géneros de sus álbumes", async () => {
-    state.txSelects.push([makeArtist()]);
+    queueArtist(makeArtist());
     state.selects.push([]);
     mocks.browse.mockResolvedValueOnce(BUNKERS);
 
@@ -564,7 +635,7 @@ describe("findOrIngestDiscography", () => {
     state.selects.push([]);
     await findOrIngestDiscography(makeArtist({ discographySyncedAt: stale, discographyCompleteAt: stale }));
 
-    state.txSelects.push([makeArtist({ discographySyncedAt: stale, discographyCompleteAt: stale })]);
+    queueArtist(makeArtist({ discographySyncedAt: stale, discographyCompleteAt: stale }));
     mocks.browse.mockResolvedValueOnce(BUNKERS);
     const task = mocks.after.mock.calls[0]![0] as () => Promise<void>;
     await task();
