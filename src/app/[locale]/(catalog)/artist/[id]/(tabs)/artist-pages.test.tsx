@@ -79,6 +79,7 @@ vi.mock("../../artist-data", () => ({ loadArtist: mocks.loadArtist, loadProfile:
 vi.mock("@/services/catalog/artist-lineup-sync", () => ({ scheduleLineupMembersSync: mocks.scheduleLineupMembersSync }));
 vi.mock("@/services/catalog/ingest-discography", () => ({ readArtistDiscography: vi.fn().mockResolvedValue([]) }));
 vi.mock("@/services/catalog/artist-profile-sync", () => ({ scheduleArtistProfileRefresh: mocks.scheduleArtistProfileRefresh }));
+vi.mock("@/services/catalog/stage-covers", () => ({ stageCoversToResolve: () => [], resolveStageCovers: vi.fn().mockResolvedValue(new Map()) }));
 vi.mock("@/services/social", () => ({
   resolveSocialTarget: vi.fn().mockResolvedValue({ type: "artist", id: "a", column: "artistId" }),
   listComments: vi.fn().mockResolvedValue({ comments: [], page: 1, pageSize: 20, hasNext: false }),

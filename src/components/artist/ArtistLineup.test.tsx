@@ -249,6 +249,7 @@ describe("PersonLineupView", () => {
         { id: "recent", name: "Reciente" },
         { id: "old", name: "Vieja" },
       ],
+      othersCount: 0,
       href: "/artist/tommy/members#artist-tabs",
       more: "seeAll",
     });
@@ -256,11 +257,12 @@ describe("PersonLineupView", () => {
 });
 
 describe("lineupFact y lineupTabOf de un grupo", () => {
-  it("hasta 5 nombres de la alineación actual con enlace a la sub-vista Actual", () => {
+  it("hasta 3 nombres de la alineación actual, cuántos más y el enlace a la sub-vista Actual (refine-artist-stage)", () => {
     const six = { ...CRUE, current: Array.from({ length: 6 }, (_, i) => member(`p${i}`, `Persona ${i}`)) };
     const fact = lineupFact(six, "crue")!;
     expect(fact.label).toBe("members");
-    expect(fact.people).toHaveLength(5);
+    expect(fact.people).toHaveLength(3);
+    expect(fact.othersCount).toBe(3);
     expect(fact.href).toBe("/artist/crue/members?view=current#artist-tabs");
     expect(lineupFact({ ...CRUE, lastLineup: true }, "crue")!.label).toBe("lastLineup");
   });

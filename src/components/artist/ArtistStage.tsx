@@ -24,7 +24,7 @@ function Wall({ backdrop }: { backdrop: StageBackdrop }) {
 }
 
 function Fan({ backdrop }: { backdrop: StageBackdrop }) {
-  const first = backdrop.covers[0];
+  const first = backdrop.ambient ?? backdrop.covers[0];
   const layout = fanLayout(backdrop.covers.length);
   return (
     <>
@@ -37,6 +37,8 @@ function Fan({ backdrop }: { backdrop: StageBackdrop }) {
         className={`${LAYER} right-4 top-24 h-[30vw] w-[52vw] opacity-85 sm:right-[max(4%,calc(50%-44rem+3rem))] sm:top-[40%] sm:h-[min(280px,21vw)] sm:w-[min(480px,36vw)] sm:-translate-y-1/2 sm:opacity-100`}
       >
         {layout.length === 1 && <span className="absolute top-[4%] block aspect-square h-[92%] rounded-full shadow-2xl" style={{ ...VINYL, left: "34%" }} />}
+        {/* Sin fundas (la única carátula ya es el retrato): el disco solo, sobre el color de esa carátula. */}
+        {layout.length === 0 && <span className="absolute top-0 block aspect-square h-full rounded-full opacity-80 shadow-2xl" style={{ ...VINYL, left: "30%" }} />}
         {backdrop.covers.map((cover, index) => (
           <span
             key={cover.id}

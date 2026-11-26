@@ -212,6 +212,15 @@ agrupación y la vista por defecto no cambian. En la grilla, el relleno de un di
 lleva «★ Mejor valorado» o «EP», y una carátula que falla —también antes de que la página se hidrate— cae a ese relleno (en la tabla,
 al disco dibujado) en lugar del icono de imagen rota. Los títulos de bloque y de grupo de la tabla usan la escala de «Comentarios».
 
+**Ajustes de la portada (cambio `refine-artist-stage`, 2026-11).** Con sesión, el panel «Tu relación» ya no va en la columna
+derecha de la portada (la estiraba y tapaba el abanico): es una franja a todo el ancho bajo la portada, con los tres conmutadores a
+un lado y las demás filas en columnas. Si el retrato es una carátula (artista sin foto), esa carátula no se repite en el abanico.
+La ficha va en tres líneas como mucho —datos; alineación, premios y comunidad; enlaces—, la alineación nombra hasta 3 personas o
+bandas y cuántas más, «Primer disco» y «Fallecimiento» llevan su rótulo a la vista y los enlaces externos van atenuados, sin
+subrayado permanente. Si a Principal le faltan carátulas para llenar la portada, el servidor resuelve hasta 12 de sus discos más
+recientes al cargar (`src/services/catalog/stage-covers.ts`, 1,5 s como mucho; el resto termina después de responder; solo Cover
+Art Archive).
+
 Lo que sigue describe la estructura original; donde contradiga el párrafo anterior, manda la portada.
 
 **Estructura** (cambio `redesign-artist-page`, 2026-09 — la página es un híbrido entre ficha

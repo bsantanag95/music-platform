@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/i18n-test-utils";
 import { albumHref, albumSegment, artistHref } from "@/lib/catalog-links";
@@ -234,6 +234,12 @@ async function renderLayout(children: React.ReactNode = <p>contenido</p>) {
 }
 
 describe("layout de la página de álbum", () => {
+  // La primera importación del layout tarda varios segundos en frío: se hace aquí, con su propio plazo, para que no cuente
+  // contra el primer test (con la máquina cargada superaba los 5 s).
+  beforeAll(async () => {
+    await import("./layout");
+  }, 30_000);
+
   it("muestra el título sin traducir, el tipo de obra y el breadcrumb con artista", async () => {
     await renderLayout();
     expect(screen.getByRole("heading", { level: 1, name: "The Dark Side of the Moon" })).toBeInTheDocument();
