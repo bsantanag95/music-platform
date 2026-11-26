@@ -1,9 +1,10 @@
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { genre, genreLocalizedText, type GenreLocalizedTextRow, type GenreRow } from "@/db/schema";
 import { wikimedia, type WikiLanguage } from "../wikimedia/client";
 import { summaryOf, type WikipediaSummary } from "../wikimedia/mappers";
 import type { WDEntity } from "../wikimedia/types";
+import { singleFlight, withEntityLock } from "@/db/entity-sync";
 import { GENRE_ABOUT_REFRESH_MS } from "./constants";
 
 // Sincronización del texto "Sobre el género" desde Wikidata y Wikipedia (openspec:
@@ -88,28 +89,35 @@ export async function enrichGenreFromWikimedia(
   genreId: string,
   { dryRun = false, force = false }: { dryRun?: boolean; force?: boolean } = {},
 ): Promise<GenreAboutSyncResult> {
-  return db.transaction(async (tx) => {
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${`genre-wikimedia:${genreId}`}, 0))`);
+  return singleFlight(`genre-wikimedia:${genreId}:${dryRun}:${force}`, () => runGenreAboutSync(genreId, dryRun, force));
+}
+
+/**
+ * Las requests a Wikimedia salen fuera de toda transacción y la escritura va en una transacción corta con el
+ * candado por género (ADR 0063), que relee el género: si otro proceso lo sincronizó o cambió su entidad de
+ * Wikidata mientras tanto, no escribe.
+ */
+async function runGenreAboutSync(genreId: string, dryRun: boolean, force: boolean): Promise<GenreAboutSyncResult> {
+  const [before]: GenreRow[] = await db.select().from(genre).where(eq(genre.id, genreId)).limit(1);
+  if (!before || before.kind !== "style") return { status: "skipped" };
+  if (!force && !isAboutStale(before.wikimediaSyncedAt)) return { status: "skipped" };
+
+  const enrichment = before.wikidataId ? await fetchGenreAboutEnrichment(before.wikidataId) : null;
+  const result: GenreAboutSyncResult = !before.wikidataId
+    ? { status: "no-wikidata" }
+    : enrichment
+      ? { status: "enriched", ...enrichment }
+      : // La entidad ya no existe (borrada o fusionada): se conserva el texto y no se reintenta en cada visita.
+        { status: "missing-entity" };
+  if (dryRun) return result;
+
+  return withEntityLock(`genre-wikimedia:${genreId}`, async (tx): Promise<GenreAboutSyncResult> => {
     const [current]: GenreRow[] = await tx.select().from(genre).where(eq(genre.id, genreId)).limit(1);
-    if (!current || current.kind !== "style") return { status: "skipped" };
+    if (!current || current.kind !== "style" || current.wikidataId !== before.wikidataId) return { status: "skipped" };
     if (!force && !isAboutStale(current.wikimediaSyncedAt)) return { status: "skipped" };
 
-    const now = new Date();
-    if (!current.wikidataId) {
-      if (!dryRun) await tx.update(genre).set({ wikimediaSyncedAt: now }).where(eq(genre.id, genreId));
-      return { status: "no-wikidata" };
-    }
-
-    const enrichment = await fetchGenreAboutEnrichment(current.wikidataId);
-    if (!enrichment) {
-      // La entidad ya no existe (borrada o fusionada): se conserva el texto y no se reintenta en cada visita.
-      if (!dryRun) await tx.update(genre).set({ wikimediaSyncedAt: now }).where(eq(genre.id, genreId));
-      return { status: "missing-entity" };
-    }
-    if (!dryRun) {
-      await saveEnrichment(tx, genreId, enrichment);
-      await tx.update(genre).set({ wikimediaSyncedAt: now }).where(eq(genre.id, genreId));
-    }
-    return { status: "enriched", ...enrichment };
+    if (enrichment) await saveEnrichment(tx, genreId, enrichment);
+    await tx.update(genre).set({ wikimediaSyncedAt: new Date() }).where(eq(genre.id, genreId));
+    return result;
   });
 }

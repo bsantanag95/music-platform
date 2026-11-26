@@ -9,6 +9,7 @@
 //     `maxlag` y se reintenta más tarde.
 // Mismo supuesto de proceso único que la cola de MusicBrainz.
 
+import { assertNoOpenTransaction } from "@/db/transaction-guard";
 import type { CommonsImageInfoResponse, WDEntitiesResponse, WDSparqlResponse, WPExtractResponse } from "./types";
 
 const MIN_INTERVAL_MS = 250;
@@ -52,6 +53,8 @@ async function wikiFetch<T extends { error?: { code: string; info?: string } }>(
   base: string,
   params: Record<string, string>,
 ): Promise<T> {
+  // Nunca con una transacción abierta (ADR 0063): la espera retendría una conexión del pool.
+  assertNoOpenTransaction("Wikimedia");
   const userAgent = requiredUserAgent();
   return schedule(async () => {
     const url = new URL(base);

@@ -4,6 +4,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // El SQL real lo cubre scripts/smoke-test-genres.ts.
 const state = vi.hoisted(() => ({
   albums: [] as { id: string; wikidataId: string | null }[],
+  /** Álbumes vencidos que ve la relectura bajo el candado, si difieren de la lectura previa. */
+  reread: null as { id: string; wikidataId: string | null }[] | null,
+  /** Hay una transacción abierta. */
+  open: false,
   deletes: 0,
   syncUpdates: [] as string[],
 }));
@@ -12,7 +16,7 @@ const mocks = vi.hoisted(() => ({ getEntities: vi.fn(), replace: vi.fn() }));
 vi.mock("@/db", () => {
   const tx = {
     execute: async () => undefined,
-    selectDistinct: () => ({ from: () => ({ innerJoin: () => ({ where: async () => state.albums }) }) }),
+    selectDistinct: () => ({ from: () => ({ innerJoin: () => ({ where: async () => state.reread ?? state.albums }) }) }),
     delete: () => ({
       where: async () => {
         state.deletes++;
@@ -27,7 +31,20 @@ vi.mock("@/db", () => {
     }),
     transaction: async (fn: (t: unknown) => unknown) => fn(tx),
   };
-  return { db: { transaction: async (fn: (t: typeof tx) => unknown) => fn(tx) } };
+  return {
+    db: {
+      transaction: async (fn: (t: typeof tx) => unknown) => {
+        state.open = true;
+        try {
+          return await fn(tx);
+        } finally {
+          state.open = false;
+        }
+      },
+      // Lectura previa, sin transacción.
+      selectDistinct: () => ({ from: () => ({ innerJoin: () => ({ where: async () => state.albums }) }) }),
+    },
+  };
 });
 vi.mock("../wikimedia/client", () => ({ wikimedia: { getEntities: mocks.getEntities } }));
 vi.mock("./seeds", () => ({ replaceReleaseGroupGenreSeeds: mocks.replace }));
@@ -46,6 +63,8 @@ function entitiesWithGenres() {
 beforeEach(() => {
   vi.clearAllMocks();
   state.albums = [];
+  state.reread = null;
+  state.open = false;
   state.deletes = 0;
   state.syncUpdates = [];
   mocks.replace.mockImplementation(async (_tx: unknown, _id: string, qids: string[]) => qids.length);
@@ -113,5 +132,41 @@ describe("syncAlbumGenreSeeds", () => {
     expect(mocks.replace).not.toHaveBeenCalled();
     expect(state.deletes).toBe(0);
     expect(state.syncUpdates).toHaveLength(0);
+  });
+});
+
+describe("syncAlbumGenreSeeds: transacción corta (ADR 0063)", () => {
+  it("pide los lotes a Wikidata sin transacción abierta", async () => {
+    state.albums = Array.from({ length: 60 }, (_, i) => ({ id: `rg-${i}`, wikidataId: `Q${i + 1}` }));
+    const openDuring: boolean[] = [];
+    mocks.getEntities.mockImplementation(async (ids: string[]) => {
+      openDuring.push(state.open);
+      return { entities: Object.fromEntries(ids.map((id) => [id, { id, claims: { P136: [genreClaim(`${id}-genre`)] } }])) };
+    });
+
+    const result = await syncAlbumGenreSeeds("artist-1");
+
+    expect(openDuring).toEqual([false, false]);
+    expect(result.seeded).toBe(60);
+  });
+
+  it("no escribe los álbumes que otro proceso sincronizó mientras tanto ni los que cambiaron de entidad", async () => {
+    state.albums = [
+      { id: "rg-1", wikidataId: "Q1" },
+      { id: "rg-2", wikidataId: "Q2" },
+      { id: "rg-3", wikidataId: "Q3" },
+    ];
+    // rg-1 ya no está vencido; rg-2 cambió de entidad; solo rg-3 sigue igual.
+    state.reread = [
+      { id: "rg-2", wikidataId: "Q20" },
+      { id: "rg-3", wikidataId: "Q3" },
+    ];
+    entitiesWithGenres();
+
+    const result = await syncAlbumGenreSeeds("artist-1");
+
+    expect(mocks.replace).toHaveBeenCalledTimes(1);
+    expect(mocks.replace).toHaveBeenCalledWith(expect.anything(), "rg-3", ["Q3-genre"]);
+    expect(result.seeded).toBe(1);
   });
 });

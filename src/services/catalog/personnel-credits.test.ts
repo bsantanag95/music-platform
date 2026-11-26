@@ -170,52 +170,79 @@ describe("completePersonnelSync", () => {
 });
 
 describe("syncPersonnelCredits", () => {
-  it("omite una edición con personal y autoría sincronizados sin llamar a MusicBrainz", async () => {
-    const queue = [
-      [{ id: "release-1", mbid: "mbid-1" }],
-      [{ id: "release-1", mbid: "mbid-1", personnelSyncedAt: new Date(), worksSyncedAt: new Date() }],
-    ];
-    mocks.transaction.mockImplementation(async (cb: (tx: unknown) => Promise<unknown>) =>
-      cb({ select: () => queryChain(queue.shift()), execute: async () => undefined }),
+  /** Transacción falsa con lock; `open` dice si está abierta y `selects` es la cola de `tx.select`. */
+  function lockTransaction(selects: unknown[]) {
+    const state = { open: false, executed: 0 };
+    mocks.transaction.mockImplementation(async (cb: (tx: unknown) => Promise<unknown>) => {
+      state.open = true;
+      try {
+        return await cb({
+          select: () => queryChain(selects.shift()),
+          execute: async () => {
+            state.executed++;
+          },
+          delete: () => queryChain(undefined),
+          insert: () => queryChain(undefined),
+        });
+      } finally {
+        state.open = false;
+      }
+    });
+    return state;
+  }
+
+  it("omite una edición con personal y autoría sincronizados sin llamar a MusicBrainz ni abrir transacción", async () => {
+    mocks.select.mockImplementation(() =>
+      queryChain([{ id: "release-1", mbid: "mbid-1", personnelSyncedAt: new Date(), worksSyncedAt: new Date() }]),
     );
 
     await expect(syncPersonnelCredits("rg-1")).resolves.toEqual({ status: "skipped" });
     expect(mocks.getRelease).not.toHaveBeenCalled();
+    expect(mocks.transaction).not.toHaveBeenCalled();
   });
 
-  it("con el personal sincronizado pero la autoría pendiente, pide la edición y guarda ambos", async () => {
-    const queue = [
-      [{ id: "release-1", mbid: "mbid-1" }],
-      [{ id: "release-1", mbid: "mbid-1", personnelSyncedAt: new Date(), worksSyncedAt: null }],
-    ];
-    // La misma transacción falsa sirve para el lock de la sincronización y para el reemplazo
-    // de los créditos de personal (que abre su propia transacción).
-    mocks.transaction.mockImplementation(async (cb: (tx: unknown) => Promise<unknown>) =>
-      cb({
-        select: () => queryChain(queue.shift()),
-        execute: async () => undefined,
-        delete: () => queryChain(undefined),
-        insert: () => queryChain(undefined),
-      }),
-    );
+  it("con el personal sincronizado pero la autoría pendiente, pide la edición fuera de la transacción y guarda ambos", async () => {
+    const pending = { id: "release-1", mbid: "mbid-1", personnelSyncedAt: new Date(), worksSyncedAt: null };
+    // Cola del cliente global: la lectura previa y, después de la transacción, las pertenencias.
+    const globalSelects: unknown[] = [[pending], []];
+    mocks.select.mockImplementation(() => queryChain(globalSelects.shift()));
+    // Cola de la transacción: la relectura y las pistas de la edición.
+    const tx = lockTransaction([[pending], []]);
     const noCredits = { id: "mbid-1", title: "Sin créditos", media: [] } as MBRelease;
-    mocks.getRelease.mockResolvedValue(noCredits);
-    mocks.select.mockImplementation(() => queryChain([]));
-    mocks.update.mockImplementation(() => queryChain(undefined));
-    mocks.ensureArtistMemberships.mockResolvedValue(undefined);
+    const openDuring: Record<string, boolean> = {};
+    mocks.getRelease.mockImplementation(async () => {
+      openDuring.getRelease = tx.open;
+      return noCredits;
+    });
+    mocks.update.mockImplementation(() => {
+      openDuring.markPersonnel = tx.open;
+      return queryChain(undefined);
+    });
 
     const result = await syncPersonnelCredits("rg-1");
 
     expect(result).toEqual({ status: "synced", creditCount: 0, workCreditCount: 0 });
     expect(mocks.getRelease).toHaveBeenCalledTimes(1);
-    expect(mocks.saveWorkCredits).toHaveBeenCalledWith("release-1", noCredits);
+    expect(tx.executed).toBe(1);
+    expect(mocks.saveWorkCredits).toHaveBeenCalledWith("release-1", noCredits, expect.anything());
+    // La request y la marca de personal (tras asegurar las pertenencias) van fuera de la transacción.
+    expect(openDuring).toEqual({ getRelease: false, markPersonnel: false });
   });
 
-  it("en dry-run cuenta los créditos sin escribir", async () => {
-    const queue = [[{ id: "release-1", mbid: "mbid-1" }], [{ id: "release-1", mbid: "mbid-1", personnelSyncedAt: null }]];
-    mocks.transaction.mockImplementation(async (cb: (tx: unknown) => Promise<unknown>) =>
-      cb({ select: () => queryChain(queue.shift()), execute: async () => undefined }),
-    );
+  it("si otra visita guardó todo mientras se esperaba a MusicBrainz, la relectura bajo el candado no escribe", async () => {
+    mocks.select.mockImplementation(() => queryChain([{ id: "release-1", mbid: "mbid-1", personnelSyncedAt: null, worksSyncedAt: null }]));
+    lockTransaction([[{ id: "release-1", mbid: "mbid-1", personnelSyncedAt: new Date(), worksSyncedAt: new Date() }]]);
+    mocks.getRelease.mockResolvedValue(RELEASE);
+
+    await expect(syncPersonnelCredits("rg-1")).resolves.toEqual({ status: "skipped" });
+    expect(mocks.getRelease).toHaveBeenCalledTimes(1);
+    expect(mocks.upsertArtistStub).not.toHaveBeenCalled();
+    expect(mocks.saveWorkCredits).not.toHaveBeenCalled();
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+
+  it("en dry-run cuenta los créditos sin escribir ni abrir transacción", async () => {
+    mocks.select.mockImplementation(() => queryChain([{ id: "release-1", mbid: "mbid-1", personnelSyncedAt: null }]));
     mocks.getRelease.mockResolvedValue(RELEASE);
 
     const result = await syncPersonnelCredits("rg-1", { dryRun: true });
@@ -224,5 +251,6 @@ describe("syncPersonnelCredits", () => {
     expect((result as { creditCount: number }).creditCount).toBeGreaterThan(100);
     expect(mocks.upsertArtistStub).not.toHaveBeenCalled();
     expect(mocks.saveWorkCredits).not.toHaveBeenCalled();
+    expect(mocks.transaction).not.toHaveBeenCalled();
   });
 });

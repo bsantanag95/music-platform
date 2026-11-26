@@ -35,16 +35,19 @@ function isAudience(value: unknown): value is Audience {
  * "Precedencia al crear contenido"): el valor explícito de la petición, luego
  * la audiencia por defecto del usuario y, si no la tiene, el default del tipo.
  * Se resuelve en el servidor. Solo se consulta al usuario cuando la petición no
- * trae audiencia, y nunca reescribe contenido ya creado.
+ * trae audiencia, y nunca reescribe contenido ya creado. Dentro de una
+ * transacción se pasa su ejecutor: el cliente global pediría otra conexión del
+ * pool (ADR 0063).
  */
 export async function resolveNewContentAudience(
   userId: string,
   type: NewContentType,
   explicit?: Audience | null,
+  executor: Pick<typeof db, "select"> = db,
 ): Promise<Audience> {
   if (explicit) return explicit;
 
-  const [row] = await db
+  const [row] = await executor
     .select({ defaultAudience: appUser.defaultAudience })
     .from(appUser)
     .where(eq(appUser.id, userId))

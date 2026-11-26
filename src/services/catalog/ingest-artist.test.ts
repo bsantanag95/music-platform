@@ -55,7 +55,10 @@ function makeArtist(overrides: Partial<ArtistRow> = {}): ArtistRow {
   };
 }
 
-function setup(current: ArtistRow) {
+const txState = { open: false };
+
+/** `before`: lo que ve la lectura previa sin transacción; `current`: la relectura bajo el candado. */
+function setup(current: ArtistRow, before: ArtistRow = current) {
   const inserts: unknown[] = [];
   const updates: unknown[] = [];
   const deletes: unknown[] = [];
@@ -89,7 +92,17 @@ function setup(current: ArtistRow) {
     delete: vi.fn(() => ({ where: vi.fn(async (condition: unknown) => { deletes.push(condition); }) })),
     update: vi.fn(() => ({ set: vi.fn((values: unknown) => ({ where: vi.fn(async () => { updates.push(values); }) })) })),
   };
-  vi.mocked(db.transaction).mockImplementation(async (callback) => callback(tx as never));
+  vi.mocked(db.transaction).mockImplementation(async (callback) => {
+    txState.open = true;
+    try {
+      return await callback(tx as never);
+    } finally {
+      txState.open = false;
+    }
+  });
+  vi.mocked(db.select).mockImplementation((() => ({
+    from: () => ({ where: () => ({ limit: async () => [before] }) }),
+  })) as never);
   return { tx, inserts, updates, deletes };
 }
 
@@ -206,6 +219,41 @@ describe("ensureArtistMemberships", () => {
       joinedOn: "1975-01-01",
       leftOn: "1980-01-01",
     });
+  });
+
+  it("pide a MusicBrainz sin transacción abierta (ADR 0063)", async () => {
+    setup(makeArtist());
+    const openDuringRequest: boolean[] = [];
+    vi.mocked(musicbrainz.getArtistWithRelations).mockImplementation(async () => {
+      openDuringRequest.push(txState.open);
+      return detail();
+    });
+
+    await ensureArtistMemberships(makeArtist());
+
+    expect(openDuringRequest).toEqual([false]);
+  });
+
+  it("si otro proceso marcó el flag mientras se esperaba a MusicBrainz, la relectura bajo el candado no escribe", async () => {
+    const { inserts, deletes, updates, tx } = setup(makeArtist({ membershipsSyncedAt: new Date() }), makeArtist());
+    vi.mocked(musicbrainz.getArtistWithRelations).mockResolvedValue(detail());
+
+    await ensureArtistMemberships(makeArtist());
+
+    expect(musicbrainz.getArtistWithRelations).toHaveBeenCalledTimes(1);
+    expect(tx.execute).toHaveBeenCalledTimes(1);
+    expect(inserts).toHaveLength(0);
+    expect(deletes).toHaveLength(0);
+    expect(updates).toHaveLength(0);
+  });
+
+  it("dos visitas simultáneas hacen una sola request", async () => {
+    setup(makeArtist());
+    vi.mocked(musicbrainz.getArtistWithRelations).mockResolvedValue(detail());
+
+    await Promise.all([ensureArtistMemberships(makeArtist()), ensureArtistMemberships(makeArtist())]);
+
+    expect(musicbrainz.getArtistWithRelations).toHaveBeenCalledTimes(1);
   });
 
   it("es idempotente cuando la segunda lectura observa el flag ya marcado", async () => {

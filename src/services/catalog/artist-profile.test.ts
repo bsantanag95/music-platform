@@ -3,6 +3,10 @@ import kuervos from "../musicbrainz/__fixtures__/kuervos-del-sur-artist-with-rel
 
 const state = vi.hoisted(() => ({
   current: null as Record<string, unknown> | null,
+  /** Lo que ve la relectura bajo el candado, si difiere de la lectura previa. */
+  reread: null as Record<string, unknown> | null,
+  /** Hay una transacción abierta. */
+  open: false,
   updates: [] as Record<string, unknown>[],
   deletes: 0,
   inserts: [] as unknown[],
@@ -15,7 +19,9 @@ vi.mock("@/db", () => {
     execute: async () => {
       state.execute += 1;
     },
-    select: () => ({ from: () => ({ where: () => ({ limit: async () => (state.current ? [state.current] : []) }) }) }),
+    select: () => ({
+      from: () => ({ where: () => ({ limit: async () => { const row = state.reread ?? state.current; return row ? [row] : []; } }) }),
+    }),
     update: () => ({
       set: (values: Record<string, unknown>) => ({
         where: async () => {
@@ -34,7 +40,20 @@ vi.mock("@/db", () => {
       },
     }),
   };
-  return { db: { transaction: async (fn: (t: typeof tx) => unknown) => fn(tx) } };
+  return {
+    db: {
+      transaction: async (fn: (t: typeof tx) => unknown) => {
+        state.open = true;
+        try {
+          return await fn(tx);
+        } finally {
+          state.open = false;
+        }
+      },
+      // Lectura previa, sin transacción.
+      select: () => ({ from: () => ({ where: () => ({ limit: async () => (state.current ? [state.current] : []) }) }) }),
+    },
+  };
 });
 vi.mock("../musicbrainz/client", () => ({ musicbrainz: { getArtistWithRelations: mocks.getArtistWithRelations } }));
 vi.mock("./artist-lineup-save", () => ({ saveArtistLineup: mocks.saveArtistLineup }));
@@ -46,6 +65,8 @@ const DAY = 24 * 60 * 60 * 1000;
 beforeEach(() => {
   vi.clearAllMocks();
   state.current = { id: "a1", mbid: "b97abf8a-6b72-43eb-8f0f-8ce210fce812", profileSyncedAt: null, lineupSyncedAt: null };
+  state.reread = null;
+  state.open = false;
   state.updates = [];
   state.deletes = 0;
   state.inserts = [];
@@ -116,5 +137,29 @@ describe("vigencia", () => {
     expect(needsProfileRefresh({ ...synced, wikimediaSyncedAt: null })).toBe(true);
     expect(needsProfileRefresh({ ...synced, lineupSyncedAt: null })).toBe(true);
     expect(needsProfileRefresh({ mbid: null, profileSyncedAt: null, lineupSyncedAt: null, wikimediaSyncedAt: null })).toBe(false);
+  });
+});
+
+describe("syncArtistProfileFacts: transacción corta (ADR 0063)", () => {
+  it("pide el artista sin transacción abierta", async () => {
+    const openDuring: boolean[] = [];
+    mocks.getArtistWithRelations.mockImplementation(async () => {
+      openDuring.push(state.open);
+      return kuervos;
+    });
+
+    await syncArtistProfileFacts("a1");
+
+    expect(openDuring).toEqual([false]);
+  });
+
+  it("si otro proceso renovó la ficha mientras se esperaba a MusicBrainz, no escribe", async () => {
+    state.reread = { ...state.current, profileSyncedAt: new Date(), lineupSyncedAt: new Date() };
+
+    await expect(syncArtistProfileFacts("a1")).resolves.toEqual({ status: "skipped" });
+    expect(mocks.getArtistWithRelations).toHaveBeenCalledTimes(1);
+    expect(state.execute).toBe(1);
+    expect(state.updates).toEqual([]);
+    expect(mocks.saveArtistLineup).not.toHaveBeenCalled();
   });
 });

@@ -12,6 +12,7 @@
 // Redis, ya previsto en docs/02-architecture/architecture.md). Para el
 // alcance de la Fase 2 esta cola en memoria es suficiente.
 
+import { assertNoOpenTransaction } from "@/db/transaction-guard";
 import type {
   MBArtistSummary,
   MBArtistDetail,
@@ -201,6 +202,8 @@ async function mbFetch<T>(
   params: Record<string, string> = {},
   signal?: AbortSignal,
 ): Promise<T> {
+  // Nunca con una transacción abierta (ADR 0063): la cola de 1,1 s retendría una conexión del pool.
+  assertNoOpenTransaction("MusicBrainz");
   return schedule(async () => {
     const url = new URL(`${MB_BASE_URL}${path}`);
     url.searchParams.set("fmt", "json");

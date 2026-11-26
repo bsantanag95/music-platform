@@ -8,6 +8,8 @@
 // artistas. Los datos son CC0 y provienen de MusicBrainz (mismos MBID).
 // Mismo supuesto de proceso único que la cola de MusicBrainz.
 
+import { assertNoOpenTransaction } from "@/db/transaction-guard";
+
 const LB_BASE_URL = "https://api.listenbrainz.org/1";
 const MIN_INTERVAL_MS = 500;
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -73,6 +75,8 @@ function requiredUserAgent(): string {
 }
 
 async function lbFetch<T>(path: string, init: { params?: Record<string, string>; body?: unknown } = {}): Promise<T> {
+  // Nunca con una transacción abierta (ADR 0063): la espera retendría una conexión del pool.
+  assertNoOpenTransaction("ListenBrainz");
   const userAgent = requiredUserAgent();
   return schedule(async () => {
     const url = new URL(`${LB_BASE_URL}${path}`);

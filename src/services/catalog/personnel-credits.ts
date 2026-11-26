@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, or } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, credit, personnelCredit, recording, release, track } from "@/db/schema";
 import { musicbrainz } from "../musicbrainz/client";
@@ -6,6 +6,7 @@ import type { MBRelease } from "../musicbrainz/types";
 import { mapRelation, type MappedPersonnelRelation } from "./credit-relations";
 import { ensureArtistMemberships, upsertArtistStub } from "./ingest-artist";
 import { countWorkCredits, saveWorkCredits } from "./work-credits";
+import { inTransaction, singleFlight, withEntityLock, type Tx } from "@/db/entity-sync";
 
 export type { MappedPersonnelRelation } from "./credit-relations";
 
@@ -47,14 +48,14 @@ export function mapPersonnelRelations(full: MBRelease): {
   return { release: releaseRelations, byRecordingMbid };
 }
 
-type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
-
 /**
  * Reemplaza los créditos de personal de una edición y de sus grabaciones con los de la
  * respuesta de MusicBrainz, en una transacción: un fallo a mitad conserva los anteriores.
  * Los artistas que no existen se crean como stub (antes de la transacción: es idempotente).
+ * Con `tx`, todo va por esa transacción (ADR 0063).
  */
-export async function savePersonnelCredits(releaseId: string, full: MBRelease): Promise<void> {
+export async function savePersonnelCredits(releaseId: string, full: MBRelease, tx?: Tx): Promise<void> {
+  const executor = tx ?? db;
   const mapped = mapPersonnelRelations(full);
   const recordingMbids = [...mapped.byRecordingMbid.keys()];
   const allRelations = [...mapped.release, ...[...mapped.byRecordingMbid.values()].flat()];
@@ -62,12 +63,12 @@ export async function savePersonnelCredits(releaseId: string, full: MBRelease): 
   const artistIdByMbid = new Map<string, string>();
   for (const r of allRelations) {
     if (artistIdByMbid.has(r.artistMbid)) continue;
-    const row = await upsertArtistStub(r.artistMbid, r.artistName);
+    const row = await upsertArtistStub(r.artistMbid, r.artistName, executor);
     artistIdByMbid.set(r.artistMbid, row.id);
   }
 
   const recordingRows = recordingMbids.length
-    ? await db
+    ? await executor
         .select({ id: recording.id, mbid: recording.mbid })
         .from(recording)
         .where(inArray(recording.mbid, recordingMbids))
@@ -85,18 +86,18 @@ export async function savePersonnelCredits(releaseId: string, full: MBRelease): 
 
   // Grabaciones de ESTA edición: sus créditos se reemplazan aunque MusicBrainz ya no traiga ninguno.
   const releaseRecordingIds = (
-    await db.select({ recordingId: track.recordingId }).from(track).where(eq(track.releaseId, releaseId))
+    await executor.select({ recordingId: track.recordingId }).from(track).where(eq(track.releaseId, releaseId))
   ).map((row) => row.recordingId);
 
-  await db.transaction(async (tx: Transaction) => {
-    await tx
+  await inTransaction(tx, async (inner) => {
+    await inner
       .delete(personnelCredit)
       .where(
         releaseRecordingIds.length
           ? or(eq(personnelCredit.releaseId, releaseId), inArray(personnelCredit.recordingId, releaseRecordingIds))
           : eq(personnelCredit.releaseId, releaseId),
       );
-    if (rows.length > 0) await tx.insert(personnelCredit).values(rows).onConflictDoNothing();
+    if (rows.length > 0) await inner.insert(personnelCredit).values(rows).onConflictDoNothing();
   });
 }
 
@@ -152,34 +153,44 @@ export type PersonnelSyncResult =
 /**
  * Sincroniza los créditos de personal y la autoría de obras de la edición representativa de
  * un álbum ingerido antes de alguno de los dos (`personnel_synced_at` o `works_synced_at`
- * nulo; openspec: add-songwriter-credits). Lock por edición y relectura de las marcas: dos
- * visitas simultáneas no piden dos veces. Una request a MusicBrainz trae ambos; se reemplaza
- * todo (idempotente).
+ * nulo; openspec: add-songwriter-credits). Una request a MusicBrainz trae ambos; se reemplaza
+ * todo (idempotente). La request sale fuera de toda transacción y la escritura va en una
+ * transacción corta con el candado por edición, que relee las marcas (ADR 0063): dos visitas
+ * simultáneas del proceso comparten la ejecución y, entre procesos, la que llega tarde no escribe.
+ * Las pertenencias de los artistas principales se aseguran después de escribir, fuera de la
+ * transacción (van a MusicBrainz), y recién entonces se marca `personnel_synced_at`.
  */
-export async function syncPersonnelCredits(
+export function syncPersonnelCredits(
   releaseGroupId: string,
   { dryRun = false }: { dryRun?: boolean } = {},
 ): Promise<PersonnelSyncResult> {
-  return db.transaction(async (tx) => {
-    const [current] = await tx
-      .select()
-      .from(release)
-      .where(and(eq(release.releaseGroupId, releaseGroupId), eq(release.isRepresentative, true)))
-      .limit(1);
-    if (!current?.mbid) return { status: "skipped" };
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${`personnel:${current.id}`}, 0))`);
+  return singleFlight(`personnel:${releaseGroupId}:${dryRun}`, () => runPersonnelSync(releaseGroupId, dryRun));
+}
+
+async function runPersonnelSync(releaseGroupId: string, dryRun: boolean): Promise<PersonnelSyncResult> {
+  const [current] = await db
+    .select()
+    .from(release)
+    .where(and(eq(release.releaseGroupId, releaseGroupId), eq(release.isRepresentative, true)))
+    .limit(1);
+  if (!current?.mbid || (current.personnelSyncedAt && current.worksSyncedAt)) return { status: "skipped" };
+  const mbid = current.mbid;
+
+  const full = await musicbrainz.getRelease(mbid);
+  const mapped = mapPersonnelRelations(full);
+  const creditCount = mapped.release.length + [...mapped.byRecordingMbid.values()].reduce((n, r) => n + r.length, 0);
+  const workCreditCount = countWorkCredits(full);
+  if (dryRun) return { status: "synced", creditCount, workCreditCount };
+
+  const written = await withEntityLock(`personnel:${current.id}`, async (tx) => {
     const [locked] = await tx.select().from(release).where(eq(release.id, current.id)).limit(1);
-    if (!locked?.mbid || (locked.personnelSyncedAt && locked.worksSyncedAt)) return { status: "skipped" };
-
-    const full = await musicbrainz.getRelease(locked.mbid);
-    const mapped = mapPersonnelRelations(full);
-    const creditCount = mapped.release.length + [...mapped.byRecordingMbid.values()].reduce((n, r) => n + r.length, 0);
-    const workCreditCount = countWorkCredits(full);
-    if (dryRun) return { status: "synced", creditCount, workCreditCount };
-
-    await savePersonnelCredits(locked.id, full);
-    await completePersonnelSync(locked.id, releaseGroupId);
-    await saveWorkCredits(locked.id, full);
-    return { status: "synced", creditCount, workCreditCount };
+    if (!locked || locked.mbid !== mbid || (locked.personnelSyncedAt && locked.worksSyncedAt)) return false;
+    await savePersonnelCredits(locked.id, full, tx);
+    await saveWorkCredits(locked.id, full, tx);
+    return true;
   });
+  if (!written) return { status: "skipped" };
+
+  await completePersonnelSync(current.id, releaseGroupId);
+  return { status: "synced", creditCount, workCreditCount };
 }

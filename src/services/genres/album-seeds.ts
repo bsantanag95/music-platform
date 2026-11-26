@@ -1,8 +1,9 @@
-import { and, eq, inArray, isNull, lt, or, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, lt, or } from "drizzle-orm";
 import { db } from "@/db";
 import { credit, releaseGroup, releaseGroupGenreSeed } from "@/db/schema";
 import { wikimedia } from "../wikimedia/client";
 import { genreIdsOf } from "../wikimedia/mappers";
+import { singleFlight, withEntityLock, type Tx } from "@/db/entity-sync";
 import { replaceReleaseGroupGenreSeeds } from "./seeds";
 
 // Semillas de género de los álbumes de un artista desde Wikidata P136 (openspec:
@@ -33,10 +34,8 @@ export interface AlbumGenreSyncResult {
   failedBatches: number;
 }
 
-type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
-
 /** Álbumes acreditados al artista con semillas nunca sincronizadas o vencidas. */
-function staleAlbums(tx: Tx, artistId: string, force: boolean, now: Date) {
+function staleAlbums(tx: Pick<Tx, "selectDistinct">, artistId: string, force: boolean, now: Date) {
   const cutoff = new Date(now.getTime() - ALBUM_GENRE_REFRESH_MS);
   return tx
     .selectDistinct({ id: releaseGroup.id, wikidataId: releaseGroup.wikidataId })
@@ -56,56 +55,87 @@ const batches = <T>(items: T[]) =>
   );
 
 /**
- * Sincroniza las semillas de los álbumes vencidos de un artista bajo un candado por artista:
- * los que no tienen entidad quedan sincronizados sin semillas; los demás se piden a Wikidata
- * en lotes de 50. Un lote que falla no marca sus álbumes, que quedan para la próxima vez.
+ * Sincroniza las semillas de los álbumes vencidos de un artista: los que no tienen entidad quedan
+ * sincronizados sin semillas; los demás se piden a Wikidata en lotes de 50. Un lote que falla no
+ * marca sus álbumes, que quedan para la próxima vez. Las requests salen fuera de toda transacción
+ * y la escritura va en una transacción corta con el candado por artista (ADR 0063), que relee los
+ * álbumes vencidos: uno que otro proceso ya sincronizó, o cuya entidad cambió, no se escribe.
  */
-export async function syncAlbumGenreSeeds(
+export function syncAlbumGenreSeeds(
   artistId: string,
   { force = false, dryRun = false }: AlbumGenreSyncOptions = {},
 ): Promise<AlbumGenreSyncResult> {
-  return db.transaction(async (tx) => {
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${`album-genres:${artistId}`}, 0))`);
-    const now = new Date();
-    const albums = await staleAlbums(tx, artistId, force, now);
-    const result: AlbumGenreSyncResult = { albums: albums.length, withoutEntity: 0, seeded: 0, requests: 0, failedBatches: 0 };
+  return singleFlight(`album-genres:${artistId}:${force}:${dryRun}`, () => runAlbumGenreSync(artistId, force, dryRun));
+}
 
-    const withoutEntity = albums.filter((a) => !a.wikidataId).map((a) => a.id);
-    result.withoutEntity = withoutEntity.length;
-    if (!dryRun && withoutEntity.length > 0) {
-      await tx.delete(releaseGroupGenreSeed).where(inArray(releaseGroupGenreSeed.releaseGroupId, withoutEntity));
-      await tx.update(releaseGroup).set({ genresSyncedAt: now }).where(inArray(releaseGroup.id, withoutEntity));
+interface FetchedBatch {
+  albums: { id: string; wikidataId: string }[];
+  genresByQid: Map<string, string[]>;
+}
+
+async function runAlbumGenreSync(artistId: string, force: boolean, dryRun: boolean): Promise<AlbumGenreSyncResult> {
+  const now = new Date();
+  const albums = await staleAlbums(db, artistId, force, now);
+  const result: AlbumGenreSyncResult = { albums: albums.length, withoutEntity: 0, seeded: 0, requests: 0, failedBatches: 0 };
+
+  const withoutEntity = albums.filter((a) => !a.wikidataId).map((a) => a.id);
+  result.withoutEntity = withoutEntity.length;
+
+  const linked = albums.filter((a): a is { id: string; wikidataId: string } => a.wikidataId !== null);
+  const fetched: FetchedBatch[] = [];
+  for (const batch of batches(linked)) {
+    try {
+      result.requests++;
+      const qids = [...new Set(batch.map((a) => a.wikidataId))];
+      const { entities = {} } = await wikimedia.getEntities(qids, ["claims"]);
+      // Una entidad borrada en Wikidata (`missing`) cuenta como sin géneros.
+      const genresByQid = new Map(qids.map((qid) => [qid, entities[qid]?.missing === undefined ? genreIdsOf(entities[qid]) : []]));
+      fetched.push({ albums: batch, genresByQid });
+    } catch (error) {
+      result.failedBatches++;
+      console.warn(`[genres] lote de ${batch.length} álbumes de ${artistId} falló`, error instanceof Error ? error.message : error);
+    }
+  }
+
+  if (dryRun) {
+    for (const { albums: batch, genresByQid } of fetched) {
+      result.seeded += batch.filter((a) => (genresByQid.get(a.wikidataId) ?? []).length > 0).length;
+    }
+    return result;
+  }
+  if (withoutEntity.length === 0 && fetched.length === 0) return result;
+
+  await withEntityLock(`album-genres:${artistId}`, async (tx) => {
+    // Relectura bajo el candado: entidad vigente de cada álbum que sigue vencido.
+    const pending = new Map((await staleAlbums(tx, artistId, force, now)).map((a) => [a.id, a.wikidataId]));
+
+    const stillWithout = withoutEntity.filter((id) => pending.has(id) && pending.get(id) === null);
+    if (stillWithout.length > 0) {
+      await tx.delete(releaseGroupGenreSeed).where(inArray(releaseGroupGenreSeed.releaseGroupId, stillWithout));
+      await tx.update(releaseGroup).set({ genresSyncedAt: now }).where(inArray(releaseGroup.id, stillWithout));
     }
 
-    const linked = albums.filter((a): a is { id: string; wikidataId: string } => a.wikidataId !== null);
-    for (const batch of batches(linked)) {
+    for (const { albums: batch, genresByQid } of fetched) {
+      const writable = batch.filter((a) => pending.get(a.id) === a.wikidataId);
+      if (writable.length === 0) continue;
       try {
-        result.requests++;
-        const qids = [...new Set(batch.map((a) => a.wikidataId))];
-        const { entities = {} } = await wikimedia.getEntities(qids, ["claims"]);
-        // Una entidad borrada en Wikidata (`missing`) cuenta como sin géneros.
-        const genresByQid = new Map(qids.map((qid) => [qid, entities[qid]?.missing === undefined ? genreIdsOf(entities[qid]) : []]));
-        if (dryRun) {
-          result.seeded += batch.filter((a) => (genresByQid.get(a.wikidataId) ?? []).length > 0).length;
-          continue;
-        }
         await tx.transaction(async (savepoint) => {
-          for (const album of batch) {
+          for (const album of writable) {
             const count = await replaceReleaseGroupGenreSeeds(savepoint, album.id, genresByQid.get(album.wikidataId) ?? []);
             if (count > 0) result.seeded++;
           }
           await savepoint
             .update(releaseGroup)
             .set({ genresSyncedAt: now })
-            .where(inArray(releaseGroup.id, batch.map((a) => a.id)));
+            .where(inArray(releaseGroup.id, writable.map((a) => a.id)));
         });
       } catch (error) {
         result.failedBatches++;
-        console.warn(`[genres] lote de ${batch.length} álbumes de ${artistId} falló`, error instanceof Error ? error.message : error);
+        console.warn(`[genres] lote de ${writable.length} álbumes de ${artistId} falló`, error instanceof Error ? error.message : error);
       }
     }
-    return result;
   });
+  return result;
 }
 
 /** ¿El artista tiene algún álbum con semillas nunca sincronizadas o vencidas? */
