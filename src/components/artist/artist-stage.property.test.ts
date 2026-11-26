@@ -47,6 +47,19 @@ describe("stageBackdrop", () => {
   });
 });
 
+describe("stageBackdrop con retrato", () => {
+  it("el abanico nunca repite la carátula del retrato", () => {
+    assertProperty(
+      fc.property(coversArb, fc.boolean(), fc.option(fc.integer({ min: 1, max: 200 }), { nil: null }), fc.string(), (covers, hasPhoto, best, name) => {
+        const portrait = stagePortrait(hasPhoto, covers, best === null ? null : `rg-${best}`, name);
+        const exclude = portrait.kind === "cover" ? portrait.cover.id : null;
+        const backdrop = stageBackdrop(covers, exclude);
+        return backdrop.mode !== "fan" || backdrop.covers.every((cover) => cover.id !== exclude);
+      }),
+    );
+  });
+});
+
 describe("stagePortrait", () => {
   it("nunca queda vacío: foto, una carátula del artista o iniciales", () => {
     assertProperty(

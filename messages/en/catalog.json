@@ -555,7 +555,8 @@
       "live": "Live",
       "setlistfm": "Concerts on setlist.fm",
       "type": "Type",
-      "genres": "Genres"
+      "genres": "Genres",
+      "andMore": "and {count} more"
     },
     "summary": {
       "readMore": "Keep reading",

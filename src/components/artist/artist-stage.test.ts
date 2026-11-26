@@ -35,7 +35,7 @@ describe("stageBackdrop", () => {
     expect(stageBackdrop(covers(7))).toMatchObject({ mode: "fan" });
     expect(stageBackdrop(covers(7)).covers).toHaveLength(5);
     expect(stageBackdrop(covers(1)).mode).toBe("fan");
-    expect(stageBackdrop([])).toEqual({ mode: "none", covers: [] });
+    expect(stageBackdrop([])).toEqual({ mode: "none", covers: [], ambient: null });
   });
 
   it("el abanico pone al frente el último trabajo; los discos sin año van al final", () => {
@@ -47,6 +47,15 @@ describe("stageBackdrop", () => {
     ];
     expect(stageBackdrop(three).covers.map((c) => c.id)).toEqual(["c", "b", "a", "x"]);
     expect(stageBackdrop(covers(7)).covers.map((c) => c.id)).toEqual(["6", "5", "4", "3", "2"]);
+  });
+
+  it("la carátula del retrato no se repite en el abanico, pero su color sigue tiñendo el fondo (refine-artist-stage)", () => {
+    const two = covers(2);
+    expect(stageBackdrop(two, "1")).toMatchObject({ mode: "fan", covers: [{ id: "0" }], ambient: { id: "1" } });
+    const one = covers(1);
+    expect(stageBackdrop(one, "0")).toEqual({ mode: "fan", covers: [], ambient: one[0] });
+    // El muro es textura: no excluye.
+    expect(stageBackdrop(covers(8), "3").covers).toHaveLength(8);
   });
 
   it("el muro repite las carátulas en ciclo", () => {

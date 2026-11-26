@@ -25,15 +25,19 @@ interface DiscographyLike {
   sections: { key: string; items: { id: string; title: string; year: number | null; coverThumbUrl: string | null; coverResolved: boolean }[] }[];
 }
 
-/** Carátulas de la discografía principal con imagen, en el orden de la discografía y sin repetir disco. */
-export function stageCovers(discography: DiscographyLike | null): StageCover[] {
+/**
+ * Carátulas de la discografía principal con imagen, en el orden de la discografía y sin repetir disco. `resolved` suma las
+ * que se acaban de resolver al cargar la página (openspec: refine-artist-stage).
+ */
+export function stageCovers(discography: DiscographyLike | null, resolved: ReadonlyMap<string, string> = new Map()): StageCover[] {
   const main = discography?.sections.find((section) => section.key === "main")?.items ?? [];
   const seen = new Set<string>();
   const covers: StageCover[] = [];
   for (const item of main) {
-    if (!item.coverResolved || !item.coverThumbUrl || seen.has(item.id)) continue;
+    const thumbUrl = item.coverResolved ? item.coverThumbUrl : (resolved.get(item.id) ?? null);
+    if (!thumbUrl || seen.has(item.id)) continue;
     seen.add(item.id);
-    covers.push({ id: item.id, title: item.title, year: item.year, thumbUrl: item.coverThumbUrl });
+    covers.push({ id: item.id, title: item.title, year: item.year, thumbUrl });
   }
   return covers;
 }
@@ -42,6 +46,8 @@ export interface StageBackdrop {
   mode: StageMode;
   /** Muro: las carátulas distintas que se repiten; abanico: las fundas de la más reciente a la más antigua; sin carátulas: vacío. */
   covers: StageCover[];
+  /** Abanico: la carátula del último trabajo, cuyo color desenfocado tiñe el fondo (aunque sea la del retrato). */
+  ambient: StageCover | null;
 }
 
 /** Del disco más reciente al más antiguo; los que no tienen año, al final en su orden. */
@@ -50,11 +56,18 @@ export function newestFirst(covers: StageCover[]): StageCover[] {
   return [...dated, ...covers.filter((cover) => cover.year === null)];
 }
 
-export function stageBackdrop(covers: StageCover[]): StageBackdrop {
-  if (covers.length >= WALL_MIN) return { mode: "wall", covers: covers.slice(0, WALL_DISTINCT_MAX) };
+/**
+ * Fondo de la portada. `exclude` es la carátula que ya se usa como retrato: no se repite en el abanico (openspec:
+ * refine-artist-stage); si no queda otra funda, el abanico dibuja el disco solo sobre su color.
+ */
+export function stageBackdrop(covers: StageCover[], exclude: string | null = null): StageBackdrop {
+  if (covers.length >= WALL_MIN) return { mode: "wall", covers: covers.slice(0, WALL_DISTINCT_MAX), ambient: null };
   // En el abanico manda el último trabajo: va al frente y su color tiñe el fondo.
-  if (covers.length >= 1) return { mode: "fan", covers: newestFirst(covers).slice(0, FAN_MAX) };
-  return { mode: "none", covers: [] };
+  if (covers.length >= 1) {
+    const ordered = newestFirst(covers);
+    return { mode: "fan", covers: ordered.filter((cover) => cover.id !== exclude).slice(0, FAN_MAX), ambient: ordered[0]! };
+  }
+  return { mode: "none", covers: [], ambient: null };
 }
 
 /** Celdas del muro: las carátulas repetidas en ciclo hasta llenar todas. */

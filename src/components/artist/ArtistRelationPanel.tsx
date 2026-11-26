@@ -53,7 +53,9 @@ const panelClass = "flex h-full flex-col gap-3 rounded border border-ink-border 
 // Acciones de texto en gris: el ámbar del panel queda para los conmutadores activos.
 const linkButton =
   "font-data text-xs text-paper-muted underline-offset-2 hover:text-paper hover:underline disabled:cursor-not-allowed disabled:opacity-50";
-const divider = "border-t border-ink-border";
+// Con sesión el panel es una franja bajo la portada (openspec: refine-artist-stage): conmutadores a un lado, filas en columnas.
+const stripClass =
+  "grid grid-cols-1 gap-5 rounded border border-ink-border bg-ink-surface p-4 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-8 lg:p-5";
 
 /**
  * Fila del panel: la etiqueta y su acción en la primera línea, el valor debajo. En la columna
@@ -203,7 +205,8 @@ function AuthenticatedPanel({
           .join(" · ");
 
   return (
-    <aside aria-label={t("heading")} className={panelClass}>
+    <aside aria-label={t("heading")} className={stripClass}>
+      <div className="flex flex-col gap-3">
       <h2 className="font-display text-sm text-paper-muted">{t("heading")}</h2>
 
       <div className="grid grid-cols-3 gap-2">
@@ -232,8 +235,11 @@ function AuthenticatedPanel({
           stacked
         />
       </div>
+      </div>
 
-      <div className={`flex flex-col gap-3 pt-3 ${divider}`}>
+      {/* Filas en columnas (openspec: refine-artist-stage): cada celda guarda lo que despliega su fila. */}
+      <div className="grid min-w-0 grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="flex min-w-0 flex-col gap-2">
         <Field
           label={t("listens")}
           action={
@@ -268,9 +274,11 @@ function AuthenticatedPanel({
             }}
           />
         )}
+        </div>
         <Field label={t("collection")}>
           <Value empty={noCollection}>{collectionSummary}</Value>
         </Field>
+        <div className="flex min-w-0 flex-col">
         <Field
           label={t("live")}
           action={
@@ -310,6 +318,9 @@ function AuthenticatedPanel({
             }}
           />
         )}
+        </div>
+        {(state.rated || discographyHref) && (
+        <div className="flex min-w-0 flex-col gap-1">
         {state.rated && (
           <Field
             label={t("rated")}
@@ -336,10 +347,9 @@ function AuthenticatedPanel({
             {t("discographyLamina")} →
           </Link>
         ) : null}
-      </div>
-
-      <div className={`flex flex-col gap-3 pt-3 ${divider}`}>
-        <div className="flex flex-col gap-1">
+        </div>
+        )}
+        <div className="flex min-w-0 flex-col gap-1">
           <Field
             label={t("listsLabel")}
             action={
@@ -369,6 +379,7 @@ function AuthenticatedPanel({
           )}
         </div>
 
+        <div className="flex min-w-0 flex-col">
         <Field
           label={t("journey")}
           action={
@@ -429,10 +440,11 @@ function AuthenticatedPanel({
             onClose={() => setJourneyAlbums(null)}
           />
         )}
+        </div>
       </div>
 
       {error && (
-        <p role="alert" className="font-data text-xs text-danger">
+        <p role="alert" className="font-data text-xs text-danger lg:col-span-2">
           {t(error)}
         </p>
       )}

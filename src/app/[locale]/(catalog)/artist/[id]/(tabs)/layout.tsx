@@ -9,7 +9,8 @@ import { artistHref } from "@/lib/catalog-links";
 import { ArtistCommunity, hasCommunity } from "@/components/artist/ArtistCommunity";
 import { ArtistFacts, ArtistFollowInvite, ArtistIdentity, ArtistPhotoCredit, ArtistPortrait } from "@/components/artist/ArtistHeader";
 import { ArtistStage } from "@/components/artist/ArtistStage";
-import { stageBackdrop, stageCovers, stagePortrait } from "@/components/artist/artist-stage";
+import { WALL_MIN, stageBackdrop, stageCovers, stagePortrait } from "@/components/artist/artist-stage";
+import { resolveStageCovers, stageCoversToResolve } from "@/services/catalog/stage-covers";
 import { ArtistRelationPanel } from "@/components/artist/ArtistRelationPanel";
 import { ArtistTabs } from "@/components/artist/ArtistTabs";
 import { ARTIST_TABS_ANCHOR, lineupFact, lineupTabOf } from "@/components/artist/lineup-fact";
@@ -107,9 +108,12 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
     live_other: t("categories.live_other"),
   } satisfies Record<ReleaseGroupCategory, string>;
 
-  const covers = stageCovers(discography);
-  const backdrop = stageBackdrop(covers);
+  // Carátulas que faltan para llenar la portada, resueltas con un tiempo acotado (openspec: refine-artist-stage).
+  const mainItems = discography?.sections.find((section) => section.key === "main")?.items ?? [];
+  const lateCovers = await resolveStageCovers(stageCoversToResolve(mainItems, WALL_MIN));
+  const covers = stageCovers(discography, lateCovers);
   const portrait = stagePortrait(profile.photo !== null, covers, discography?.bestRatedId ?? null, artist.name);
+  const backdrop = stageBackdrop(covers, portrait.kind === "cover" ? portrait.cover.id : null);
   const frame = "mx-auto w-full max-w-[88rem] px-4 sm:px-8 xl:px-12";
 
   return (
@@ -120,7 +124,7 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
             items={[{ label: tCommon("home"), href: "/" }, { label: artist.name }]}
             action={<ShareAction kind="artist" refId={artist.id} />}
           />
-          <header className="grid grid-cols-1 items-end gap-7 lg:grid-cols-[minmax(0,1fr)_18rem]">
+          <header className={`grid grid-cols-1 items-end gap-7 ${userId ? "" : "lg:grid-cols-[minmax(0,1fr)_18rem]"}`}>
             <div className="flex min-w-0 flex-col items-start gap-4 sm:flex-row sm:items-end sm:gap-6">
               <ArtistPortrait name={artist.name} photo={profile.photo} portrait={portrait} />
               <div className="flex min-w-0 flex-1 flex-col gap-4">
@@ -139,22 +143,25 @@ async function ArtistLayout({ children, params }: ArtistLayoutProps) {
                 />
               </div>
             </div>
-            {userId ? (
-              <ArtistRelationPanel
-                artistId={artist.id}
-                artistName={artist.name}
-                state={personal}
-                discographyHref={discographyHref}
-                categoryLabels={categoryLabels}
-              />
-            ) : (
-              <ArtistFollowInvite name={artist.name} />
-            )}
+            {userId ? null : <ArtistFollowInvite name={artist.name} />}
           </header>
         </div>
       </ArtistStage>
 
       <div className={`${frame} flex flex-col gap-8 pb-12 pt-2`}>
+        {/* Con sesión, «Tu relación» va en una franja bajo la portada: no estira la portada ni tapa el abanico
+            (openspec: refine-artist-stage). */}
+        {userId ? (
+          <div className="pt-6">
+            <ArtistRelationPanel
+              artistId={artist.id}
+              artistName={artist.name}
+              state={personal}
+              discographyHref={discographyHref}
+              categoryLabels={categoryLabels}
+            />
+          </div>
+        ) : null}
         {/* Alturas de las barras fijas: el encabezado del sitio y las pestañas (openspec: refine-artist-page-phase2, D4). */}
         <div
           id={ARTIST_TABS_ANCHOR}

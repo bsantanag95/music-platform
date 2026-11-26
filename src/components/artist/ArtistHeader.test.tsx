@@ -32,7 +32,7 @@ function profile(overrides: Partial<ArtistProfile> = {}): ArtistProfile {
 }
 
 function dd(label: string): HTMLElement {
-  return screen.getByText(label).nextElementSibling as HTMLElement;
+  return screen.getByText(label, { selector: "dt" }).nextElementSibling as HTMLElement;
 }
 
 const photo = {url: "https://thumb.wikimedia.org/k.jpg",author: "Carolina Gatica",license: "CC BY-SA 4.0",licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0",sourceUrl: "https://commons.wikimedia.org/wiki/File:K.jpg"};
@@ -130,7 +130,7 @@ describe("ArtistFacts", () => {
       />,
     );
     expect(dd(artistEs.facts.born)).toHaveTextContent("2 de mayo de 1983 · Viña del Mar, Chile");
-    expect(dd(artistEs.facts.firstRecord)).toHaveTextContent("2003");
+    expect(dd(artistEs.facts.firstRecord)).toHaveTextContent(`${artistEs.facts.firstRecord} 2003`);
     expect(screen.queryByText(artistEs.facts.activity)).not.toBeInTheDocument();
     expect(screen.queryByText(artistEs.facts.died)).not.toBeInTheDocument();
   });
@@ -209,7 +209,7 @@ describe("ArtistFacts", () => {
     expect(screen.getAllByRole("definition")).toHaveLength(1);
   });
 
-  it("géneros abren la primera línea, comunidad la cierra y los enlaces van en la segunda", () => {
+  it("tres líneas: géneros y datos; comunidad; enlaces (refine-artist-stage)", () => {
     const { container } = renderWithIntl(
       <ArtistFacts
         type="group"
@@ -221,7 +221,8 @@ describe("ArtistFacts", () => {
       />,
     );
     const lines = container.querySelectorAll("dl > div");
-    expect([...lines[0]!.querySelectorAll("[data-fact]")].map((el) => el.getAttribute("data-fact"))).toEqual(["genres", "type", "community"]);
-    expect([...lines[1]!.querySelectorAll("[data-fact]")].map((el) => el.getAttribute("data-fact"))).toEqual(["links", "live"]);
+    expect([...lines[0]!.querySelectorAll("[data-fact]")].map((el) => el.getAttribute("data-fact"))).toEqual(["genres", "type"]);
+    expect([...lines[1]!.querySelectorAll("[data-fact]")].map((el) => el.getAttribute("data-fact"))).toEqual(["community"]);
+    expect([...lines[2]!.querySelectorAll("[data-fact]")].map((el) => el.getAttribute("data-fact"))).toEqual(["links", "live"]);
   });
 });

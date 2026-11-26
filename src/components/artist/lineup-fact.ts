@@ -2,10 +2,10 @@ import { artistHref } from "@/lib/catalog-links";
 import type { ArtistLineup } from "@/services/catalog/artist-lineup";
 
 // Fila de la alineación en la ficha de la cabecera (openspec: add-artist-members-tab, design D6):
-// hasta 5 nombres de la alineación actual (o la última, si el grupo se separó) o de los grupos
-// de una persona, con un enlace a la pestaña.
+// hasta 3 nombres (antes 5; openspec: refine-artist-stage) de la alineación actual (o la última, si el grupo se separó) o de
+// los grupos de una persona, cuántos más hay y un enlace a la pestaña.
 
-export const LINEUP_FACT_LIMIT = 5;
+export const LINEUP_FACT_LIMIT = 3;
 
 /**
  * Ancla de la barra de pestañas: el enlace de la ficha lleva directo a la alineación, no al tope
@@ -16,6 +16,8 @@ export const ARTIST_TABS_ANCHOR = "artist-tabs";
 export interface LineupFact {
   label: "members" | "lastLineup" | "bands";
   people: { id: string; name: string }[];
+  /** Cuántos más hay además de los nombrados. */
+  othersCount: number;
   href: string;
   more: "seeLineup" | "seeAll";
 }
@@ -33,6 +35,7 @@ export function lineupFact(lineup: ArtistLineup | null, artistId: string, artist
     return {
       label: lineup.lastLineup ? "lastLineup" : "members",
       people: lineup.current.slice(0, LINEUP_FACT_LIMIT).map((p) => ({ id: p.artistId, name: p.name })),
+      othersCount: Math.max(lineup.current.length - LINEUP_FACT_LIMIT, 0),
       href: `${membersBase}?view=current#${ARTIST_TABS_ANCHOR}`,
       more: "seeLineup",
     };
@@ -44,6 +47,7 @@ export function lineupFact(lineup: ArtistLineup | null, artistId: string, artist
   return {
     label: "bands",
     people: [...current, ...past].slice(0, LINEUP_FACT_LIMIT).map((g) => ({ id: g.artistId, name: g.name })),
+    othersCount: Math.max(lineup.groups.length - LINEUP_FACT_LIMIT, 0),
     href: `${membersBase}#${ARTIST_TABS_ANCHOR}`,
     more: "seeAll",
   };

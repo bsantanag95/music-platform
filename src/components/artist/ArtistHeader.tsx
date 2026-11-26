@@ -15,7 +15,8 @@ type ArtistType = "person" | "group" | "various" | "unknown";
 
 // Enlaces que salen del sitio: texto claro con subrayado punteado y `↗`. El ámbar queda para lo activo del panel y
 // para "Seguir leyendo" (openspec: polish-artist-header).
-const externalLink = "text-paper underline decoration-dotted decoration-paper-muted/60 underline-offset-2 hover:text-amber";
+// Sin subrayado permanente (openspec: refine-artist-stage): atenuados, subrayan al pasar.
+const externalLink = "text-paper/70 underline-offset-2 hover:text-paper hover:underline";
 const internalMore = "text-paper-muted hover:text-paper hover:underline";
 // Crédito de la foto: lo exige la licencia, pero no compite con la ficha.
 const creditText = "font-data text-[0.65rem] leading-snug text-paper-muted/70";
@@ -160,6 +161,7 @@ export function artistFactRows(
               </Link>
             </span>
           ))}
+          {lineup.othersCount > 0 ? ` ${t("facts.andMore", { count: lineup.othersCount })}` : null}
           {" · "}
           <Link href={lineup.href} className={`whitespace-nowrap ${internalMore}`}>
             {t(`facts.${lineup.more}`)} →
@@ -241,9 +243,14 @@ export function artistFactRows(
 
 /** Filas de la segunda línea de la ficha: lo que sale del sitio. */
 const OUTBOUND_ROWS = new Set(["links", "live"]);
+/** Filas de la segunda línea: la gente alrededor del artista (openspec: refine-artist-stage). */
+const SOCIAL_ROWS = new Set(["lineup", "awards", "community"]);
+/** Filas cuyo valor solo no se entiende («Cobham 1977»): llevan su rótulo a la vista. */
+const VISIBLE_LABEL_ROWS = new Set(["firstRecord", "died"]);
 
 /**
- * Ficha compacta en dos líneas (openspec: modernize-artist-page-phase1): géneros, tipo, datos, alineación, premios y
+ * Ficha compacta en tres líneas (openspec: modernize-artist-page-phase1, refine-artist-stage): géneros, tipo y datos; alineación,
+ * premios y comunidad; enlaces y En vivo. Antes eran dos líneas: géneros, tipo, datos, alineación, premios y
  * comunidad; debajo, enlaces y En vivo. Cada fila conserva su rótulo para lectores de pantalla.
  */
 export function ArtistFacts(props: ArtistFactsProps) {
@@ -259,14 +266,22 @@ export function ArtistFacts(props: ArtistFactsProps) {
         {items.map((row) => (
           <div key={row.key} data-fact={row.key} className="min-w-0">
             <dt className="sr-only">{row.label}</dt>
-            <dd>{row.value}</dd>
+            <dd>
+              {VISIBLE_LABEL_ROWS.has(row.key) ? (
+                <span aria-hidden="true" className="text-paper-muted">
+                  {row.label}{" "}
+                </span>
+              ) : null}
+              {row.value}
+            </dd>
           </div>
         ))}
       </div>
     );
   return (
     <dl aria-label={t("facts.heading")} className="flex flex-col gap-2.5 font-data text-[0.8125rem] text-paper/80">
-      {line(rows.filter((row) => !OUTBOUND_ROWS.has(row.key)))}
+      {line(rows.filter((row) => !OUTBOUND_ROWS.has(row.key) && !SOCIAL_ROWS.has(row.key)))}
+      {line(rows.filter((row) => SOCIAL_ROWS.has(row.key)))}
       {line(rows.filter((row) => OUTBOUND_ROWS.has(row.key)))}
     </dl>
   );
