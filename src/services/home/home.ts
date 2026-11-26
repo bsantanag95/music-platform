@@ -137,6 +137,8 @@ export interface HomeRecentListen {
     id: string;
     title: string;
     artistName: string | null;
+    /** Artista acreditado (para enlazar su nombre); `null` cuando el objetivo ya es el artista. */
+    artistId: string | null;
     coverThumbUrl: string | null;
   };
   /** Tu valoración del objetivo, si existe (`stars` "0.5".."5.0"). */
@@ -164,6 +166,7 @@ export async function listMyRecentListens(userId: string, limit = 8): Promise<Ho
       artistName: artist.name,
       artistPhoto: artist.photoUrl,
       creditedArtist: PRIMARY_ARTIST_SQL(listenEntry.releaseGroupId, listenEntry.recordingId),
+      creditedArtistId: PRIMARY_ARTIST_ID_SQL(listenEntry.releaseGroupId, listenEntry.recordingId),
       releaseTitle: releaseGroup.title,
       releaseCover: releaseGroup.coverThumbUrl,
       recordingTitle: recording.title,
@@ -221,6 +224,7 @@ export async function listMyRecentListens(userId: string, limit = 8): Promise<Ho
         id,
         title: (type === "artist" ? row.artistName : type === "release-group" ? row.releaseTitle : row.recordingTitle) ?? "",
         artistName: type === "artist" ? null : row.creditedArtist,
+        artistId: type === "artist" ? null : row.creditedArtistId,
         coverThumbUrl: type === "artist" ? row.artistPhoto : type === "release-group" ? row.releaseCover : row.recordingCover,
       },
       rating: own ? { stars: String(own.stars), detailedScore: own.detailedScore } : null,

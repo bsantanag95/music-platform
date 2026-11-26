@@ -123,4 +123,51 @@ describe("ActivityCard", () => {
     expect(screen.getByRole("link", { name: "Isn't Anything" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "m b v" })).toBeInTheDocument();
   });
+
+  it("el artista acreditado enlaza a su página cuando viene su id", () => {
+    renderCard({
+      kind: "rating",
+      id: "r3",
+      stars: "4.0",
+      detailedScore: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      target: { ...target, artistId: "a1b2c3d4-0000-4000-8000-0000000000a1" },
+      author,
+    });
+    expect(screen.getByRole("link", { name: "My Bloody Valentine" }).getAttribute("href")).toMatch(/^\/artist\//);
+  });
+
+  it("sin id del artista, su nombre queda como texto", () => {
+    renderCard({ kind: "rating", id: "r4", stars: "4.0", detailedScore: null, createdAt: "2026-01-01T00:00:00.000Z", target, author });
+    expect(screen.getByText(/My Bloody Valentine/)).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "My Bloody Valentine" })).toBeNull();
+  });
+
+  it("en una racha, el artista de cada escucha enlaza a su página", () => {
+    const withArtist = (id: string, title: string) => {
+      const entry = listen(id, title);
+      return { ...entry, target: { ...entry.target, artistId: "a1b2c3d4-0000-4000-8000-0000000000a1" } };
+    };
+    renderCard({
+      kind: "listen-run",
+      id: "run-l4",
+      author,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      entries: [withArtist("l4", "Loveless"), withArtist("l5", "m b v")],
+    });
+    expect(screen.getAllByRole("link", { name: "My Bloody Valentine" })).toHaveLength(2);
+  });
+
+  it("una reseña enlaza a su página", () => {
+    renderCard({
+      kind: "review",
+      id: "a1b2c3d4-0000-4000-8000-0000000000f1",
+      title: null,
+      body: "Un muro de ruido que se vuelve canción.",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      target,
+      author,
+    });
+    expect(screen.getByRole("link", { name: "Leer reseña" }).getAttribute("href")).toMatch(/^\/review\//);
+  });
 });

@@ -5578,6 +5578,7 @@
     "collection.wantedEntriesHeading",
     "collection.wantedRemoved",
     "feed.commentLabel",
+    "feed.community.readReview",
     "feed.context.first_listen",
     "feed.context.rediscovery",
     "feed.context.relisten",
