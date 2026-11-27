@@ -58,6 +58,9 @@ export function Header({
   // header-search). Menú y búsqueda son mutuamente excluyentes.
   const [searchOpen, setSearchOpen] = useState(false);
   const searchToggleRef = useRef<HTMLButtonElement>(null);
+  // En /search el buscador es el de la página, con la consulta en curso: el campo central del Header se oculta
+  // desde `lg` sin desmontarse, así la fila no salta (openspec: redesign-search-phase1, design D2).
+  const onSearchPage = pathname === "/search";
 
   useEffect(() => {
     setCurrentUser(user);
@@ -123,7 +126,9 @@ export function Header({
       // `offsetParent` es null cuando el contenedor está oculto (debajo de `lg`).
       if (desktopField && desktopField.offsetParent !== null) {
         event.preventDefault();
-        desktopField.focus();
+        // En /search el campo del Header está oculto: el atajo lleva al de la página.
+        const pageField = onSearchPage ? document.querySelector<HTMLInputElement>("[data-search-page-field]") : null;
+        (pageField ?? desktopField).focus();
         return;
       }
       event.preventDefault();
@@ -132,7 +137,7 @@ export function Header({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [onSearchPage]);
 
   const handleLocaleChange = (newLocale: string) => {
     // Preserva el query string (ej. `?q=` en /search): `usePathname` de next-intl
@@ -221,7 +226,12 @@ export function Header({
           </nav>
         </div>
 
-        <div id="header-desktop-search" className="hidden w-full max-w-[30rem] justify-self-center lg:block">
+        <div
+          id="header-desktop-search"
+          aria-hidden={onSearchPage || undefined}
+          inert={onSearchPage || undefined}
+          className={`hidden w-full max-w-[30rem] justify-self-center lg:block ${onSearchPage ? "invisible" : ""}`}
+        >
           <HeaderSearch wide />
         </div>
 

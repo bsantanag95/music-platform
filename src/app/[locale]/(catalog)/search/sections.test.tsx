@@ -164,11 +164,14 @@ describe("estado vacío (refine-search-results-phase1)", () => {
   beforeEach(() => vi.clearAllMocks());
 
   const emptyAlbums = { type: "album", results: [], remoteFailed: false, total: 0, nextOffset: null, refine: null };
+  // Recorre también el resumen y la columna lateral de `ResultsLayout` (redesign-search-phase1), y los componentes
+  // locales sin estado (`Layout`) que solo reparten sus props.
   const flatten = (node: unknown): ReactElement[] => {
     if (!isValidElement(node)) return Array.isArray(node) ? node.flatMap(flatten) : [];
-    const children = (node.props as { children?: unknown }).children;
-    return [node, ...flatten(children)];
+    const props = node.props as { children?: unknown; summary?: unknown; aside?: unknown };
+    return [node, ...flatten(props.summary), ...flatten(props.aside), ...flatten(props.children)];
   };
+  const named = (tree: ReactElement[], name: string) => tree.filter((el) => (el.type as { name?: string }).name === name);
 
   it("sin filtro: sugiere desde el catálogo y oculta las pastillas", async () => {
     mocks.searchAlbums.mockResolvedValue(emptyAlbums);
@@ -201,6 +204,45 @@ describe("estado vacío (refine-search-results-phase1)", () => {
 
     await streamed(await AlbumSection({ query: "the wall" }));
     expect(mocks.suggestSpelling).not.toHaveBeenCalled();
+  });
+
+  it("rápida: filtros y «Acotar» van a la columna lateral; avanzada: sin lateral (redesign-search-phase1)", async () => {
+    const album = { kind: "release-group", id: "w", mbid: null, title: "The Wall", artistName: "Pink Floyd", category: "studio", year: 1979, cached: true };
+    mocks.searchAlbums.mockResolvedValue({
+      ...emptyAlbums,
+      total: 883675,
+      results: [album],
+      refine: { total: 883675, artists: ["Pink Floyd", "ARTY"] },
+    });
+
+    const quick = (await streamed(await AlbumSection({ query: "the wall" }))) as ReactElement<{
+      advanced: boolean;
+      aside: unknown;
+      children: unknown;
+    }>;
+    expect(quick.props.advanced).toBe(false);
+    const aside = flatten(quick.props.aside);
+    expect(named(aside, "FilterPills")).toHaveLength(2);
+    expect(named(aside, "RefineHint")).toHaveLength(1);
+    expect(named(flatten(quick.props.children), "RefineHint")).toHaveLength(0);
+
+    const advanced = (await streamed(await AlbumSection({ query: "the wall", advanced: true }))) as ReactElement<{
+      advanced: boolean;
+      aside: unknown;
+    }>;
+    expect(advanced.props).toMatchObject({ advanced: true, aside: null });
+    expect(named(flatten(advanced), "FilterPills")).toHaveLength(0);
+    expect(named(flatten(advanced), "RefineHint")).toHaveLength(1);
+  });
+
+  it("la cifra no es menor que la lista: total 0 con resultados locales (redesign-search-phase1)", async () => {
+    mocks.searchArtists.mockResolvedValue({
+      ...response([artist({ id: "a", name: "Radiohead" }), artist({ id: "b", name: "Radiohead Tribute" })]),
+      total: 0,
+    });
+
+    const tree = flatten(await streamed(await ArtistSection({ query: "radiohed", all: false })));
+    expect(named(tree, "SearchSummary")[0]?.props).toMatchObject({ count: 2 });
   });
 
   it("con filtro: ofrece quitarlo y no busca sugerencias", async () => {

@@ -67,12 +67,13 @@ async function SearchPage({ searchParams }: SearchPageProps) {
   }
 
   // Sin consulta, la portada (recientes, "Prueba con", consejo); con consulta, encabezado compacto: el título queda
-  // para lectores de pantalla y los resultados suben (openspec: refine-search-results-phase2).
+  // para lectores de pantalla y los resultados suben (openspec: refine-search-results-phase2). Con consulta, el marco
+  // de 88rem del resto del sitio, con pestañas arriba y resultados y columna lateral debajo (redesign-search-phase1).
   const suggestions = query ? null : await listTrySuggestions().catch(() => null);
   return (
     <main
-      className={`mx-auto flex min-h-screen w-full max-w-3xl flex-col items-start px-4 ${
-        query ? "gap-5 py-6 sm:py-8" : "gap-8 py-12"
+      className={`mx-auto flex min-h-screen w-full flex-col items-start px-4 ${
+        query ? "max-w-[88rem] gap-5 py-6 sm:gap-6 sm:px-8 sm:py-8 xl:px-12" : "max-w-3xl gap-8 py-12"
       }`}
     >
       <Breadcrumbs
@@ -85,7 +86,7 @@ async function SearchPage({ searchParams }: SearchPageProps) {
       <SearchForm initialQuery={query} initialType={type} compact={Boolean(query)} />
       {!query ? <SearchLanding suggestions={suggestions} /> : null}
       {query ? (
-        <section className="flex w-full flex-col gap-6">
+        <section className="w-full">
           {type === "artist" ? (
             <ArtistSection query={query} all={all} criteria={criteria} />
           ) : type === "album" ? (

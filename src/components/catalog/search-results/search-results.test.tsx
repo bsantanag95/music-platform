@@ -152,6 +152,24 @@ describe("ArtistResults", () => {
     expect(screen.getByRole("link", { name: "Kiss Kiss" })).toBeInTheDocument();
   });
 
+  it("encabezados de grupo: h3 de sección con la cantidad en la rápida, compactos en la avanzada (redesign-search-phase1)", () => {
+    const results = [
+      artist({ id: "us", name: "KISS", exact: true }),
+      artist({ id: "kr", name: "KISS", exact: true }),
+      artist({ id: "kk", name: "Kiss Kiss" }),
+    ];
+    const homonyms = labels.results.artists.homonyms.replace("{query}", "KISS");
+    const { unmount } = renderWithIntl(<ArtistResults query="KISS" results={results} />);
+    const heading = screen.getByRole("heading", { level: 3, name: new RegExp(homonyms) });
+    expect(heading).toHaveClass("font-bold");
+    expect(within(heading).getByText("1")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: labels.results.artists.more })).toBeInTheDocument();
+    unmount();
+
+    renderWithIntl(<ArtistResults query="KISS" results={results} compactHeadings />);
+    expect(screen.getByRole("heading", { level: 3, name: homonyms })).toHaveClass("text-sm");
+  });
+
   it("sin coincidencias exactas no muestra tarjeta de mejor coincidencia", () => {
     renderWithIntl(<ArtistResults query="icon" results={[artist({ id: "d", name: "Despised Icon" })]} />);
 
@@ -298,16 +316,25 @@ describe("SearchOriginNotice", () => {
   });
 });
 
-describe("encabezado compacto (refine-search-results-phase2)", () => {
-  it("pestañas de tipo con el actual marcado y la misma consulta en cada una", () => {
+describe("encabezado compacto (refine-search-results-phase2, redesign-search-phase1)", () => {
+  it("pestañas de tipo con el actual marcado, su cifra y la misma consulta en cada una", () => {
     renderWithIntl(<SearchSummary query="the wall" type="album" count={12} />);
     const tabs = screen.getByRole("navigation", { name: labels.results.tabsLabel });
-    expect(within(tabs).getByRole("link", { name: labels.types.album })).toHaveAttribute("aria-current", "page");
+    const current = within(tabs).getByRole("link", { name: new RegExp(`^${labels.types.album}`) });
+    expect(current).toHaveAttribute("aria-current", "page");
+    // La cifra va en la pestaña activa; el resumen queda para lectores de pantalla.
+    expect(within(current).getByText("12 resultados")).toBeInTheDocument();
     expect(within(tabs).getByRole("link", { name: labels.types.song })).toHaveAttribute(
       "href",
       "/search?type=song&q=the+wall",
     );
-    expect(screen.getByText("12 resultados")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2 })).toHaveClass("sr-only");
+  });
+
+  it("sin cifra todavía (streaming), la pestaña activa solo lleva su nombre", () => {
+    renderWithIntl(<SearchSummary query="the wall" type="album" count={null} />);
+    const tabs = screen.getByRole("navigation", { name: labels.results.tabsLabel });
+    expect(within(tabs).getByRole("link", { name: labels.types.album })).toHaveAttribute("aria-current", "page");
   });
 
   it("más de 1.000 resultados se dicen 'más de 1.000'", () => {
@@ -322,7 +349,7 @@ describe("encabezado compacto (refine-search-results-phase2)", () => {
 });
 
 describe("FiltersDisclosure (refine-search-results-phase2)", () => {
-  it("en móvil se pliega tras 'Filtros' con la cuenta de activos", () => {
+  it("por debajo de lg se pliega tras 'Filtros' con la cuenta de activos", () => {
     renderWithIntl(
       <FiltersDisclosure active={1}>
         <span>pastillas</span>
@@ -330,7 +357,8 @@ describe("FiltersDisclosure (refine-search-results-phase2)", () => {
     );
     const toggle = screen.getByRole("button", { name: /Filtros · 1/ });
     expect(toggle).toHaveAttribute("aria-expanded", "false");
-    expect(screen.getByText("pastillas").parentElement).toHaveClass("hidden", "sm:flex");
+    expect(screen.getByText("pastillas").parentElement).toHaveClass("hidden", "lg:flex");
+    expect(toggle).toHaveClass("lg:hidden");
     fireEvent.click(toggle);
     expect(toggle).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByText("pastillas").parentElement).not.toHaveClass("hidden");

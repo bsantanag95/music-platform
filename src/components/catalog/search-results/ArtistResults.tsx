@@ -7,6 +7,7 @@ import type { ArtistSearchResult } from "@/services/catalog/search/types";
 import type { ResultHighlight } from "@/services/catalog/search/filters";
 import { SearchTypeIcon } from "../SearchTypeIcon";
 import { MetaLine, type MetaSegment } from "./MetaLine";
+import { ResultsGroupHeading } from "./ResultsGroupHeading";
 
 // Resultados del tipo Artistas (openspec: redesign-scoped-search). Con
 // homónimos (KISS, Icon) no hay redirección: la primera coincidencia exacta
@@ -176,9 +177,12 @@ export function ArtistResults({
   results,
   bestGenres = [],
   highlight,
+  compactHeadings = false,
 }: {
   query: string;
   results: ArtistSearchResult[];
+  /** Búsqueda avanzada: encabezados de grupo compactos, como siempre (openspec: redesign-search-phase1). */
+  compactHeadings?: boolean;
   /** Géneros de la mejor coincidencia (hasta 3), en el idioma de la interfaz. */
   bestGenres?: string[];
   /** Búsqueda avanzada: datos filtrados que se destacan. */
@@ -196,14 +200,16 @@ export function ArtistResults({
 
       {homonyms.length > 0 ? (
         <section className="flex flex-col gap-3">
-          <h3 className="font-display text-sm text-paper-muted">{t("homonyms", { query })}</h3>
+          <ResultsGroupHeading count={homonyms.length} compact={compactHeadings}>
+            {t("homonyms", { query })}
+          </ResultsGroupHeading>
           <ArtistList artists={homonyms} highlight={highlight} />
         </section>
       ) : null}
 
       {rest.length > 0 ? (
         <section className="flex flex-col gap-3">
-          {best ? <h3 className="font-display text-sm text-paper-muted">{t("more")}</h3> : null}
+          {best ? <ResultsGroupHeading compact={compactHeadings}>{t("more")}</ResultsGroupHeading> : null}
           <ArtistList artists={rest} highlight={highlight} />
         </section>
       ) : null}

@@ -55,13 +55,22 @@ export const COUNT_CAP = 1000;
 
 /**
  * Pestañas de tipo bajo el formulario (openspec: refine-search-results-phase2, design D1): la misma consulta en cada
- * tipo, con el actual marcado. Reemplazan a "Buscar «x» en:", que repetía lo que ya dice el selector del campo.
+ * tipo, con el actual marcado. Reemplazan a "Buscar «x» en:", que repetía lo que ya dice el selector del campo. Desde
+ * redesign-search-phase1 son pastillas y la activa lleva la cifra de resultados (`countLabel`, si ya se conoce).
  */
-export function SearchTypeTabs({ query, current }: { query: string; current: SearchType }) {
+export function SearchTypeTabs({
+  query,
+  current,
+  countLabel = null,
+}: {
+  query: string;
+  current: SearchType;
+  countLabel?: string | null;
+}) {
   const t = useTranslations("catalog.search");
   return (
     <nav aria-label={t("results.tabsLabel")} className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
-      <ul className="flex min-w-max gap-1 border-b border-ink-border">
+      <ul className="flex min-w-max gap-1">
         {SEARCH_TYPES.map((type) => {
           const active = type === current;
           return (
@@ -69,13 +78,18 @@ export function SearchTypeTabs({ query, current }: { query: string; current: Sea
               <Link
                 href={searchHref(type, query)}
                 aria-current={active ? "page" : undefined}
-                className={`-mb-px inline-flex items-center gap-1.5 border-b-2 px-2.5 py-2 font-display text-sm transition-colors sm:px-3 ${
-                  active ? "border-amber text-paper" : "border-transparent text-paper-muted hover:text-paper"
+                className={`inline-flex h-10 items-center gap-2 rounded-full border px-3.5 font-display text-[0.9375rem] transition-colors sm:px-4 ${
+                  active
+                    ? "border-paper bg-paper text-ink"
+                    : "border-transparent text-paper-muted hover:border-ink-border hover:text-paper"
                 }`}
               >
                 {/* Sin ícono en móvil: así las cuatro pestañas caben en 375 px y la activa no queda cortada. */}
-                <SearchTypeIcon type={type} className="hidden size-3.5 sm:inline" />
+                <SearchTypeIcon type={type} className="hidden size-4 sm:inline" />
                 {t(`types.${type}`)}
+                {active && countLabel ? (
+                  <span className="whitespace-nowrap font-data text-xs opacity-75">{countLabel}</span>
+                ) : null}
               </Link>
             </li>
           );
@@ -118,13 +132,12 @@ export function SearchSummary({
   }
   const countLabel =
     count === null ? null : count > COUNT_CAP ? t("results.countOver", { count: COUNT_CAP }) : t("results.count", { count });
+  // El campo ya muestra la consulta: «Resultados para «x»» queda para lectores de pantalla y la cifra va en la pestaña
+  // activa (openspec: redesign-search-phase1, design D4).
   return (
-    <header className="flex flex-col gap-3">
-      <SearchTypeTabs query={query} current={type} />
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <h2 className="min-w-0 wrap-break-word font-display text-base text-paper">{t("results.summary", { query })}</h2>
-        {countLabel !== null ? <span className="shrink-0 font-data text-xs text-paper-muted">{countLabel}</span> : null}
-      </div>
+    <header className="flex flex-col">
+      <h2 className="sr-only">{t("results.summary", { query })}</h2>
+      <SearchTypeTabs query={query} current={type} countLabel={countLabel} />
     </header>
   );
 }
@@ -291,7 +304,10 @@ export function FilterPills({
       aria-label={label}
       className="flex flex-wrap items-center gap-1.5"
     >
-      <span className="mr-1 font-data text-xs text-paper-muted">{label}</span>
+      {/* En la columna lateral (desde `lg`) la etiqueta es el título del grupo, sobre sus pastillas. */}
+      <span className="mr-1 font-data text-xs text-paper-muted lg:mb-1 lg:w-full lg:uppercase lg:tracking-[0.12em]">
+        {label}
+      </span>
       {options.map((option) => (
         <Link
           key={option.key}

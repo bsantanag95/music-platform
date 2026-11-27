@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Búsqueda · Auditoría y tres direcciones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="search.css">
+<style>
+  .doc { max-width: 1180px; margin: 0 auto; padding: 0 var(--pad); }
+  header.d { padding: 56px 0 32px; border-bottom: 1px solid var(--border); }
+  header.d h1 { font-family: var(--display); font-weight: 700; font-size: clamp(34px, 4.2vw, 54px); letter-spacing: -.03em; line-height: 1.02; max-width: 22ch; }
+  header.d p { margin-top: 16px; font-size: 19px; color: var(--muted); max-width: 66ch; }
+  .metaline { margin-top: 16px; font: 500 12.5px var(--data); color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 18px; }
+  nav.toc { position: sticky; top: 0; z-index: 5; background: rgba(20,18,15,.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
+  nav.toc .doc { display: flex; gap: 4px; overflow-x: auto; padding-top: 10px; padding-bottom: 10px; scrollbar-width: none; }
+  nav.toc a { white-space: nowrap; font-family: var(--display); font-size: 14px; color: var(--muted); padding: 6px 12px; border-radius: 8px; }
+  nav.toc a:hover { background: var(--surface); color: var(--paper); }
+  nav.toc a.cta { background: var(--amber); color: var(--amber-ink); }
+  section.s { padding-top: 64px; }
+  h2.h { font-family: var(--display); font-weight: 700; font-size: clamp(26px, 2.6vw, 34px); letter-spacing: -.02em; }
+  h2.h + p { margin-top: 10px; color: var(--muted); font-size: 17px; max-width: 70ch; }
+  .shots { margin-top: 24px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  figure { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); }
+  figure img { display: block; width: 100%; height: auto; }
+  figcaption { padding: 10px 14px; font-size: 14px; color: var(--muted); border-top: 1px solid var(--border); }
+  .stats { margin-top: 14px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .stat { border: 1px solid var(--border); border-radius: 12px; padding: 16px; background: var(--ink-2); }
+  .stat b { display: block; font-family: var(--display); font-size: 28px; letter-spacing: -.02em; }
+  .stat span { font-size: 14px; color: var(--muted); }
+  .issues { margin-top: 24px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .issue { border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; background: var(--ink-2); }
+  .issue h3 { font-family: var(--display); font-size: 18px; display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+  .sev { font: 500 11.5px var(--data); padding: 2px 8px; border-radius: 5px; white-space: nowrap; }
+  .sev.hi { background: rgba(217,108,95,.16); color: #e58a7f; }
+  .sev.md { background: rgba(232,184,75,.14); color: var(--amber); }
+  .sev.lo { background: var(--surface-2); color: var(--muted); }
+  .issue ul { margin-top: 10px; padding-left: 18px; list-style: disc; color: var(--muted); font-size: 15px; }
+  .issue li + li { margin-top: 6px; }
+  .issue li b { color: var(--paper); font-weight: 500; }
+  .issue code { font: 500 13px var(--data); background: var(--surface-2); padding: 1px 5px; border-radius: 4px; color: var(--paper); }
+  .crit { margin-top: 22px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 36px; }
+  .crit li { padding: 14px 0; border-top: 1px solid var(--border); }
+  .crit h3 { font-family: var(--display); font-size: 17px; }
+  .crit p { color: var(--muted); font-size: 15px; margin-top: 4px; }
+  .props { margin-top: 24px; display: grid; gap: 20px; }
+  .prop { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: var(--ink-2); }
+  .prop > a img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+  .prop .body { padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+  .prop h3 { font-family: var(--display); font-weight: 700; font-size: 24px; letter-spacing: -.015em; }
+  .prop .thesis { color: var(--muted); font-size: 15.5px; }
+  .pc { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 14.5px; }
+  .pc h4 { font: 500 12px var(--data); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+  .pc .pro h4 { color: var(--petrol); } .pc .con h4 { color: #e58a7f; }
+  .pc ul { padding-left: 16px; list-style: disc; color: var(--muted); }
+  .pc li + li { margin-top: 4px; }
+  .prop .open { margin-top: auto; align-self: start; }
+  table { margin-top: 22px; width: 100%; border-collapse: collapse; font-size: 15px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--border); }
+  thead th { font: 500 12px var(--data); color: var(--muted); background: var(--surface); }
+  td.s { font: 500 14px var(--data); }
+  tr.best td.s:nth-child(3) { color: var(--amber); }
+  .rec { margin-top: 24px; border-radius: 18px; padding: clamp(24px, 3.5vw, 44px); background: var(--surface); border: 1px solid var(--border-2); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 36px; }
+  .rec h3 { font-family: var(--display); font-weight: 700; font-size: clamp(24px, 2.6vw, 34px); letter-spacing: -.02em; line-height: 1.1; }
+  .rec p, .rec li { color: var(--muted); font-size: 15.5px; }
+  .rec ul { padding-left: 18px; list-style: disc; margin-top: 10px; }
+  .rec li + li { margin-top: 8px; }
+  .rec b { color: var(--paper); font-weight: 500; }
+  .notes { margin: 56px 0 40px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: 14px; max-width: 92ch; }
+  .notes p + p { margin-top: 8px; }
+  @media (max-width: 900px) {
+    .shots, .issues, .crit, .prop, .rec, .pc { grid-template-columns: minmax(0, 1fr); }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    table { display: block; overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+<header class="d"><div class="doc">
+  <h1>Búsqueda: auditoría y tres direcciones de rediseño</h1>
+  <p>Revisión de <code style="font:500 16px var(--data)">/search</code> sin sesión al buscar un artista, un álbum y una canción, más el estado sin resultados, con tres mockups completos que replantean la composición sin cambiar qué busca ni qué encuentra la página.</p>
+  <p class="metaline"><span>27 nov 2026</span><span>main 89f85d56</span><span>«pink» en artistas · «the wall» en álbumes · «creep» en canciones · «qzxvbnmqk» y «radiohed»</span><span>1440, 1024, 820 y 390 px</span></p>
+</div></header>
+<nav class="toc"><div class="doc"><a href="#estado">Estado actual</a><a href="#problemas">Problemas</a><a href="#criterios">Criterios</a><a href="#propuestas">Propuestas</a><a href="#comparacion">Comparación</a><a href="#recomendacion">Recomendación</a><a class="cta" href="b-respuesta.html">Abrir la recomendada</a></div></nav>
+
+<main class="doc">
+  <section class="s" id="estado">
+    <h2 class="h">Estado actual</h2>
+    <p>Tras su rediseño de noviembre la búsqueda es rápida (0,9–1,9 s en caliente, con lo local primero y lo remoto en streaming) y su relevancia acierta con «the wall» y «creep». El problema ahora es de presentación: una columna de 768 px, filas idénticas cuando los títulos coinciden, homónimos mezclados con los artistas que la gente busca y un «sin resultados» que no orienta.</p>
+    <div class="shots">
+      <figure><img src="shots/actual-artistas.png" alt="Búsqueda de artistas «pink»: mejor coincidencia un grupo japonés poco conocido, columna estrecha"><figcaption>«pink»: la «mejor coincidencia» es un grupo japonés sin discos; P!nk (88 discos) aparece en el puesto 17.</figcaption></figure>
+      <figure><img src="shots/actual-albumes.png" alt="Búsqueda de álbumes «the wall»: dos filas de filtros y veinticinco filas iguales"><figcaption>«the wall»: 13 pastillas de filtro y 25 filas que repiten el mismo título.</figcaption></figure>
+      <figure><img src="shots/actual-errata.png" alt="Búsqueda «radiohed»: dice 0 resultados y lista ocho artistas"><figcaption>«radiohed»: el encabezado dice «0 resultados» y debajo lista ocho artistas.</figcaption></figure>
+      <figure><img src="shots/actual-sin-resultados.png" alt="Sin resultados: una caja pequeña en una página vacía"><figcaption>Sin resultados: una caja pequeña en una página vacía; repite las pestañas como pastillas.</figcaption></figure>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>53 %</b><span>del ancho usado a 1440 px (columna de 768 px)</span></div>
+      <div class="stat"><b>17.º</b><span>puesto de P!nk al buscar «pink»; Pink Floyd sale en el 7.º</span></div>
+      <div class="stat"><b>25</b><span>filas seguidas tituladas «The Wall» sin otra distinción que el artista</span></div>
+      <div class="stat"><b>~515 px</b><span>hasta el primer resultado en un teléfono (sobre 844 de pantalla)</span></div>
+    </div>
+  </section>
+
+  <section class="s" id="problemas">
+    <h2 class="h">Problemas detectados</h2>
+    <p>Ordenados por lo que le cuestan a quien busca: encontrar lo que quería, distinguir entre resultados parecidos y saber qué hacer cuando no hay nada.</p>
+    <div class="issues">
+      <article class="issue"><h3>Fallos de datos visibles <span class="sev hi">Alta</span></h3><ul>
+        <li><b>«0 resultados» con resultados en pantalla</b> («radiohed»): el conteo usa <code>response.total ?? results.length</code> y MusicBrainz devuelve <code>total = 0</code> mientras la lista trae coincidencias locales (<code>sections.tsx:224</code>).</li>
+        <li><b>«en tu catálogo»</b> se muestra a visitantes sin sesión: no es su catálogo, es el de la plataforma.</li>
+        <li>Pink Floyd aparece dos veces (el grupo real y un «online collective» de 2023), sin pista de cuál es cuál salvo los años.</li>
+      </ul></article>
+      <article class="issue"><h3>La mejor coincidencia no es la buscada <span class="sev hi">Alta</span></h3><ul>
+        <li>Con «pink», la tarjeta destacada es <b>PINK, un grupo japonés</b> sin fecha ni discos, por coincidencia exacta de nombre. P!nk, Pink Floyd o BONNIE PINK, con discografía en el catálogo, quedan abajo.</li>
+        <li>En canciones, la respuesta es un panel «Álbumes que contienen «Creep»»: la canción en sí no tiene ficha; solo un enlace pequeño «Ver canción».</li>
+      </ul></article>
+      <article class="issue"><h3>Resultados que no se distinguen <span class="sev hi">Alta</span></h3><ul>
+        <li>En álbumes, 25 filas iguales «The Wall»: el dato que distingue (el artista) va en gris pequeño y la carátula mide 48 px.</li>
+        <li>En canciones, 25 filas «Creep» con el mismo icono y sin carátula: no se sabe cuál es versión, cuál es otra canción ni cuál es famosa (TLC sale en el puesto 12).</li>
+        <li>En artistas, 20 de 26 filas llevan el mismo micrófono: el retrato existe para los que están en el catálogo y casi no se ve.</li>
+      </ul></article>
+      <article class="issue"><h3>Sin resultados que no orienta <span class="sev hi">Alta</span></h3><ul>
+        <li>Una caja de 735 × 160 px en una página vacía; «Resultados para «x»» + «0 resultados» + «Ningún álbum coincide» dicen lo mismo tres veces.</li>
+        <li>No dice si hay algo en los otros tipos: ofrece pastillas a ciegas que repiten las pestañas de arriba.</li>
+        <li>Ninguna salida hacia contenido (Explorar, colecciones, búsquedas recientes).</li>
+      </ul></article>
+      <article class="issue"><h3>Composición y ancho <span class="sev md">Media</span></h3><ul>
+        <li>Columna de <b>768 px</b> (<code>max-w-3xl</code>) en una página que el resto del sitio ya lleva a 1408 px.</li>
+        <li><b>Dos buscadores</b> a la vez: el de la cabecera vacío y el de la página con la consulta.</li>
+        <li>Filtros de álbumes siempre abiertos: dos filas y 13 pastillas antes del primer disco.</li>
+      </ul></article>
+      <article class="issue"><h3>Jerarquía y tipografía <span class="sev md">Media</span></h3><ul>
+        <li>«Resultados para «pink»» a 16 px es el título visible más grande; las secciones («Otros artistas llamados…», «Más resultados») son texto gris de 15 px.</li>
+        <li>Metadatos en monoespaciada de 11–12 px y descripciones de MusicBrainz en inglés («Not well-known Finnish singer») sin marca de que son citas.</li>
+      </ul></article>
+      <article class="issue"><h3>Móvil <span class="sev lo">Baja</span></h3><ul>
+        <li>Sin desbordes a 390 px; el primer resultado aparece hacia los 515 px. En canciones, la lista de otras canciones empieza por debajo de los 1100 px, tras el panel de discos.</li>
+        <li>El buscador de la cabecera es un icono; el de la página repite la consulta.</li>
+      </ul></article>
+      <article class="issue"><h3>Lo que funciona y hay que conservar <span class="sev lo">Mantener</span></h3><ul>
+        <li>Relevancia de álbumes y canciones («The Wall» de Pink Floyd y «Creep» de Radiohead primero), «¿Quisiste decir…?», acotar por artista, «más de 1.000» y el streaming de lo remoto.</li>
+      </ul></article>
+    </div>
+  </section>
+
+  <section class="s" id="criterios">
+    <h2 class="h">Criterios de las propuestas</h2>
+    <p>Mismo sistema visual que el resto del sitio rediseñado (tipografías actuales incluidas); cambian composición y presentación. Las tres comparten cuatro arreglos que la auditoría pide sí o sí.</p>
+    <ul class="crit">
+      <li><h3>Un solo buscador</h3><p>O el de la cabecera, o el de la página: nunca los dos a la vez.</p></li>
+      <li><h3>Primero lo que ya está en el catálogo</h3><p>Los artistas con discografía en music-platform se separan de los homónimos que solo existen en MusicBrainz.</p></li>
+      <li><h3>Plegar lo repetido</h3><p>Si el título es idéntico a la consulta, lo que distingue (artista, carátula, año) pasa a primer plano.</p></li>
+      <li><h3>Ancho completo</h3><p>El contenedor de 1408 px del resto del sitio, con más carátula y retrato.</p></li>
+      <li><h3>Sin resultados con salida</h3><p>Qué se buscó y dónde, si hay algo en otros tipos, cómo corregir y a dónde ir.</p></li>
+      <li><h3>Conteos y textos honestos</h3><p>El total nunca contradice la lista; «en el catálogo», no «en tu catálogo».</p></li>
+      <li><h3>Notas con rating-display</h3><p>Promedios en forma compacta (<code style="font:500 13px var(--data)">★ 4,6</code>); las cifras de comunidad de los mockups son de ejemplo.</p></li>
+      <li><h3>Datos reales</h3><p>Resultados, carátulas (espejo local o Cover Art Archive, 250 px) y fotos (Commons) son los que devuelve hoy la aplicación.</p></li>
+    </ul>
+  </section>
+
+  <section class="s" id="propuestas">
+    <h2 class="h">Las tres propuestas</h2>
+    <p>Cada una se recorre con la barra de abajo: propuesta y estado (artistas, álbumes, canciones, sin resultados). Estructuras elegidas por sorteo entre siete candidatas, dentro del sistema visual vigente.</p>
+    <div class="props">
+      <article class="prop"><a href="a-rejilla.html#album"><img src="shots/a.png" alt="A · Rejilla: The Wall de Pink Floyd en grande y una rejilla de carátulas del resto"></a><div class="body">
+        <h3>A · Rejilla</h3>
+        <p class="thesis">La carátula y el retrato mandan. La consulta encabeza la página en grande y vive en la cabecera (un solo campo). Artistas en tres grupos: ya en el catálogo (retratos), homónimos exactos (fichas con país y descripción) y el resto. Álbumes en rejilla de 6 con el primero destacado; canciones con una ficha de la canción y sus discos.</p>
+        <div class="pc"><div class="pro"><h4>Ventajas</h4><ul><li>La más visual: las carátulas distinguen 25 «The Wall» al instante.</li><li>Los artistas del catálogo se reconocen por la cara.</li><li>«Sin resultados» con una salida a discos.</li></ul></div><div class="con"><h4>Desventajas</h4><ul><li>Páginas largas; menos resultados por pantalla para quien compara.</li><li>Las canciones no tienen carátula: su rejilla es de iniciales.</li><li>Depende de que haya carátulas y fotos.</li></ul></div></div>
+        <a class="btn line open" href="a-rejilla.html">Abrir A</a></div></article>
+      <article class="prop"><a href="b-respuesta.html#artist"><img src="shots/b.png" alt="B · Respuesta primero: tres tarjetas grandes para elegir qué «pink» se busca y una columna lateral"></a><div class="body">
+        <h3>B · Respuesta primero</h3>
+        <p class="thesis">Un buscador grande en la página y la cabecera sin el suyo. Arriba, la respuesta: «¿Cuál «pink» buscas?» con P!nk, Pink Floyd y el homónimo exacto; para álbumes y canciones, una ficha completa (canciones del disco, discos donde aparece la canción). Debajo, el resto agrupado y plegado. A la derecha, el término en otros tipos y los filtros, que dejan de ocupar la cabecera.</p>
+        <div class="pc"><div class="pro"><h4>Ventajas</h4><ul><li>Resuelve la intención más común en un vistazo.</li><li>El mejor «sin resultados»: cuenta qué hay en cada tipo y da salidas.</li><li>Filtros a un lado: el primer resultado sube.</li></ul></div><div class="con"><h4>Desventajas</h4><ul><li>«En otros tipos» exige consultar más de un tipo; con MusicBrainz (≥1,1 s por solicitud) hay que limitarlo al catálogo propio.</li><li>Elegir la respuesta necesita una regla nueva (catálogo, discos, actividad).</li></ul></div></div>
+        <a class="btn line open" href="b-respuesta.html">Abrir B</a></div></article>
+      <article class="prop"><a href="c-lector.html#album"><img src="shots/c.png" alt="C · Lector: lista agrupada a la izquierda y vista previa del disco con sus canciones a la derecha"></a><div class="body">
+        <h3>C · Lector</h3>
+        <p class="thesis">Herramienta de consulta al estilo Metal Archives. Barra fija con campo, tipos y filtros; lista densa y agrupada a la izquierda; vista previa a la derecha que cambia al elegir una fila (en el teléfono, la fila abre la página). La vista previa enseña los discos de un artista o las canciones de un álbum sin salir de la búsqueda.</p>
+        <div class="pc"><div class="pro"><h4>Ventajas</h4><ul><li>La más rápida para comparar homónimos y ediciones.</li><li>Primer resultado en ~250 px en el teléfono.</li><li>Encaja con la visión «profundidad tipo Metal Archives».</li></ul></div><div class="con"><h4>Desventajas</h4><ul><li>La vista previa necesita datos por fila; un artista que no está en el catálogo no tiene discos que mostrar hasta abrirlo.</li><li>En el teléfono no aporta nada sobre la lista actual.</li><li>La más compleja de construir.</li></ul></div></div>
+        <a class="btn line open" href="c-lector.html">Abrir C</a></div></article>
+    </div>
+  </section>
+
+  <section class="s" id="comparacion">
+    <h2 class="h">Comparación</h2>
+    <p>De 1 a 5 frente a los problemas detectados y al coste de llevarlo al producto.</p>
+    <table>
+      <thead><tr><th>Criterio</th><th>A · Rejilla</th><th>B · Respuesta</th><th>C · Lector</th></tr></thead>
+      <tbody>
+        <tr><td>Encontrar lo que se buscaba</td><td class="s">4</td><td class="s">5</td><td class="s">4</td></tr>
+        <tr><td>Distinguir resultados parecidos</td><td class="s">5</td><td class="s">4</td><td class="s">5</td></tr>
+        <tr><td>Sin resultados</td><td class="s">4</td><td class="s">5</td><td class="s">3</td></tr>
+        <tr><td>Móvil</td><td class="s">4</td><td class="s">4</td><td class="s">5</td></tr>
+        <tr><td>Densidad para usuarios intensivos</td><td class="s">2</td><td class="s">3</td><td class="s">5</td></tr>
+        <tr><td>Coherencia con el resto del sitio</td><td class="s">4</td><td class="s">5</td><td class="s">3</td></tr>
+        <tr><td>Coste de implementación</td><td class="s">Medio</td><td class="s">Medio</td><td class="s">Alto</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="s" id="recomendacion">
+    <div class="rec">
+      <div><h3>Recomendación: B · Respuesta primero, con la rejilla de A para álbumes</h3></div>
+      <div>
+        <p><b>B ataca los problemas de mayor impacto</b>: la mejor coincidencia equivocada, las filas indistinguibles y el «sin resultados» que no orienta. Su estructura (respuesta, grupos plegados, columna lateral) es la misma que ya usan el Inicio y Explorar, así que se integra sin un sistema nuevo.</p>
+        <ul>
+          <li><b>De A, la rejilla de carátulas en «Otros discos llamados…»</b>: con títulos idénticos, la carátula distingue mejor que una fila.</li>
+          <li><b>De C, los grupos con encabezado</b> (en el catálogo / se llaman exactamente / más) y la marca «en el catálogo».</li>
+          <li><b>«En otros tipos» solo con el catálogo propio</b>, para no multiplicar solicitudes a MusicBrainz; en «sin resultados», el conteo de los otros tipos sale de esa misma consulta local.</li>
+          <li><b>Arreglos independientes de la dirección</b>, que conviene hacer ya: el conteo «0 resultados», «en tu catálogo» para visitantes y el buscador duplicado.</li>
+        </ul>
+        <p style="margin-top:14px">Como el Inicio, Explorar y Listas, cabría en tres fases: 1) arreglos, un solo buscador, ancho y grupos; 2) la respuesta y la columna lateral; 3) la rejilla de álbumes y el nuevo «sin resultados».</p>
+        <p style="margin-top:14px"><a href="b-respuesta.html" style="color:var(--amber)">Abrir B →</a></p>
+      </div>
+    </div>
+  </section>
+
+  <div class="notes">
+    <p><b style="color:var(--paper)">Sobre los mockups.</b> Páginas estáticas, sin tocar el sitio. Resultados, conteos, carátulas y fotos son reales (base local y MusicBrainz, 27 nov 2026). Las valoraciones de comunidad (★ 4,6 · 38) y el ejemplo «kid a mnesia tour» son ilustrativos.</p>
+    <p>La regla para elegir la respuesta de B (catálogo, número de discos, actividad) es una propuesta: hoy la «mejor coincidencia» se elige por nombre exacto.</p>
+  </div>
+</main>
+<script src="shared.js"></script>
+<script>window.mockBar("index.html");</script>
+</body>
+</html>

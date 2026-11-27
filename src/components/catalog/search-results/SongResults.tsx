@@ -5,6 +5,7 @@ import type { SongGroupResult, SongSearchResponse } from "@/services/catalog/sea
 import { searchHref } from "../search-types";
 import { SearchTypeIcon } from "../SearchTypeIcon";
 import { SongGroupPanel } from "./SongGroupPanel";
+import { ResultsGroupHeading } from "./ResultsGroupHeading";
 
 // Resultados del tipo Canciones (openspec: redesign-scoped-search): la
 // interpretación usada queda a la vista y es corregible, la canción resuelta
@@ -84,8 +85,11 @@ export function SongResults({
   response,
   plain = false,
   highlight,
+  compactHeadings = false,
 }: {
   response: SongSearchResponse;
+  /** Búsqueda avanzada: encabezado de grupo compacto, como siempre (openspec: redesign-search-phase1). */
+  compactHeadings?: boolean;
   /** Búsqueda avanzada sin título: no hay "mejor coincidencia", solo la lista (openspec: refine-advanced-search-phase1). */
   plain?: boolean;
   highlight?: ResultHighlight[];
@@ -100,7 +104,7 @@ export function SongResults({
       <SongGroupPanel group={first} />
       {others.length > 0 ? (
         <section className="flex flex-col gap-3">
-          <h3 className="font-display text-sm text-paper-muted">{t("otherSongs")}</h3>
+          <ResultsGroupHeading compact={compactHeadings}>{t("otherSongs")}</ResultsGroupHeading>
           <SongList groups={others} highlight={highlight} />
         </section>
       ) : null}

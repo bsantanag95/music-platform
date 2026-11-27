@@ -21,16 +21,18 @@ interface SearchFormProps {
 // conserva el tipo elegido (openspec: redesign-scoped-search). Al lado, el
 // enlace a la búsqueda avanzada con el tipo y el texto cargados (openspec:
 // redesign-advanced-search), como texto bajo el campo: a lo ancho competía con
-// "Buscar" (openspec: refine-search-results-phase2).
+// "Buscar" (openspec: refine-search-results-phase2). Desde redesign-search-phase1 es el único buscador visible de la página
+// en escritorio (el del Header se oculta en /search): campo grande (`size="page"`), alineado con la columna de resultados.
 export function SearchForm({ initialQuery = "", initialType = "artist", compact = false }: SearchFormProps) {
   const t = useTranslations("catalog.search.advanced");
   return (
-    <div className="flex w-full max-w-xl flex-col gap-2">
+    <div className="flex w-full max-w-[54rem] flex-col gap-2">
       <ScopedSearchField
         // Remonta al cambiar la URL (enlace de otro tipo, búsqueda reciente):
         // el campo refleja siempre el tipo y el texto de la búsqueda en curso.
         key={`${initialType}|${initialQuery}`}
         variant="full"
+        size="page"
         initialType={initialType}
         initialQuery={initialQuery}
         onSubmitSearch={(query, type) => pushRecentSearch(query, type)}

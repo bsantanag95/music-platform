@@ -205,13 +205,17 @@ describe("Header", () => {
   });
 
   it("cambia de locale preservando el query string (ej. ?q= en /search)", () => {
+    const previous = { pathname: mocks.pathname, search: mocks.search };
     mocks.pathname = "/search";
     mocks.search = "q=Sabrina";
+    try {
+      renderWithIntl(<Header />);
+      fireEvent.click(screen.getByRole("button", { name: "en" }));
 
-    renderWithIntl(<Header />);
-    fireEvent.click(screen.getByRole("button", { name: "en" }));
-
-    expect(mocks.replace).toHaveBeenCalledWith("/search?q=Sabrina", { locale: "en" });
+      expect(mocks.replace).toHaveBeenCalledWith("/search?q=Sabrina", { locale: "en" });
+    } finally {
+      Object.assign(mocks, previous);
+    }
   });
 
   it("el botón de menú mobile pliega la barra general y la zona de usuario", () => {
@@ -251,6 +255,54 @@ describe("Header", () => {
       renderWithIntl(<Header />);
 
       expect(screen.getByRole("link", { name: "music-platform — Inicio" })).toHaveTextContent("music-platform");
+    });
+  });
+
+  describe("en la página de resultados (/search)", () => {
+    const onPath = (pathname: string, run: () => void) => {
+      const previous = mocks.pathname;
+      mocks.pathname = pathname;
+      try {
+        run();
+      } finally {
+        mocks.pathname = previous;
+      }
+    };
+
+    it("oculta el campo central sin desmontarlo y lo deja fuera del foco", () => {
+      onPath("/search", () => {
+        renderWithIntl(<Header />);
+        const search = document.getElementById("header-desktop-search")!;
+        expect(search).toHaveClass("invisible");
+        expect(search).toHaveAttribute("aria-hidden", "true");
+        expect(search).toHaveAttribute("inert");
+      });
+    });
+
+    it.each(["/search/advanced", "/album/rg-1"])("en %s el campo central sigue visible", (pathname) => {
+      onPath(pathname, () => {
+        renderWithIntl(<Header />);
+        const search = document.getElementById("header-desktop-search")!;
+        expect(search).not.toHaveClass("invisible");
+        expect(search).not.toHaveAttribute("inert");
+      });
+    });
+
+    it("el atajo / enfoca el campo de la página", () => {
+      onPath("/search", () => {
+        renderWithIntl(
+          <>
+            <Header />
+            <input aria-label="Texto a buscar" data-search-page-field="" defaultValue="pink" />
+          </>,
+        );
+        const headerField = within(document.getElementById("header-desktop-search")!).getByLabelText("Buscar artista");
+        Object.defineProperty(headerField, "offsetParent", { configurable: true, get: () => document.body });
+
+        fireEvent.keyDown(window, { key: "/" });
+
+        expect(screen.getByLabelText("Texto a buscar")).toHaveFocus();
+      });
     });
   });
 

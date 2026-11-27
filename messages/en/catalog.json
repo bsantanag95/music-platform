@@ -182,7 +182,7 @@
       "count": "{count, plural, =0 {No catalog suggestions} one {# suggestion} other {# suggestions}}",
       "seeAll": "Search <q>“{query}”</q> in {type}",
       "otherTypes": "Other type",
-      "fromCatalog": "In your catalog"
+      "fromCatalog": "In the catalog"
     },
     "recent": {
       "heading": "Recent searches",
@@ -195,7 +195,7 @@
       "count": "{count, plural, one {# result} other {# results}}",
       "countOver": "more than {count, number}",
       "tabsLabel": "Result type",
-      "cachedTag": "in your catalog",
+      "cachedTag": "in the catalog",
       "switchLabel": "Search “{query}” in:",
       "emptyTitle": "No matches",
       "emptyTitleType": {
