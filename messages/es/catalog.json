@@ -182,7 +182,7 @@
       "count": "{count, plural, =0 {Sin sugerencias del catálogo} one {# sugerencia} other {# sugerencias}}",
       "seeAll": "Buscar <q>«{query}»</q> en {type}",
       "otherTypes": "Otro tipo",
-      "fromCatalog": "En tu catálogo"
+      "fromCatalog": "En el catálogo"
     },
     "recent": {
       "heading": "Búsquedas recientes",
@@ -195,7 +195,7 @@
       "count": "{count, plural, one {# resultado} other {# resultados}}",
       "countOver": "más de {count, number}",
       "tabsLabel": "Tipo de resultado",
-      "cachedTag": "en tu catálogo",
+      "cachedTag": "en el catálogo",
       "switchLabel": "Buscar «{query}» en:",
       "emptyTitle": "Sin coincidencias",
       "emptyTitleType": {

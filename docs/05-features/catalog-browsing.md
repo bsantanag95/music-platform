@@ -71,6 +71,20 @@ de vida y, con la discografía explorada, cuántos discos tiene en el catálogo;
 seguidores de los perfiles públicos y, con sesión, cuántos de los que sigues lo siguen; sin sesión, un solo aviso para
 iniciar sesión en lugar de un botón por fila.
 
+**Rediseño «Respuesta primero» (cambios `redesign-search-phase1` a `phase3`, auditoría y mockups en
+`mockups/search-2026-11/`).** Fase 1: con una consulta, `/search` usa el marco de 88rem del sitio. El campo de la página es
+grande (`ScopedSearchField size="page"`) y es el único buscador visible en escritorio: el campo central del Header se
+oculta en `/search` desde `lg` (invisible e inerte, sin mover la fila) y la tecla `/` enfoca el de la página. Debajo van las
+pestañas en pastillas, con la cifra en la activa; «Resultados para «x»» queda para lectores de pantalla. Desde `lg` los
+resultados ocupan 8 de 12 columnas y una columna lateral fija reúne los filtros (Persona/Grupo, categoría y década, siempre
+abiertos) y «Acotar» por artista. Por debajo de `lg`, una sola columna con ese contenido antes de los resultados (Álbumes
+tras "Filtros · N"). Los grupos («Otros artistas llamados «x»», «Más resultados», «Otras canciones con este título») llevan
+un encabezado de sección (`ResultsGroupHeading`, `h3`). La cifra nunca es menor que lo listado (`displayCount`: con
+«radiohed» MusicBrainz informa 0 y la lista trae artistas del catálogo), y la marca de lo ya guardado dice «en el
+catálogo», no «en tu catálogo». `/search/advanced` comparte las secciones y no cambia. Pendiente: fase 2 (la respuesta:
+«¿Cuál «x» buscas?», fichas de álbum y canción, «x en otros tipos» solo del catálogo) y fase 3 (rejilla de carátulas y nuevo
+estado sin resultados).
+
 **Búsqueda avanzada (cambios `add-advanced-search-phase1` y `redesign-advanced-search`).** Página
 propia `/search/advanced`, al estilo de Metal Archives: pestañas **Artistas · Álbumes · Canciones**
 (`?type=`), cada una con su formulario `GET` que escribe la URL (solo los campos con valor; los

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Búsqueda · C · Lector</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="search.css">
+<style>
+  /* C · Lector: herramienta de consulta. Barra fija con campo, tipos y filtros; lista densa y agrupada a la
+     izquierda; vista previa a la derecha que cambia al elegir una fila (en el teléfono la fila abre la página). */
+  .site-header .hsearch { visibility: hidden; }
+  .tool { position: sticky; top: 64px; z-index: 30; background: rgba(20,18,15,.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+  .tool .wrap { display: grid; grid-template-columns: minmax(0, 420px) auto minmax(0, 1fr) auto; gap: 16px; align-items: center; height: 68px; }
+  .tfield { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px; border: 1px solid var(--border-2); border-radius: 10px; background: var(--surface); }
+  .tfield svg { width: 17px; height: 17px; color: var(--muted); }
+  .tfield span { font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tfield kbd { margin-left: auto; font: 500 11px var(--data); border: 1px solid var(--border-2); border-radius: 4px; padding: 1px 6px; color: var(--muted); }
+  .tt { display: flex; gap: 2px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--ink-2); }
+  .tt a { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 12px; border-radius: 7px; font-family: var(--display); font-size: 14.5px; color: var(--muted); white-space: nowrap; }
+  .tt a svg { width: 15px; height: 15px; }
+  .tt a[aria-current] { background: var(--surface-2); color: var(--paper); box-shadow: inset 0 -2px var(--amber); }
+  .tcount { font: 500 12.5px var(--data); color: var(--muted); justify-self: end; white-space: nowrap; }
+  .tfil { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border: 1px solid var(--border-2); border-radius: 8px; font: 500 13px var(--data); }
+  .tfil svg { width: 15px; height: 15px; }
+
+  .reader { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(24px, 3vw, 48px); align-items: start; padding-top: 24px; }
+  .list { min-width: 0; }
+  .gh { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 18px 0 8px; border-bottom: 1px solid var(--border-2); }
+  .gh:first-child { padding-top: 4px; }
+  .gh h2 { font-family: var(--display); font-size: 15px; font-weight: 700; }
+  .gh span { font: 500 12px var(--data); color: var(--muted); }
+  .r { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: center; width: 100%; text-align: left; padding: 9px 10px; border-radius: 10px; border: 1px solid transparent; }
+  .r:hover { background: var(--ink-2); }
+  .r[aria-current="true"] { background: var(--surface); border-color: var(--border-2); }
+  .r .ph, .r .cvbox, .r .disc { width: 40px; font-size: 15px; }
+  .r b { font-family: var(--display); font-weight: 500; font-size: 15.5px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .r .meta { font-size: 11.5px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .r .end { font: 500 11.5px var(--data); color: var(--muted); }
+  .r .end.cat { color: var(--petrol); }
+  .foldr { width: 100%; padding: 10px; text-align: left; font: 500 12.5px var(--data); color: var(--paper); display: flex; gap: 8px; align-items: center; }
+  .foldr svg { width: 14px; height: 14px; }
+
+  .preview { position: sticky; top: 152px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); overflow: hidden; }
+  .pv-hero { position: relative; height: 260px; overflow: hidden; background: var(--ink-2); }
+  .pv-hero img { width: 100%; height: 100%; object-fit: cover; }
+  .pv-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, var(--surface) 2%, rgba(31,27,23,.2) 55%, transparent); }
+  .pv-hero.ini { display: grid; place-items: center; font-family: var(--display); font-weight: 700; font-size: 150px; color: var(--border-2); }
+  .pv-body { padding: 0 26px 26px; margin-top: -54px; position: relative; }
+  .pv-body.flat { margin-top: 0; padding-top: 26px; }
+  .pv-body h3 { font-family: var(--display); font-weight: 700; font-size: clamp(30px, 2.8vw, 42px); letter-spacing: -.02em; line-height: 1.02; }
+  .pv-body .by { font-size: 18px; margin-top: 6px; }
+  .pv-body .facts { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-top: 12px; }
+  .pv-body .lede { margin-top: 14px; font-size: 16px; color: var(--muted); max-width: 52ch; }
+  .pv-acts { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+  .pv-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
+  .pv-grid a { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .pv-grid b { font-family: var(--display); font-weight: 500; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pv-grid .meta { font-size: 11px; }
+  .pv-album { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 24px; padding: 26px; }
+  .pv-album .cvbox, .pv-album .disc { border-radius: 10px; }
+  .pv-tracks { margin-top: 16px; counter-reset: t; }
+  .pv-tracks li { counter-increment: t; display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 14.5px; }
+  .pv-tracks li::before { content: counter(t); font: 500 12px var(--data); color: var(--muted-2); padding-top: 2px; }
+  .pv-tracks li i { font: 500 12px var(--data); font-style: normal; color: var(--muted); }
+  .pv-note { margin-top: 16px; padding: 12px 14px; border-radius: 10px; background: var(--ink-2); border: 1px dashed var(--border-2); font-size: 14.5px; color: var(--muted); }
+  .pv-note b { color: var(--paper); font-weight: 500; }
+
+  .nores { padding: 26px 4px; }
+  .nores h2 { font-family: var(--display); font-weight: 700; font-size: 28px; letter-spacing: -.015em; line-height: 1.1; }
+  .nores h2 q { quotes: "«" "»"; color: var(--muted); font-weight: 500; }
+  .nores p { margin-top: 10px; color: var(--muted); font-size: 16px; }
+  .nores .typeline { margin-top: 18px; display: grid; gap: 6px; }
+  .nores .typeline a { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; font-family: var(--display); }
+  .nores .typeline a span { font: 500 12px var(--data); color: var(--muted); }
+  .nores ul { margin-top: 18px; display: grid; gap: 8px; }
+  .nores li { font-size: 15px; display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 8px; }
+  .nores li::before { content: "—"; color: var(--amber); }
+  .nores code { font: 500 13.5px var(--data); background: var(--surface-2); padding: 1px 6px; border-radius: 4px; }
+  .suggest { padding: 26px; }
+  .suggest h3 { font-family: var(--display); font-weight: 700; font-size: 22px; }
+  .suggest p { color: var(--muted); margin-top: 6px; }
+  .sgrid { margin-top: 18px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .sgrid a { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .m-only { display: none; margin-top: 22px; }
+  .sgrid b { font-family: var(--display); font-weight: 500; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  @media (max-width: 1100px) {
+    .tool .wrap { grid-template-columns: minmax(0, 1fr) auto; height: auto; padding-top: 10px; padding-bottom: 10px; row-gap: 10px; }
+    .tt { grid-column: 1 / -1; order: 3; overflow-x: auto; scrollbar-width: none; }
+    .tcount { display: none; }
+    .reader { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .tool + main .preview { top: 190px; }
+    .pv-album { grid-template-columns: minmax(0, 1fr); }
+    .pv-album .cvbox, .pv-album .disc { max-width: 240px; }
+  }
+  @media (max-width: 760px) {
+    .site-header .hsearch { visibility: visible; }
+    .tool { top: 60px; }
+    .reader { grid-template-columns: minmax(0, 1fr); }
+    .preview { display: none; }
+    .m-only { display: inline-flex; }
+    .tfil span { display: none; }
+    .tt a svg { display: none; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header"></header>
+<div class="tool" id="tool"></div>
+<main class="wrap" id="app"></main>
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script>
+  var D = window.SEARCH_DATA, U = window.UI, I = window.ICON;
+  var QUERIES = { artist: "pink", album: "the wall", song: "creep", none: "qzxvbnmqk" };
+  var TYPES = [["artist", "Artistas"], ["album", "Álbumes"], ["song", "Canciones"], ["user", "Usuarios"]];
+  var C = function (m) { return "covers/" + m + ".webp"; };
+  var PF_DISCS = [[C("f5093c06-23e3-404f-aeaa-40f72885ee3a"), "The Dark Side of the Moon", "1973"], [C("1a272023-10d3-38ee-bab3-317b55fcc21d"), "Wish You Were Here", "1975"], [C("20c77fb4-1c9f-33c8-9d7e-c4977f11e847"), "Animals", "1977"], [C("f2026101-945b-3d05-9ef4-aa718fc3feef"), "The Wall", "1979"]];
+  var RH_DISCS = [[C("cd76f76b-ff15-3784-a71d-4da3078a6851"), "Pablo Honey", "1993"], [C("b8048f24-c026-3398-b23a-b5e50716cbc7"), "The Bends", "1995"], [C("b1392450-e666-3926-a536-22c65f834433"), "OK Computer", "1997"], [C("e75c0549-ad55-39e3-8025-c72c5d4a3c5d"), "Kid A", "2000"]];
+  var ITEMS = [];
+
+  function tool(state) {
+    var type = state === "none" ? "album" : state, total = state === "none" ? 0 : D.totals[type];
+    return (
+      '<div class="wrap"><label class="tfield">' + I.search + "<span>" + U.esc(QUERIES[state]) + "</span><kbd>/</kbd></label>" +
+      '<nav class="tt" aria-label="Tipo de resultado">' + TYPES.map(function (t) { return '<a href="#' + (t[0] === "user" ? "artist" : t[0]) + '"' + (t[0] === type ? ' aria-current="page"' : "") + ">" + I[t[0]] + t[1] + "</a>"; }).join("") + "</nav>" +
+      '<span class="tcount">' + (total ? U.countLabel(total) + " resultados" : "0 resultados") + "</span>" +
+      (state === "none" || state === "song" ? "<span></span>" : '<button class="tfil">' + I.filter + "<span>Filtros</span></button>") + "</div>"
+    );
+  }
+
+  // Cada fila es un botón que pinta la vista previa (en el teléfono sería el enlace a la página).
+  function row(i, lead, title, meta, end, endCls) {
+    return '<button class="r" data-i="' + i + '">' + lead + "<span><b>" + U.esc(title) + '</b><span class="meta">' + meta + "</span></span>" + (end ? '<span class="end ' + (endCls || "") + '">' + end + "</span>" : "<span></span>") + "</button>";
+  }
+  function group(title, count) { return '<div class="gh"><h2>' + title + "</h2><span>" + count + "</span></div>"; }
+
+  function listArtists() {
+    var inCat = D.artists.filter(function (a) { return a.inCatalog; });
+    var exact = D.artists.filter(function (a) { return a.exact && !a.inCatalog; });
+    var rest = D.artists.filter(function (a) { return !a.inCatalog && !a.exact; });
+    ITEMS = [];
+    var add = function (a) { ITEMS.push({ kind: "artist", a: a }); return ITEMS.length - 1; };
+    var r = function (a) { var i = add(a); return row(i, U.portrait(a), a.name, U.meta([a.type, a.country, U.years(a)]), a.inCatalog ? a.discs + " discos" : "", a.inCatalog ? "cat" : ""); };
+    return group("En el catálogo", inCat.length) + inCat.map(r).join("") +
+      group("Se llaman exactamente «Pink»", exact.length) + exact.slice(0, 3).map(r).join("") + '<button class="foldr">Ver los ' + exact.length + " " + I.chevron + "</button>" +
+      group("Más artistas", U.countLabel(D.totals.artist)) + rest.slice(0, 8).map(r).join("") + '<button class="foldr">Cargar más ' + I.chevron + "</button>";
+  }
+  function listAlbums() {
+    ITEMS = [];
+    var add = function (a) { ITEMS.push({ kind: "album", a: a }); return ITEMS.length - 1; };
+    var pf = D.albums.filter(function (a) { return a.artist === "Pink Floyd"; });
+    var rest = D.albums.filter(function (a) { return a.artist !== "Pink Floyd"; });
+    return group("Pink Floyd", pf.length) + pf.map(function (a) { return row(add(a), U.cover(a.cover), a.title, U.meta([a.cat, a.year]), "en el catálogo", "cat"); }).join("") +
+      group("Otros discos llamados «The Wall»", "más de 1.000") + rest.slice(0, 12).map(function (a) { return row(add(a), U.cover(a.cover), a.artist, U.meta([a.cat, a.year]), ""); }).join("") + '<button class="foldr">Cargar más ' + I.chevron + "</button>";
+  }
+  function listSongs() {
+    ITEMS = [];
+    var add = function (s) { ITEMS.push({ kind: "song", s: s }); return ITEMS.length - 1; };
+    var first = D.songs[0];
+    return group("Radiohead", "aparece en " + first.albums.length + " discos") + row(add(first), U.cover(C("471b4ff5-004f-4a7b-b0ba-a0837c41da14")), first.title, "Radiohead · 1992 · 3:56", "en el catálogo", "cat") +
+      group("Otras canciones llamadas «Creep»", "más de 1.000") + D.songs.slice(1, 14).map(function (s) { return row(add(s), U.portrait({ name: s.artist }), s.artist, U.esc(s.title), ""); }).join("") + '<button class="foldr">Cargar más ' + I.chevron + "</button>";
+  }
+
+  function preview(item) {
+    if (!item) return "";
+    if (item.kind === "artist") {
+      var a = item.a;
+      var discs = a.name === "Pink Floyd" ? PF_DISCS : null;
+      var hero = a.photo ? '<div class="pv-hero"><img src="' + U.esc(a.photo) + '" alt=""></div>' : '<div class="pv-hero ini" aria-hidden="true">' + U.esc(a.name.charAt(0)) + "</div>";
+      return hero + '<div class="pv-body"><h3>' + U.esc(a.name) + '</h3><div class="facts"><span class="meta">' + U.meta([a.type, a.country, U.years(a)]) + "</span>" + (a.inCatalog ? '<span class="incat">' + a.discs + " discos en el catálogo</span>" : "") + "</div>" +
+        (a.dis ? '<p class="lede"><i>' + U.esc(a.dis) + "</i> — descripción de MusicBrainz.</p>" : "") +
+        (discs ? '<div class="pv-grid">' + discs.map(function (d) { return '<a href="#">' + U.cover(d[0]) + "<b>" + d[1] + '</b><span class="meta">' + d[2] + "</span></a>"; }).join("") + "</div>" : "") +
+        (!a.inCatalog ? '<p class="pv-note"><b>Aún no está en el catálogo.</b> Al abrirlo traemos su discografía de MusicBrainz; tarda unos segundos la primera vez.</p>' : "") +
+        '<div class="pv-acts"><a class="btn primary" href="#">Ver artista ' + I.arrow + '</a><a class="btn line" href="#">Seguir</a></div></div>';
+    }
+    if (item.kind === "album") {
+      var b = item.a, isWall = b.artist === "Pink Floyd" && b.year === 1979;
+      var tracks = isWall ? [["In the Flesh?", "3:20"], ["The Thin Ice", "2:27"], ["Another Brick in the Wall, Part 1", "3:21"], ["The Happiest Days of Our Lives", "1:46"], ["Another Brick in the Wall, Part 2", "3:59"]] : null;
+      return '<div class="pv-album">' + U.cover(b.cover) + '<div><h3 style="font-family:var(--display);font-weight:700;font-size:clamp(28px,2.6vw,38px);letter-spacing:-.02em;line-height:1.02">' + U.esc(b.title) + '</h3><p class="by" style="font-size:18px;margin-top:6px">' + U.esc(b.artist) + '</p><div class="facts" style="display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:12px"><span class="meta">' + U.meta([b.cat, b.year]) + "</span>" + (isWall ? '<span class="cstar"><b>★ 4,6</b> <span>· 38 valoraciones</span></span>' : "") + "</div>" +
+        (tracks ? '<ol class="pv-tracks">' + tracks.map(function (t) { return "<li><span>" + t[0] + "</span><i>" + t[1] + "</i></li>"; }).join("") + '</ol><p class="meta" style="margin-top:8px">+21 canciones</p>' : '<p class="pv-note"><b>Lista de canciones al abrirlo.</b> Los discos se completan desde MusicBrainz la primera vez que alguien los visita.</p>') +
+        '<div class="pv-acts"><a class="btn primary" href="#">Ver el disco ' + I.arrow + '</a><a class="btn line" href="#">Valorar</a></div></div></div>';
+    }
+    var s = item.s, rh = s.artist === "Radiohead";
+    return '<div class="pv-body flat"><h3>' + U.esc(s.title) + '</h3><p class="by">' + U.esc(s.artist) + "</p>" +
+      (rh ? '<div class="facts"><span class="meta">Single de 1992 · 3:56</span><span class="cstar"><b>★ 4,4</b> <span>· 61 valoraciones</span></span></div><p class="meta" style="margin-top:18px">Aparece en ' + s.albums.length + ' discos</p><div class="pv-grid">' + s.albums.slice(0, 4).map(function (x) { return '<a href="#">' + U.cover(x.cover) + "<b>" + U.esc(x.title) + '</b><span class="meta">' + U.meta([x.cat, x.year]) + "</span></a>"; }).join("") + "</div>" : '<p class="pv-note"><b>Grabación de ' + U.esc(s.artist) + ".</b> Al abrirla verás en qué discos aparece y si es una versión de otra canción.</p>") +
+      '<div class="pv-acts"><a class="btn primary" href="#">Ver la canción ' + I.arrow + "</a>" + (rh ? '<a class="btn line" href="#">Versiones de otros artistas</a>' : "") + "</div></div>";
+  }
+
+  function none() {
+    var wall = [[24, "Kind of Blue"], [26, "Horses"], [6, "Madvillainy"], [4, "Unknown Pleasures"], [16, "LUX"], [10, "Homogenic"], [21, "London Calling"], [13, "Maggot Brain"]];
+    return '<div class="reader"><section class="nores list" aria-labelledby="n1"><h2 id="n1">Ningún álbum coincide con <q>qzxvbnmqk</q></h2><p>Ni en el catálogo ni en MusicBrainz. En los otros tipos:</p>' +
+      '<div class="typeline"><a href="#">Artistas <span>0 resultados</span></a><a href="#">Canciones <span>0 resultados</span></a><a href="#">Usuarios <span>0 resultados</span></a></div>' +
+      '<ul><li><span>Revisa la ortografía o usa menos palabras.</span></li><li><span>Para un disco concreto: <code>pink floyd - the wall</code>.</span></li><li><span>Con año, país o sello, prueba la <a href="#" style="color:var(--amber)">búsqueda avanzada</a>.</span></li></ul><a class="btn line m-only" href="#">Ir a Explorar</a></section>' +
+      '<aside class="preview"><div class="suggest"><h3>Discos para empezar</h3><p>Una selección del catálogo, mientras ajustas la búsqueda.</p><div class="sgrid">' +
+      wall.map(function (w) { return '<a href="#"><i class="cv" data-c="' + w[0] + '"></i><b>' + w[1] + "</b></a>"; }).join("") +
+      '</div><div class="pv-acts"><a class="btn line" href="#">Ir a Explorar ' + I.arrow + "</a></div></div></aside></div>";
+  }
+
+  function render() {
+    var st = window.currentState();
+    window.paintHeader(QUERIES[st]);
+    document.title = (st === "none" ? "Sin resultados" : "«" + QUERIES[st] + "»") + " · C · Lector";
+    document.getElementById("tool").innerHTML = tool(st);
+    var app = document.getElementById("app");
+    if (st === "none") {
+      app.innerHTML = none();
+      app.querySelectorAll("[data-c]").forEach(function (el) { var i = +el.dataset.c; el.style.backgroundImage = "url(wall.webp)"; el.style.backgroundSize = "800% 400%"; el.style.backgroundPosition = ((i % 8) * 100) / 7 + "% " + (Math.floor(i / 8) * 100) / 3 + "%"; });
+    } else {
+      var list = { artist: listArtists, album: listAlbums, song: listSongs }[st]();
+      app.innerHTML = '<div class="reader"><section class="list" aria-label="Resultados">' + list + '</section><aside class="preview" aria-live="polite" id="pv"></aside></div>';
+      var select = function (i) {
+        app.querySelectorAll(".r").forEach(function (b) { b.setAttribute("aria-current", +b.dataset.i === i ? "true" : "false"); });
+        document.getElementById("pv").innerHTML = preview(ITEMS[i]);
+      };
+      app.querySelectorAll(".r").forEach(function (b) { b.addEventListener("click", function () { select(+b.dataset.i); }); });
+      select(0);
+    }
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener("hashchange", render);
+  render();
+  window.mockBar("c-lector.html");
+</script>
+</body>
+</html>

@@ -28,6 +28,7 @@ import { suggestSpelling } from "@/services/catalog/search/spelling";
 import { coverageLevel } from "@/services/catalog/search/coverage";
 import { withViewerStars } from "@/services/catalog/search/activity";
 import { getArtistGenres } from "@/services/genres/display";
+import { displayCount } from "@/services/catalog/search/display-count";
 import { getCurrentUser } from "@/services/auth/authorization";
 import { SearchErrorState } from "@/components/catalog/SearchErrorState";
 import { searchHref } from "@/components/catalog/search-types";
@@ -44,6 +45,7 @@ import {
 } from "@/components/catalog/search-results/SearchChrome";
 import { RemoteFailedNotice } from "@/components/catalog/search-results/RemoteFailedNotice";
 import { FiltersDisclosure } from "@/components/catalog/search-results/FiltersDisclosure";
+import { AsidePanel, ResultsLayout } from "@/components/catalog/search-results/ResultsLayout";
 import { ArtistResults } from "@/components/catalog/search-results/ArtistResults";
 import { AlbumList } from "@/components/catalog/search-results/AlbumResults";
 import {
@@ -73,6 +75,8 @@ import { UserResults } from "@/components/catalog/search-results/UserResults";
 // (/search/advanced, openspec: redesign-advanced-search) usa las mismas con
 // `advanced`: sin pastillas ni "Buscar en otro tipo" (el formulario y las
 // pestañas ya lo cubren) y sin redirección por coincidencia exacta única.
+// Desde redesign-search-phase1 la rápida reparte cada tipo en `ResultsLayout`: pestañas arriba, resultados y una
+// columna lateral con los filtros y «Acotar»; la avanzada conserva su secuencia.
 
 const CATEGORIES: ReleaseGroupCategoryValue[] = [
   "studio",
@@ -120,43 +124,42 @@ export async function ArtistSection({
       all: all ? "1" : undefined,
     });
   const pills = advanced ? null : (
-    <FilterPills
-      label={t("filterLabel")}
-      options={[
-        {
-          key: "all",
-          label: t("filterAll"),
-          href: filterHref(),
-          active: !artistType,
-        },
-        {
-          key: "solo",
-          label: t("filterPerson"),
-          href: filterHref("solo"),
-          active: artistType === "solo",
-        },
-        {
-          key: "group",
-          label: t("filterGroup"),
-          href: filterHref("group"),
-          active: artistType === "group",
-        },
-      ]}
-    />
+    <AsidePanel>
+      <FilterPills
+        label={t("filterLabel")}
+        options={[
+          {
+            key: "all",
+            label: t("filterAll"),
+            href: filterHref(),
+            active: !artistType,
+          },
+          {
+            key: "solo",
+            label: t("filterPerson"),
+            href: filterHref("solo"),
+            active: artistType === "solo",
+          },
+          {
+            key: "group",
+            label: t("filterGroup"),
+            href: filterHref("group"),
+            active: artistType === "group",
+          },
+        ]}
+      />
+    </AsidePanel>
   );
 
   return (
     <Suspense
       fallback={
         <LocalFirst
-          summary={
-            <>
-              <SearchSummary query={query} type="artist" count={null} advanced={advanced} artistType={criteria.artistType} />
-              {pills}
-            </>
-          }
+          summary={<SearchSummary query={query} type="artist" count={null} advanced={advanced} artistType={criteria.artistType} />}
+          aside={pills}
+          advanced={advanced}
         >
-          {local.results.length > 0 ? <ArtistResults query={query} results={local.results} /> : null}
+          {local.results.length > 0 ? <ArtistResults query={query} results={local.results} compactHeadings={advanced} /> : null}
         </LocalFirst>
       }
     >
@@ -216,16 +219,18 @@ async function ArtistRemote({
   // Sugerencia con la lista vacía o débil: ningún nombre cubre todas las palabras de la consulta.
   const weak = !empty && response.results.every((artist) => coverageLevel(query, artist.name, []) === 4);
   const suggestion = (empty || weak) && !filtered && !advanced && query ? await suggestSpelling("artist", query) : null;
-  return (
+  const summary = (
+    <SearchSummary
+      query={query}
+      type="artist"
+      count={displayCount(response.total, response.results.length)}
+      advanced={advanced}
+      artistType={criteria.artistType}
+    />
+  );
+  const aside = empty && !filtered ? null : pills;
+  const body = (
     <>
-      <SearchSummary
-        query={query}
-        type="artist"
-        count={response.total ?? response.results.length}
-        advanced={advanced}
-        artistType={criteria.artistType}
-      />
-      {empty && !filtered ? null : pills}
       {response.catalogOnly ? <CatalogOnlyNotice type="artist" /> : null}
       {advanced && !query && !response.catalogOnly ? <BroadQueryHint total={response.total} type="artist" criteria={criteria} /> : null}
       {response.remoteFailed ? <RemoteFailedNotice /> : null}
@@ -250,6 +255,7 @@ async function ArtistRemote({
                   results={response.results}
                   bestGenres={bestGenres}
                   highlight={highlight}
+                  compactHeadings
                 />
               }
               table={<ResultsTable type="artist" rows={response.results} highlight={highlight ?? []} />}
@@ -270,6 +276,11 @@ async function ArtistRemote({
         </div>
       )}
     </>
+  );
+  return (
+    <Layout advanced={advanced} summary={summary} aside={aside}>
+      {body}
+    </Layout>
   );
 }
 
@@ -312,54 +323,53 @@ export async function AlbumSection({
   // Los filtros van debajo del encabezado de resultados, tanto mientras llega
   // MusicBrainz (fallback) como en la lista final.
   const pills = advanced ? null : (
-    <FiltersDisclosure active={(category ? 1 : 0) + (decade !== undefined ? 1 : 0)}>
-      <FilterPills
-        label={t("search.results.albums.categoryLabel")}
-        options={[
-          {
-            key: "all",
-            label: t("search.results.albums.categoryAll"),
-            href: href({ category: "" }),
-            active: !category,
-          },
-          ...CATEGORIES.map((value) => ({
-            key: value,
-            label: t(`artist.categories.${value}`),
-            href: href({ category: value }),
-            active: category === value,
-          })),
-        ]}
-      />
-      <FilterPills
-        label={t("search.results.albums.decadeLabel")}
-        options={[
-          {
-            key: "all",
-            label: t("search.results.albums.decadeAll"),
-            href: searchHref("album", query, { category }),
-            active: decade === undefined,
-          },
-          ...DECADES.map((value) => ({
-            key: String(value),
-            label: t("search.results.albums.decade", { decade: value }),
-            href: href({ decade: value }),
-            active: decade === value,
-          })),
-        ]}
-      />
-    </FiltersDisclosure>
+    <AsidePanel>
+      <FiltersDisclosure active={(category ? 1 : 0) + (decade !== undefined ? 1 : 0)}>
+        <FilterPills
+          label={t("search.results.albums.categoryLabel")}
+          options={[
+            {
+              key: "all",
+              label: t("search.results.albums.categoryAll"),
+              href: href({ category: "" }),
+              active: !category,
+            },
+            ...CATEGORIES.map((value) => ({
+              key: value,
+              label: t(`artist.categories.${value}`),
+              href: href({ category: value }),
+              active: category === value,
+            })),
+          ]}
+        />
+        <FilterPills
+          label={t("search.results.albums.decadeLabel")}
+          options={[
+            {
+              key: "all",
+              label: t("search.results.albums.decadeAll"),
+              href: searchHref("album", query, { category }),
+              active: decade === undefined,
+            },
+            ...DECADES.map((value) => ({
+              key: String(value),
+              label: t("search.results.albums.decade", { decade: value }),
+              href: href({ decade: value }),
+              active: decade === value,
+            })),
+          ]}
+        />
+      </FiltersDisclosure>
+    </AsidePanel>
   );
 
   return (
     <Suspense
       fallback={
         <LocalFirst
-          summary={
-            <>
-              <SearchSummary query={query} type="album" count={null} advanced={advanced} />
-              {pills}
-            </>
-          }
+          summary={<SearchSummary query={query} type="album" count={null} advanced={advanced} />}
+          aside={pills}
+          advanced={advanced}
         >
           {local.results.length > 0 ? (
             <AlbumList albums={local.results} authenticated={authenticated} />
@@ -411,22 +421,26 @@ async function AlbumRemote({
     !empty &&
     response.results.every((album) => coverageLevel(query, album.title, album.artistName ? [album.artistName] : []) === 4);
   const suggestion = (empty || weak) && !filtered && !advanced && query ? await suggestSpelling("album", query) : null;
-  return (
+  const summary = (
+    <SearchSummary query={query} type="album" count={displayCount(response.total, response.results.length)} advanced={advanced} />
+  );
+  // «Acotar» por artista: en la lateral (en la avanzada, en su lugar de siempre).
+  const refine = response.refine?.artists.length ? <RefineHint kind="album" query={query} {...response.refine} /> : null;
+  const shownPills = empty && !filtered ? null : pills;
+  const aside =
+    shownPills || refine ? (
+      <>
+        {shownPills}
+        {refine}
+      </>
+    ) : null;
+  const body = (
     <>
-      <SearchSummary
-        query={query}
-        type="album"
-        count={response.total ?? response.results.length}
-        advanced={advanced}
-      />
-      {empty && !filtered ? null : pills}
       {response.catalogOnly ? <CatalogOnlyNotice type="album" /> : null}
       {advanced && !query && !response.catalogOnly ? <BroadQueryHint total={response.total} type="album" criteria={criteria} /> : null}
       {response.remoteFailed ? <RemoteFailedNotice /> : null}
       {weak && suggestion ? <DidYouMean type="album" suggestion={suggestion} /> : null}
-      {response.refine ? (
-        <RefineHint kind="album" query={query} {...response.refine} />
-      ) : null}
+      {advanced ? refine : null}
       {empty && advanced ? (
         <AdvancedNoResults type="album" query={query} criteria={criteria} />
       ) : empty ? (
@@ -461,6 +475,11 @@ async function AlbumRemote({
       )}
     </>
   );
+  return (
+    <Layout advanced={advanced} summary={summary} aside={advanced ? null : aside}>
+      {body}
+    </Layout>
+  );
 }
 
 // ---------- Canciones
@@ -470,10 +489,8 @@ export async function SongSection({ query, criteria = {}, advanced = false }: Se
   return (
     <Suspense
       fallback={
-        <LocalFirst
-          summary={<SearchSummary query={query} type="song" count={null} advanced={advanced} />}
-        >
-          {local.results.length > 0 ? <SongResults response={local} plain={advanced && !query} /> : null}
+        <LocalFirst summary={<SearchSummary query={query} type="song" count={null} advanced={advanced} />} advanced={advanced}>
+          {local.results.length > 0 ? <SongResults response={local} plain={advanced && !query} compactHeadings={advanced} /> : null}
         </LocalFirst>
       }
     >
@@ -503,14 +520,17 @@ async function SongRemote({
     response.results.every((group) => coverageLevel(query, group.title, group.artistName ? [group.artistName] : []) === 4);
   const suggestion = (empty || weak) && !advanced && query ? await suggestSpelling("song", query) : null;
   const highlight = advanced ? highlightFields("song", criteria) : undefined;
-  return (
+  const summary = (
+    <SearchSummary
+      query={query}
+      type="song"
+      count={advanced ? displayCount(response.total, response.results.length) : null}
+      advanced={advanced}
+    />
+  );
+  const refine = response.refine?.artists.length ? <RefineHint kind="song" query={query} {...response.refine} /> : null;
+  const body = (
     <>
-      <SearchSummary
-        query={query}
-        type="song"
-        count={advanced ? (response.total ?? response.results.length) : null}
-        advanced={advanced}
-      />
       {advanced ? null : (
         <SongInterpretation
           interpretation={response.interpretation}
@@ -520,9 +540,7 @@ async function SongRemote({
       {advanced && !query ? <BroadQueryHint total={response.total} type="song" criteria={criteria} /> : null}
       {response.remoteFailed ? <RemoteFailedNotice /> : null}
       {weak && suggestion ? <DidYouMean type="song" suggestion={suggestion} /> : null}
-      {response.refine ? (
-        <RefineHint kind="song" query={query} {...response.refine} />
-      ) : null}
+      {advanced ? refine : null}
       {empty && advanced ? (
         <AdvancedNoResults type="song" query={query} criteria={criteria} />
       ) : empty ? (
@@ -532,7 +550,7 @@ async function SongRemote({
           {/* Sin título no hay "mejor coincidencia": lista simple (openspec: refine-advanced-search-phase1). */}
           {advanced && highlight ? (
             <ResultsViewSwitch
-              list={<SongResults response={response} plain={!query} highlight={highlight} />}
+              list={<SongResults response={response} plain={!query} highlight={highlight} compactHeadings />}
               table={<ResultsTable type="song" rows={response.results} highlight={highlight} />}
             />
           ) : (
@@ -551,6 +569,11 @@ async function SongRemote({
         </div>
       )}
     </>
+  );
+  return (
+    <Layout advanced={advanced} summary={summary} aside={advanced ? null : refine}>
+      {body}
+    </Layout>
   );
 }
 
@@ -582,12 +605,7 @@ export async function UserSection({
 
   const response = await searchUsers(query, viewer?.id ?? null, 1, 20);
   return (
-    <>
-      <SearchSummary
-        query={query}
-        type="user"
-        count={response.hasNext ? null : response.users.length}
-      />
+    <ResultsLayout summary={<SearchSummary query={query} type="user" count={response.hasNext ? null : response.users.length} />}>
       {response.users.length === 0 ? (
         <SearchEmpty query={query} type="user" />
       ) : (
@@ -598,7 +616,7 @@ export async function UserSection({
           initialHasNext={response.hasNext}
         />
       )}
-    </>
+    </ResultsLayout>
   );
 }
 
@@ -656,16 +674,16 @@ async function AlternativeCountFor({
         filters: artistFilters(next.criteria),
         catalog: artistCatalogFilters(next.criteria),
       });
-      count = response.total ?? response.results.length;
+      count = displayCount(response.total, response.results.length);
     } else if (type === "album") {
       const response = await searchAlbums(next.query, {
         ...albumOptions(next.criteria),
         catalog: albumCatalogFilters(next.criteria),
       });
-      count = response.total ?? response.results.length;
+      count = displayCount(response.total, response.results.length);
     } else {
       const response = await searchSongs(next.query, { filters: songFilters(next.criteria) });
-      count = response.total ?? response.results.length;
+      count = displayCount(response.total, response.results.length);
     }
   } catch {
     count = null;
@@ -678,16 +696,47 @@ async function AlternativeCountFor({
 /** Fallback del streaming: lo local ya visible y la pata remota pendiente. */
 function LocalFirst({
   summary,
+  aside = null,
+  advanced,
   children,
 }: {
   summary: ReactNode;
+  aside?: ReactNode;
+  advanced: boolean;
   children: ReactNode;
 }) {
   return (
-    <>
-      {summary}
+    <Layout advanced={advanced} summary={summary} aside={aside}>
       {children}
       <PendingRemote />
-    </>
+    </Layout>
+  );
+}
+
+/** La rápida en dos columnas (`ResultsLayout`); la avanzada, en la secuencia de siempre (resumen, lateral, cuerpo). */
+function Layout({
+  advanced,
+  summary,
+  aside,
+  children,
+}: {
+  advanced: boolean;
+  summary: ReactNode;
+  aside: ReactNode;
+  children: ReactNode;
+}) {
+  if (advanced) {
+    return (
+      <>
+        {summary}
+        {aside}
+        {children}
+      </>
+    );
+  }
+  return (
+    <ResultsLayout summary={summary} aside={aside}>
+      {children}
+    </ResultsLayout>
   );
 }

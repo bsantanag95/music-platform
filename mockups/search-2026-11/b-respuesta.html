@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Búsqueda · B · Respuesta primero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="search.css">
+<style>
+  /* B · Respuesta primero: un solo buscador (el de la página; el de la cabecera se oculta en /search), una
+     respuesta grande arriba y el resto agrupado. A la derecha, el mismo término en otros tipos y los filtros. */
+  .site-header .hsearch { visibility: hidden; }
+  .searchbar { padding: clamp(24px, 3vw, 40px) 0 0; display: flex; flex-direction: column; gap: 16px; }
+  .field { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; height: 64px; border: 1px solid var(--border-2); border-radius: 14px; background: var(--surface); max-width: 860px; }
+  .field .tsel { display: inline-flex; align-items: center; gap: 8px; height: 100%; padding: 0 16px; border-right: 1px solid var(--border); font: 500 14px var(--data); color: var(--paper); }
+  .field .tsel svg { width: 16px; height: 16px; color: var(--muted); }
+  .field .tsel .chev { width: 14px; height: 14px; }
+  .field .val { padding: 0 18px; font-size: 22px; font-family: var(--body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .field .go { margin-right: 8px; height: 48px; }
+  .seg { display: flex; gap: 4px; flex-wrap: wrap; }
+  .seg a { display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 14px; border-radius: 999px; font-family: var(--display); font-size: 15px; color: var(--muted); border: 1px solid transparent; }
+  .seg a svg { width: 15px; height: 15px; }
+  .seg a[aria-current] { color: var(--ink); background: var(--paper); }
+  .seg a:not([aria-current]):hover { border-color: var(--border-2); color: var(--paper); }
+  .seg .cnt { font: 500 12px var(--data); opacity: .75; white-space: nowrap; }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: clamp(28px, 4vw, 64px); align-items: start; padding-top: clamp(28px, 3.5vw, 44px); }
+  .lbl { font-family: var(--display); font-weight: 700; font-size: 22px; letter-spacing: -.01em; margin-bottom: 14px; }
+  .lbl small { font: 500 12.5px var(--data); color: var(--muted); margin-left: 10px; letter-spacing: 0; }
+  .sect + .sect, .nores + .sect { margin-top: 40px; }
+
+  /* Respuesta: artistas */
+  .likely { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .lk { position: relative; display: flex; flex-direction: column; justify-content: end; min-height: 300px; padding: 18px; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); background: var(--surface); isolation: isolate; }
+  .lk .bg { position: absolute; inset: 0; z-index: -1; }
+  .lk .bg img { width: 100%; height: 100%; object-fit: cover; filter: saturate(.9); }
+  .lk .bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(20,18,15,.96) 8%, rgba(20,18,15,.35) 60%, rgba(20,18,15,.1)); }
+  .lk .bg.ini { display: grid; place-items: center; font-family: var(--display); font-size: 120px; font-weight: 700; color: var(--border-2); background: var(--ink-2); }
+  .lk .bg.ini::after { display: none; }
+  .lk h3 { font-family: var(--display); font-weight: 700; font-size: 28px; letter-spacing: -.015em; line-height: 1.05; }
+  .lk .meta { margin-top: 6px; display: block; color: #cfc6b8; }
+  .lk .why { margin-top: 10px; display: inline-flex; align-self: start; font: 500 11.5px var(--data); padding: 3px 8px; border-radius: 4px; background: rgba(20,18,15,.7); color: var(--paper); border: 1px solid var(--border-2); }
+  .rows { border-top: 1px solid var(--border); }
+  .row { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 12px 4px; border-bottom: 1px solid var(--border); }
+  .row:hover { background: var(--ink-2); }
+  .row .ph, .row .cvbox, .row .disc { width: 44px; font-size: 17px; }
+  .row > span:nth-child(2) { min-width: 0; }
+  .row b { font-family: var(--display); font-weight: 500; font-size: 16px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .sub { display: flex; gap: 10px; align-items: baseline; min-width: 0; }
+  .row .sub .meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .row .sub .dis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .end { font: 500 12px var(--data); color: var(--muted); white-space: nowrap; }
+  .fold { margin-top: 10px; font: 500 13px var(--data); color: var(--paper); display: inline-flex; gap: 8px; align-items: center; padding: 8px 0; }
+  .fold svg { width: 14px; height: 14px; }
+
+  /* Respuesta: álbum y canción */
+  .answer { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: clamp(20px, 3vw, 36px); padding: clamp(18px, 2.4vw, 28px); border: 1px solid var(--border); border-radius: 18px; background: var(--surface); }
+  .answer .cvbox { border-radius: 10px; box-shadow: 0 24px 40px -24px rgba(0,0,0,.9); }
+  .answer h3 { font-family: var(--display); font-weight: 700; font-size: clamp(32px, 3.4vw, 48px); letter-spacing: -.025em; line-height: 1; }
+  .answer .by { margin-top: 8px; font-size: 19px; }
+  .answer .facts { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; margin-top: 14px; }
+  .answer .acts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+  .tracks { margin-top: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; counter-reset: t; }
+  .tracks li { counter-increment: t; display: grid; grid-template-columns: 26px minmax(0, 1fr); padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 14.5px; }
+  .tracks li::before { content: counter(t); font: 500 12px var(--data); color: var(--muted-2); padding-top: 2px; }
+  .tracks li span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .strip { margin-top: 16px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+  .strip a { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .strip b { display: block; font-family: var(--display); font-weight: 500; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .strip .meta { font-size: 11px; display: block; }
+
+  /* Columna lateral */
+  aside { display: flex; flex-direction: column; gap: 18px; position: sticky; top: 88px; }
+  .panel { border: 1px solid var(--border); border-radius: 14px; background: var(--ink-2); padding: 18px; }
+  .panel h4 { font-family: var(--display); font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+  .panel > p { font-size: 14px; color: var(--muted); margin-bottom: 10px; }
+  .mini { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .mini:last-of-type { border-bottom: 0; }
+  .mini .cvbox, .mini .disc, .mini .ph { width: 40px; font-size: 15px; }
+  .mini b { font-family: var(--display); font-weight: 500; font-size: 14.5px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini .meta { font-size: 11.5px; }
+  .panel .see { margin-top: 6px; }
+  .facet + .facet { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .facet h5 { font: 500 12px var(--data); color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .06em; }
+  .facet .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .facet .chip { height: 32px; font-size: 12.5px; }
+  .facet .chip[aria-pressed="true"] { border-color: var(--amber); color: var(--amber); }
+
+  /* Sin resultados */
+  .nores { padding: clamp(24px, 3vw, 40px); border: 1px solid var(--border); border-radius: 18px; background: var(--surface); }
+  .nores h3 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 3vw, 40px); letter-spacing: -.02em; line-height: 1.05; }
+  .nores h3 q { quotes: "«" "»"; color: var(--muted); font-weight: 500; }
+  .nores > p { margin-top: 12px; font-size: 17px; color: var(--muted); max-width: 56ch; }
+  .zero { margin-top: 20px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .zero div { padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--ink-2); }
+  .zero b { display: block; font-family: var(--display); font-size: 26px; font-weight: 700; color: var(--muted-2); }
+  .zero span { font: 500 12px var(--data); color: var(--muted); }
+  .checks { margin-top: 22px; display: grid; gap: 8px; }
+  .checks li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; font-size: 16px; }
+  .checks li::before { content: ""; width: 8px; height: 8px; margin-top: 8px; border-radius: 50%; background: var(--amber); }
+  .checks code { font: 500 14px var(--data); background: var(--surface-2); padding: 1px 6px; border-radius: 4px; }
+  .partial { margin-top: 24px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px; align-items: center; padding: 16px 18px; border-radius: 14px; border: 1px dashed var(--border-2); }
+  .partial .tagx { font: 500 11px var(--data); color: var(--muted); border: 1px solid var(--border-2); border-radius: 4px; padding: 2px 6px; }
+  .partial p { font-size: 16px; }
+  .partial p b { font-weight: 500; }
+  .starts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .start { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; align-items: center; padding: 14px; border: 1px solid var(--border); border-radius: 12px; }
+  .start:hover { border-color: var(--border-2); }
+  .start i { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--surface-2); color: var(--amber); }
+  .start i svg { width: 18px; height: 18px; }
+  .start b { font-family: var(--display); font-weight: 500; display: block; }
+  .start span { font-size: 13.5px; color: var(--muted); }
+
+  @media (max-width: 1100px) {
+    .layout { grid-template-columns: minmax(0, 1fr); }
+    aside { position: static; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 760px) {
+    .likely { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--pad); margin: 0 calc(-1 * var(--pad)); padding: 0 var(--pad) 6px; scrollbar-width: none; }
+    .lk { flex: 0 0 78%; min-height: 240px; scroll-snap-align: start; }
+    .answer { grid-template-columns: minmax(0, 1fr); }
+    .answer > .cvbox, .answer > .disc { max-width: 160px; }
+    .tracks { grid-template-columns: minmax(0, 1fr); }
+    .strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .strip a:nth-child(n+4) { display: none; }
+    aside { grid-template-columns: minmax(0, 1fr); }
+    .zero, .starts { grid-template-columns: minmax(0, 1fr); }
+    .partial { grid-template-columns: minmax(0, 1fr); }
+    .row .sub .dis { display: none; }
+  }
+  @media (max-width: 640px) {
+    .site-header .hsearch { visibility: visible; }
+    .field { height: 54px; }
+    .field .tsel span { display: none; }
+    .field .val { font-size: 18px; padding: 0 12px; }
+    .field .go span { display: none; }
+    .field .go { width: 44px; padding: 0; height: 44px; }
+    .seg { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--pad)); padding: 0 var(--pad); }
+    .seg a svg, .seg .cnt { display: none; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header"></header>
+<main class="wrap" id="app"></main>
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script>
+  var D = window.SEARCH_DATA, U = window.UI, I = window.ICON;
+  var QUERIES = { artist: "pink", album: "the wall", song: "creep", none: "qzxvbnmqk" };
+  var TYPES = [["artist", "Artistas"], ["album", "Álbumes"], ["song", "Canciones"], ["user", "Usuarios"]];
+  var C = function (m) { return "covers/" + m + ".webp"; };
+
+  function bar(state) {
+    var type = state === "none" ? "album" : state, q = QUERIES[state];
+    var total = state === "none" ? 0 : D.totals[type];
+    return (
+      '<section class="searchbar" aria-label="Buscar"><h1 class="sr-only">Búsqueda</h1>' +
+      '<div class="field"><span class="tsel">' + I[type] + "<span>" + TYPES.filter(function (t) { return t[0] === type; })[0][1] + '</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></span>' +
+      '<span class="val">' + U.esc(q) + '</span><a class="btn primary go" href="#">' + I.search + "<span>Buscar</span></a></div>" +
+      '<nav class="seg" aria-label="Tipo de resultado">' +
+      TYPES.map(function (t) {
+        var cur = t[0] === type;
+        return '<a href="#' + (t[0] === "user" ? "artist" : t[0]) + '"' + (cur ? ' aria-current="page"' : "") + ">" + I[t[0]] + t[1] + (cur ? ' <span class="cnt">' + (total ? U.countLabel(total) : "0") + "</span>" : "") + "</a>";
+      }).join("") + "</nav></section>"
+    );
+  }
+
+  function artistRow(a) {
+    return '<a class="row" href="#">' + U.portrait(a) + '<span><b>' + U.esc(a.name) + '</b><span class="sub"><span class="meta">' + U.meta([a.type, a.country, U.years(a)]) + '</span>' + (a.dis ? '<span class="dis">' + U.esc(a.dis) + "</span>" : "") + "</span></span>" + (a.discs > 1 ? '<span class="end num">' + a.discs + " discos</span>" : '<span class="end"></span>') + "</a>";
+  }
+
+  function artists() {
+    var byName = function (n) { return D.artists.filter(function (a) { return a.name === n && a.inCatalog; })[0]; };
+    var pink = byName("P!nk"), pf = byName("Pink Floyd");
+    var jp = D.artists[0];
+    var likely = [[pink, "88 discos en el catálogo"], [pf, "233 discos en el catálogo"], [jp, "Nombre idéntico a «pink»"]];
+    var exact = D.artists.filter(function (a) { return a.exact; }).slice(1);
+    var rest = D.artists.filter(function (a) { return !a.exact && a !== pink && a !== pf; });
+    return (
+      '<div class="layout"><div>' +
+      '<section class="sect" aria-labelledby="s1"><h2 class="lbl" id="s1">¿Cuál «pink» buscas?</h2><div class="likely">' +
+      likely.map(function (l) {
+        var a = l[0];
+        var bg = a.photo ? '<span class="bg"><img src="' + U.esc(a.photo) + '" alt="" loading="lazy"></span>' : '<span class="bg ini" aria-hidden="true">' + U.esc(a.name.charAt(0)) + "</span>";
+        return '<a class="lk" href="#">' + bg + "<h3>" + U.esc(a.name) + '</h3><span class="meta">' + U.meta([a.type, a.country, U.years(a), a.discs > 1 ? "" : a.dis]) + '</span><span class="why">' + l[1] + "</span></a>";
+      }).join("") + "</div></section>" +
+      '<section class="sect" aria-labelledby="s2"><h2 class="lbl" id="s2">Otros que se llaman «Pink» <small>5</small></h2><div class="rows">' + exact.slice(0, 3).map(artistRow).join("") + '</div><button class="fold">Ver los 5 ' + I.chevron + "</button></section>" +
+      '<section class="sect" aria-labelledby="s3"><h2 class="lbl" id="s3">Más artistas <small>' + U.countLabel(D.totals.artist) + "</small></h2><div class=\"rows\">" + rest.map(artistRow).join("") + '</div><div style="margin-top:22px"><button class="btn line">Cargar más</button></div></section>' +
+      "</div>" + aside("artist") + "</div>"
+    );
+  }
+
+  function aside(type) {
+    var other = {
+      artist:
+        '<div class="panel"><h4>«pink» en álbumes</h4><p>Títulos que coinciden.</p>' +
+        [["Pink", "Four Tet", "2012"], ["Pink", "Aerosmith", "1997"], ["PINK", "CHAI", "2017"]].map(function (x) { return '<a class="mini" href="#">' + U.cover(null) + "<span><b>" + x[0] + '</b><span class="meta">' + x[1] + " · " + x[2] + "</span></span></a>"; }).join("") +
+        '<a class="see" href="#album">Ver álbumes →</a></div>',
+      album:
+        '<div class="panel"><h4>Acotar</h4><div class="facet"><h5>Artista</h5><div class="chips">' + D.refine.map(function (n) { return '<a class="chip" href="#">' + U.esc(n) + "</a>"; }).join("") + "</div></div>" +
+        '<div class="facet"><h5>Tipo</h5><div class="chips"><a class="chip" aria-pressed="true" href="#">Todos</a><a class="chip" href="#">Álbumes</a><a class="chip" href="#">Singles y EPs</a><a class="chip" href="#">Compilaciones</a><a class="chip" href="#">Directos</a></div></div>' +
+        '<div class="facet"><h5>Década</h5><div class="chips"><a class="chip" aria-pressed="true" href="#">Todas</a>' + ["1960s", "1970s", "1980s", "1990s", "2000s", "2010s", "2020s"].map(function (d) { return '<a class="chip" href="#">' + d + "</a>"; }).join("") + "</div></div></div>" +
+        '<div class="panel"><h4>«the wall» en canciones</h4><p>Canciones con ese título.</p><a class="see" href="#song">Ver canciones →</a></div>',
+      song:
+        '<div class="panel"><h4>«creep» en álbumes</h4><p>Singles y discos con ese título.</p>' +
+        [[C("471b4ff5-004f-4a7b-b0ba-a0837c41da14"), "Creep", "Radiohead · Single · 1992"], [null, "Creep (Very 2021 rmx)", "Thom Yorke feat. Radiohead · 2021"], [null, "Creep", "Lambretta · Single · 2001"]].map(function (x) { return '<a class="mini" href="#">' + U.cover(x[0]) + "<span><b>" + U.esc(x[1]) + '</b><span class="meta">' + U.esc(x[2]) + "</span></span></a>"; }).join("") +
+        '<a class="see" href="#album">Ver álbumes →</a></div>' +
+        '<div class="panel"><h4>Acotar</h4><p>Escribe <b>artista - título</b> o elige un artista:</p><div class="facet"><div class="chips"><a class="chip" href="#">Radiohead</a><a class="chip" href="#">TLC</a><a class="chip" href="#">Lena Hall</a><a class="chip" href="#">Macy Gray</a></div></div></div>',
+    }[type];
+    return "<aside>" + other + "</aside>";
+  }
+
+  function albums() {
+    var f = D.albums[0];
+    var rest = D.albums.slice(1);
+    var tracks = ["In the Flesh?", "The Thin Ice", "Another Brick in the Wall, Part 1", "The Happiest Days of Our Lives", "Another Brick in the Wall, Part 2", "Mother"];
+    return (
+      '<div class="layout"><div>' +
+      '<section class="sect" aria-labelledby="s1"><h2 class="sr-only" id="s1">Mejor respuesta</h2><article class="answer">' + U.cover(f.cover) +
+      "<div><h3>" + U.esc(f.title) + '</h3><p class="by">' + U.esc(f.artist) + '</p><div class="facts"><span class="meta">' + U.meta([f.cat, f.year, "2 discos", "26 canciones"]) + '</span><span class="cstar"><b>★ 4,6</b> <span>· 38 valoraciones</span></span></div>' +
+      '<ol class="tracks">' + tracks.map(function (t) { return "<li><span>" + U.esc(t) + "</span></li>"; }).join("") + "</ol>" +
+      '<div class="acts"><a class="btn primary" href="#">Ver el disco ' + I.arrow + '</a><a class="btn line" href="#">También: single de 2023</a></div></div></article></section>' +
+      '<section class="sect" aria-labelledby="s2"><h2 class="lbl" id="s2">Otros discos llamados «The Wall» <small>más de 1.000</small></h2><div class="rows">' +
+      rest.filter(function (a) { return a.artist !== "Pink Floyd"; }).map(function (a) {
+        return '<a class="row" href="#">' + U.cover(a.cover) + "<span><b>" + U.esc(a.artist) + '</b><span class="sub"><span class="meta">' + U.meta([a.cat, a.year]) + '</span></span></span><span class="end">' + I.more.replace("<svg", '<svg width="18" height="18"') + "</span></a>";
+      }).join("") + '</div><div style="margin-top:22px"><button class="btn line">Cargar más</button></div></section>' +
+      "</div>" + aside("album") + "</div>"
+    );
+  }
+
+  function songs() {
+    var s = D.songs[0];
+    return (
+      '<div class="layout"><div>' +
+      '<section class="sect" aria-labelledby="s1"><h2 class="sr-only" id="s1">Mejor respuesta</h2><article class="answer">' + U.cover(C("471b4ff5-004f-4a7b-b0ba-a0837c41da14")) +
+      "<div><h3>Creep</h3><p class=\"by\">Radiohead</p><div class=\"facts\"><span class=\"meta\">" + U.meta(["Single de 1992", "3:56", "de Pablo Honey"]) + '</span><span class="cstar"><b>★ 4,4</b> <span>· 61 valoraciones</span></span></div>' +
+      '<p class="meta" style="margin-top:18px">Aparece en ' + s.albums.length + ' discos</p><div class="strip">' +
+      s.albums.slice(0, 5).map(function (a) { return '<a href="#">' + U.cover(a.cover) + "<div><b>" + U.esc(a.title) + '</b><span class="meta">' + U.meta([a.cat, a.year]) + "</span></div></a>"; }).join("") +
+      '</div><div class="acts"><a class="btn primary" href="#">Ver la canción ' + I.arrow + '</a><a class="btn line" href="#">Versiones de otros artistas</a></div></div></article></section>' +
+      '<section class="sect" aria-labelledby="s2"><h2 class="lbl" id="s2">Otras canciones llamadas «Creep» <small>más de 1.000</small></h2><div class="rows">' +
+      D.songs.slice(1).map(function (x) { return '<a class="row" href="#">' + U.portrait({ name: x.artist }) + "<span><b>" + U.esc(x.artist) + '</b><span class="sub"><span class="meta">' + U.esc(x.title) + '</span></span></span><span class="end">→</span></a>'; }).join("") +
+      '</div><div style="margin-top:22px"><button class="btn line">Cargar más</button></div></section>' +
+      "</div>" + aside("song") + "</div>"
+    );
+  }
+
+  function none() {
+    var starts = [[I.compass, "Explorar", "Colecciones, géneros y décadas"], [I.album, "Lanzamientos", "Lo que acaba de salir"], [I.user, "Listas", "Recorridos de otras personas"]];
+    return (
+      '<div class="layout"><div>' +
+      '<section class="nores" aria-labelledby="n1"><h2 id="n1" class="sr-only">Sin resultados</h2><h3>Nada coincide con <q>qzxvbnmqk</q></h3>' +
+      "<p>Buscamos en el catálogo de music-platform y en MusicBrainz, en los tres tipos:</p>" +
+      '<div class="zero"><div><b>0</b><span>álbumes</span></div><div><b>0</b><span>artistas</span></div><div><b>0</b><span>canciones</span></div></div>' +
+      '<ul class="checks"><li><span>Revisa la ortografía: si hay algo parecido en el catálogo, te lo propondremos aquí.</span></li><li><span>Prueba con menos palabras o con <code>artista - título</code>.</span></li><li><span>¿Sabes el año, el país o el sello? La <a href="#" style="color:var(--amber)">búsqueda avanzada</a> acota mejor.</span></li></ul>' +
+      '<div class="partial"><span class="tagx">Ejemplo</span><p>Cuando un tipo sale vacío y otro no: <b>no hay álbumes «kid a mnesia tour», pero sí 2 canciones.</b></p><a class="btn line" href="#">Ver canciones</a></div></section>' +
+      '<section class="sect" aria-labelledby="n2"><h2 class="lbl" id="n2">O empieza por aquí</h2><div class="starts">' +
+      starts.map(function (s) { return '<a class="start" href="#"><i>' + s[0] + "</i><span><b>" + s[1] + "</b><span>" + s[2] + "</span></span></a>"; }).join("") + "</div></section>" +
+      '</div><aside><div class="panel"><h4>Búsquedas recientes</h4><p>Solo en este navegador.</p>' +
+      [["pink", "artistas"], ["the wall", "álbumes"], ["creep", "canciones"]].map(function (r) { return '<a class="mini" href="#"><span class="disc" style="width:40px;border-radius:8px">' + I.search + "</span><span><b>" + r[0] + '</b><span class="meta">en ' + r[1] + "</span></span></a>"; }).join("") +
+      "</div></aside></div>"
+    );
+  }
+
+  function render() {
+    var st = window.currentState();
+    window.paintHeader(QUERIES[st]);
+    document.title = (st === "none" ? "Sin resultados" : "«" + QUERIES[st] + "»") + " · B · Respuesta primero";
+    document.getElementById("app").innerHTML = bar(st) + ({ artist: artists, album: albums, song: songs, none: none }[st])();
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener("hashchange", render);
+  render();
+  window.mockBar("b-respuesta.html");
+</script>
+</body>
+</html>

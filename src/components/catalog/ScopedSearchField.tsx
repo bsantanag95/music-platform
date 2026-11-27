@@ -44,8 +44,12 @@ interface ScopedSearchFieldProps {
   trailing?: ReactNode;
   /** Variante `full` con resultados debajo: la etiqueta solo para lectores de pantalla. */
   labelHidden?: boolean;
-  /** Variante `full`: `large` es el buscador del hero de Inicio (campo y botón más altos). */
-  size?: "default" | "large";
+  /**
+   * Variante `full`: `large` es el buscador del hero de Inicio (campo y botón más altos); `page`, el único buscador de
+   * /search (openspec: redesign-search-phase1, design D3): 54 px en móvil y 64 desde `sm`, texto grande y Buscar solo con
+   * la lupa por debajo de `sm`. Marca el campo con `data-search-page-field` para el atajo `/` del Header.
+   */
+  size?: "default" | "large" | "page";
   /** Lleva el foco al campo al montarse (fila de búsqueda del Header en pantallas angostas). */
   autoFocus?: boolean;
   /** Aviso de que el buscador navegó (el Header cierra su fila de búsqueda). */
@@ -282,6 +286,7 @@ export function ScopedSearchField({
 
   const compact = variant === "compact";
   const large = !compact && size === "large";
+  const page = !compact && size === "page";
   const typeLabel = t(`types.${type}`);
   const countText =
     showDropdown && loadedFor === suggestKey ? t("suggestions.count", { count: visibleSuggestions.length }) : "";
@@ -290,7 +295,7 @@ export function ScopedSearchField({
     <div
       className={`flex items-stretch rounded border bg-ink-surface transition-colors focus-within:border-amber/70 ${
         validationError ? "border-danger" : "border-ink-border"
-      } ${compact ? (wide ? "h-10 rounded-md" : "h-8") : large ? "h-14 rounded-lg" : "h-11"}`}
+      } ${compact ? (wide ? "h-10 rounded-md" : "h-8") : page ? "h-[3.375rem] rounded-xl sm:h-16" : large ? "h-14 rounded-lg" : "h-11"}`}
     >
       <button
         ref={typeButtonRef}
@@ -301,11 +306,11 @@ export function ScopedSearchField({
         aria-label={t("typeSelector.label", { type: typeLabel })}
         onClick={openTypeMenu}
         className={`flex shrink-0 items-center gap-1.5 border-r border-ink-border text-paper-muted transition-colors hover:text-paper ${
-          compact ? "px-2" : "px-3"
+          compact ? "px-2" : page ? "px-3 sm:px-4" : "px-3"
         }`}
       >
         <SearchTypeIcon type={type} className={compact ? "size-3.5" : "size-4"} />
-        <span className={`font-data text-xs text-paper ${compact ? "sr-only" : "hidden sm:inline"}`}>
+        <span className={`font-data text-paper ${page ? "text-sm" : "text-xs"} ${compact ? "sr-only" : "hidden sm:inline"}`}>
           {typeLabel}
         </span>
         <svg viewBox="0 0 24 24" className="size-3" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -325,6 +330,7 @@ export function ScopedSearchField({
         aria-activedescendant={activeIndex >= 0 ? optionId(activeIndex) : undefined}
         aria-invalid={Boolean(validationError)}
         aria-describedby={validationError ? `${inputId}-error` : undefined}
+        data-search-page-field={page ? "" : undefined}
         value={query}
         disabled={isNavigating && !compact}
         placeholder={t(`placeholder.${type}`)}
@@ -341,9 +347,11 @@ export function ScopedSearchField({
             ? wide
               ? "w-full px-3 font-body text-sm"
               : `px-2 font-data text-xs ${fluid ? "w-full" : "w-40 transition-[width] focus:w-56"}`
-            : large
-              ? "px-4 font-body text-lg"
-              : "px-3 font-body text-base"
+            : page
+              ? "px-3 font-body text-lg sm:px-5 sm:text-xl"
+              : large
+                ? "px-4 font-body text-lg"
+                : "px-3 font-body text-base"
         }`}
       />
 
@@ -392,7 +400,20 @@ export function ScopedSearchField({
         {/* Campo y botón en una fila también en móvil (openspec: refine-search-results-phase2). */}
         <div className={compact ? "" : "flex gap-2 sm:gap-3"}>
           <div className="min-w-0 flex-1">{field}</div>
-          {compact ? null : (
+          {compact ? null : page ? (
+            // Por debajo de `sm` solo la lupa; el texto queda como nombre accesible («Buscar»).
+            <button
+              type="submit"
+              disabled={isNavigating}
+              className="flex size-[3.375rem] shrink-0 items-center justify-center gap-2 rounded-xl bg-amber font-display text-base text-ink transition-colors hover:bg-amber-hover disabled:opacity-60 sm:h-16 sm:w-auto sm:px-7"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" className="sm:hidden">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <span className="sr-only sm:not-sr-only">{isNavigating ? t("submitting") : t("submit")}</span>
+            </button>
+          ) : (
             <button
               type="submit"
               disabled={isNavigating}
