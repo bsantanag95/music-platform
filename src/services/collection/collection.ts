@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { and, asc, count, desc, eq, inArray, isNull, max, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNull, lte, max, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { artist, collectionEntry, credit, releaseGroup } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
@@ -536,34 +536,59 @@ export const getCollectionPreview = cache(async function getCollectionPreview(
       .from(scoped),
   ]);
 
-  const perArtist = await Promise.all(
-    ranking.map((artistRow) =>
-      db
-        .select(entrySelection)
-        .from(collectionEntry)
-        .innerJoin(releaseGroup, eq(collectionEntry.releaseGroupId, releaseGroup.id))
-        .where(
-          and(
-            ...scope,
-            artistRow.name === null
-              ? sql`${PRIMARY_ARTIST_NAME} is null`
-              : sql`${PRIMARY_ARTIST_NAME} = ${artistRow.name}`,
-          ),
-        )
-        .orderBy(desc(collectionEntry.createdAt), desc(collectionEntry.id))
-        .limit(COLLECTION_PREVIEW_PER_ARTIST),
-    ),
-  );
+  // Las copias más recientes de los artistas del ranking, en UNA consulta (no una por artista): `row_number()` por
+  // artista principal y se quedan las `COLLECTION_PREVIEW_PER_ARTIST` primeras de cada uno. Una copia sin artista
+  // principal cuenta como el artista `null`, igual que en el ranking.
+  const names = ranking.flatMap((artistRow) => (artistRow.name === null ? [] : [artistRow.name]));
+  const withoutArtist = ranking.some((artistRow) => artistRow.name === null);
+  const rows: (EntryRow & { artistName: string | null })[] = [];
+  if (ranking.length > 0) {
+    const inRanking = or(
+      ...(names.length > 0 ? [inArray(PRIMARY_ARTIST_NAME, names)] : []),
+      ...(withoutArtist ? [sql`${PRIMARY_ARTIST_NAME} is null`] : []),
+    );
+    const ranked = db
+      .select({
+        ...entrySelection,
+        artistName: PRIMARY_ARTIST_NAME.as("artist_name"),
+        rank: sql<number>`row_number() over (
+          partition by ${PRIMARY_ARTIST_NAME}
+          order by ${collectionEntry.createdAt} desc, ${collectionEntry.id} desc
+        )`.as("preview_rank"),
+      })
+      .from(collectionEntry)
+      .innerJoin(releaseGroup, eq(collectionEntry.releaseGroupId, releaseGroup.id))
+      .where(and(...scope, inRanking))
+      .as("ranked");
+    rows.push(
+      ...(await db
+        .select({
+          id: ranked.id,
+          format: ranked.format,
+          attributes: ranked.attributes,
+          note: ranked.note,
+          audience: ranked.audience,
+          createdAt: ranked.createdAt,
+          updatedAt: ranked.updatedAt,
+          releaseGroupId: ranked.releaseGroupId,
+          albumTitle: ranked.albumTitle,
+          albumCover: ranked.albumCover,
+          albumDate: ranked.albumDate,
+          artistName: ranked.artistName,
+        })
+        .from(ranked)
+        .where(lte(ranked.rank, COLLECTION_PREVIEW_PER_ARTIST))
+        .orderBy(desc(ranked.createdAt), desc(ranked.id))),
+    );
+  }
 
   // Un solo lote para resolver los artistas de todas las copias traídas.
-  const serialized = await serializePage(perArtist.flat());
-  let offset = 0;
-  const artists = ranking.map((artistRow, index) => {
-    const size = perArtist[index]!.length;
-    const entries = serialized.slice(offset, offset + size);
-    offset += size;
-    return { name: artistRow.name, total: Number(artistRow.total), entries };
-  });
+  const serialized = await serializePage(rows);
+  const artists = ranking.map((artistRow) => ({
+    name: artistRow.name,
+    total: Number(artistRow.total),
+    entries: serialized.filter((_, index) => rows[index]!.artistName === artistRow.name),
+  }));
 
   return {
     artists,
