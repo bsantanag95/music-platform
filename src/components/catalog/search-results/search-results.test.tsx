@@ -458,7 +458,7 @@ describe("respuesta de la rápida (redesign-search-phase2)", () => {
 
   it("ficha de Álbumes solo si el primero cubre la consulta; «También» del mismo artista y título", () => {
     const album = (id: string, title: string, artistName: string) =>
-      ({ kind: "release-group", id, mbid: null, title, artistName, category: "studio", year: 1979, cached: false }) as const;
+      ({ kind: "release-group", id, mbid: null, title, artistName, category: "studio", year: 1979, cached: false, coverThumbUrl: null, coverResolved: false }) as const;
     const list = [album("pf", "The Wall", "Pink Floyd"), album("arty", "The Wall", "ARTY"), album("pf2", "The Wall", "Pink Floyd")];
     const answer = albumAnswerOf("the wall", list);
     expect(answer?.id).toBe("pf");

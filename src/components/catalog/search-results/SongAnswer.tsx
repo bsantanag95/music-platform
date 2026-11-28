@@ -6,7 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { albumHref, songHref } from "@/lib/catalog-links";
 import { formatDuration } from "@/components/album/album-format";
 import type { SongGroupResult } from "@/services/catalog/search/types";
-import { LazyCoverImage } from "../LazyCoverImage";
+import { ResultCover } from "./ResultCover";
 
 // Ficha de la canción resuelta en Canciones (openspec: redesign-search-phase2, design D4). Reemplaza en la búsqueda
 // rápida al panel «Álbumes que contienen…»: la canción tiene su ficha (título, artista, duración, carátula del primer
@@ -29,7 +29,7 @@ export function SongAnswer({ group }: { group: SongGroupResult }) {
       <article className="grid grid-cols-1 gap-5 rounded-xl border border-ink-border bg-ink-surface p-5 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-7 sm:p-6">
         <div className="w-32 sm:w-40">
           {first ? (
-            <LazyCoverImage releaseGroupId={first.id} coverLabel="" className="aspect-square w-full" />
+            <ResultCover item={first} className="aspect-square w-full" priority />
           ) : (
             <span aria-hidden className="block aspect-square w-full rounded bg-ink" />
           )}
@@ -54,7 +54,7 @@ export function SongAnswer({ group }: { group: SongGroupResult }) {
                 {visible.map((album) => (
                   <li key={album.id} className="min-w-0">
                     <Link href={albumHref(group.artistName, album.title, album.id)} className="group flex flex-col gap-1.5">
-                      <LazyCoverImage releaseGroupId={album.id} coverLabel="" className="aspect-square w-full" />
+                      <ResultCover item={album} className="aspect-square w-full" />
                       <span className="truncate font-display text-xs text-paper transition-colors group-hover:text-amber">
                         {album.title}
                       </span>

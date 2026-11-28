@@ -6,7 +6,7 @@ import { findInOtherType } from "@/services/catalog/search/other-type";
 import type { SearchType } from "@/services/catalog/search/types";
 import { searchHref } from "../search-types";
 import { SearchTypeIcon } from "../SearchTypeIcon";
-import { LazyCoverImage } from "../LazyCoverImage";
+import { ResultCover } from "./ResultCover";
 
 // «x» en otros tipos, en la columna lateral de la búsqueda rápida (openspec: redesign-search-phase2, design D5). Solo de
 // la base propia: ninguna solicitud a MusicBrainz. Se transmite en su propio `Suspense`; sin coincidencias, no se pinta.
@@ -32,7 +32,7 @@ export async function OtherTypePanel({ type, query }: { type: SearchType; query:
           ? matches.rows.map((album) => (
               <li key={album.id} className="py-2.5 first:pt-0 last:pb-0">
                 <Link href={albumHref(album.artistName, album.title, album.id)} className="group flex items-center gap-3">
-                  <LazyCoverImage releaseGroupId={album.id} coverLabel="" className="size-10 shrink-0" />
+                  <ResultCover item={album} className="size-10 shrink-0" />
                   <span className="flex min-w-0 flex-col gap-0.5">
                     <span className="truncate font-display text-sm text-paper transition-colors group-hover:text-amber">
                       {album.title}

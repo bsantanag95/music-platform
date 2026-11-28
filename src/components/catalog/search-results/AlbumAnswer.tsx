@@ -6,7 +6,7 @@ import type { AlbumSearchResult } from "@/services/catalog/search/types";
 import type { TracklistPreview } from "@/services/catalog/search/tracklist-preview";
 import { coverageLevel } from "@/services/catalog/search/coverage";
 import { normalizeSearchText } from "@/services/catalog/search/normalize";
-import { LazyCoverImage } from "../LazyCoverImage";
+import { ResultCover } from "./ResultCover";
 import { MetaLine } from "./MetaLine";
 
 // Ficha del disco buscado en Álbumes (openspec: redesign-search-phase2, design D3): carátula grande (miniatura de 250 px,
@@ -50,7 +50,7 @@ export function AlbumAnswer({
       <h3 className="sr-only">{t("search.results.albums.answerLabel")}</h3>
       <article className="grid grid-cols-1 gap-5 rounded-xl border border-ink-border bg-ink-surface p-5 sm:grid-cols-[12.5rem_minmax(0,1fr)] sm:gap-7 sm:p-6">
         <Link href={href} className="block w-40 sm:w-[12.5rem]" tabIndex={-1} aria-hidden>
-          <LazyCoverImage releaseGroupId={album.id} coverLabel="" className="aspect-square w-full" />
+          <ResultCover item={album} className="aspect-square w-full" priority />
         </Link>
         <div className="flex min-w-0 flex-col gap-3">
           <div className="flex flex-col gap-1">
