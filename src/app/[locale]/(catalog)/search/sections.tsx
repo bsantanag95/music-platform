@@ -46,8 +46,13 @@ import {
 import { RemoteFailedNotice } from "@/components/catalog/search-results/RemoteFailedNotice";
 import { FiltersDisclosure } from "@/components/catalog/search-results/FiltersDisclosure";
 import { AsidePanel, ResultsLayout } from "@/components/catalog/search-results/ResultsLayout";
-import { ArtistResults } from "@/components/catalog/search-results/ArtistResults";
+import { ArtistAnswerResults, ArtistResults } from "@/components/catalog/search-results/ArtistResults";
+import { answeredIds, pickArtistAnswer } from "@/services/catalog/search/artist-answer";
 import { AlbumList } from "@/components/catalog/search-results/AlbumResults";
+import { AlbumAnswer, albumAnswerOf, albumSiblingsOf } from "@/components/catalog/search-results/AlbumAnswer";
+import { ResultsGroupHeading } from "@/components/catalog/search-results/ResultsGroupHeading";
+import { OtherTypePanel } from "@/components/catalog/search-results/OtherTypePanel";
+import { getStoredTracklistPreview } from "@/services/catalog/search/tracklist-preview";
 import {
   SongInterpretation,
   SongResults,
@@ -159,7 +164,12 @@ export async function ArtistSection({
           aside={pills}
           advanced={advanced}
         >
-          {local.results.length > 0 ? <ArtistResults query={query} results={local.results} compactHeadings={advanced} /> : null}
+          {local.results.length === 0 ? null : advanced ? (
+            <ArtistResults query={query} results={local.results} compactHeadings />
+          ) : (
+            // Lo local ya permite elegir la respuesta con la misma regla (openspec: redesign-search-phase2).
+            <ArtistAnswerResults query={query} results={local.results} answer={pickArtistAnswer(query, local.results)} />
+          )}
         </LocalFirst>
       }
     >
@@ -207,14 +217,19 @@ async function ArtistRemote({
   const empty = response.results.length === 0;
   const filtered = Boolean(criteria.artistType);
   const highlight = advanced ? highlightFields("artist", criteria) : undefined;
-  // Géneros de la mejor coincidencia (la primera exacta), para distinguirla de sus homónimos.
+  // La respuesta de la rápida se elige por presencia en el catálogo (openspec: redesign-search-phase2, design D1); la
+  // avanzada conserva la primera exacta como mejor coincidencia.
+  const answer = advanced ? null : pickArtistAnswer(query, response.results);
   const best = response.results.find((artist) => artist.exact);
   const locale = await getLocale();
-  const bestGenres = best
-    ? (await getArtistGenres(best.id).catch(() => ({ genres: [] }))).genres
-        .slice(0, 3)
-        .map((genre) => (locale.startsWith("es") ? (genre.nameEs ?? genre.name) : genre.name))
-    : [];
+  const genresOf = async (id: string) =>
+    (await getArtistGenres(id).catch(() => ({ genres: [] }))).genres
+      .slice(0, 3)
+      .map((genre) => (locale.startsWith("es") ? (genre.nameEs ?? genre.name) : genre.name));
+  // Géneros de lo que va arriba: la mejor coincidencia de la avanzada, o la respuesta o cada opción de la elección.
+  const genreIds = answer ? [...answeredIds(answer)] : best ? [best.id] : [];
+  const genresById = Object.fromEntries(await Promise.all(genreIds.map(async (id) => [id, await genresOf(id)] as const)));
+  const bestGenres = best ? (genresById[best.id] ?? []) : [];
   // Sin resultados ni filtro, las pastillas no tienen nada que filtrar (openspec: refine-search-results-phase1).
   // Sugerencia con la lista vacía o débil: ningún nombre cubre todas las palabras de la consulta.
   const weak = !empty && response.results.every((artist) => coverageLevel(query, artist.name, []) === 4);
@@ -261,7 +276,7 @@ async function ArtistRemote({
               table={<ResultsTable type="artist" rows={response.results} highlight={highlight ?? []} />}
             />
           ) : (
-            <ArtistResults query={query} results={response.results} bestGenres={bestGenres} />
+            <ArtistAnswerResults query={query} results={response.results} answer={answer ?? { kind: "none" }} genresById={genresById} />
           )}
           {response.nextOffset !== null ? (
             <LoadMoreResults
@@ -278,7 +293,7 @@ async function ArtistRemote({
     </>
   );
   return (
-    <Layout advanced={advanced} summary={summary} aside={aside}>
+    <Layout advanced={advanced} summary={summary} aside={aside} asideAfter={<OtherTypes type="artist" query={query} />}>
       {body}
     </Layout>
   );
@@ -427,6 +442,14 @@ async function AlbumRemote({
   // «Acotar» por artista: en la lateral (en la avanzada, en su lugar de siempre).
   const refine = response.refine?.artists.length ? <RefineHint kind="album" query={query} {...response.refine} /> : null;
   const shownPills = empty && !filtered ? null : pills;
+  // Ficha del disco buscado en la rápida (openspec: redesign-search-phase2, design D3); su tracklist solo si ya está
+  // guardada: la búsqueda no ingiere.
+  const tAlbums = await getTranslations("catalog.search.results.albums");
+  const answer = advanced ? null : albumAnswerOf(query, response.results);
+  const siblings = answer ? albumSiblingsOf(answer, response.results) : [];
+  const tracks = answer ? await getStoredTracklistPreview(answer.id).catch(() => null) : null;
+  const shownAbove = new Set([answer?.id, ...siblings.map((album) => album.id)]);
+  const others = response.results.filter((album) => !shownAbove.has(album.id));
   const aside =
     shownPills || refine ? (
       <>
@@ -457,6 +480,16 @@ async function AlbumRemote({
               list={<AlbumList albums={response.results} authenticated={authenticated} highlight={highlight} />}
               table={<ResultsTable type="album" rows={response.results} highlight={highlight} />}
             />
+          ) : answer ? (
+            <div className="flex flex-col gap-8">
+              <AlbumAnswer album={answer} siblings={siblings} tracks={tracks} />
+              {others.length > 0 ? (
+                <section className="flex flex-col gap-3">
+                  <ResultsGroupHeading>{tAlbums("others")}</ResultsGroupHeading>
+                  <AlbumList albums={others} authenticated={authenticated} />
+                </section>
+              ) : null}
+            </div>
           ) : (
             <AlbumList albums={response.results} authenticated={authenticated} />
           )}
@@ -476,7 +509,7 @@ async function AlbumRemote({
     </>
   );
   return (
-    <Layout advanced={advanced} summary={summary} aside={advanced ? null : aside}>
+    <Layout advanced={advanced} summary={summary} aside={advanced ? null : aside} asideAfter={<OtherTypes type="album" query={query} />}>
       {body}
     </Layout>
   );
@@ -571,7 +604,7 @@ async function SongRemote({
     </>
   );
   return (
-    <Layout advanced={advanced} summary={summary} aside={advanced ? null : refine}>
+    <Layout advanced={advanced} summary={summary} aside={advanced ? null : refine} asideAfter={<OtherTypes type="song" query={query} />}>
       {body}
     </Layout>
   );
@@ -718,11 +751,14 @@ function Layout({
   advanced,
   summary,
   aside,
+  asideAfter,
   children,
 }: {
   advanced: boolean;
   summary: ReactNode;
   aside: ReactNode;
+  /** En el teléfono, después de los resultados (`ResultsLayout`); la avanzada no lo muestra. */
+  asideAfter?: ReactNode;
   children: ReactNode;
 }) {
   if (advanced) {
@@ -735,8 +771,17 @@ function Layout({
     );
   }
   return (
-    <ResultsLayout summary={summary} aside={aside}>
+    <ResultsLayout summary={summary} aside={aside} asideAfter={asideAfter}>
       {children}
     </ResultsLayout>
+  );
+}
+
+/** «x» en otros tipos (openspec: redesign-search-phase2, design D5): aparte, sin retrasar los resultados. */
+function OtherTypes({ type, query }: { type: SearchType; query: string }) {
+  return (
+    <Suspense fallback={null}>
+      <OtherTypePanel type={type} query={query} />
+    </Suspense>
   );
 }

@@ -245,7 +245,12 @@
         "memberOf": "Integrante de {band}",
         "memberOfMore": "Integrante de {band} y {count, plural, one {# más} other {# más}}",
         "activeSpan": "Activo {from}–{to}",
-        "activeSpanOpen": "Activo desde {from}"
+        "activeSpanOpen": "Activo desde {from}",
+        "choiceTitle": "¿Cuál «{query}» buscas?",
+        "reasonCatalog": "{count, plural, one {# disco en el catálogo} other {# discos en el catálogo}}",
+        "reasonIdentical": "Nombre idéntico a «{query}»",
+        "closestNote": "Más cercano en el catálogo",
+        "showAll": "Ver los {count}"
       },
       "albums": {
         "categoryLabel": "Categoría",
@@ -255,14 +260,22 @@
         "decade": "{decade}s",
         "community": "{average} · {count}",
         "communityTitle": "Media de {count} valoraciones",
-        "yours": "Tu nota {stars}"
+        "yours": "Tu nota {stars}",
+        "answerLabel": "Mejor respuesta",
+        "viewAlbum": "Ver el disco",
+        "tracksMore": "y {count, plural, one {# canción más} other {# canciones más}}",
+        "also": "También:",
+        "others": "Otros álbumes"
       },
       "songs": {
         "interpretation": "Interpretado como canción «{song}» de {artist}",
         "alternative": "¿Buscabas «{song}» de {artist}?",
         "otherSongs": "Otras canciones con ese título",
         "openSong": "Ver álbumes de «{song}»",
-        "noAlbums": "Todavía no conocemos los álbumes de esta versión."
+        "noAlbums": "Todavía no conocemos los álbumes de esta versión.",
+        "answerLabel": "Mejor respuesta",
+        "appearsIn": "Aparece en {count, plural, one {# disco} other {# discos}}",
+        "viewSong": "Ver la canción"
       },
       "songContext": {
         "title": "Álbumes que contienen «{song}»",
@@ -280,6 +293,10 @@
         "inCommon": "{count, plural, one {# en común} other {# en común}}",
         "private": "Perfil privado",
         "signInNotice": "<link>Inicia sesión</link> para seguir a quien encuentres."
+      },
+      "otherType": {
+        "title": "«{query}» en {type}",
+        "seeAll": "Ver {type}"
       }
     },
     "origin": {

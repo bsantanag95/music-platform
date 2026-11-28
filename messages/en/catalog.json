@@ -245,7 +245,12 @@
         "memberOf": "Member of {band}",
         "memberOfMore": "Member of {band} and {count, plural, one {# more} other {# more}}",
         "activeSpan": "Active {from}–{to}",
-        "activeSpanOpen": "Active since {from}"
+        "activeSpanOpen": "Active since {from}",
+        "choiceTitle": "Which “{query}” are you looking for?",
+        "reasonCatalog": "{count, plural, one {# record in the catalog} other {# records in the catalog}}",
+        "reasonIdentical": "Same name as “{query}”",
+        "closestNote": "Closest in the catalog",
+        "showAll": "Show all {count}"
       },
       "albums": {
         "categoryLabel": "Category",
@@ -255,14 +260,22 @@
         "decade": "{decade}s",
         "community": "{average} · {count}",
         "communityTitle": "Average of {count} ratings",
-        "yours": "Your rating {stars}"
+        "yours": "Your rating {stars}",
+        "answerLabel": "Best answer",
+        "viewAlbum": "View the record",
+        "tracksMore": "and {count, plural, one {# more song} other {# more songs}}",
+        "also": "Also:",
+        "others": "Other albums"
       },
       "songs": {
         "interpretation": "Read as the song “{song}” by {artist}",
         "alternative": "Did you mean “{song}” by {artist}?",
         "otherSongs": "Other songs with that title",
         "openSong": "See albums for “{song}”",
-        "noAlbums": "We don't know the albums for this version yet."
+        "noAlbums": "We don't know the albums for this version yet.",
+        "answerLabel": "Best answer",
+        "appearsIn": "Appears on {count, plural, one {# record} other {# records}}",
+        "viewSong": "View the song"
       },
       "songContext": {
         "title": "Albums that contain “{song}”",
@@ -280,6 +293,10 @@
         "inCommon": "{count} in common",
         "private": "Private profile",
         "signInNotice": "<link>Sign in</link> to follow the people you find."
+      },
+      "otherType": {
+        "title": "“{query}” in {type}",
+        "seeAll": "View {type}"
       }
     },
     "origin": {

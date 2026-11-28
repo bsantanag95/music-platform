@@ -42,6 +42,9 @@ vi.mock("@/services/social/profiles", () => ({
   getProfileByUsername: mocks.getProfileByUsername,
 }));
 vi.mock("@/services/auth/authorization", () => ({ getCurrentUser: mocks.getCurrentUser }));
+// Lecturas locales de la fase 2 (redesign-search-phase2): sin BD en estos tests.
+vi.mock("@/services/catalog/search/tracklist-preview", () => ({ getStoredTracklistPreview: vi.fn(async () => null) }));
+vi.mock("@/components/catalog/search-results/OtherTypePanel", () => ({ OtherTypePanel: () => null }));
 
 const { ArtistSection, AlbumSection, UserSection } = await import("./sections");
 
@@ -233,6 +236,48 @@ describe("estado vacío (refine-search-results-phase1)", () => {
     expect(advanced.props).toMatchObject({ advanced: true, aside: null });
     expect(named(flatten(advanced), "FilterPills")).toHaveLength(0);
     expect(named(flatten(advanced), "RefineHint")).toHaveLength(1);
+  });
+
+  it("rápida: la respuesta de Artistas sale de pickArtistAnswer y la lateral lleva «x en otros tipos» (redesign-search-phase2)", async () => {
+    mocks.searchArtists.mockResolvedValue(
+      response([
+        artist({ id: "pink-jp", name: "PINK", exact: true }),
+        // Dos homónimos: con uno solo, la página redirigiría a su perfil.
+        artist({ id: "pink-de", name: "Pink", exact: true }),
+        artist({ id: "pf", name: "Pink Floyd", discCount: 233, cached: true }),
+        artist({ id: "lpd", name: "The Legendary Pink Dots", discCount: 175, cached: true }),
+      ]),
+    );
+
+    const quick = (await streamed(await ArtistSection({ query: "pink", all: false }))) as ReactElement<{
+      asideAfter: unknown;
+    }>;
+    expect(quick.props.asideAfter).toBeTruthy();
+    const results = named(flatten(quick), "ArtistAnswerResults")[0];
+    expect((results?.props as { answer: { kind: string; candidates: { artist: { id: string } }[] } }).answer).toMatchObject({
+      kind: "choice",
+      candidates: [{ artist: { id: "pf" } }, { artist: { id: "lpd" } }, { artist: { id: "pink-jp" } }],
+    });
+
+    const advanced = flatten(await streamed(await ArtistSection({ query: "pink", all: false, advanced: true })));
+    expect(named(advanced, "ArtistAnswerResults")).toHaveLength(0);
+  });
+
+  it("rápida: ficha del disco buscado con sus «También» fuera de la lista (redesign-search-phase2)", async () => {
+    const album = (id: string, artistName: string, year: number) => ({
+      kind: "release-group", id, mbid: null, title: "The Wall", artistName, category: "studio", year, cached: false,
+    });
+    mocks.searchAlbums.mockResolvedValue({
+      ...emptyAlbums,
+      results: [album("pf", "Pink Floyd", 1979), album("arty", "ARTY", 2011), album("pf-single", "Pink Floyd", 2023)],
+    });
+
+    const tree = flatten(await streamed(await AlbumSection({ query: "the wall" })));
+    const answer = named(tree, "AlbumAnswer")[0]?.props as { album: { id: string }; siblings: { id: string }[] };
+    expect(answer.album.id).toBe("pf");
+    expect(answer.siblings.map((album) => album.id)).toEqual(["pf-single"]);
+    const lists = named(tree, "AlbumList").map((el) => (el.props as { albums: { id: string }[] }).albums.map((a) => a.id));
+    expect(lists).toContainEqual(["arty"]);
   });
 
   it("la cifra no es menor que la lista: total 0 con resultados locales (redesign-search-phase1)", async () => {

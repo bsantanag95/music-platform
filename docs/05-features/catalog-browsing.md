@@ -81,9 +81,17 @@ abiertos) y «Acotar» por artista. Por debajo de `lg`, una sola columna con ese
 tras "Filtros · N"). Los grupos («Otros artistas llamados «x»», «Más resultados», «Otras canciones con este título») llevan
 un encabezado de sección (`ResultsGroupHeading`, `h3`). La cifra nunca es menor que lo listado (`displayCount`: con
 «radiohed» MusicBrainz informa 0 y la lista trae artistas del catálogo), y la marca de lo ya guardado dice «en el
-catálogo», no «en tu catálogo». `/search/advanced` comparte las secciones y no cambia. Pendiente: fase 2 (la respuesta:
-«¿Cuál «x» buscas?», fichas de álbum y canción, «x en otros tipos» solo del catálogo) y fase 3 (rejilla de carátulas y nuevo
-estado sin resultados).
+catálogo», no «en tu catálogo». `/search/advanced` comparte las secciones y no cambia. Fase 2 (la respuesta): en Artistas, `pickArtistAnswer`
+elige arriba al homónimo exacto con más discos en el catálogo; si ninguno tiene discos pero hay artistas del catálogo (≥ 2
+discos) cuyo nombre contiene todas las palabras, pregunta «¿Cuál «x» buscas?» con los dos de más discos y el primer homónimo
+(«Nombre idéntico»); sin datos del catálogo, el primer exacto como antes. Los alias no cuentan (P!nk no entra con «pink»).
+Los homónimos se pliegan tras los tres primeros. En Álbumes, si el primero cubre la consulta, una ficha con carátula,
+datos, media, las primeras canciones **solo si la tracklist ya está guardada** (`getStoredTracklistPreview`, sin ingerir)
+y «También» del mismo artista y título; el resto va en «Otros álbumes». En Canciones, la ficha de la canción resuelta
+(duración, tira de discos, «Ver la canción») reemplaza al panel de álbumes. La columna lateral suma «x en otros tipos»
+(Artistas → álbumes, Álbumes → canciones, Canciones → álbumes), solo de la base propia, en su propio `Suspense`; en el
+teléfono va después de los resultados. La avanzada no cambia. Pendiente: fase 3 (rejilla de carátulas y nuevo estado sin
+resultados).
 
 **Búsqueda avanzada (cambios `add-advanced-search-phase1` y `redesign-advanced-search`).** Página
 propia `/search/advanced`, al estilo de Metal Archives: pestañas **Artistas · Álbumes · Canciones**
