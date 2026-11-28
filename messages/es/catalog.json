@@ -429,7 +429,8 @@
         "period": "Época",
         "release": "Lanzamiento",
         "catalog": "Del catálogo",
-        "catalogHint": "Solo buscan en lo que ya está en el catálogo."
+        "catalogHint": "Solo buscan en lo que ya está en el catálogo.",
+        "catalogTag": "solo lo ya cargado"
       },
       "criteriaCount": "{count, plural, =0 {Ningún criterio} one {# criterio} other {# criterios}}",
       "errors": {

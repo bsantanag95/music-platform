@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Búsqueda avanzada · A · Ficha</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="search.css">
+<link rel="stylesheet" href="adv.css">
+<style>
+  /* A · Ficha: el formulario como una ficha de catálogo al estilo Metal Archives (etiqueta a la izquierda, control a la
+     derecha, todo a la vista) y los resultados al lado. Cambiar un dato y ver el efecto, sin recoger nada. */
+  .grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(28px, 4vw, 64px); align-items: start; margin-top: 24px; }
+  .ficha { position: sticky; top: 88px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+  .ficha .tabs-in { padding: 14px 14px 0; }
+  .fbody { padding: 8px 20px 0; max-height: calc(100vh - 230px); overflow: auto; }
+  .grp { padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .grp:last-child { border-bottom: 0; }
+  .grp h3 { font: 500 11.5px var(--data); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 10px; display: flex; gap: 8px; align-items: center; }
+  .row { display: grid; grid-template-columns: 132px minmax(0, 1fr); gap: 12px; align-items: start; padding: 6px 0; }
+  .row > label { font-family: var(--display); font-size: 14.5px; padding-top: 11px; }
+  .row .ctl { display: flex; flex-direction: column; gap: 6px; }
+  .row .ctl small { font: 500 12px var(--data); color: var(--muted); }
+  .inp.val, .sel.val { border-color: var(--amber); }
+  .fbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; border-top: 1px solid var(--border); background: var(--ink-2); border-radius: 0 0 16px 16px; }
+  .fbar .n { font: 500 13px var(--data); color: var(--muted); }
+  .fbar .n b { color: var(--paper); font-weight: 500; }
+  .fbar .acts { display: flex; gap: 8px; align-items: center; }
+  .fbar .clear { font: 500 13px var(--data); color: var(--muted); padding: 0 8px; }
+  .help { margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .help div { padding: 14px 16px; border-radius: 12px; border: 1px dashed var(--border-2); font-size: 15px; color: var(--muted); }
+  .help b { display: block; color: var(--paper); font-family: var(--display); font-weight: 500; margin-bottom: 4px; }
+  .mchips { display: none; }
+  @media (max-width: 980px) {
+    .grid { grid-template-columns: minmax(0, 1fr); }
+    .ficha { position: static; }
+    .fbody { max-height: none; }
+    .fbar { position: sticky; bottom: 0; }
+    body.st-results .ficha { display: none; }
+    body.st-results .mchips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 12px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+    .help { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 520px) {
+    .row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+    .row > label { padding-top: 0; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header"></header>
+<main class="wrap page">
+  <p class="crumbs">Inicio / Búsqueda / <b>Avanzada</b></p>
+  <h1 class="pt">Búsqueda avanzada</h1>
+  <p class="lede">Combina nombre, origen, época y lo que ya sabe el catálogo. Con un dato basta.</p>
+  <div class="grid">
+    <div>
+      <section class="ficha" aria-label="Criterios"></section>
+      <div class="mchips"></div>
+    </div>
+    <div class="side"></div>
+  </div>
+</main>
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script src="adv.js"></script>
+<script>
+(function () {
+  var I = window.ICON, D = window.ADV;
+  var x = '<button aria-label="Quitar">×</button>';
+  function row(label, ctl, hint) {
+    return '<div class="row"><label>' + label + '</label><div class="ctl">' + ctl + (hint ? "<small>" + hint + "</small>" : "") + "</div></div>";
+  }
+  function inp(v, ph) { return '<span class="inp' + (v ? " val" : " ph") + '">' + (v || ph || "") + "</span>"; }
+  function sel(v, ph) { return '<span class="sel' + (v ? " val" : " ph") + '">' + (v || ph) + I.chevron + "</span>"; }
+  function pair(a, b) { return '<div class="pair">' + inp(a, "Desde") + inp(b, "Hasta") + "</div>"; }
+
+  function artistForm(f) {
+    return '<div class="grp"><h3>Identidad</h3>' +
+      row("Nombre", inp("", "") + '<span class="chk"><i></i>Coincidencia exacta</span>') +
+      row("Tipo", '<div class="seg"><a aria-pressed="' + (!f) + '">Todos</a><a aria-pressed="' + (!!f) + '">Grupo</a><a>Solista</a><a>Otras personas</a></div>') + "</div>" +
+      '<div class="grp"><h3>Origen</h3>' +
+      row("País", sel(f ? "Chile" : "", "Cualquier país")) +
+      row("Ciudad o región", inp("", ""), "Donde nació la persona o se formó el grupo") + "</div>" +
+      '<div class="grp"><h3>Época</h3>' +
+      row("Formación", pair(f ? "1980" : "", f ? "1989" : ""), "Año en que se formó el grupo") +
+      row("Estado", '<div class="seg"><a aria-pressed="true">Cualquiera</a><a>En actividad</a><a>Separado</a></div>') + "</div>" +
+      '<div class="grp"><h3>Del catálogo <span class="tag-cat">solo lo ya cargado</span></h3>' +
+      row("Activo entre", pair("", ""), "Del primer al último disco propio") +
+      row("Género", inp("", "Buscar un género"), "Incluye sus subgéneros") +
+      row("Premios", sel("", "Cualquiera") + '<span class="chk"><i></i>Solo ganadores</span>') + "</div>";
+  }
+  function albumForm() {
+    return '<div class="grp"><h3>Identidad</h3>' +
+      row("Título", inp("", "") + '<span class="chk"><i></i>Coincidencia exacta</span>') +
+      row("Artista", inp("", "") + '<span class="chk"><i></i>Coincidencia exacta</span>') + "</div>" +
+      '<div class="grp"><h3>Lanzamiento</h3>' +
+      row("Año", pair("", "")) +
+      row("Tipo", '<div class="seg"><a>De estudio</a><a>Singles y EPs</a><a>Compilaciones</a><a>Directos y otros</a></div>') + "</div>" +
+      '<div class="grp"><h3>Del catálogo <span class="tag-cat">solo lo ya cargado</span></h3>' +
+      row("Género", inp("", "Buscar un género"), "Incluye sus subgéneros") +
+      row("País del artista", sel("", "Cualquier país")) +
+      row("Premios", sel("", "Cualquiera") + '<span class="chk"><i></i>Solo ganadores</span>') + "</div>";
+  }
+  function ficha(st) {
+    var filled = st === "results";
+    return '<div class="tabs-in">' + window.advTabs(st === "album" ? "album" : "artist") + "</div>" +
+      '<div class="fbody">' + (st === "album" ? albumForm() : artistForm(filled)) + "</div>" +
+      '<div class="fbar"><span class="n">' + (filled ? "<b>3 criterios</b> · 53 grupos" : "Ningún criterio todavía") + '</span><span class="acts">' +
+      (filled ? '<a class="clear" href="#form">Limpiar</a>' : "") + '<a class="btn primary" href="#results">' + I.search + "Buscar</a></span></div>";
+  }
+  function side(st) {
+    if (st === "results") {
+      return '<div class="rhead"><h2>53 grupos <small>Chile · formados en los 80</small></h2><span class="viewtog"><span class="on">Lista</span><span>Tabla</span></span></div>' +
+        '<div class="rows">' + window.advRows(12) + '</div><div style="margin-top:20px"><a class="btn line" href="#">Cargar más</a></div>';
+    }
+    return '<h2 class="lbl">Prueba con</h2><div class="examples" style="grid-template-columns:1fr">' +
+      (st === "album"
+        ? [["Directos de 1994", "Año 1994 · Directos y otros"], ["Pink Floyd en estudio, años 70", "Artista: Pink Floyd · 1970–1979 · De estudio"], ["Singles y EPs de Radiohead", "Artista: Radiohead (exacto) · Singles y EPs"]]
+        : window.advExamples).map(function (e) { return '<a class="ex" href="#results"><b>' + e[0] + "</b><span>" + e[1] + "</span></a>"; }).join("") +
+      '</div><div class="help"><div><b>MusicBrainz</b>Nombre, tipo, país, ciudad, época y estado buscan en toda la base abierta.</div><div><b>Del catálogo</b>Actividad, género y premios solo miran lo que ya está cargado aquí.</div></div>';
+  }
+  function chips() {
+    return '<span class="crit">Grupo' + x + '</span><span class="crit">Chile' + x + '</span><span class="crit">Formación 1980–1989' + x + '</span><a class="btn line" href="#form" style="height:34px;margin-left:auto">Editar</a>';
+  }
+  function render() {
+    var st = window.advState();
+    document.body.className = "st-" + st;
+    document.querySelector(".ficha").innerHTML = ficha(st);
+    document.querySelector(".mchips").innerHTML = chips();
+    document.querySelector(".side").innerHTML = side(st);
+  }
+  window.paintHeader();
+  render();
+  window.addEventListener("hashchange", render);
+  window.advMockBar("a-ficha.html");
+})();
+</script>
+</body>
+</html>

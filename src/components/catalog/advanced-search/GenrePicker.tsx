@@ -148,7 +148,7 @@ export function GenrePicker({
           ) : null}
         </div>
       )}
-      <span className="font-data text-[11px] text-paper-muted">{t("genreHint")}</span>
+      <span className="font-data text-xs text-paper-muted">{t("genreHint")}</span>
     </div>
   );
 }

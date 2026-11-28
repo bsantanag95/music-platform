@@ -1908,6 +1908,7 @@
     "catalog.search.advanced.group",
     "catalog.search.advanced.groups.catalog",
     "catalog.search.advanced.groups.catalogHint",
+    "catalog.search.advanced.groups.catalogTag",
     "catalog.search.advanced.groups.identity",
     "catalog.search.advanced.groups.origin",
     "catalog.search.advanced.groups.period",

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Búsqueda avanzada · Auditoría y tres direcciones</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:wght@400..600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="search.css">
+<style>
+  .doc { max-width: 1100px; margin: 0 auto; padding: 48px var(--pad) 120px; }
+  h1 { font-family: var(--display); font-size: clamp(32px, 4vw, 48px); letter-spacing: -.03em; line-height: 1.05; }
+  h2 { font-family: var(--display); font-size: 26px; margin-top: 48px; letter-spacing: -.02em; }
+  p, li { color: var(--muted); font-size: 16px; }
+  ul { list-style: disc; padding-left: 20px; margin-top: 12px; }
+  li + li { margin-top: 6px; }
+  b { color: var(--paper); font-weight: 500; }
+  .props { display: grid; gap: 16px; margin-top: 16px; }
+  .prop { display: grid; grid-template-columns: 1.1fr 1fr; gap: 20px; border: 1px solid var(--border); border-radius: 14px; padding: 18px; background: var(--ink-2); }
+  .prop img { width: 100%; border-radius: 8px; border: 1px solid var(--border); }
+  .prop h3 { font-family: var(--display); font-size: 21px; }
+  .rec { margin-top: 20px; padding: 24px; border-radius: 16px; background: var(--surface); border: 1px solid var(--border-2); }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 15px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  th { font: 500 12px var(--data); color: var(--muted); }
+  @media (max-width: 800px) { .prop { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main class="doc">
+  <h1>Búsqueda avanzada: auditoría y tres direcciones</h1>
+  <p style="margin-top:12px">Revisión de <b>/search/advanced</b> sin sesión (28 nov 2026, main 94b31f12), a 1440 y 390 px, con las tres pestañas y una búsqueda real («grupos de Chile formados entre 1980 y 1989», 53 resultados).</p>
+
+  <h2>Problemas detectados</h2>
+  <ul>
+    <li><b>Marco estrecho y título pequeño:</b> la página usa 1024 px (<code>max-w-5xl</code>) y un h1 de 24 px, mientras que /search ya usa 88rem y títulos de página grandes.</li>
+    <li><b>Formulario largo:</b> Artistas tiene 13 campos en cuatro grupos. En el teléfono mide 1.297 px y el último grupo empieza a más de 1.000 px. En escritorio, el botón Buscar queda al pie de una tarjeta de 830 px.</li>
+    <li><b>Lo que cambia el resultado va en letra mínima:</b> «Del catálogo: solo buscan en lo que ya está» convierte la búsqueda en solo-catálogo, pero se dice en monoespaciada de 11 px. Hay 10 textos de menos de 12 px.</li>
+    <li><b>Formulario y resultados no conviven:</b> tras buscar, el formulario se recoge en una barra de criterios y para cambiar un dato hay que reabrirlo («Editar búsqueda»).</li>
+    <li><b>Selects nativos para elecciones cortas:</b> Tipo y Estado tienen 3–4 opciones dentro de un desplegable; como pastillas se verían de un vistazo.</li>
+    <li><b>Lo que funciona:</b> los grupos con nombre, los ejemplos «Prueba con», la barra de criterios, los datos filtrados destacados en ámbar, Lista/Tabla y la barra de envío fija en el teléfono.</li>
+  </ul>
+
+  <h2>Las tres propuestas</h2>
+  <div class="props">
+    <div class="prop"><a href="a-ficha.html#results"><img src="shots/a-results.png" alt="A · Ficha"></a><div><h3>A · Ficha</h3><p>Formulario estilo Metal Archives, con la etiqueta a la izquierda y todo a la vista, fijo a la izquierda; los resultados quedan al lado. Pastillas para Tipo y Estado, y «solo lo ya cargado» como etiqueta visible.</p><ul><li><b>A favor:</b> se cambia un dato y se ve el efecto sin recoger nada; denso, para quien busca mucho.</li><li><b>En contra:</b> en el teléfono vuelve a ser un formulario largo (2.272 px vacío); la columna fija necesita su propio desplazamiento.</li></ul></div></div>
+    <div class="prop"><a href="b-frase.html#form"><img src="shots/b-form.png" alt="B · Frase"></a><div><h3>B · Frase</h3><p>La búsqueda se escribe como una frase con huecos («Busco grupos de Chile formados entre 1980 y 1989») y el resto de criterios se suma con «+ Añadir».</p><ul><li><b>A favor:</b> la más amable y la más corta sin criterios; se lee como lo que se pide.</li><li><b>En contra:</b> con muchos criterios la frase se alarga; cada hueco necesita su propio desplegable (más trabajo de accesibilidad); en el teléfono el primer resultado baja a 858 px.</li></ul></div></div>
+    <div class="prop"><a href="c-facetas.html#results"><img src="shots/c-results.png" alt="C · Facetas"></a><div><h3>C · Facetas</h3><p>Primero los resultados: filtros en una columna izquierda por secciones plegables (casillas para Tipo y País, rango con atajos de década), el nombre arriba de la lista y criterios aplicados como pastillas. En el teléfono, «Filtros · 3» abre una hoja inferior.</p><ul><li><b>A favor:</b> el patrón más conocido (tiendas, Discogs); el primer resultado sale a 484 px en el teléfono; encaja con la columna lateral nueva de /search.</li><li><b>En contra:</b> MusicBrainz no da recuentos por faceta, así que los filtros no muestran cifras; requiere «Aplicar» (cada cambio es una búsqueda).</li></ul></div></div>
+  </div>
+
+  <table>
+    <thead><tr><th>Criterio</th><th>A · Ficha</th><th>B · Frase</th><th>C · Facetas</th></tr></thead>
+    <tbody>
+      <tr><td>Primer resultado en el teléfono</td><td>436 px (formulario recogido)</td><td>858 px</td><td>484 px</td></tr>
+      <tr><td>Cambiar un criterio con resultados a la vista</td><td>Sí</td><td>Sí (la frase)</td><td>Sí</td></tr>
+      <tr><td>Coherencia con /search rediseñada</td><td>Media</td><td>Baja</td><td>Alta</td></tr>
+      <tr><td>Coste de implementación</td><td>Medio</td><td>Alto</td><td>Medio</td></tr>
+    </tbody>
+  </table>
+
+  <div class="rec">
+    <h2 style="margin-top:0">Recomendación: C · Facetas, con las pastillas de A</h2>
+    <p>C resuelve lo principal: los resultados se ven desde el principio, cada criterio se cambia sin reabrir un formulario y el teléfono gana una hoja de filtros en lugar de 1.300 px de campos. Además repite el patrón de columna lateral que /search ya usa. De A tomaría las pastillas para Tipo, Estado y Tipo de lanzamiento, y la etiqueta visible «solo lo ya cargado». De B, la idea de mostrar los criterios aplicados como texto legible encima de la lista.</p>
+    <p style="margin-top:10px">Mientras tanto se pueden hacer, elija la dirección que elija: marco de 88rem y título de página, sustituir los selects cortos por pastillas, y subir el aviso «Del catálogo» a una etiqueta visible.</p>
+  </div>
+  <p style="margin-top:28px;font-size:14px">Mockups estáticos; los resultados son reales (API local + MusicBrainz, 28 nov 2026). Los atajos de década («80s») son una propuesta: hoy solo hay rango de años.</p>
+</main>
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script src="adv.js"></script>
+<script>window.advMockBar("index.html");</script>
+</body>
+</html>
