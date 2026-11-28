@@ -252,6 +252,8 @@ export const SearchSuggestionSchema = z.discriminatedUnion("kind", [
     artistName: z.string().nullable(),
     year: z.number().int().nullable(),
     bridge: z.boolean(),
+    coverThumbUrl: z.string().nullable(),
+    coverResolved: z.boolean(),
   }),
   z.object({
     kind: z.literal("song"),

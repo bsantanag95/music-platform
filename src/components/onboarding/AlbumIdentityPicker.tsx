@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { LazyCoverImage } from "@/components/catalog/LazyCoverImage";
+import { ReleaseGroupCover } from "@/components/catalog/ReleaseGroupCover";
 import { useTargetSearch } from "@/components/quick-actions/use-target-search";
 import { isRecord } from "@/lib/session-state";
 import { ONBOARDING_MAX_ALBUMS, type Audience } from "@/services/social/types";
@@ -15,6 +15,9 @@ export interface PickedAlbum {
   title: string;
   artistName: string | null;
   year: number | null;
+  /** Carátula que trajo el candidato elegido; ausente en un valor guardado antes (se resuelve aparte). */
+  coverThumbUrl?: string | null;
+  coverResolved?: boolean;
 }
 
 /** Forma de un álbum elegido guardado en `sessionStorage` (un valor ajeno se descarta). */
@@ -24,7 +27,9 @@ export function isPickedAlbum(value: unknown): value is PickedAlbum {
     typeof value.id === "string" &&
     typeof value.title === "string" &&
     (value.artistName === null || typeof value.artistName === "string") &&
-    (value.year === null || typeof value.year === "number")
+    (value.year === null || typeof value.year === "number") &&
+    (value.coverThumbUrl === undefined || value.coverThumbUrl === null || typeof value.coverThumbUrl === "string") &&
+    (value.coverResolved === undefined || typeof value.coverResolved === "boolean")
   );
 }
 
@@ -52,7 +57,17 @@ export function AlbumIdentityPicker({ picked, onChange, audience }: AlbumIdentit
   const albums = search.candidates.filter((c) => !pickedIds.has(c.id));
 
   function pick(album: (typeof albums)[number]) {
-    onChange([...picked, { id: album.id, title: album.title, artistName: album.subtitle, year: album.year }]);
+    onChange([
+      ...picked,
+      {
+        id: album.id,
+        title: album.title,
+        artistName: album.subtitle,
+        year: album.year,
+        coverThumbUrl: album.coverThumbUrl,
+        coverResolved: album.coverResolved,
+      },
+    ]);
     // El resultado elegido desaparece de la lista y el foco no debe caer al <body>: se limpia el
     // texto y se vuelve al campo para sumar el siguiente.
     setQuery("");
@@ -73,7 +88,14 @@ export function AlbumIdentityPicker({ picked, onChange, audience }: AlbumIdentit
               key={album.id}
               className="flex items-center gap-3 rounded border border-ink-border bg-ink p-2"
             >
-              <span aria-hidden="true" className="contents"><LazyCoverImage releaseGroupId={album.id} coverLabel="" className="size-10" /></span>
+              <span aria-hidden="true" className="contents">
+                <ReleaseGroupCover
+                  releaseGroupId={album.id}
+                  coverThumbUrl={album.coverThumbUrl}
+                  coverResolved={album.coverResolved}
+                  className="size-10"
+                />
+              </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-display text-sm text-paper">{album.title}</span>
                 <span className="block truncate font-data text-xs text-paper-muted">
@@ -137,7 +159,14 @@ export function AlbumIdentityPicker({ picked, onChange, audience }: AlbumIdentit
                       onClick={() => pick(album)}
                       className="flex min-h-11 w-full items-center gap-2 rounded border border-ink-border bg-ink px-2 py-1.5 text-left transition-colors hover:border-amber"
                     >
-                      <span aria-hidden="true" className="contents"><LazyCoverImage releaseGroupId={album.id} coverLabel="" className="size-8 shrink-0" /></span>
+                      <span aria-hidden="true" className="contents">
+                        <ReleaseGroupCover
+                          releaseGroupId={album.id}
+                          coverThumbUrl={album.coverThumbUrl}
+                          coverResolved={album.coverResolved}
+                          className="size-8 shrink-0"
+                        />
+                      </span>
                       <span className="min-w-0">
                         <span className="block truncate font-body text-sm text-paper">{album.title}</span>
                         {detail && (
