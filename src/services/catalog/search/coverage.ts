@@ -73,6 +73,27 @@ export function restAfterEdgeArtist(queryTokens: string[], artistName: string): 
   return null;
 }
 
+/**
+ * Artistas que ocupan un extremo de la consulta, agrupados por el resto que dejan (el título a buscar). Muchos
+ * homónimos («Pink», «Soda») dejan el mismo resto: se consulta una vez por resto distinto, no una por artista (un N+1
+ * que crece con los homónimos). Respeta el orden de `artists` dentro de cada grupo y el de primera aparición entre grupos.
+ */
+export function groupEdgeArtistsByRest(
+  queryTokens: string[],
+  artists: readonly { id: string; name: string }[],
+): Map<string, string[]> {
+  const idsByRest = new Map<string, string[]>();
+  for (const artist of artists) {
+    const rest = restAfterEdgeArtist(queryTokens, artist.name);
+    if (!rest) continue;
+    const key = rest.join(" ");
+    const ids = idsByRest.get(key);
+    if (ids) ids.push(artist.id);
+    else idsByRest.set(key, [artist.id]);
+  }
+  return idsByRest;
+}
+
 export function coverageLevel(
   query: string,
   title: string,

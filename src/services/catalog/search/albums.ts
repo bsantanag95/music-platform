@@ -29,7 +29,7 @@ import {
   type AlbumCatalogFilters,
   type ResolvedCatalogFields,
 } from "./catalog-fields";
-import { coverageLevel, edgeSplits, restAfterEdgeArtist } from "./coverage";
+import { coverageLevel, edgeSplits, groupEdgeArtistsByRest } from "./coverage";
 import {
   findArtistsByKeys,
   matchLocalReleaseGroups,
@@ -112,15 +112,11 @@ async function localCandidates(text: string, filters: ReleaseGroupQueryOptions) 
   );
   const keys = [...new Set(edgeSplits(tokens).map((split) => split.artistTokens.join(" ")))];
   const edgeArtists = await findArtistsByKeys(keys);
+  // Una consulta por resto de título distinto, no una por artista: «pink floyd» encuentra decenas de artistas «Pink»
+  // y «Floyd» que dejan el mismo resto (mismo criterio que las sugerencias, `suggest.ts`).
   const byArtist: ReleaseGroupRow[] = [];
-  for (const edgeArtist of edgeArtists) {
-    const rest = restAfterEdgeArtist(tokens, edgeArtist.name);
-    if (!rest) continue;
-    const matches = await releaseGroupsByArtistsAndTitle([edgeArtist.id], rest.join(" "), {
-      limit: LOCAL_LIMIT,
-      mode: "fuzzy",
-      ...filters,
-    });
+  for (const [rest, ids] of groupEdgeArtistsByRest(tokens, edgeArtists)) {
+    const matches = await releaseGroupsByArtistsAndTitle(ids, rest, { limit: LOCAL_LIMIT, mode: "fuzzy", ...filters });
     byArtist.push(...matches.map((match) => match.row));
   }
 

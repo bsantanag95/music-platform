@@ -100,6 +100,30 @@ nadie imaginó al escribir el código. Viven junto al código como `*.property.t
   `planCategoryUpdates`. Una propiedad nueva debería pasar por la misma prueba antes de fiarse de ella.
 - **Exploración (2026-11-18):** 3 semillas distintas × 3000–5000 corridas por propiedad sin ningún contraejemplo: las funciones cubiertas se comportan como se esperaba.
 
+## Contador de consultas por petición
+
+`src/db/query-counter.ts` cuenta las consultas a Postgres de cada petición y detecta los N+1: la misma sentencia repetida
+muchas veces en una sola petición, en vez de una consulta por lote. Va enganchado como `logger` del cliente de Drizzle
+(`src/db/index.ts`), que avisa cada consulta en el contexto asíncrono de quien la hace.
+
+- **Modo** (`DB_QUERY_COUNTER`): `warn` por defecto fuera de producción, `off` en producción (sin logger: no cuesta nada),
+  `all` para una línea por petición. Un valor desconocido falla al arrancar.
+- **Aviso** (`console.warn`, al terminar la petición vía `after`): si una sentencia se repite **5** veces o más, o si la
+  petición pasa de **50** consultas. Ejemplo: `[db] /[locale]/search — 33 consultas; posible N+1:` y debajo
+  `12× select "release_group"."id", … from "credit" …`. Dos sentencias son "la misma" si solo cambian sus parámetros; un `IN ($1, …)` o un
+  `VALUES` de cualquier tamaño cuentan como una sola forma.
+- **Qué es una petición**: el store de trabajo que Next abre por petición (`workAsyncStorage`; páginas, layouts, metadata,
+  route handlers y server actions), y la ruta del informe es su patrón (`/[locale]/artist/[id]`). Es una API interna
+  de Next (`next/dist/server/app-render/work-async-storage.external`): si una versión nueva la cambia, el test
+  `query-counter.test.ts` no lo detecta (la mockea), pero `typecheck` sí, porque la importa con su tipo.
+- **Fuera de Next** (scripts, smoke tests contra una BD de scratch): `countQueries(fn)` devuelve `{ result, summary }` con el
+  total y las sentencias repetidas, para medir o fijar en un smoke test cuántas consultas hace un flujo. Cuenta con el
+  contador encendido (`NODE_ENV` distinto de `production` o `DB_QUERY_COUNTER` puesto).
+- Los tests unitarios mockean `@/db`, así que no pasan por el contador: lo que mide es la app real (`next dev`) o un
+  script con `countQueries`.
+- Una sentencia repetida no siempre es un error: un bucle con tope y en segundo plano (sincronizaciones, `after`) puede ser
+  deliberado. El aviso pide mirarlo, no lo bloquea.
+
 ## CI
 
 `.github/workflows/ci.yml` tiene tres jobs independientes:

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { coverageLevel, edgeSplits, restAfterEdgeArtist } from "./coverage";
+import { coverageLevel, edgeSplits, groupEdgeArtistsByRest, restAfterEdgeArtist } from "./coverage";
 import { tokenize } from "./normalize";
 
 describe("edgeSplits", () => {
@@ -34,6 +34,26 @@ describe("restAfterEdgeArtist", () => {
   it("ignora el artista en medio o si ocupa toda la consulta", () => {
     expect(restAfterEdgeArtist(query, "Kiss")).toBeNull();
     expect(restAfterEdgeArtist(tokenize("kiss"), "KISS")).toBeNull();
+  });
+});
+
+describe("groupEdgeArtistsByRest", () => {
+  it("los homónimos que dejan el mismo resto van en un solo grupo, en su orden", () => {
+    const artists = [
+      { id: "pink-1", name: "Pink" },
+      { id: "floyd-1", name: "Floyd" },
+      { id: "pink-2", name: "P!nk" },
+      { id: "pink-3", name: "pink" },
+      { id: "otro", name: "Queen" },
+    ];
+    expect([...groupEdgeArtistsByRest(tokenize("pink floyd"), artists)]).toEqual([
+      ["floyd", ["pink-1", "pink-3"]],
+      ["pink", ["floyd-1"]],
+    ]);
+  });
+
+  it("un artista que no ocupa un extremo no entra", () => {
+    expect(groupEdgeArtistsByRest(tokenize("dokken kiss of death"), [{ id: "kiss", name: "Kiss" }]).size).toBe(0);
   });
 });
 
