@@ -179,6 +179,14 @@ deja de repetir el país, y las canciones muestran su duración. En pantallas an
 por columna porque MusicBrainz no ordena); Lista es la vista por defecto, la elección se recuerda en
 el navegador y "Cargar más" la respeta. En el teléfono siempre se ve la lista.
 
+**Rediseño de la búsqueda avanzada (cambios `redesign-advanced-search-phase1` a `phase3`, auditoría y mockups en
+`mockups/advanced-search-2026-11/`, dirección «C · Facetas» con las pastillas de «A · Ficha»).** Fase 1: marco de 88rem
+con el contenido a su ancho de lectura, título de página grande y pestañas en pastillas como en `/search`. Tipo de artista y
+Estado pasan de desplegable a pastillas de radio (Cualquiera = valor vacío, que se omite o el servidor ignora) y Tipo de lanzamiento a casillas
+en pastilla: siguen siendo campos del formulario GET, con los mismos parámetros. El grupo «Del catálogo» lleva la etiqueta
+«solo lo ya cargado» y su ayuda en texto legible; ningún texto del formulario baja de 12 px. Pendiente: fase 2 (resultados
+primero con los filtros en una columna izquierda desde `lg`) y fase 3 (hoja de filtros en el teléfono y atajos de década).
+
 **Tiempos de respuesta (cambio `speed-up-search`).** En `/search` y `/search/advanced`, los tres
 tipos pintan primero las coincidencias locales y transmiten lo de MusicBrainz cuando llega; en
 Artistas, la redirección por coincidencia exacta única la decide esa parte transmitida (la lista

@@ -429,7 +429,8 @@
         "period": "Period",
         "release": "Release",
         "catalog": "From the catalog",
-        "catalogHint": "They only search what's already in the catalog."
+        "catalogHint": "They only search what's already in the catalog.",
+        "catalogTag": "catalog only"
       },
       "criteriaCount": "{count, plural, =0 {No criteria} one {# criterion} other {# criteria}}",
       "errors": {

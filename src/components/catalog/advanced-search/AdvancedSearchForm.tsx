@@ -58,7 +58,12 @@ const inputClass = `${fieldClass} px-3`;
 // El `<select>` nativo suma 4 px de margen propio. Sin elección, el texto va en gris como un texto de ejemplo.
 const selectClass = `filter-select ${fieldClass} pl-2 pr-2 has-[option[value='']:checked]:text-paper-muted`;
 const labelClass = "font-display text-sm text-paper-muted";
-const hintClass = "font-data text-[11px] text-paper-muted";
+// 12 px como mínimo (openspec: redesign-advanced-search-phase1): las ayudas estaban en 11 px.
+const hintClass = "font-data text-xs text-paper-muted";
+// Elecciones cortas como pastillas (openspec: redesign-advanced-search-phase1, design D1): un radio o una casilla reales,
+// visualmente ocultos dentro de su etiqueta, así el formulario GET envía lo mismo también sin JavaScript.
+const pillClass =
+  "inline-flex h-9 cursor-pointer select-none items-center rounded-full border border-ink-border px-3.5 font-data text-[13px] text-paper-muted transition-colors hover:border-amber/60 hover:text-paper has-[:checked]:border-amber has-[:checked]:bg-amber/10 has-[:checked]:text-amber has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-amber";
 
 /** Banderas que solo tienen sentido con su campo. */
 const EXACT_OF: Record<string, string> = { exact: "q", artistExact: "artist", albumExact: "album" };
@@ -227,15 +232,15 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
   const categories = (
     <fieldset className="flex flex-col gap-1.5">
       <legend className={`${labelClass} mb-1.5`}>{t("releaseType")}</legend>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+      <div className="flex flex-wrap gap-1.5">
         {CATEGORY_VALUES.map((value) => (
-          <label key={value} className="inline-flex items-center gap-2 font-body text-sm text-paper">
+          <label key={value} className={pillClass}>
             <input
               type="checkbox"
               name="category"
               value={value}
               defaultChecked={criteria.category?.includes(value) ?? false}
-              className="form-check"
+              className="sr-only"
             />
             {tCategories(value)}
           </label>
@@ -244,8 +249,38 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
     </fieldset>
   );
 
+  /** Una elección de pocas opciones como pastillas de radio; "Cualquiera" es el valor vacío, que no se envía. */
+  const radioPills = (
+    name: "artistType" | "ended",
+    label: string,
+    hint: string | null,
+    value: string,
+    options: [string, string][],
+    onChange?: (value: string) => void,
+  ) => (
+    <fieldset className="flex flex-col gap-1.5">
+      <legend className={`${labelClass} mb-1.5`}>{label}</legend>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map(([optionValue, optionLabel]) => (
+          <label key={optionValue || "any"} className={pillClass}>
+            <input
+              type="radio"
+              name={name}
+              value={optionValue}
+              defaultChecked={value === optionValue}
+              onChange={onChange ? () => onChange(optionValue) : undefined}
+              className="sr-only"
+            />
+            {optionLabel}
+          </label>
+        ))}
+      </div>
+      {hint ? <span className={hintClass}>{hint}</span> : null}
+    </fieldset>
+  );
+
   const select = (
-    name: "artistType" | "ended" | "role" | "award",
+    name: "role" | "award",
     label: string,
     hint: string | null,
     value: string,
@@ -303,7 +338,7 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
         wide: artistType === "other",
         fields: <>
           {textField("q", "exact", t("name"), query, criteria.exact ?? false)}
-          {select(
+          {radioPills(
             "artistType",
             t("artistType"),
             artistType === "other" ? t("otherHint") : null,
@@ -340,7 +375,7 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
         legend: t("groups.period"),
         fields: <>
           {range("begin", t(beginLabel), null, criteria.beginFrom, criteria.beginTo, YEAR_PATTERN)}
-          {select("ended", t("ended"), t("endedHint"), criteria.ended === undefined ? "" : criteria.ended ? "1" : "0", [
+          {radioPills("ended", t("ended"), t("endedHint"), criteria.ended === undefined ? "" : criteria.ended ? "1" : "0", [
             ["", t("any")],
             ["0", t("endedActive")],
             ["1", t("endedInactive")],
@@ -442,11 +477,17 @@ export function AdvancedSearchForm({ type, query, criteria, awards = [], genreNa
       <p className={hintClass}>{t("intro")}</p>
       {groups.map(({ legend, fields, hint: groupHint, wide }) => (
         <fieldset key={legend} className="flex flex-col gap-4 border-t border-ink-border pt-4 first-of-type:border-t-0 first-of-type:pt-0">
-          <legend className="float-left mb-1 w-full font-data text-[11px] uppercase tracking-wider text-paper-muted">
+          <legend className="float-left mb-1 flex w-full flex-wrap items-center gap-2 font-data text-xs uppercase tracking-wider text-paper-muted">
             {legend}
+            {/* El grupo del catálogo cambia lo que se busca: la etiqueta lo dice a la vista (redesign-advanced-search-phase1). */}
+            {groupHint ? (
+              <span className="rounded border border-petrol/60 px-1.5 py-0.5 normal-case tracking-normal text-petrol">
+                {t("groups.catalogTag")}
+              </span>
+            ) : null}
           </legend>
           {/* El grupo del catálogo dice que sus campos no buscan en MusicBrainz (openspec: add-catalog-search-fields). */}
-          {groupHint ? <p className={`${hintClass} -mt-3`}>{groupHint}</p> : null}
+          {groupHint ? <p className="-mt-3 font-body text-sm text-paper-muted">{groupHint}</p> : null}
           <div className={`grid gap-x-10 gap-y-5 md:grid-cols-2 ${wide ? "lg:grid-cols-3 lg:gap-x-6" : ""}`}>{fields}</div>
         </fieldset>
       ))}

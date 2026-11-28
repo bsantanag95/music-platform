@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Búsqueda avanzada · B · Frase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="search.css">
+<link rel="stylesheet" href="adv.css">
+<style>
+  /* B · Frase: la búsqueda se escribe como una frase con huecos ("Busco grupos de Chile formados entre 1980 y 1989").
+     Solo se ven los criterios en uso; los demás se suman con "Añadir". Lee como lo que se pide y ocupa poco. */
+  .composer { margin-top: 24px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); padding: clamp(20px, 3vw, 32px); }
+  .composer .atabs { margin-bottom: 20px; }
+  .sentence { font-family: var(--display); font-size: clamp(24px, 2.6vw, 34px); line-height: 1.55; letter-spacing: -.015em; color: var(--muted); }
+  .tok { display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; margin: 0 2px; border-radius: 10px; color: var(--paper); background: var(--ink); border: 1px solid var(--border-2); line-height: 1.5; white-space: nowrap; }
+  .tok.set { border-color: var(--amber); color: var(--amber); }
+  .tok.empty { color: var(--muted-2); border-style: dashed; }
+  .tok svg { width: 18px; height: 18px; color: var(--muted); }
+  .tok button { font-size: 22px; line-height: 1; color: var(--muted); padding: 0 2px; }
+  .add { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .add > span { font: 500 12.5px var(--data); color: var(--muted); margin-right: 4px; }
+  .add a { height: 36px; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; border: 1px dashed var(--border-2); border-radius: 999px; font: 500 13px var(--data); color: var(--paper); }
+  .add a:hover { border-color: var(--amber); }
+  .add a .tag-cat { margin-left: 2px; }
+  .cfoot { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .cfoot .n { font: 500 13px var(--data); color: var(--muted); }
+  .cfoot .n b { color: var(--paper); font-weight: 500; }
+  .pop { margin-top: 14px; max-width: 520px; border: 1px solid var(--border-2); border-radius: 14px; background: var(--ink-2); padding: 14px; box-shadow: 0 18px 40px -20px rgba(0,0,0,.8); }
+  .pop h4 { font: 500 11.5px var(--data); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 10px; }
+  .pop .opts { display: flex; flex-wrap: wrap; gap: 6px; }
+  .results { margin-top: 36px; display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: clamp(28px, 4vw, 64px); align-items: start; }
+  .aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap: 14px; }
+  .panel { border: 1px solid var(--border); border-radius: 14px; background: var(--ink-2); padding: 18px; }
+  .panel h3 { font-family: var(--display); font-weight: 700; font-size: 17px; margin-bottom: 6px; }
+  .panel p { font-size: 14.5px; color: var(--muted); }
+  .panel .seg { margin-top: 10px; }
+  .exwrap { margin-top: 36px; }
+  @media (max-width: 1100px) { .results { grid-template-columns: minmax(0, 1fr); } .aside { position: static; } }
+  @media (max-width: 640px) {
+    .sentence { font-size: 22px; line-height: 1.7; }
+    .tok { white-space: normal; }
+    .cfoot { position: sticky; bottom: 0; background: var(--surface); margin-left: -20px; margin-right: -20px; padding: 14px 20px; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header"></header>
+<main class="wrap page">
+  <p class="crumbs">Inicio / Búsqueda / <b>Avanzada</b></p>
+  <h1 class="pt">Búsqueda avanzada</h1>
+  <section class="composer" aria-label="Lo que buscas"></section>
+  <div class="below"></div>
+</main>
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script src="adv.js"></script>
+<script>
+(function () {
+  var I = window.ICON;
+  var x = '<button aria-label="Quitar">×</button>';
+  // La entidad (artistas, álbumes) se cambia con las pestañas: su token no se quita.
+  function tok(text, set, fixed) { return '<span class="tok' + (set ? " set" : " empty") + '">' + text + (set && !fixed ? x : "") + "</span>"; }
+
+  function sentence(st) {
+    if (st === "album") {
+      return 'Busco ' + tok("álbumes", true, true) + ' titulados ' + tok("cualquier título") + ' de ' + tok("cualquier artista") + ' publicados entre ' + tok("año") + ' y ' + tok("año") + ".";
+    }
+    if (st === "results") {
+      return 'Busco ' + tok("grupos", true) + ' de ' + tok("Chile", true) + ' formados entre ' + tok("1980", true) + ' y ' + tok("1989", true) + ".";
+    }
+    return 'Busco ' + tok("artistas", true, true) + ' llamados ' + tok("cualquier nombre") + ' de ' + tok("cualquier país") + '.';
+  }
+  function adds(st) {
+    var list = st === "album"
+      ? [["Tipo de lanzamiento"], ["Género", 1], ["País del artista", 1], ["Premios", 1]]
+      : st === "results"
+        ? [["Nombre"], ["Ciudad o región"], ["En actividad o separado"], ["Activo entre", 1], ["Género", 1], ["Premios", 1]]
+        : [["Ciudad o región"], ["Año de formación"], ["En actividad o separado"], ["Activo entre", 1], ["Género", 1], ["Premios", 1]];
+    return '<div class="add"><span>Añadir</span>' + list.map(function (a) {
+      return '<a href="#">+ ' + a[0] + (a[1] ? ' <span class="tag-cat">catálogo</span>' : "") + "</a>";
+    }).join("") + "</div>";
+  }
+  function pop(st) {
+    if (st !== "form") return "";
+    return '<div class="pop" role="dialog" aria-label="Tipo"><h4>¿Qué tipo de artista?</h4><div class="seg opts"><a aria-pressed="true">Cualquiera</a><a>Grupo</a><a>Solista</a><a>Otras personas <span class="tag-cat">catálogo</span></a></div></div>';
+  }
+  function composer(st) {
+    var filled = st === "results";
+    return window.advTabs(st === "album" ? "album" : "artist") +
+      '<p class="sentence">' + sentence(st) + "</p>" + pop(st) + adds(st) +
+      '<div class="cfoot"><span class="n">' + (filled ? "<b>3 criterios</b> · 53 grupos" : "Elige al menos un dato") + '</span><span style="display:flex;gap:8px">' +
+      (filled ? '<a class="btn line" href="#form">Empezar de nuevo</a>' : "") + '<a class="btn primary" href="#results">' + I.search + "Buscar</a></span></div>";
+  }
+  function below(st) {
+    if (st === "results") {
+      return '<div class="results"><div><div class="rhead"><h2>53 grupos</h2><span class="viewtog"><span class="on">Lista</span><span>Tabla</span></span></div>' +
+        '<div class="rows">' + window.advRows(12) + '</div><div style="margin-top:20px"><a class="btn line" href="#">Cargar más</a></div></div>' +
+        '<aside class="aside"><div class="panel"><h3>Acotar más</h3><p>Un clic suma el criterio a la frase:</p><div class="seg"><a>Con discos cargados</a><a>Separados</a></div></div>' +
+        '<div class="panel"><h3>La misma búsqueda</h3><p>En álbumes: discos de 1980–1989 de artistas chilenos del catálogo.</p><div style="margin-top:10px"><a class="btn line" href="#album">Ver álbumes</a></div></div></aside></div>';
+    }
+    return '<div class="exwrap"><h2 class="lbl">O empieza con una de estas</h2><div class="examples">' +
+      (st === "album"
+        ? [["Directos de 1994", "Año 1994 · Directos y otros"], ["Pink Floyd en estudio, años 70", "Artista: Pink Floyd · 1970–1979 · De estudio"], ["Singles y EPs de Radiohead", "Artista: Radiohead (exacto) · Singles y EPs"]]
+        : window.advExamples).map(function (e) { return '<a class="ex" href="#results"><b>' + e[0] + "</b><span>" + e[1] + "</span></a>"; }).join("") + "</div></div>";
+  }
+  function render() {
+    var st = window.advState();
+    document.querySelector(".composer").innerHTML = composer(st);
+    document.querySelector(".below").innerHTML = below(st);
+  }
+  window.paintHeader();
+  render();
+  window.addEventListener("hashchange", render);
+  window.advMockBar("b-frase.html");
+})();
+</script>
+</body>
+</html>

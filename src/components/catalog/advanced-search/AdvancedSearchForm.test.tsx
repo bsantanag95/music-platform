@@ -18,6 +18,7 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 
 const labels = catalogEs.search.advanced;
+const catalogLabels = catalogEs;
 
 /** El selector de género consulta géneros con React Query (openspec: add-catalog-search-fields). */
 function renderForm(ui: ReactElement) {
@@ -34,7 +35,8 @@ describe("AdvancedSearchForm", () => {
   it("Artistas: navega solo con los campos con valor, los países repetidos y sin nombre", () => {
     renderForm(<AdvancedSearchForm type="artist" query="" criteria={{ country: ["CL", "AR"] }} />);
 
-    fireEvent.change(screen.getByLabelText(labels.artistType), { target: { value: "group" } });
+    // Tipo en pastillas de radio (openspec: redesign-advanced-search-phase1).
+    fireEvent.click(screen.getByRole("radio", { name: labels.group }));
     fireEvent.change(screen.getAllByLabelText(labels.from)[0]!, { target: { value: "1980" } });
     // La casilla exacta sin nombre no llega a la URL.
     fireEvent.click(screen.getByRole("checkbox", { name: `Coincidencia exacta en ${labels.name}` }));
@@ -110,7 +112,8 @@ describe("formulario agrupado y validación (openspec: refine-advanced-search-ph
       <AdvancedSearchForm type="artist" query="" criteria={{ artistType: "group", country: ["CL"], beginFrom: 1980 }} />,
     );
     for (const legend of [labels.groups.identity, labels.groups.origin, labels.groups.period, labels.groups.catalog]) {
-      expect(screen.getByRole("group", { name: legend })).toBeInTheDocument();
+      // El grupo del catálogo suma su etiqueta «solo lo ya cargado» al nombre.
+      expect(screen.getByRole("group", { name: new RegExp(`^${legend}`) })).toBeInTheDocument();
     }
     expect(screen.getByText("3 criterios")).toBeInTheDocument();
   });
@@ -156,19 +159,19 @@ describe("campos del catálogo (openspec: add-catalog-search-fields)", () => {
     expect(screen.getByRole("group", { name: labels.begin })).toBeInTheDocument();
     expect(screen.queryByLabelText(new RegExp(`^${labels.role}`))).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText(new RegExp(`^${labels.artistType}`)), { target: { value: "solo" } });
+    fireEvent.click(screen.getByRole("radio", { name: labels.solo }));
     expect(screen.getByRole("group", { name: labels.beginPerson })).toBeInTheDocument();
     expect(screen.queryByLabelText(new RegExp(`^${labels.role}`))).not.toBeInTheDocument();
     expect(screen.getByRole("group", { name: labels.active })).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText(new RegExp(`^${labels.artistType}`)), { target: { value: "other" } });
+    fireEvent.click(screen.getByRole("radio", { name: labels.other }));
     expect(screen.getByRole("group", { name: labels.beginPerson })).toBeInTheDocument();
     expect(screen.queryByRole("group", { name: labels.active })).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText(new RegExp(`^${labels.role}`)), { target: { value: "member" } });
     submit();
     expect(mockPush).toHaveBeenLastCalledWith("/search/advanced?type=artist&artistType=other&role=member");
 
-    fireEvent.change(screen.getByLabelText(new RegExp(`^${labels.artistType}`)), { target: { value: "group" } });
+    fireEvent.click(screen.getByRole("radio", { name: labels.group }));
     expect(screen.getByRole("group", { name: labels.beginGroup })).toBeInTheDocument();
     expect(screen.queryByLabelText(new RegExp(`^${labels.role}`))).not.toBeInTheDocument();
   });
@@ -186,7 +189,8 @@ describe("campos del catálogo (openspec: add-catalog-search-fields)", () => {
       />,
     );
 
-    const catalog = screen.getByRole("group", { name: labels.groups.catalog });
+    const catalog = screen.getByRole("group", { name: new RegExp(`^${labels.groups.catalog}`) });
+    expect(catalog).toHaveTextContent(labels.groups.catalogTag);
     expect(catalog).toHaveTextContent(labels.groups.catalogHint);
     fireEvent.change(screen.getAllByLabelText(labels.from)[1]!, { target: { value: "1980" } });
     fireEvent.change(screen.getAllByLabelText(labels.to)[1]!, { target: { value: "1990" } });
@@ -207,5 +211,32 @@ describe("campos del catálogo (openspec: add-catalog-search-fields)", () => {
     submit();
 
     expect(mockPush).toHaveBeenLastCalledWith("/search/advanced?type=album&genre=rock&artistCountry=CL");
+  });
+});
+
+describe("pastillas (openspec: redesign-advanced-search-phase1)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("Tipo y Estado son radios; Cualquiera no envía nada", () => {
+    renderForm(<AdvancedSearchForm type="artist" query="" criteria={{ country: ["CL"] }} />);
+    const anyType = screen.getAllByRole("radio", { name: labels.any })[0]!;
+    expect(anyType).toBeChecked();
+    fireEvent.click(screen.getByRole("radio", { name: labels.endedActive }));
+    submit();
+    expect(mockPush).toHaveBeenLastCalledWith("/search/advanced?type=artist&country=CL&ended=0");
+  });
+
+  it("los valores de la URL marcan sus pastillas", () => {
+    renderForm(<AdvancedSearchForm type="artist" query="" criteria={{ artistType: "group", ended: true }} />);
+    expect(screen.getByRole("radio", { name: labels.group })).toBeChecked();
+    expect(screen.getByRole("radio", { name: labels.endedInactive })).toBeChecked();
+  });
+
+  it("Tipo de lanzamiento: casillas en pastillas, varias a la vez", () => {
+    renderForm(<AdvancedSearchForm type="album" query="the wall" criteria={{}} />);
+    fireEvent.click(screen.getByRole("checkbox", { name: catalogLabels.artist.categories.studio }));
+    fireEvent.click(screen.getByRole("checkbox", { name: catalogLabels.artist.categories.live_other }));
+    submit();
+    expect(mockPush).toHaveBeenLastCalledWith("/search/advanced?type=album&q=the+wall&category=studio&category=live_other");
   });
 });

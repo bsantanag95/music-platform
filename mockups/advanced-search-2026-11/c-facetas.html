@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Búsqueda avanzada · C · Facetas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="search.css">
+<link rel="stylesheet" href="adv.css">
+<style>
+  /* C · Facetas: la avanzada como catálogo navegable. Los filtros viven en una columna a la izquierda, por secciones
+     plegables, y la lista ocupa el centro desde el principio. En el teléfono, "Filtros (3)" abre una hoja inferior. */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 20px; }
+  .lay { margin-top: 24px; display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 9fr); gap: clamp(24px, 3vw, 48px); align-items: start; }
+  .fcol { position: sticky; top: 88px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); max-height: calc(100vh - 110px); display: flex; flex-direction: column; }
+  .fscroll { overflow: auto; padding: 6px 16px; }
+  .fsec { border-bottom: 1px solid var(--border); padding: 12px 0; }
+  .fsec:last-child { border-bottom: 0; }
+  .fsec > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; font-family: var(--display); font-weight: 500; font-size: 15px; min-height: 32px; }
+  .fsec > summary::-webkit-details-marker { display: none; }
+  .fsec > summary .on { font: 500 12px var(--data); color: var(--amber); }
+  .fsec > summary svg { width: 16px; height: 16px; color: var(--muted); transition: transform .15s; }
+  .fsec[open] > summary svg { transform: rotate(180deg); }
+  .fsec .in { display: flex; flex-direction: column; gap: 10px; padding-top: 10px; }
+  .clist { display: flex; flex-direction: column; gap: 2px; }
+  .clist label { display: flex; align-items: center; gap: 10px; min-height: 32px; font-size: 15px; }
+  .clist label i { width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--border-2); background: var(--ink); flex: none; }
+  .clist label i.on { background: var(--amber); border-color: var(--amber); }
+  .clist label span { margin-left: auto; font: 500 12px var(--data); color: var(--muted); }
+  .ffoot { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--ink-2); border-radius: 0 0 16px 16px; }
+  .ffoot a.clear { font: 500 13px var(--data); color: var(--muted); }
+  .applied { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 16px; }
+  .namebar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; margin-bottom: 18px; }
+  .namebar .inp { height: 48px; font-size: 17px; }
+  .empty-intro { border: 1px dashed var(--border-2); border-radius: 16px; padding: clamp(20px, 3vw, 32px); }
+  .empty-intro h2 { font-family: var(--display); font-weight: 700; font-size: 24px; letter-spacing: -.015em; }
+  .empty-intro p { color: var(--muted); margin-top: 6px; max-width: 60ch; }
+  .empty-intro .examples { margin-top: 18px; }
+  .mfilters { display: none; }
+  @media (max-width: 980px) {
+    .lay { grid-template-columns: minmax(0, 1fr); }
+    .fcol { display: none; }
+    .mfilters { display: inline-flex; }
+    body.sheet .fcol { display: flex; position: fixed; inset: auto 0 0 0; top: auto; max-height: 82vh; border-radius: 18px 18px 0 0; z-index: 70; }
+    body.sheet::after { content: ""; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 65; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header"></header>
+<main class="wrap page">
+  <p class="crumbs">Inicio / Búsqueda / <b>Avanzada</b></p>
+  <h1 class="pt">Búsqueda avanzada</h1>
+  <div class="top"></div>
+  <div class="lay">
+    <aside class="fcol" aria-label="Filtros"></aside>
+    <section class="main"></section>
+  </div>
+</main>
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script src="adv.js"></script>
+<script>
+(function () {
+  var I = window.ICON;
+  var x = '<button aria-label="Quitar">×</button>';
+  function sec(title, on, body, open) {
+    return '<details class="fsec"' + (open ? " open" : "") + "><summary>" + title + '<span style="display:flex;gap:8px;align-items:center">' + (on ? '<span class="on">' + on + "</span>" : "") + I.chevron + '</span></summary><div class="in">' + body + "</div></details>";
+  }
+  function check(label, on) { return '<label><i class="' + (on ? "on" : "") + '"></i>' + label + "</label>"; }
+  function pair(a, b) { return '<div class="pair"><span class="inp' + (a ? "" : " ph") + '">' + (a || "Desde") + '</span><span class="inp' + (b ? "" : " ph") + '">' + (b || "Hasta") + "</span></div>"; }
+
+  function artistFilters(f) {
+    return sec("Tipo", f ? "Grupo" : "", '<div class="clist">' + check("Grupo", f) + check("Solista") + check("Otras personas <span class=\"tag-cat\">catálogo</span>") + "</div>", true) +
+      sec("País", f ? "Chile" : "", '<span class="inp ph">' + I.search + ' Buscar país</span><div class="clist">' + check("Chile", f) + check("Argentina") + check("México") + check("España") + "</div>", true) +
+      sec("Ciudad o región", "", '<span class="inp ph">Santiago, Mánchester…</span>') +
+      sec("Formación", f ? "1980–1989" : "", pair(f ? "1980" : "", f ? "1989" : "") + '<div class="seg"><a>70s</a><a aria-pressed="' + (!!f) + '">80s</a><a>90s</a><a>2000s</a></div>', true) +
+      sec("Estado", "", '<div class="clist">' + check("En actividad") + check("Separado") + "</div>") +
+      sec('Del catálogo <span class="tag-cat">solo lo ya cargado</span>', "", '<span class="fl"><span class="lb">Activo entre</span>' + pair("", "") + '</span><span class="fl"><span class="lb">Género</span><span class="inp ph">Buscar un género</span></span><span class="fl"><span class="lb">Premios</span><span class="sel ph">Cualquiera' + I.chevron + "</span></span>");
+  }
+  function albumFilters() {
+    return sec("Tipo de lanzamiento", "", '<div class="clist">' + check("De estudio") + check("Singles y EPs") + check("Compilaciones") + check("Directos y otros") + "</div>", true) +
+      sec("Año", "", pair("", "") + '<div class="seg"><a>70s</a><a>80s</a><a>90s</a><a>2000s</a></div>', true) +
+      sec('Del catálogo <span class="tag-cat">solo lo ya cargado</span>', "", '<span class="fl"><span class="lb">Género</span><span class="inp ph">Buscar un género</span></span><span class="fl"><span class="lb">País del artista</span><span class="inp ph">Cualquier país</span></span><span class="fl"><span class="lb">Premios</span><span class="sel ph">Cualquiera' + I.chevron + "</span></span>", true);
+  }
+  function fcol(st) {
+    var filled = st === "results";
+    return '<div class="fscroll">' + (st === "album" ? albumFilters() : artistFilters(filled)) + '</div><div class="ffoot">' +
+      (filled ? '<a class="clear" href="#form">Quitar todo</a>' : '<span></span>') + '<a class="btn primary" href="#results">Aplicar</a></div>';
+  }
+  function top(st) {
+    return window.advTabs(st === "album" ? "album" : "artist") +
+      '<button class="btn line mfilters" onclick="document.body.classList.toggle(\'sheet\')">' + I.filter + (st === "results" ? "Filtros · 3" : "Filtros") + "</button>";
+  }
+  function main(st) {
+    var name = '<div class="namebar"><span class="inp ph">' + (st === "album" ? "Título o artista (opcional)" : "Nombre (opcional)") + '</span><a class="btn primary" href="#results">' + I.search + "Buscar</a></div>";
+    if (st === "results") {
+      return name + '<div class="applied"><span class="crit">Grupo' + x + '</span><span class="crit">Chile' + x + '</span><span class="crit">Formación 1980–1989' + x + '</span><a class="clear" href="#form" style="font:500 13px var(--data);color:var(--muted);margin-left:6px">Quitar todo</a></div>' +
+        '<div class="rhead"><h2>53 grupos</h2><span class="viewtog"><span class="on">Lista</span><span>Tabla</span></span></div><div class="rows">' + window.advRows(12) +
+        '</div><div style="margin-top:20px"><a class="btn line" href="#">Cargar más</a></div>';
+    }
+    var ex = st === "album"
+      ? [["Directos de 1994", "Año 1994 · Directos y otros"], ["Pink Floyd en estudio, años 70", "Artista: Pink Floyd · 1970–1979 · De estudio"], ["Singles y EPs de Radiohead", "Artista: Radiohead (exacto) · Singles y EPs"]]
+      : window.advExamples;
+    return name + '<div class="empty-intro"><h2>Elige filtros a la izquierda, o escribe un nombre</h2><p>Combina tipo, país, época y estado sobre toda la base de MusicBrainz; los filtros "del catálogo" miran solo lo que ya está cargado aquí.</p>' +
+      '<div class="examples">' + ex.map(function (e) { return '<a class="ex" href="#results"><b>' + e[0] + "</b><span>" + e[1] + "</span></a>"; }).join("") + "</div></div>";
+  }
+  function render() {
+    var st = window.advState();
+    document.body.classList.remove("sheet");
+    document.querySelector(".top").innerHTML = top(st);
+    document.querySelector(".fcol").innerHTML = fcol(st);
+    document.querySelector(".main").innerHTML = main(st);
+  }
+  window.paintHeader();
+  render();
+  window.addEventListener("hashchange", render);
+  window.advMockBar("c-facetas.html");
+})();
+</script>
+</body>
+</html>
