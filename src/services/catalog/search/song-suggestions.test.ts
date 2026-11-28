@@ -105,19 +105,19 @@ describe("songSuggestions", () => {
 
     const rows = await songSuggestions("metallica one", 6);
 
-    expect(localMatch.recordingsByArtistsAndTitlePrefix).toHaveBeenCalledWith(["artist-Metallica"], "one", 40);
+    expect(localMatch.recordingsByArtistsAndTitlePrefix).toHaveBeenCalledWith(["artist-Metallica"], "one", 40, { perArtist: true });
     expect(labels(rows)[0]).toBe("One — Metallica");
   });
 
-  it("los homónimos de un extremo comparten una consulta por resto, no una por artista (N+1)", async () => {
+  it("los homónimos de un extremo comparten una consulta por resto, no una por artista (N+1), con tope propio", async () => {
     const pinks = Array.from({ length: 6 }, (_, index) => ({ id: `pink-${index}`, name: "Pink" }) as ArtistRow);
     vi.mocked(localMatch.findArtistsByKeys).mockResolvedValue([...pinks, { id: "floyd", name: "Floyd" } as ArtistRow]);
 
     await songSuggestions("pink floyd", 6);
 
     expect(vi.mocked(localMatch.recordingsByArtistsAndTitlePrefix).mock.calls).toEqual([
-      [pinks.map((artist) => artist.id), "floyd", 40],
-      [["floyd"], "pink", 40],
+      [pinks.map((artist) => artist.id), "floyd", 40, { perArtist: true }],
+      [["floyd"], "pink", 40, { perArtist: true }],
     ]);
   });
 

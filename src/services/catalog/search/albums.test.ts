@@ -362,7 +362,7 @@ describe("searchAlbums", () => {
     expect(localMatch.releaseGroupsByArtistsAndTitle).toHaveBeenCalledWith(
       ["dokken"],
       "back for the attack",
-      expect.objectContaining({ mode: "fuzzy" }),
+      expect.objectContaining({ mode: "fuzzy", perArtist: true }),
     );
     expect(response.results[0]).toMatchObject({ title: "Back for the Attack", artistName: "Dokken", year: 1987 });
   });

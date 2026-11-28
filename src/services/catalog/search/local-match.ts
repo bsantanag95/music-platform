@@ -9,7 +9,7 @@
 // (índices trigram de la migración 0050) y el orden final lo decide
 // `matchTier` en TypeScript, con la misma normalización que el resto.
 
-import { and, asc, eq, inArray, sql, type AnyColumn, type SQL } from "drizzle-orm";
+import { and, asc, eq, inArray, lte, sql, type AnyColumn, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import {
   artist,
@@ -296,36 +296,74 @@ export interface ArtistTitleMatch {
   artistId: string;
 }
 
+/** Similitud de `column` con el texto, para ordenar dentro de una ventana (`row_number() over (… order by …)`). */
+function similarityOf(column: AnyColumn, text: string): SQL {
+  return sql`similarity(search_normalize(${column}), search_normalize(${text}))`;
+}
+
+/** Filas agrupadas por artista en el orden de `artistIds` (el de quien llama); dentro, el orden de llegada. */
+function groupByArtist<T extends { artistId: string }>(rows: T[], artistIds: readonly string[]): T[][] {
+  const byArtist = new Map<string, T[]>(artistIds.map((id) => [id, []]));
+  for (const row of rows) byArtist.get(row.artistId)?.push(row);
+  return [...byArtist.values()];
+}
+
 /**
  * Álbumes con crédito primario de alguno de `artistIds` cuyo título coincide
  * con `title`: por prefijo (sugerencias mientras se escribe) o de forma
  * tolerante (búsqueda completa).
+ *
+ * Por defecto el tope (`limit`, sobre un grupo de `CANDIDATE_POOL`) es compartido entre los artistas. Con `perArtist`,
+ * cada artista tiene el suyo, como si se consultara por separado, pero en UNA consulta: `row_number()` por artista
+ * (homónimos que dejan el mismo resto no se quitan sitio entre sí, sin una consulta por artista).
  */
 export async function releaseGroupsByArtistsAndTitle(
   artistIds: string[],
   title: string,
-  { limit, mode, ...filters }: LocalReleaseGroupOptions & { mode: "prefix" | "fuzzy" },
+  { limit, mode, perArtist = false, ...filters }: LocalReleaseGroupOptions & { mode: "prefix" | "fuzzy"; perArtist?: boolean },
 ): Promise<ArtistTitleMatch[]> {
   if (artistIds.length === 0 || !title.trim()) return [];
   const titleFilter =
     mode === "prefix"
       ? sql`search_key(${releaseGroup.title}) LIKE ${`${escapeLike(title)}%`}`
       : fuzzyMatch(releaseGroup.title, title);
-  const rows = await db
-    .select({ row: releaseGroup, artistId: credit.artistId })
+  const where = and(
+    inArray(credit.artistId, artistIds),
+    eq(credit.role, "primary"),
+    titleFilter,
+    ...releaseGroupFilters(filters),
+  );
+  if (!perArtist) {
+    const rows = await db
+      .select({ row: releaseGroup, artistId: credit.artistId })
+      .from(credit)
+      .innerJoin(releaseGroup, eq(releaseGroup.id, credit.releaseGroupId))
+      .where(where)
+      .orderBy(bySimilarity(releaseGroup.title, title))
+      .limit(CANDIDATE_POOL);
+    return rankByMatchTier(rows, ({ row }) => row.title, title).slice(0, limit);
+  }
+  const ranked = db
+    .select({
+      releaseGroupId: credit.releaseGroupId,
+      artistId: credit.artistId,
+      rank: sql<number>`row_number() over (partition by ${credit.artistId} order by ${similarityOf(releaseGroup.title, title)} desc)`.as(
+        "artist_rank",
+      ),
+    })
     .from(credit)
     .innerJoin(releaseGroup, eq(releaseGroup.id, credit.releaseGroupId))
-    .where(
-      and(
-        inArray(credit.artistId, artistIds),
-        eq(credit.role, "primary"),
-        titleFilter,
-        ...releaseGroupFilters(filters),
-      ),
-    )
-    .orderBy(bySimilarity(releaseGroup.title, title))
-    .limit(CANDIDATE_POOL);
-  return rankByMatchTier(rows, ({ row }) => row.title, title).slice(0, limit);
+    .where(where)
+    .as("ranked");
+  const rows = await db
+    .select({ row: releaseGroup, artistId: ranked.artistId })
+    .from(ranked)
+    .innerJoin(releaseGroup, eq(releaseGroup.id, ranked.releaseGroupId))
+    .where(lte(ranked.rank, CANDIDATE_POOL))
+    .orderBy(bySimilarity(releaseGroup.title, title));
+  return groupByArtist(rows, artistIds).flatMap((matches) =>
+    rankByMatchTier(matches, ({ row }) => row.title, title).slice(0, limit),
+  );
 }
 
 /**
@@ -396,27 +434,51 @@ export async function releaseGroupsWithContent(releaseGroupIds: string[]): Promi
  * Grabaciones con crédito principal de alguno de `artistIds` cuyo título EMPIEZA por `title` (ya
  * normalizado): el puente artista + canción de las sugerencias (openspec: improve-song-suggestions).
  * Prefijo, porque la persona todavía está escribiendo.
+ *
+ * Por defecto `limit` es compartido entre los artistas; con `perArtist`, cada uno tiene el suyo en UNA consulta
+ * (`row_number()` por artista), agrupado en el orden de `artistIds`.
  */
 export async function recordingsByArtistsAndTitlePrefix(
   artistIds: string[],
   title: string,
   limit: number,
+  { perArtist = false }: { perArtist?: boolean } = {},
 ): Promise<RecordingRow[]> {
   if (artistIds.length === 0 || !title.trim()) return [];
-  const rows = await db
-    .select({ row: recording })
+  const where = and(
+    inArray(credit.artistId, artistIds),
+    eq(credit.role, "primary"),
+    sql`search_key(${recording.title}) LIKE ${`${escapeLike(title)}%`}`,
+  );
+  if (!perArtist) {
+    const rows = await db
+      .select({ row: recording })
+      .from(credit)
+      .innerJoin(recording, eq(recording.id, credit.recordingId))
+      .where(where)
+      .orderBy(bySimilarity(recording.title, title))
+      .limit(limit);
+    return rows.map(({ row }) => row);
+  }
+  const ranked = db
+    .select({
+      recordingId: credit.recordingId,
+      artistId: credit.artistId,
+      rank: sql<number>`row_number() over (partition by ${credit.artistId} order by ${similarityOf(recording.title, title)} desc)`.as(
+        "artist_rank",
+      ),
+    })
     .from(credit)
     .innerJoin(recording, eq(recording.id, credit.recordingId))
-    .where(
-      and(
-        inArray(credit.artistId, artistIds),
-        eq(credit.role, "primary"),
-        sql`search_key(${recording.title}) LIKE ${`${escapeLike(title)}%`}`,
-      ),
-    )
-    .orderBy(bySimilarity(recording.title, title))
-    .limit(limit);
-  return rows.map(({ row }) => row);
+    .where(where)
+    .as("ranked");
+  const rows = await db
+    .select({ row: recording, artistId: ranked.artistId })
+    .from(ranked)
+    .innerJoin(recording, eq(recording.id, ranked.recordingId))
+    .where(lte(ranked.rank, limit))
+    .orderBy(bySimilarity(recording.title, title));
+  return groupByArtist(rows, artistIds).flatMap((matches) => matches.map(({ row }) => row));
 }
 
 export interface RecordingSignals {
