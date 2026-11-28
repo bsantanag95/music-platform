@@ -5,6 +5,7 @@ import type { SongGroupResult, SongSearchResponse } from "@/services/catalog/sea
 import { searchHref } from "../search-types";
 import { SearchTypeIcon } from "../SearchTypeIcon";
 import { SongGroupPanel } from "./SongGroupPanel";
+import { SongAnswer } from "./SongAnswer";
 import { ResultsGroupHeading } from "./ResultsGroupHeading";
 
 // Resultados del tipo Canciones (openspec: redesign-scoped-search): la
@@ -101,7 +102,8 @@ export function SongResults({
 
   return (
     <div className="flex flex-col gap-6">
-      <SongGroupPanel group={first} />
+      {/* En la rápida, la ficha de la canción (openspec: redesign-search-phase2); la avanzada conserva el panel. */}
+      {compactHeadings ? <SongGroupPanel group={first} /> : <SongAnswer group={first} />}
       {others.length > 0 ? (
         <section className="flex flex-col gap-3">
           <ResultsGroupHeading compact={compactHeadings}>{t("otherSongs")}</ResultsGroupHeading>

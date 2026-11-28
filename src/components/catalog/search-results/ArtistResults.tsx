@@ -8,6 +8,8 @@ import type { ResultHighlight } from "@/services/catalog/search/filters";
 import { SearchTypeIcon } from "../SearchTypeIcon";
 import { MetaLine, type MetaSegment } from "./MetaLine";
 import { ResultsGroupHeading } from "./ResultsGroupHeading";
+import { Folded } from "./Folded";
+import { answeredIds, type ArtistAnswer, type ArtistCandidate } from "@/services/catalog/search/artist-answer";
 
 // Resultados del tipo Artistas (openspec: redesign-scoped-search). Con
 // homónimos (KISS, Icon) no hay redirección: la primera coincidencia exacta
@@ -211,6 +213,196 @@ export function ArtistResults({
         <section className="flex flex-col gap-3">
           {best ? <ResultsGroupHeading compact={compactHeadings}>{t("more")}</ResultsGroupHeading> : null}
           <ArtistList artists={rest} highlight={highlight} />
+        </section>
+      ) : null}
+    </div>
+  );
+}
+
+// ---------- Respuesta de la búsqueda rápida (openspec: redesign-search-phase2, design D2)
+
+/** Foto grande de la respuesta o de una opción de la elección; sin foto, la inicial del nombre. */
+function BigPortrait({ artist, size }: { artist: ArtistSearchResult; size: "answer" | "choice" }) {
+  const box = size === "answer" ? "size-20 sm:size-24" : "size-24 sm:size-28";
+  if (artist.photoUrl) {
+    return (
+      <span className={`relative ${box} shrink-0 overflow-hidden rounded-full bg-ink-surface`}>
+        <AppImage src={artist.photoUrl} alt="" fill sizes="7rem" className="object-cover" />
+      </span>
+    );
+  }
+  return (
+    <span
+      aria-hidden
+      className={`flex ${box} shrink-0 items-center justify-center rounded-full border border-ink-border bg-ink font-display text-3xl font-bold text-paper-muted`}
+    >
+      {artist.name.trim().charAt(0).toUpperCase() || "?"}
+    </span>
+  );
+}
+
+function GenreChips({ genres }: { genres: string[] }) {
+  if (genres.length === 0) return null;
+  return (
+    <span className="flex flex-wrap gap-1.5">
+      {genres.map((name) => (
+        <span key={name} className="rounded-full border border-ink-border px-2 py-0.5 font-data text-xs text-paper-muted">
+          {name}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** Línea de por qué está arriba: discos en el catálogo o nombre idéntico a la consulta. */
+function useReason(query: string) {
+  const t = useTranslations("catalog.search.results.artists");
+  return (candidate: ArtistCandidate): string | null =>
+    candidate.reason === "identical"
+      ? t("reasonIdentical", { query })
+      : candidate.artist.discCount
+        ? t("reasonCatalog", { count: candidate.artist.discCount })
+        : null;
+}
+
+function AnswerCard({ query, candidate, genres }: { query: string; candidate: ArtistCandidate; genres: string[] }) {
+  const t = useTranslations("catalog.search.results.artists");
+  const { artist } = candidate;
+  // En la tarjeta la cifra va en su propia línea («N discos en el catálogo»): fuera de la meta.
+  const meta = useArtistMeta()({ ...artist, discCount: null });
+  const reasonOf = useReason(query);
+  // Sola arriba, «Nombre idéntico» sobra: el nombre ya lo dice. Solo se explica la cifra del catálogo.
+  const reason = candidate.reason === "identical" ? null : reasonOf(candidate);
+  return (
+    <section aria-labelledby={`answer-${artist.id}`} className="flex flex-col gap-2">
+      <h3 className="sr-only">{t("bestMatch")}</h3>
+      <Link
+        href={artistHref(artist.name, artist.id)}
+        className="group flex items-center gap-5 rounded-xl border border-ink-border bg-ink-surface p-5 transition-colors hover:border-amber/60 sm:gap-6 sm:p-6"
+      >
+        <BigPortrait artist={artist} size="answer" />
+        <span className="flex min-w-0 flex-1 flex-col gap-1.5">
+          {candidate.reason === "closest" ? (
+            <span className="font-data text-xs uppercase tracking-[0.14em] text-amber">{t("closestNote")}</span>
+          ) : null}
+          <span
+            id={`answer-${artist.id}`}
+            className="wrap-break-word font-display text-2xl font-bold leading-tight tracking-[-0.015em] text-paper sm:text-3xl"
+          >
+            {artist.name}
+          </span>
+          <MetaLine segments={meta} />
+          {reason ? <span className="font-data text-xs text-petrol">{reason}</span> : null}
+          <GenreChips genres={genres} />
+        </span>
+        <span className="hidden shrink-0 font-data text-xs text-paper-muted transition-colors group-hover:text-amber sm:inline">
+          {t("viewProfile")} →
+        </span>
+      </Link>
+    </section>
+  );
+}
+
+function ChoiceCards({
+  query,
+  candidates,
+  genresById,
+}: {
+  query: string;
+  candidates: ArtistCandidate[];
+  genresById: Record<string, string[]>;
+}) {
+  const t = useTranslations("catalog.search.results.artists");
+  const meta = useArtistMeta();
+  const reasonOf = useReason(query);
+  return (
+    <section aria-labelledby="artist-choice" className="flex flex-col gap-4">
+      <h3 id="artist-choice" className="font-display text-xl font-bold tracking-[-0.01em] text-paper sm:text-[1.375rem]">
+        {t("choiceTitle", { query })}
+      </h3>
+      {/* En el teléfono, riel horizontal; desde `sm`, una fila de 2–3 tarjetas. */}
+      <ul className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0">
+        {candidates.map((candidate) => {
+          const { artist } = candidate;
+          const reason = reasonOf(candidate);
+          return (
+            <li key={artist.id} className="w-[78%] shrink-0 snap-start sm:w-auto">
+              <Link
+                href={artistHref(artist.name, artist.id)}
+                className="group flex h-full flex-col items-start gap-3 rounded-xl border border-ink-border bg-ink-surface p-5 transition-colors hover:border-amber/60"
+              >
+                <BigPortrait artist={artist} size="choice" />
+                <span className="wrap-break-word font-display text-xl font-bold leading-tight text-paper transition-colors group-hover:text-amber">
+                  {artist.name}
+                </span>
+                <MetaLine segments={meta({ ...artist, discCount: null })} />
+                {reason ? (
+                  <span className={`font-data text-xs ${candidate.reason === "identical" ? "text-paper-muted" : "text-petrol"}`}>
+                    {reason}
+                  </span>
+                ) : null}
+                <GenreChips genres={genresById[artist.id] ?? []} />
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+/** Homónimos visibles antes de «Ver los N». */
+const VISIBLE_HOMONYMS = 3;
+
+/**
+ * Resultados de Artistas de la búsqueda rápida: la respuesta (o «¿Cuál «x» buscas?»), los demás homónimos plegados y el
+ * resto, sin repetir lo que ya está arriba. La avanzada sigue con `ArtistResults`.
+ */
+export function ArtistAnswerResults({
+  query,
+  results,
+  answer,
+  genresById = {},
+}: {
+  query: string;
+  results: ArtistSearchResult[];
+  answer: ArtistAnswer;
+  /** Hasta 3 géneros por id, de la respuesta o de cada opción. */
+  genresById?: Record<string, string[]>;
+}) {
+  const t = useTranslations("catalog.search.results.artists");
+  const above = answeredIds(answer);
+  const homonyms = results.filter((artist) => artist.exact && !above.has(artist.id));
+  const rest = results.filter((artist) => !artist.exact && !above.has(artist.id));
+
+  return (
+    <div className="flex flex-col gap-8">
+      {answer.kind === "answer" ? (
+        <AnswerCard query={query} candidate={answer.candidate} genres={genresById[answer.candidate.artist.id] ?? []} />
+      ) : answer.kind === "choice" ? (
+        <ChoiceCards query={query} candidates={answer.candidates} genresById={genresById} />
+      ) : null}
+
+      {homonyms.length > 0 ? (
+        <section className="flex flex-col gap-3">
+          <ResultsGroupHeading count={homonyms.length}>{t("homonyms", { query })}</ResultsGroupHeading>
+          <Folded
+            className="flex flex-col divide-y divide-ink-border"
+            visible={VISIBLE_HOMONYMS}
+            moreLabel={t("showAll", { count: homonyms.length })}
+            items={homonyms.map((artist) => (
+              <li key={artist.id} className="py-3 first:pt-0 last:pb-0">
+                <ArtistRow artist={artist} />
+              </li>
+            ))}
+          />
+        </section>
+      ) : null}
+
+      {rest.length > 0 ? (
+        <section className="flex flex-col gap-3">
+          {answer.kind !== "none" || homonyms.length > 0 ? <ResultsGroupHeading>{t("more")}</ResultsGroupHeading> : null}
+          <ArtistList artists={rest} />
         </section>
       ) : null}
     </div>

@@ -5,7 +5,9 @@ import { renderWithIntl } from "@/test/i18n-test-utils";
 import { songHref } from "@/lib/catalog-links";
 import catalogEs from "../../../../messages/es/catalog.json";
 import type { ArtistSearchResult, SongGroupResult } from "@/services/catalog/search/types";
-import { ArtistResults } from "./ArtistResults";
+import { ArtistAnswerResults, ArtistResults } from "./ArtistResults";
+import { albumAnswerOf, albumSiblingsOf } from "./AlbumAnswer";
+import { pickArtistAnswer } from "@/services/catalog/search/artist-answer";
 import { BroadQueryHint, CatalogOnlyNotice, RefineHint, SearchEmpty, SearchSummary, SearchTypeSwitch } from "./SearchChrome";
 import { SongInterpretation, SongResults } from "./SongResults";
 import { SearchOriginNotice } from "./SearchOriginNotice";
@@ -229,7 +231,7 @@ describe("Canciones", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("la canción resuelta lista sus álbumes; las demás abren su propia búsqueda", () => {
+  it("la canción resuelta tiene su ficha con sus discos; las demás abren su propia búsqueda (redesign-search-phase2)", () => {
     renderWithIntl(
       <SongResults
         response={{
@@ -245,9 +247,12 @@ describe("Canciones", () => {
       />,
     );
 
+    // Ficha de la canción: sin el panel «Álbumes que contienen…» de la búsqueda anterior.
     expect(
-      screen.getByRole("heading", { name: labels.results.songContext.title.replace("{song}", "Kiss of Death") }),
-    ).toBeInTheDocument();
+      screen.queryByRole("heading", { name: labels.results.songContext.title.replace("{song}", "Kiss of Death") }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Kiss of Death" })).toBeInTheDocument();
+    expect(screen.getByText("Aparece en 7 discos")).toBeInTheDocument();
     expect(
       screen.getByRole("link", {
         name: labels.results.songContext.viewSongAria.replace("{song}", "Kiss of Death"),
@@ -427,5 +432,35 @@ describe("campos del catálogo (openspec: add-catalog-search-fields)", () => {
 
     expect(screen.getByText(/Integrante de Foo Fighters y 2 más/)).toBeInTheDocument();
     expect(screen.getByText(/Activo desde 2006/)).toBeInTheDocument();
+  });
+});
+
+describe("respuesta de la rápida (redesign-search-phase2)", () => {
+  it("«¿Cuál «x» buscas?» con sus motivos y los homónimos plegados", () => {
+    const results = [
+      artist({ id: "pink-jp", name: "PINK", exact: true }),
+      ...["de", "it", "fi", "pp"].map((id) => artist({ id: `pink-${id}`, name: "Pink", exact: true, disambiguation: id })),
+      artist({ id: "pf", name: "Pink Floyd", discCount: 233, cached: true }),
+      artist({ id: "lpd", name: "The Legendary Pink Dots", discCount: 175, cached: true }),
+    ];
+    renderWithIntl(<ArtistAnswerResults query="pink" results={results} answer={pickArtistAnswer("pink", results)} />);
+
+    expect(screen.getByRole("heading", { name: "¿Cuál «pink» buscas?" })).toBeInTheDocument();
+    expect(screen.getByText("233 discos en el catálogo")).toBeInTheDocument();
+    expect(screen.getByText("Nombre idéntico a «pink»")).toBeInTheDocument();
+    // Cuatro homónimos debajo (PINK ya está arriba): tres visibles y el resto tras «Ver los 4».
+    expect(screen.queryByRole("link", { name: /pp/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Ver los 4/ }));
+    expect(screen.getByRole("link", { name: /pp/ })).toBeInTheDocument();
+  });
+
+  it("ficha de Álbumes solo si el primero cubre la consulta; «También» del mismo artista y título", () => {
+    const album = (id: string, title: string, artistName: string) =>
+      ({ kind: "release-group", id, mbid: null, title, artistName, category: "studio", year: 1979, cached: false }) as const;
+    const list = [album("pf", "The Wall", "Pink Floyd"), album("arty", "The Wall", "ARTY"), album("pf2", "The Wall", "Pink Floyd")];
+    const answer = albumAnswerOf("the wall", list);
+    expect(answer?.id).toBe("pf");
+    expect(albumSiblingsOf(answer!, list).map((a) => a.id)).toEqual(["pf2"]);
+    expect(albumAnswerOf("pink floid", [album("x", "Pink", "Four Tet")])).toBeNull();
   });
 });
