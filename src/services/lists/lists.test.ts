@@ -18,7 +18,7 @@ import {
 } from "./lists";
 
 const mocks = vi.hoisted(() => ({
-  db: { select: vi.fn(), insert: vi.fn(), update: vi.fn(), delete: vi.fn(), transaction: vi.fn() },
+  db: { select: vi.fn(), insert: vi.fn(), update: vi.fn(), delete: vi.fn(), transaction: vi.fn(), execute: vi.fn() },
   getProfileByUsername: vi.fn(),
 }));
 
@@ -558,17 +558,15 @@ describe("servicio de listas", () => {
     expect(result.id).toBe(listRow.id);
   });
 
-  it("reorderListItems reordena dentro de una transacción", async () => {
+  it("reorderListItems reordena en una sola sentencia, sin un UPDATE por ítem", async () => {
     mocks.db.select.mockReturnValueOnce(chain([{ id: listRow.id }])); // validar lista
     mockOwnedList(listRow);
-    mocks.db.transaction.mockImplementation(async (cb: (tx: unknown) => Promise<void>) => {
-      mocks.db.update.mockReturnValue(chain([]));
-      await cb(mocks.db);
-    });
+    mocks.db.execute.mockResolvedValue([]);
 
-    const result = await reorderListItems(listRow.id, owner, ["i2", "i1"]);
+    const result = await reorderListItems(listRow.id, owner, ["i2", "i1", "i3"]);
     expect(result.id).toBe(listRow.id);
-    expect(mocks.db.transaction).toHaveBeenCalled();
+    expect(mocks.db.execute).toHaveBeenCalledTimes(1);
+    expect(mocks.db.update).not.toHaveBeenCalled();
   });
 });
 

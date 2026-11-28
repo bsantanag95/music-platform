@@ -22,6 +22,7 @@ import {
 } from "./types";
 import { resolveNewContentAudience } from "@/services/social/default-audience";
 import { scheduleCoverMirrorsForUrls } from "@/services/catalog/cover-mirror";
+import { applyItemPlacements } from "./reorder";
 import { notGeneratedCollectionCondition } from "@/services/discovery/collections/conditions";
 
 /** Cantidad máxima de carátulas que se llevan a la tarjeta de una lista. */
@@ -777,16 +778,12 @@ export async function reorderListItems(
     .limit(1);
   if (!listRow) throw new ApiError("LIST_NOT_FOUND", 404, "La lista no existe");
 
-  await db.transaction(async (tx) => {
-    for (let i = 0; i < itemIds.length; i += 1) {
-      const itemId = itemIds[i];
-      if (!itemId) continue;
-      await tx
-        .update(userListItem)
-        .set({ position: i + 1 })
-        .where(and(eq(userListItem.listId, listId), eq(userListItem.id, itemId)));
-    }
-  });
+  // Una sola sentencia para todo el orden (no un UPDATE por ítem): ver `reorder.ts`.
+  await applyItemPlacements(
+    db,
+    listId,
+    itemIds.flatMap((itemId, index) => (itemId ? [{ itemId, position: index + 1 }] : [])),
+  );
 
   return getOwnedList(listId, ownerId);
 }

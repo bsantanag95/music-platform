@@ -36,6 +36,7 @@ import {
   type SongContextAlbum,
 } from "../ingest-recording";
 import { activityScores, exploredArtistMbids, exploredScores } from "./activity";
+import { withAlbumCovers } from "./album-covers";
 import { coverageLevel, edgeSplits, restAfterEdgeArtist } from "./coverage";
 import { findArtistsByKeys, matchLocalRecordings } from "./local-match";
 import {
@@ -384,6 +385,9 @@ function toSongAlbums(albums: SongContextAlbum[]): SongAlbum[] {
       title: album.title,
       category: album.category,
       year: album.year,
+      // Se completan en lote al final de la búsqueda (`withAlbumCovers`): una consulta para todos los discos.
+      coverThumbUrl: null,
+      coverResolved: false,
     }));
 }
 
@@ -781,7 +785,7 @@ export async function searchSongs(
 
   return {
     type: "song",
-    results,
+    results: await withAlbumCovers(results),
     remoteFailed,
     total,
     nextOffset: !pick && total !== null && pageSize > 0 && fetched < total ? fetched : null,

@@ -21,6 +21,7 @@ import {
   type LaminaScore,
 } from "@/services/laminas/laminas";
 import { listItems, normalizeTitle, type UserListItemEntry } from "@/services/lists/lists";
+import { applyItemPlacements } from "@/services/lists/reorder";
 import type { Audience } from "@/services/social/types";
 
 /** Discos o canciones (0086 admite los dos; la Fase 2 suma canciones). */
@@ -335,12 +336,11 @@ export async function arrangeTierList(
     if (placed.length !== known.size || sent.size !== known.size || placed.some((p) => !known.has(p.itemId))) {
       throw new ApiError("VALIDATION_ERROR", 400, "La disposición no coincide con los discos de la tier list");
     }
-    for (const [index, p] of placed.entries()) {
-      await tx
-        .update(userListItem)
-        .set({ position: index + 1, tier: p.tier })
-        .where(and(eq(userListItem.listId, id), eq(userListItem.id, p.itemId)));
-    }
+    await applyItemPlacements(
+      tx,
+      id,
+      placed.map((p, index) => ({ itemId: p.itemId, position: index + 1, tier: p.tier })),
+    );
     // Toca `updated_at` por el trigger: versiona la imagen y ordena el listado.
     await tx.update(userList).set({ title: row.title }).where(eq(userList.id, id));
   });

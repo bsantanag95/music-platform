@@ -68,6 +68,10 @@ export interface AlbumSearchResult {
   year: number | null;
   /** Tracklist ya ingerida en la base local. */
   cached: boolean;
+  /** Carátula conocida (nula si no hay o fue retirada). */
+  coverThumbUrl: string | null;
+  /** La carátula ya tiene respuesta: el cliente no la pide aparte (`isCoverResolved`). */
+  coverResolved: boolean;
   /**
    * Media de la comunidad con su cantidad (openspec: refine-search-results-phase3); `average` es `null` con menos
    * de 5 valoraciones (umbral del álbum).
@@ -108,6 +112,10 @@ export interface SongAlbum {
   title: string;
   category: ReleaseGroupCategoryValue;
   year: number | null;
+  /** Carátula conocida (nula si no hay o fue retirada). */
+  coverThumbUrl: string | null;
+  /** La carátula ya tiene respuesta: el cliente no la pide aparte (`isCoverResolved`). */
+  coverResolved: boolean;
 }
 
 /** Una canción (título, artista) con los álbumes que la contienen. */

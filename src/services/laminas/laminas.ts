@@ -8,6 +8,7 @@ import { db } from "@/db";
 import { appUser, rating, userList, userListItem } from "@/db/schema";
 import { ApiError } from "@/lib/api/errors";
 import { enrichLists, listItems, normalizeTitle, resolveListTarget, type UserListItemEntry } from "@/services/lists/lists";
+import { applyItemPlacements } from "@/services/lists/reorder";
 import { resolveNewContentAudience } from "@/services/social/default-audience";
 import { getProfileByUsername } from "@/services/social/profiles";
 import type { Audience } from "@/services/social/types";
@@ -344,9 +345,11 @@ export async function reorderLamina(id: string, ownerId: string, itemIds: string
     throw new ApiError("VALIDATION_ERROR", 400, "El orden no coincide con los ítems de la Lámina");
   }
   await db.transaction(async (tx) => {
-    for (const [index, itemId] of itemIds.entries()) {
-      await tx.update(userListItem).set({ position: index + 1 }).where(and(eq(userListItem.listId, id), eq(userListItem.id, itemId)));
-    }
+    await applyItemPlacements(
+      tx,
+      id,
+      itemIds.map((itemId, index) => ({ itemId, position: index + 1 })),
+    );
     await tx.update(userList).set({ title: row.title }).where(eq(userList.id, id));
   });
   return getOwnedLamina(id, ownerId);

@@ -29,3 +29,17 @@ export function isCoverResolved(rg: CoverResolutionRow): boolean {
     Date.now() - rg.coverCheckedAt.getTime() < NEGATIVE_RETRY_MS
   );
 }
+
+/** Carátula que viaja en un payload: URL (nula si fue retirada) y si ya está resuelta. */
+export interface CoverFields {
+  coverThumbUrl: string | null;
+  coverResolved: boolean;
+}
+
+/**
+ * Los dos campos de carátula de un disco para el cliente. Con `coverResolved` el cliente la pinta en la carga inicial
+ * y no pide `/cover` disco por disco; una carátula retirada viaja como `null`, resuelta.
+ */
+export function coverFields(rg: CoverResolutionRow): CoverFields {
+  return { coverThumbUrl: rg.coverBlockedAt ? null : rg.coverThumbUrl, coverResolved: isCoverResolved(rg) };
+}

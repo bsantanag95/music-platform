@@ -11,7 +11,8 @@ vi.mock("@/i18n/navigation", () => ({
     </a>
   ),
 }));
-vi.mock("../LazyCoverImage", () => ({ LazyCoverImage: () => <span /> }));
+vi.mock("../LazyCoverImage", () => ({ LazyCoverImage: () => <span data-testid="lazy-cover" /> }));
+vi.mock("../CoverThumb", () => ({ CoverThumb: ({ cover }: { cover: string | null }) => <span data-testid="cover" data-src={cover ?? ""} /> }));
 
 const wall: AlbumSearchResult = {
   kind: "release-group",
@@ -20,6 +21,8 @@ const wall: AlbumSearchResult = {
   title: "The Wall",
   artistName: "Pink Floyd",
   category: "studio",
+  coverThumbUrl: null,
+  coverResolved: false,
   year: 1979,
   cached: true,
 };
@@ -35,5 +38,17 @@ describe("AlbumRow (refine-search-results-phase3)", () => {
     renderWithIntl(<AlbumRow album={{ ...wall, community: { average: null, count: 3 }, yourStars: null }} />);
     expect(screen.queryByText(/· 3$/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Tu nota/)).not.toBeInTheDocument();
+  });
+
+  it("con la carátula resuelta en el payload la pinta sin pedir /cover", () => {
+    renderWithIntl(<AlbumRow album={{ ...wall, coverResolved: true, coverThumbUrl: "https://example.test/wall.jpg" }} />);
+    expect(screen.getByTestId("cover")).toHaveAttribute("data-src", "https://example.test/wall.jpg");
+    expect(screen.queryByTestId("lazy-cover")).not.toBeInTheDocument();
+  });
+
+  it("sin resolver, la carga diferida la pide al hacerse visible", () => {
+    renderWithIntl(<AlbumRow album={wall} />);
+    expect(screen.getByTestId("lazy-cover")).toBeInTheDocument();
+    expect(screen.queryByTestId("cover")).not.toBeInTheDocument();
   });
 });
