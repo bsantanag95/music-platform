@@ -113,10 +113,16 @@ async function localCandidates(text: string, filters: ReleaseGroupQueryOptions) 
   const keys = [...new Set(edgeSplits(tokens).map((split) => split.artistTokens.join(" ")))];
   const edgeArtists = await findArtistsByKeys(keys);
   // Una consulta por resto de título distinto, no una por artista: «pink floyd» encuentra decenas de artistas «Pink»
-  // y «Floyd» que dejan el mismo resto (mismo criterio que las sugerencias, `suggest.ts`).
+  // y «Floyd» que dejan el mismo resto. Cada artista conserva su propio tope (`perArtist`), como cuando se consultaba
+  // uno por uno: los homónimos no se quitan sitio entre sí.
   const byArtist: ReleaseGroupRow[] = [];
   for (const [rest, ids] of groupEdgeArtistsByRest(tokens, edgeArtists)) {
-    const matches = await releaseGroupsByArtistsAndTitle(ids, rest, { limit: LOCAL_LIMIT, mode: "fuzzy", ...filters });
+    const matches = await releaseGroupsByArtistsAndTitle(ids, rest, {
+      limit: LOCAL_LIMIT,
+      mode: "fuzzy",
+      perArtist: true,
+      ...filters,
+    });
     byArtist.push(...matches.map((match) => match.row));
   }
 

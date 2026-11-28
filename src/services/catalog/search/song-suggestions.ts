@@ -79,10 +79,11 @@ async function bridgeCandidates(text: string): Promise<{ row: RecordingRow; rest
   const artists = await findArtistsByKeys(keys);
   // Una consulta por resto de título distinto, no una por artista: los homónimos («Pink», «Soda») dejan el mismo
   // resto, y en el typeahead cada tecla las lanzaba todas a la vez (mismo criterio que `suggest.ts` y `albums.ts`).
+  // Cada artista conserva su propio tope (`perArtist`), como cuando se consultaba uno por uno.
   const groups = [...groupEdgeArtistsByRest(tokens, artists)].filter(([rest]) => rest.length >= MIN_BRIDGE_REST);
   const lists = await Promise.all(
     groups.map(async ([rest, ids]) => {
-      const rows = await recordingsByArtistsAndTitlePrefix(ids, rest, BRIDGE_POOL);
+      const rows = await recordingsByArtistsAndTitlePrefix(ids, rest, BRIDGE_POOL, { perArtist: true });
       return rows.map((row) => ({ row, rest }));
     }),
   );

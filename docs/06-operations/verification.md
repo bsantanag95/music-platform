@@ -114,8 +114,10 @@ muchas veces en una sola petición, en vez de una consulta por lote. Va engancha
   `VALUES` de cualquier tamaño cuentan como una sola forma.
 - **Qué es una petición**: el store de trabajo que Next abre por petición (`workAsyncStorage`; páginas, layouts, metadata,
   route handlers y server actions), y la ruta del informe es su patrón (`/[locale]/artist/[id]`). Es una API interna
-  de Next (`next/dist/server/app-render/work-async-storage.external`): si una versión nueva la cambia, el test
-  `query-counter.test.ts` no lo detecta (la mockea), pero `typecheck` sí, porque la importa con su tipo.
+  de Next (`next/dist/server/app-render/work-async-storage.external`). Si una versión nueva la cambia, lo detectan
+  `typecheck` (la importa con su tipo) y `query-counter.next-contract.test.ts`, que corre contra el módulo real (sin
+  mock, tras el arranque `node-environment-baseline` de Next) y comprueba que el store se ve a través de `await`, que
+  dos peticiones simultáneas no se mezclan y que el informe usa `route`.
 - **Fuera de Next** (scripts, smoke tests contra una BD de scratch): `countQueries(fn)` devuelve `{ result, summary }` con el
   total y las sentencias repetidas, para medir o fijar en un smoke test cuántas consultas hace un flujo. Cuenta con el
   contador encendido (`NODE_ENV` distinto de `production` o `DB_QUERY_COUNTER` puesto).
