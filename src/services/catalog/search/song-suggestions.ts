@@ -14,7 +14,7 @@
 
 import type { RecordingRow } from "@/db/schema";
 import { activityScores } from "./activity";
-import { edgeSplits, restAfterEdgeArtist } from "./coverage";
+import { edgeSplits, groupEdgeArtistsByRest } from "./coverage";
 import {
   findArtistsByKeys,
   matchLocalRecordings,
@@ -77,11 +77,12 @@ async function bridgeCandidates(text: string): Promise<{ row: RecordingRow; rest
   if (tokens.length < 2) return [];
   const keys = [...new Set(edgeSplits(tokens).map((split) => split.artistTokens.join(" ")))];
   const artists = await findArtistsByKeys(keys);
+  // Una consulta por resto de título distinto, no una por artista: los homónimos («Pink», «Soda») dejan el mismo
+  // resto, y en el typeahead cada tecla las lanzaba todas a la vez (mismo criterio que `suggest.ts` y `albums.ts`).
+  const groups = [...groupEdgeArtistsByRest(tokens, artists)].filter(([rest]) => rest.length >= MIN_BRIDGE_REST);
   const lists = await Promise.all(
-    artists.map(async (artist) => {
-      const rest = restAfterEdgeArtist(tokens, artist.name)?.join(" ");
-      if (!rest || rest.length < MIN_BRIDGE_REST) return [];
-      const rows = await recordingsByArtistsAndTitlePrefix([artist.id], rest, BRIDGE_POOL);
+    groups.map(async ([rest, ids]) => {
+      const rows = await recordingsByArtistsAndTitlePrefix(ids, rest, BRIDGE_POOL);
       return rows.map((row) => ({ row, rest }));
     }),
   );

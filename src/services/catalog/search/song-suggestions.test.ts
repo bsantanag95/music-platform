@@ -109,6 +109,26 @@ describe("songSuggestions", () => {
     expect(labels(rows)[0]).toBe("One — Metallica");
   });
 
+  it("los homónimos de un extremo comparten una consulta por resto, no una por artista (N+1)", async () => {
+    const pinks = Array.from({ length: 6 }, (_, index) => ({ id: `pink-${index}`, name: "Pink" }) as ArtistRow);
+    vi.mocked(localMatch.findArtistsByKeys).mockResolvedValue([...pinks, { id: "floyd", name: "Floyd" } as ArtistRow]);
+
+    await songSuggestions("pink floyd", 6);
+
+    expect(vi.mocked(localMatch.recordingsByArtistsAndTitlePrefix).mock.calls).toEqual([
+      [pinks.map((artist) => artist.id), "floyd", 40],
+      [["floyd"], "pink", 40],
+    ]);
+  });
+
+  it("un resto demasiado corto no consulta", async () => {
+    vi.mocked(localMatch.findArtistsByKeys).mockResolvedValue([{ id: "metallica", name: "Metallica" } as ArtistRow]);
+
+    await songSuggestions("metallica o", 6);
+
+    expect(localMatch.recordingsByArtistsAndTitlePrefix).not.toHaveBeenCalled();
+  });
+
   it("entre las difusas, primero las que cubren más palabras de la consulta", async () => {
     vi.mocked(localMatch.findArtistsByKeys).mockResolvedValue([{ id: "artist-Oasis", name: "Oasis" } as ArtistRow]);
     vi.mocked(localMatch.recordingsByArtistsAndTitlePrefix).mockResolvedValue([rec("oasis", "Wonderwall")]);
