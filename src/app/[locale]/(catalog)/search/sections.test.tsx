@@ -45,6 +45,10 @@ vi.mock("@/services/auth/authorization", () => ({ getCurrentUser: mocks.getCurre
 // Lecturas locales de la fase 2 (redesign-search-phase2): sin BD en estos tests.
 vi.mock("@/services/catalog/search/tracklist-preview", () => ({ getStoredTracklistPreview: vi.fn(async () => null) }));
 vi.mock("@/components/catalog/search-results/OtherTypePanel", () => ({ OtherTypePanel: () => null }));
+vi.mock("@/services/catalog/search/other-type", () => ({
+  findInAllOtherTypes: vi.fn(async () => []),
+  findInOtherType: vi.fn(async () => null),
+}));
 
 const { ArtistSection, AlbumSection, UserSection } = await import("./sections");
 
@@ -176,13 +180,17 @@ describe("estado vacío (refine-search-results-phase1)", () => {
   };
   const named = (tree: ReactElement[], name: string) => tree.filter((el) => (el.type as { name?: string }).name === name);
 
-  it("sin filtro: sugiere desde el catálogo y oculta las pastillas", async () => {
+  it("sin filtro: el nuevo estado vacío sugiere desde el catálogo y oculta las pastillas (redesign-search-phase3)", async () => {
     mocks.searchAlbums.mockResolvedValue(emptyAlbums);
     mocks.suggestSpelling.mockResolvedValue("Pink Floyd");
 
-    const tree = flatten(await streamed(await AlbumSection({ query: "pink floid" })));
-    const empty = tree.find((el) => (el.type as { name?: string }).name === "SearchEmpty");
-    expect(empty?.props).toMatchObject({ suggestion: "Pink Floyd", clearFiltersHref: null });
+    const section = (await streamed(await AlbumSection({ query: "pink floid" }))) as ReactElement<{ asideAfter: unknown }>;
+    const tree = flatten(section);
+    expect(named(tree, "SearchEmpty")).toHaveLength(0);
+    expect(named(tree, "SearchNoResults")[0]?.props).toMatchObject({ suggestion: "Pink Floyd", type: "album", query: "pink floid" });
+    // La lateral lleva las búsquedas recientes y no el panel de otros tipos (ya va en el estado vacío).
+    expect(named(tree, "RecentSearches")).toHaveLength(1);
+    expect(section.props.asideAfter).toBeNull();
     expect(tree.some((el) => (el.type as { name?: string }).name === "FilterPills")).toBe(false);
     expect(mocks.suggestSpelling).toHaveBeenCalledWith("album", "pink floid");
   });

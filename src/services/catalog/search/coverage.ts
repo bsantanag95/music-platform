@@ -58,7 +58,7 @@ function sameTokens(a: string[], b: string[]): boolean {
 const LEADING_ARTICLES = new Set(["the", "a", "an", "el", "la", "los", "las", "un", "una", "le", "les", "der", "die", "das"]);
 
 /** Quita un artículo inicial si queda al menos una palabra. */
-function withoutLeadingArticle(tokens: string[]): string[] {
+export function withoutLeadingArticle(tokens: string[]): string[] {
   const [first, ...rest] = tokens;
   return first !== undefined && rest.length > 0 && LEADING_ARTICLES.has(first) ? rest : tokens;
 }

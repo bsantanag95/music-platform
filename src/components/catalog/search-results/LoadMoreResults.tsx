@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { searchAlbums, searchArtists, searchSongs, type CatalogSearchFilters } from "@/lib/api/catalog";
 import type { AlbumSearchResult, ArtistSearchResult, SongGroupResult } from "@/lib/api/schemas";
 import { AlbumList } from "./AlbumResults";
+import { AlbumGrid } from "./AlbumGrid";
 import { ArtistList } from "./ArtistResults";
 import { SongList } from "./SongResults";
 import type { ResultHighlight } from "@/services/catalog/search/filters";
@@ -23,6 +24,8 @@ interface LoadMoreResultsProps {
   authenticated?: boolean;
   /** Búsqueda avanzada: datos filtrados que se destacan (openspec: refine-advanced-search-phase3). */
   highlight?: ResultHighlight[];
+  /** Álbumes de la rápida: `grid` agrega tarjetas a la rejilla «Otros discos llamados…» (redesign-search-phase3). */
+  view?: "rows" | "grid";
 }
 
 // "Cargar más" de Álbumes y Canciones (openspec: redesign-scoped-search): pide
@@ -37,6 +40,7 @@ export function LoadMoreResults({
   seen,
   authenticated = false,
   highlight,
+  view = "rows",
 }: LoadMoreResultsProps) {
   const t = useTranslations("catalog.search.results");
   // Con la vista Tabla de la búsqueda avanzada, las páginas nuevas llegan como filas de tabla (desde `md`).
@@ -101,13 +105,17 @@ export function LoadMoreResults({
         : null}
       {albums.length > 0
         ? asTable(
-            <AlbumList albums={albums} authenticated={authenticated} highlight={highlight} />,
+            view === "grid" ? (
+              <AlbumGrid albums={albums} query={query} authenticated={authenticated} />
+            ) : (
+              <AlbumList albums={albums} authenticated={authenticated} highlight={highlight} />
+            ),
             <ResultsTable type="album" rows={albums} highlight={highlight ?? []} header={false} />,
           )
         : null}
       {songs.length > 0
         ? asTable(
-            <SongList groups={songs} highlight={highlight} />,
+            <SongList groups={songs} highlight={highlight} query={highlight ? undefined : query} />,
             <ResultsTable type="song" rows={songs} highlight={highlight ?? []} header={false} />,
           )
         : null}

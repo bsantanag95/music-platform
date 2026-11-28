@@ -5,6 +5,8 @@ import { formatStars } from "@/components/album/album-format";
 import type { AlbumSearchResult } from "@/services/catalog/search/types";
 import type { TracklistPreview } from "@/services/catalog/search/tracklist-preview";
 import { coverageLevel } from "@/services/catalog/search/coverage";
+import { sameTitleAsQuery } from "@/services/catalog/search/same-title";
+import { tokenize } from "@/services/catalog/search/normalize";
 import { normalizeSearchText } from "@/services/catalog/search/normalize";
 import { ResultCover } from "./ResultCover";
 import { MetaLine } from "./MetaLine";
@@ -13,11 +15,17 @@ import { MetaLine } from "./MetaLine";
 // nunca resolución completa), datos, media de la comunidad, primeras canciones si la tracklist ya está guardada (la
 // búsqueda no ingiere) y «Ver el disco». Los otros discos del mismo artista con el mismo título se enlazan como «También».
 
-/** Hay ficha cuando el primer resultado cubre la consulta: título igual a ella, o artista + título. */
+/**
+ * Hay ficha cuando el primer resultado cubre la consulta: título igual a ella, o artista + título. Si la consulta es solo
+ * el nombre del artista («paranoid android», que también es un grupo), no hay disco buscado: no hay ficha.
+ */
 export function albumAnswerOf(query: string, results: AlbumSearchResult[]): AlbumSearchResult | null {
   const [first] = results;
   if (!first) return null;
-  return coverageLevel(query, first.title, first.artistName ? [first.artistName] : []) <= 2 ? first : null;
+  if (sameTitleAsQuery(first.title, query)) return first;
+  const artist = first.artistName ?? "";
+  const onlyArtist = artist !== "" && tokenize(artist).join(" ") === tokenize(query).join(" ");
+  return !onlyArtist && coverageLevel(query, first.title, artist ? [artist] : []) <= 2 ? first : null;
 }
 
 /** Otros discos del mismo artista con el mismo título (el single de 2023 junto a The Wall de 1979). */

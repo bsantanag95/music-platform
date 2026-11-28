@@ -9,7 +9,8 @@ import { ArtistAnswerResults, ArtistResults } from "./ArtistResults";
 import { albumAnswerOf, albumSiblingsOf } from "./AlbumAnswer";
 import { pickArtistAnswer } from "@/services/catalog/search/artist-answer";
 import { BroadQueryHint, CatalogOnlyNotice, RefineHint, SearchEmpty, SearchSummary, SearchTypeSwitch } from "./SearchChrome";
-import { SongInterpretation, SongResults } from "./SongResults";
+import { SongInterpretation, SongList, SongResults } from "./SongResults";
+import { AlbumGrid } from "./AlbumGrid";
 import { SearchOriginNotice } from "./SearchOriginNotice";
 import { FiltersDisclosure } from "./FiltersDisclosure";
 
@@ -464,5 +465,38 @@ describe("respuesta de la rápida (redesign-search-phase2)", () => {
     expect(answer?.id).toBe("pf");
     expect(albumSiblingsOf(answer!, list).map((a) => a.id)).toEqual(["pf2"]);
     expect(albumAnswerOf("pink floid", [album("x", "Pink", "Four Tet")])).toBeNull();
+    // Solo el nombre del artista: no hay disco buscado (redesign-search-phase3).
+    expect(albumAnswerOf("paranoid android", [album("b", "Beyond and Back", "Paranoid Android")])).toBeNull();
+    // Artista + título sí.
+    expect(albumAnswerOf("pink floyd the wall", list)?.id).toBe("pf");
+  });
+});
+
+describe("títulos repetidos (redesign-search-phase3)", () => {
+  const song = (key: string, title: string, artistName: string): SongGroupResult => ({
+    kind: "song", key, title, artistName, recordingId: null, mbid: null, albums: [], query: `${artistName} - ${title}`, durationSec: 218,
+  });
+
+  it("en la rápida, una canción con el mismo título lleva al artista de titular", () => {
+    renderWithIntl(<SongList groups={[song("a", "Creep", "Lena Hall"), song("b", "Creep (Live)", "TLC")]} query="creep" />);
+    const [same, other] = screen.getAllByRole("link");
+    expect(same!.querySelector("span.font-display")).toHaveTextContent("Lena Hall");
+    expect(other!.querySelector("span.font-display")).toHaveTextContent("Creep (Live)");
+  });
+
+  it("sin consulta (avanzada), el título sigue de titular", () => {
+    renderWithIntl(<SongList groups={[song("a", "Creep", "Lena Hall")]} />);
+    expect(screen.getByRole("link").querySelector("span.font-display")).toHaveTextContent("Creep");
+  });
+
+  it("la rejilla pone al artista de titular y el título solo si difiere", () => {
+    const album = (id: string, title: string, artistName: string) => ({
+      kind: "release-group" as const, id, mbid: null, title, artistName, category: "single_ep" as const, year: 2011, cached: false,
+      coverThumbUrl: null, coverResolved: false,
+    });
+    renderWithIntl(<AlbumGrid albums={[album("a", "The Wall", "ARTY"), album("b", "The Wall (Remix)", "Yuck")]} query="the wall" authenticated={false} />);
+    const arty = screen.getByRole("link", { name: /ARTY/ });
+    expect(arty).not.toHaveTextContent("The Wall");
+    expect(screen.getByRole("link", { name: /Yuck/ })).toHaveTextContent("The Wall (Remix)");
   });
 });

@@ -49,9 +49,13 @@ import { AsidePanel, ResultsLayout } from "@/components/catalog/search-results/R
 import { ArtistAnswerResults, ArtistResults } from "@/components/catalog/search-results/ArtistResults";
 import { answeredIds, pickArtistAnswer } from "@/services/catalog/search/artist-answer";
 import { AlbumList } from "@/components/catalog/search-results/AlbumResults";
+import { AlbumGrid } from "@/components/catalog/search-results/AlbumGrid";
+import { albumView } from "@/services/catalog/search/same-title";
 import { AlbumAnswer, albumAnswerOf, albumSiblingsOf } from "@/components/catalog/search-results/AlbumAnswer";
 import { ResultsGroupHeading } from "@/components/catalog/search-results/ResultsGroupHeading";
 import { OtherTypePanel } from "@/components/catalog/search-results/OtherTypePanel";
+import { SearchNoResults } from "@/components/catalog/search-results/SearchNoResults";
+import { RecentSearches } from "@/components/catalog/RecentSearches";
 import { getStoredTracklistPreview } from "@/services/catalog/search/tracklist-preview";
 import {
   SongInterpretation,
@@ -243,7 +247,7 @@ async function ArtistRemote({
       artistType={criteria.artistType}
     />
   );
-  const aside = empty && !filtered ? null : pills;
+  const aside = empty && !filtered ? <RecentSearches /> : pills;
   const body = (
     <>
       {response.catalogOnly ? <CatalogOnlyNotice type="artist" /> : null}
@@ -253,12 +257,11 @@ async function ArtistRemote({
       {empty && advanced ? (
         <AdvancedNoResults type="artist" query={query} criteria={criteria} />
       ) : empty ? (
-        <SearchEmpty
-          query={query}
-          type="artist"
-          suggestion={suggestion}
-          clearFiltersHref={filtered ? searchHref("artist", query) : null}
-        />
+        filtered ? (
+          <SearchEmpty query={query} type="artist" suggestion={suggestion} clearFiltersHref={searchHref("artist", query)} />
+        ) : (
+          <SearchNoResults query={query} type="artist" suggestion={suggestion} searchedRemote={!response.remoteFailed} />
+        )
       ) : (
         <div className="flex flex-col gap-4">
           {advanced ? (
@@ -293,7 +296,12 @@ async function ArtistRemote({
     </>
   );
   return (
-    <Layout advanced={advanced} summary={summary} aside={aside} asideAfter={<OtherTypes type="artist" query={query} />}>
+    <Layout
+      advanced={advanced}
+      summary={summary}
+      aside={aside}
+      asideAfter={empty && !filtered ? null : <OtherTypes type="artist" query={query} />}
+    >
       {body}
     </Layout>
   );
@@ -450,8 +458,12 @@ async function AlbumRemote({
   const tracks = answer ? await getStoredTracklistPreview(answer.id).catch(() => null) : null;
   const shownAbove = new Set([answer?.id, ...siblings.map((album) => album.id)]);
   const others = response.results.filter((album) => !shownAbove.has(album.id));
+  // Con títulos repetidos, rejilla de carátulas con el artista como titular (openspec: redesign-search-phase3, D1).
+  const view = answer ? albumView(query, others) : "rows";
   const aside =
-    shownPills || refine ? (
+    empty && !filtered ? (
+      <RecentSearches />
+    ) : shownPills || refine ? (
       <>
         {shownPills}
         {refine}
@@ -467,12 +479,11 @@ async function AlbumRemote({
       {empty && advanced ? (
         <AdvancedNoResults type="album" query={query} criteria={criteria} />
       ) : empty ? (
-        <SearchEmpty
-          query={query}
-          type="album"
-          suggestion={suggestion}
-          clearFiltersHref={filtered ? searchHref("album", query) : null}
-        />
+        filtered ? (
+          <SearchEmpty query={query} type="album" suggestion={suggestion} clearFiltersHref={searchHref("album", query)} />
+        ) : (
+          <SearchNoResults query={query} type="album" suggestion={suggestion} searchedRemote={!response.remoteFailed} />
+        )
       ) : (
         <div className="flex flex-col gap-4">
           {advanced && highlight ? (
@@ -484,9 +495,15 @@ async function AlbumRemote({
             <div className="flex flex-col gap-8">
               <AlbumAnswer album={answer} siblings={siblings} tracks={tracks} />
               {others.length > 0 ? (
-                <section className="flex flex-col gap-3">
-                  <ResultsGroupHeading>{tAlbums("others")}</ResultsGroupHeading>
-                  <AlbumList albums={others} authenticated={authenticated} />
+                <section className="flex flex-col gap-4">
+                  <ResultsGroupHeading>
+                    {view === "grid" ? tAlbums("othersNamed", { query }) : tAlbums("others")}
+                  </ResultsGroupHeading>
+                  {view === "grid" ? (
+                    <AlbumGrid albums={others} query={query} authenticated={authenticated} />
+                  ) : (
+                    <AlbumList albums={others} authenticated={authenticated} />
+                  )}
                 </section>
               ) : null}
             </div>
@@ -502,6 +519,7 @@ async function AlbumRemote({
               seen={response.results.map((album) => album.id)}
               authenticated={authenticated}
               highlight={highlight}
+              view={view}
             />
           ) : null}
         </div>
@@ -509,7 +527,12 @@ async function AlbumRemote({
     </>
   );
   return (
-    <Layout advanced={advanced} summary={summary} aside={advanced ? null : aside} asideAfter={<OtherTypes type="album" query={query} />}>
+    <Layout
+      advanced={advanced}
+      summary={summary}
+      aside={advanced ? null : aside}
+      asideAfter={empty && !filtered ? null : <OtherTypes type="album" query={query} />}
+    >
       {body}
     </Layout>
   );
@@ -577,7 +600,7 @@ async function SongRemote({
       {empty && advanced ? (
         <AdvancedNoResults type="song" query={query} criteria={criteria} />
       ) : empty ? (
-        <SearchEmpty query={query} type="song" suggestion={suggestion} />
+        <SearchNoResults query={query} type="song" suggestion={suggestion} searchedRemote={!response.remoteFailed} />
       ) : (
         <div className="flex flex-col gap-4">
           {/* Sin título no hay "mejor coincidencia": lista simple (openspec: refine-advanced-search-phase1). */}
@@ -587,7 +610,7 @@ async function SongRemote({
               table={<ResultsTable type="song" rows={response.results} highlight={highlight} />}
             />
           ) : (
-            <SongResults response={response} />
+            <SongResults response={response} query={query} />
           )}
           {response.nextOffset !== null ? (
             <LoadMoreResults
@@ -604,7 +627,12 @@ async function SongRemote({
     </>
   );
   return (
-    <Layout advanced={advanced} summary={summary} aside={advanced ? null : refine} asideAfter={<OtherTypes type="song" query={query} />}>
+    <Layout
+      advanced={advanced}
+      summary={summary}
+      aside={advanced ? null : empty ? <RecentSearches /> : refine}
+      asideAfter={empty ? null : <OtherTypes type="song" query={query} />}
+    >
       {body}
     </Layout>
   );

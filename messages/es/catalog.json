@@ -265,7 +265,8 @@
         "viewAlbum": "Ver el disco",
         "tracksMore": "y {count, plural, one {# canción más} other {# canciones más}}",
         "also": "También:",
-        "others": "Otros álbumes"
+        "others": "Otros álbumes",
+        "othersNamed": "Otros discos llamados «{query}»"
       },
       "songs": {
         "interpretation": "Interpretado como canción «{song}» de {artist}",
@@ -297,6 +298,30 @@
       "otherType": {
         "title": "«{query}» en {type}",
         "seeAll": "Ver {type}"
+      },
+      "noResults": {
+        "title": "Nada coincide con «{query}» en {type}",
+        "lead": "Buscamos en el catálogo y en MusicBrainz.",
+        "inOtherTypes": "En otros tipos del catálogo",
+        "inType": "En {type}",
+        "seeType": "Ver {type}",
+        "tipsHeading": "Prueba así",
+        "tipFewer": "Usa menos palabras o revisa la ortografía.",
+        "startHeading": "O empieza por aquí",
+        "start": {
+          "explore": {
+            "title": "Explorar",
+            "text": "Colecciones, géneros y décadas"
+          },
+          "releases": {
+            "title": "Lanzamientos",
+            "text": "Lo que acaba de salir y lo que viene"
+          },
+          "lists": {
+            "title": "Listas",
+            "text": "Recorridos de la comunidad"
+          }
+        }
       }
     },
     "origin": {
