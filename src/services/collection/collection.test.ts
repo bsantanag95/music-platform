@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { sql } from "drizzle-orm";
+import { sql, type SQL } from "drizzle-orm";
+import { PgDialect } from "drizzle-orm/pg-core";
 import { describe, expect, it, vi } from "vitest";
 import {
   addEntry,
@@ -453,13 +454,18 @@ describe("getCollectionPreview", () => {
   function totals(row: { entries: number; artists: number }) {
     return { from: vi.fn().mockResolvedValue([row]) };
   }
-  // select().from().innerJoin().where().orderBy().limit() → copias de un artista
-  function artistEntries(rows: unknown[]) {
-    const limit = vi.fn().mockResolvedValue(rows);
-    const orderBy = vi.fn(() => ({ limit }));
-    const where = vi.fn(() => ({ orderBy }));
-    const chain = { innerJoin: vi.fn(() => chain), where };
-    return { chain: { from: vi.fn(() => chain) }, limit };
+  // Copias de los artistas del ranking en UNA consulta: la tabla derivada `ranked`
+  // (select().from().innerJoin().where().as()) y el select().from(ranked).where().orderBy() que la recorta.
+  function previewEntries(rows: unknown[]) {
+    const derived = Object.fromEntries(
+      ["id", "format", "attributes", "note", "audience", "createdAt", "updatedAt", "releaseGroupId", "albumTitle", "albumCover", "albumDate", "artistName", "rank"].map(
+        (key) => [key, sql.raw(`"ranked"."${key}"`)],
+      ),
+    );
+    const inner = { from: vi.fn(() => inner), innerJoin: vi.fn(() => inner), where: vi.fn(() => inner), as: vi.fn(() => derived) };
+    const orderBy = vi.fn().mockResolvedValue(rows);
+    const where = vi.fn((_condition: SQL) => ({ orderBy }));
+    return { inner, outer: { from: vi.fn(() => ({ where })) }, where };
   }
 
   it("devuelve vacío sin permiso (perfil privado sin relación) y no consulta la base", async () => {
@@ -478,21 +484,23 @@ describe("getCollectionPreview", () => {
 
   it("arma un grupo por artista con su total real y sus copias, y los totales del perfil", async () => {
     mocks.getProfileByUsername.mockResolvedValue(publicProfile);
-    const queenRows = [
-      { ...entryRow, id: "q1", releaseGroupId: "rg-q1", albumTitle: "A Night at the Opera" },
-      { ...entryRow, id: "q2", releaseGroupId: "rg-q2", albumTitle: "Jazz" },
+    // Llegan mezcladas por fecha, como las devuelve la consulta única: cada grupo toma las suyas.
+    const rows = [
+      { ...entryRow, id: "q1", releaseGroupId: "rg-q1", albumTitle: "A Night at the Opera", artistName: "Queen" },
+      { ...entryRow, id: "o1", releaseGroupId: "rg-o1", albumTitle: "Sin crédito", artistName: null },
+      { ...entryRow, id: "q2", releaseGroupId: "rg-q2", albumTitle: "Jazz", artistName: "Queen" },
     ];
-    const orphanRows = [{ ...entryRow, id: "o1", releaseGroupId: "rg-o1", albumTitle: "Sin crédito" }];
     const rank = ranking([
       { name: "Queen", total: 12, latest: new Date("2026-03-01T00:00:00Z") },
       { name: null, total: 1, latest: new Date("2026-02-01T00:00:00Z") },
     ]);
+    const preview = previewEntries(rows);
     mocks.db.select
       .mockReturnValueOnce(scopedTable())
       .mockReturnValueOnce(rank.chain)
       .mockReturnValueOnce(totals({ entries: 87, artists: 31 }))
-      .mockReturnValueOnce(artistEntries(queenRows).chain)
-      .mockReturnValueOnce(artistEntries(orphanRows).chain)
+      .mockReturnValueOnce(preview.inner)
+      .mockReturnValueOnce(preview.outer)
       .mockReturnValueOnce(
         joinWhereOrderBy([
           { releaseGroupId: "rg-q1", position: 0, artistId: "a-queen", artistName: "Queen" },
@@ -508,7 +516,7 @@ describe("getCollectionPreview", () => {
       ["Queen", 12, 2],
       [null, 1, 1],
     ]);
-    // Cada grupo recibe SUS copias, en el orden en que se pidieron.
+    // Cada grupo recibe SUS copias, en el orden en que llegaron.
     expect(result.artists[0]!.entries.map((e) => e.id)).toEqual(["q1", "q2"]);
     expect(result.artists[0]!.entries[0]!.album.artistName).toBe("Queen");
     expect(result.artists[1]!.entries.map((e) => e.id)).toEqual(["o1"]);
@@ -518,19 +526,47 @@ describe("getCollectionPreview", () => {
   it("aplica el tope: N artistas en el ranking y M copias por artista", async () => {
     mocks.getProfileByUsername.mockResolvedValue(publicProfile);
     const rank = ranking([{ name: "Queen", total: 12, latest: new Date() }]);
-    const queen = artistEntries([]);
+    const preview = previewEntries([]);
     mocks.db.select
       .mockReturnValueOnce(scopedTable())
       .mockReturnValueOnce(rank.chain)
       .mockReturnValueOnce(totals({ entries: 12, artists: 1 }))
-      .mockReturnValueOnce(queen.chain);
+      .mockReturnValueOnce(preview.inner)
+      .mockReturnValueOnce(preview.outer);
 
     await getCollectionPreview("otro", userId);
 
     expect(rank.limit).toHaveBeenCalledWith(COLLECTION_PREVIEW_ARTISTS);
-    expect(queen.limit).toHaveBeenCalledWith(COLLECTION_PREVIEW_PER_ARTIST);
+    // El recorte por artista es `rank <= M` sobre la tabla derivada.
+    const cut = new PgDialect().sqlToQuery(preview.where.mock.calls[0]![0]);
+    expect(cut.sql).toBe('"ranked"."rank" <= $1');
+    expect(cut.params).toEqual([COLLECTION_PREVIEW_PER_ARTIST]);
     expect(COLLECTION_PREVIEW_ARTISTS).toBe(5);
     expect(COLLECTION_PREVIEW_PER_ARTIST).toBe(4);
+  });
+
+  it("las copias de todos los artistas salen en una sola consulta, no una por artista (N+1)", async () => {
+    mocks.getProfileByUsername.mockResolvedValue(publicProfile);
+    mocks.db.select.mockClear();
+    const artists = Array.from({ length: COLLECTION_PREVIEW_ARTISTS }, (_, index) => ({
+      name: `Artista ${index}`,
+      total: 9,
+      latest: new Date(),
+    }));
+    const preview = previewEntries([]);
+    mocks.db.select
+      .mockReturnValueOnce(scopedTable())
+      .mockReturnValueOnce(ranking(artists).chain)
+      .mockReturnValueOnce(totals({ entries: 45, artists: 5 }))
+      .mockReturnValueOnce(preview.inner)
+      .mockReturnValueOnce(preview.outer);
+
+    const result = await getCollectionPreview("otro", userId);
+
+    // scoped + ranking + totales + (derivada + recorte): 5, sean cuantos sean los artistas (sin copias no se
+    // resuelven sus artistas).
+    expect(mocks.db.select).toHaveBeenCalledTimes(5);
+    expect(result.artists).toHaveLength(COLLECTION_PREVIEW_ARTISTS);
   });
 
   it("perfil sin copias visibles: sin grupos y totales en cero", async () => {
