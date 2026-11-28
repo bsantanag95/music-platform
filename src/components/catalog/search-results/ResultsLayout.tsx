@@ -25,7 +25,7 @@ export function ResultsLayout({
     <div className="grid w-full grid-cols-1 gap-y-6 lg:grid-cols-12 lg:gap-x-12 lg:gap-y-8 xl:gap-x-16">
       <div className="min-w-0 lg:col-span-12">{summary}</div>
       {aside || asideAfter ? (
-        <div className={`${aside ? "flex" : "hidden lg:flex"} min-w-0 flex-col gap-4 lg:sticky lg:top-24 lg:col-span-4 lg:col-start-9 lg:row-start-2 lg:self-start`}>
+        <div className={`${aside ? "flex" : "hidden lg:flex"} min-w-0 flex-col gap-4 empty:hidden lg:sticky lg:top-24 lg:col-span-4 lg:col-start-9 lg:row-start-2 lg:self-start`}>
           {aside}
           {asideAfter ? <div className="hidden flex-col gap-4 lg:flex">{asideAfter}</div> : null}
         </div>

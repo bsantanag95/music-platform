@@ -90,8 +90,14 @@ datos, media, las primeras canciones **solo si la tracklist ya está guardada** 
 y «También» del mismo artista y título; el resto va en «Otros álbumes». En Canciones, la ficha de la canción resuelta
 (duración, tira de discos, «Ver la canción») reemplaza al panel de álbumes. La columna lateral suma «x en otros tipos»
 (Artistas → álbumes, Álbumes → canciones, Canciones → álbumes), solo de la base propia, en su propio `Suspense`; en el
-teléfono va después de los resultados. La avanzada no cambia. Pendiente: fase 3 (rejilla de carátulas y nuevo estado sin
-resultados).
+teléfono va después de los resultados. La avanzada no cambia. Fase 3: bajo la ficha de Álbumes, si hay ≥ 4 discos y la mitad o más se llama como la
+consulta (`albumView`), van en una rejilla «Otros discos llamados «x»» con el artista como titular y el menú «…» sobre la
+carátula (también al «Cargar más»); si no, filas «Otros álbumes». La ficha no aparece si la consulta es solo el nombre del
+artista del primer disco. En «Otras canciones con ese título», las filas con el mismo título llevan al artista de titular.
+Sin resultados ni filtro, `SearchNoResults`: «Nada coincide con «x» en <tipo>», «¿Quisiste decir…?», coincidencias en los
+otros tipos **solo de la base propia** (`findInAllOtherTypes`), consejos, búsqueda avanzada y «O empieza por aquí»
+(Explorar, `/explore#lanzamientos`, Listas); en la lateral, las búsquedas recientes. Con un filtro activo sigue «Nada con
+estos filtros».
 
 **Búsqueda avanzada (cambios `add-advanced-search-phase1` y `redesign-advanced-search`).** Página
 propia `/search/advanced`, al estilo de Metal Archives: pestañas **Artistas · Álbumes · Canciones**

@@ -1,11 +1,12 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ searchAlbums: vi.fn(), searchSongs: vi.fn() }));
+const mocks = vi.hoisted(() => ({ searchAlbums: vi.fn(), searchSongs: vi.fn(), searchArtists: vi.fn() }));
 vi.mock("./albums", () => ({ searchAlbums: mocks.searchAlbums }));
+vi.mock("./artists", () => ({ searchArtists: mocks.searchArtists }));
 vi.mock("./songs", () => ({ searchSongs: mocks.searchSongs }));
 
-const { findInOtherType, otherTypeOf } = await import("./other-type");
+const { findInAllOtherTypes, findInOtherType, otherTypeOf } = await import("./other-type");
 
 const album = (id: string) => ({ kind: "release-group", id, title: "Pink", artistName: "Four Tet" });
 
@@ -40,5 +41,26 @@ describe("findInOtherType (redesign-search-phase2)", () => {
     await expect(findInOtherType("song", "qzxvbnmqk")).resolves.toBeNull();
     await expect(findInOtherType("song", "creep")).resolves.toBeNull();
     await expect(findInOtherType("user", "ana")).resolves.toBeNull();
+  });
+});
+
+describe("findInAllOtherTypes (redesign-search-phase3)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("busca en local en los otros tipos de catálogo y devuelve solo los que tienen algo", async () => {
+    mocks.searchArtists.mockResolvedValue({ results: [] });
+    mocks.searchSongs.mockResolvedValue({ results: [{ key: "k", title: "Kid A Mnesia" }] });
+    const found = await findInAllOtherTypes("album", "kid a mnesia");
+    expect(mocks.searchArtists).toHaveBeenCalledWith("kid a mnesia", { localOnly: true });
+    expect(mocks.searchSongs).toHaveBeenCalledWith("kid a mnesia", { localOnly: true });
+    expect(mocks.searchAlbums).not.toHaveBeenCalled();
+    expect(found.map((m) => m.type)).toEqual(["song"]);
+  });
+
+  it("un tipo que falla no tumba a los demás", async () => {
+    mocks.searchArtists.mockRejectedValue(new Error("db"));
+    mocks.searchAlbums.mockResolvedValue({ results: [{ id: "a", title: "Creep" }] });
+    const found = await findInAllOtherTypes("song", "creep");
+    expect(found.map((m) => m.type)).toEqual(["album"]);
   });
 });

@@ -265,7 +265,8 @@
         "viewAlbum": "View the record",
         "tracksMore": "and {count, plural, one {# more song} other {# more songs}}",
         "also": "Also:",
-        "others": "Other albums"
+        "others": "Other albums",
+        "othersNamed": "Other records called “{query}”"
       },
       "songs": {
         "interpretation": "Read as the song “{song}” by {artist}",
@@ -297,6 +298,30 @@
       "otherType": {
         "title": "“{query}” in {type}",
         "seeAll": "View {type}"
+      },
+      "noResults": {
+        "title": "Nothing matches “{query}” in {type}",
+        "lead": "We searched the catalog and MusicBrainz.",
+        "inOtherTypes": "In other types in the catalog",
+        "inType": "In {type}",
+        "seeType": "View {type}",
+        "tipsHeading": "Try this",
+        "tipFewer": "Use fewer words or check the spelling.",
+        "startHeading": "Or start here",
+        "start": {
+          "explore": {
+            "title": "Explore",
+            "text": "Collections, genres and decades"
+          },
+          "releases": {
+            "title": "Releases",
+            "text": "What just came out and what is coming"
+          },
+          "lists": {
+            "title": "Lists",
+            "text": "Journeys from the community"
+          }
+        }
       }
     },
     "origin": {

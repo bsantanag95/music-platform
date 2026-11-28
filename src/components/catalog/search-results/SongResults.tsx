@@ -7,6 +7,7 @@ import { SearchTypeIcon } from "../SearchTypeIcon";
 import { SongGroupPanel } from "./SongGroupPanel";
 import { SongAnswer } from "./SongAnswer";
 import { ResultsGroupHeading } from "./ResultsGroupHeading";
+import { sameTitleAsQuery } from "@/services/catalog/search/same-title";
 
 // Resultados del tipo Canciones (openspec: redesign-scoped-search): la
 // interpretación usada queda a la vista y es corregible, la canción resuelta
@@ -36,8 +37,20 @@ export function SongInterpretation({
   );
 }
 
-export function SongRow({ group, highlight = [] }: { group: SongGroupResult; highlight?: ResultHighlight[] }) {
+export function SongRow({
+  group,
+  highlight = [],
+  query,
+}: {
+  group: SongGroupResult;
+  highlight?: ResultHighlight[];
+  /** Búsqueda rápida: con el mismo título que la consulta, el artista pasa a ser el titular (redesign-search-phase3). */
+  query?: string;
+}) {
   const t = useTranslations("catalog.search.results.songs");
+  const byArtist = query !== undefined && Boolean(group.artistName) && sameTitleAsQuery(group.title, query);
+  const headline = byArtist ? group.artistName! : group.title;
+  const sub = byArtist ? group.title : group.artistName;
   return (
     <Link
       href={searchHref("song", group.query)}
@@ -49,11 +62,11 @@ export function SongRow({ group, highlight = [] }: { group: SongGroupResult; hig
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="truncate font-display text-sm text-paper transition-colors group-hover:text-amber">
-          {group.title}
+          {headline}
         </span>
-        {group.artistName ? (
+        {sub ? (
           <span className={`truncate font-data text-xs ${highlight.includes("artist") ? "text-amber" : "text-paper-muted"}`}>
-            {group.artistName}
+            {sub}
           </span>
         ) : null}
       </span>
@@ -70,12 +83,20 @@ export function SongRow({ group, highlight = [] }: { group: SongGroupResult; hig
   );
 }
 
-export function SongList({ groups, highlight }: { groups: SongGroupResult[]; highlight?: ResultHighlight[] }) {
+export function SongList({
+  groups,
+  highlight,
+  query,
+}: {
+  groups: SongGroupResult[];
+  highlight?: ResultHighlight[];
+  query?: string;
+}) {
   return (
     <ul className="flex flex-col divide-y divide-ink-border">
       {groups.map((group) => (
         <li key={group.key} className="py-3 first:pt-0 last:pb-0">
-          <SongRow group={group} highlight={highlight} />
+          <SongRow group={group} highlight={highlight} query={query} />
         </li>
       ))}
     </ul>
@@ -87,8 +108,11 @@ export function SongResults({
   plain = false,
   highlight,
   compactHeadings = false,
+  query,
 }: {
   response: SongSearchResponse;
+  /** Búsqueda rápida: la consulta, para poner el artista de titular en las filas con el mismo título. */
+  query?: string;
   /** Búsqueda avanzada: encabezado de grupo compacto, como siempre (openspec: redesign-search-phase1). */
   compactHeadings?: boolean;
   /** Búsqueda avanzada sin título: no hay "mejor coincidencia", solo la lista (openspec: refine-advanced-search-phase1). */
@@ -107,7 +131,7 @@ export function SongResults({
       {others.length > 0 ? (
         <section className="flex flex-col gap-3">
           <ResultsGroupHeading compact={compactHeadings}>{t("otherSongs")}</ResultsGroupHeading>
-          <SongList groups={others} highlight={highlight} />
+          <SongList groups={others} highlight={highlight} query={compactHeadings ? undefined : query} />
         </section>
       ) : null}
     </div>
