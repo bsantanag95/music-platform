@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import * as schema from "./schema";
 import { IDLE_IN_TRANSACTION_TIMEOUT_MS, parsePoolMax } from "./pool-config";
 import { guardDatabase } from "./transaction-guard";
+import { parseQueryCounterMode, queryCounterLogger } from "./query-counter";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("Falta DATABASE_URL en las variables de entorno");
@@ -27,4 +28,8 @@ if (process.env.NODE_ENV !== "production") globalForDb.pgClient = client;
 
 // El cliente global va envuelto en la guardia de transacciones (`transaction-guard.ts`): usarlo dentro de una
 // transacción pediría una segunda conexión del pool.
-export const db = guardDatabase(drizzle(client, { schema }));
+// Contador de consultas por petición (`query-counter.ts`): en desarrollo avisa las peticiones con una sentencia
+// repetida (N+1); en producción, apagado salvo que `DB_QUERY_COUNTER` lo pida.
+const logger = queryCounterLogger(parseQueryCounterMode(process.env.DB_QUERY_COUNTER, process.env.NODE_ENV));
+
+export const db = guardDatabase(drizzle(client, { schema, logger }));

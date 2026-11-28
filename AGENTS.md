@@ -85,6 +85,9 @@ de cuál de las filas con el mismo título haya en la BD.
 - Tablas en singular y `snake_case`; PK siempre `UUID` (ADR 0003); `mbid` de
   MusicBrainz como columna única para upsert idempotente; `updated_at` lo
   mantiene un trigger — nunca actualizarlo a mano desde la app.
+- `src/db/query-counter.ts` cuenta las consultas por petición: en `next dev` avisa en consola (`[db] … posible N+1`) cuando
+  una misma sentencia se repite; un aviso nuevo tras un cambio se corrige (consulta por lote), no se ignora.
+  `countQueries(fn)` mide un flujo desde un script. Detalle en `docs/06-operations/verification.md`.
 - Reglas de negocio críticas (coherencia estrellas↔detallada, unicidad de
   rating por usuario/objetivo) viven como `CHECK`/índices únicos parciales en
   SQL, no solo en la capa de aplicación — no relajarlas "para simplificar".

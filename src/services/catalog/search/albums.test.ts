@@ -367,6 +367,22 @@ describe("searchAlbums", () => {
     expect(response.results[0]).toMatchObject({ title: "Back for the Attack", artistName: "Dokken", year: 1987 });
   });
 
+  it("los homónimos de un extremo comparten una consulta por resto, no una por artista (N+1)", async () => {
+    const pinks = Array.from({ length: 6 }, (_, index) => ({ id: `pink-${index}`, name: "Pink" }));
+    const floyd = { id: "floyd", name: "Floyd" };
+    // La consulta completa no es un artista; los extremos sí: seis «Pink» y un «Floyd».
+    vi.mocked(localMatch.findArtistsByKeys).mockResolvedValueOnce([]).mockResolvedValueOnce([...pinks, floyd] as never);
+    vi.mocked(localMatch.releaseGroupsByArtistsAndTitle).mockResolvedValue([]);
+    vi.mocked(musicbrainz.searchReleaseGroup).mockResolvedValue({ count: 0, "release-groups": [] });
+
+    await searchAlbums("pink floyd");
+
+    expect(vi.mocked(localMatch.releaseGroupsByArtistsAndTitle).mock.calls.map(([ids, rest]) => [ids, rest])).toEqual([
+      [pinks.map((artist) => artist.id), "floyd"],
+      [["floyd"], "pink"],
+    ]);
+  });
+
   it("MusicBrainz caído con datos locales: remoteFailed sin paginación", async () => {
     vi.mocked(localMatch.matchLocalReleaseGroups).mockResolvedValue([rgRow({ title: "Destroyer" })]);
     vi.mocked(musicbrainz.searchReleaseGroup).mockRejectedValue(new Error("503"));

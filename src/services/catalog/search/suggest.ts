@@ -11,7 +11,7 @@ import { appUser } from "@/db/schema";
 import { activeUserCondition } from "@/services/auth/account-status";
 import { resolveImageUrls } from "@/services/storage/avatar-urls";
 import { activityScores, type ActivityKind } from "./activity";
-import { edgeSplits, restAfterEdgeArtist } from "./coverage";
+import { edgeSplits, groupEdgeArtistsByRest } from "./coverage";
 import {
   findArtistsByKeys,
   matchLocalArtists,
@@ -107,13 +107,7 @@ async function bridgeAlbums(text: string, limit: number) {
   const artists = await findArtistsByKeys(keys);
   // Una consulta por resto de título distinto, no una por artista: «soda st» encuentra decenas
   // de artistas «Soda» con el mismo resto (openspec: speed-up-search).
-  const idsByRest = new Map<string, string[]>();
-  for (const artist of artists) {
-    const rest = restAfterEdgeArtist(tokens, artist.name);
-    if (!rest) continue;
-    const key = rest.join(" ");
-    idsByRest.set(key, [...(idsByRest.get(key) ?? []), artist.id]);
-  }
+  const idsByRest = groupEdgeArtistsByRest(tokens, artists);
   const rowsByArtist = new Map<string, ArtistTitleMatch[]>();
   for (const [rest, ids] of idsByRest) {
     for (const match of await releaseGroupsByArtistsAndTitle(ids, rest, { limit, mode: "prefix" })) {
