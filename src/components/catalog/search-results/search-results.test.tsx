@@ -190,6 +190,8 @@ describe("Canciones", () => {
       id: `album-${index}`,
       mbid: null,
       title: `Álbum ${index}`,
+      coverThumbUrl: null,
+      coverResolved: false,
       category: "studio" as const,
       year: 1987 + index,
     })),

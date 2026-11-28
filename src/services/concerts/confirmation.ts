@@ -3,7 +3,7 @@
 // cuentan, o cuando su enlace de setlist.fm apunta a un setlist del mismo artista y del mismo año. La confirmación es
 // pegajosa: quitar asistencias no la deshace; solo la moderación oculta.
 
-import { and, asc, eq, isNull, sql, type SQL } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, concert, concertEntry, concertPerformer, userRestriction } from "@/db/schema";
 import { normalizeSearchText } from "@/services/catalog/search/normalize";
@@ -68,6 +68,27 @@ export async function countingAttendees(executor: Executor, concertId: string, n
     .innerJoin(appUser, eq(appUser.id, concertEntry.userId))
     .where(and(eq(concertEntry.concertId, concertId), accountCountsSql(now)));
   return row?.n ?? 0;
+}
+
+/**
+ * `countingAttendees` de varios conciertos en una sola consulta (agrupada por concierto): una lista de conciertos no
+ * hace una consulta por fila. Un concierto sin personas que cuenten queda en 0.
+ */
+export async function countingAttendeesByConcert(
+  executor: Executor,
+  concertIds: readonly string[],
+  now: Date = new Date(),
+): Promise<Map<string, number>> {
+  const counts = new Map<string, number>(concertIds.map((id) => [id, 0]));
+  if (concertIds.length === 0) return counts;
+  const rows = await executor
+    .select({ concertId: concertEntry.concertId, n: sql<number>`count(distinct ${concertEntry.userId})`.mapWith(Number) })
+    .from(concertEntry)
+    .innerJoin(appUser, eq(appUser.id, concertEntry.userId))
+    .where(and(inArray(concertEntry.concertId, [...concertIds]), accountCountsSql(now)))
+    .groupBy(concertEntry.concertId);
+  for (const row of rows) if (row.concertId) counts.set(row.concertId, row.n);
+  return counts;
 }
 
 /** Confirmaciones que le faltan a un concierto por confirmar (0 si ya alcanzó el umbral). */

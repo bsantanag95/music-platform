@@ -48,6 +48,8 @@ const album: AlbumSearchResult = {
   title: "Animals",
   artistName: "Pink Floyd",
   category: "studio",
+  coverThumbUrl: null,
+  coverResolved: false,
   year: 1977,
   cached: false,
   community: { average: 4.4, count: 12 },

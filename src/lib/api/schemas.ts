@@ -151,6 +151,8 @@ export const AlbumSearchResultSchema = z.object({
   category: ReleaseGroupCategorySchema,
   year: z.number().int().nullable(),
   cached: z.boolean(),
+  coverThumbUrl: z.string().nullable(),
+  coverResolved: z.boolean(),
   community: z.object({ average: z.number().nullable(), count: z.number().int() }).optional(),
   yourStars: z.number().nullable().optional(),
   genre: z.object({ slug: z.string(), name: z.string(), nameEs: z.string().nullable() }).nullable().optional(),
@@ -164,6 +166,8 @@ export const SongAlbumSchema = z.object({
   title: z.string(),
   category: ReleaseGroupCategorySchema,
   year: z.number().int().nullable(),
+  coverThumbUrl: z.string().nullable(),
+  coverResolved: z.boolean(),
 });
 export type SongAlbum = z.infer<typeof SongAlbumSchema>;
 

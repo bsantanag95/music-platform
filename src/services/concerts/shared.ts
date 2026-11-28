@@ -9,7 +9,7 @@
 import { and, asc, count, countDistinct, desc, eq, gt, inArray, isNull, lte, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { appUser, concert, concertEntry, concertPerformer, concertSeries } from "@/db/schema";
-import { countingAttendees, evaluateConfirmation, missingConfirmations, type Executor } from "./confirmation";
+import { countingAttendees, countingAttendeesByConcert, evaluateConfirmation, missingConfirmations, type Executor } from "./confirmation";
 import { ApiError } from "@/lib/api/errors";
 import { isValidConcertDate } from "@/lib/api/schemas";
 import { COMMUNITY_MIN_COUNT, type ThresholdedCount } from "@/services/catalog/album-community-shared";
@@ -293,13 +293,17 @@ async function listPendingConcerts(
   if (rows.length === 0) return [];
   const [summaries, counting] = await Promise.all([
     summarize(rows, viewerId, now),
-    Promise.all(rows.map((row) => countingAttendees(db, row.id, now))),
+    countingAttendeesByConcert(
+      db,
+      rows.map((row) => row.id),
+      now,
+    ),
   ]);
   return summaries.map((summary, index) => ({
     ...summary,
     attendees: null,
     attending: summary.attending ?? false,
-    missing: missingConfirmations(counting[index] ?? 0),
+    missing: missingConfirmations(counting.get(rows[index]!.id) ?? 0),
   }));
 }
 

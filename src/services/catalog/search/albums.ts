@@ -7,6 +7,7 @@
 // en qué orden se escriban.
 
 import { ApiError } from "@/lib/api/errors";
+import { coverFields } from "../cover-resolution";
 import type { ReleaseGroupRow } from "@/db/schema";
 import { musicbrainz } from "../../musicbrainz/client";
 import { mapReleaseGroupCategory, yearFromMbDate } from "../../musicbrainz/mappers";
@@ -264,6 +265,7 @@ export async function searchAlbums(
         category: row.category as ReleaseGroupCategoryValue,
         year: row.firstReleaseYear ?? yearFromMbDate(remoteItem?.["first-release-date"]),
         cached,
+        ...coverFields(row),
       },
       artistNames: artists,
       rank: {
@@ -290,6 +292,7 @@ export async function searchAlbums(
         category: row.category as ReleaseGroupCategoryValue,
         year: yearFromMbDate(item["first-release-date"]),
         cached: false,
+        ...coverFields(row),
       },
       artistNames: credits.map((credit) => credit.name),
       rank: { level: 0, activity: 0, popularity: item.count ?? 0, group: 1, index },
@@ -378,6 +381,7 @@ async function catalogAlbums(
         category: row.category as ReleaseGroupCategoryValue,
         year: row.firstReleaseYear,
         cached: withContent.has(row.id),
+        ...coverFields(row),
         community: community.get(row.id) ?? { average: null, count: 0 },
         genre: genres.get(row.id) ?? null,
         artistCountry: countries.get(row.id) ?? null,

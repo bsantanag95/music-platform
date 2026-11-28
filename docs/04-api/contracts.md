@@ -109,11 +109,17 @@ Presupuesto: **1** solicitud a MusicBrainz.
       "artistName": "string | null",
       "category": "studio | single_ep | compilation | live_other",
       "year": "int | null",
-      "cached": "boolean"
+      "cached": "boolean",
+      "coverThumbUrl": "string | null",
+      "coverResolved": "boolean"
     }
   ]
 }
 ```
+
+`coverThumbUrl`/`coverResolved` (mismo criterio que la discografía, `isCoverResolved`): con `coverResolved: true` el
+cliente pinta la carátula en la carga inicial (o la silueta si `coverThumbUrl` es `null`: sin carátula o retirada) y no
+pide `GET /api/catalog/release-group/:id/cover` por fila; solo los no resueltos la piden al hacerse visibles.
 
 Orden por **cobertura de términos** (las palabras pueden repartirse entre título y artista, en
 cualquier orden): (1) un artista acreditado ocupa un extremo de la consulta y el resto es el
@@ -154,7 +160,9 @@ el primer orden vacío).
           "mbid": "uuid | null",
           "title": "string",
           "category": "studio | single_ep | compilation | live_other",
-          "year": "int | null"
+          "year": "int | null",
+          "coverThumbUrl": "string | null",
+          "coverResolved": "boolean"
         }
       ],
       "query": "string"
@@ -185,7 +193,8 @@ el primer orden vacío).
   ingeridas) y se ingiere su grabación identidad (la de más ediciones; `recordingId` solo en ese
   grupo). `albums` va
   deduplicado por `release_group` (año mínimo entre fuentes), ordenado por categoría → año →
-  título, máximo **12**. Los demás grupos llegan con `albums: []` y `query` =
+  título, máximo **12**. La carátula de todos los álbumes de la respuesta se lee en **una** consulta al final (mismo
+  `coverThumbUrl`/`coverResolved` que `type=album`). Los demás grupos llegan con `albums: []` y `query` =
   `"<artista> - <título>"` para abrirlos como primer grupo.
 - El grupo resuelto (`recordingId` no nulo) ofrece un enlace directo a `/song/<id>` («Ver canción»)
   además de listar sus álbumes; los grupos no expandidos (`recordingId: null`) siguen abriéndose

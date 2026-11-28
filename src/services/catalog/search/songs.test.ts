@@ -3,6 +3,8 @@ import type { MBRecordingSearchItem } from "@/services/musicbrainz/types";
 import { ApiError } from "@/lib/api/errors";
 
 vi.mock("@/db", () => ({ db: { select: vi.fn() } }));
+// La carátula en lote tiene su propio test (`album-covers.test.ts`); aquí no suma una consulta al encadenado de `select`.
+vi.mock("./album-covers", () => ({ withAlbumCovers: async (results: unknown) => results }));
 vi.mock("@/services/musicbrainz/client", () => ({
   musicbrainz: {
     searchArtist: vi.fn(),

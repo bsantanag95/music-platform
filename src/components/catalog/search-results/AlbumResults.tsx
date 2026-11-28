@@ -10,6 +10,7 @@ import { albumHref } from "@/lib/catalog-links";
 import type { AlbumSearchResult } from "@/services/catalog/search/types";
 import type { ResultHighlight } from "@/services/catalog/search/filters";
 import { MetaLine } from "./MetaLine";
+import { CoverThumb } from "../CoverThumb";
 import { LazyCoverImage } from "../LazyCoverImage";
 import { AlbumQuickActions } from "../AlbumQuickActions";
 
@@ -38,7 +39,12 @@ export function AlbumRow({ album, highlight = [] }: { album: AlbumSearchResult; 
 
   return (
     <Link href={albumHref(album.artistName, album.title, album.id)} className="group flex min-w-0 flex-1 items-center gap-3">
-      <LazyCoverImage releaseGroupId={album.id} coverLabel="" className="size-12 shrink-0" />
+      {/* Resuelta en el payload: se pinta en la carga inicial, sin pedir `/cover` por fila. */}
+      {album.coverResolved ? (
+        <CoverThumb cover={album.coverThumbUrl} label="" className="size-12 shrink-0" />
+      ) : (
+        <LazyCoverImage releaseGroupId={album.id} coverLabel="" className="size-12 shrink-0" />
+      )}
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="truncate font-display text-sm text-paper transition-colors group-hover:text-amber">
           {album.title}
