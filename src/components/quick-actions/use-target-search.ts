@@ -20,7 +20,15 @@ const REMOTE_MIN_LENGTH = 3;
 export interface TargetCandidate extends PickTarget {
   year: number | null;
   category: ReleaseGroupCategory | null;
+  /**
+   * Carátula de un álbum tal como llegó (sugerencia o búsqueda completa): con `coverResolved`, quien lo muestra la pinta
+   * sin pedir `/cover` por fila. Fuera de los álbumes, `null` y sin resolver.
+   */
+  coverThumbUrl: string | null;
+  coverResolved: boolean;
 }
+
+const NO_COVER = { coverThumbUrl: null, coverResolved: false } as const;
 
 /** Resultado de una fase, etiquetado con la consulta que lo produjo. */
 interface Phase {
@@ -65,7 +73,15 @@ function fromSuggestions(suggestions: SearchSuggestion[], type: PickerType, quer
     .flatMap((suggestion): TargetCandidate[] => {
       if (suggestion.kind === "artist") {
         return [
-          { type: "artist", id: suggestion.id, title: suggestion.name, subtitle: suggestion.disambiguation, year: null, category: null },
+          {
+            type: "artist",
+            id: suggestion.id,
+            title: suggestion.name,
+            subtitle: suggestion.disambiguation,
+            year: null,
+            category: null,
+            ...NO_COVER,
+          },
         ];
       }
       if (suggestion.kind === "album") {
@@ -77,11 +93,23 @@ function fromSuggestions(suggestions: SearchSuggestion[], type: PickerType, quer
             subtitle: suggestion.artistName,
             year: suggestion.year,
             category: null,
+            coverThumbUrl: suggestion.coverThumbUrl,
+            coverResolved: suggestion.coverResolved,
           },
         ];
       }
       if (suggestion.kind === "song") {
-        return [{ type: "recording", id: suggestion.id, title: suggestion.title, subtitle: suggestion.artistName, year: null, category: null }];
+        return [
+          {
+            type: "recording",
+            id: suggestion.id,
+            title: suggestion.title,
+            subtitle: suggestion.artistName,
+            year: null,
+            category: null,
+            ...NO_COVER,
+          },
+        ];
       }
       return [];
     });
@@ -97,18 +125,38 @@ function fromSearch(response: CatalogSearchResponse): TargetCandidate[] {
         subtitle: r.artistName,
         year: r.year,
         category: r.category,
+        coverThumbUrl: r.coverThumbUrl,
+        coverResolved: r.coverResolved,
       }),
     );
   }
   if (response.type === "artist") {
     return response.results.map(
-      (r): TargetCandidate => ({ type: "artist", id: r.id, title: r.name, subtitle: r.disambiguation, year: null, category: null }),
+      (r): TargetCandidate => ({
+        type: "artist",
+        id: r.id,
+        title: r.name,
+        subtitle: r.disambiguation,
+        year: null,
+        category: null,
+        ...NO_COVER,
+      }),
     );
   }
   // Canciones: solo la canción con grabación identidad es registrable (en modo de elección, todas).
   return response.results.flatMap((group): TargetCandidate[] =>
     group.recordingId
-      ? [{ type: "recording", id: group.recordingId, title: group.title, subtitle: group.artistName, year: null, category: null }]
+      ? [
+          {
+            type: "recording",
+            id: group.recordingId,
+            title: group.title,
+            subtitle: group.artistName,
+            year: null,
+            category: null,
+            ...NO_COVER,
+          },
+        ]
       : [],
   );
 }

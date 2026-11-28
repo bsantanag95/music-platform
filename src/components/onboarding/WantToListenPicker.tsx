@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { LazyCoverImage } from "@/components/catalog/LazyCoverImage";
+import { ReleaseGroupCover } from "@/components/catalog/ReleaseGroupCover";
 import { SearchTypeToggle } from "@/components/catalog/SearchTypeToggle";
 import { useTargetSearch, type TargetCandidate } from "@/components/quick-actions/use-target-search";
 import { removeFromWantToListen, toggleWantToListen } from "@/lib/api/want-to-listen";
@@ -213,7 +213,12 @@ export function WantToListenPicker({ onCountChange, storageKey }: WantToListenPi
                   >
                     {candidate.type === "release-group" && (
                       <span aria-hidden="true" className="contents">
-                        <LazyCoverImage releaseGroupId={candidate.id} coverLabel="" className="size-8 shrink-0" />
+                        <ReleaseGroupCover
+                          releaseGroupId={candidate.id}
+                          coverThumbUrl={candidate.coverThumbUrl}
+                          coverResolved={candidate.coverResolved}
+                          className="size-8 shrink-0"
+                        />
                       </span>
                     )}
                     <span className="min-w-0">

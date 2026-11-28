@@ -247,7 +247,7 @@ max-age=30`.
 {
   "suggestions": [
     { "kind": "artist", "id": "uuid", "name": "string", "artistType": "person | group | various | unknown", "disambiguation": "string | null" },
-    { "kind": "album", "id": "uuid", "title": "string", "artistName": "string | null", "year": "int | null", "bridge": "boolean" },
+    { "kind": "album", "id": "uuid", "title": "string", "artistName": "string | null", "year": "int | null", "bridge": "boolean", "coverThumbUrl": "string | null", "coverResolved": "boolean" },
     { "kind": "song", "id": "uuid", "title": "string", "artistName": "string | null" },
     { "kind": "user", "id": "uuid", "username": "string", "displayName": "string | null", "avatarUrl": "string | null" }
   ]
@@ -258,7 +258,9 @@ Orden: exacta → palabra completa → prefijo → resto; a igualdad, actividad 
 contenido cacheado. En `artist`, si un artista local ocupa un extremo de la consulta y el resto
 es el **prefijo** del título de uno de sus álbumes, ese álbum llega primero con `bridge: true`
 (puente artista + título: `dokken back for` → *Back for the Attack*). `user` aplica las mismas
-reglas que `/api/users` (solo cuentas activas).
+reglas que `/api/users` (solo cuentas activas). `album` trae `coverThumbUrl`/`coverResolved` con el mismo criterio que
+`/api/catalog/search?type=album`: con `coverResolved: true`, quien lo muestra (los selectores del onboarding) pinta la
+carátula sin pedir `GET /api/catalog/release-group/:id/cover` por fila.
 
 `song` (openspec `improve-song-suggestions`) tiene su propio orden:
 

@@ -10,6 +10,7 @@ import { db } from "@/db";
 import { appUser } from "@/db/schema";
 import { activeUserCondition } from "@/services/auth/account-status";
 import { resolveImageUrls } from "@/services/storage/avatar-urls";
+import { coverFields } from "../cover-resolution";
 import { activityScores, type ActivityKind } from "./activity";
 import { edgeSplits, groupEdgeArtistsByRest } from "./coverage";
 import {
@@ -55,6 +56,10 @@ export type SearchSuggestion =
       year: number | null;
       /** Vino del puente artista + título (se marca con su tipo en Artistas). */
       bridge: boolean;
+      /** Carátula conocida (nula si no hay o fue retirada). */
+      coverThumbUrl: string | null;
+      /** La carátula ya tiene respuesta: quien la muestra no la pide aparte (`isCoverResolved`). */
+      coverResolved: boolean;
     }
   | { kind: "song"; id: string; title: string; artistName: string | null }
   | {
@@ -151,6 +156,7 @@ async function albumSuggestions(text: string, bridgeOnly: boolean): Promise<Sear
     artistName: artistName ?? artists.get(row.id)?.map((artist) => artist.name).join(", ") ?? null,
     year: row.firstReleaseYear,
     bridge,
+    ...coverFields(row),
   }));
 }
 

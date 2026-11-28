@@ -42,7 +42,15 @@ const songSuggestionsModule = await import("./song-suggestions");
 const { suggest } = await import("./suggest");
 
 const dokken = { id: "dokken", name: "Dokken", type: "group", disambiguation: null } as ArtistRow;
-const attack = { id: "attack", title: "Back for the Attack", firstReleaseYear: 1987 } as ReleaseGroupRow;
+const ATTACK_COVER = "https://example.test/attack.jpg";
+const attack = {
+  id: "attack",
+  title: "Back for the Attack",
+  firstReleaseYear: 1987,
+  coverThumbUrl: ATTACK_COVER,
+  coverCheckedAt: null,
+  coverBlockedAt: null,
+} as ReleaseGroupRow;
 
 beforeEach(() => vi.clearAllMocks());
 
@@ -64,7 +72,16 @@ describe("suggest", () => {
       mode: "prefix",
     });
     expect(suggestions).toEqual([
-      { kind: "album", id: "attack", title: "Back for the Attack", artistName: "Dokken", year: 1987, bridge: true },
+      {
+        kind: "album",
+        id: "attack",
+        title: "Back for the Attack",
+        artistName: "Dokken",
+        year: 1987,
+        bridge: true,
+        coverThumbUrl: ATTACK_COVER,
+        coverResolved: true,
+      },
       { kind: "artist", id: "dokken", name: "Dokken", artistType: "group", disambiguation: null },
     ]);
   });
@@ -95,7 +112,30 @@ describe("suggest", () => {
     );
 
     expect(await suggest("album", "back for")).toEqual([
-      { kind: "album", id: "attack", title: "Back for the Attack", artistName: "Dokken", year: 1987, bridge: false },
+      {
+        kind: "album",
+        id: "attack",
+        title: "Back for the Attack",
+        artistName: "Dokken",
+        year: 1987,
+        bridge: false,
+        coverThumbUrl: ATTACK_COVER,
+        coverResolved: true,
+      },
+    ]);
+  });
+
+  it("Álbumes: la carátula viaja resuelta; una retirada llega como null y sin comprobar queda sin resolver", async () => {
+    const blocked = { ...attack, id: "blocked", title: "Back in Black", coverBlockedAt: new Date() };
+    const unchecked = { ...attack, id: "unchecked", title: "Back to Black", coverThumbUrl: null };
+    vi.mocked(localMatch.matchLocalReleaseGroups).mockResolvedValue([blocked, unchecked]);
+    vi.mocked(localMatch.primaryArtistsByReleaseGroup).mockResolvedValue(new Map());
+
+    const suggestions = await suggest("album", "back");
+
+    expect(suggestions.map((item) => (item.kind === "album" ? [item.id, item.coverThumbUrl, item.coverResolved] : null))).toEqual([
+      ["blocked", null, true],
+      ["unchecked", null, false],
     ]);
   });
 

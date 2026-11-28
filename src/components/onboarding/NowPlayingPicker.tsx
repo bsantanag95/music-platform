@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { LazyCoverImage } from "@/components/catalog/LazyCoverImage";
+import { ReleaseGroupCover } from "@/components/catalog/ReleaseGroupCover";
 import { SearchTypeToggle } from "@/components/catalog/SearchTypeToggle";
 import { useTargetSearch, type TargetCandidate } from "@/components/quick-actions/use-target-search";
 import { createListenEntry, deleteListenEntry } from "@/lib/api/diary";
@@ -204,7 +204,14 @@ export function NowPlayingPicker({ audience, onCountChange, storageKey }: NowPla
                   className="flex min-h-11 w-full items-center gap-2 rounded border border-ink-border bg-ink px-2 py-1.5 text-left transition-colors hover:border-amber disabled:opacity-50"
                 >
                   {candidate.type === "release-group" && (
-                    <span aria-hidden="true" className="contents"><LazyCoverImage releaseGroupId={candidate.id} coverLabel="" className="size-8 shrink-0" /></span>
+                    <span aria-hidden="true" className="contents">
+                      <ReleaseGroupCover
+                        releaseGroupId={candidate.id}
+                        coverThumbUrl={candidate.coverThumbUrl}
+                        coverResolved={candidate.coverResolved}
+                        className="size-8 shrink-0"
+                      />
+                    </span>
                   )}
                   <span className="min-w-0">
                     <span className="block truncate font-body text-sm text-paper">{candidate.title}</span>
